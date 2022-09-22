@@ -100,12 +100,12 @@ async function createGrantInitiation(
     const accessToken = await deps.accessTokenService.create(grant.id)
     const access = await deps.accessService.getByGrant(grant.id)
     ctx.status = 200
-    ctx.body = createGrantBody(
-      deps.config.authServerDomain,
+    ctx.body = createGrantBody({
+      domain: deps.config.authServerDomain,
       grant,
       access,
       accessToken
-    )
+    })
     return
   }
 
@@ -399,20 +399,25 @@ async function continueGrant(
   const access = await accessService.getByGrant(grant.id)
 
   // TODO: add "continue" to response if additional grant request steps are added
-  ctx.body = createGrantBody(
-    config.authServerDomain,
+  ctx.body = createGrantBody({
+    domain: config.authServerDomain,
     grant,
     access,
     accessToken
-  )
+  })
 }
 
-function createGrantBody(
-  domain: string,
-  grant: Grant,
-  access: Access[],
+function createGrantBody({
+  domain,
+  grant,
+  access,
+  accessToken
+}: {
+  domain: string
+  grant: Grant
+  access: Access[]
   accessToken: AccessToken
-) {
+}) {
   return {
     access_token: {
       value: accessToken.value,

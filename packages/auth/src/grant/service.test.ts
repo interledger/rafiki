@@ -1,3 +1,4 @@
+import assert from 'assert'
 import crypto from 'crypto'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -180,11 +181,12 @@ describe('Grant Service', (): void => {
   describe('continue', (): void => {
     test('Can fetch a grant by its continuation information', async (): Promise<void> => {
       const { continueId, continueToken, interactRef } = grant
+      assert.ok(interactRef)
 
       const fetchedGrant = await grantService.getByContinue(
         continueId,
         continueToken,
-        interactRef as string
+        interactRef
       )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.continueId).toEqual(continueId)
@@ -199,10 +201,8 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant?.id).toEqual(grant.id)
     })
     test('Can fetch a grant by its interaction information', async (): Promise<void> => {
-      const fetchedGrant = await grantService.getByInteraction(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        grant.interactId!
-      )
+      assert.ok(grant.interactId)
+      const fetchedGrant = await grantService.getByInteraction(grant.interactId)
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.interactId).toEqual(grant.interactId)
     })
