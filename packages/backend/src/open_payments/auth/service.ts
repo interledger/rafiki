@@ -80,7 +80,7 @@ async function introspectToken(
     )
     const options: GrantOptions = {
       active: data.active,
-      clientId: data.clientId,
+      clientId: data.client_id,
       grant: data.grant
     }
     if (data.access) {
