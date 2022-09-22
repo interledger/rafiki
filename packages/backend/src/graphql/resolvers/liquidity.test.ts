@@ -882,7 +882,9 @@ describe('Liquidity Resolvers', (): void => {
     const amount = BigInt(100)
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await createPaymentPointer(deps)
+      paymentPointer = await createPaymentPointer(deps, {
+        createLiquidityAccount: true
+      })
 
       await expect(
         accountingService.createDeposit({
@@ -1696,6 +1698,7 @@ describe('Liquidity Resolvers', (): void => {
               data = incomingPayment.toData(amount)
             } else {
               liquidityAccount = paymentPointer
+              await accountingService.createLiquidityAccount(paymentPointer)
               data = paymentPointer.toData(amount)
             }
             await WebhookEvent.query(knex).insertAndFetch({

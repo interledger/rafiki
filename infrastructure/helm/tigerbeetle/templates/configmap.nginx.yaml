@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-nginx-proxy
+  namespace: {{ .Release.Namespace | quote }}
+  labels: 
+    {{- include "tigerbeetle.labels" . | nindent 4 }}
+data:
+  # property-like keys; each key maps to a simple value
+  nginx-prestart.sh: |
+    #!/bin/sh
+    set -ex; 
+    DNS_SERVER=$(cat /etc/resolv.conf |grep -i '^nameserver'|head -n1|cut -d ' ' -f2)
+    echo $DNS_SERVER
+    config=$(cat << EOF
+    events {}
+    stream {
+
+      {{- range ( untilStep 0 ( .Values.statefulset.replicas | int) 1 ) }}
+        server {
+            listen     {{ ( add 3000 . ) }};
+            resolver $DNS_SERVER;
+            set \$backend {{ $.Chart.Name }}-{{ . }}.{{ $.Chart.Name }}.{{ $.Release.Namespace }}.svc.cluster.local:4242;
+            proxy_pass \$backend;
+        }
+      {{- end }}
+    }
+    EOF
+    )
+    echo $config
+    echo $config > /etc/nginx/nginx.conf 

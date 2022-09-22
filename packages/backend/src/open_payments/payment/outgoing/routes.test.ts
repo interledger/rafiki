@@ -22,7 +22,9 @@ import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { listTests } from '../../../shared/routes.test'
+import { listTests, setup } from '../../../shared/routes.test'
+import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { GrantReference as GrantModel } from '../../grantReference/model'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -31,12 +33,14 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let paymentPointer: PaymentPointer
+  let grant: Grant
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
 
   const createPayment = async (options: {
     paymentPointerId: string
+    grant?: Grant
     description?: string
     externalRef?: string
   }): Promise<OutgoingPayment> => {
@@ -54,7 +58,6 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -65,6 +68,21 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointer = await createPaymentPointer(deps, { asset })
+    grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.OutgoingPayment,
+          actions: [AccessAction.Create, AccessAction.Read]
+        }
+      ]
+    })
+    await GrantModel.query().insert({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -76,77 +94,86 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        {
-          outgoingPaymentId: uuid()
+    describe.each`
+      withGrant | description
+      ${false}  | ${'without grant'}
+      ${true}   | ${'with grant'}
+    `('$description', ({ withGrant }): void => {
+      test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
+        const ctx = setup<ReadContext>({
+          reqOpts: {
+            headers: { Accept: 'application/json' }
+          },
+          params: {
+            outgoingPaymentId: uuid()
+          },
+          paymentPointer,
+          grant: withGrant ? grant : undefined
+        })
+        await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
+          'status',
+          404
+        )
+      })
+
+      test.each`
+        failed   | description
+        ${false} | ${''}
+        ${true}  | ${'failed '}
+      `(
+        'returns the $description outgoing payment on success',
+        async ({ failed }): Promise<void> => {
+          const outgoingPayment = await createPayment({
+            paymentPointerId: paymentPointer.id,
+            grant,
+            description: 'rent',
+            externalRef: '202201'
+          })
+          if (failed) {
+            await outgoingPayment
+              .$query(knex)
+              .patch({ state: OutgoingPaymentState.Failed })
+          }
+          const ctx = setup<ReadContext>({
+            reqOpts: {
+              headers: { Accept: 'application/json' },
+              method: 'GET',
+              url: `/outgoing-payments/${outgoingPayment.id}`
+            },
+            params: {
+              outgoingPaymentId: outgoingPayment.id
+            },
+            paymentPointer,
+            grant: withGrant ? grant : undefined
+          })
+          await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.body).toEqual({
+            id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
+            paymentPointer: paymentPointer.url,
+            receiver: outgoingPayment.receiver,
+            sendAmount: {
+              ...outgoingPayment.sendAmount,
+              value: outgoingPayment.sendAmount.value.toString()
+            },
+            sentAmount: {
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            receiveAmount: {
+              ...outgoingPayment.receiveAmount,
+              value: outgoingPayment.receiveAmount.value.toString()
+            },
+            description: outgoingPayment.description,
+            externalRef: outgoingPayment.externalRef,
+            failed,
+            createdAt: outgoingPayment.createdAt.toISOString(),
+            updatedAt: outgoingPayment.updatedAt.toISOString()
+          })
         }
-      )
-      ctx.paymentPointer = paymentPointer
-      await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        404
       )
     })
-
-    test.each`
-      failed   | description
-      ${false} | ${''}
-      ${true}  | ${'failed '}
-    `(
-      'returns the $description outgoing payment on success',
-      async ({ failed }): Promise<void> => {
-        const outgoingPayment = await createPayment({
-          paymentPointerId: paymentPointer.id,
-          description: 'rent',
-          externalRef: '202201'
-        })
-        if (failed) {
-          await outgoingPayment
-            .$query(knex)
-            .patch({ state: OutgoingPaymentState.Failed })
-        }
-        const ctx = createContext<ReadContext>(
-          {
-            headers: { Accept: 'application/json' },
-            method: 'GET',
-            url: `/outgoing-payments/${outgoingPayment.id}`
-          },
-          {
-            outgoingPaymentId: outgoingPayment.id
-          }
-        )
-        ctx.paymentPointer = paymentPointer
-        await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.body).toEqual({
-          id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
-          paymentPointer: paymentPointer.url,
-          receiver: outgoingPayment.receiver,
-          sendAmount: {
-            ...outgoingPayment.sendAmount,
-            value: outgoingPayment.sendAmount.value.toString()
-          },
-          sentAmount: {
-            value: '0',
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          receiveAmount: {
-            ...outgoingPayment.receiveAmount,
-            value: outgoingPayment.receiveAmount.value.toString()
-          },
-          description: outgoingPayment.description,
-          externalRef: outgoingPayment.externalRef,
-          failed,
-          createdAt: outgoingPayment.createdAt.toISOString(),
-          updatedAt: outgoingPayment.updatedAt.toISOString()
-        })
-      }
-    )
   })
 
   describe('create', (): void => {
@@ -154,6 +181,7 @@ describe('Outgoing Payment Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       options = {
+        grant,
         quoteId: `${paymentPointer.url}/quotes/${uuid()}`
       }
     })
@@ -183,11 +211,13 @@ describe('Outgoing Payment Routes', (): void => {
       async ({ description, externalRef }): Promise<void> => {
         const payment = await createPayment({
           paymentPointerId: paymentPointer.id,
+          grant,
           description,
           externalRef
         })
         options = {
           quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
+          grant,
           description,
           externalRef
         }
@@ -237,52 +267,60 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   describe('list', (): void => {
-    listTests({
-      getPaymentPointer: () => paymentPointer,
-      getUrl: () => `/outgoing-payments`,
-      createItem: async (index: number) => {
-        const payment = await createPayment({
-          paymentPointerId: paymentPointer.id,
-          description: `p${index}`
-        })
-        return {
-          id: `${paymentPointer.url}/outgoing-payments/${payment.id}`,
-          paymentPointer: paymentPointer.url,
-          receiver: payment.receiver,
-          sendAmount: {
-            ...payment.sendAmount,
-            value: payment.sendAmount.value.toString()
-          },
-          receiveAmount: {
-            ...payment.receiveAmount,
-            value: payment.receiveAmount.value.toString()
-          },
-          sentAmount: {
-            value: '0',
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          failed: false,
-          description: payment.description,
-          createdAt: payment.createdAt.toISOString(),
-          updatedAt: payment.updatedAt.toISOString()
-        }
-      },
-      list: (ctx: ListContext) => outgoingPaymentRoutes.list(ctx)
-    })
-
-    test('returns 500 for unexpected error', async (): Promise<void> => {
-      const outgoingPaymentService = await deps.use('outgoingPaymentService')
-      jest
-        .spyOn(outgoingPaymentService, 'getPaymentPointerPage')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = createContext<ListContext>({
-        headers: { Accept: 'application/json' }
+    describe.each`
+      withGrant | description
+      ${false}  | ${'without grant'}
+      ${true}   | ${'with grant'}
+    `('$description', ({ withGrant }): void => {
+      listTests({
+        getPaymentPointer: () => paymentPointer,
+        getGrant: () => (withGrant ? grant : undefined),
+        getUrl: () => `/outgoing-payments`,
+        createItem: async (index: number) => {
+          const payment = await createPayment({
+            paymentPointerId: paymentPointer.id,
+            grant,
+            description: `p${index}`
+          })
+          return {
+            id: `${paymentPointer.url}/outgoing-payments/${payment.id}`,
+            paymentPointer: paymentPointer.url,
+            receiver: payment.receiver,
+            sendAmount: {
+              ...payment.sendAmount,
+              value: payment.sendAmount.value.toString()
+            },
+            receiveAmount: {
+              ...payment.receiveAmount,
+              value: payment.receiveAmount.value.toString()
+            },
+            sentAmount: {
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            failed: false,
+            description: payment.description,
+            createdAt: payment.createdAt.toISOString(),
+            updatedAt: payment.updatedAt.toISOString()
+          }
+        },
+        list: (ctx: ListContext) => outgoingPaymentRoutes.list(ctx)
       })
-      ctx.paymentPointer = paymentPointer
-      await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: `Error trying to list outgoing payments`
+
+      test('returns 500 for unexpected error', async (): Promise<void> => {
+        const outgoingPaymentService = await deps.use('outgoingPaymentService')
+        jest
+          .spyOn(outgoingPaymentService, 'getPaymentPointerPage')
+          .mockRejectedValueOnce(new Error('unexpected'))
+        const ctx = createContext<ListContext>({
+          headers: { Accept: 'application/json' }
+        })
+        ctx.paymentPointer = paymentPointer
+        await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+          status: 500,
+          message: `Error trying to list outgoing payments`
+        })
       })
     })
   })

@@ -50,6 +50,7 @@ export const Config = {
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
   adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
   sessionLength: envInt('SESSION_LENGTH', 30), // in minutes
+  devAccessToken: envString('DEV_ACCESS_TOKEN', 'dev-access-token'),
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   streamSecret: process.env.STREAM_SECRET
@@ -102,7 +103,7 @@ export const Config = {
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/cd3a05a08d1c5d925942f153a1532a1432a2411b/open-api-spec.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/bc90cb63e99e56b85abe25f2018393c7b21f6648/open-api-spec.yaml'
   ),
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',

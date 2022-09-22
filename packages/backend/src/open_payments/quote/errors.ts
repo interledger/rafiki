@@ -1,7 +1,7 @@
 export enum QuoteError {
   UnknownPaymentPointer = 'UnknownPaymentPointer',
   InvalidAmount = 'InvalidAmount',
-  InvalidDestination = 'InvalidDestination'
+  InvalidReceiver = 'InvalidReceiver'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -13,7 +13,7 @@ export const errorToCode: {
 } = {
   [QuoteError.UnknownPaymentPointer]: 404,
   [QuoteError.InvalidAmount]: 400,
-  [QuoteError.InvalidDestination]: 400
+  [QuoteError.InvalidReceiver]: 400
 }
 
 export const errorToMessage: {
@@ -21,5 +21,5 @@ export const errorToMessage: {
 } = {
   [QuoteError.UnknownPaymentPointer]: 'unknown payment pointer',
   [QuoteError.InvalidAmount]: 'invalid amount',
-  [QuoteError.InvalidDestination]: 'invalid destination'
+  [QuoteError.InvalidReceiver]: 'invalid receiver'
 }

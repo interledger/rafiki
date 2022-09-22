@@ -10,7 +10,10 @@ exports.up = function (knex) {
     table.bigInteger('incomingAmountValue').nullable()
     table.string('state').notNullable()
     table.string('externalRef').nullable()
-    table.uuid('connectionId').notNullable()
+    table.uuid('connectionId').nullable()
+
+    table.string('grantId').nullable()
+    table.foreign('grantId').references('grantReferences.id')
 
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')

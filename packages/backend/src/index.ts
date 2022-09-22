@@ -24,6 +24,7 @@ import { createAssetService } from './asset/service'
 import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createAuthService } from './open_payments/auth/service'
+import { createOpenPaymentsClientService } from './open_payments/client/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createClientKeysRoutes } from './clientKeys/routes'
@@ -40,6 +41,7 @@ import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createClientKeysService } from './clientKeys/service'
 import { createClientService } from './clients/service'
+import { createGrantReferenceService } from './open_payments/grantReference/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -185,6 +187,15 @@ export function initIocContainer(
       logger: await deps.use('logger')
     })
   })
+  container.singleton('openPaymentsClientService', async (deps) => {
+    const config = await deps.use('config')
+    return await createOpenPaymentsClientService({
+      logger: await deps.use('logger'),
+      // TODO: https://github.com/interledger/rafiki/issues/583
+      accessToken: config.devAccessToken,
+      openApi: await deps.use('openApi')
+    })
+  })
   container.singleton('incomingPaymentService', async (deps) => {
     return await createIncomingPaymentService({
       logger: await deps.use('logger'),
@@ -213,14 +224,15 @@ export function initIocContainer(
     })
   })
   container.singleton('connectionService', async (deps) => {
+    const config = await deps.use('config')
     return await createConnectionService({
       logger: await deps.use('logger'),
+      openPaymentsUrl: config.openPaymentsUrl,
       streamServer: await deps.use('streamServer')
     })
   })
   container.singleton('connectionRoutes', async (deps) => {
     return createConnectionRoutes({
-      config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       connectionService: await deps.use('connectionService')
@@ -272,6 +284,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
+      clientService: await deps.use('openPaymentsClientService'),
       paymentPointerService: await deps.use('paymentPointerService'),
       ratesService: await deps.use('ratesService')
     })
@@ -283,15 +296,18 @@ export function initIocContainer(
       quoteService: await deps.use('quoteService')
     })
   })
+  container.singleton('grantReferenceService', async () => {
+    return createGrantReferenceService()
+  })
   container.singleton('outgoingPaymentService', async (deps) => {
-    const config = await deps.use('config')
     return await createOutgoingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
+      clientService: await deps.use('openPaymentsClientService'),
+      grantReferenceService: await deps.use('grantReferenceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      peerService: await deps.use('peerService'),
-      publicHost: config.publicHost
+      peerService: await deps.use('peerService')
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {

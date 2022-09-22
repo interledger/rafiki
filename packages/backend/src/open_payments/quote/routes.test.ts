@@ -9,7 +9,7 @@ import { createContext } from '../../tests/context'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
-import { AppServices, CreateContext, ReadContext, ListContext } from '../../app'
+import { AppServices, CreateContext, ReadContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteService } from './service'
 import { Quote } from './model'
@@ -19,7 +19,6 @@ import { PaymentPointer } from '../payment_pointer/model'
 import { randomAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
-import { listTests } from '../../shared/routes.test'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -55,7 +54,6 @@ describe('Quote Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -294,32 +292,6 @@ describe('Quote Routes', (): void => {
           expiresAt: quote.expiresAt.toISOString()
         })
       })
-    })
-  })
-
-  describe('list', (): void => {
-    listTests({
-      getPaymentPointer: () => paymentPointer,
-      getUrl: () => `/quotes`,
-      createItem: async (_index) => {
-        const quote = await createPaymentPointerQuote(paymentPointer.id)
-        return {
-          id: `${paymentPointer.url}/quotes/${quote.id}`,
-          paymentPointer: paymentPointer.url,
-          receiver: quote.receiver,
-          sendAmount: {
-            ...quote.sendAmount,
-            value: quote.sendAmount.value.toString()
-          },
-          receiveAmount: {
-            ...quote.receiveAmount,
-            value: quote.receiveAmount.value.toString()
-          },
-          expiresAt: quote.expiresAt.toISOString(),
-          createdAt: quote.createdAt.toISOString()
-        }
-      },
-      list: (ctx: ListContext) => quoteRoutes.list(ctx)
     })
   })
 })

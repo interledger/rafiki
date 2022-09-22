@@ -1,6 +1,7 @@
 import assert from 'assert'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
+import { v4 as uuid } from 'uuid'
 
 import { createAuthMiddleware } from './middleware'
 import { Grant, GrantJSON, AccessType, AccessAction } from './grant'
@@ -13,6 +14,8 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
+import { GrantReference } from '../grantReference/model'
+import { GrantReferenceService } from '../grantReference/service'
 
 type AppMiddleware = (
   ctx: AppContext,
@@ -32,6 +35,7 @@ describe('Auth Middleware', (): void => {
   let ctx: AppContext
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: ValidateFunction<IntrospectionBody>
+  let grantReferenceService: GrantReferenceService
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
   beforeAll(async (): Promise<void> => {
@@ -47,6 +51,7 @@ describe('Auth Middleware', (): void => {
       path: '/introspect',
       method: HttpMethod.POST
     })
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -108,7 +113,7 @@ describe('Auth Middleware', (): void => {
 
   const inactiveGrant = {
     active: false,
-    grant: 'PRY5NM33OM4TB8N6BW7'
+    grant: uuid()
   }
 
   test.each`
@@ -131,7 +136,8 @@ describe('Auth Middleware', (): void => {
   test('returns 403 for unauthorized request', async (): Promise<void> => {
     const scope = mockAuthServer({
       active: true,
-      grant: 'PRY5NM33OM4TB8N6BW7',
+      clientId: uuid(),
+      grant: uuid(),
       access: [
         {
           type: AccessType.OutgoingPayment,
@@ -146,6 +152,30 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
     scope.isDone()
   })
+  test('returns 500 for not matching clientId', async (): Promise<void> => {
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.params.paymentPointerId
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: uuid()
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 500
+    })
+    expect(next).not.toHaveBeenCalled()
+    scope.isDone()
+  })
 
   test.each`
     limitAccount
@@ -156,7 +186,8 @@ describe('Auth Middleware', (): void => {
     async ({ limitAccount }): Promise<void> => {
       const grant = new Grant({
         active: true,
-        grant: 'PRY5NM33OM4TB8N6BW7',
+        clientId: uuid(),
+        grant: uuid(),
         access: [
           {
             type: AccessType.IncomingPayment,
@@ -197,7 +228,45 @@ describe('Auth Middleware', (): void => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
+      await expect(
+        GrantReference.query().findById(grant.grant)
+      ).resolves.toEqual({
+        id: grant.grant,
+        clientId: grant.clientId
+      })
       scope.isDone()
     }
   )
+  test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
+    ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
+    const authService = await deps.use('authService')
+    const introspectSpy = jest.spyOn(authService, 'introspect')
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(introspectSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
+  })
+
+  test('sets the context and calls next if grant has been seen before', async (): Promise<void> => {
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.params.paymentPointerId
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(next).toHaveBeenCalled()
+    expect(ctx.grant).toEqual(grant)
+    scope.isDone()
+  })
 })

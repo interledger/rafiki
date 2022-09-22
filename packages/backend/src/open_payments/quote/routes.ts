@@ -1,15 +1,10 @@
 import { Logger } from 'pino'
-import { ReadContext, CreateContext, ListContext } from '../../app'
+import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
 import { QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
-import {
-  getPageInfo,
-  parsePaginationQueryParameters
-} from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -20,7 +15,6 @@ interface ServiceDependencies {
 export interface QuoteRoutes {
   get(ctx: ReadContext): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
-  list(ctx: ListContext): Promise<void>
 }
 
 export function createQuoteRoutes(deps_: ServiceDependencies): QuoteRoutes {
@@ -30,8 +24,7 @@ export function createQuoteRoutes(deps_: ServiceDependencies): QuoteRoutes {
   const deps = { ...deps_, logger }
   return {
     get: (ctx: ReadContext) => getQuote(deps, ctx),
-    create: (ctx: CreateContext<CreateBody>) => createQuote(deps, ctx),
-    list: (ctx: ListContext) => listQuotes(deps, ctx)
+    create: (ctx: CreateContext<CreateBody>) => createQuote(deps, ctx)
   }
 }
 
@@ -79,37 +72,6 @@ async function createQuote(
     }
     deps.logger.debug({ error: err.message })
     ctx.throw(500, 'Error trying to create quote')
-  }
-}
-
-async function listQuotes(
-  deps: ServiceDependencies,
-  ctx: ListContext
-): Promise<void> {
-  const pagination = parsePaginationQueryParameters(ctx.request.query)
-  try {
-    const page = await deps.quoteService.getPaymentPointerPage(
-      ctx.paymentPointer.id,
-      pagination
-    )
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
-        deps.quoteService.getPaymentPointerPage(
-          ctx.paymentPointer.id,
-          pagination
-        ),
-      page
-    )
-    const result = {
-      pagination: pageInfo,
-      result: page.map((item: Quote) => {
-        item.paymentPointer = ctx.paymentPointer
-        return quoteToBody(deps, item)
-      })
-    }
-    ctx.body = result
-  } catch (_) {
-    ctx.throw(500, 'Error trying to list quotes')
   }
 }
 

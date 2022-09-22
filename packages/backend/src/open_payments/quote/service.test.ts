@@ -31,6 +31,8 @@ import {
 } from '../payment/incoming/model'
 import { Pagination } from '../../shared/baseModel'
 import { getPageTests } from '../../shared/baseModel.test'
+import { GrantReference } from '../grantReference/model'
+import { GrantReferenceService } from '../grantReference/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -42,6 +44,8 @@ describe('QuoteService', (): void => {
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
+  let grantReferenceService: GrantReferenceService
+  let grantRef: GrantReference
   const SIGNATURE_SECRET = 'test secret'
 
   const asset: AssetOptions = {
@@ -82,6 +86,7 @@ describe('QuoteService', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     quoteUrl = new URL(Config.quoteUrl)
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -97,6 +102,10 @@ describe('QuoteService', (): void => {
     receivingPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
+    })
+    grantRef = await grantReferenceService.create({
+      id: uuid(),
+      clientId: appContainer.clientId
     })
     const accountingService = await deps.use('accountingService')
     await expect(
@@ -227,11 +236,12 @@ describe('QuoteService', (): void => {
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointer.id,
+            grantId: grantRef.id,
             incomingAmount
           })
           options = {
             paymentPointerId,
-            receiver: `${receivingPaymentPointer.url}/incoming-payments/${incomingPayment.id}`,
+            receiver: incomingPayment.url,
             sendAmount,
             receiveAmount
           }
@@ -246,7 +256,7 @@ describe('QuoteService', (): void => {
             await expect(quoteService.create(options)).resolves.toEqual(
               toPaymentPointer
                 ? QuoteError.InvalidAmount
-                : QuoteError.InvalidDestination
+                : QuoteError.InvalidReceiver
             )
           })
         } else {
@@ -475,12 +485,12 @@ describe('QuoteService', (): void => {
 
           if (!toPaymentPointer) {
             test.each`
-              state                             | error
-              ${IncomingPaymentState.Completed} | ${Pay.PaymentError.IncomingPaymentCompleted}
-              ${IncomingPaymentState.Expired}   | ${Pay.PaymentError.IncomingPaymentExpired}
+              state
+              ${IncomingPaymentState.Completed}
+              ${IncomingPaymentState.Expired}
             `(
-              'throws on $state receiver',
-              async ({ state, error }): Promise<void> => {
+              `returns ${QuoteError.InvalidReceiver} on $state receiver`,
+              async ({ state }): Promise<void> => {
                 await incomingPayment.$query(knex).patch({
                   state,
                   expiresAt:
@@ -488,8 +498,8 @@ describe('QuoteService', (): void => {
                       ? new Date()
                       : undefined
                 })
-                await expect(quoteService.create(options)).rejects.toEqual(
-                  error
+                await expect(quoteService.create(options)).resolves.toEqual(
+                  QuoteError.InvalidReceiver
                 )
               }
             )
@@ -519,7 +529,7 @@ describe('QuoteService', (): void => {
           }/incoming-payments/${uuid()}`,
           sendAmount
         })
-      ).resolves.toEqual(QuoteError.InvalidDestination)
+      ).resolves.toEqual(QuoteError.InvalidReceiver)
     })
 
     test.each`
@@ -537,13 +547,12 @@ describe('QuoteService', (): void => {
         await expect(
           quoteService.create({
             paymentPointerId,
-            receiver: `${receivingPaymentPointer.url}/incoming-payments/${
-              (
-                await createIncomingPayment(deps, {
-                  paymentPointerId: receivingPaymentPointer.id
-                })
-              ).id
-            }`,
+            receiver: (
+              await createIncomingPayment(deps, {
+                paymentPointerId: receivingPaymentPointer.id,
+                grantId: grantRef.id
+              })
+            ).url,
             sendAmount,
             receiveAmount
           })
@@ -559,13 +568,12 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: `${receivingPaymentPointer.url}/incoming-payments/${
-            (
-              await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointer.id
-              })
-            ).id
-          }`,
+          receiver: (
+            await createIncomingPayment(deps, {
+              paymentPointerId: receivingPaymentPointer.id,
+              grantId: grantRef.id
+            })
+          ).url,
           sendAmount
         })
       ).rejects.toThrow('missing prices')

@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
-import * as Pay from '@interledger/pay'
 
 import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
@@ -11,13 +10,14 @@ import {
 } from './errors'
 import {
   OutgoingPayment,
-  Grant as GrantModel,
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
+import { OpenPaymentsClientService } from '../../client/service'
+import { isReceiver } from '../../shared/receiver'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -27,9 +27,10 @@ import {
 } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
+import { GrantReferenceService } from '../../grantReference/service'
 
 export interface OutgoingPaymentService {
-  get(id: string): Promise<OutgoingPayment | undefined>
+  get(id: string, clientId?: string): Promise<OutgoingPayment | undefined>
   create(
     options: CreateOutgoingPaymentOptions
   ): Promise<OutgoingPayment | OutgoingPaymentError>
@@ -39,16 +40,18 @@ export interface OutgoingPaymentService {
   processNext(): Promise<string | undefined>
   getPaymentPointerPage(
     paymentPointerId: string,
-    pagination?: Pagination
+    pagination?: Pagination,
+    clientId?: string
   ): Promise<OutgoingPayment[]>
 }
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
+  clientService: OpenPaymentsClientService
   peerService: PeerService
+  grantReferenceService: GrantReferenceService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
-  publicHost: string
 }
 
 export async function createOutgoingPaymentService(
@@ -59,23 +62,32 @@ export async function createOutgoingPaymentService(
     logger: deps_.logger.child({ service: 'OutgoingPaymentService' })
   }
   return {
-    get: (id) => getOutgoingPayment(deps, id),
+    get: (id, clientId) => getOutgoingPayment(deps, id, clientId),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getPaymentPointerPage: (paymentPointerId, pagination) =>
-      getPaymentPointerPage(deps, paymentPointerId, pagination)
+    getPaymentPointerPage: (paymentPointerId, pagination, clientId) =>
+      getPaymentPointerPage(deps, paymentPointerId, pagination, clientId)
   }
 }
 
 async function getOutgoingPayment(
   deps: ServiceDependencies,
-  id: string
+  id: string,
+  clientId?: string
 ): Promise<OutgoingPayment | undefined> {
-  const outgoingPayment = await OutgoingPayment.query(deps.knex)
-    .findById(id)
-    .withGraphJoined('quote.asset')
+  let outgoingPayment: OutgoingPayment
+  if (!clientId) {
+    outgoingPayment = await OutgoingPayment.query(deps.knex)
+      .findById(id)
+      .withGraphJoined('quote.asset')
+  } else {
+    outgoingPayment = await OutgoingPayment.query(deps.knex)
+      .findById(id)
+      .withGraphJoined('[quote.asset, grantRef]')
+      .where('grantRef.clientId', clientId)
+  }
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
 }
@@ -83,9 +95,9 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   paymentPointerId: string
   quoteId: string
+  grant?: Grant
   description?: string
   externalRef?: string
-  grant?: Grant
   callback?: (f: unknown) => NodeJS.Timeout
 }
 
@@ -93,19 +105,9 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
+  const grantId = options.grant ? options.grant.grant : undefined
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      if (options.grant) {
-        await GrantModel.query(trx)
-          .insert({
-            id: options.grant.grant
-          })
-          .onConflict('id')
-          .ignore()
-          .forUpdate()
-          .timeout(5000)
-        if (options.callback) await new Promise(options.callback)
-      }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
@@ -113,7 +115,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
-          grantId: options.grant?.grant
+          grantId
         })
         .withGraphFetched('[quote.asset]')
 
@@ -132,38 +134,24 @@ async function createOutgoingPayment(
               knex: trx
             },
             payment,
-            options.grant
+            options.grant,
+            options.callback
           ))
         ) {
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
-      const plugin = deps.makeIlpPlugin({
-        sourceAccount: {
-          id: payment.paymentPointerId,
-          asset: {
-            id: payment.assetId,
-            ledger: payment.asset.ledger
-          }
-        },
-        unfulfillable: true
-      })
-      try {
-        await plugin.connect()
-        const destination = await Pay.setupPayment({
-          plugin,
-          destinationPayment: payment.receiver
-        })
-        const peer = await deps.peerService.getByDestinationAddress(
-          destination.destinationAddress
-        )
-        if (peer) {
-          await payment.$query(trx).patch({ peerId: peer.id })
-        }
-      } finally {
-        plugin.disconnect().catch((err: Error) => {
-          deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
-        })
+      const incomingPayment = await deps.clientService.incomingPayment.get(
+        payment.receiver
+      )
+      if (!isReceiver(incomingPayment)) {
+        throw OutgoingPaymentError.InvalidQuote
+      }
+      const peer = await deps.peerService.getByDestinationAddress(
+        incomingPayment.ilpStreamConnection.ilpAddress
+      )
+      if (peer) {
+        await payment.$query(trx).patch({ peerId: peer.id })
       }
 
       await sendWebhookEvent(
@@ -188,7 +176,7 @@ async function createOutgoingPayment(
     } else if (isOutgoingPaymentError(err)) {
       return err
     } else if (err instanceof knex.KnexTimeoutError) {
-      deps.logger.error({ grant: options.grant.grant }, 'grant locked')
+      deps.logger.error({ grant: grantId }, 'grant locked')
     }
     throw err
   }
@@ -251,7 +239,8 @@ interface PaymentLimits extends AccessLimits {
 async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  grant: Grant
+  grant: Grant,
+  callback?: (f: unknown) => NodeJS.Timeout
 ): Promise<boolean> {
   const grantAccess = grant.access[0]
   if (!grantAccess.limits) {
@@ -271,6 +260,11 @@ async function validateGrant(
     // Payment amount single-handedly exceeds amount limit
     return false
   }
+
+  //lock grant
+  await deps.grantReferenceService.lock(grant.grant, deps.knex)
+
+  if (callback) await new Promise(callback)
 
   const grantPayments = await OutgoingPayment.query(deps.knex)
     .where({
@@ -380,14 +374,24 @@ async function fundPayment(
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
   paymentPointerId: string,
-  pagination?: Pagination
+  pagination?: Pagination,
+  clientId?: string
 ): Promise<OutgoingPayment[]> {
-  const page = await OutgoingPayment.query(deps.knex)
-    .getPage(pagination)
-    .where({
-      paymentPointerId
-    })
-    .withGraphFetched('quote.asset')
+  let page: OutgoingPayment[]
+  if (!clientId) {
+    page = await OutgoingPayment.query(deps.knex)
+      .getPage(pagination)
+      .where({
+        paymentPointerId
+      })
+      .withGraphFetched('quote.asset')
+  } else {
+    page = await OutgoingPayment.query(deps.knex)
+      .getPage(pagination)
+      .where('outgoingPayments.paymentPointerId', paymentPointerId)
+      .andWhere('grantRef.clientId', clientId)
+      .withGraphJoined('[quote.asset, grantRef]')
+  }
 
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
