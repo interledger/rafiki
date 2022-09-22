@@ -86,16 +86,7 @@ class OpenAPIImpl implements OpenAPI {
       // OpenAPIRequestValidator hasn't been updated with OpenAPIV3_1 types
       requestBody: operation.requestBody as OpenAPIV3.RequestBodyObject,
       errorTransformer,
-      customFormats: {
-        uint64: function (input) {
-          try {
-            const value = BigInt(input)
-            return value >= BigInt(0)
-          } catch (e) {
-            return false
-          }
-        }
-      }
+      customFormats
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,7 +113,8 @@ class OpenAPIImpl implements OpenAPI {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: OpenAPIResponseValidator supports v3 responses but its types aren't updated
       responses,
-      errorTransformer
+      errorTransformer,
+      customFormats
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -152,5 +144,16 @@ const errorTransformer = (
       : ''
   return {
     message: message + additionalProperty
+  }
+}
+
+const customFormats = {
+  uint64: function (input) {
+    try {
+      const value = BigInt(input)
+      return value >= BigInt(0)
+    } catch (e) {
+      return false
+    }
   }
 }

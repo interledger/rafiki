@@ -28,7 +28,7 @@ accounts:
     scale: 2
     url: http://backend/accounts/wbdc
 fees:
-  - fixed: 1
+  - fixed: 100
     percentage: 0.02
     asset: USD
     scale: 2

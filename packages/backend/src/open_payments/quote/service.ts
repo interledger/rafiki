@@ -8,7 +8,7 @@ import { Pagination } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
-import { Amount } from '../amount'
+import { Amount, parseAmount } from '../amount'
 import { OpenPaymentsClientService, Receiver } from '../client/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
@@ -293,25 +293,27 @@ export async function finalizeQuote(
   if (!res.data.sendAmount?.value || !res.data.receiveAmount?.value) {
     throw QuoteError.InvalidAmount
   }
-  const sendAmount: Amount = {
-    ...res.data.sendAmount,
-    value: BigInt(res.data.sendAmount.value)
-  }
-  const receiveAmount: Amount = {
-    ...res.data.receiveAmount,
-    value: BigInt(res.data.receiveAmount.value)
+  let sendAmount: Amount
+  let receiveAmount: Amount
+  try {
+    sendAmount = parseAmount(res.data.sendAmount)
+    receiveAmount = parseAmount(res.data.receiveAmount)
+  } catch (_) {
+    throw QuoteError.InvalidAmount
   }
   if (maxReceiveAmountValue) {
     if (
       sendAmount.value !== quote.sendAmount.value ||
-      receiveAmount.value > maxReceiveAmountValue
+      receiveAmount.value > maxReceiveAmountValue ||
+      receiveAmount.value <= BigInt(0)
     ) {
       throw QuoteError.InvalidAmount
     }
   } else {
     if (
       receiveAmount.value !== quote.receiveAmount.value ||
-      sendAmount.value < quote.sendAmount.value
+      sendAmount.value < quote.sendAmount.value ||
+      sendAmount.value <= BigInt(0)
     ) {
       throw QuoteError.InvalidAmount
     }

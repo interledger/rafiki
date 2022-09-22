@@ -136,12 +136,13 @@ describe('Auth Middleware', (): void => {
   test('returns 403 for unauthorized request', async (): Promise<void> => {
     const scope = mockAuthServer({
       active: true,
-      clientId: uuid(),
+      client_id: uuid(),
       grant: uuid(),
       access: [
         {
           type: AccessType.OutgoingPayment,
-          actions: [AccessAction.Create]
+          actions: [AccessAction.Create],
+          identifier: ctx.paymentPointer.url
         }
       ]
     })
@@ -161,7 +162,7 @@ describe('Auth Middleware', (): void => {
         {
           type: AccessType.IncomingPayment,
           actions: [AccessAction.Read],
-          identifier: ctx.params.paymentPointerId
+          identifier: ctx.paymentPointer.url
         }
       ]
     })
@@ -192,12 +193,12 @@ describe('Auth Middleware', (): void => {
           {
             type: AccessType.IncomingPayment,
             actions: [AccessAction.Read],
-            identifier: limitAccount ? ctx.params.paymentPointerId : undefined
+            identifier: limitAccount ? ctx.paymentPointer.url : undefined
           },
           {
             type: AccessType.OutgoingPayment,
             actions: [AccessAction.Create, AccessAction.Read],
-            identifier: 'alice',
+            identifier: ctx.paymentPointer.url,
             interval: 'R/2022-03-01T13:00:00Z/P1M',
             limits: {
               receiveAmount: {
@@ -210,30 +211,24 @@ describe('Auth Middleware', (): void => {
                 assetCode: 'USD',
                 assetScale: 2
               },
-              receiver: 'https://wallet2.example/bob'
-            }
-          },
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create],
-            identifier: 'alice',
-            limits: {
               receiver:
-                'https://wallet2.example/bob/incoming-payments/fi7td6dito8yf6t'
+                'https://wallet2.example/bob/incoming-payments/aa9da466-12ba-4760-9aa0-8c06061f333b'
             }
           }
         ]
       })
       const scope = mockAuthServer(grant.toJSON())
+      const next = jest.fn().mockImplementation(async () => {
+        await expect(
+          GrantReference.query().findById(grant.grant)
+        ).resolves.toEqual({
+          id: grant.grant,
+          clientId: grant.clientId
+        })
+      })
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
-      await expect(
-        GrantReference.query().findById(grant.grant)
-      ).resolves.toEqual({
-        id: grant.grant,
-        clientId: grant.clientId
-      })
       scope.isDone()
     }
   )
@@ -255,7 +250,7 @@ describe('Auth Middleware', (): void => {
         {
           type: AccessType.IncomingPayment,
           actions: [AccessAction.Read],
-          identifier: ctx.params.paymentPointerId
+          identifier: ctx.paymentPointer.url
         }
       ]
     })

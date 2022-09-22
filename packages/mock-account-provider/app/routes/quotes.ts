@@ -4,7 +4,7 @@ import { json } from '@remix-run/node'
 import { CONFIG } from '~/lib/parse_config'
 
 export type Amount = {
-  value: number // bigint
+  value: string // bigint
   assetCode: string
   assetScale: number
 }
@@ -19,8 +19,8 @@ export type Quote = {
   paymentType: PaymentType
   paymentPointerId: string
   receiver: string
-  sendAmount?: Amount
-  receiveAmount?: Amount
+  sendAmount: Amount
+  receiveAmount: Amount
   maxPacketAmount: number // bigint
   minExchangeRate: number
   lowEstimatedExchangeRate: number
@@ -33,28 +33,38 @@ export async function action({ request }: ActionArgs) {
   const receivedQuote: Quote = await request.json()
 
   const feeStructure = CONFIG.fees[0]
-  if (
-    receivedQuote.paymentType == PaymentType.FixedDelivery &&
-    receivedQuote.sendAmount
-  ) {
+  if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
+    // TODO: handle quote fee calculation for different assets/scales
+    if (
+      receivedQuote.sendAmount.assetCode !== feeStructure.asset ||
+      receivedQuote.sendAmount.assetScale !== feeStructure.scale
+    ) {
+      throw json('Invalid quote sendAmount asset', { status: 400 })
+    }
+    const sendAmountValue = BigInt(receivedQuote.sendAmount.value)
     const fees =
-      BigInt(receivedQuote.sendAmount.value * feeStructure.percentage) +
-      BigInt(feeStructure.fixed * 10 ** feeStructure.scale)
+      // TODO: bigint/float multiplication
+      BigInt(Math.floor(Number(sendAmountValue) * feeStructure.percentage)) +
+      BigInt(feeStructure.fixed)
 
-    receivedQuote.sendAmount.value = Number(
-      BigInt(receivedQuote.sendAmount.value) + fees
-    )
-  } else if (
-    receivedQuote.paymentType === PaymentType.FixedSend &&
-    receivedQuote.receiveAmount
-  ) {
+    receivedQuote.sendAmount.value = (sendAmountValue + fees).toString()
+  } else if (receivedQuote.paymentType === PaymentType.FixedSend) {
+    if (
+      receivedQuote.receiveAmount.assetCode !== feeStructure.asset ||
+      receivedQuote.receiveAmount.assetScale !== feeStructure.scale
+    ) {
+      throw json('Invalid quote receiveAmount asset', { status: 400 })
+    }
+    const receiveAmountValue = BigInt(receivedQuote.receiveAmount.value)
     const fees =
-      BigInt(receivedQuote.receiveAmount.value * feeStructure.percentage) +
-      BigInt(feeStructure.fixed * 10 ** feeStructure.scale)
+      BigInt(Math.floor(Number(receiveAmountValue) * feeStructure.percentage)) +
+      BigInt(feeStructure.fixed)
 
-    receivedQuote.receiveAmount.value = Number(
-      BigInt(receivedQuote.receiveAmount.value) - fees
-    )
+    if (receiveAmountValue <= fees) {
+      throw json('Fees exceed quote receiveAmount', { status: 400 })
+    }
+
+    receivedQuote.receiveAmount.value = (receiveAmountValue - fees).toString()
   } else throw json('Invalid paymentType', { status: 400 })
 
   return json(receivedQuote, { status: 201 })

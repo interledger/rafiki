@@ -1,6 +1,6 @@
 self:
   graphqlUrl: http://peer-backend:3001/graphql
-  hostname: 'backend'
+  hostname: 'peer-backend'
   mapHostname: 'primary-map'
   openPaymentPublishedPort: 4000
 peers:
@@ -25,7 +25,7 @@ accounts:
     path: accounts/planex
     postmanEnvVar: planexPaymentPointer
 fees:
-  - fixed: 1
+  - fixed: 100
     percentage: 0.02
     asset: USD
     scale: 2
