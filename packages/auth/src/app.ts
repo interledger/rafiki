@@ -12,7 +12,9 @@ import Router from '@koa/router'
 import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
+import { ResourceSetService } from './resourceSet/service'
 import { AccessTokenRoutes } from './accessToken/routes'
+import { ResourceSetRoutes } from './resourceSet/routes'
 import { createValidatorMiddleware, HttpMethod } from 'openapi'
 
 export interface AppContextData extends DefaultContext {
@@ -54,6 +56,8 @@ export interface AppServices {
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
   accessTokenRoutes: Promise<AccessTokenRoutes>
+  resourceSetService: Promise<ResourceSetService>
+  resourceSetRoutes: Promise<ResourceSetRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -180,6 +184,7 @@ export class App {
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
     const signatureService = await this.container.use('signatureService')
+    const resourceSetRoutes = await this.container.use('resourceSetRoutes')
 
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
@@ -293,6 +298,13 @@ export class App {
       }),
       grantRoutes.interaction.reject
     )
+
+    /* Back Channel Resource Set Routes */
+
+    // Resource Set register
+    // TODO: validator middleware for route
+    // TODO: httpsig validation
+    this.publicRouter.post('/resource', resourceSetRoutes.create)
 
     this.koa.use(this.publicRouter.middleware())
   }

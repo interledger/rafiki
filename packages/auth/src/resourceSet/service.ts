@@ -21,9 +21,19 @@ export interface ResourceSetService {
   create(req: ResourceSetRequest): Promise<ResourceSet>
 }
 
-export async function createResourceSetService(
-  deps: ServiceDependencies
-): Promise<ResourceSetService> {
+export async function createResourceSetService({
+  logger,
+  accessService
+}: ServiceDependencies): Promise<ResourceSetService> {
+  const log = logger.child({
+    service: 'ResourceSetService'
+  })
+
+  const deps = {
+    logger: log,
+    accessService
+  }
+
   return {
     create: (req: ResourceSetRequest) => create(deps, req)
   }

@@ -15,6 +15,7 @@ import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
 import { createSignatureService } from './signature/service'
 import { createResourceSetService } from './resourceSet/service'
+import { createResourceSetRoutes } from './resourceSet/routes'
 
 export { JWKWithRequired } from './client/service'
 const container = initIocContainer(Config)
@@ -151,6 +152,16 @@ export function initIocContainer(
       return createResourceSetService({
         logger: await deps.use('logger'),
         accessService: await deps.use('accessService')
+      })
+    }
+  )
+
+  container.singleton(
+    'resourceSetRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return createResourceSetRoutes({
+        logger: await deps.use('logger'),
+        resourceSetService: await deps.use('resourceSetService')
       })
     }
   )
