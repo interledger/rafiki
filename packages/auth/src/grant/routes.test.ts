@@ -12,11 +12,10 @@ import { Config, IAppConfig } from '../config/app'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { GrantRoutes, validateGrantRequest } from './routes'
+import { GrantRoutes } from './routes'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
-import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
@@ -51,21 +50,6 @@ const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
   actions: [Action.Create, Action.Read, Action.List],
   identifier: `https://example.com/${v4()}`
-}
-
-const OUTGOING_PAYMENT_LIMIT = {
-  sendAmount: {
-    value: '1000000000',
-    assetCode: 'usd',
-    assetScale: 9
-  },
-  receiveAmount: {
-    value: '2000000000',
-    assetCode: 'usd',
-    assetScale: 9
-  },
-  expiresAt: new Date().toISOString(),
-  receiver: 'https://wallet.com/alice'
 }
 
 const BASE_GRANT_REQUEST = {
@@ -140,79 +124,6 @@ describe('Grant Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Grant request validation', (): void => {
-    const expDate = new Date()
-    expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-    const nbfDate = new Date()
-    nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
-    test('Valid incoming payment grant', async (): Promise<void> => {
-      const incomingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(incomingPaymentGrantRequest)).toBe(true)
-    })
-
-    test('Valid outgoing payment grant', async (): Promise<void> => {
-      const outgoingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(outgoingPaymentGrantRequest)).toBe(true)
-    })
-
-    test('Valid account grant', async (): Promise<void> => {
-      const accountGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(accountGrantRequest)).toBe(true)
-    })
-
-    test('Valid quote grant', async (): Promise<void> => {
-      const quoteGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote
-            }
-          ]
-        }
-      }
-
-      expect(validateGrantRequest(quoteGrantRequest)).toBe(true)
-    })
-  })
-
   describe('/create', (): void => {
     const url = '/'
     const method = 'POST'
@@ -255,55 +166,6 @@ describe('Grant Routes', (): void => {
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(406)
       expect(ctx.body).toEqual({ error: 'invalid_request' })
-    })
-
-    test('Cannot initiate grant with invalid grant request', async (): Promise<void> => {
-      const expDate = new Date()
-      expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-      const nbfDate = new Date()
-      nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              type: 'unknown-type',
-              actions: [Action.Create, Action.Read, Action.List]
-            }
-          ]
-        }
-      }
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-      expect(ctx.body).toEqual({
-        error: 'invalid_request'
-      })
-
-      scope.isDone()
     })
 
     test('Can initiate a grant request', async (): Promise<void> => {

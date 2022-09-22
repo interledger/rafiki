@@ -1,14 +1,13 @@
 import * as crypto from 'crypto'
 import { URL } from 'url'
 import { AppContext } from '../app'
-import { GrantService, GrantRequest } from './service'
+import { GrantService } from './service'
 import { Grant, GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import {
   IncomingPaymentRequest,
-  isAccessRequest,
   isIncomingPaymentAccessRequest
 } from '../access/types'
 import { IAppConfig } from '../config/app'
@@ -71,20 +70,6 @@ export function createGrantRoutes({
   }
 }
 
-// exported for testing
-export function validateGrantRequest(
-  grantRequest: GrantRequest
-): grantRequest is GrantRequest {
-  if (typeof grantRequest.access_token !== 'object') return false
-  const { access_token } = grantRequest
-  if (typeof access_token.access !== 'object') return false
-  for (const access of access_token.access) {
-    if (!isAccessRequest(access)) return false
-  }
-
-  return grantRequest.interact?.start !== undefined
-}
-
 async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: AppContext
@@ -102,11 +87,6 @@ async function createGrantInitiation(
 
   const { body } = ctx.request
   const { grantService, config } = deps
-  if (!validateGrantRequest(body)) {
-    ctx.status = 400
-    ctx.body = { error: 'invalid_request' }
-    return
-  }
 
   if (
     !deps.config.incomingPaymentInteraction &&
