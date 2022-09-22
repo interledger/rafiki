@@ -23,13 +23,13 @@ export class Receiver extends ConnectionBase {
     if (incomingPayment.completed) {
       return undefined
     }
+    if (typeof incomingPayment.ilpStreamConnection !== 'object') {
+      return undefined
+    }
     if (
       incomingPayment.expiresAt &&
       new Date(incomingPayment.expiresAt).getTime() <= Date.now()
     ) {
-      return undefined
-    }
-    if (typeof incomingPayment.ilpStreamConnection !== 'object') {
       return undefined
     }
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
