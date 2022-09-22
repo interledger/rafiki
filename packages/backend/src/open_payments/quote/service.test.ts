@@ -24,7 +24,7 @@ import {
 } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
-import { Amount } from '../amount'
+import { Amount, AmountJSON, serializeAmount } from '../amount'
 import {
   IncomingPayment,
   IncomingPaymentState
@@ -148,8 +148,8 @@ describe('QuoteService', (): void => {
       status = 201
     }: {
       expected: ExpectedQuote
-      sendAmount?: Amount
-      receiveAmount?: Amount
+      sendAmount?: AmountJSON
+      receiveAmount?: AmountJSON
       status?: number
     }): nock.Scope {
       return nock(quoteUrl.origin)
@@ -196,16 +196,10 @@ describe('QuoteService', (): void => {
           status,
           function (_path: string, requestBody: Record<string, unknown>) {
             if (sendAmount) {
-              requestBody.sendAmount = {
-                ...sendAmount,
-                value: sendAmount.value.toString()
-              }
+              requestBody.sendAmount = sendAmount
             }
             if (receiveAmount) {
-              requestBody.receiveAmount = {
-                ...receiveAmount,
-                value: receiveAmount.value.toString()
-              }
+              requestBody.receiveAmount = receiveAmount
             }
             return requestBody
           }
@@ -378,7 +372,7 @@ describe('QuoteService', (): void => {
               }
               const walletScope = mockWalletQuote({
                 expected,
-                receiveAmount
+                receiveAmount: serializeAmount(receiveAmount)
               })
               const quote = await quoteService.create(options)
               assert.ok(!isQuoteError(quote))
@@ -404,20 +398,25 @@ describe('QuoteService', (): void => {
               await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
             })
 
-            it('fails if wallet increases receiveAmount', async (): Promise<void> => {
-              const walletScope = mockWalletQuote({
-                expected,
-                receiveAmount: {
-                  value: BigInt(100),
-                  assetCode: destinationAsset.code,
-                  assetScale: destinationAsset.scale
-                }
-              })
-              await expect(quoteService.create(options)).resolves.toEqual(
-                QuoteError.InvalidAmount
-              )
-              walletScope.isDone()
-            })
+            it.each`
+              receiveAmount                                                                                 | message
+              ${{ value: '100', assetCode: destinationAsset.code, assetScale: destinationAsset.scale }}     | ${'increases receiveAmount'}
+              ${{ value: '0', assetCode: destinationAsset.code, assetScale: destinationAsset.scale }}       | ${'returns receiveAmount.value of 0'}
+              ${{ value: '-1', assetCode: destinationAsset.code, assetScale: destinationAsset.scale }}      | ${'returns negative receiveAmount.value'}
+              ${{ value: 'invalid', assetCode: destinationAsset.code, assetScale: destinationAsset.scale }} | ${'returns invalid receiveAmount.value'}
+            `(
+              `fails if account provider $message`,
+              async ({ receiveAmount }): Promise<void> => {
+                const walletScope = mockWalletQuote({
+                  expected,
+                  receiveAmount
+                })
+                await expect(quoteService.create(options)).resolves.toEqual(
+                  QuoteError.InvalidAmount
+                )
+                walletScope.isDone()
+              }
+            )
           } else if (receiveAmount || incomingAmount) {
             it('uses wallet adjusted sendAmount', async () => {
               const sendAmount = {
@@ -428,7 +427,7 @@ describe('QuoteService', (): void => {
               }
               const walletScope = mockWalletQuote({
                 expected,
-                sendAmount
+                sendAmount: serializeAmount(sendAmount)
               })
               const quote = await quoteService.create(options)
               assert.ok(!isQuoteError(quote))
@@ -456,20 +455,25 @@ describe('QuoteService', (): void => {
               await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
             })
 
-            it('fails if wallet decreases sendAmount', async (): Promise<void> => {
-              const walletScope = mockWalletQuote({
-                expected,
-                sendAmount: {
-                  value: BigInt(100),
-                  assetCode: destinationAsset.code,
-                  assetScale: destinationAsset.scale
-                }
-              })
-              await expect(quoteService.create(options)).resolves.toEqual(
-                QuoteError.InvalidAmount
-              )
-              walletScope.isDone()
-            })
+            it.each`
+              sendAmount                                                              | message
+              ${{ value: '100', assetCode: asset.code, assetScale: asset.scale }}     | ${'decreases sendAmount'}
+              ${{ value: '0', assetCode: asset.code, assetScale: asset.scale }}       | ${'returns sendAmount.value of 0'}
+              ${{ value: '-1', assetCode: asset.code, assetScale: asset.scale }}      | ${'returns negative sendAmount.value'}
+              ${{ value: 'invalid', assetCode: asset.code, assetScale: asset.scale }} | ${'returns invalid sendAmount.value'}
+            `(
+              `fails if account provider $message`,
+              async ({ sendAmount }): Promise<void> => {
+                const walletScope = mockWalletQuote({
+                  expected,
+                  sendAmount
+                })
+                await expect(quoteService.create(options)).resolves.toEqual(
+                  QuoteError.InvalidAmount
+                )
+                walletScope.isDone()
+              }
+            )
           }
 
           it('fails if wallet does not respond 201', async (): Promise<void> => {

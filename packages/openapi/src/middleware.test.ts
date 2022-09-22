@@ -185,28 +185,42 @@ describe('OpenAPI Validator', (): void => {
       expect(next).toHaveBeenCalled()
     })
 
+    const body = {
+      id: `https://${accountId}/incoming-payments/${uuid()}`,
+      accountId: `https://${accountId}`,
+      receivedAmount: {
+        value: '0',
+        assetCode: 'USD',
+        assetScale: 2
+      },
+      createdAt: '2022-03-12T23:20:50.52Z',
+      updatedAt: '2022-04-01T10:24:36.11Z'
+    }
     test.each`
-      status | body                    | message                                                           | description
-      ${202} | ${{}}                   | ${'An unknown status code was used and no default was provided.'} | ${'status code'}
-      ${200} | ${{ invalid: 'field' }} | ${'response must NOT have additional properties: invalid'}        | ${'body'}
+      status | body                                                                    | message                                                           | description
+      ${202} | ${{}}                                                                   | ${'An unknown status code was used and no default was provided.'} | ${'status code'}
+      ${201} | ${{ ...body, invalid: 'field' }}                                        | ${'response must NOT have additional properties: invalid'}        | ${'body'}
+      ${201} | ${{ ...body, receivedAmount: { ...body.receivedAmount, value: '-1' } }} | ${'response.receivedAmount.value must match format "uint64"'}     | ${'body'}
     `(
       'returns 500 on invalid response $description',
       async ({ status, body, message }): Promise<void> => {
         const ctx = createContext(
           {
             headers: {
-              Accept: 'application/json'
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
             }
           },
           {
             accountId
           }
         )
+        ctx.request.body = {}
         const next = jest.fn().mockImplementation(() => {
           ctx.status = status
           ctx.response.body = body
         })
-        await expect(validateListMiddleware(ctx, next)).rejects.toMatchObject({
+        await expect(validatePostMiddleware(ctx, next)).rejects.toMatchObject({
           status: 500,
           message
         })
