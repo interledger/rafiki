@@ -274,8 +274,8 @@ export default function ConsentScreen() {
     previousStepResponse: null,
     previousStepFailed: false,
     endFlow: false,
-    interactId: 'idpmock0001',
-    nonce: 'idpmock0001',
+    interactId: 'example-interact-id',
+    nonce: 'example-interact-nonce',
     acceptanceDecision: true
   })
 
