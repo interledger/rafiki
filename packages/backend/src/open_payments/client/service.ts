@@ -156,6 +156,9 @@ async function getResource({
   }
   if (accessToken) {
     headers['Authorization'] = `GNAP ${accessToken}`
+    // TODO: https://github.com/interledger/rafiki/issues/587
+    headers['Signature'] = 'TODO'
+    headers['Signature-Input'] = 'TODO'
   }
   return await axios.get(requestUrl.href, {
     headers,
