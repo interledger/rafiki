@@ -75,5 +75,60 @@ describe('Resource Set Service', (): void => {
       expect(dbAccesses[0].identifier).toEqual(req.access[0].identifier)
       expect(dbAccesses[0].type).toEqual(req.access[0].type)
     })
+
+    test('Can create a resource set with only access field', async (): Promise<void> => {
+      const req = {
+        access: [
+          {
+            actions: [Action.Create, Action.Read, Action.List],
+            locations: ['https://example.com'],
+            identifier: `https://example.com/${v4()}`,
+            type: AccessType.IncomingPayment
+          }
+        ]
+      }
+
+      const resourceSet = await resourceSetService.create(req)
+      const dbResourceSet = await ResourceSet.query(trx).findById(
+        resourceSet.id
+      )
+
+      expect(dbResourceSet).not.toBeUndefined()
+      expect(resourceSet.keyProof).toBeNull()
+      expect(resourceSet.keyJwk).toBeNull()
+
+      const dbAccesses = await Access.query(trx).where({
+        resourceId: resourceSet.id
+      })
+
+      expect(dbAccesses[0].actions).toEqual(req.access[0].actions)
+      expect(dbAccesses[0].locations).toEqual(req.access[0].locations)
+      expect(dbAccesses[0].identifier).toEqual(req.access[0].identifier)
+      expect(dbAccesses[0].type).toEqual(req.access[0].type)
+    })
+
+    test('Can create a resource set with only key field', async (): Promise<void> => {
+      const req = {
+        key: {
+          proof: 'httpsig',
+          jwk: publicKey
+        }
+      }
+
+      const resourceSet = await resourceSetService.create(req)
+      const dbResourceSet = await ResourceSet.query(trx).findById(
+        resourceSet.id
+      )
+
+      expect(dbResourceSet).not.toBeUndefined()
+      expect(resourceSet.keyProof).toEqual(req.key.proof)
+      expect(resourceSet.keyJwk).toEqual(req.key.jwk)
+
+      const dbAccesses = await Access.query(trx).where({
+        resourceId: resourceSet.id
+      })
+
+      expect(dbAccesses).toHaveLength(0)
+    })
   })
 })

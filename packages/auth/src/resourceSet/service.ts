@@ -43,17 +43,25 @@ async function create(
   deps: ServiceDependencies,
   req: ResourceSetRequest
 ): Promise<ResourceSet> {
-  const resourceSet = await ResourceSet.query().insertAndFetch({
-    keyProof: req.key?.proof,
-    keyJwk: req.key?.jwk
-  })
+  const trx = await ResourceSet.startTransaction()
+  try {
+    const resourceSet = await ResourceSet.query(trx).insertAndFetch({
+      keyProof: req.key?.proof,
+      keyJwk: req.key?.jwk
+    })
 
-  if (req.access) {
-    await deps.accessService.createAccessForResourceSet(
-      resourceSet.id,
-      req.access
-    )
+    if (req.access) {
+      await deps.accessService.createAccessForResourceSet(
+        resourceSet.id,
+        req.access,
+        trx
+      )
+    }
+
+    await trx.commit()
+    return resourceSet
+  } catch (err) {
+    await trx.rollback()
+    throw err
   }
-
-  return resourceSet
 }
