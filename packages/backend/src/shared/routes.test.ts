@@ -1,5 +1,5 @@
 import * as httpMocks from 'node-mocks-http'
-import { AppContext, ListContext } from '../app'
+import { PaymentPointerContext, ListContext } from '../app'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { Grant } from '../open_payments/auth/grant'
 import { createContext } from '../tests/context'
@@ -15,7 +15,9 @@ interface SetupOptions {
   grant?: Grant
 }
 
-export const setup = <T extends AppContext>(options: SetupOptions): T => {
+export const setup = <T extends PaymentPointerContext>(
+  options: SetupOptions
+): T => {
   const ctx = createContext<T>(
     {
       ...options.reqOpts,

@@ -54,7 +54,7 @@ async function getOutgoingPayment(
   }
   try {
     outgoingPayment = await deps.outgoingPaymentService.get(
-      ctx.params.outgoingPaymentId,
+      ctx.params.id,
       clientId
     )
   } catch (_) {

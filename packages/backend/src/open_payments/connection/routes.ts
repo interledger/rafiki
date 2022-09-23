@@ -29,8 +29,9 @@ async function getConnection(
   deps: ServiceDependencies,
   ctx: ReadContext
 ): Promise<void> {
-  const id = ctx.params.connectionId
-  const incomingPayment = await deps.incomingPaymentService.getByConnection(id)
+  const incomingPayment = await deps.incomingPaymentService.getByConnection(
+    ctx.params.id
+  )
   if (!incomingPayment) return ctx.throw(404)
 
   const connection = deps.connectionService.get(incomingPayment)

@@ -57,7 +57,6 @@ export interface AppContextData {
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
-  grant?: Grant
   paymentPointer?: PaymentPointer
 }
 
@@ -69,14 +68,11 @@ export interface ApolloContext {
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
-export type AppRequest<
-  ParamsT extends string = string,
-  BodyT = never,
-  QueryT = ParsedUrlQuery
-> = Omit<AppContext['request'], 'params' | 'body'> & {
+export type AppRequest<ParamsT extends string = string> = Omit<
+  AppContext['request'],
+  'params'
+> & {
   params: Record<ParamsT, string>
-  query: ParsedUrlQuery & QueryT
-  body: BodyT
 }
 
 type Context<T> = Omit<AppContext, 'request'> & {
@@ -85,25 +81,39 @@ type Context<T> = Omit<AppContext, 'request'> & {
 
 export type ClientKeysContext = Context<AppRequest<'keyId'>>
 
-export type PaymentPointerContext = Context<AppRequest<'id'>>
+export interface PaymentPointerContext extends AppContext {
+  paymentPointer: PaymentPointer
+  grant?: Grant
+}
 
 // Payment pointer subresources
-export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
-export type ReadContext = Context<
-  AppRequest<
-    | 'accountId'
-    | 'incomingPaymentId'
-    | 'outgoingPaymentId'
-    | 'quoteId'
-    | 'connectionId'
-  >
->
-export type CompleteContext = Context<
-  AppRequest<'accountId' | 'incomingPaymentId'>
->
-export type ListContext = Context<
-  AppRequest<'accountId', never, PageQueryParams>
->
+type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  PaymentPointerContext['request'],
+  'body'
+> & {
+  body: BodyT
+  query: ParsedUrlQuery & QueryT
+}
+
+type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  PaymentPointerContext,
+  'request'
+> & {
+  request: CollectionRequest<BodyT, QueryT>
+}
+
+type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
+  params: Record<'id', string>
+}
+
+type SubresourceContext = Omit<PaymentPointerContext, 'request'> & {
+  request: SubresourceRequest
+}
+
+export type CreateContext<BodyT> = CollectionContext<BodyT>
+export type ReadContext = SubresourceContext
+export type CompleteContext = SubresourceContext
+export type ListContext = CollectionContext<never, PageQueryParams>
 
 type ContextType<T> = T extends (
   ctx: infer Context
@@ -264,7 +274,7 @@ export class App {
     }): AccessAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('Id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
             ? AccessAction.Complete

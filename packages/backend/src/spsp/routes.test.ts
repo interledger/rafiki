@@ -1,9 +1,9 @@
 import * as crypto from 'crypto'
 import { Knex } from 'knex'
-import { createContext } from '../tests/context'
 import { AppServices } from '../app'
 
 import { SPSPRoutes } from './routes'
+import { setup } from '../shared/routes.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { initIocContainer } from '../'
 import { Config } from '../config/app'
@@ -52,62 +52,59 @@ describe('SPSP Routes', (): void => {
     })
 
     test('wrong Accept; returns 406', async () => {
-      const ctx = createContext({
-        headers: { Accept: 'application/json' }
+      const ctx = setup({
+        reqOpts: {
+          headers: { Accept: 'application/json' }
+        },
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
     })
 
     test('nonce, no secret; returns 400', async () => {
-      const ctx = createContext({
-        headers: { Accept: 'application/spsp4+json', 'Receipt-Nonce': nonce }
+      const ctx = setup({
+        reqOpts: {
+          headers: { Accept: 'application/spsp4+json', 'Receipt-Nonce': nonce }
+        },
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
     test('secret; no nonce; returns 400', async () => {
-      const ctx = createContext({
-        headers: {
-          Accept: 'application/spsp4+json',
-          'Receipt-Secret': secret
-        }
+      const ctx = setup({
+        reqOpts: {
+          headers: {
+            Accept: 'application/spsp4+json',
+            'Receipt-Secret': secret
+          }
+        },
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
     test('malformed nonce; returns 400', async () => {
-      const ctx = createContext({
-        headers: {
-          Accept: 'application/spsp4+json',
-          'Receipt-Nonce': Buffer.alloc(15).toString('base64'),
-          'Receipt-Secret': secret
-        }
+      const ctx = setup({
+        reqOpts: {
+          headers: {
+            Accept: 'application/spsp4+json',
+            'Receipt-Nonce': Buffer.alloc(15).toString('base64'),
+            'Receipt-Secret': secret
+          }
+        },
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
-    test('no payment pointer; returns 404', async () => {
-      const ctx = createContext({
-        headers: { Accept: 'application/spsp4+json' }
-      })
-      await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.response.status).toBe(404)
-      expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
-      expect(JSON.parse(ctx.body as string)).toEqual({
-        id: 'InvalidReceiverError',
-        message: 'Invalid receiver ID'
-      })
-    })
-
     test('receipts disabled', async () => {
-      const ctx = createContext({
-        headers: { Accept: 'application/spsp4+json' }
+      const ctx = setup({
+        reqOpts: {
+          headers: { Accept: 'application/spsp4+json' }
+        },
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
 
@@ -130,14 +127,16 @@ describe('SPSP Routes', (): void => {
     })
 
     test('receipts enabled', async () => {
-      const ctx = createContext({
-        Accept: 'application/spsp4+json',
-        headers: {
-          'Receipt-Nonce': nonce,
-          'Receipt-Secret': secret
-        }
+      const ctx = setup({
+        reqOpts: {
+          headers: {
+            Accept: 'application/spsp4+json',
+            'Receipt-Nonce': nonce,
+            'Receipt-Secret': secret
+          }
+        },
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
 

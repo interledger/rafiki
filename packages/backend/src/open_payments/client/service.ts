@@ -122,12 +122,12 @@ export async function createOpenPaymentsClientService(
     ...deps_,
     logger: log,
     validateConnection: deps_.openApi.createResponseValidator<ConnectionJSON>({
-      path: '/connections/{connectionId}',
+      path: '/connections/{id}',
       method: HttpMethod.GET
     }),
     validateIncomingPayment:
       deps_.openApi.createResponseValidator<IncomingPaymentJSON>({
-        path: '/incoming-payments/{incomingPaymentId}',
+        path: '/incoming-payments/{id}',
         method: HttpMethod.GET
       })
   }

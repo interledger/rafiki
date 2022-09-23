@@ -116,7 +116,7 @@ describe('Incoming Payment Routes', (): void => {
             headers: { Accept: 'application/json' }
           },
           params: {
-            incomingPaymentId: uuid()
+            id: uuid()
           },
           paymentPointer,
           grant: withGrant ? grant : undefined
@@ -135,7 +135,7 @@ describe('Incoming Payment Routes', (): void => {
             url: `/incoming-payments/${incomingPayment.id}`
           },
           params: {
-            incomingPaymentId: incomingPayment.id
+            id: incomingPayment.id
           },
           paymentPointer,
           grant: withGrant ? grant : undefined
@@ -306,7 +306,7 @@ describe('Incoming Payment Routes', (): void => {
           url: `/incoming-payments/${incomingPayment.id}/complete`
         },
         params: {
-          incomingPaymentId: incomingPayment.id
+          id: incomingPayment.id
         },
         paymentPointer
       })
