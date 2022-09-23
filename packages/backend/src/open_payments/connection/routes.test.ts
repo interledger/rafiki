@@ -142,7 +142,9 @@ describe('Connection Routes', (): void => {
       expect(ctx.body).toEqual({
         id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
-        sharedSecret
+        sharedSecret,
+        assetCode: incomingPayment.asset.code,
+        assetScale: incomingPayment.asset.scale
       })
       const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
       expect(sharedSecretBuffer).toHaveLength(32)

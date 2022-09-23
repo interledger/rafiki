@@ -5,30 +5,49 @@ import { StreamCredentials, StreamServer } from '@interledger/stream-receiver'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPayment } from '../payment/incoming/model'
 
-export interface ConnectionOptions extends StreamCredentials {
-  id: string
-  openPaymentsUrl: string
-}
-
 export type ConnectionJSON = {
   id: string
   ilpAddress: IlpAddress
   sharedSecret: string
+  assetCode: string
+  assetScale: number
 }
 
-export class Connection {
-  constructor(options: ConnectionOptions) {
-    this.id = options.id
-    this.ilpAddress = options.ilpAddress
-    this.sharedSecret = options.sharedSecret
-    this.openPaymentsUrl = options.openPaymentsUrl
+export abstract class ConnectionBase {
+  protected constructor(
+    public readonly ilpAddress: IlpAddress,
+    public readonly sharedSecret: Buffer,
+    public readonly assetCode: string,
+    public readonly assetScale: number
+  ) {}
+}
+
+export class Connection extends ConnectionBase {
+  static fromPayment(options: {
+    payment: IncomingPayment
+    credentials: StreamCredentials
+    openPaymentsUrl: string
+  }): Connection {
+    return new this(
+      options.payment.connectionId,
+      options.openPaymentsUrl,
+      options.credentials.ilpAddress,
+      options.credentials.sharedSecret,
+      options.payment.asset.code,
+      options.payment.asset.scale
+    )
   }
 
-  public readonly id: string
-  public readonly ilpAddress: IlpAddress
-  public readonly sharedSecret: Buffer
-
-  private readonly openPaymentsUrl: string
+  private constructor(
+    public readonly id: string,
+    private readonly openPaymentsUrl: string,
+    ilpAddress: IlpAddress,
+    sharedSecret: Buffer,
+    assetCode: string,
+    assetScale: number
+  ) {
+    super(ilpAddress, sharedSecret, assetCode, assetScale)
+  }
 
   public get url(): string {
     return `${this.openPaymentsUrl}/connections/${this.id}`
@@ -38,7 +57,9 @@ export class Connection {
     return {
       id: this.url,
       ilpAddress: this.ilpAddress,
-      sharedSecret: base64url(this.sharedSecret)
+      sharedSecret: base64url(this.sharedSecret),
+      assetCode: this.assetCode,
+      assetScale: this.assetScale
     }
   }
 }
@@ -76,17 +97,16 @@ function getConnection(
   if (!payment.connectionId) {
     return undefined
   }
-  const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
+  const credentials = deps.streamServer.generateCredentials({
     paymentTag: payment.id,
     asset: {
       code: payment.asset.code,
       scale: payment.asset.scale
     }
   })
-  return new Connection({
-    id: payment.connectionId,
-    ilpAddress,
-    sharedSecret,
+  return Connection.fromPayment({
+    payment,
+    credentials,
     openPaymentsUrl: deps.openPaymentsUrl
   })
 }

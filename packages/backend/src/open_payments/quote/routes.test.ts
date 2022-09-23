@@ -29,7 +29,7 @@ describe('Quote Routes', (): void => {
   let quoteRoutes: QuoteRoutes
   let paymentPointer: PaymentPointer
 
-  const receiver = `http://wallet2.example/bob/incoming-payments/${uuid()}`
+  const receiver = `https://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
   const sendAmount: Amount = {
     value: BigInt(123),

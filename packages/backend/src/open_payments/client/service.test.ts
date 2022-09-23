@@ -20,6 +20,9 @@ describe('Open Payments Client Service', (): void => {
   let clientService: OpenPaymentsClientService
   let knex: Knex
 
+  const CONNECTION_PATH = 'connections'
+  const INCOMING_PAYMENT_PATH = 'incoming-payments'
+
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -35,43 +38,66 @@ describe('Open Payments Client Service', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
   })
-  describe('incomingPayment.get', (): void => {
-    test.each`
-      incomingAmount | description  | externalRef
-      ${undefined}   | ${undefined} | ${undefined}
-      ${BigInt(123)} | ${'Test'}    | ${'#123'}
-    `(
-      'resolves incoming payment from Open Payments server',
-      async ({ incomingAmount, description, externalRef }): Promise<void> => {
+  describe.each`
+    urlPath                  | description
+    ${CONNECTION_PATH}       | ${'connection'}
+    ${INCOMING_PAYMENT_PATH} | ${'incoming payment'}
+  `('receiver.get - $description', ({ urlPath }): void => {
+    if (urlPath === CONNECTION_PATH) {
+      test('resolves connection from Open Payments server', async (): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps, {
           mockServerPort: appContainer.openPaymentsPort
         })
         const incomingPayment = await createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id,
-          description,
-          incomingAmount: incomingAmount && {
-            value: incomingAmount,
-            assetCode: paymentPointer.asset.code,
-            assetScale: paymentPointer.asset.scale
-          },
-          externalRef
+          paymentPointerId: paymentPointer.id
         })
-        const resolvedPayment = await clientService.incomingPayment.get(
-          incomingPayment.url
+        const receiver = await clientService.receiver.get(
+          `${Config.openPaymentsUrl}/${urlPath}/${incomingPayment.connectionId}`
         )
         paymentPointer.scope.isDone()
-        expect(resolvedPayment).toEqual({
-          ...incomingPayment.toJSON(),
-          id: incomingPayment.url,
-          paymentPointer: incomingPayment.paymentPointer.url,
-          ilpStreamConnection: {
-            id: `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
-            ilpAddress: expect.any(String),
-            sharedSecret: expect.any(String)
-          }
-        })
-      }
-    )
+        expect(receiver.assetCode).toEqual(paymentPointer.asset.code)
+        expect(receiver.assetScale).toEqual(paymentPointer.asset.scale)
+        expect(receiver.incomingAmount).toBeUndefined()
+        expect(receiver.receivedAmount).toBeUndefined()
+        expect(receiver.ilpAddress).toEqual(expect.any(String))
+        expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
+      })
+    } else {
+      test.each`
+        incomingAmount | description  | externalRef
+        ${undefined}   | ${undefined} | ${undefined}
+        ${BigInt(123)} | ${'Test'}    | ${'#123'}
+      `(
+        'resolves incoming payment from Open Payments server',
+        async ({ incomingAmount, description, externalRef }): Promise<void> => {
+          const paymentPointer = await createPaymentPointer(deps, {
+            mockServerPort: appContainer.openPaymentsPort
+          })
+          const incomingPayment = await createIncomingPayment(deps, {
+            paymentPointerId: paymentPointer.id,
+            description,
+            incomingAmount: incomingAmount && {
+              value: incomingAmount,
+              assetCode: paymentPointer.asset.code,
+              assetScale: paymentPointer.asset.scale
+            },
+            externalRef
+          })
+          const receiver = await clientService.receiver.get(incomingPayment.url)
+          paymentPointer.scope.isDone()
+          expect(receiver.assetCode).toEqual(paymentPointer.asset.code)
+          expect(receiver.assetScale).toEqual(paymentPointer.asset.scale)
+          expect(receiver.incomingAmount).toEqual(
+            incomingPayment.incomingAmount
+          )
+          expect(receiver.receivedAmount).toEqual(
+            incomingPayment.receivedAmount
+          )
+          expect(receiver.ilpAddress).toEqual(expect.any(String))
+          expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
+        }
+      )
+    }
     test.each`
       statusCode
       ${404}
@@ -79,30 +105,30 @@ describe('Open Payments Client Service', (): void => {
     `(
       'returns undefined for unsuccessful request ($statusCode)',
       async ({ statusCode }): Promise<void> => {
-        const incomingPaymentUrl = new URL(
-          `${faker.internet.url()}/incoming-payments/${uuid()}`
+        const receiverUrl = new URL(
+          `${faker.internet.url()}/${urlPath}/${uuid()}`
         )
-        const scope = nock(incomingPaymentUrl.host)
-          .get(incomingPaymentUrl.pathname)
+        const scope = nock(receiverUrl.host)
+          .get(receiverUrl.pathname)
           .reply(statusCode)
         scope.isDone()
         await expect(
-          clientService.incomingPayment.get(incomingPaymentUrl.href)
+          clientService.receiver.get(receiverUrl.href)
         ).resolves.toBeUndefined()
       }
     )
-    test('returns undefined for invalid incoming payment response', async (): Promise<void> => {
-      const incomingPaymentUrl = new URL(
-        `${faker.internet.url()}/incoming-payments/${uuid()}`
+    test(`returns undefined for invalid response`, async (): Promise<void> => {
+      const receiverUrl = new URL(
+        `${faker.internet.url()}/${urlPath}/${uuid()}`
       )
-      const scope = nock(incomingPaymentUrl.host)
-        .get(incomingPaymentUrl.pathname)
+      const scope = nock(receiverUrl.host)
+        .get(receiverUrl.pathname)
         .reply(200, () => ({
-          validPayment: 0
+          validReceiver: 0
         }))
       scope.isDone()
       await expect(
-        clientService.incomingPayment.get(incomingPaymentUrl.href)
+        clientService.receiver.get(receiverUrl.href)
       ).resolves.toBeUndefined()
     })
   })

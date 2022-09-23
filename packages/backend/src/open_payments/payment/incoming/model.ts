@@ -267,6 +267,6 @@ export type IncomingPaymentJSON = {
   externalRef?: string
   createdAt: string
   updatedAt: string
-  expiresAt: string
+  expiresAt?: string
   ilpStreamConnection?: ConnectionJSON | string
 }

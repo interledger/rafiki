@@ -212,10 +212,11 @@ describe('QuoteService', (): void => {
     }
 
     describe.each`
-      incomingAmount    | description
-      ${undefined}      | ${'receiver'}
-      ${incomingAmount} | ${'receiver.incomingAmount'}
-    `('$description', ({ toPaymentPointer, incomingAmount }): void => {
+      toConnection | incomingAmount    | description
+      ${true}      | ${undefined}      | ${'connection'}
+      ${false}     | ${undefined}      | ${'incomingPayment'}
+      ${false}     | ${incomingAmount} | ${'incomingPayment.incomingAmount'}
+    `('$description', ({ toConnection, incomingAmount }): void => {
       describe.each`
         sendAmount    | receiveAmount    | paymentType                      | description
         ${sendAmount} | ${undefined}     | ${Pay.PaymentType.FixedSend}     | ${'sendAmount'}
@@ -224,7 +225,6 @@ describe('QuoteService', (): void => {
       `('$description', ({ sendAmount, receiveAmount, paymentType }): void => {
         let options: CreateQuoteOptions
         let incomingPayment: IncomingPayment
-        let receiver: string
         let expected: ExpectedQuote
 
         beforeEach(async (): Promise<void> => {
@@ -233,9 +233,12 @@ describe('QuoteService', (): void => {
             grantId: grantRef.id,
             incomingAmount
           })
+          const connectionService = await deps.use('connectionService')
           options = {
             paymentPointerId,
-            receiver: incomingPayment.url,
+            receiver: toConnection
+              ? connectionService.getUrl(incomingPayment)
+              : incomingPayment.url,
             sendAmount,
             receiveAmount
           }
@@ -248,9 +251,7 @@ describe('QuoteService', (): void => {
         if (!sendAmount && !receiveAmount && !incomingAmount) {
           it('fails without receiver.incomingAmount', async (): Promise<void> => {
             await expect(quoteService.create(options)).resolves.toEqual(
-              toPaymentPointer
-                ? QuoteError.InvalidAmount
-                : QuoteError.InvalidReceiver
+              QuoteError.InvalidReceiver
             )
           })
         } else {
@@ -264,7 +265,7 @@ describe('QuoteService', (): void => {
               walletScope.isDone()
               expect(quote).toMatchObject({
                 paymentPointerId,
-                receiver: receiver || quote.receiver,
+                receiver: options.receiver,
                 sendAmount: sendAmount || {
                   value: BigInt(
                     Math.ceil(
@@ -487,7 +488,7 @@ describe('QuoteService', (): void => {
             walletScope.isDone()
           })
 
-          if (!toPaymentPointer) {
+          if (!toConnection) {
             test.each`
               state
               ${IncomingPaymentState.Completed}

@@ -4,6 +4,7 @@ import { IocContract } from '@adonisjs/fold'
 
 import { createQuote, CreateTestQuoteOptions } from './quote'
 import { AppServices } from '../app'
+import { Receiver } from '../open_payments/client/service'
 import { isOutgoingPaymentError } from '../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/service'
@@ -21,18 +22,15 @@ export async function createOutgoingPayment(
   if (options.validDestination === false) {
     const streamServer = await deps.use('streamServer')
     const { ilpAddress, sharedSecret } = streamServer.generateCredentials()
-    jest.spyOn(clientService.incomingPayment, 'get').mockResolvedValueOnce({
-      id: options.receiver,
-      receivedAmount: {
-        value: BigInt(0),
+    jest.spyOn(clientService.receiver, 'get').mockResolvedValueOnce(
+      Receiver.fromConnection({
+        id: options.receiver,
+        ilpAddress,
+        sharedSecret: base64url(sharedSecret),
         assetCode: quote.receiveAmount.assetCode,
         assetScale: quote.receiveAmount.assetScale
-      },
-      ilpStreamConnection: {
-        ilpAddress,
-        sharedSecret: base64url(sharedSecret)
-      }
-    })
+      })
+    )
   }
   const outgoingPaymentOrError = await outgoingPaymentService.create({
     ...options,
