@@ -25,7 +25,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
       const liquidity = await addPeerLiquidity(
         config.self.graphqlUrl,
         peerResponse.id,
-        peer.initialLiquidity.toString(),
+        peer.initialLiquidity,
         transferUid
       )
       return [peerResponse, liquidity]

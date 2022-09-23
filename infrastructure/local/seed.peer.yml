@@ -6,7 +6,7 @@ self:
 peers:
   - asset: USD
     scale: 2
-    initialLiquidity: 100000
+    initialLiquidity: '1000000000000'
     peerUrl: http://backend:3002
     peerIlpAddress: test.rafiki
 accounts:

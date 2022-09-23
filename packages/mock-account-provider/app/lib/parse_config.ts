@@ -20,7 +20,7 @@ export interface Peering {
   peerIlpAddress: string
   asset: string
   scale: number
-  initialLiquidity: number
+  initialLiquidity: string
 }
 
 export interface Account {

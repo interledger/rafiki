@@ -6,7 +6,7 @@ self:
 peers:
   - asset: USD
     scale: 2
-    initialLiquidity: 100000
+    initialLiquidity: '100000'
     peerUrl: http://peer-backend:3002
     peerIlpAddress: test.peer
 accounts:
