@@ -40,26 +40,36 @@ export async function createAccessService({
       grantId: string,
       accessRequests: AccessRequest[],
       trx?: Transaction
-    ) => createAccess(deps, accessRequests, grantId, undefined, trx),
+    ) => createAccess(deps, { accessRequests, grantId } as GrantAccess, trx),
     createAccessForResourceSet: (
       resourceId: string,
       accessRequests: AccessRequest[],
       trx?: Transaction
-    ) => createAccess(deps, accessRequests, undefined, resourceId, trx),
+    ) =>
+      createAccess(deps, { accessRequests, resourceId } as ResourceAccess, trx),
     getByGrant: (grantId: string) => getByGrant(grantId)
   }
 }
 
+interface GrantAccess {
+  accessRequests: AccessRequest[]
+  grantId: string
+  resourceId: never
+}
+
+interface ResourceAccess {
+  accessRequests: AccessRequest[]
+  grantId: never
+  resourceId: string
+}
+
+type AccessOptions = GrantAccess | ResourceAccess
+
 async function createAccess(
   deps: ServiceDependencies,
-  accessRequests: AccessRequest[],
-  grantId?: string,
-  resourceId?: string,
+  { accessRequests, grantId, resourceId }: AccessOptions,
   trx?: Transaction
 ): Promise<Access[]> {
-  if (!grantId && !resourceId) {
-    throw new Error('Missing required properties')
-  }
   const accessRequestsWithGrantOrResource = accessRequests.map((access) => {
     return { grantId, resourceId, ...access }
   })

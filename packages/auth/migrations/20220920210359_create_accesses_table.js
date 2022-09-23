@@ -9,6 +9,14 @@ exports.up = function (knex) {
     table.jsonb('limits')
     table.uuid('grantId')
     table.foreign('grantId').references('grants.id').onDelete('CASCADE')
+    table.uuid('resourceId')
+    table.foreign('resourceId').references('resourceSets.id')
+
+    table.check(
+      '"grantId" is not null or "resourceId" is not null',
+      [],
+      'grant_id_or_resource_id'
+    )
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
