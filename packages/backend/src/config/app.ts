@@ -141,10 +141,16 @@ function parseRedisTlsConfig(
 
 function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
   if (keyPath !== '') {
-    const key = crypto.createPrivateKey(readFileSync(keyPath))
-    const jwk = key.export({ format: 'jwk' })
-    if (jwk.crv === 'Ed25519') {
-      return key
+    try {
+      const key = crypto.createPrivateKey(readFileSync(keyPath))
+      const jwk = key.export({ format: 'jwk' })
+      if (jwk.crv === 'Ed25519') {
+        return key
+      } else {
+        console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')
+      }
+    } catch {
+      console.log('Private key could not be loaded. Generating new key.')
     }
   }
   const keypair = crypto.generateKeyPairSync('ed25519')
