@@ -44,27 +44,27 @@ export async function handleSending(
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const newMaxSourceAmount = payment.sendAmount.value - amountSent
 
-  let newMinDeliveryAmount
+  // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
+  // eslint-disable-next-line no-case-declarations
+  const amountDelivered = BigInt(
+    Math.ceil(+amountSent.toString() * payment.quote.minExchangeRate.valueOf())
+  )
+  let newAmountToDeliver = payment.receiveAmount.value - amountDelivered
+
   if (receiver.incomingAmount) {
-    newMinDeliveryAmount =
+    const maxAmountToDeliver =
       receiver.incomingAmount.value - receiver.receivedAmount.value
-  } else {
-    // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
-    // eslint-disable-next-line no-case-declarations
-    const amountDelivered = BigInt(
-      Math.ceil(
-        +amountSent.toString() * payment.quote.minExchangeRate.valueOf()
-      )
-    )
-    newMinDeliveryAmount = payment.receiveAmount.value - amountDelivered
+    if (maxAmountToDeliver < newAmountToDeliver) {
+      newAmountToDeliver = maxAmountToDeliver
+    }
   }
 
-  if (newMinDeliveryAmount <= BigInt(0)) {
+  if (newAmountToDeliver <= BigInt(0)) {
     // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
         newMaxSourceAmount,
-        newMinDeliveryAmount,
+        newAmountToDeliver,
         amountSent,
         receiver
       },
@@ -74,14 +74,14 @@ export async function handleSending(
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
-    newMinDeliveryAmount <= BigInt(0)
+    newAmountToDeliver <= BigInt(0)
   ) {
     // Similar to the above, but not recoverable (at least not without a re-quote).
     // I'm not sure whether this case is actually reachable, but handling it here is clearer than passing ilp-pay bad parameters.
     deps.logger.error(
       {
         newMaxSourceAmount,
-        newMinDeliveryAmount
+        newAmountToDeliver
       },
       'handleSending bad retry state'
     )
@@ -96,7 +96,7 @@ export async function handleSending(
     paymentType: Pay.PaymentType.FixedDelivery,
     // Adjust quoted amounts to paymentPointer for prior partial payment.
     maxSourceAmount: newMaxSourceAmount,
-    minDeliveryAmount: newMinDeliveryAmount,
+    minDeliveryAmount: newAmountToDeliver,
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
     minExchangeRate
@@ -121,7 +121,7 @@ export async function handleSending(
       destination: destination.destinationAddress,
       error: receipt.error,
       newMaxSourceAmount,
-      newMinDeliveryAmount,
+      newAmountToDeliver,
       receiptAmountSent: receipt.amountSent,
       receiptAmountDelivered: receipt.amountDelivered
     },

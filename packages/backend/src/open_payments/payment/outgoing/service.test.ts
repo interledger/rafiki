@@ -849,6 +849,37 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
+      it('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+        incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: receiverPaymentPointer.id,
+          grantId: grantRef.id,
+          incomingAmount: {
+            value: receiveAmount.value * 2n,
+            assetCode: receiverPaymentPointer.asset.code,
+            assetScale: receiverPaymentPointer.asset.scale
+          }
+        })
+        const paymentId = await setup({
+          receiver: toConnection
+            ? connectionService.getUrl(incomingPayment)
+            : incomingPayment.url,
+          receiveAmount
+        })
+
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
+        const amountSent = payment.receiveAmount.value * BigInt(2)
+        await expectOutcome(payment, {
+          accountBalance: payment.sendAmount.value - amountSent,
+          amountSent,
+          amountDelivered: payment.receiveAmount.value,
+          incomingPaymentReceived: payment.receiveAmount.value,
+          withdrawAmount: payment.sendAmount.value - amountSent
+        })
+      })
+
       it('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
@@ -998,7 +1029,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
+      it('COMPLETED (already fully paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
             receiver,
@@ -1024,7 +1055,6 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (already fully paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
