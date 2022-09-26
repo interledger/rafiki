@@ -141,9 +141,12 @@ function parseRedisTlsConfig(
 
 function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
   if (keyPath !== '') {
-    return crypto.createPrivateKey(readFileSync(keyPath))
-  } else {
-    const keypair = crypto.generateKeyPairSync('ed25519')
-    return keypair.privateKey
+    const key = crypto.createPrivateKey(readFileSync(keyPath))
+    const jwk = key.export({ format: 'jwk' })
+    if (jwk.crv === 'Ed25519') {
+      return key
+    }
   }
+  const keypair = crypto.generateKeyPairSync('ed25519')
+  return keypair.privateKey
 }
