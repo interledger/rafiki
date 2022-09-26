@@ -1,12 +1,12 @@
 import { BaseService } from '../shared/baseService'
-import { AppContext } from '../app'
+import { PaymentPointerContext } from '../app'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
 export interface SPSPRoutes {
-  get(ctx: AppContext): Promise<void>
+  get(ctx: PaymentPointerContext): Promise<void>
 }
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
@@ -32,7 +32,7 @@ export async function createSPSPRoutes({
 
 async function getPay(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: PaymentPointerContext
 ): Promise<void> {
   ctx.assert(ctx.accepts(CONTENT_TYPE_V4), 406)
 
@@ -43,16 +43,6 @@ async function getPay(
     400,
     'Failed to generate credentials: receipt nonce and secret must accompany each other'
   )
-
-  if (!ctx.paymentPointer) {
-    ctx.status = 404
-    ctx.set('Content-Type', CONTENT_TYPE_V4)
-    ctx.body = JSON.stringify({
-      id: 'InvalidReceiverError',
-      message: 'Invalid receiver ID'
-    })
-    return
-  }
 
   try {
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({

@@ -73,7 +73,7 @@ async function getIncomingPayment(
   }
   try {
     incomingPayment = await deps.incomingPaymentService.get(
-      ctx.params.incomingPaymentId,
+      ctx.params.id,
       clientId
     )
   } catch (err) {
@@ -136,7 +136,7 @@ async function completeIncomingPayment(
   let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
   try {
     incomingPaymentOrError = await deps.incomingPaymentService.complete(
-      ctx.params.incomingPaymentId
+      ctx.params.id
     )
   } catch (err) {
     ctx.throw(500, 'Error trying to complete incoming payment')

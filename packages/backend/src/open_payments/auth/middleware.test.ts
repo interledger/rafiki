@@ -8,17 +8,17 @@ import { Grant, GrantJSON, AccessType, AccessAction } from './grant'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppContext, AppServices } from '../../app'
+import { AppServices, PaymentPointerContext } from '../../app'
 import { HttpMethod, ValidateFunction } from 'openapi'
+import { setup } from '../../shared/routes.test'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
 
 type AppMiddleware = (
-  ctx: AppContext,
+  ctx: PaymentPointerContext,
   next: () => Promise<void>
 ) => Promise<void>
 
@@ -32,7 +32,7 @@ describe('Auth Middleware', (): void => {
   let appContainer: TestContainer
   let authServerIntrospectionUrl: URL
   let middleware: AppMiddleware
-  let ctx: AppContext
+  let ctx: PaymentPointerContext
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: ValidateFunction<IntrospectionBody>
   let grantReferenceService: GrantReferenceService
@@ -55,14 +55,16 @@ describe('Auth Middleware', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    ctx = createContext({
-      headers: {
-        Accept: 'application/json',
-        Authorization: `GNAP ${token}`
-      }
+    ctx = setup({
+      reqOpts: {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `GNAP ${token}`
+        }
+      },
+      paymentPointer: await createPaymentPointer(deps)
     })
     ctx.container = deps
-    ctx.paymentPointer = await createPaymentPointer(deps)
     next = jest.fn()
   })
 

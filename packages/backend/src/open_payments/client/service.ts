@@ -122,12 +122,12 @@ export async function createOpenPaymentsClientService(
     ...deps_,
     logger: log,
     validateConnection: deps_.openApi.createResponseValidator<ConnectionJSON>({
-      path: '/connections/{connectionId}',
+      path: '/connections/{id}',
       method: HttpMethod.GET
     }),
     validateIncomingPayment:
       deps_.openApi.createResponseValidator<IncomingPaymentJSON>({
-        path: '/incoming-payments/{incomingPaymentId}',
+        path: '/incoming-payments/{id}',
         method: HttpMethod.GET
       })
   }
@@ -156,6 +156,9 @@ async function getResource({
   }
   if (accessToken) {
     headers['Authorization'] = `GNAP ${accessToken}`
+    // TODO: https://github.com/interledger/rafiki/issues/587
+    headers['Signature'] = 'TODO'
+    headers['Signature-Input'] = 'TODO'
   }
   return await axios.get(requestUrl.href, {
     headers,

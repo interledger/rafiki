@@ -85,7 +85,7 @@ describe('Connection Routes', (): void => {
           url: `/connections/${incomingPayment.connectionId}`
         },
         {
-          connectionId: uuid()
+          id: uuid()
         }
       )
       await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
@@ -112,7 +112,7 @@ describe('Connection Routes', (): void => {
             url: `/connections/${incomingPayment.connectionId}`
           },
           {
-            connectionId: incomingPayment.connectionId
+            id: incomingPayment.connectionId
           }
         )
         await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
@@ -129,7 +129,7 @@ describe('Connection Routes', (): void => {
           url: `/connections/${incomingPayment.connectionId}`
         },
         {
-          connectionId: incomingPayment.connectionId
+          id: incomingPayment.connectionId
         }
       )
       await expect(connectionRoutes.get(ctx)).resolves.toBeUndefined()

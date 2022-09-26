@@ -87,7 +87,7 @@ describe('Quote Routes', (): void => {
           headers: { Accept: 'application/json' }
         },
         {
-          quoteId: uuid()
+          id: uuid()
         }
       )
       ctx.paymentPointer = paymentPointer
@@ -103,7 +103,7 @@ describe('Quote Routes', (): void => {
           url: `/quotes/${quote.id}`
         },
         {
-          quoteId: quote.id
+          id: quote.id
         }
       )
       ctx.paymentPointer = paymentPointer

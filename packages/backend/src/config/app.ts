@@ -103,7 +103,7 @@ export const Config = {
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/499d551e36fb42614feeadd4aa3af90bb2a4fcff/open-api-spec.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/4c873dba89164decffbe84905d12f1d4ec045389/open-api-spec.yaml'
   ),
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
