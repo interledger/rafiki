@@ -109,6 +109,7 @@ export const Config = {
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
   ),
+  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_PATH', '')),
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
@@ -136,4 +137,13 @@ function parseRedisTlsConfig(
   }
 
   return Object.keys(options).length > 0 ? options : undefined
+}
+
+function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
+  if (keyPath !== '') {
+    return crypto.createPrivateKey(readFileSync(keyPath))
+  } else {
+    const keypair = crypto.generateKeyPairSync('ed25519')
+    return keypair.privateKey
+  }
 }
