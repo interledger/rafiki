@@ -1,16 +1,20 @@
 import * as crypto from 'crypto'
 import { URL } from 'url'
 import { AppContext } from '../app'
-import { GrantService, GrantRequest } from './service'
-import { GrantState } from './model'
+import { GrantService } from './service'
+import { Grant, GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
-import { isAccessRequest } from '../access/types'
+import {
+  IncomingPaymentRequest,
+  isIncomingPaymentAccessRequest
+} from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { accessToBody } from '../shared/utils'
+import { AccessToken } from '../accessToken/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -66,19 +70,6 @@ export function createGrantRoutes({
   }
 }
 
-function validateGrantRequest(
-  grantRequest: GrantRequest
-): grantRequest is GrantRequest {
-  if (typeof grantRequest.access_token !== 'object') return false
-  const { access_token } = grantRequest
-  if (typeof access_token.access !== 'object') return false
-  for (const access of access_token.access) {
-    if (!isAccessRequest(access)) return false
-  }
-
-  return grantRequest.interact?.start !== undefined
-}
-
 async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: AppContext
@@ -96,14 +87,50 @@ async function createGrantInitiation(
 
   const { body } = ctx.request
   const { grantService, config } = deps
-  if (!validateGrantRequest(body)) {
-    ctx.status = 400
-    ctx.body = { error: 'invalid_request' }
+
+  if (
+    !deps.config.incomingPaymentInteraction &&
+    body.access_token.access
+      .map((acc) => {
+        return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
+      })
+      .every((el) => el === true)
+  ) {
+    const trx = await Grant.startTransaction()
+    let grant: Grant
+    let accessToken: AccessToken
+    try {
+      grant = await grantService.create(body, trx)
+      accessToken = await deps.accessTokenService.create(grant.id, {
+        trx
+      })
+      await trx.commit()
+    } catch (err) {
+      await trx.rollback()
+      ctx.status = 500
+      return
+    }
+    const access = await deps.accessService.getByGrant(grant.id)
+    ctx.status = 200
+    ctx.body = createGrantBody({
+      domain: deps.config.authServerDomain,
+      grant,
+      access,
+      accessToken
+    })
     return
   }
 
-  const grant = await grantService.initiateGrant(body)
-  ctx.status = 201
+  if (!body.interact) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'interaction_required'
+    }
+    return
+  }
+
+  const grant = await grantService.create(body)
+  ctx.status = 200
   ctx.body = {
     interact: {
       redirect: config.authServerDomain + `/interact/${grant.interactId}`,
@@ -384,12 +411,37 @@ async function continueGrant(
   const access = await accessService.getByGrant(grant.id)
 
   // TODO: add "continue" to response if additional grant request steps are added
-  ctx.body = {
+  ctx.body = createGrantBody({
+    domain: config.authServerDomain,
+    grant,
+    access,
+    accessToken
+  })
+}
+
+function createGrantBody({
+  domain,
+  grant,
+  access,
+  accessToken
+}: {
+  domain: string
+  grant: Grant
+  access: Access[]
+  accessToken: AccessToken
+}) {
+  return {
     access_token: {
       value: accessToken.value,
-      manage: config.authServerDomain + `/token/${accessToken.managementId}`,
+      manage: domain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
       expiresIn: accessToken.expiresIn
+    },
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: domain + `continue/${grant.continueId}`
     }
   }
 }

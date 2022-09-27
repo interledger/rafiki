@@ -136,7 +136,7 @@ async function createAccessToken(
   grantId: string,
   opts?: AccessTokenOpts
 ): Promise<AccessToken> {
-  return AccessToken.query(deps.knex).insert({
+  return AccessToken.query(opts?.trx || deps.knex).insert({
     value: crypto.randomBytes(8).toString('hex').toUpperCase(),
     managementId: v4(),
     grantId,

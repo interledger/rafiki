@@ -51,12 +51,12 @@ export class Grant extends BaseModel {
   public continueId!: string
   public wait?: number
 
-  public finishMethod!: FinishMethod
-  public finishUri!: string
-  public clientNonce!: string // client-generated nonce for post-interaction hash
+  public finishMethod?: FinishMethod
+  public finishUri?: string
+  public clientNonce?: string // client-generated nonce for post-interaction hash
   public clientKeyId!: string
 
-  public interactId!: string
-  public interactRef!: string
-  public interactNonce!: string // AS-generated nonce for post-interaction hash
+  public interactId?: string
+  public interactRef?: string
+  public interactNonce?: string // AS-generated nonce for post-interaction hash
 }

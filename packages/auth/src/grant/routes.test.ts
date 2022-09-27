@@ -16,8 +16,8 @@ import { GrantRoutes } from './routes'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
-import { GrantRequest } from '../grant/service'
 import { AccessToken } from '../accessToken/model'
+import { AccessTokenService } from '../accessToken/service'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const KID_PATH = '/keys/base-test-key'
@@ -50,32 +50,15 @@ export const TEST_CLIENT_KEY = {
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
   actions: [Action.Create, Action.Read, Action.List],
-  locations: ['https://example.com'],
   identifier: `https://example.com/${v4()}`
-}
-
-const OUTGOING_PAYMENT_LIMIT = {
-  sendAmount: {
-    value: '1000000000',
-    assetCode: 'usd',
-    assetScale: 9
-  },
-  receiveAmount: {
-    value: '2000000000',
-    assetCode: 'usd',
-    assetScale: 9
-  },
-  expiresAt: new Date().toISOString(),
-  receiver: 'https://wallet.com/alice'
 }
 
 const BASE_GRANT_REQUEST = {
   access_token: {
     access: [
       {
-        type: AccessType.IncomingPayment,
+        type: AccessType.OutgoingPayment,
         actions: [Action.Create, Action.Read, Action.List],
-        locations: ['https://example.com'],
         identifier: `https://example.com/${v4()}`
       }
     ]
@@ -114,6 +97,7 @@ describe('Grant Routes', (): void => {
   let knex: Knex
   let grantRoutes: GrantRoutes
   let config: IAppConfig
+  let accessTokenService: AccessTokenService
 
   let grant: Grant
   beforeEach(async (): Promise<void> => {
@@ -132,6 +116,7 @@ describe('Grant Routes', (): void => {
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
     jestOpenAPI(await deps.use('openApi'))
+    accessTokenService = await deps.use('accessTokenService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -142,321 +127,18 @@ describe('Grant Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Grant validation', (): void => {
+  describe('/create', (): void => {
+    const url = '/'
+    const method = 'POST'
+
     const expDate = new Date()
     expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
 
     const nbfDate = new Date()
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-    const url = '/'
-    const method = 'POST'
 
-    test('Valid incoming payment grant', async (): Promise<void> => {
-      const incomingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = incomingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(201)
-
-      scope.isDone()
-    })
-
-    test('Valid outgoing payment grant', async (): Promise<void> => {
-      const outgoingPaymentGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = outgoingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(201)
-
-      scope.isDone()
-    })
-
-    test('Valid account grant', async (): Promise<void> => {
-      const accountGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = accountGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(201)
-
-      scope.isDone()
-    })
-
-    test('Valid quote grant', async (): Promise<void> => {
-      const quoteGrantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = quoteGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(201)
-
-      scope.isDone()
-    })
-
-    test('Cannot create outgoing payment grant with unexpected limit payload', async (): Promise<void> => {
-      const outgoingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.OutgoingPayment,
-              limits: { wrongLimitField: 'wrong' }
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = outgoingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-
-      scope.isDone()
-    })
-
-    test('Cannot create account grant with unexpected limit payload', async (): Promise<void> => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Account,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = incomingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-
-      scope.isDone()
-    })
-
-    test('Cannot create quote grant with unexpected limit payload', async (): Promise<void> => {
-      const incomingPaymentGrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.Quote,
-              limits: OUTGOING_PAYMENT_LIMIT
-            }
-          ]
-        }
-      }
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = incomingPaymentGrantRequest
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-
-      scope.isDone()
-    })
-  })
-
-  describe('/create', (): void => {
-    const url = '/'
-    const method = 'POST'
+    const exp = Math.round(expDate.getTime() / 1000)
+    const nbf = Math.round(nbfDate.getTime() / 1000)
 
     test('accepts json only', async (): Promise<void> => {
       const ctx = createContext(
@@ -498,68 +180,13 @@ describe('Grant Routes', (): void => {
       expect(ctx.body).toEqual({ error: 'invalid_request' })
     })
 
-    test('Cannot initiate grant with invalid grant request', async (): Promise<void> => {
-      const expDate = new Date()
-      expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-      const nbfDate = new Date()
-      nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
-          revoked: false
-        })
-
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              type: 'unknown-type',
-              actions: [Action.Create, Action.Read, Action.List]
-            }
-          ]
-        }
-      }
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
-      expect(ctx.body).toEqual({
-        error: 'invalid_request'
-      })
-
-      scope.isDone()
-    })
-
     test('Can initiate a grant request', async (): Promise<void> => {
-      const expDate = new Date()
-      expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-      const nbfDate = new Date()
-      nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           ...TEST_CLIENT_KEY.jwk,
-          exp: Math.round(expDate.getTime() / 1000),
-          nbf: Math.round(nbfDate.getTime() / 1000),
+          exp,
+          nbf,
           revoked: false
         })
 
@@ -579,7 +206,7 @@ describe('Grant Routes', (): void => {
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(201)
+      expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         interact: {
           redirect: expect.any(String),
@@ -593,6 +220,139 @@ describe('Grant Routes', (): void => {
           wait: Config.waitTimeSeconds
         }
       })
+
+      scope.isDone()
+    })
+
+    test('Can get a software-only authorization grant', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(KID_PATH)
+        .reply(200, {
+          ...TEST_CLIENT_KEY.jwk,
+          exp,
+          nbf,
+          revoked: false
+        })
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
+        },
+        {}
+      )
+      const body = {
+        access_token: {
+          access: [
+            {
+              type: AccessType.IncomingPayment,
+              actions: [Action.Create, Action.Read, Action.List],
+              identifier: `https://example.com/${v4()}`
+            }
+          ]
+        },
+        client: {
+          display: TEST_CLIENT_DISPLAY,
+          key: TEST_CLIENT_KEY
+        }
+      }
+      ctx.request.body = body
+
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.body).toEqual({
+        access_token: {
+          value: expect.any(String),
+          manage: expect.any(String),
+          access: body.access_token.access,
+          expiresIn: 600
+        },
+        continue: {
+          access_token: {
+            value: expect.any(String)
+          },
+          uri: expect.any(String)
+        }
+      })
+
+      scope.isDone()
+    })
+    test('Does not create grant if token issuance fails', async (): Promise<void> => {
+      jest
+        .spyOn(accessTokenService, 'create')
+        .mockRejectedValueOnce(new Error())
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(KID_PATH)
+        .reply(200, {
+          ...TEST_CLIENT_KEY.jwk,
+          exp,
+          nbf,
+          revoked: false
+        })
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
+        },
+        {}
+      )
+      const body = {
+        access_token: {
+          access: [
+            {
+              type: AccessType.IncomingPayment,
+              actions: [Action.Create, Action.Read, Action.List],
+              identifier: `https://example.com/${v4()}`
+            }
+          ]
+        },
+        client: {
+          display: TEST_CLIENT_DISPLAY,
+          key: TEST_CLIENT_KEY
+        }
+      }
+      ctx.request.body = body
+
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(500)
+      scope.isDone()
+    })
+    test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(KID_PATH)
+        .reply(200, {
+          ...TEST_CLIENT_KEY.jwk,
+          exp,
+          nbf,
+          revoked: false
+        })
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
+        },
+        {}
+      )
+
+      ctx.request.body = { ...BASE_GRANT_REQUEST, interact: undefined }
+
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(400)
 
       scope.isDone()
     })
@@ -1117,11 +877,16 @@ describe('Grant Routes', (): void => {
             {
               actions: expect.arrayContaining(['create', 'read', 'list']),
               identifier: access.identifier,
-              locations: expect.arrayContaining(['https://example.com']),
               type: 'incoming-payment'
             }
           ]),
           expiresIn: 600
+        },
+        continue: {
+          access_token: {
+            value: expect.any(String)
+          },
+          uri: expect.any(String)
         }
       })
     })
