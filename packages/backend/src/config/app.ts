@@ -1,5 +1,5 @@
 import * as crypto from 'crypto'
-import { readFileSync } from 'fs'
+import * as fs from 'fs'
 import { ConnectionOptions } from 'tls'
 
 function envString(name: string, value: string): string {
@@ -109,7 +109,9 @@ export const Config = {
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
   ),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_PATH', '')),
+  privateKey: parseOrProvisionKey(
+    envString('PRIVATE_KEY_PATH', '../../tmp/private.pem')
+  ),
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
@@ -124,35 +126,38 @@ function parseRedisTlsConfig(
 
   // self-signed certs.
   if (caFile !== '') {
-    options.ca = readFileSync(caFile)
+    options.ca = fs.readFileSync(caFile)
     options.rejectUnauthorized = false
   }
 
   if (certFile !== '') {
-    options.cert = readFileSync(certFile)
+    options.cert = fs.readFileSync(certFile)
   }
 
   if (keyFile !== '') {
-    options.key = readFileSync(keyFile)
+    options.key = fs.readFileSync(keyFile)
   }
 
   return Object.keys(options).length > 0 ? options : undefined
 }
 
 function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
-  if (keyPath !== '') {
-    try {
-      const key = crypto.createPrivateKey(readFileSync(keyPath))
-      const jwk = key.export({ format: 'jwk' })
-      if (jwk.crv === 'Ed25519') {
-        return key
-      } else {
-        console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')
-      }
-    } catch {
-      console.log('Private key could not be loaded. Generating new key.')
+  try {
+    const key = crypto.createPrivateKey(fs.readFileSync(keyPath))
+    const jwk = key.export({ format: 'jwk' })
+    if (jwk.crv === 'Ed25519') {
+      return key
+    } else {
+      console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')
     }
+  } catch {
+    console.log('Private key could not be loaded. Generating new key.')
   }
   const keypair = crypto.generateKeyPairSync('ed25519')
+  fs.mkdirSync('../../tmp')
+  fs.writeFileSync(
+    '../../tmp/private.pem',
+    keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
+  )
   return keypair.privateKey
 }
