@@ -110,7 +110,7 @@ export const Config = {
     'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
   ),
   privateKey: parseOrProvisionKey(
-    envString('PRIVATE_KEY_PATH', '../../tmp/private.pem')
+    envString('PRIVATE_KEY_PATH', './tmp/private.pem')
   ),
 
   /** Frontend **/
@@ -154,9 +154,11 @@ function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
     console.log('Private key could not be loaded. Generating new key.')
   }
   const keypair = crypto.generateKeyPairSync('ed25519')
-  fs.mkdirSync('../../tmp')
+  if (!fs.existsSync('./tmp')) {
+    fs.mkdirSync('./tmp')
+  }
   fs.writeFileSync(
-    '../../tmp/private.pem',
+    './tmp/private.pem',
     keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
   )
   return keypair.privateKey
