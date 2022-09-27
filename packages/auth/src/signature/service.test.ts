@@ -212,7 +212,7 @@ describe('Signature Service', (): void => {
       await truncateTables(knex)
     })
 
-    test('Validate POST / request with middleware', async (): Promise<void> => {
+    test('Validate grant initiation request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
@@ -241,7 +241,7 @@ describe('Signature Service', (): void => {
         privateKey
       )
 
-      await signatureService.tokenHttpsigMiddleware(ctx, next)
+      await signatureService.grantInitiationHttpsigMiddleware(ctx, next)
 
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
@@ -249,7 +249,7 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('Validate /introspect request with middleware', async (): Promise<void> => {
+    test('Validate token introspection request with middleware', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
@@ -269,12 +269,17 @@ describe('Signature Service', (): void => {
         {
           access_token: token.value,
           proof: 'httpsig',
-          resource_server: 'test'
+          resource_server: {
+            key: {
+              proof: 'httpsig',
+              jwk: testClientKey.jwk
+            }
+          }
         },
         privateKey
       )
 
-      await signatureService.tokenHttpsigMiddleware(ctx, next)
+      await signatureService.introspectionHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
@@ -282,7 +287,7 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('Validate DEL /token request with middleware', async () => {
+    test('Validate token management request with middleware', async () => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
@@ -315,26 +320,7 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('httpsig middleware fails if client is invalid', async () => {
-      const grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        continueToken: crypto.randomBytes(8).toString('hex'),
-        continueId: v4(),
-        interactId: v4(),
-        interactNonce: crypto.randomBytes(8).toString('hex'),
-        interactRef: v4(),
-        clientKeyId: 'https://openpayments.network/wrong-key'
-      })
-      await Access.query(trx).insertAndFetch({
-        grantId: grant.id,
-        ...BASE_ACCESS
-      })
-      const token = await AccessToken.query(trx).insertAndFetch({
-        grantId: grant.id,
-        ...BASE_TOKEN,
-        value: crypto.randomBytes(8).toString('hex'),
-        managementId: v4()
-      })
+    test('token introspection httpsig middleware fails if resource server is invalid', async () => {
       const ctx = await createContextWithSigHeaders(
         {
           headers: {
@@ -343,16 +329,16 @@ describe('Signature Service', (): void => {
           url: '/introspect',
           method: 'POST'
         },
-        { managementId },
+        {},
         {
-          access_token: token.value,
+          access_token: v4(),
           proof: 'httpsig',
-          resource_server: 'test'
+          resource_server: 'invalid'
         },
         privateKey
       )
 
-      await signatureService.tokenHttpsigMiddleware(ctx, next)
+      await signatureService.introspectionHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(401)

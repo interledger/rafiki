@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as crypto from 'crypto'
 import { importJWK } from 'jose'
-import { HttpMethod } from 'openapi'
 
 import { AppContext } from '../app'
 import { BaseService } from '../shared/baseService'
@@ -33,7 +34,18 @@ export interface SignatureService {
   sigInputToChallenge(sigInput: string, ctx: AppContext): string | null
   tokenHttpsigMiddleware(
     ctx: AppContext,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    next: () => Promise<any>
+  ): Promise<void>
+  introspectionHttpsigMiddleware(
+    ctx: AppContext,
+    next: () => Promise<any>
+  ): Promise<void>
+  grantContinueHttpsigMiddleware(
+    ctx: AppContext,
+    next: () => Promise<any>
+  ): Promise<void>
+  grantInitiationHttpsigMiddleware(
+    ctx: AppContext,
     next: () => Promise<any>
   ): Promise<void>
 }
@@ -62,9 +74,20 @@ export async function createSignatureService({
       verifySig(deps, sig, jwk, challenge),
     sigInputToChallenge: (sigInput: string, ctx: AppContext) =>
       sigInputToChallenge(sigInput, ctx),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tokenHttpsigMiddleware: (ctx: AppContext, next: () => Promise<any>) =>
-      tokenHttpsigMiddleware(deps, ctx, next)
+      tokenHttpsigMiddleware(deps, ctx, next),
+    introspectionHttpsigMiddleware: (
+      ctx: AppContext,
+      next: () => Promise<any>
+    ) => introspectionHttpsigMiddleware(deps, ctx, next),
+    grantContinueHttpsigMiddleware: (
+      ctx: AppContext,
+      next: () => Promise<any>
+    ) => grantContinueHttpsigMiddleware(deps, ctx, next),
+    grantInitiationHttpsigMiddleware: (
+      ctx: AppContext,
+      next: () => Promise<any>
+    ) => grantInitiationHttpsigMiddleware(deps, ctx, next)
   }
 }
 
@@ -96,13 +119,25 @@ async function verifySigAndChallenge(
     }
   }
 
-  return {
-    success: await verifySig(
-      deps,
-      sig.replace('sig1=', ''),
-      clientKey,
-      challenge
+  try {
+    return {
+      success: await verifySig(
+        deps,
+        sig.replace('sig1=', ''),
+        clientKey,
+        challenge
+      )
+    }
+  } catch (err) {
+    deps.logger.error(
+      {
+        error: err
+      },
+      'failed to verify signature'
     )
+    return {
+      success: false
+    }
   }
 }
 
@@ -124,6 +159,7 @@ async function verifySigFromBoundKey(
   return verifySigAndChallenge(deps, sig, sigInput, jwk, ctx)
 }
 
+// TODO: Replace with public httpsig library
 function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
   // https://datatracker.ietf.org/doc/html/rfc8941#section-4.1.1.1
   const messageComponents = sigInput.split('sig1=')[1].split(';')[0].split(' ')
@@ -165,12 +201,19 @@ function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
   return signatureBase
 }
 
-async function tokenHttpsigMiddleware(
-  deps: ServiceDependencies,
-  ctx: AppContext,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  next: () => Promise<any>
-): Promise<void> {
+interface ValidateHttpSigHeadersResult {
+  success: boolean
+  status?: number
+  body?: {
+    error: string
+    message: string
+  }
+  sig?: string
+  sigInput?: string
+}
+
+// TODO: maybe refactor into handler for next()
+function validateHttpSigHeaders(ctx: AppContext): ValidateHttpSigHeadersResult {
   const sig = ctx.headers['signature']
   const sigInput = ctx.headers['signature-input']
 
@@ -180,86 +223,28 @@ async function tokenHttpsigMiddleware(
     typeof sig !== 'string' ||
     typeof sigInput !== 'string'
   ) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
+    return {
+      success: false,
+      status: 400,
+      body: {
+        error: 'invalid_request',
+        message: 'invalid signature headers'
+      }
     }
-    next()
-    return
   }
 
-  const { body } = ctx.request
-  const { path, method } = ctx
-  let verified: VerifySigResult
-  if (
-    path.includes('/introspect') &&
-    method === HttpMethod.POST.toUpperCase()
-  ) {
-    const accessToken = await deps.accessTokenService.get(body['access_token'])
-    if (!accessToken) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client',
-        message: 'invalid access token'
-      }
-
-      return
-    }
-
-    const grant = await deps.grantService.get(accessToken.grantId)
-    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
-  } else if (
-    path.includes('/token') &&
-    method === HttpMethod.DELETE.toUpperCase()
-  ) {
-    const accessToken = await deps.accessTokenService.getByManagementId(
-      ctx.params['managementId']
-    )
-    if (!accessToken) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_client',
-        message: 'invalid access token'
-      }
-      return
-    }
-
-    const grant = await deps.grantService.get(accessToken.grantId)
-    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
-  } else if (path.includes('/continue')) {
-    const grant = await deps.grantService.getByInteraction(
-      ctx.params['interactId']
-    )
-    if (!grant) {
-      ctx.status = 401
-      ctx.body = {
-        error: 'invalid_interaction',
-        message: 'invalid grant'
-      }
-      return
-    }
-    verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
-  } else if (path === '/' && method === HttpMethod.POST.toUpperCase()) {
-    if (!(await deps.clientService.validateClient(body.client))) {
-      ctx.status = 401
-      ctx.body = { error: 'invalid_client' }
-      return
-    }
-
-    verified = await verifySigAndChallenge(
-      deps,
-      sig,
-      sigInput,
-      body.client.key.jwk,
-      ctx
-    )
-  } else {
-    // route does not need httpsig verification
-    await next()
-    return
+  return {
+    success: true,
+    sig,
+    sigInput
   }
+}
 
+async function handleVerifySigResult(
+  verified: VerifySigResult,
+  ctx: AppContext,
+  next: () => Promise<void>
+): Promise<void> {
   if (!verified.success) {
     ctx.status = verified.status || 401
     ctx.body = {
@@ -271,4 +256,130 @@ async function tokenHttpsigMiddleware(
   }
 
   await next()
+}
+
+async function introspectionHttpsigMiddleware(
+  deps: ServiceDependencies,
+  ctx: AppContext,
+  next: () => Promise<void>
+): Promise<void> {
+  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
+  if (!validateHttpSigHeadersResult.success) {
+    const { status, body } = validateHttpSigHeadersResult
+    ctx.status = status
+    ctx.body = body
+    next()
+    return
+  }
+  const { sig, sigInput } = validateHttpSigHeadersResult
+  const { body } = ctx.request
+
+  const verified = await verifySigAndChallenge(
+    deps,
+    sig,
+    sigInput,
+    body.resource_server?.key?.jwk, // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-resource-servers#section-3.2
+    ctx
+  )
+
+  await handleVerifySigResult(verified, ctx, next)
+}
+
+async function grantContinueHttpsigMiddleware(
+  deps: ServiceDependencies,
+  ctx: AppContext,
+  next: () => Promise<any>
+): Promise<void> {
+  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
+  if (!validateHttpSigHeadersResult.success) {
+    const { status, body } = validateHttpSigHeadersResult
+    ctx.status = status
+    ctx.body = body
+    next()
+    return
+  }
+
+  const { sig, sigInput } = validateHttpSigHeadersResult
+
+  const grant = await deps.grantService.getByInteraction(
+    ctx.params['interactId']
+  )
+  if (!grant) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_interaction',
+      message: 'invalid grant'
+    }
+    return
+  }
+  const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
+
+  await handleVerifySigResult(verified, ctx, next)
+}
+
+async function grantInitiationHttpsigMiddleware(
+  deps: ServiceDependencies,
+  ctx: AppContext,
+  next: () => Promise<any>
+): Promise<void> {
+  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
+  if (!validateHttpSigHeadersResult.success) {
+    const { status, body } = validateHttpSigHeadersResult
+    ctx.status = status
+    ctx.body = body
+    next()
+    return
+  }
+
+  const { sig, sigInput } = validateHttpSigHeadersResult
+  const { body } = ctx.request
+
+  if (!(await deps.clientService.validateClient(body.client))) {
+    ctx.status = 401
+    ctx.body = { error: 'invalid_client' }
+    return
+  }
+
+  const verified = await verifySigAndChallenge(
+    deps,
+    sig,
+    sigInput,
+    body.client.key.jwk,
+    ctx
+  )
+
+  await handleVerifySigResult(verified, ctx, next)
+}
+
+async function tokenHttpsigMiddleware(
+  deps: ServiceDependencies,
+  ctx: AppContext,
+  next: () => Promise<any>
+): Promise<void> {
+  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
+  if (!validateHttpSigHeadersResult.success) {
+    const { status, body } = validateHttpSigHeadersResult
+    ctx.status = status
+    ctx.body = body
+    next()
+    return
+  }
+
+  const { sig, sigInput } = validateHttpSigHeadersResult
+  const accessToken = await deps.accessTokenService.getByManagementId(
+    ctx.params['managementId']
+  )
+  if (!accessToken) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_client',
+      message: 'invalid access token'
+    }
+    return
+  }
+
+  const grant = await deps.grantService.get(accessToken.grantId)
+  const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
+
+  await handleVerifySigResult(verified, ctx, next)
 }

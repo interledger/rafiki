@@ -190,7 +190,7 @@ export class App {
         path: '/',
         method: HttpMethod.POST
       }),
-      signatureService.tokenHttpsigMiddleware,
+      signatureService.grantInitiationHttpsigMiddleware,
       grantRoutes.create
     )
 
@@ -201,7 +201,7 @@ export class App {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
-      signatureService.tokenHttpsigMiddleware,
+      signatureService.grantContinueHttpsigMiddleware,
       grantRoutes.continue
     )
 
@@ -236,7 +236,7 @@ export class App {
         method: HttpMethod.POST
       }),
       this.config.introspectionHttpsig
-        ? signatureService.tokenHttpsigMiddleware
+        ? signatureService.introspectionHttpsigMiddleware
         : (ctx, next) => next(),
       accessTokenRoutes.introspect
     )
