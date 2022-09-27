@@ -17,6 +17,7 @@ import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
+import { AccessTokenService } from '../accessToken/service'
 
 export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 export const KID_PATH = '/keys/base-test-key'
@@ -96,6 +97,7 @@ describe('Grant Routes', (): void => {
   let knex: Knex
   let grantRoutes: GrantRoutes
   let config: IAppConfig
+  let accessTokenService: AccessTokenService
 
   let grant: Grant
   beforeEach(async (): Promise<void> => {
@@ -114,6 +116,7 @@ describe('Grant Routes', (): void => {
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
     jestOpenAPI(await deps.use('openApi'))
+    accessTokenService = await deps.use('accessTokenService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -277,6 +280,51 @@ describe('Grant Routes', (): void => {
         }
       })
 
+      scope.isDone()
+    })
+    test('Does not create grant if token issuance fails', async (): Promise<void> => {
+      jest
+        .spyOn(accessTokenService, 'create')
+        .mockRejectedValueOnce(new Error())
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(KID_PATH)
+        .reply(200, {
+          ...TEST_CLIENT_KEY.jwk,
+          exp,
+          nbf,
+          revoked: false
+        })
+
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          url,
+          method
+        },
+        {}
+      )
+      const body = {
+        access_token: {
+          access: [
+            {
+              type: AccessType.IncomingPayment,
+              actions: [Action.Create, Action.Read, Action.List],
+              identifier: `https://example.com/${v4()}`
+            }
+          ]
+        },
+        client: {
+          display: TEST_CLIENT_DISPLAY,
+          key: TEST_CLIENT_KEY
+        }
+      }
+      ctx.request.body = body
+
+      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(500)
       scope.isDone()
     })
     test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {

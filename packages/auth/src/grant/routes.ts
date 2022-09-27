@@ -97,25 +97,28 @@ async function createGrantInitiation(
       .every((el) => el === true)
   ) {
     const trx = await Grant.startTransaction()
+    let grant: Grant
+    let accessToken: AccessToken
     try {
-      const grant = await grantService.create(body, trx)
-      const accessToken = await deps.accessTokenService.create(grant.id, {
+      grant = await grantService.create(body, trx)
+      accessToken = await deps.accessTokenService.create(grant.id, {
         trx
       })
       await trx.commit()
-      const access = await deps.accessService.getByGrant(grant.id)
-      ctx.status = 200
-      ctx.body = createGrantBody({
-        domain: deps.config.authServerDomain,
-        grant,
-        access,
-        accessToken
-      })
-      return
     } catch (err) {
       await trx.rollback()
-      throw err
+      ctx.status = 500
+      return
     }
+    const access = await deps.accessService.getByGrant(grant.id)
+    ctx.status = 200
+    ctx.body = createGrantBody({
+      domain: deps.config.authServerDomain,
+      grant,
+      access,
+      accessToken
+    })
+    return
   }
 
   if (!body.interact) {
