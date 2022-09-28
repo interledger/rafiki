@@ -2,6 +2,70 @@ import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
+import { createVerifier, httpis, RequestLike } from 'http-message-signatures'
+import { KeyObject } from 'crypto'
+import { Request as KoaRequest } from 'koa'
+import { ClientKeys } from '../../clientKeys/model'
+import { JWKWithRequired } from 'auth'
+
+// Creates a RequestLike object for the http-message-signatures library input
+function requestLike(request: KoaRequest): RequestLike {
+  return {
+    method: request.method,
+    headers: request.headers,
+    url: request.url
+  }
+}
+
+function parseJwkKeyType(jwk: JWKWithRequired): KeyType {
+  if (jwk.kty === 'private' || jwk.kty === 'public' || jwk.kty === 'secret') {
+    return jwk.kty
+  } else {
+    throw new Error('invalid key type')
+  }
+}
+
+function parseJwkUsages(jwk: JWKWithRequired): Array<KeyUsage> {
+  const { use } = jwk
+  if (use === 'decrypt' || use === 'deriveBits' || use === 'deriveKey' || use === 'encrypt' || use === 'sign' || use === 'unwrapKey' || use === 'verify' || use === 'wrapKey') {
+    return [use]
+  } else if (use === undefined) {
+    return []
+  } else {
+    throw new Error('invalid usage')
+  }
+}
+
+async function verifyRequest(request: KoaRequest, clientKeys: ClientKeys): Promise<void> {
+    const keyType = parseJwkKeyType(clientKeys.jwk)
+    const typedRequest = requestLike(request)
+    const signatures = httpis.parseSignatures(typedRequest)
+    for (const [, { keyid, alg }] of signatures) {
+      if (!keyid) {
+        throw new Error(`The signature input is missing the 'keyid' parameter`)
+      } else if (alg !== 'ed25519') {
+        throw new Error(`The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' is supported.`)
+      } else {
+        const success = await httpis.verify(requestLike(request), {
+          format: 'httpbis',
+          verifiers: {
+            keyid: createVerifier(alg, KeyObject.from({
+              algorithm: {
+                name: alg
+              },
+              extractable: clientKeys.jwk.ext,
+              type: keyType,
+              usages: parseJwkUsages(clientKeys.jwk)
+            }))
+          }
+        })
+
+        if (!success) {
+          throw new Error('signature is not valid')
+        }
+      }
+    }
+}
 
 export function createAuthMiddleware({
   type,
@@ -36,6 +100,13 @@ export function createAuthMiddleware({
       const grant = await authService.introspect(token)
       if (!grant || !grant.active) {
         ctx.throw(401, 'Invalid Token')
+      }
+      try {
+        const clientKeysService = await ctx.container.use('clientKeysService')
+        const clientKeys = await clientKeysService.getKeyByClientId(grant.clientId)
+        await verifyRequest(ctx.request, clientKeys)
+      } catch (e) {
+        ctx.throw(401, `Invalid signature: ${e.message}`)
       }
       if (
         !grant.includesAccess({

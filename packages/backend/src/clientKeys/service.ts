@@ -5,6 +5,7 @@ import { BaseService } from '../shared/baseService'
 
 export interface ClientKeysService {
   getKeyById(keyId: string): Promise<ClientKeys>
+  getKeyByClientId(clientId: string): Promise<ClientKeys>
   revokeKeyById(keyId: string): Promise<string>
 }
 
@@ -25,6 +26,7 @@ export async function createClientKeysService({
   }
   return {
     getKeyById: (keyId) => getKeyById(deps, keyId),
+    getKeyByClientId: (clientId) => getKeyByClientId(deps, clientId),
     revokeKeyById: (keyId) => revokeKeyById(deps, keyId)
   }
 }
@@ -35,6 +37,17 @@ async function getKeyById(
   keyId: string
 ): Promise<ClientKeys> {
   const key = await ClientKeys.query(deps.knex).findById(keyId)
+  if (!key) return null
+  return key
+}
+
+async function getKeyByClientId(
+  deps: ServiceDependencies,
+  clientId: string
+): Promise<ClientKeys> {
+  const key = await ClientKeys.query(deps.knex).findOne({
+    clientId
+  })
   if (!key) return null
   return key
 }
