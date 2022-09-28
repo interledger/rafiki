@@ -66,7 +66,7 @@
     "graphql": "^16.6.0",
     "graphql-scalars": "^1.18.0",
     "graphql-tools": "^8.3.3",
-    "http-message-signatures": "link:../http-message-signatures",
+    "http-message-signatures": "workspace:../http-message-signatures",
     "ilp-packet": "3.1.4-alpha.1",
     "ilp-protocol-ccp": "^1.2.2",
     "ilp-protocol-ildcp": "^2.2.2",
