@@ -17,6 +17,7 @@ import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
 import { OpenPaymentsClientService } from '../../client/service'
+import { GetOptions } from '../../payment_pointer/model'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -29,7 +30,7 @@ import { knex } from 'knex'
 import { GrantReferenceService } from '../../grantReference/service'
 
 export interface OutgoingPaymentService {
-  get(id: string, clientId?: string): Promise<OutgoingPayment | undefined>
+  get(options: GetOptions): Promise<OutgoingPayment | undefined>
   create(
     options: CreateOutgoingPaymentOptions
   ): Promise<OutgoingPayment | OutgoingPaymentError>
@@ -61,7 +62,7 @@ export async function createOutgoingPaymentService(
     logger: deps_.logger.child({ service: 'OutgoingPaymentService' })
   }
   return {
-    get: (id, clientId) => getOutgoingPayment(deps, id, clientId),
+    get: (options) => getOutgoingPayment(deps, options),
     create: (options: CreateOutgoingPaymentOptions) =>
       createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
@@ -73,20 +74,11 @@ export async function createOutgoingPaymentService(
 
 async function getOutgoingPayment(
   deps: ServiceDependencies,
-  id: string,
-  clientId?: string
+  options: GetOptions
 ): Promise<OutgoingPayment | undefined> {
-  let outgoingPayment: OutgoingPayment
-  if (!clientId) {
-    outgoingPayment = await OutgoingPayment.query(deps.knex)
-      .findById(id)
-      .withGraphJoined('quote.asset')
-  } else {
-    outgoingPayment = await OutgoingPayment.query(deps.knex)
-      .findById(id)
-      .withGraphJoined('[quote.asset, grantRef]')
-      .where('grantRef.clientId', clientId)
-  }
+  const outgoingPayment = await OutgoingPayment.query(deps.knex)
+    .get(options)
+    .withGraphFetched('quote.asset')
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
 }

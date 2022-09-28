@@ -22,7 +22,9 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   ctx
 ): Promise<ResolversTypes['Quote']> => {
   const quoteService = await ctx.container.use('quoteService')
-  const quote = await quoteService.get(args.id)
+  const quote = await quoteService.get({
+    id: args.id
+  })
   if (!quote) throw new Error('quote does not exist')
   return quoteToGraphql(quote)
 }

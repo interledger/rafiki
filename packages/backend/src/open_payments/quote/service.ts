@@ -10,7 +10,7 @@ import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount, parseAmount } from '../amount'
 import { OpenPaymentsClientService, Receiver } from '../client/service'
-import { PaymentPointer } from '../payment_pointer/model'
+import { PaymentPointer, GetOptions } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
@@ -18,7 +18,7 @@ import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 const MAX_INT64 = BigInt('9223372036854775807')
 
 export interface QuoteService {
-  get(id: string): Promise<Quote | undefined>
+  get(options: GetOptions): Promise<Quote | undefined>
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
   getPaymentPointerPage(
     paymentPointerId: string,
@@ -47,7 +47,7 @@ export async function createQuoteService(
     logger: deps_.logger.child({ service: 'QuoteService' })
   }
   return {
-    get: (id) => getQuote(deps, id),
+    get: (options) => getQuote(deps, options),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
     getPaymentPointerPage: (paymentPointerId, pagination) =>
       getPaymentPointerPage(deps, paymentPointerId, pagination)
@@ -56,9 +56,9 @@ export async function createQuoteService(
 
 async function getQuote(
   deps: ServiceDependencies,
-  id: string
+  options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex).findById(id).withGraphJoined('asset')
+  return Quote.query(deps.knex).get(options).withGraphFetched('asset')
 }
 
 export interface CreateQuoteOptions {

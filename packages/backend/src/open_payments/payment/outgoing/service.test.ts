@@ -40,6 +40,8 @@ import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
+import { GetOptions } from '../../payment_pointer/model'
+import { getTests } from '../../payment_pointer/model.test'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
@@ -94,7 +96,9 @@ describe('OutgoingPaymentService', (): void => {
     expectedError?: string
   ): Promise<OutgoingPayment> {
     await expect(outgoingPaymentService.processNext()).resolves.toBe(paymentId)
-    const payment = await outgoingPaymentService.get(paymentId)
+    const payment = await outgoingPaymentService.get({
+      id: paymentId
+    })
     if (!payment) throw 'no payment'
     if (expectState) expect(payment.state).toBe(expectState)
     expect(payment.error).toEqual(expectedError || null)
@@ -285,8 +289,34 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('get', (): void => {
-    it('returns undefined when no payment exists', async () => {
-      await expect(outgoingPaymentService.get(uuid())).resolves.toBeUndefined()
+    getTests({
+      createGrant: async ({ clientId }: { clientId: string }) => {
+        const grantRef = await grantReferenceService.create({
+          id: uuid(),
+          clientId
+        })
+
+        return new Grant({
+          active: true,
+          clientId: grantRef.clientId,
+          grant: grantRef.id,
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read]
+            }
+          ]
+        })
+      },
+      createModel: ({ grant }: { grant?: Grant }) =>
+        createOutgoingPayment(deps, {
+          paymentPointerId,
+          grant,
+          receiver,
+          sendAmount,
+          validDestination: false
+        }),
+      get: (options: GetOptions) => outgoingPaymentService.get(options)
     })
   })
 
@@ -341,9 +371,11 @@ describe('OutgoingPaymentService', (): void => {
             peerId: outgoingPeer ? peer.id : null
           })
 
-          await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
-            payment
-          )
+          await expect(
+            outgoingPaymentService.get({
+              id: payment.id
+            })
+          ).resolves.toEqual(payment)
 
           const expectedPaymentData: Partial<PaymentData['payment']> = {
             id: payment.id
@@ -1162,7 +1194,9 @@ describe('OutgoingPaymentService', (): void => {
         state: OutgoingPaymentState.Sending
       })
 
-      const after = await outgoingPaymentService.get(payment.id)
+      const after = await outgoingPaymentService.get({
+        id: payment.id
+      })
       expect(after?.state).toBe(OutgoingPaymentState.Sending)
       await expectOutcome(payment, { accountBalance: quoteAmount })
     })
@@ -1176,7 +1210,9 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(FundingError.InvalidAmount)
 
-      const after = await outgoingPaymentService.get(payment.id)
+      const after = await outgoingPaymentService.get({
+        id: payment.id
+      })
       expect(after?.state).toBe(OutgoingPaymentState.Funding)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     })
@@ -1193,7 +1229,9 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).resolves.toEqual(FundingError.WrongState)
 
-        const after = await outgoingPaymentService.get(payment.id)
+        const after = await outgoingPaymentService.get({
+          id: payment.id
+        })
         expect(after?.state).toBe(startState)
       })
     })

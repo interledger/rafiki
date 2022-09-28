@@ -22,13 +22,17 @@ import {
   createPaymentPointer,
   MockPaymentPointer
 } from '../../tests/paymentPointer'
+import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import { Amount, AmountJSON, serializeAmount } from '../amount'
+import { AccessAction, AccessType, Grant } from '../auth/grant'
 import {
   IncomingPayment,
   IncomingPaymentState
 } from '../payment/incoming/model'
+import { GetOptions } from '../payment_pointer/model'
+import { getTests } from '../payment_pointer/model.test'
 import { Pagination } from '../../shared/baseModel'
 import { getPageTests } from '../../shared/baseModel.test'
 import { GrantReference } from '../grantReference/model'
@@ -128,8 +132,40 @@ describe('QuoteService', (): void => {
   })
 
   describe('get', (): void => {
-    it('returns undefined when no quote exists', async () => {
-      await expect(quoteService.get(uuid())).resolves.toBeUndefined()
+    getTests({
+      createGrant: async ({ clientId }: { clientId: string }) => {
+        const grantRef = await grantReferenceService.create({
+          id: uuid(),
+          clientId
+        })
+
+        return new Grant({
+          active: true,
+          clientId: grantRef.clientId,
+          grant: grantRef.id,
+          access: [
+            {
+              type: AccessType.Quote,
+              actions: [AccessAction.Create, AccessAction.Read]
+            }
+          ]
+        })
+      },
+      createModel: ({ grant }: { grant?: Grant }) =>
+        createQuote(deps, {
+          paymentPointerId,
+          receiver: `${
+            receivingPaymentPointer.url
+          }/incoming-payments/${uuid()}`,
+          sendAmount: {
+            value: BigInt(56),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grantId: grant?.grant,
+          validDestination: false
+        }),
+      get: (options: GetOptions) => quoteService.get(options)
     })
   })
 
@@ -317,7 +353,11 @@ describe('QuoteService', (): void => {
                   0.500000000001
                 )
 
-                await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
+                await expect(
+                  quoteService.get({
+                    id: quote.id
+                  })
+                ).resolves.toEqual(quote)
               }
             )
 
@@ -387,9 +427,11 @@ describe('QuoteService', (): void => {
                   expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
                     0.500000000001
                   )
-                  await expect(quoteService.get(quote.id)).resolves.toEqual(
-                    quote
-                  )
+                  await expect(
+                    quoteService.get({
+                      id: quote.id
+                    })
+                  ).resolves.toEqual(quote)
                 }
               )
             }
@@ -427,7 +469,11 @@ describe('QuoteService', (): void => {
                 0.500000000001
               )
 
-              await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
+              await expect(
+                quoteService.get({
+                  id: quote.id
+                })
+              ).resolves.toEqual(quote)
             })
 
             it.each`
@@ -484,7 +530,11 @@ describe('QuoteService', (): void => {
                 0.500000000001
               )
 
-              await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
+              await expect(
+                quoteService.get({
+                  id: quote.id
+                })
+              ).resolves.toEqual(quote)
             })
 
             it.each`

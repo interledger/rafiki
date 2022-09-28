@@ -53,10 +53,11 @@ async function getOutgoingPayment(
       : ctx.grant.clientId
   }
   try {
-    outgoingPayment = await deps.outgoingPaymentService.get(
-      ctx.params.id,
-      clientId
-    )
+    outgoingPayment = await deps.outgoingPaymentService.get({
+      id: ctx.params.id,
+      clientId,
+      paymentPointerId: ctx.paymentPointer.id
+    })
   } catch (_) {
     ctx.throw(500, 'Error trying to get outgoing payment')
   }

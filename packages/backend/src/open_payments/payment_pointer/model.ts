@@ -1,5 +1,4 @@
-import { Model } from 'objection'
-
+import { Model, Page } from 'objection'
 import { GrantReference } from '../grantReference/model'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
@@ -93,6 +92,42 @@ export class PaymentPointerEvent extends WebhookEvent {
   public data!: PaymentPointerData
 }
 
+export interface GetOptions {
+  id: string
+  clientId?: string
+  paymentPointerId?: string
+}
+
+class SubresourceQueryBuilder<
+  M extends Model,
+  R = M[]
+> extends BaseModel.QueryBuilder<M, R> {
+  ArrayQueryBuilderType!: SubresourceQueryBuilder<M, M[]>
+  SingleQueryBuilderType!: SubresourceQueryBuilder<M, M>
+  MaybeSingleQueryBuilderType!: SubresourceQueryBuilder<M, M | undefined>
+  NumberQueryBuilderType!: SubresourceQueryBuilder<M, number>
+  PageQueryBuilderType!: SubresourceQueryBuilder<M, Page<M>>
+
+  get({ id, paymentPointerId, clientId }: GetOptions) {
+    const tableName = this.modelClass().tableName
+    if (paymentPointerId) {
+      this.where(`${tableName}.paymentPointerId`, paymentPointerId)
+    }
+    if (clientId) {
+      // SubresourceQueryBuilder seemingly cannot access
+      // PaymentPointerSubresource relationMappings, so
+      // this.withGraphJoined('grantRef') results in:
+      // missing FROM-clause entry for table "grantRef"
+      this.join(
+        'grantReferences as grantRef',
+        `${tableName}.grantId`,
+        'grantRef.id'
+      ).where('grantRef.clientId', clientId)
+    }
+    return this.findById(id)
+  }
+}
+
 export abstract class PaymentPointerSubresource extends BaseModel {
   public readonly paymentPointerId!: string
   public paymentPointer?: PaymentPointer
@@ -123,4 +158,7 @@ export abstract class PaymentPointerSubresource extends BaseModel {
       }
     }
   }
+
+  QueryBuilderType!: SubresourceQueryBuilder<this>
+  static QueryBuilder = SubresourceQueryBuilder
 }

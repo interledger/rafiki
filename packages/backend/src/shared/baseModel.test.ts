@@ -1,4 +1,4 @@
-import { BaseModel, Pagination } from '../shared/baseModel'
+import { BaseModel, Pagination } from './baseModel'
 
 interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>

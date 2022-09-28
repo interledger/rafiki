@@ -22,7 +22,9 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const payment = await outgoingPaymentService.get(args.id)
+    const payment = await outgoingPaymentService.get({
+      id: args.id
+    })
     if (!payment) throw new Error('payment does not exist')
     return paymentToGraphql(payment)
   }
