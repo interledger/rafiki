@@ -1,0 +1,49 @@
+{
+  "name": "http-message-signatures",
+  "version": "0.1.2",
+  "description": "HTTP message signature implementation",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint -c .eslintrc ./src/**/*.ts ./test/**/*.ts",
+    "lint:fix": "npm run lint --silent -- --fix",
+    "prepare": "npm run build",
+    "preversion": "npm run lint",
+    "test": "mocha -r ts-node/register test/**/*.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dhensby/node-http-message-signatures.git"
+  },
+  "keywords": [
+    "http-message-signatures",
+    "message-signatures",
+    "signature"
+  ],
+  "author": "Daniel Hensby",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dhensby/node-http-message-signatures/issues"
+  },
+  "files": [
+    "lib/"
+  ],
+  "homepage": "https://github.com/dhensby/node-http-message-signatures#readme",
+  "devDependencies": {
+    "@tsconfig/node12": "^1.0.11",
+    "@types/chai": "^4.3.3",
+    "@types/mocha": "^9.1.1",
+    "@types/node": "^12.20.55",
+    "@typescript-eslint/eslint-plugin": "^5.36.1",
+    "@typescript-eslint/parser": "^5.36.1",
+    "chai": "^4.3.6",
+    "eslint": "^8.23.0",
+    "mocha": "^10.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.2"
+  },
+  "dependencies": {
+    "structured-headers": "^0.5.0"
+  }
+}

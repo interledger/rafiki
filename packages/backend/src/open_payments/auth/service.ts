@@ -10,6 +10,9 @@ import {
   GrantAccessJSON
 } from './grant'
 import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
+import { createVerifier, httpis, RequestLike } from 'http-message-signatures'
+import { KeyObject } from 'crypto'
+import { Request as KoaRequest } from 'koa'
 
 export interface AuthService {
   introspect(token: string): Promise<Grant | undefined>
@@ -44,6 +47,15 @@ export async function createAuthService(
   }
 }
 
+// Creates a RequestLike object for the http-message-signatures library input
+function requestLike(request: KoaRequest): RequestLike {
+  return {
+    method: request.method,
+    headers: request.headers,
+    url: request.url
+  }
+}
+
 async function introspectToken(
   deps: ServiceDependencies,
   token: string
@@ -58,7 +70,7 @@ async function introspectToken(
       // 'Digest': 'sha256=...'
     }
 
-    const { status, data } = await axios.post(
+    const { status, data, request } = await axios.post(
       deps.authServerIntrospectionUrl,
       {
         access_token: token,
@@ -71,6 +83,53 @@ async function introspectToken(
         validateStatus: (status) => status === 200
       }
     )
+
+    const keyType: KeyType = 'public' //dc_TODO
+    const extractable = false //dc_TODO 
+    const typedRequest = requestLike(request)
+    const signatures = httpis.parseSignatures(typedRequest)
+    const verifications = new Array<Promise<void>>()
+    signatures.forEach(({ keyid, alg }, signatureName) => {
+      if (!keyid) {
+        verifications.push(Promise.reject(new Error(`The signature input is missing the 'keyid' parameter`)))
+      } else if (alg !== 'ed25519') {
+        verifications.push(Promise.reject(new Error(`The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' is supported.`)))
+      } else {
+        verifications.push(new Promise((resolve, reject) => {
+          httpis.verify(requestLike(request), {
+            format: 'httpbis',
+            verifiers: {
+              keyid: createVerifier(alg, KeyObject.from({
+                algorithm: {
+                  name: alg
+                },
+                extractable: extractable,
+                type: keyType,
+                usages: []
+              }))
+            }
+          }).then((result) => {
+            if (result) {
+              resolve()
+            } else {
+              reject(new Error('signature is not authentic'))
+            }
+          }).catch((err) => {
+            reject(err)
+          })
+        }))
+      }
+    })
+
+    let signatureIsAuthentic = false
+    try {
+      await Promise.all(verifications)
+      signatureIsAuthentic = true
+    } catch (e) {}
+
+    if (!signatureIsAuthentic) {
+      // dc_TODO reject
+    }
 
     assert.ok(
       deps.validateResponse({
