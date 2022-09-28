@@ -1,5 +1,6 @@
 import { Model } from 'objection'
 
+import { GrantReference } from '../grantReference/model'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
@@ -90,4 +91,36 @@ export type PaymentPointerData = {
 export class PaymentPointerEvent extends WebhookEvent {
   public type!: PaymentPointerEventType
   public data!: PaymentPointerData
+}
+
+export abstract class PaymentPointerSubresource extends BaseModel {
+  public readonly paymentPointerId!: string
+  public paymentPointer?: PaymentPointer
+
+  public abstract readonly assetId: string
+  public abstract asset: Asset
+
+  public readonly grantId?: string
+  public grantRef?: GrantReference
+
+  static get relationMappings() {
+    return {
+      paymentPointer: {
+        relation: Model.BelongsToOneRelation,
+        modelClass: PaymentPointer,
+        join: {
+          from: `${this.tableName}.paymentPointerId`,
+          to: 'paymentPointers.id'
+        }
+      },
+      grantRef: {
+        relation: Model.HasOneRelation,
+        modelClass: GrantReference,
+        join: {
+          from: `${this.tableName}.grantId`,
+          to: 'grantReferences.id'
+        }
+      }
+    }
+  }
 }

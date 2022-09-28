@@ -66,6 +66,7 @@ export interface CreateQuoteOptions {
   sendAmount?: Amount
   receiveAmount?: Amount
   receiver: string
+  grantId?: string
 }
 
 async function createQuote(
@@ -128,7 +129,8 @@ async function createQuote(
           lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
-          expiresAt: new Date(0)
+          expiresAt: new Date(0),
+          grantId: options.grantId
         })
         .withGraphFetched('asset')
 

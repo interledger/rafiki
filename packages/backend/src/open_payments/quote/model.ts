@@ -3,11 +3,10 @@ import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { Amount, AmountJSON } from '../amount'
-import { PaymentPointer } from '../payment_pointer/model'
+import { PaymentPointerSubresource } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
-import { BaseModel } from '../../shared/baseModel'
 
-export class Quote extends BaseModel {
+export class Quote extends PaymentPointerSubresource {
   public static readonly tableName = 'quotes'
 
   static get virtualAttributes(): string[] {
@@ -20,29 +19,20 @@ export class Quote extends BaseModel {
     ]
   }
 
-  // Open payments payment pointer id of the sender
-  public paymentPointerId!: string
-  public paymentPointer?: PaymentPointer
-
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
 
-  static relationMappings = {
-    paymentPointer: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: PaymentPointer,
-      join: {
-        from: 'quotes.paymentPointerId',
-        to: 'paymentPointers.id'
-      }
-    },
-    asset: {
-      relation: Model.HasOneRelation,
-      modelClass: Asset,
-      join: {
-        from: 'quotes.assetId',
-        to: 'assets.id'
+  static get relationMappings() {
+    return {
+      ...super.relationMappings,
+      asset: {
+        relation: Model.HasOneRelation,
+        modelClass: Asset,
+        join: {
+          from: 'quotes.assetId',
+          to: 'assets.id'
+        }
       }
     }
   }

@@ -226,6 +226,7 @@ describe('QuoteService', (): void => {
         let options: CreateQuoteOptions
         let incomingPayment: IncomingPayment
         let expected: ExpectedQuote
+        const grantId = uuid()
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
@@ -246,6 +247,11 @@ describe('QuoteService', (): void => {
             ...options,
             paymentType
           }
+
+          await grantReferenceService.create({
+            id: grantId,
+            clientId: uuid()
+          })
         })
 
         if (!sendAmount && !receiveAmount && !incomingAmount) {
@@ -256,52 +262,64 @@ describe('QuoteService', (): void => {
           })
         } else {
           if (sendAmount || receiveAmount) {
-            it('creates a Quote', async () => {
-              const walletScope = mockWalletQuote({
-                expected
-              })
-              const quote = await quoteService.create(options)
-              assert.ok(!isQuoteError(quote))
-              walletScope.isDone()
-              expect(quote).toMatchObject({
-                paymentPointerId,
-                receiver: options.receiver,
-                sendAmount: sendAmount || {
-                  value: BigInt(
-                    Math.ceil(
-                      Number(receiveAmount.value) /
-                        quote.minExchangeRate.valueOf()
-                    )
+            it.each`
+              grantId      | description
+              ${grantId}   | ${'with a grantId'}
+              ${undefined} | ${'without a grantId'}
+            `(
+              'creates a Quote $description',
+              async ({ grantId }): Promise<void> => {
+                const walletScope = mockWalletQuote({
+                  expected
+                })
+                const quote = await quoteService.create({
+                  ...options,
+                  grantId
+                })
+                assert.ok(!isQuoteError(quote))
+                walletScope.isDone()
+                expect(quote).toMatchObject({
+                  paymentPointerId,
+                  receiver: options.receiver,
+                  sendAmount: sendAmount || {
+                    value: BigInt(
+                      Math.ceil(
+                        Number(receiveAmount.value) /
+                          quote.minExchangeRate.valueOf()
+                      )
+                    ),
+                    assetCode: asset.code,
+                    assetScale: asset.scale
+                  },
+                  receiveAmount: receiveAmount || {
+                    value: BigInt(
+                      Math.ceil(
+                        Number(sendAmount.value) *
+                          quote.minExchangeRate.valueOf()
+                      )
+                    ),
+                    assetCode: destinationAsset.code,
+                    assetScale: destinationAsset.scale
+                  },
+                  maxPacketAmount: BigInt('9223372036854775807'),
+                  createdAt: expect.any(Date),
+                  updatedAt: expect.any(Date),
+                  expiresAt: new Date(
+                    quote.createdAt.getTime() + config.quoteLifespan
                   ),
-                  assetCode: asset.code,
-                  assetScale: asset.scale
-                },
-                receiveAmount: receiveAmount || {
-                  value: BigInt(
-                    Math.ceil(
-                      Number(sendAmount.value) * quote.minExchangeRate.valueOf()
-                    )
-                  ),
-                  assetCode: destinationAsset.code,
-                  assetScale: destinationAsset.scale
-                },
-                maxPacketAmount: BigInt('9223372036854775807'),
-                createdAt: expect.any(Date),
-                updatedAt: expect.any(Date),
-                expiresAt: new Date(
-                  quote.createdAt.getTime() + config.quoteLifespan
+                  grantId: grantId || null
+                })
+                expect(quote.minExchangeRate.valueOf()).toBe(
+                  0.5 * (1 - config.slippage)
                 )
-              })
-              expect(quote.minExchangeRate.valueOf()).toBe(
-                0.5 * (1 - config.slippage)
-              )
-              expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
-              expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
-                0.500000000001
-              )
+                expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
+                expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
+                  0.500000000001
+                )
 
-              await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
-            })
+                await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
+              }
+            )
 
             if (incomingAmount) {
               it('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
@@ -325,42 +343,55 @@ describe('QuoteService', (): void => {
             }
           } else {
             if (incomingAmount) {
-              it('creates a Quote', async () => {
-                const scope = mockWalletQuote({
-                  expected
-                })
-                const quote = await quoteService.create(options)
-                scope.isDone()
-                assert.ok(!isQuoteError(quote))
-                expect(quote).toMatchObject({
-                  ...options,
-                  maxPacketAmount: BigInt('9223372036854775807'),
-                  sendAmount: {
-                    value: BigInt(
-                      Math.ceil(
-                        Number(incomingAmount.value) /
-                          quote.minExchangeRate.valueOf()
-                      )
+              it.each`
+                grantId      | description
+                ${grantId}   | ${'with a grantId'}
+                ${undefined} | ${'without a grantId'}
+              `(
+                'creates a Quote $description',
+                async ({ grantId }): Promise<void> => {
+                  const scope = mockWalletQuote({
+                    expected
+                  })
+                  const quote = await quoteService.create({
+                    ...options,
+                    grantId
+                  })
+                  scope.isDone()
+                  assert.ok(!isQuoteError(quote))
+                  expect(quote).toMatchObject({
+                    ...options,
+                    maxPacketAmount: BigInt('9223372036854775807'),
+                    sendAmount: {
+                      value: BigInt(
+                        Math.ceil(
+                          Number(incomingAmount.value) /
+                            quote.minExchangeRate.valueOf()
+                        )
+                      ),
+                      assetCode: asset.code,
+                      assetScale: asset.scale
+                    },
+                    receiveAmount: incomingAmount,
+                    createdAt: expect.any(Date),
+                    updatedAt: expect.any(Date),
+                    expiresAt: new Date(
+                      quote.createdAt.getTime() + config.quoteLifespan
                     ),
-                    assetCode: asset.code,
-                    assetScale: asset.scale
-                  },
-                  receiveAmount: incomingAmount,
-                  createdAt: expect.any(Date),
-                  updatedAt: expect.any(Date),
-                  expiresAt: new Date(
-                    quote.createdAt.getTime() + config.quoteLifespan
+                    grantId: grantId || null
+                  })
+                  expect(quote.minExchangeRate.valueOf()).toBe(
+                    0.5 * (1 - config.slippage)
                   )
-                })
-                expect(quote.minExchangeRate.valueOf()).toBe(
-                  0.5 * (1 - config.slippage)
-                )
-                expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
-                expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
-                  0.500000000001
-                )
-                await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
-              })
+                  expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
+                  expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
+                    0.500000000001
+                  )
+                  await expect(quoteService.get(quote.id)).resolves.toEqual(
+                    quote
+                  )
+                }
+              )
             }
           }
 
