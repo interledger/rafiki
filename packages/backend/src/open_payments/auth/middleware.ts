@@ -27,7 +27,16 @@ function parseJwkKeyType(jwk: JWKWithRequired): KeyType {
 
 function parseJwkUsages(jwk: JWKWithRequired): Array<KeyUsage> {
   const { use } = jwk
-  if (use === 'decrypt' || use === 'deriveBits' || use === 'deriveKey' || use === 'encrypt' || use === 'sign' || use === 'unwrapKey' || use === 'verify' || use === 'wrapKey') {
+  if (
+    use === 'decrypt' ||
+    use === 'deriveBits' ||
+    use === 'deriveKey' ||
+    use === 'encrypt' ||
+    use === 'sign' ||
+    use === 'unwrapKey' ||
+    use === 'verify' ||
+    use === 'wrapKey'
+  ) {
     return [use]
   } else if (use === undefined) {
     return []
@@ -36,35 +45,43 @@ function parseJwkUsages(jwk: JWKWithRequired): Array<KeyUsage> {
   }
 }
 
-async function verifyRequest(request: KoaRequest, clientKeys: ClientKeys): Promise<void> {
-    const keyType = parseJwkKeyType(clientKeys.jwk)
-    const typedRequest = requestLike(request)
-    const signatures = httpis.parseSignatures(typedRequest)
-    for (const [, { keyid, alg }] of signatures) {
-      if (!keyid) {
-        throw new Error(`The signature input is missing the 'keyid' parameter`)
-      } else if (alg !== 'ed25519') {
-        throw new Error(`The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' is supported.`)
-      } else {
-        const success = await httpis.verify(requestLike(request), {
-          format: 'httpbis',
-          verifiers: {
-            keyid: createVerifier(alg, KeyObject.from({
+async function verifyRequest(
+  request: KoaRequest,
+  clientKeys: ClientKeys
+): Promise<void> {
+  const keyType = parseJwkKeyType(clientKeys.jwk)
+  const typedRequest = requestLike(request)
+  const signatures = httpis.parseSignatures(typedRequest)
+  for (const [, { keyid, alg }] of signatures) {
+    if (!keyid) {
+      throw new Error(`The signature input is missing the 'keyid' parameter`)
+    } else if (alg !== 'ed25519') {
+      throw new Error(
+        `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' is supported.`
+      )
+    } else {
+      const success = await httpis.verify(requestLike(request), {
+        format: 'httpbis',
+        verifiers: {
+          keyid: createVerifier(
+            alg,
+            KeyObject.from({
               algorithm: {
                 name: alg
               },
               extractable: clientKeys.jwk.ext,
               type: keyType,
               usages: parseJwkUsages(clientKeys.jwk)
-            }))
-          }
-        })
-
-        if (!success) {
-          throw new Error('signature is not valid')
+            })
+          )
         }
+      })
+
+      if (!success) {
+        throw new Error('signature is not valid')
       }
     }
+  }
 }
 
 export function createAuthMiddleware({
@@ -103,7 +120,9 @@ export function createAuthMiddleware({
       }
       try {
         const clientKeysService = await ctx.container.use('clientKeysService')
-        const clientKeys = await clientKeysService.getKeyByClientId(grant.clientId)
+        const clientKeys = await clientKeysService.getKeyByClientId(
+          grant.clientId
+        )
         await verifyRequest(ctx.request, clientKeys)
       } catch (e) {
         ctx.throw(401, `Invalid signature: ${e.message}`)

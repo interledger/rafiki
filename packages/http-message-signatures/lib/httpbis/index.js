@@ -1,9 +1,9 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.verify = exports.sign = exports.buildSignedData = exports.parseSignatures = exports.buildSignatureInputString = exports.extractComponent = exports.extractHeader = exports.defaultSigningComponents = void 0;
-const url_1 = require("url");
-const structured_headers_1 = require("structured-headers");
-const algorithm_1 = require("../algorithm");
+const url_1 = require('url');
+const structured_headers_1 = require('structured-headers');
+const algorithm_1 = require('../algorithm');
 exports.defaultSigningComponents = [
     '@method',
     '@path',
@@ -167,7 +167,7 @@ function parseSignatures(message, opts) {
         returnValue.set(signatureName, {
             input: {
                 components,
-                parameters
+                parameters,
             },
             value,
             components: components.map(([component, params], i) => {
@@ -175,7 +175,7 @@ function parseSignatures(message, opts) {
                 // comes from the request when doing request/response binding
                 // See: https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-11#section-2.3
                 if (params.size > 0) {
-                    throw new Error(`Component parameters are not yet supported`);
+                    throw new Error('Component parameters are not yet supported');
                 }
                 if (typeof component !== 'string') {
                     throw new Error(`Error parsing component at index '${i}'. Expected a string but got a ${typeof component}.`);
@@ -183,7 +183,7 @@ function parseSignatures(message, opts) {
                 return component;
             }),
             signatureParams,
-            ...knownParameters
+            ...knownParameters,
         });
     });
     return returnValue;

@@ -1,8 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.createVerifier = exports.createSigner = exports.isAlgorithm = void 0;
-const crypto_1 = require("crypto");
-const constants_1 = require("constants");
+const crypto_1 = require('crypto');
+const constants_1 = require('constants');
 function isAlgorithm(alg) {
     switch (alg) {
         case 'rsa-v1_5-sha256':
@@ -17,7 +17,7 @@ function isAlgorithm(alg) {
 }
 exports.isAlgorithm = isAlgorithm;
 function isEd25519PrivateKey(key) {
-    const keyObj = (typeof key === 'object' && "key" in key) ? key.key : key;
+    const keyObj = (typeof key === 'object' && 'key' in key) ? key.key : key;
     return (typeof keyObj === 'object' && 'asymmetricKeyType' in keyObj && keyObj.asymmetricKeyType === 'ed25519');
 }
 function createSigner(alg, key) {
@@ -46,7 +46,7 @@ function createSigner(alg, key) {
                 throw new Error('Invalid key for ed25519 signer.');
             }
             signer = async (data) => {
-                sign: async (data) => {
+                async (data) => {
                     return (0, crypto_1.sign)('ed25519', typeof data === 'string' ? Buffer.from(data) : data, key);
                 };
             };
