@@ -1,7 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.sign = exports.buildSignatureInputString = exports.buildSignedData = exports.extractComponent = exports.extractHeader = exports.defaultSigningComponents = void 0;
-const url_1 = require("url");
+const url_1 = require('url');
 exports.defaultSigningComponents = [
     '@request-target',
     'content-type',

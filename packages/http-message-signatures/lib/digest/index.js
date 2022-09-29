@@ -1,8 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.verifyContentDigest = exports.createContentDigestHeader = void 0;
-const httpbis_1 = require("../httpbis");
-const crypto_1 = require("crypto");
+const httpbis_1 = require('../httpbis');
+const crypto_1 = require('crypto');
 /**
  * Implementation of functions to assist with HTTP Content Digest headers per
  * https://www.ietf.org/archive/id/draft-ietf-httpbis-digest-headers-10.txt

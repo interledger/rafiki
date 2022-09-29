@@ -24,30 +24,29 @@ possible.
 ### Signing a request
 
 ```js
-const { sign, createSigner } = require('http-message-signing');
+const { sign, createSigner } = require('http-message-signing')
 
-(async () => {
-    const signedRequest = await sign({
-        method: 'POST',
-        url: 'https://example.com',
-        headers: {
-            'content-type': 'text/plain',
-        },
-        body: 'test',
-    }, {
-        components: [
-            '@method',
-            '@authority',
-            'content-type',
-        ],
-        parameters: {
-            created: Math.floor(Date.now() / 1000),
-        },
-        keyId: 'my-hmac-secret',
-        signer: createSigner('hmac-sha256'),
-    });
-    // signedRequest now has the `Signature` and `Signature-Input` headers
-})().catch(console.error);
+;(async () => {
+  const signedRequest = await sign(
+    {
+      method: 'POST',
+      url: 'https://example.com',
+      headers: {
+        'content-type': 'text/plain'
+      },
+      body: 'test'
+    },
+    {
+      components: ['@method', '@authority', 'content-type'],
+      parameters: {
+        created: Math.floor(Date.now() / 1000)
+      },
+      keyId: 'my-hmac-secret',
+      signer: createSigner('hmac-sha256')
+    }
+  )
+  // signedRequest now has the `Signature` and `Signature-Input` headers
+})().catch(console.error)
 ```
 
 ### Signing with your own signer
@@ -59,7 +58,7 @@ logic you need to support.
 
 ```js
 const mySigner = async (data) => {
-    return Buffer.from('my sig');
+  return Buffer.from('my sig')
 }
-mySigner.alg = 'custom-123';
+mySigner.alg = 'custom-123'
 ```

@@ -3,3 +3,4 @@ public
 generated
 dist
 build
+packages/http-message-signatures/lib

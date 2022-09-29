@@ -10,3 +10,4 @@ Dockerfile
 .gitignore
 .prettierignore
 infrastructure/helm/**
+packages/http-message-signatures/lib/**
