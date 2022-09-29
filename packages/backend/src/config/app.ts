@@ -24,6 +24,9 @@ function envFloat(name: string, value: number): number {
 
 export type IAppConfig = typeof Config
 
+const TMP_DIR = './tmp'
+const PRIVATE_KEY_FILE = `${TMP_DIR}/private-key.pem`
+
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   // publicHost is for open payments URLs.
@@ -110,7 +113,7 @@ export const Config = {
     'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
   ),
   privateKey: parseOrProvisionKey(
-    envString('PRIVATE_KEY_PATH', './tmp/private.pem')
+    envString('PRIVATE_KEY_PATH', PRIVATE_KEY_FILE)
   ),
 
   /** Frontend **/
@@ -154,11 +157,11 @@ function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
     console.log('Private key could not be loaded. Generating new key.')
   }
   const keypair = crypto.generateKeyPairSync('ed25519')
-  if (!fs.existsSync('./tmp')) {
-    fs.mkdirSync('./tmp')
+  if (!fs.existsSync(TMP_DIR)) {
+    fs.mkdirSync(TMP_DIR)
   }
   fs.writeFileSync(
-    './tmp/private.pem',
+    PRIVATE_KEY_FILE,
     keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
   )
   return keypair.privateKey
