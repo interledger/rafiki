@@ -9,7 +9,6 @@ import {
   parsePaginationQueryParameters
 } from '../../../shared/pagination'
 import { Pagination } from '../../../shared/baseModel'
-import { AccessAction } from '../../auth/grant'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -43,19 +42,10 @@ async function getOutgoingPayment(
   ctx: ReadContext
 ): Promise<void> {
   let outgoingPayment: OutgoingPayment | undefined
-  let clientId = undefined
-  const outgoingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'outgoing-payment'
-  )
-  if (outgoingAccess && outgoingAccess.length === 1) {
-    clientId = outgoingAccess[0].actions.includes(AccessAction.ReadAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
     outgoingPayment = await deps.outgoingPaymentService.get({
       id: ctx.params.id,
-      clientId,
+      clientId: ctx.clientId,
       paymentPointerId: ctx.paymentPointer.id
     })
   } catch (_) {
@@ -107,26 +97,18 @@ async function listOutgoingPayments(
   ctx: ListContext
 ): Promise<void> {
   const pagination = parsePaginationQueryParameters(ctx.request.query)
-  let clientId = undefined
-  const outgoingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'outgoing-payment'
-  )
-  if (outgoingAccess && outgoingAccess.length === 1) {
-    clientId = outgoingAccess[0].actions.includes(AccessAction.ListAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
     const page = await deps.outgoingPaymentService.getPaymentPointerPage(
       ctx.paymentPointer.id,
       pagination,
-      clientId
+      ctx.clientId
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.outgoingPaymentService.getPaymentPointerPage(
           ctx.paymentPointer.id,
-          pagination
+          pagination,
+          ctx.clientId
         ),
       page
     )

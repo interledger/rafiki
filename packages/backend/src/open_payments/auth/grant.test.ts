@@ -3,7 +3,7 @@ import { Interval } from 'luxon'
 import { v4 as uuid } from 'uuid'
 
 describe('Grant', (): void => {
-  describe('includesAccess', (): void => {
+  describe('findAccess', (): void => {
     let grant: Grant
     const type = AccessType.IncomingPayment
     const action = AccessAction.Create
@@ -36,12 +36,12 @@ describe('Grant', (): void => {
 
       test('Returns true for included access', async (): Promise<void> => {
         expect(
-          grant.includesAccess({
+          grant.findAccess({
             type,
             action,
             identifier
           })
-        ).toBe(true)
+        ).toEqual(grant.access[1])
       })
       test.each`
         superAction             | subAction            | description
@@ -63,12 +63,12 @@ describe('Grant', (): void => {
             ]
           })
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action: subAction,
               identifier
             })
-          ).toBe(true)
+          ).toEqual(grant.access[0])
         }
       )
 
@@ -80,34 +80,34 @@ describe('Grant', (): void => {
         'Returns false for missing $description',
         async ({ type, action, identifier }): Promise<void> => {
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action,
               identifier
             })
-          ).toBe(false)
+          ).toBeUndefined()
         }
       )
 
       if (identifier) {
         test('Returns false for missing identifier', async (): Promise<void> => {
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action,
               identifier: 'https://wallet.example/bob'
             })
-          ).toBe(false)
+          ).toBeUndefined()
         })
       } else {
         test('Returns true for unrestricted identifier', async (): Promise<void> => {
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action,
               identifier: 'https://wallet.example/bob'
             })
-          ).toBe(true)
+          ).toEqual(grant.access[1])
         })
       }
     })

@@ -13,6 +13,7 @@ interface SetupOptions {
   params?: Record<string, string>
   paymentPointer: PaymentPointer
   grant?: Grant
+  clientId?: string
 }
 
 export const setup = <T extends PaymentPointerContext>(
@@ -32,7 +33,8 @@ export const setup = <T extends PaymentPointerContext>(
     ctx.request.body = options.reqOpts.body
   }
   ctx.paymentPointer = options.paymentPointer
-  if (options.grant) ctx.grant = options.grant
+  ctx.grant = options.grant
+  ctx.clientId = options.clientId
   return ctx
 }
 

@@ -14,6 +14,7 @@ import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { CreateQuoteOptions } from '../../quote/service'
+import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import {
@@ -290,24 +291,16 @@ describe('OutgoingPaymentService', (): void => {
 
   describe('get', (): void => {
     getTests({
-      createGrant: async ({ clientId }: { clientId: string }) => {
-        const grantRef = await grantReferenceService.create({
-          id: uuid(),
-          clientId
-        })
-
-        return new Grant({
-          active: true,
-          clientId: grantRef.clientId,
-          grant: grantRef.id,
+      createGrant: async ({ clientId }) =>
+        createGrant(deps, {
+          clientId,
           access: [
             {
               type: AccessType.OutgoingPayment,
               actions: [AccessAction.Create, AccessAction.Read]
             }
           ]
-        })
-      },
+        }),
       createModel: ({ grant }: { grant?: Grant }) =>
         createOutgoingPayment(deps, {
           paymentPointerId,

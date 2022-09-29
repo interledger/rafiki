@@ -8,23 +8,20 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import {
-  AppServices,
-  ReadContext,
-  CreateContext,
-  ListContext
-} from '../../../app'
+import { AppServices, CreateContext, ListContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { CreateOutgoingPaymentOptions } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
+import { serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
+import { getRouteTests } from '../../payment_pointer/model.test'
+import { createGrant } from '../../../tests/grant'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { listTests, setup } from '../../../shared/routes.test'
+import { listTests } from '../../../shared/routes.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
-import { GrantReference as GrantModel } from '../../grantReference/model'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -68,20 +65,13 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointer = await createPaymentPointer(deps, { asset })
-    grant = new Grant({
-      active: true,
-      clientId: uuid(),
-      grant: uuid(),
+    grant = await createGrant(deps, {
       access: [
         {
           type: AccessType.OutgoingPayment,
           actions: [AccessAction.Create, AccessAction.Read]
         }
       ]
-    })
-    await GrantModel.query().insert({
-      id: grant.grant,
-      clientId: grant.clientId
     })
   })
 
@@ -93,86 +83,52 @@ describe('Outgoing Payment Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
-    describe.each`
-      withGrant | description
-      ${false}  | ${'without grant'}
-      ${true}   | ${'with grant'}
-    `('$description', ({ withGrant }): void => {
-      test('returns 404 for nonexistent outgoing payment', async (): Promise<void> => {
-        const ctx = setup<ReadContext>({
-          reqOpts: {
-            headers: { Accept: 'application/json' }
-          },
-          params: {
-            id: uuid()
-          },
-          paymentPointer,
-          grant: withGrant ? grant : undefined
+  describe.each`
+    failed   | description
+    ${false} | ${''}
+    ${true}  | ${' failed'}
+  `('get$description outgoing payment', ({ failed }): void => {
+    getRouteTests({
+      createGrant: async ({ clientId }) =>
+        createGrant(deps, {
+          clientId,
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read]
+            }
+          ]
+        }),
+      getPaymentPointer: async () => paymentPointer,
+      createModel: async ({ grant }) => {
+        const outgoingPayment = await createPayment({
+          paymentPointerId: paymentPointer.id,
+          grant,
+          description: 'rent',
+          externalRef: '202201'
         })
-        await expect(outgoingPaymentRoutes.get(ctx)).rejects.toHaveProperty(
-          'status',
-          404
-        )
-      })
-
-      test.each`
-        failed   | description
-        ${false} | ${''}
-        ${true}  | ${'failed '}
-      `(
-        'returns the $description outgoing payment on success',
-        async ({ failed }): Promise<void> => {
-          const outgoingPayment = await createPayment({
-            paymentPointerId: paymentPointer.id,
-            grant,
-            description: 'rent',
-            externalRef: '202201'
-          })
-          if (failed) {
-            await outgoingPayment
-              .$query(knex)
-              .patch({ state: OutgoingPaymentState.Failed })
-          }
-          const ctx = setup<ReadContext>({
-            reqOpts: {
-              headers: { Accept: 'application/json' },
-              method: 'GET',
-              url: `/outgoing-payments/${outgoingPayment.id}`
-            },
-            params: {
-              id: outgoingPayment.id
-            },
-            paymentPointer,
-            grant: withGrant ? grant : undefined
-          })
-          await expect(outgoingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-          expect(ctx.response).toSatisfyApiSpec()
-          expect(ctx.body).toEqual({
-            id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
-            paymentPointer: paymentPointer.url,
-            receiver: outgoingPayment.receiver,
-            sendAmount: {
-              ...outgoingPayment.sendAmount,
-              value: outgoingPayment.sendAmount.value.toString()
-            },
-            sentAmount: {
-              value: '0',
-              assetCode: asset.code,
-              assetScale: asset.scale
-            },
-            receiveAmount: {
-              ...outgoingPayment.receiveAmount,
-              value: outgoingPayment.receiveAmount.value.toString()
-            },
-            description: outgoingPayment.description,
-            externalRef: outgoingPayment.externalRef,
-            failed,
-            createdAt: outgoingPayment.createdAt.toISOString(),
-            updatedAt: outgoingPayment.updatedAt.toISOString()
-          })
+        if (failed) {
+          await outgoingPayment
+            .$query(knex)
+            .patch({ state: OutgoingPaymentState.Failed })
         }
-      )
+        return outgoingPayment
+      },
+      get: (ctx) => outgoingPaymentRoutes.get(ctx),
+      getBody: (outgoingPayment) => ({
+        id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
+        paymentPointer: paymentPointer.url,
+        receiver: outgoingPayment.receiver,
+        sendAmount: serializeAmount(outgoingPayment.sendAmount),
+        sentAmount: serializeAmount(outgoingPayment.sentAmount),
+        receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
+        description: outgoingPayment.description,
+        externalRef: outgoingPayment.externalRef,
+        failed,
+        createdAt: outgoingPayment.createdAt.toISOString(),
+        updatedAt: outgoingPayment.updatedAt.toISOString()
+      }),
+      getUrl: (id) => `/outgoing-payments/${id}`
     })
   })
 

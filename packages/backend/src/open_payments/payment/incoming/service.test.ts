@@ -18,14 +18,13 @@ import { AppServices } from '../../../app'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { randomAsset } from '../../../tests/asset'
+import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
-import { AccessAction, AccessType, Grant } from '../../auth/grant'
 import { GrantReference } from '../../grantReference/model'
 import { GrantReferenceService } from '../../grantReference/service'
-import { GetOptions } from '../../payment_pointer/model'
 import { getTests } from '../../payment_pointer/model.test'
 
 describe('Incoming Payment Service', (): void => {
@@ -199,25 +198,8 @@ describe('Incoming Payment Service', (): void => {
 
   describe('get', (): void => {
     getTests({
-      createGrant: async ({ clientId }: { clientId: string }) => {
-        const grantRef = await grantReferenceService.create({
-          id: uuid(),
-          clientId
-        })
-
-        return new Grant({
-          active: true,
-          clientId: grantRef.clientId,
-          grant: grantRef.id,
-          access: [
-            {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Create, AccessAction.Read]
-            }
-          ]
-        })
-      },
-      createModel: ({ grant }: { grant?: Grant }) =>
+      createGrant: async (options) => createGrant(deps, options),
+      createModel: ({ grant }) =>
         createIncomingPayment(deps, {
           paymentPointerId,
           grantId: grant?.grant,
@@ -230,7 +212,7 @@ describe('Incoming Payment Service', (): void => {
           description: 'Test incoming payment',
           externalRef: '#123'
         }),
-      get: (options: GetOptions) => incomingPaymentService.get(options)
+      get: (options) => incomingPaymentService.get(options)
     })
   })
 

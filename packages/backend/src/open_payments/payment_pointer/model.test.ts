@@ -1,19 +1,21 @@
 import { v4 as uuid } from 'uuid'
 
-import { PaymentPointerSubresource, GetOptions } from './model'
+import { PaymentPointer, PaymentPointerSubresource, GetOptions } from './model'
 import { Grant } from '../auth/grant'
+import { ReadContext } from '../../app'
+import { setup } from '../../shared/routes.test'
 
-interface TestsOptions<M> {
+interface BaseTestsOptions<M> {
   createGrant: (options: { clientId: string }) => Promise<Grant>
   createModel: (options: { grant?: Grant }) => Promise<M>
-  get: (options: GetOptions) => Promise<M | undefined>
+  testGet: (options: GetOptions, expectedMatch?: M) => void
 }
 
-export const getTests = <M extends PaymentPointerSubresource>({
+const baseGetTests = <M extends PaymentPointerSubresource>({
   createGrant,
   createModel,
-  get
-}: TestsOptions<M>): void => {
+  testGet
+}: BaseTestsOptions<M>): void => {
   enum GetOption {
     Matching = 'matching',
     Conflicting = 'conflicting',
@@ -84,13 +86,14 @@ export const getTests = <M extends PaymentPointerSubresource>({
                 test(`${
                   match ? '' : 'cannot '
                 }get a model`, async (): Promise<void> => {
-                  await expect(
-                    get({
+                  await testGet(
+                    {
                       id,
                       clientId,
                       paymentPointerId
-                    })
-                  ).resolves.toEqual(match ? model : undefined)
+                    },
+                    match ? model : undefined
+                  )
                 })
               }
             )
@@ -99,6 +102,70 @@ export const getTests = <M extends PaymentPointerSubresource>({
       })
     }
   )
+}
+
+type TestsOptions<M> = Omit<BaseTestsOptions<M>, 'testGet'> & {
+  get: (options: GetOptions) => Promise<M | undefined>
+}
+
+export const getTests = <M extends PaymentPointerSubresource>({
+  createGrant,
+  createModel,
+  get
+}: TestsOptions<M>): void => {
+  baseGetTests({
+    createGrant,
+    createModel,
+    testGet: (options, expectedMatch) =>
+      expect(get(options)).resolves.toEqual(expectedMatch)
+  })
+}
+
+type RouteTestsOptions<M> = Omit<BaseTestsOptions<M>, 'testGet'> & {
+  getPaymentPointer: () => Promise<PaymentPointer>
+  getUrl: (id: string) => string
+  get: (ctx: ReadContext) => Promise<void>
+  getBody: (model: M) => Record<string, unknown>
+}
+
+export const getRouteTests = <M extends PaymentPointerSubresource>({
+  createGrant,
+  getPaymentPointer,
+  createModel,
+  get,
+  getUrl,
+  getBody
+}: RouteTestsOptions<M>): void => {
+  baseGetTests({
+    createGrant,
+    createModel,
+    testGet: async ({ id, paymentPointerId, clientId }, expectedMatch) => {
+      const paymentPointer = await getPaymentPointer()
+      paymentPointer.id = paymentPointerId
+      const ctx = setup<ReadContext>({
+        reqOpts: {
+          headers: { Accept: 'application/json' },
+          method: 'GET',
+          url: getUrl(id)
+        },
+        params: {
+          id
+        },
+        paymentPointer,
+        clientId
+      })
+      if (expectedMatch) {
+        await expect(get(ctx)).resolves.toBeUndefined()
+        expect(ctx.response).toSatisfyApiSpec()
+        expect(ctx.body).toEqual(getBody(expectedMatch))
+      } else {
+        await expect(get(ctx)).rejects.toMatchObject({
+          status: 404,
+          message: 'Not Found'
+        })
+      }
+    }
+  })
 }
 
 test.todo('test suite must contain at least one test')

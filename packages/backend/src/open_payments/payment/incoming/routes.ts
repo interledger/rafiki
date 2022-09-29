@@ -21,7 +21,6 @@ import {
 } from '../../../shared/pagination'
 import { Pagination } from '../../../shared/baseModel'
 import { ConnectionJSON, ConnectionService } from '../../connection/service'
-import { AccessAction } from '../../auth/grant'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -62,19 +61,10 @@ async function getIncomingPayment(
   ctx: ReadContext
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
-  let clientId = undefined
-  const incomingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'incoming-payment'
-  )
-  if (incomingAccess && incomingAccess.length === 1) {
-    clientId = incomingAccess[0].actions.includes(AccessAction.ReadAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
     incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
-      clientId,
+      clientId: ctx.clientId,
       paymentPointerId: ctx.paymentPointer.id
     })
   } catch (err) {
@@ -157,27 +147,18 @@ async function listIncomingPayments(
   ctx: ListContext
 ): Promise<void> {
   const pagination = parsePaginationQueryParameters(ctx.request.query)
-  let clientId = undefined
-  const incomingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'incoming-payment'
-  )
-  if (incomingAccess && incomingAccess.length === 1) {
-    clientId = incomingAccess[0].actions.includes(AccessAction.ListAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
     const page = await deps.incomingPaymentService.getPaymentPointerPage(
       ctx.paymentPointer.id,
       pagination,
-      clientId
+      ctx.clientId
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         deps.incomingPaymentService.getPaymentPointerPage(
           ctx.paymentPointer.id,
           pagination,
-          clientId
+          ctx.clientId
         ),
       page
     )
