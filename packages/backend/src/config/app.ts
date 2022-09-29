@@ -144,7 +144,8 @@ function parseRedisTlsConfig(
   return Object.keys(options).length > 0 ? options : undefined
 }
 
-function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
+// exported for testing
+export function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
   try {
     const key = crypto.createPrivateKey(fs.readFileSync(keyPath))
     const jwk = key.export({ format: 'jwk' })
