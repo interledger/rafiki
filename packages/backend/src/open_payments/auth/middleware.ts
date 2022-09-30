@@ -118,14 +118,16 @@ export function createAuthMiddleware({
       if (!grant || !grant.active) {
         ctx.throw(401, 'Invalid Token')
       }
-      try {
-        const clientKeysService = await ctx.container.use('clientKeysService')
-        const clientKeys = await clientKeysService.getKeyByClientId(
-          grant.clientId
-        )
-        await verifyRequest(ctx.request, clientKeys)
-      } catch (e) {
-        ctx.throw(401, `Invalid signature: ${e.message}`)
+      if (!config.skipSignatureVerification) {
+        try {
+          const clientKeysService = await ctx.container.use('clientKeysService')
+          const clientKeys = await clientKeysService.getKeyByClientId(
+            grant.clientId
+          )
+          await verifyRequest(ctx.request, clientKeys)
+        } catch (e) {
+          ctx.throw(401, `Invalid signature: ${e.message}`)
+        }
       }
       if (
         !grant.includesAccess({
