@@ -40,4 +40,4 @@ dist
 
 **/.terraform
 
-packages/http-message-signatures/lib
+#packages/http-message-signatures/lib
