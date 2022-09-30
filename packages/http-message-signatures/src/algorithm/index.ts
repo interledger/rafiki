@@ -120,6 +120,14 @@ export function createSigner(
   return Object.assign(signer, { alg })
 }
 
+function binaryLikeToArrayBufferLike(binaryLike: BinaryLike): ArrayBufferLike {
+  if (typeof binaryLike === 'string') {
+    return Buffer.from(binaryLike, 'binary')
+  } else {
+    return binaryLike.buffer
+  }
+}
+
 export function createVerifier(
   alg: Algorithm,
   key: BinaryLike | KeyLike | VerifyKeyObjectInput | VerifyPublicKeyInput
@@ -131,7 +139,7 @@ export function createVerifier(
         const expected = createHmac('sha256', key as BinaryLike)
           .update(data)
           .digest()
-        const sig = Buffer.from(signature)
+        const sig = Buffer.from(binaryLikeToArrayBufferLike(signature))
         return sig.length === expected.length && timingSafeEqual(sig, expected)
       }
       break
@@ -144,7 +152,7 @@ export function createVerifier(
               key,
               padding: RSA_PKCS1_PSS_PADDING
             } as VerifyPublicKeyInput,
-            Buffer.from(signature)
+            Buffer.from(binaryLikeToArrayBufferLike(signature))
           )
       break
     case 'rsa-v1_5-sha256':
@@ -156,14 +164,17 @@ export function createVerifier(
               key,
               padding: RSA_PKCS1_PADDING
             } as VerifyPublicKeyInput,
-            Buffer.from(signature)
+            Buffer.from(binaryLikeToArrayBufferLike(signature))
           )
       break
     case 'ecdsa-p256-sha256':
       verifier = async (data: BinaryLike, signature: BinaryLike) =>
         createVerify('sha256')
           .update(data)
-          .verify(key as KeyLike, Buffer.from(signature))
+          .verify(
+            key as KeyLike,
+            Buffer.from(binaryLikeToArrayBufferLike(signature))
+          )
       break
     default:
       throw new Error(`Unsupported signing algorithm ${alg}`)

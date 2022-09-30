@@ -31,10 +31,10 @@
   ],
   "homepage": "https://github.com/dhensby/node-http-message-signatures#readme",
   "devDependencies": {
-    "@tsconfig/node12": "^1.0.11",
+    "@tsconfig/node16": "^1.0.3",
     "@types/chai": "^4.3.3",
     "@types/mocha": "^9.1.1",
-    "@types/node": "^12.20.55",
+    "@types/node": "^16.11.7",
     "@typescript-eslint/eslint-plugin": "^5.36.1",
     "@typescript-eslint/parser": "^5.36.1",
     "chai": "^4.3.6",
