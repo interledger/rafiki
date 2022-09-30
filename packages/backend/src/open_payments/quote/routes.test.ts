@@ -106,7 +106,7 @@ describe('Quote Routes', (): void => {
         createdAt: quote.createdAt.toISOString(),
         expiresAt: quote.expiresAt.toISOString()
       }),
-      getUrl: (id) => `/quotes/${id}`
+      urlPath: Quote.urlPath
     })
   })
 

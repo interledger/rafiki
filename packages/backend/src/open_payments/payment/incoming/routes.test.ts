@@ -94,7 +94,7 @@ describe('Incoming Payment Routes', (): void => {
           externalRef
         }),
       get: (ctx) => incomingPaymentRoutes.get(ctx),
-      getBody: (incomingPayment) => ({
+      getBody: (incomingPayment, list) => ({
         id: incomingPayment.url,
         paymentPointer: paymentPointer.url,
         completed: false,
@@ -105,17 +105,20 @@ describe('Incoming Payment Routes', (): void => {
         updatedAt: incomingPayment.updatedAt.toISOString(),
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         externalRef: '#123',
-        ilpStreamConnection: {
-          id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
-          ilpAddress: expect.stringMatching(
-            /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-          ),
-          sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
-          assetCode: incomingPayment.incomingAmount.assetCode,
-          assetScale: incomingPayment.incomingAmount.assetScale
-        }
+        ilpStreamConnection: list
+          ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
+          : {
+              id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
+              ilpAddress: expect.stringMatching(
+                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+              ),
+              sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
+              assetCode: incomingPayment.incomingAmount.assetCode,
+              assetScale: incomingPayment.incomingAmount.assetScale
+            }
       }),
-      getUrl: (id) => `/incoming-payments/${id}`
+      list: (ctx) => incomingPaymentRoutes.list(ctx),
+      urlPath: IncomingPayment.urlPath
     })
   })
 

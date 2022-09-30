@@ -8,6 +8,7 @@ import { Asset } from '../../asset/model'
 
 export class Quote extends PaymentPointerSubresource {
   public static readonly tableName = 'quotes'
+  public static readonly urlPath = '/quotes'
 
   static get virtualAttributes(): string[] {
     return [

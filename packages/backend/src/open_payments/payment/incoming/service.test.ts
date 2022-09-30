@@ -212,7 +212,8 @@ describe('Incoming Payment Service', (): void => {
           description: 'Test incoming payment',
           externalRef: '#123'
         }),
-      get: (options) => incomingPaymentService.get(options)
+      get: (options) => incomingPaymentService.get(options),
+      list: (options) => incomingPaymentService.getPaymentPointerPage(options)
     })
   })
 

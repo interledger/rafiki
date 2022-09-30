@@ -150,6 +150,8 @@ class SubresourceQueryBuilder<
 }
 
 export abstract class PaymentPointerSubresource extends BaseModel {
+  public static readonly urlPath: string
+
   public readonly paymentPointerId!: string
   public paymentPointer?: PaymentPointer
 

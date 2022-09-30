@@ -13,6 +13,7 @@ export class OutgoingPayment
   implements ConnectorAccount, LiquidityAccount
 {
   public static readonly tableName = 'outgoingPayments'
+  public static readonly urlPath = '/outgoing-payments'
 
   static get virtualAttributes(): string[] {
     return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']

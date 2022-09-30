@@ -128,7 +128,8 @@ describe('Outgoing Payment Routes', (): void => {
         createdAt: outgoingPayment.createdAt.toISOString(),
         updatedAt: outgoingPayment.updatedAt.toISOString()
       }),
-      getUrl: (id) => `/outgoing-payments/${id}`
+      list: (ctx) => outgoingPaymentRoutes.list(ctx),
+      urlPath: OutgoingPayment.urlPath
     })
   })
 

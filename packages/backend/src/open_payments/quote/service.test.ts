@@ -147,7 +147,8 @@ describe('QuoteService', (): void => {
           grantId: grant?.grant,
           validDestination: false
         }),
-      get: (options) => quoteService.get(options)
+      get: (options) => quoteService.get(options),
+      list: (options) => quoteService.getPaymentPointerPage(options)
     })
   })
 

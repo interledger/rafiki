@@ -59,6 +59,7 @@ export class IncomingPayment
   public static get tableName(): string {
     return 'incomingPayments'
   }
+  public static readonly urlPath = '/incoming-payments'
 
   static get virtualAttributes(): string[] {
     return ['completed', 'incomingAmount', 'receivedAmount', 'url']
@@ -126,7 +127,7 @@ export class IncomingPayment
   }
 
   public get url(): string {
-    return `${this.paymentPointer.url}/incoming-payments/${this.id}`
+    return `${this.paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({

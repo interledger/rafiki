@@ -41,7 +41,6 @@ import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
-import { GetOptions } from '../../payment_pointer/model'
 import { getTests } from '../../payment_pointer/model.test'
 import { Pagination } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
@@ -309,7 +308,8 @@ describe('OutgoingPaymentService', (): void => {
           sendAmount,
           validDestination: false
         }),
-      get: (options: GetOptions) => outgoingPaymentService.get(options)
+      get: (options) => outgoingPaymentService.get(options),
+      list: (options) => outgoingPaymentService.getPaymentPointerPage(options)
     })
   })
 
