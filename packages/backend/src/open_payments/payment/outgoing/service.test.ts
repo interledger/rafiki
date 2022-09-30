@@ -1285,11 +1285,11 @@ describe('OutgoingPaymentService', (): void => {
           validDestination: false
         }),
       getPage: (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage(
+        outgoingPaymentService.getPaymentPointerPage({
           paymentPointerId,
           pagination,
-          client ? grant.clientId : undefined
-        )
+          clientId: client ? grant.clientId : undefined
+        })
     })
   })
 })

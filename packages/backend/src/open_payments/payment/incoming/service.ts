@@ -5,13 +5,16 @@ import {
   IncomingPaymentState
 } from './model'
 import { AccountingService } from '../../../accounting/service'
-import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
-import { GetOptions } from '../../payment_pointer/model'
-import { PaymentPointerService } from '../../payment_pointer/service'
+import { GetOptions, ListOptions } from '../../payment_pointer/model'
+import {
+  PaymentPointerService,
+  PaymentPointerSubresourceService
+} from '../../payment_pointer/service'
+
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { end, parse } from 'iso8601-duration'
@@ -33,18 +36,13 @@ export interface CreateIncomingPaymentOptions {
   externalRef?: string
 }
 
-export interface IncomingPaymentService {
-  get(options: GetOptions): Promise<IncomingPayment | undefined>
+export interface IncomingPaymentService
+  extends PaymentPointerSubresourceService<IncomingPayment> {
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
-  getPaymentPointerPage(
-    paymentPointerId: string,
-    pagination?: Pagination,
-    clientId?: string
-  ): Promise<IncomingPayment[]>
   processNext(): Promise<string | undefined>
   getByConnection(connectionId: string): Promise<IncomingPayment | undefined>
 }
@@ -69,8 +67,7 @@ export async function createIncomingPaymentService(
     get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
-    getPaymentPointerPage: (paymentPointerId, pagination, clientId) =>
-      getPaymentPointerPage(deps, paymentPointerId, pagination, clientId),
+    getPaymentPointerPage: (options) => getPaymentPointerPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
     getByConnection: (connectionId) =>
       getIncomingPaymentByConnection(deps, connectionId)
@@ -256,26 +253,11 @@ async function handleDeactivated(
 
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
-  paymentPointerId: string,
-  pagination?: Pagination,
-  clientId?: string
+  options: ListOptions
 ): Promise<IncomingPayment[]> {
-  let page: IncomingPayment[]
-  if (!clientId) {
-    page = await IncomingPayment.query(deps.knex)
-      .getPage(pagination)
-      .where({
-        paymentPointerId
-      })
-      .withGraphFetched('[asset, paymentPointer]')
-  } else {
-    page = await IncomingPayment.query(deps.knex)
-      .getPage(pagination)
-      .where('incomingPayments.paymentPointerId', paymentPointerId)
-      .andWhere('grantRef.clientId', clientId)
-      .withGraphJoined('[asset, paymentPointer, grantRef]')
-  }
-
+  const page = await IncomingPayment.query(deps.knex)
+    .list(options)
+    .withGraphFetched('[asset, paymentPointer]')
   const amounts = await deps.accountingService.getAccountsTotalReceived(
     page.map((payment: IncomingPayment) => payment.id)
   )

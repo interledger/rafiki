@@ -3,7 +3,7 @@ import { GrantReference } from '../grantReference/model'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
-import { BaseModel } from '../../shared/baseModel'
+import { BaseModel, Pagination } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 
 export class PaymentPointer
@@ -98,6 +98,12 @@ export interface GetOptions {
   paymentPointerId?: string
 }
 
+export interface ListOptions {
+  paymentPointerId: string
+  clientId?: string
+  pagination?: Pagination
+}
+
 class SubresourceQueryBuilder<
   M extends Model,
   R = M[]
@@ -108,23 +114,38 @@ class SubresourceQueryBuilder<
   NumberQueryBuilderType!: SubresourceQueryBuilder<M, number>
   PageQueryBuilderType!: SubresourceQueryBuilder<M, Page<M>>
 
+  private byClientId(clientId: string) {
+    // SubresourceQueryBuilder seemingly cannot access
+    // PaymentPointerSubresource relationMappings, so
+    // this.withGraphJoined('grantRef') results in:
+    // missing FROM-clause entry for table "grantRef"
+    return this.join(
+      'grantReferences as grantRef',
+      `${this.modelClass().tableName}.grantId`,
+      'grantRef.id'
+    ).where('grantRef.clientId', clientId)
+  }
+
   get({ id, paymentPointerId, clientId }: GetOptions) {
-    const tableName = this.modelClass().tableName
     if (paymentPointerId) {
-      this.where(`${tableName}.paymentPointerId`, paymentPointerId)
+      this.where(
+        `${this.modelClass().tableName}.paymentPointerId`,
+        paymentPointerId
+      )
     }
     if (clientId) {
-      // SubresourceQueryBuilder seemingly cannot access
-      // PaymentPointerSubresource relationMappings, so
-      // this.withGraphJoined('grantRef') results in:
-      // missing FROM-clause entry for table "grantRef"
-      this.join(
-        'grantReferences as grantRef',
-        `${tableName}.grantId`,
-        'grantRef.id'
-      ).where('grantRef.clientId', clientId)
+      this.byClientId(clientId)
     }
     return this.findById(id)
+  }
+  list({ paymentPointerId, clientId, pagination }: ListOptions) {
+    if (clientId) {
+      this.byClientId(clientId)
+    }
+    return this.getPage(pagination).where(
+      `${this.modelClass().tableName}.paymentPointerId`,
+      paymentPointerId
+    )
   }
 }
 

@@ -71,15 +71,17 @@ export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloCo
       'outgoingPaymentService'
     )
     const outgoingPayments = await outgoingPaymentService.getPaymentPointerPage(
-      parent.id,
-      args
+      {
+        paymentPointerId: parent.id,
+        pagination: args
+      }
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage(
-          parent.id as string,
+        outgoingPaymentService.getPaymentPointerPage({
+          paymentPointerId: parent.id as string,
           pagination
-        ),
+        }),
       outgoingPayments
     )
     return {

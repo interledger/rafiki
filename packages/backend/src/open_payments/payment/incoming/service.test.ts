@@ -509,11 +509,11 @@ describe('Incoming Payment Service', (): void => {
           externalRef: '#123'
         }),
       getPage: (pagination: Pagination) =>
-        incomingPaymentService.getPaymentPointerPage(
+        incomingPaymentService.getPaymentPointerPage({
           paymentPointerId,
           pagination,
-          client ? grantRef.clientId : undefined
-        )
+          clientId: client ? grantRef.clientId : undefined
+        })
     })
   })
 

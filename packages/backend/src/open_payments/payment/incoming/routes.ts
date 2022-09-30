@@ -148,18 +148,18 @@ async function listIncomingPayments(
 ): Promise<void> {
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
-    const page = await deps.incomingPaymentService.getPaymentPointerPage(
-      ctx.paymentPointer.id,
+    const page = await deps.incomingPaymentService.getPaymentPointerPage({
+      paymentPointerId: ctx.paymentPointer.id,
       pagination,
-      ctx.clientId
-    )
+      clientId: ctx.clientId
+    })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        deps.incomingPaymentService.getPaymentPointerPage(
-          ctx.paymentPointer.id,
+        deps.incomingPaymentService.getPaymentPointerPage({
+          paymentPointerId: ctx.paymentPointer.id,
           pagination,
-          ctx.clientId
-        ),
+          clientId: ctx.clientId
+        }),
       page
     )
     const result = {

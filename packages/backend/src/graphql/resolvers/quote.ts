@@ -58,10 +58,16 @@ export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['qu
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
     if (!parent.id) throw new Error('missing payment pointer id')
     const quoteService = await ctx.container.use('quoteService')
-    const quotes = await quoteService.getPaymentPointerPage(parent.id, args)
+    const quotes = await quoteService.getPaymentPointerPage({
+      paymentPointerId: parent.id,
+      pagination: args
+    })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage(parent.id as string, pagination),
+        quoteService.getPaymentPointerPage({
+          paymentPointerId: parent.id as string,
+          pagination
+        }),
       quotes
     )
     return {

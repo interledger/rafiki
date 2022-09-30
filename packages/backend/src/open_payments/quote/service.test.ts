@@ -675,7 +675,10 @@ describe('QuoteService', (): void => {
           expiresAt: new Date(Date.now() + config.quoteLifespan)
         }),
       getPage: (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage(paymentPointerId, pagination)
+        quoteService.getPaymentPointerPage({
+          paymentPointerId,
+          pagination
+        })
     })
   })
 })
