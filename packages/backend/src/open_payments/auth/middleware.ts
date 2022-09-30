@@ -47,7 +47,7 @@ function parseJwkUsages(jwk: JWKWithRequired): Array<KeyUsage> {
 
 async function verifyRequest(
   request: KoaRequest,
-  clientKeys: ClientKeys
+  jwk: JWKWithRequired
 ): Promise<void> {
   const keyType = parseJwkKeyType(clientKeys.jwk)
   const typedRequest = requestLike(request)
