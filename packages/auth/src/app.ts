@@ -235,9 +235,6 @@ export class App {
         path: '/introspect',
         method: HttpMethod.POST
       }),
-      this.config.introspectionHttpsig
-        ? signatureService.introspectionHttpsigMiddleware
-        : (ctx, next) => next(),
       accessTokenRoutes.introspect
     )
 

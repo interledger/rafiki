@@ -36,10 +36,6 @@ export interface SignatureService {
     ctx: AppContext,
     next: () => Promise<any>
   ): Promise<void>
-  introspectionHttpsigMiddleware(
-    ctx: AppContext,
-    next: () => Promise<any>
-  ): Promise<void>
   grantContinueHttpsigMiddleware(
     ctx: AppContext,
     next: () => Promise<any>
@@ -76,10 +72,6 @@ export async function createSignatureService({
       sigInputToChallenge(sigInput, ctx),
     tokenHttpsigMiddleware: (ctx: AppContext, next: () => Promise<any>) =>
       tokenHttpsigMiddleware(deps, ctx, next),
-    introspectionHttpsigMiddleware: (
-      ctx: AppContext,
-      next: () => Promise<any>
-    ) => introspectionHttpsigMiddleware(deps, ctx, next),
     grantContinueHttpsigMiddleware: (
       ctx: AppContext,
       next: () => Promise<any>
@@ -160,32 +152,49 @@ async function verifySigFromBoundKey(
 }
 
 // TODO: Replace with public httpsig library
-function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
+function getSigInputComponents(sigInput: string): string[] | null {
   // https://datatracker.ietf.org/doc/html/rfc8941#section-4.1.1.1
-  const messageComponents = sigInput.split('sig1=')[1].split(';')[0].split(' ')
-  const cleanMessageComponents = messageComponents.map((component) =>
-    component.replace(/[()"]/g, '')
-  )
+  const messageComponents = sigInput
+    .split('sig1=')[1]
+    ?.split(';')[0]
+    ?.split(' ')
+  return messageComponents
+    ? messageComponents.map((component) => component.replace(/[()"]/g, ''))
+    : null
+}
 
+function validateSigInputComponents(
+  sigInputComponents: string[],
+  ctx: AppContext
+): boolean {
   // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-7.3.1
-  if (
-    !cleanMessageComponents.includes('@method') ||
-    !cleanMessageComponents.includes('@target-uri') ||
-    (ctx.request.body && !cleanMessageComponents.includes('content-digest')) ||
-    (ctx.headers['authorization'] &&
-      !cleanMessageComponents.includes('authorization'))
-  ) {
-    return null
+
+  for (const component of sigInputComponents) {
+    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.1
+    if (component !== component.toLowerCase()) return false
   }
+
+  return !(
+    !sigInputComponents.includes('@method') ||
+    !sigInputComponents.includes('@target-uri') ||
+    (ctx.request.body && !sigInputComponents.includes('content-digest')) ||
+    (ctx.headers['authorization'] &&
+      !sigInputComponents.includes('authorization'))
+  )
+}
+
+function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
+  const sigInputComponents = getSigInputComponents(sigInput)
+
+  if (
+    !sigInputComponents ||
+    !validateSigInputComponents(sigInputComponents, ctx)
+  )
+    return null
 
   // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.3
   let signatureBase = ''
-  for (const component of cleanMessageComponents) {
-    // https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures-09#section-2.1
-    if (component !== component.toLowerCase()) {
-      return null
-    }
-
+  for (const component of sigInputComponents) {
     if (component === '@method') {
       signatureBase += `"@method": ${ctx.request.method}\n`
     } else if (component === '@target-uri') {
@@ -201,88 +210,41 @@ function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
   return signatureBase
 }
 
-interface ValidateHttpSigHeadersResult {
-  success: boolean
-  status?: number
-  body?: {
-    error: string
-    message: string
-  }
-  sig?: string
-  sigInput?: string
+type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
+  headers: Record<'signature' | 'signature-input', string>
 }
 
-// TODO: maybe refactor into handler for next()
-function validateHttpSigHeaders(ctx: AppContext): ValidateHttpSigHeadersResult {
+type HttpSigContext = AppContext & {
+  request: HttpSigRequest
+}
+
+function validateHttpSigHeaders(ctx: AppContext): ctx is HttpSigContext {
   const sig = ctx.headers['signature']
-  const sigInput = ctx.headers['signature-input']
+  const sigInput = ctx.headers['signature-input'] as string
 
+  const sigInputComponents = getSigInputComponents(sigInput ?? '')
   if (
-    !sig ||
-    !sigInput ||
-    typeof sig !== 'string' ||
-    typeof sigInput !== 'string'
-  ) {
-    return {
-      success: false,
-      status: 400,
-      body: {
-        error: 'invalid_request',
-        message: 'invalid signature headers'
-      }
-    }
-  }
-
-  return {
-    success: true,
-    sig,
-    sigInput
-  }
-}
-
-async function handleVerifySigResult(
-  verified: VerifySigResult,
-  ctx: AppContext,
-  next: () => Promise<void>
-): Promise<void> {
-  if (!verified.success) {
-    ctx.status = verified.status || 401
-    ctx.body = {
-      error: verified.error || 'request_denied',
-      message: verified.message || null
-    }
-    await next()
-    return
-  }
-
-  await next()
-}
-
-async function introspectionHttpsigMiddleware(
-  deps: ServiceDependencies,
-  ctx: AppContext,
-  next: () => Promise<void>
-): Promise<void> {
-  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
-  if (!validateHttpSigHeadersResult.success) {
-    const { status, body } = validateHttpSigHeadersResult
-    ctx.status = status
-    ctx.body = body
-    next()
-    return
-  }
-  const { sig, sigInput } = validateHttpSigHeadersResult
-  const { body } = ctx.request
-
-  const verified = await verifySigAndChallenge(
-    deps,
-    sig,
-    sigInput,
-    body.resource_server?.key?.jwk, // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-resource-servers#section-3.2
-    ctx
+    !sigInputComponents ||
+    !validateSigInputComponents(sigInputComponents, ctx)
   )
+    return false
 
-  await handleVerifySigResult(verified, ctx, next)
+  return (
+    sig && sigInput && typeof sig === 'string' && typeof sigInput === 'string'
+  )
+}
+
+function handleVerifySigResult(
+  verified: VerifySigResult,
+  ctx: HttpSigContext
+): boolean {
+  if (!verified.success) {
+    ctx.throw(verified.status ?? 401, verified.message, {
+      error: 'request_denied'
+    })
+  }
+
+  return true
 }
 
 async function grantContinueHttpsigMiddleware(
@@ -290,16 +252,17 @@ async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
-  if (!validateHttpSigHeadersResult.success) {
-    const { status, body } = validateHttpSigHeadersResult
-    ctx.status = status
-    ctx.body = body
-    next()
+  if (!validateHttpSigHeaders(ctx)) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid signature headers'
+    }
     return
   }
 
-  const { sig, sigInput } = validateHttpSigHeadersResult
+  const sig = ctx.headers['signature'] as string
+  const sigInput = ctx.headers['signature-input'] as string
 
   const grant = await deps.grantService.getByInteraction(
     ctx.params['interactId']
@@ -314,7 +277,8 @@ async function grantContinueHttpsigMiddleware(
   }
   const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
 
-  await handleVerifySigResult(verified, ctx, next)
+  handleVerifySigResult(verified, ctx)
+  await next()
 }
 
 async function grantInitiationHttpsigMiddleware(
@@ -322,16 +286,17 @@ async function grantInitiationHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
-  if (!validateHttpSigHeadersResult.success) {
-    const { status, body } = validateHttpSigHeadersResult
-    ctx.status = status
-    ctx.body = body
-    next()
+  if (!validateHttpSigHeaders(ctx)) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid signature headers'
+    }
     return
   }
 
-  const { sig, sigInput } = validateHttpSigHeadersResult
+  const sig = ctx.headers['signature'] as string
+  const sigInput = ctx.headers['signature-input'] as string
   const { body } = ctx.request
 
   if (!(await deps.clientService.validateClient(body.client))) {
@@ -348,7 +313,8 @@ async function grantInitiationHttpsigMiddleware(
     ctx
   )
 
-  await handleVerifySigResult(verified, ctx, next)
+  handleVerifySigResult(verified, ctx)
+  await next()
 }
 
 async function tokenHttpsigMiddleware(
@@ -356,16 +322,17 @@ async function tokenHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  const validateHttpSigHeadersResult = validateHttpSigHeaders(ctx)
-  if (!validateHttpSigHeadersResult.success) {
-    const { status, body } = validateHttpSigHeadersResult
-    ctx.status = status
-    ctx.body = body
-    next()
+  if (!validateHttpSigHeaders(ctx)) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_request',
+      message: 'invalid signature headers'
+    }
     return
   }
 
-  const { sig, sigInput } = validateHttpSigHeadersResult
+  const sig = ctx.headers['signature'] as string
+  const sigInput = ctx.headers['signature-input'] as string
   const accessToken = await deps.accessTokenService.getByManagementId(
     ctx.params['managementId']
   )
@@ -381,5 +348,6 @@ async function tokenHttpsigMiddleware(
   const grant = await deps.grantService.get(accessToken.grantId)
   const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
 
-  await handleVerifySigResult(verified, ctx, next)
+  handleVerifySigResult(verified, ctx)
+  await next()
 }

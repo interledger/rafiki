@@ -249,44 +249,6 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('Validate token introspection request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
-        .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
-
-      const ctx = await createContextWithSigHeaders(
-        {
-          headers: {
-            Accept: 'application/json'
-          },
-          url: '/introspect',
-          method: 'POST'
-        },
-        {},
-        {
-          access_token: token.value,
-          proof: 'httpsig',
-          resource_server: {
-            key: {
-              proof: 'httpsig',
-              jwk: testClientKey.jwk
-            }
-          }
-        },
-        privateKey
-      )
-
-      await signatureService.introspectionHttpsigMiddleware(ctx, next)
-
-      expect(next).toHaveBeenCalled()
-      expect(ctx.response.status).toEqual(200)
-
-      scope.isDone()
-    })
-
     test('Validate token management request with middleware', async () => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
@@ -320,30 +282,6 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('token introspection httpsig middleware fails if resource server is invalid', async () => {
-      const ctx = await createContextWithSigHeaders(
-        {
-          headers: {
-            Accept: 'application/json'
-          },
-          url: '/introspect',
-          method: 'POST'
-        },
-        {},
-        {
-          access_token: v4(),
-          proof: 'httpsig',
-          resource_server: 'invalid'
-        },
-        privateKey
-      )
-
-      await signatureService.introspectionHttpsigMiddleware(ctx, next)
-
-      expect(next).toHaveBeenCalled()
-      expect(ctx.response.status).toEqual(401)
-    })
-
     test('httpsig middleware fails if headers are invalid', async () => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
@@ -370,8 +308,6 @@ describe('Signature Service', (): void => {
         resource_server: 'test'
       }
       await signatureService.tokenHttpsigMiddleware(ctx, next)
-
-      expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(400)
 
       scope.isDone()
