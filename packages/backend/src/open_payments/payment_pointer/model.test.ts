@@ -302,8 +302,6 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
           if (cursor) {
             query['cursor'] = cursor
           }
-          // pagination['startCursor'] = getCursor(startIndex)
-          // pagination['endCursor'] = getCursor(endIndex)
           pagination['startCursor'] = models[startIndex].id
           pagination['endCursor'] = models[endIndex].id
           const ctx = setup<ListContext>({
@@ -316,7 +314,6 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
             paymentPointer: await getPaymentPointer()
           })
           await expect(list(ctx)).resolves.toBeUndefined()
-          console.log(ctx.response)
           expect(ctx.response).toSatisfyApiSpec()
           expect(ctx.body).toEqual({
             pagination,
