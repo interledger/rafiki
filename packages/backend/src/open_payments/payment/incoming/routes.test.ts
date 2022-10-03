@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid'
 
 import { Amount, serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
-import { getRouteTests } from '../../payment_pointer/model.test'
+import { getRouteTests, setup } from '../../payment_pointer/model.test'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -21,7 +21,6 @@ import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { listTests, setup } from '../../../shared/routes.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
 import { GrantReference as GrantModel } from '../../grantReference/model'
 
@@ -80,7 +79,7 @@ describe('Incoming Payment Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
+  describe('get/list', (): void => {
     getRouteTests({
       createGrant: async (options) => createGrant(deps, options),
       getPaymentPointer: async () => paymentPointer,
@@ -119,6 +118,23 @@ describe('Incoming Payment Routes', (): void => {
       }),
       list: (ctx) => incomingPaymentRoutes.list(ctx),
       urlPath: IncomingPayment.urlPath
+    })
+
+    test('returns 500 for unexpected error', async (): Promise<void> => {
+      const incomingPaymentService = await deps.use('incomingPaymentService')
+      jest
+        .spyOn(incomingPaymentService, 'getPaymentPointerPage')
+        .mockRejectedValueOnce(new Error('unexpected'))
+      const ctx = setup<ListContext>({
+        reqOpts: {
+          headers: { Accept: 'application/json' }
+        },
+        paymentPointer
+      })
+      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to list incoming payments`
+      })
     })
   })
 
@@ -275,76 +291,6 @@ describe('Incoming Payment Routes', (): void => {
         },
         externalRef: '#123',
         completed: true
-      })
-    })
-  })
-
-  describe('list', (): void => {
-    let grant: Grant
-    beforeEach(async (): Promise<void> => {
-      grant = new Grant({
-        active: true,
-        grant: grantRef.id,
-        clientId: grantRef.clientId,
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.List]
-          }
-        ]
-      })
-    })
-    describe.each`
-      withGrant | description
-      ${false}  | ${'without grant'}
-      ${true}   | ${'with grant'}
-    `('$description', ({ withGrant }): void => {
-      listTests({
-        getPaymentPointer: () => paymentPointer,
-        getGrant: () => (withGrant ? grant : undefined),
-        getUrl: () => `/incoming-payments`,
-        createItem: async (index: number) => {
-          const payment = await createIncomingPayment(deps, {
-            paymentPointerId: paymentPointer.id,
-            grantId: withGrant ? grantRef.id : undefined,
-            description: `p${index}`,
-            expiresAt
-          })
-          return {
-            id: payment.url,
-            paymentPointer: paymentPointer.url,
-            receivedAmount: {
-              value: '0',
-              assetCode: asset.code,
-              assetScale: asset.scale
-            },
-            description: payment.description,
-            completed: false,
-            expiresAt: expiresAt.toISOString(),
-            createdAt: payment.createdAt.toISOString(),
-            updatedAt: payment.updatedAt.toISOString(),
-            ilpStreamConnection: `${config.openPaymentsUrl}/connections/${payment.connectionId}`
-          }
-        },
-        list: (ctx: ListContext) => incomingPaymentRoutes.list(ctx)
-      })
-
-      test('returns 500 for unexpected error', async (): Promise<void> => {
-        const incomingPaymentService = await deps.use('incomingPaymentService')
-        jest
-          .spyOn(incomingPaymentService, 'getPaymentPointerPage')
-          .mockRejectedValueOnce(new Error('unexpected'))
-        const ctx = setup<ListContext>({
-          reqOpts: {
-            headers: { Accept: 'application/json' }
-          },
-          paymentPointer,
-          grant: withGrant ? grant : undefined
-        })
-        await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
-          status: 500,
-          message: `Error trying to list incoming payments`
-        })
       })
     })
   })

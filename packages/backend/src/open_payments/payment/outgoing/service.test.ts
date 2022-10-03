@@ -42,8 +42,6 @@ import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
 import { getTests } from '../../payment_pointer/model.test'
-import { Pagination } from '../../../shared/baseModel'
-import { getPageTests } from '../../../shared/baseModel.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
 import { GrantReference } from '../../grantReference/model'
 import { Quote } from '../../quote/model'
@@ -288,7 +286,7 @@ describe('OutgoingPaymentService', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
+  describe('get/getPaymentPointerPage', (): void => {
     getTests({
       createGrant: async ({ clientId }) =>
         createGrant(deps, {
@@ -1227,69 +1225,6 @@ describe('OutgoingPaymentService', (): void => {
         })
         expect(after?.state).toBe(startState)
       })
-    })
-  })
-
-  describe.each`
-    client   | description
-    ${false} | ${'without client'}
-    ${true}  | ${'with client'}
-  `('Outgoing payment pagination - $description', ({ client }): void => {
-    let grant: Grant
-    beforeEach(async (): Promise<void> => {
-      grant = new Grant({
-        active: true,
-        clientId: grantRef.clientId,
-        grant: grantRef.id,
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read]
-          }
-        ]
-      })
-      if (client) {
-        const secondGrant = new Grant({
-          active: true,
-          clientId: uuid(),
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read]
-            }
-          ]
-        })
-        await grantReferenceService.create({
-          id: secondGrant.grant,
-          clientId: secondGrant.clientId
-        })
-        for (let i = 0; i < 10; i++) {
-          await createOutgoingPayment(deps, {
-            paymentPointerId,
-            grant: secondGrant,
-            receiver,
-            sendAmount,
-            validDestination: false
-          })
-        }
-      }
-    })
-    getPageTests({
-      createModel: () =>
-        createOutgoingPayment(deps, {
-          paymentPointerId,
-          grant: grant,
-          receiver,
-          sendAmount,
-          validDestination: false
-        }),
-      getPage: (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage({
-          paymentPointerId,
-          pagination,
-          clientId: client ? grant.clientId : undefined
-        })
     })
   })
 })

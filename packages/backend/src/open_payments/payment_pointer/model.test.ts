@@ -1,3 +1,4 @@
+import * as httpMocks from 'node-mocks-http'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -7,8 +8,39 @@ import {
   ListOptions
 } from './model'
 import { Grant } from '../auth/grant'
-import { ReadContext, ListContext } from '../../app'
-import { setup } from '../../shared/routes.test'
+import { PaymentPointerContext, ReadContext, ListContext } from '../../app'
+import { getPageTests } from '../../shared/baseModel.test'
+import { createContext } from '../../tests/context'
+
+interface SetupOptions {
+  reqOpts: httpMocks.RequestOptions
+  params?: Record<string, string>
+  paymentPointer: PaymentPointer
+  grant?: Grant
+  clientId?: string
+}
+
+export const setup = <T extends PaymentPointerContext>(
+  options: SetupOptions
+): T => {
+  const ctx = createContext<T>(
+    {
+      ...options.reqOpts,
+      headers: Object.assign(
+        { Accept: 'application/json', 'Content-Type': 'application/json' },
+        options.reqOpts.headers
+      )
+    },
+    options.params
+  )
+  if (options.reqOpts.body !== undefined) {
+    ctx.request.body = options.reqOpts.body
+  }
+  ctx.paymentPointer = options.paymentPointer
+  ctx.grant = options.grant
+  ctx.clientId = options.clientId
+  return ctx
+}
 
 interface BaseTestsOptions<M> {
   createGrant: (options: { clientId: string }) => Promise<Grant>
@@ -34,7 +66,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
     ${true}   | ${'with grant'}
     ${false}  | ${'without grant'}
   `(
-    'Common PaymentPointerSubresource get ($description)',
+    'Common PaymentPointerSubresource get/getPaymentPointerPage ($description)',
     ({ withGrant }): void => {
       const grantClientId = uuid()
 
@@ -138,8 +170,24 @@ export const getTests = <M extends PaymentPointerSubresource>({
     createModel,
     testGet: (options, expectedMatch) =>
       expect(get(options)).resolves.toEqual(expectedMatch),
+    // tests paymentPointerId / clientId filtering
     testList: (options, expectedMatch) =>
       expect(list(options)).resolves.toEqual([expectedMatch])
+  })
+
+  // tests pagination
+  let paymentPointerId: string
+  getPageTests({
+    createModel: async () => {
+      const model = await createModel({})
+      paymentPointerId = model.paymentPointerId
+      return model
+    },
+    getPage: (pagination) =>
+      list({
+        paymentPointerId,
+        pagination
+      })
   })
 }
 
@@ -220,8 +268,66 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
         })
       }
     },
+    // tests paymentPointerId / clientId filtering
     testList: list && testList
   })
+
+  if (list) {
+    describe('Common list route pagination', (): void => {
+      let models: M[]
+
+      beforeEach(async (): Promise<void> => {
+        models = []
+        for (let i = 0; i < 3; i++) {
+          models.push(await createModel({}))
+        }
+      })
+
+      test.each`
+        query            | cursorIndex | pagination                                        | startIndex | endIndex | description
+        ${{}}            | ${-1}       | ${{ hasPreviousPage: false, hasNextPage: false }} | ${0}       | ${2}     | ${'no pagination parameters'}
+        ${{ first: 2 }}  | ${-1}       | ${{ hasPreviousPage: false, hasNextPage: true }}  | ${0}       | ${1}     | ${'only `first`'}
+        ${{ first: 10 }} | ${0}        | ${{ hasPreviousPage: true, hasNextPage: false }}  | ${1}       | ${2}     | ${'`first` plus `cursor`'}
+        ${{ last: 10 }}  | ${2}        | ${{ hasPreviousPage: false, hasNextPage: true }}  | ${0}       | ${1}     | ${'`last` plus `cursor`'}
+      `(
+        'returns 200 on $description',
+        async ({
+          query,
+          cursorIndex,
+          pagination,
+          startIndex,
+          endIndex
+        }): Promise<void> => {
+          const cursor = models[cursorIndex]?.id
+          if (cursor) {
+            query['cursor'] = cursor
+          }
+          // pagination['startCursor'] = getCursor(startIndex)
+          // pagination['endCursor'] = getCursor(endIndex)
+          pagination['startCursor'] = models[startIndex].id
+          pagination['endCursor'] = models[endIndex].id
+          const ctx = setup<ListContext>({
+            reqOpts: {
+              headers: { Accept: 'application/json' },
+              method: 'GET',
+              query,
+              url: urlPath
+            },
+            paymentPointer: await getPaymentPointer()
+          })
+          await expect(list(ctx)).resolves.toBeUndefined()
+          console.log(ctx.response)
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.body).toEqual({
+            pagination,
+            result: models
+              .slice(startIndex, endIndex + 1)
+              .map((model) => getBody(model, true))
+          })
+        }
+      )
+    })
+  }
 }
 
 test.todo('test suite must contain at least one test')

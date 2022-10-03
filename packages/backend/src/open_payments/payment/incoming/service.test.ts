@@ -15,15 +15,12 @@ import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
-import { Pagination } from '../../../shared/baseModel'
-import { getPageTests } from '../../../shared/baseModel.test'
 import { randomAsset } from '../../../tests/asset'
 import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
-import { GrantReference } from '../../grantReference/model'
 import { GrantReferenceService } from '../../grantReference/service'
 import { getTests } from '../../payment_pointer/model.test'
 
@@ -196,7 +193,7 @@ describe('Incoming Payment Service', (): void => {
     })
   })
 
-  describe('get', (): void => {
+  describe('get/getPaymentPointerPage', (): void => {
     getTests({
       createGrant: async (options) => createGrant(deps, options),
       createModel: ({ grant }) =>
@@ -461,61 +458,6 @@ describe('Incoming Payment Service', (): void => {
         })
       }
     )
-  })
-
-  describe.each`
-    client   | description
-    ${false} | ${'without client'}
-    ${true}  | ${'with client'}
-  `('Incoming payment pagination - $description', ({ client }): void => {
-    let grantRef: GrantReference
-    beforeEach(async (): Promise<void> => {
-      grantRef = await grantReferenceService.create({
-        id: uuid(),
-        clientId: uuid()
-      })
-      if (client) {
-        const secondGrant = await grantReferenceService.create({
-          id: uuid(),
-          clientId: uuid()
-        })
-        for (let i = 0; i < 10; i++) {
-          await createIncomingPayment(deps, {
-            paymentPointerId,
-            grantId: secondGrant.id,
-            incomingAmount: {
-              value: BigInt(789),
-              assetCode: asset.code,
-              assetScale: asset.scale
-            },
-            expiresAt: new Date(Date.now() + 30_000),
-            description: 'IncomingPayment',
-            externalRef: '#456'
-          })
-        }
-      }
-    })
-    getPageTests({
-      createModel: () =>
-        createIncomingPayment(deps, {
-          paymentPointerId,
-          grantId: grantRef.id,
-          incomingAmount: {
-            value: BigInt(123),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          expiresAt: new Date(Date.now() + 30_000),
-          description: 'IncomingPayment',
-          externalRef: '#123'
-        }),
-      getPage: (pagination: Pagination) =>
-        incomingPaymentService.getPaymentPointerPage({
-          paymentPointerId,
-          pagination,
-          clientId: client ? grantRef.clientId : undefined
-        })
-    })
   })
 
   describe('complete', (): void => {

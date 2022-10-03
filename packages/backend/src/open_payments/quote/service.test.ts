@@ -6,7 +6,6 @@ import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { QuoteError, isQuoteError } from './errors'
-import { Quote } from './model'
 import {
   QuoteService,
   CreateQuoteOptions,
@@ -32,8 +31,6 @@ import {
   IncomingPaymentState
 } from '../payment/incoming/model'
 import { getTests } from '../payment_pointer/model.test'
-import { Pagination } from '../../shared/baseModel'
-import { getPageTests } from '../../shared/baseModel.test'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
 
@@ -43,7 +40,6 @@ describe('QuoteService', (): void => {
   let quoteService: QuoteService
   let knex: Knex
   let paymentPointerId: string
-  let assetId: string
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
@@ -101,7 +97,6 @@ describe('QuoteService', (): void => {
       }
     })
     paymentPointerId = paymentPointer.id
-    assetId = paymentPointer.assetId
     receivingPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
@@ -130,7 +125,7 @@ describe('QuoteService', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
+  describe('get/getPaymentPointerPage', (): void => {
     getTests({
       createGrant: async (options) => createGrant(deps, options),
       createModel: ({ grant }) =>
@@ -646,40 +641,6 @@ describe('QuoteService', (): void => {
           sendAmount
         })
       ).rejects.toThrow('missing prices')
-    })
-  })
-
-  describe('getPaymentPointerPage', (): void => {
-    getPageTests({
-      createModel: async () =>
-        Quote.query(knex).insertAndFetch({
-          paymentPointerId,
-          assetId,
-          receiver: `${
-            receivingPaymentPointer.url
-          }/incoming-payments/${uuid()}`,
-          sendAmount,
-          receiveAmount,
-          maxPacketAmount: BigInt('9223372036854775807'),
-          lowEstimatedExchangeRate: Pay.Ratio.of(
-            Pay.Int.from(500000000000n) as Pay.PositiveInt,
-            Pay.Int.from(1000000000000n) as Pay.PositiveInt
-          ),
-          highEstimatedExchangeRate: Pay.Ratio.of(
-            Pay.Int.from(500000000001n) as Pay.PositiveInt,
-            Pay.Int.from(1000000000000n) as Pay.PositiveInt
-          ),
-          minExchangeRate: Pay.Ratio.of(
-            Pay.Int.from(495n) as Pay.PositiveInt,
-            Pay.Int.from(1000n) as Pay.PositiveInt
-          ),
-          expiresAt: new Date(Date.now() + config.quoteLifespan)
-        }),
-      getPage: (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage({
-          paymentPointerId,
-          pagination
-        })
     })
   })
 })
