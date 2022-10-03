@@ -15,6 +15,12 @@ import { GrantService } from './grant/service'
 import { AccessTokenRoutes } from './accessToken/routes'
 import { createValidatorMiddleware, HttpMethod } from 'openapi'
 
+import {
+  grantInitiationHttpsigMiddleware,
+  grantContinueHttpsigMiddleware,
+  tokenHttpsigMiddleware
+} from './signature/middleware'
+
 export interface AppContextData extends DefaultContext {
   logger: Logger
   closeEmitter: EventEmitter
@@ -179,7 +185,6 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
-    const signatureService = await this.container.use('signatureService')
 
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
@@ -190,7 +195,7 @@ export class App {
         path: '/',
         method: HttpMethod.POST
       }),
-      signatureService.grantInitiationHttpsigMiddleware,
+      grantInitiationHttpsigMiddleware,
       grantRoutes.create
     )
 
@@ -201,7 +206,7 @@ export class App {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
-      signatureService.grantContinueHttpsigMiddleware,
+      grantContinueHttpsigMiddleware,
       grantRoutes.continue
     )
 
@@ -212,7 +217,7 @@ export class App {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
-      signatureService.tokenHttpsigMiddleware,
+      tokenHttpsigMiddleware,
       accessTokenRoutes.rotate
     )
 
@@ -223,7 +228,7 @@ export class App {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
-      signatureService.tokenHttpsigMiddleware,
+      tokenHttpsigMiddleware,
       accessTokenRoutes.revoke
     )
 

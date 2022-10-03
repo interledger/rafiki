@@ -10,7 +10,6 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { SignatureService } from './service'
 import { ClientKey, JWKWithRequired } from '../client/service'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
 import {
@@ -23,11 +22,17 @@ import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessType, Action } from '../access/types'
 import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
+import {
+  verifySig,
+  sigInputToChallenge,
+  tokenHttpsigMiddleware,
+  grantContinueHttpsigMiddleware,
+  grantInitiationHttpsigMiddleware
+} from './middleware'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let signatureService: SignatureService
   let keyPath: string
   let publicKey: JWKWithRequired
   let privateKey: JWKWithRequired
@@ -38,7 +43,6 @@ describe('Signature Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    signatureService = await deps.use('signatureService')
     appContainer = await createTestApp(deps)
 
     const keys = await generateTestKeys()
@@ -62,11 +66,7 @@ describe('Signature Service', (): void => {
       const privateJwk = (await importJWK(privateKey)) as crypto.KeyLike
       const signature = crypto.sign(null, Buffer.from(challenge), privateJwk)
       await expect(
-        signatureService.verifySig(
-          signature.toString('base64'),
-          publicKey,
-          challenge
-        )
+        verifySig(signature.toString('base64'), publicKey, challenge)
       ).resolves.toBe(true)
     })
 
@@ -85,15 +85,13 @@ describe('Signature Service', (): void => {
           method: 'GET',
           url: '/test'
         },
-        {}
+        {},
+        deps
       )
 
       ctx.request.body = { foo: 'bar' }
 
-      const challenge = signatureService.sigInputToChallenge(
-        sigInputHeader,
-        ctx
-      )
+      const challenge = sigInputToChallenge(sigInputHeader, ctx)
       expect(challenge).toEqual(
         `"@method": GET\n"@target-uri": /test\n"content-digest": sha-256=:test-hash:\n"content-length": 1234\n"content-type": application/json\n"authorization": GNAP test-access-token\n"@signature-params": ${sigInputHeader.replace(
           'sig1=',
@@ -124,16 +122,15 @@ describe('Signature Service', (): void => {
             method: 'GET',
             url: '/test'
           },
-          {}
+          {},
+          deps
         )
 
         ctx.request.body = { foo: 'bar' }
         ctx.method = 'GET'
         ctx.request.url = '/test'
 
-        expect(signatureService.sigInputToChallenge(sigInputHeader, ctx)).toBe(
-          null
-        )
+        expect(sigInputToChallenge(sigInputHeader, ctx)).toBe(null)
       }
     )
   })
@@ -238,11 +235,42 @@ describe('Signature Service', (): void => {
             }
           }
         },
-        privateKey
+        privateKey,
+        deps
       )
 
-      await signatureService.grantInitiationHttpsigMiddleware(ctx, next)
+      await grantInitiationHttpsigMiddleware(ctx, next)
 
+      expect(ctx.response.status).toEqual(200)
+      expect(next).toHaveBeenCalled()
+
+      scope.isDone()
+    })
+
+    test('Validate grant continuation request with middleware', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(keyPath)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${grant.continueToken}`
+          },
+          url: '/continue',
+          method: 'POST'
+        },
+        { id: grant.continueId },
+        { interact_ref: grant.interactRef },
+        privateKey,
+        deps
+      )
+
+      await grantContinueHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
 
@@ -265,16 +293,17 @@ describe('Signature Service', (): void => {
           url: tokenManagementUrl,
           method: 'DELETE'
         },
-        { managementId },
+        { id: managementId },
         {
           access_token: token.value,
           proof: 'httpsig',
           resource_server: 'test'
         },
-        privateKey
+        privateKey,
+        deps
       )
 
-      await signatureService.tokenHttpsigMiddleware(ctx, next)
+      await tokenHttpsigMiddleware(ctx, next)
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
@@ -299,7 +328,8 @@ describe('Signature Service', (): void => {
           url: tokenManagementUrl,
           method
         },
-        { managementId }
+        { id: managementId },
+        deps
       )
 
       ctx.request.body = {
@@ -307,7 +337,7 @@ describe('Signature Service', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
-      await signatureService.tokenHttpsigMiddleware(ctx, next)
+      await tokenHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(400)
 
       scope.isDone()

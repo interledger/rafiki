@@ -4,19 +4,8 @@ import * as crypto from 'crypto'
 import { importJWK } from 'jose'
 
 import { AppContext } from '../app'
-import { BaseService } from '../shared/baseService'
-import { IAppConfig } from '../config/app'
 import { Grant } from '../grant/model'
-import { GrantService } from '../grant/service'
-import { AccessTokenService } from '../accessToken/service'
-import { ClientService, JWKWithRequired } from '../client/service'
-
-interface ServiceDependencies extends BaseService {
-  config: IAppConfig
-  grantService: GrantService
-  accessTokenService: AccessTokenService
-  clientService: ClientService
-}
+import { JWKWithRequired } from '../client/service'
 
 interface VerifySigResult {
   success: boolean
@@ -25,66 +14,7 @@ interface VerifySigResult {
   message?: string
 }
 
-export interface SignatureService {
-  verifySig(
-    sig: string,
-    jwk: JWKWithRequired,
-    challenge: string
-  ): Promise<boolean>
-  sigInputToChallenge(sigInput: string, ctx: AppContext): string | null
-  tokenHttpsigMiddleware(
-    ctx: AppContext,
-    next: () => Promise<any>
-  ): Promise<void>
-  grantContinueHttpsigMiddleware(
-    ctx: AppContext,
-    next: () => Promise<any>
-  ): Promise<void>
-  grantInitiationHttpsigMiddleware(
-    ctx: AppContext,
-    next: () => Promise<any>
-  ): Promise<void>
-}
-
-export async function createSignatureService({
-  logger,
-  config,
-  grantService,
-  accessTokenService,
-  clientService
-}: ServiceDependencies): Promise<SignatureService> {
-  const log = logger.child({
-    service: 'SignatureService'
-  })
-
-  const deps: ServiceDependencies = {
-    logger: log,
-    config,
-    grantService,
-    accessTokenService,
-    clientService
-  }
-
-  return {
-    verifySig: (sig: string, jwk: JWKWithRequired, challenge: string) =>
-      verifySig(deps, sig, jwk, challenge),
-    sigInputToChallenge: (sigInput: string, ctx: AppContext) =>
-      sigInputToChallenge(sigInput, ctx),
-    tokenHttpsigMiddleware: (ctx: AppContext, next: () => Promise<any>) =>
-      tokenHttpsigMiddleware(deps, ctx, next),
-    grantContinueHttpsigMiddleware: (
-      ctx: AppContext,
-      next: () => Promise<any>
-    ) => grantContinueHttpsigMiddleware(deps, ctx, next),
-    grantInitiationHttpsigMiddleware: (
-      ctx: AppContext,
-      next: () => Promise<any>
-    ) => grantInitiationHttpsigMiddleware(deps, ctx, next)
-  }
-}
-
-async function verifySig(
-  deps: ServiceDependencies,
+export async function verifySig(
   sig: string,
   jwk: JWKWithRequired,
   challenge: string
@@ -95,12 +25,11 @@ async function verifySig(
 }
 
 async function verifySigAndChallenge(
-  deps: ServiceDependencies,
-  sig: string,
-  sigInput: string,
   clientKey: JWKWithRequired,
-  ctx: AppContext
+  ctx: HttpSigContext
 ): Promise<VerifySigResult> {
+  const sig = ctx.headers['signature'] as string
+  const sigInput = ctx.headers['signature-input'] as string
   const challenge = sigInputToChallenge(sigInput, ctx)
   if (!challenge) {
     return {
@@ -113,15 +42,11 @@ async function verifySigAndChallenge(
 
   try {
     return {
-      success: await verifySig(
-        deps,
-        sig.replace('sig1=', ''),
-        clientKey,
-        challenge
-      )
+      success: await verifySig(sig.replace('sig1=', ''), clientKey, challenge)
     }
   } catch (err) {
-    deps.logger.error(
+    const logger = await ctx.container.use('logger')
+    logger.error(
       {
         error: err
       },
@@ -134,13 +59,11 @@ async function verifySigAndChallenge(
 }
 
 async function verifySigFromBoundKey(
-  deps: ServiceDependencies,
-  sig: string,
-  sigInput: string,
   grant: Grant,
-  ctx: AppContext
+  ctx: HttpSigContext
 ): Promise<VerifySigResult> {
-  const { jwk } = await deps.clientService.getKeyByKid(grant.clientKeyId)
+  const clientService = await ctx.container.use('clientService')
+  const { jwk } = await clientService.getKeyByKid(grant.clientKeyId)
   if (!jwk)
     return {
       success: false,
@@ -148,7 +71,7 @@ async function verifySigFromBoundKey(
       status: 401
     }
 
-  return verifySigAndChallenge(deps, sig, sigInput, jwk, ctx)
+  return verifySigAndChallenge(jwk, ctx)
 }
 
 // TODO: Replace with public httpsig library
@@ -183,7 +106,10 @@ function validateSigInputComponents(
   )
 }
 
-function sigInputToChallenge(sigInput: string, ctx: AppContext): string | null {
+export function sigInputToChallenge(
+  sigInput: string,
+  ctx: AppContext
+): string | null {
   const sigInputComponents = getSigInputComponents(sigInput)
 
   if (
@@ -247,8 +173,7 @@ function handleVerifySigResult(
   return true
 }
 
-async function grantContinueHttpsigMiddleware(
-  deps: ServiceDependencies,
+export async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
@@ -261,11 +186,27 @@ async function grantContinueHttpsigMiddleware(
     return
   }
 
-  const sig = ctx.headers['signature'] as string
-  const sigInput = ctx.headers['signature-input'] as string
+  const continueToken = ctx.headers['authorization'].replace(
+    'GNAP ',
+    ''
+  ) as string
+  const { interact_ref: interactRef } = ctx.request.body
 
-  const grant = await deps.grantService.getByInteraction(
-    ctx.params['interactId']
+  const logger = await ctx.container.use('logger')
+  logger.info(
+    {
+      continueToken,
+      interactRef,
+      continueId: ctx.params['id']
+    },
+    'httpsig for continue'
+  )
+
+  const grantService = await ctx.container.use('grantService')
+  const grant = await grantService.getByContinue(
+    ctx.params['id'],
+    continueToken,
+    interactRef
   )
   if (!grant) {
     ctx.status = 401
@@ -275,14 +216,13 @@ async function grantContinueHttpsigMiddleware(
     }
     return
   }
-  const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
+  const verified = await verifySigFromBoundKey(grant, ctx)
 
   handleVerifySigResult(verified, ctx)
   await next()
 }
 
-async function grantInitiationHttpsigMiddleware(
-  deps: ServiceDependencies,
+export async function grantInitiationHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
@@ -295,30 +235,22 @@ async function grantInitiationHttpsigMiddleware(
     return
   }
 
-  const sig = ctx.headers['signature'] as string
-  const sigInput = ctx.headers['signature-input'] as string
   const { body } = ctx.request
 
-  if (!(await deps.clientService.validateClient(body.client))) {
+  const clientService = await ctx.container.use('clientService')
+  if (!(await clientService.validateClient(body.client))) {
     ctx.status = 401
     ctx.body = { error: 'invalid_client' }
     return
   }
 
-  const verified = await verifySigAndChallenge(
-    deps,
-    sig,
-    sigInput,
-    body.client.key.jwk,
-    ctx
-  )
+  const verified = await verifySigAndChallenge(body.client.key.jwk, ctx)
 
   handleVerifySigResult(verified, ctx)
   await next()
 }
 
-async function tokenHttpsigMiddleware(
-  deps: ServiceDependencies,
+export async function tokenHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
@@ -331,10 +263,9 @@ async function tokenHttpsigMiddleware(
     return
   }
 
-  const sig = ctx.headers['signature'] as string
-  const sigInput = ctx.headers['signature-input'] as string
-  const accessToken = await deps.accessTokenService.getByManagementId(
-    ctx.params['managementId']
+  const accessTokenService = await ctx.container.use('accessTokenService')
+  const accessToken = await accessTokenService.getByManagementId(
+    ctx.params['id']
   )
   if (!accessToken) {
     ctx.status = 401
@@ -345,8 +276,9 @@ async function tokenHttpsigMiddleware(
     return
   }
 
-  const grant = await deps.grantService.get(accessToken.grantId)
-  const verified = await verifySigFromBoundKey(deps, sig, sigInput, grant, ctx)
+  const grantService = await ctx.container.use('grantService')
+  const grant = await grantService.get(accessToken.grantId)
+  const verified = await verifySigFromBoundKey(grant, ctx)
 
   handleVerifySigResult(verified, ctx)
   await next()
