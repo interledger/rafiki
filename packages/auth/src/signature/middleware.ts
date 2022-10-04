@@ -7,13 +7,6 @@ import { AppContext } from '../app'
 import { Grant } from '../grant/model'
 import { JWKWithRequired } from '../client/service'
 
-interface VerifySigResult {
-  success: boolean
-  status?: number
-  error?: string
-  message?: string
-}
-
 export async function verifySig(
   sig: string,
   jwk: JWKWithRequired,
@@ -191,7 +184,7 @@ export async function grantContinueHttpsigMiddleware(
     }
     return
   }
-  
+
   await verifySigFromBoundKey(grant, ctx)
   await next()
 }

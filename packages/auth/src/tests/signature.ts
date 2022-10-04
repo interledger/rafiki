@@ -59,7 +59,7 @@ export async function generateSigHeaders(
   url: string,
   method: string,
   optionalComponents?: {
-    body?: unknown,
+    body?: unknown
     authorization?: string
   }
 ): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
