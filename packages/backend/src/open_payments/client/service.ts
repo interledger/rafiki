@@ -5,10 +5,18 @@ import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
 import { URL } from 'url'
 
 import { Amount, parseAmount } from '../amount'
+import { ConnectionRoutes } from '../connection/routes'
 import { ConnectionBase, ConnectionJSON } from '../connection/service'
 import { IncomingPaymentJSON } from '../payment/incoming/model'
+import { IncomingPaymentRoutes } from '../payment/incoming/routes'
+import { PaymentPointerService } from '../payment_pointer/service'
+import { ReadContext } from '../../app'
 import { AssetOptions } from '../../asset/service'
 import { BaseService } from '../../shared/baseService'
+// TODO: move out of *.tests
+import { setup } from '../../shared/routes.test'
+// TODO: move out of /tests
+import { createContext } from '../../tests/context'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -104,7 +112,11 @@ export interface OpenPaymentsClientService {
 
 interface ServiceDependencies extends BaseService {
   accessToken: string
+  connectionRoutes: ConnectionRoutes
+  incomingPaymentRoutes: IncomingPaymentRoutes
   openApi: OpenAPI
+  openPaymentsUrl: string
+  paymentPointerService: PaymentPointerService
   validateConnection: ValidateFunction<ConnectionJSON>
   validateIncomingPayment: ValidateFunction<IncomingPaymentJSON>
 }
@@ -172,6 +184,20 @@ async function getConnection(
   url: string
 ): Promise<ConnectionJSON | undefined> {
   try {
+    // Check if this is a local incoming payment connection
+    if (url.startsWith(`${deps.openPaymentsUrl}/connections/`)) {
+      const ctx = createContext<ReadContext>(
+        {
+          headers: { Accept: 'application/json' },
+          method: 'GET'
+        },
+        {
+          id: url.slice(-36)
+        }
+      )
+      await deps.connectionRoutes.get(ctx)
+      return ctx.body as ConnectionJSON
+    }
     const { status, data } = await getResource({
       url
     })
@@ -189,11 +215,36 @@ async function getConnection(
   }
 }
 
+const INCOMING_PAYMENT_URL_REGEX =
+  /(?<paymentPointerUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
+
 async function getIncomingPayment(
   deps: ServiceDependencies,
   url: string
 ): Promise<IncomingPaymentJSON | undefined> {
   try {
+    const match = url.match(INCOMING_PAYMENT_URL_REGEX)?.groups
+    if (!match) {
+      return undefined
+    }
+    // Check if this is a local payment pointer
+    const paymentPointer = await deps.paymentPointerService.getByUrl(
+      match.paymentPointerUrl
+    )
+    if (paymentPointer) {
+      const ctx = setup<ReadContext>({
+        reqOpts: {
+          headers: { Accept: 'application/json' },
+          method: 'GET'
+        },
+        params: {
+          id: match.id
+        },
+        paymentPointer
+      })
+      await deps.incomingPaymentRoutes.get(ctx)
+      return ctx.body as IncomingPaymentJSON
+    }
     const { status, data } = await getResource({
       url,
       accessToken: deps.accessToken
@@ -214,7 +265,6 @@ async function getIncomingPayment(
 }
 
 const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
-const INCOMING_PAYMENT_URL_REGEX = /\/incoming-payments\/(.){36}$/
 
 async function getReceiver(
   deps: ServiceDependencies,
@@ -225,7 +275,7 @@ async function getReceiver(
     if (connection) {
       return Receiver.fromConnection(connection)
     }
-  } else if (url.match(INCOMING_PAYMENT_URL_REGEX)) {
+  } else {
     const incomingPayment = await getIncomingPayment(deps, url)
     if (incomingPayment) {
       return Receiver.fromIncomingPayment(incomingPayment)
