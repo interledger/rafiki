@@ -58,28 +58,32 @@ export async function generateSigHeaders(
   privateKey: JWKWithRequired,
   url: string,
   method: string,
-  body?: unknown
+  optionalComponents?: {
+    body?: unknown
+    authorization?: string
+  }
 ): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
-  const sigInput = body
-    ? 'sig1=("@method" "@target-uri" "content-digest");created=1618884473;keyid="gnap-key"'
-    : 'sig1=("@method" "@target-uri");created=1618884473;keyid="gnap-key"'
-  let challenge
+  let sigInputComponents = 'sig1=("@method" "@target-uri"'
+  const { body, authorization } = optionalComponents ?? {}
+  if (body) sigInputComponents += ' "content-digest"'
+  if (authorization) sigInputComponents += ' "authorization"'
+
+  const sigInput = sigInputComponents + ');created=1618884473;keyid="gnap-key"'
+  let challenge = `"@method": ${method}\n"@target-uri": ${url}\n`
   let contentDigest
   if (body) {
     const hash = crypto.createHash('sha256')
     hash.update(Buffer.from(JSON.stringify(body)))
     const bodyDigest = hash.digest()
     contentDigest = `sha-256:${bodyDigest.toString('base64')}:`
-    challenge = `"@method": ${method}\n"@target-uri": ${url}\n"content-digest": ${contentDigest}\n"@signature-params": ${sigInput.replace(
-      'sig1=',
-      ''
-    )}`
-  } else {
-    challenge = `"@method": ${method}\n"@target-uri": ${url}\n"@signature-params": ${sigInput.replace(
-      'sig1=',
-      ''
-    )}`
+    challenge += `"content-digest": ${contentDigest}\n`
   }
+
+  if (authorization) {
+    challenge += `"authorization": ${authorization}\n`
+  }
+
+  challenge += `"@signature-params": ${sigInput.replace('sig1=', '')}`
 
   const privateJwk = (await importJWK(privateKey)) as crypto.KeyLike
   const signature = crypto.sign(null, Buffer.from(challenge), privateJwk)
