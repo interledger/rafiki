@@ -339,8 +339,73 @@ describe('Signature Service', (): void => {
       }
       await tokenHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(400)
+      expect(ctx.response.body.error).toEqual('invalid_request')
+      expect(ctx.response.body.message).toEqual('invalid signature headers')
 
       scope.isDone()
+    })
+
+    test('middleware fails if signature is invalid', async (): Promise<void> => {
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(keyPath)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${grant.continueToken}`
+          },
+          url: '/continue',
+          method: 'POST'
+        },
+        { id: grant.continueId },
+        { interact_ref: grant.interactRef },
+        privateKey,
+        deps
+      )
+
+      ctx.headers['signature'] = 'wrong-signature'
+
+      await expect(
+        grantContinueHttpsigMiddleware(ctx, next)
+      ).rejects.toHaveProperty('status', 401)
+
+      scope.isDone()
+    })
+
+    test('middleware fails if client is invalid', async (): Promise<void> => {
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {},
+        {
+          client: {
+            display: TEST_CLIENT_DISPLAY,
+            key: {
+              proof: 'httpsig',
+              jwk: {
+                ...testClientKey.jwk,
+                kid: KEY_REGISTRY_ORIGIN + '/wrong-kid'
+              }
+            }
+          }
+        },
+        privateKey,
+        deps
+      )
+
+      await grantInitiationHttpsigMiddleware(ctx, next)
+      expect(ctx.response.status).toEqual(401)
+      expect(ctx.body).toMatchObject({ error: 'invalid_client' })
     })
   })
 })

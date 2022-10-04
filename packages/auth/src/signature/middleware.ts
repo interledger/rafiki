@@ -28,16 +28,15 @@ async function verifySigAndChallenge(
     ctx.throw(400, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  try {
-    return verifySig(sig.replace('sig1=', ''), clientKey, challenge)
-  } catch (err) {
-    const logger = await ctx.container.use('logger')
-    logger.error(
-      {
-        error: err
-      },
-      'failed to verify signature'
-    )
+  const verified = await verifySig(
+    sig.replace('sig1=', ''),
+    clientKey,
+    challenge
+  )
+
+  if (verified) {
+    return true
+  } else {
     ctx.throw(401, 'invalid signature')
   }
 }
