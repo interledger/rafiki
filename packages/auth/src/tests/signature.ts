@@ -58,10 +58,13 @@ export async function generateSigHeaders(
   privateKey: JWKWithRequired,
   url: string,
   method: string,
-  body?: unknown,
-  authorization?: string
+  optionalComponents?: {
+    body?: unknown,
+    authorization?: string
+  }
 ): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
   let sigInputComponents = 'sig1=("@method" "@target-uri"'
+  const { body, authorization } = optionalComponents ?? {}
   if (body) sigInputComponents += ' "content-digest"'
   if (authorization) sigInputComponents += ' "authorization"'
 

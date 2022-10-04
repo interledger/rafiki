@@ -49,8 +49,10 @@ export async function createContextWithSigHeaders(
     privateKey,
     url as string,
     method as string,
-    requestBody,
-    headers.Authorization as string
+    {
+      body: requestBody,
+      authorization: headers.Authorization as string
+    }
   )
 
   const ctx = createContext(

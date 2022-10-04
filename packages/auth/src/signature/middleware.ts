@@ -27,23 +27,16 @@ export async function verifySig(
 async function verifySigAndChallenge(
   clientKey: JWKWithRequired,
   ctx: HttpSigContext
-): Promise<VerifySigResult> {
+): Promise<boolean> {
   const sig = ctx.headers['signature'] as string
   const sigInput = ctx.headers['signature-input'] as string
   const challenge = sigInputToChallenge(sigInput, ctx)
   if (!challenge) {
-    return {
-      success: false,
-      status: 400,
-      error: 'invalid_request',
-      message: 'invalid Sig-Input'
-    }
+    ctx.throw(400, 'invalid signature input', { error: 'invalid_request' })
   }
 
   try {
-    return {
-      success: await verifySig(sig.replace('sig1=', ''), clientKey, challenge)
-    }
+    return verifySig(sig.replace('sig1=', ''), clientKey, challenge)
   } catch (err) {
     const logger = await ctx.container.use('logger')
     logger.error(
@@ -52,24 +45,19 @@ async function verifySigAndChallenge(
       },
       'failed to verify signature'
     )
-    return {
-      success: false
-    }
+    ctx.throw(401, 'invalid signature')
   }
 }
 
 async function verifySigFromBoundKey(
   grant: Grant,
   ctx: HttpSigContext
-): Promise<VerifySigResult> {
+): Promise<boolean> {
   const clientService = await ctx.container.use('clientService')
   const { jwk } = await clientService.getKeyByKid(grant.clientKeyId)
-  if (!jwk)
-    return {
-      success: false,
-      error: 'invalid_client',
-      status: 401
-    }
+  if (!jwk) {
+    ctx.throw(401, 'invalid client', { error: 'invalid_client' })
+  }
 
   return verifySigAndChallenge(jwk, ctx)
 }
@@ -160,19 +148,6 @@ function validateHttpSigHeaders(ctx: AppContext): ctx is HttpSigContext {
   )
 }
 
-function handleVerifySigResult(
-  verified: VerifySigResult,
-  ctx: HttpSigContext
-): boolean {
-  if (!verified.success) {
-    ctx.throw(verified.status ?? 401, verified.message, {
-      error: 'request_denied'
-    })
-  }
-
-  return true
-}
-
 export async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
@@ -216,9 +191,8 @@ export async function grantContinueHttpsigMiddleware(
     }
     return
   }
-  const verified = await verifySigFromBoundKey(grant, ctx)
-
-  handleVerifySigResult(verified, ctx)
+  
+  await verifySigFromBoundKey(grant, ctx)
   await next()
 }
 
@@ -244,9 +218,7 @@ export async function grantInitiationHttpsigMiddleware(
     return
   }
 
-  const verified = await verifySigAndChallenge(body.client.key.jwk, ctx)
-
-  handleVerifySigResult(verified, ctx)
+  await verifySigAndChallenge(body.client.key.jwk, ctx)
   await next()
 }
 
@@ -278,8 +250,6 @@ export async function tokenHttpsigMiddleware(
 
   const grantService = await ctx.container.use('grantService')
   const grant = await grantService.get(accessToken.grantId)
-  const verified = await verifySigFromBoundKey(grant, ctx)
-
-  handleVerifySigResult(verified, ctx)
+  await verifySigFromBoundKey(grant, ctx)
   await next()
 }
