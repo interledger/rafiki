@@ -179,6 +179,7 @@ importers:
       raw-body: ^2.4.1
       react: ~18.2.0
       rosie: ^2.1.0
+      structured-headers: ^0.5.0
       testcontainers: ^8.12.0
       tigerbeetle-node: ^0.10.0
       tmp: ^0.2.1
@@ -229,6 +230,7 @@ importers:
       pino: 8.4.2
       pino-pretty: 9.0.1
       raw-body: 2.5.1
+      structured-headers: 0.5.0
       tigerbeetle-node: 0.10.0
       uuid: 8.3.2
     devDependencies:

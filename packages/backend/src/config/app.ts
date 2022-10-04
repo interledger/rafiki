@@ -21,7 +21,9 @@ function envBool(name: string, value: boolean): boolean {
   const envValue = process.env[name]
   return envValue == null
     ? value
-    : `${true}`.toLowerCase() === `${envValue}`.toLowerCase()
+    : Number.isInteger(envValue)
+    ? +envValue != 0
+    : `${true}`.toLowerCase() == `${envValue}`.toLowerCase()
 }
 
 // function envBool(name: string, value: boolean): boolean {

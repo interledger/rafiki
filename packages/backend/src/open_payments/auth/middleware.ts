@@ -3,77 +3,79 @@ import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
 import { createVerifier, httpis, RequestLike } from 'http-message-signatures'
-import { KeyObject } from 'crypto'
 import { Request as KoaRequest } from 'koa'
-import { ClientKeys } from '../../clientKeys/model'
 import { JWKWithRequired } from 'auth'
-
-// Creates a RequestLike object for the http-message-signatures library input
-function requestLike(request: KoaRequest): RequestLike {
-  return {
-    method: request.method,
-    headers: request.headers,
-    url: request.url
-  }
-}
-
-function parseJwkKeyType(jwk: JWKWithRequired): KeyType {
-  if (jwk.kty === 'private' || jwk.kty === 'public' || jwk.kty === 'secret') {
-    return jwk.kty
-  } else {
-    throw new Error('invalid key type')
-  }
-}
-
-function parseJwkUsages(jwk: JWKWithRequired): Array<KeyUsage> {
-  const { use } = jwk
-  if (
-    use === 'decrypt' ||
-    use === 'deriveBits' ||
-    use === 'deriveKey' ||
-    use === 'encrypt' ||
-    use === 'sign' ||
-    use === 'unwrapKey' ||
-    use === 'verify' ||
-    use === 'wrapKey'
-  ) {
-    return [use]
-  } else if (use === undefined) {
-    return []
-  } else {
-    throw new Error('invalid usage')
-  }
-}
+import {
+  ByteSequence,
+  InnerList,
+  Item,
+  parseDictionary,
+  serializeDictionary
+} from 'structured-headers'
 
 async function verifyRequest(
-  request: KoaRequest,
-  jwk: JWKWithRequired
+  koaRequest: KoaRequest,
+  jwk: JWKWithRequired,
+  key: string
 ): Promise<void> {
-  const keyType = parseJwkKeyType(clientKeys.jwk)
-  const typedRequest = requestLike(request)
+  const { kid, kty } = jwk
+
+  if (kty !== 'OKP') {
+    throw new Error('invalid key type')
+  }
+
+  if (!koaRequest.headers['signature']) {
+    throw new Error('signature is missing')
+  }
+
+  if (!koaRequest.headers['signature-input']) {
+    throw new Error('signature-input is missing')
+  }
+
+  const signatureInputMap = new Map<string, string>()
+  signatureInputMap.set('keyid', kid)
+  signatureInputMap.set('alg', jwk.alg)
+
+  const typedRequest: RequestLike = {
+    method: koaRequest.method,
+    headers: {
+      ...koaRequest.headers,
+      signature: serializeDictionary(
+        new Map<string, Item | InnerList>([
+          ...Array.from(
+            parseDictionary(koaRequest.headers['signature'].toString())
+          ).map(([propKey, propValue]) => {
+            return [
+              propKey,
+              [new ByteSequence(propValue[0].toString()), new Map()]
+            ] as [string, Item | InnerList]
+          })
+        ])
+      )
+    },
+    url: koaRequest.url
+  }
+
+  const verifier = createVerifier('ecdsa-p256-sha256', key)
   const signatures = httpis.parseSignatures(typedRequest)
+
   for (const [, { keyid, alg }] of signatures) {
     if (!keyid) {
       throw new Error(`The signature input is missing the 'keyid' parameter`)
     } else if (alg !== 'ed25519') {
+      // ed25519 is EdDSA
       throw new Error(
-        `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' is supported.`
+        `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' ('EdDSA') is supported.`
+      )
+    } else if (jwk.use && jwk.use !== 'sig') {
+      throw new Error(
+        "The optional signature parameter 'use' is using an illegal value. Only 'sig' is supported."
       )
     } else {
-      const success = await httpis.verify(requestLike(request), {
+      const success = await httpis.verify(typedRequest, {
         format: 'httpbis',
         verifiers: {
-          keyid: createVerifier(
-            alg,
-            KeyObject.from({
-              algorithm: {
-                name: alg
-              },
-              extractable: clientKeys.jwk.ext,
-              type: keyType,
-              usages: parseJwkUsages(clientKeys.jwk)
-            })
-          )
+          [kid]: verifier
         }
       })
 
@@ -124,7 +126,7 @@ export function createAuthMiddleware({
           const clientKeys = await clientKeysService.getKeyByClientId(
             grant.clientId
           )
-          await verifyRequest(ctx.request, clientKeys)
+          await verifyRequest(ctx.request, clientKeys.jwk, grant.key.proof)
         } catch (e) {
           ctx.throw(401, `Invalid signature: ${e.message}`)
         }
