@@ -14,7 +14,6 @@ import { truncateTables } from '../../tests/tableManager'
 import { v4 as uuid } from 'uuid'
 import { GrantReference } from '../../open_payments/grantReference/model'
 import { GrantReferenceService } from '../../open_payments/grantReference/service'
-import { IncomingPayment as IncomingPaymentModel } from '../../open_payments/payment/incoming/model'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import {
   IncomingPaymentResponse,
@@ -50,22 +49,6 @@ describe('Incoming Payment Resolver', (): void => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
-
-  const createPayment = async (options: {
-    paymentPointerId: string
-    description?: string
-    externalRef?: string
-    expiresAt?: Date
-    incomingAmount: {
-      value: bigint
-      assetCode: string
-      assetScale: number
-    }
-  }): Promise<IncomingPaymentModel> => {
-    return await createIncomingPayment(deps, {
-      ...options
-    })
-  }
 
   describe('Payment pointer incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
@@ -123,7 +106,7 @@ describe('Incoming Payment Resolver', (): void => {
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
           asset
         })
-        const payment = await createPayment({
+        const payment = await createIncomingPayment(deps, {
           paymentPointerId,
           description,
           externalRef,
@@ -136,9 +119,9 @@ describe('Incoming Payment Resolver', (): void => {
           .mockResolvedValueOnce(payment)
 
         const input = {
-          paymentPointerId: payment.paymentPointerId,
-          incomingAmount: payment.incomingAmount,
-          expiresAt: payment.expiresAt,
+          paymentPointerId,
+          incomingAmount,
+          expiresAt,
           description,
           externalRef
         }
@@ -191,22 +174,23 @@ describe('Incoming Payment Resolver', (): void => {
           payment: {
             __typename: 'IncomingPayment',
             id: payment.id,
-            paymentPointerId: payment.paymentPointerId,
+            paymentPointerId,
             state: SchemaPaymentState.Pending,
-            expiresAt: payment.expiresAt.toISOString(),
+            expiresAt:
+              expiresAt?.toISOString() || payment.expiresAt.toISOString(),
             incomingAmount:
               incomingAmount === undefined
                 ? null
                 : {
                     __typename: 'Amount',
-                    ...serializeAmount(payment.incomingAmount)
+                    ...serializeAmount(incomingAmount)
                   },
             receivedAmount: {
               __typename: 'Amount',
               ...serializeAmount(payment.receivedAmount)
             },
-            description: payment.description,
-            externalRef: payment.externalRef,
+            description: description || null,
+            externalRef: externalRef || null,
             createdAt: payment.createdAt.toISOString()
           }
         })
