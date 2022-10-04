@@ -2,7 +2,12 @@ import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
-import { createVerifier, httpis, RequestLike } from 'http-message-signatures'
+import {
+  createVerifier,
+  httpis,
+  RequestLike,
+  Algorithm as AlgorithmName
+} from 'http-message-signatures'
 import { Request as KoaRequest } from 'koa'
 import { JWKWithRequired } from 'auth'
 import {
@@ -12,6 +17,17 @@ import {
   parseDictionary,
   serializeDictionary
 } from 'structured-headers'
+
+function parseAlgorithmName(alg: string): AlgorithmName {
+  if (alg === 'EdDSA' || alg === 'ed25519') {
+    // ed25519 is EdDSA
+    return 'ed25519'
+  } else {
+    throw new Error(
+      `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' ('EdDSA') is supported.`
+    )
+  }
+}
 
 async function verifyRequest(
   koaRequest: KoaRequest,
@@ -34,7 +50,7 @@ async function verifyRequest(
 
   const signatureInputMap = new Map<string, string>()
   signatureInputMap.set('keyid', kid)
-  signatureInputMap.set('alg', jwk.alg)
+  signatureInputMap.set('alg', parseAlgorithmName(jwk.alg))
 
   const typedRequest: RequestLike = {
     method: koaRequest.method,
