@@ -167,7 +167,7 @@ export type CreateClientMutationResponse = MutationResponse & {
 
 export type CreateIncomingPaymentInput = {
   description?: InputMaybe<Scalars['String']>;
-  expiresAt: Scalars['String'];
+  expiresAt?: InputMaybe<Scalars['String']>;
   externalRef?: InputMaybe<Scalars['String']>;
   incomingAmount?: InputMaybe<AmountInput>;
   paymentPointerId: Scalars['String'];

@@ -24,6 +24,7 @@ import {
   IncomingPaymentError,
   errorToMessage
 } from '../../open_payments/payment/incoming/errors'
+import { serializeAmount } from '../../open_payments/amount'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -54,20 +55,15 @@ describe('Incoming Payment Resolver', (): void => {
     paymentPointerId: string
     description?: string
     externalRef?: string
+    expiresAt?: Date
+    incomingAmount: {
+      value: bigint
+      assetCode: string
+      assetScale: number
+    }
   }): Promise<IncomingPaymentModel> => {
-    grantRef = await grantReferenceService.create({
-      id: uuid(),
-      clientId: uuid()
-    })
     return await createIncomingPayment(deps, {
-      ...options,
-      expiresAt: new Date(Date.now() + 30_000),
-      incomingAmount: {
-        value: BigInt(56),
-        assetCode: asset.code,
-        assetScale: asset.scale
-      },
-      grantId: grantRef.id
+      ...options
     })
   }
 
@@ -104,58 +100,118 @@ describe('Incoming Payment Resolver', (): void => {
   })
 
   describe('Mutation.createIncomingPayment', (): void => {
+    const amount = {
+      value: BigInt(56),
+      assetCode: asset.code,
+      assetScale: asset.scale
+    }
+
     test.each`
-      description  | externalRef  | desc
-      ${'rent'}    | ${undefined} | ${'description'}
-      ${undefined} | ${'202201'}  | ${'externalRef'}
-    `('200 ($desc)', async ({ description, externalRef }): Promise<void> => {
-      const { id: paymentPointerId } = await createPaymentPointer(deps, {
-        asset
-      })
-      const payment = await createPayment({
-        paymentPointerId,
+      description  | externalRef  | expiresAt                        | incomingAmount | desc
+      ${'rent'}    | ${undefined} | ${undefined}                     | ${undefined}   | ${'description'}
+      ${undefined} | ${'202201'}  | ${undefined}                     | ${undefined}   | ${'externalRef'}
+      ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${undefined}   | ${'expiresAt'}
+      ${undefined} | ${undefined} | ${undefined}                     | ${amount}      | ${'incomingAmount'}
+    `(
+      '200 ($desc)',
+      async ({
         description,
-        externalRef
-      })
+        externalRef,
+        expiresAt,
+        incomingAmount
+      }): Promise<void> => {
+        const { id: paymentPointerId } = await createPaymentPointer(deps, {
+          asset
+        })
+        const payment = await createPayment({
+          paymentPointerId,
+          description,
+          externalRef,
+          expiresAt,
+          incomingAmount
+        })
 
-      const createSpy = jest
-        .spyOn(incomingPaymentService, 'create')
-        .mockResolvedValueOnce(payment)
+        const createSpy = jest
+          .spyOn(incomingPaymentService, 'create')
+          .mockResolvedValueOnce(payment)
 
-      const input = {
-        paymentPointerId: payment.paymentPointerId,
-        incomingAmount: payment.incomingAmount,
-        expiresAt: payment.expiresAt
-      }
+        const input = {
+          paymentPointerId: payment.paymentPointerId,
+          incomingAmount: payment.incomingAmount,
+          expiresAt: payment.expiresAt,
+          description,
+          externalRef
+        }
 
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            mutation CreateIncomingPayment(
-              $input: CreateIncomingPaymentInput!
-            ) {
-              createIncomingPayment(input: $input) {
-                code
-                success
-                payment {
-                  id
-                  state
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              mutation CreateIncomingPayment(
+                $input: CreateIncomingPaymentInput!
+              ) {
+                createIncomingPayment(input: $input) {
+                  code
+                  success
+                  message
+                  payment {
+                    id
+                    paymentPointerId
+                    state
+                    expiresAt
+                    incomingAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    receivedAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    description
+                    externalRef
+                    createdAt
+                  }
                 }
               }
-            }
-          `,
-          variables: { input }
-        })
-        .then(
-          (query): IncomingPaymentResponse => query.data?.createIncomingPayment
-        )
+            `,
+            variables: { input }
+          })
+          .then(
+            (query): IncomingPaymentResponse =>
+              query.data?.createIncomingPayment
+          )
 
-      expect(createSpy).toHaveBeenCalledWith(input)
-      expect(query.code).toBe('200')
-      expect(query.success).toBe(true)
-      expect(query.payment?.id).toBe(payment.id)
-      expect(query.payment?.state).toBe(SchemaPaymentState.Pending)
-    })
+        expect(createSpy).toHaveBeenCalledWith(input)
+        expect(query).toEqual({
+          __typename: 'IncomingPaymentResponse',
+          code: '200',
+          success: true,
+          message: null,
+          payment: {
+            __typename: 'IncomingPayment',
+            id: payment.id,
+            paymentPointerId: payment.paymentPointerId,
+            state: SchemaPaymentState.Pending,
+            expiresAt: payment.expiresAt.toISOString(),
+            incomingAmount:
+              incomingAmount === undefined
+                ? null
+                : {
+                    __typename: 'Amount',
+                    ...serializeAmount(payment.incomingAmount)
+                  },
+            receivedAmount: {
+              __typename: 'Amount',
+              ...serializeAmount(payment.receivedAmount)
+            },
+            description: payment.description,
+            externalRef: payment.externalRef,
+            createdAt: payment.createdAt.toISOString()
+          }
+        })
+      }
+    )
 
     test('400', async (): Promise<void> => {
       const createSpy = jest
@@ -163,13 +219,7 @@ describe('Incoming Payment Resolver', (): void => {
         .mockResolvedValueOnce(IncomingPaymentError.UnknownPaymentPointer)
 
       const input = {
-        paymentPointerId: uuid(),
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000)
+        paymentPointerId: uuid()
       }
 
       const query = await appContainer.apolloClient
@@ -209,13 +259,7 @@ describe('Incoming Payment Resolver', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        paymentPointerId: uuid(),
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000)
+        paymentPointerId: uuid()
       }
 
       const query = await appContainer.apolloClient

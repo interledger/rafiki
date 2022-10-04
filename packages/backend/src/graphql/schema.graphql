@@ -501,16 +501,10 @@ input CreateOutgoingPaymentInput {
 
 input CreateIncomingPaymentInput {
   paymentPointerId: String!
-  expiresAt: String!
+  expiresAt: String
   description: String
   incomingAmount: AmountInput
   externalRef: String
-}
-
-input AmountInput {
-  value: UInt64!
-  assetCode: String!
-  assetScale: Int!
 }
 
 type OutgoingPaymentResponse {

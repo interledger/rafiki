@@ -43,12 +43,7 @@ export const getPaymentPointerIncomingPayments: PaymentPointerResolvers<ApolloCo
       edges: incomingPayments.map((incomingPayment: IncomingPayment) => {
         return {
           cursor: incomingPayment.id,
-          node: {
-            ...incomingPayment,
-            receivedAmount: incomingPayment.receivedAmount,
-            expiresAt: incomingPayment.expiresAt.toISOString(),
-            createdAt: incomingPayment.createdAt?.toISOString()
-          }
+          node: paymentToGraphql(incomingPayment)
         }
       })
     }
@@ -65,7 +60,7 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
     return incomingPaymentService
       .create({
         paymentPointerId: args.input.paymentPointerId,
-        expiresAt: new Date(args.input.expiresAt),
+        expiresAt: args.input.expiresAt && new Date(args.input.expiresAt),
         description: args.input.description,
         incomingAmount: args.input.incomingAmount,
         externalRef: args.input.externalRef
