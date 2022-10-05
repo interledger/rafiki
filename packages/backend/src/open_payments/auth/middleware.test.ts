@@ -81,7 +81,8 @@ describe('Auth Middleware', (): void => {
           crv: (jwk && jwk.crv) || 'Ed25519',
           x: (jwk && jwk.x) || '051208da-f6b6-4ed0-b49b-8b0043900eee',
           kid: (jwk && jwk.kid) || 'gnap-key'
-        }
+        },
+        proof: 'httpsig'
       })
     })
   }
