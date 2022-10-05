@@ -91,6 +91,7 @@ export function createAuthMiddleware({
         try {
           await verifyRequest(ctx.request, tokenInfo.key.jwk)
         } catch (e) {
+          ctx.status = 401
           ctx.throw(401, `Invalid signature: ${e.message}`)
         }
       }

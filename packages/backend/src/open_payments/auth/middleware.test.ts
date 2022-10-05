@@ -16,6 +16,9 @@ import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
+import { httpis } from 'http-message-signatures'
+import { JWKWithRequired } from 'auth'
+import { TokenInfo } from './service'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -38,6 +41,51 @@ describe('Auth Middleware', (): void => {
   let grantReferenceService: GrantReferenceService
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 
+  function buildSignatureInputHeader(
+    signatureName: string,
+    parameters?: {
+      created?: number
+      keyid?: string
+      alg?: string
+    }
+  ): string {
+    return (
+      signatureName +
+      httpis.buildSignatureInputString(
+        [
+          '@method',
+          '@target-uri',
+          'content-digest',
+          'content-length',
+          'content-type',
+          'authorization'
+        ],
+        {
+          created: (parameters && parameters.created) || 1618884473,
+          keyid: (parameters && parameters.keyid) || 'gnap-key'
+        }
+      )
+    )
+  }
+
+  async function mockIntrospect(
+    grant: Grant,
+    jwk?: Partial<JWKWithRequired>
+  ): Promise<void> {
+    const authService = await deps.use('authService')
+    jest.spyOn(authService, 'introspect').mockImplementation(async () => {
+      return new TokenInfo(grant, {
+        jwk: {
+          alg: (jwk && jwk.alg) || 'ed25519',
+          kty: (jwk && jwk.kty) || 'OKP',
+          crv: (jwk && jwk.crv) || 'Ed25519',
+          x: (jwk && jwk.x) || '051208da-f6b6-4ed0-b49b-8b0043900eee',
+          kid: (jwk && jwk.kid) || 'gnap-key'
+        }
+      })
+    })
+  }
+
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -59,7 +107,9 @@ describe('Auth Middleware', (): void => {
       reqOpts: {
         headers: {
           Accept: 'application/json',
-          Authorization: `GNAP ${token}`
+          Authorization: `GNAP ${token}`,
+          Signature: 'sig1=:aGVsbG8=:',
+          'Signature-Input': buildSignatureInputHeader('sig1')
         }
       },
       paymentPointer: await createPaymentPointer(deps)
@@ -264,6 +314,147 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(next).toHaveBeenCalled()
     expect(ctx.grant).toEqual(grant)
+    scope.isDone()
+  })
+
+  test('returns 200 with valid http signature', async (): Promise<void> => {
+    Config.skipSignatureVerification = false
+    ctx.request.headers['signature'] = 'sig1=:aGVsbG8=:'
+    ctx.request.headers['signature-input'] =
+      'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'
+    ctx.request.headers['content-digest'] = 'sha-256=:test-hash:'
+    ctx.request.headers['content-length'] = '1234'
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.paymentPointer.url
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await mockIntrospect(grant)
+    await expect(middleware(ctx, next)).resolves.not.toThrow()
+    expect(next).toHaveBeenCalled()
+    scope.isDone()
+  })
+
+  test('returns 401 for invalid key type', async (): Promise<void> => {
+    Config.skipSignatureVerification = false
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.paymentPointer.url
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await mockIntrospect(grant, {
+      kty: 'EC'
+    })
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.isDone()
+  })
+
+  test('returns 401 if signature header is missing', async (): Promise<void> => {
+    Config.skipSignatureVerification = false
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.paymentPointer.url
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    delete ctx.request.headers['signature']
+    await mockIntrospect(grant)
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.isDone()
+  })
+
+  test('returns 401 if signature-input header is missing', async (): Promise<void> => {
+    Config.skipSignatureVerification = false
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.paymentPointer.url
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    delete ctx.request.headers['signature-input']
+    await mockIntrospect(grant)
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.isDone()
+  })
+
+  test('returns 401 if any signature keyid does not match the jwk key id', async (): Promise<void> => {
+    Config.skipSignatureVerification = false
+    const grant = new Grant({
+      active: true,
+      clientId: uuid(),
+      grant: uuid(),
+      access: [
+        {
+          type: AccessType.IncomingPayment,
+          actions: [AccessAction.Read],
+          identifier: ctx.paymentPointer.url
+        }
+      ]
+    })
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    ctx.request.headers['signature'] = 'sig1=:aGVsbG8=:'
+    ctx.request.headers['signature-input'] =
+      'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="051208daf6b64ed0b49b8b00439003bc"'
+    await mockIntrospect(grant)
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
     scope.isDone()
   })
 })
