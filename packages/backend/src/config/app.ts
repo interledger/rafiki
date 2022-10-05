@@ -17,15 +17,6 @@ function envFloat(name: string, value: number): number {
   return envValue == null ? value : +envValue
 }
 
-function envBool(name: string, value: boolean): boolean {
-  const envValue = process.env[name]
-  return envValue == null
-    ? value
-    : Number.isInteger(envValue)
-    ? +envValue != 0
-    : `${true}`.toLowerCase() == `${envValue}`.toLowerCase()
-}
-
 // function envBool(name: string, value: boolean): boolean {
 //   const envValue = process.env[name]
 //   return envValue == null ? value : Boolean(envValue)
@@ -120,11 +111,7 @@ export const Config = {
   ),
 
   /** Frontend **/
-  frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000'),
-
-  skipSignatureVerification:
-    process.env.NODE_ENV === 'test' ||
-    envBool('SKIP_SIGNATURE_VERIFICATION', false)
+  frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
 }
 
 function parseRedisTlsConfig(
