@@ -87,14 +87,6 @@ export function createAuthMiddleware({
       if (!tokenInfo || !tokenInfo.active) {
         ctx.throw(401, 'Invalid Token')
       }
-      if (!config.skipSignatureVerification) {
-        try {
-          await verifyRequest(ctx.request, tokenInfo.key.jwk)
-        } catch (e) {
-          ctx.status = 401
-          ctx.throw(401, `Invalid signature: ${e.message}`)
-        }
-      }
       if (
         !tokenInfo.includesAccess({
           type,
@@ -103,6 +95,12 @@ export function createAuthMiddleware({
         })
       ) {
         ctx.throw(403, 'Insufficient Grant')
+      }
+      try {
+        await verifyRequest(ctx.request, tokenInfo.key.jwk)
+      } catch (e) {
+        ctx.status = 401
+        ctx.throw(401, `Invalid signature: ${e.message}`)
       }
       await GrantReference.transaction(async (trx: Transaction) => {
         const grantRef = await grantReferenceService.get(tokenInfo.grant, trx)
