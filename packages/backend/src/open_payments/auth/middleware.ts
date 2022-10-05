@@ -72,7 +72,7 @@ async function verifyRequest(
     url: koaRequest.url
   }
 
-  const verifier = createVerifier('ecdsa-p256-sha256', key)
+  const verifier = createVerifier('ecdsa-p256-sha256', jwk.x)
   const signatures = httpis.parseSignatures(typedRequest)
 
   for (const [, { keyid, alg }] of signatures) {
