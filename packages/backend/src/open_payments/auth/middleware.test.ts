@@ -149,7 +149,7 @@ describe('Auth Middleware', (): void => {
       `GNAP as_uri=${Config.authServerGrantUrl}`
     )
     expect(next).not.toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
 
   test('returns 403 for unauthorized request', async (): Promise<void> => {
@@ -170,7 +170,7 @@ describe('Auth Middleware', (): void => {
       message: 'Insufficient Grant'
     })
     expect(next).not.toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
   test('returns 500 for not matching clientId', async (): Promise<void> => {
     const grant = new TokenInfo(
@@ -197,7 +197,7 @@ describe('Auth Middleware', (): void => {
       status: 500
     })
     expect(next).not.toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
 
   test.each`
@@ -254,7 +254,7 @@ describe('Auth Middleware', (): void => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
-      scope.isDone()
+      scope.done()
     }
   )
   test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
@@ -290,7 +290,7 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(next).toHaveBeenCalled()
     expect(ctx.grant).toEqual(grant)
-    scope.isDone()
+    scope.done()
   })
 
   test('returns 200 with valid http signature', async (): Promise<void> => {
@@ -374,7 +374,7 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
 
   test('returns 401 if signature-input header is missing', async (): Promise<void> => {
@@ -402,7 +402,7 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
 
   test('returns 401 if any signature keyid does not match the jwk key id', async (): Promise<void> => {
@@ -439,6 +439,6 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
 })
