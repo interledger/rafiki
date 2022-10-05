@@ -345,7 +345,7 @@ describe('Auth Middleware', (): void => {
     await mockIntrospect(grant)
     await expect(middleware(ctx, next)).resolves.not.toThrow()
     expect(next).toHaveBeenCalled()
-    scope.isDone()
+    scope.done()
   })
 
   test('returns 401 for invalid key type', async (): Promise<void> => {
