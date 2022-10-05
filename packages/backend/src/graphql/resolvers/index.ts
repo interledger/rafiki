@@ -10,7 +10,10 @@ import {
   createAsset,
   updateAssetWithdrawalThreshold
 } from './asset'
-import { getPaymentPointerIncomingPayments } from './incoming_payment'
+import {
+  getPaymentPointerIncomingPayments,
+  createIncomingPayment
+} from './incoming_payment'
 import { getQuote, createQuote, getPaymentPointerQuotes } from './quote'
 import {
   getOutgoingPayment,
@@ -66,6 +69,7 @@ export const resolvers: Resolvers = {
     updateAssetWithdrawalThreshold,
     createQuote,
     createOutgoingPayment,
+    createIncomingPayment,
     createApiKey: createApiKey,
     redeemApiKey: redeemApiKey,
     deleteAllApiKeys: deleteAllApiKeys,

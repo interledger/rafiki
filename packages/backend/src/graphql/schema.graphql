@@ -99,6 +99,10 @@ type Mutation {
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
+  createIncomingPayment(
+    input: CreateIncomingPaymentInput!
+  ): IncomingPaymentResponse!
+
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
 
@@ -495,11 +499,26 @@ input CreateOutgoingPaymentInput {
   externalRef: String
 }
 
+input CreateIncomingPaymentInput {
+  paymentPointerId: String!
+  expiresAt: String
+  description: String
+  incomingAmount: AmountInput
+  externalRef: String
+}
+
 type OutgoingPaymentResponse {
   code: String!
   success: Boolean!
   message: String
   payment: OutgoingPayment
+}
+
+type IncomingPaymentResponse {
+  code: String!
+  success: Boolean!
+  message: String
+  payment: IncomingPayment
 }
 
 input CreatePaymentPointerInput {
