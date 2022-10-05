@@ -133,7 +133,7 @@ async function createGrantInitiation(
   ctx.status = 200
   ctx.body = {
     interact: {
-      redirect: config.authServerDomain + `/interact/${grant.interactId}`,
+      redirect: config.authServerDomain + `/interact/${grant.interactId}/${grant.interactNonce}`,
       finish: grant.interactNonce
     },
     continue: {
