@@ -12,12 +12,23 @@ import {
 } from './grant'
 import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
 
+export interface TokenInfoJSON extends GrantJSON {
+  key: KeyInfo
+}
+
 export class TokenInfo extends Grant {
   public readonly key: KeyInfo
 
   constructor(options: GrantOptions, key: KeyInfo) {
     super(options)
     this.key = key
+  }
+
+  public toJSON(): TokenInfoJSON {
+    return {
+      ...super.toJSON(),
+      key: this.key
+    }
   }
 }
 
@@ -29,7 +40,7 @@ interface ServiceDependencies {
   authServerIntrospectionUrl: string
   authOpenApi: OpenAPI
   logger: Logger
-  validateResponse: ValidateFunction<GrantJSON>
+  validateResponse: ValidateFunction<TokenInfoJSON>
 }
 
 export async function createAuthService(
@@ -38,12 +49,11 @@ export async function createAuthService(
   const log = deps_.logger.child({
     service: 'AuthService'
   })
-  const validateResponse = deps_.authOpenApi.createResponseValidator<GrantJSON>(
-    {
+  const validateResponse =
+    deps_.authOpenApi.createResponseValidator<TokenInfoJSON>({
       path: '/introspect',
       method: HttpMethod.POST
-    }
-  )
+    })
   const deps: ServiceDependencies = {
     ...deps_,
     logger: log,
