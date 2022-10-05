@@ -83,10 +83,6 @@ async function verifyRequest(
       throw new Error(
         `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' ('EdDSA') is supported.`
       )
-    } else if (jwk.use && jwk.use !== 'sig') {
-      throw new Error(
-        "The optional signature parameter 'use' is using an illegal value. Only 'sig' is supported."
-      )
     } else {
       const success = await httpis.verify(typedRequest, {
         format: 'httpbis',
