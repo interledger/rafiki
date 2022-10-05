@@ -1,5 +1,6 @@
 import assert from 'assert'
 import axios from 'axios'
+import { KeyInfo } from 'auth'
 import { Logger } from 'pino'
 
 import {
@@ -11,8 +12,17 @@ import {
 } from './grant'
 import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
 
+export class TokenInfo extends Grant {
+  public readonly key: KeyInfo
+
+  constructor(options: GrantOptions, key: KeyInfo) {
+    super(options)
+    this.key = key
+  }
+}
+
 export interface AuthService {
-  introspect(token: string): Promise<Grant | undefined>
+  introspect(token: string): Promise<TokenInfo | undefined>
 }
 
 interface ServiceDependencies {
@@ -47,7 +57,7 @@ export async function createAuthService(
 async function introspectToken(
   deps: ServiceDependencies,
   token: string
-): Promise<Grant | undefined> {
+): Promise<TokenInfo | undefined> {
   try {
     // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-resource-servers#section-3.3
     const requestHeaders = {
@@ -115,7 +125,7 @@ async function introspectToken(
         }
       )
     }
-    return new Grant(options)
+    return new TokenInfo(options, data.key)
   } catch (err) {
     if (err.errors) {
       deps.logger.warn({ err }, 'invalid token introspection')

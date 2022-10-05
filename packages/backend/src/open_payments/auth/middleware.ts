@@ -83,19 +83,19 @@ export function createAuthMiddleware({
         return
       }
       const authService = await ctx.container.use('authService')
-      const grant = await authService.introspect(token)
-      if (!grant || !grant.active) {
+      const tokenInfo = await authService.introspect(token)
+      if (!tokenInfo || !tokenInfo.active) {
         ctx.throw(401, 'Invalid Token')
       }
       if (!config.skipSignatureVerification) {
         try {
-          await verifyRequest(ctx.request, grant.key.jwk)
+          await verifyRequest(ctx.request, tokenInfo.key.jwk)
         } catch (e) {
           ctx.throw(401, `Invalid signature: ${e.message}`)
         }
       }
       if (
-        !grant.includesAccess({
+        !tokenInfo.includesAccess({
           type,
           action,
           identifier: ctx.paymentPointer.url
@@ -104,25 +104,25 @@ export function createAuthMiddleware({
         ctx.throw(403, 'Insufficient Grant')
       }
       await GrantReference.transaction(async (trx: Transaction) => {
-        const grantRef = await grantReferenceService.get(grant.grant, trx)
+        const grantRef = await grantReferenceService.get(tokenInfo.grant, trx)
         if (grantRef) {
-          if (grantRef.clientId !== grant.clientId) {
+          if (grantRef.clientId !== tokenInfo.clientId) {
             logger.debug(
-              `clientID ${grant.clientId} for grant ${grant.grant} does not match internal reference clientId ${grantRef.clientId}.`
+              `clientID ${tokenInfo.clientId} for grant ${tokenInfo.grant} does not match internal reference clientId ${grantRef.clientId}.`
             )
             ctx.throw(500)
           }
         } else {
           await grantReferenceService.create(
             {
-              id: grant.grant,
-              clientId: grant.clientId
+              id: tokenInfo.grant,
+              clientId: tokenInfo.clientId
             },
             trx
           )
         }
       })
-      ctx.grant = grant
+      ctx.grant = tokenInfo
       await next()
     } catch (err) {
       if (err.status === 401) {
