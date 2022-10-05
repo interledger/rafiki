@@ -29,7 +29,7 @@ export const Config = {
         ),
   authServerSpec: envString(
     'AUTH_SERVER_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/16cff7a2605cb90d0e5b5d34ba32c8263d694f2b/auth-server-open-api-spec.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/5b0c7bb3c9d6ab425507a466e06b084cfa01c3bd/auth-server-open-api-spec.yaml'
   ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
