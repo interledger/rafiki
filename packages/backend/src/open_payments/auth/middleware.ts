@@ -134,11 +134,7 @@ export function createAuthMiddleware({
       }
       if (!config.skipSignatureVerification) {
         try {
-          const clientKeysService = await ctx.container.use('clientKeysService')
-          const clientKeys = await clientKeysService.getKeyByClientId(
-            grant.clientId
-          )
-          await verifyRequest(ctx.request, clientKeys.jwk, grant.key.proof)
+          await verifyRequest(ctx.request, grant.key.jwk, grant.key.proof)
         } catch (e) {
           ctx.throw(401, `Invalid signature: ${e.message}`)
         }
