@@ -5,34 +5,14 @@ import { GrantReference } from '../grantReference/model'
 import {
   createVerifier,
   httpis,
-  RequestLike,
-  Algorithm as AlgorithmName
+  verifyContentDigest
 } from 'http-message-signatures'
 import { Request as KoaRequest } from 'koa'
 import { JWKWithRequired } from 'auth'
-import {
-  ByteSequence,
-  InnerList,
-  Item,
-  parseDictionary,
-  serializeDictionary
-} from 'structured-headers'
-
-function parseAlgorithmName(alg: string): AlgorithmName {
-  if (alg === 'EdDSA' || alg === 'ed25519') {
-    // ed25519 is EdDSA
-    return 'ed25519'
-  } else {
-    throw new Error(
-      `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' ('EdDSA') is supported.`
-    )
-  }
-}
 
 async function verifyRequest(
   koaRequest: KoaRequest,
-  jwk: JWKWithRequired,
-  key: string
+  jwk: JWKWithRequired
 ): Promise<void> {
   const { kid, kty } = jwk
 
@@ -48,50 +28,25 @@ async function verifyRequest(
     throw new Error('signature-input is missing')
   }
 
-  const signatureInputMap = new Map<string, string>()
-  signatureInputMap.set('keyid', kid)
-  signatureInputMap.set('alg', parseAlgorithmName(jwk.alg))
-
-  const typedRequest: RequestLike = {
-    method: koaRequest.method,
-    headers: {
-      ...koaRequest.headers,
-      signature: serializeDictionary(
-        new Map<string, Item | InnerList>([
-          ...Array.from(
-            parseDictionary(koaRequest.headers['signature'].toString())
-          ).map(([propKey, propValue]) => {
-            return [
-              propKey,
-              [new ByteSequence(propValue[0].toString()), new Map()]
-            ] as [string, Item | InnerList]
-          })
-        ])
-      )
-    },
-    url: koaRequest.url
-  }
-
   const verifier = createVerifier('ecdsa-p256-sha256', jwk.x)
-  const signatures = httpis.parseSignatures(typedRequest)
+  const signatures = httpis.parseSignatures(koaRequest)
 
-  for (const [, { keyid, alg }] of signatures) {
+  for (const [, { keyid }] of signatures) {
     if (!keyid) {
       throw new Error(`The signature input is missing the 'keyid' parameter`)
-    } else if (alg !== 'ed25519') {
-      // ed25519 is EdDSA
+    } else if (keyid != kid) {
       throw new Error(
-        `The signature parameter 'alg' is using an illegal value '${alg}'. Only 'ed25519' ('EdDSA') is supported.`
+        `The 'keyid' parameter does not match the key id specified by the JWK`
       )
     } else {
-      const success = await httpis.verify(typedRequest, {
+      const success = await httpis.verify(koaRequest, {
         format: 'httpbis',
         verifiers: {
           [kid]: verifier
         }
       })
 
-      if (!success) {
+      if (!success || !verifyContentDigest(koaRequest)) {
         throw new Error('signature is not valid')
       }
     }
@@ -134,7 +89,7 @@ export function createAuthMiddleware({
       }
       if (!config.skipSignatureVerification) {
         try {
-          await verifyRequest(ctx.request, grant.key.jwk, grant.key.proof)
+          await verifyRequest(ctx.request, grant.key.jwk)
         } catch (e) {
           ctx.throw(401, `Invalid signature: ${e.message}`)
         }
