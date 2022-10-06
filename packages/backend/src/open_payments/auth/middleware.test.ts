@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { createHash } from 'crypto'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -58,6 +59,11 @@ describe('Auth Middleware', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const body = {
+      access_token: token,
+      proof: 'httpsig',
+      resource_server: 'test'
+    }
     ctx = setup({
       reqOpts: {
         headers: {
@@ -66,8 +72,11 @@ describe('Auth Middleware', (): void => {
           Signature: 'sig1=:aGVsbG8=:',
           'Signature-Input':
             'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': 'sha-256=:test-hash:'
-        }
+          'Content-Digest': `sha-256=:${createHash('sha256')
+            .update(JSON.stringify(body))
+            .digest('base64')}:`
+        },
+        body
       },
       paymentPointer: await createPaymentPointer(deps)
     })

@@ -39,14 +39,16 @@ async function verifyRequest(
         `The 'keyid' parameter does not match the key id specified by the JWK`
       )
     } else {
-      const success = await httpis.verify(koaRequest, {
+      const headerSuccess = await httpis.verify(koaRequest, {
         format: 'httpbis',
         verifiers: {
           [kid]: verifier
         }
       })
 
-      if (!success || !verifyContentDigest(koaRequest)) {
+      const bodySuccess = !koaRequest.body || verifyContentDigest(koaRequest)
+
+      if (!headerSuccess || !bodySuccess) {
         throw new Error('signature is not valid')
       }
     }

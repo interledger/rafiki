@@ -11,6 +11,8 @@ type HttpLike = {
     string,
     { toString(): string } | string | string[] | undefined
   >
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  body?: { [key: string]: any } | string | undefined
 }
 
 export type RequestLike = HttpLike

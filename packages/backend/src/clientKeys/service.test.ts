@@ -79,27 +79,6 @@ describe('Client Key Service', (): void => {
       const key = await clientKeysService.getKeyById(KEY_UUID)
       await expect(key.clientId).toEqual(client.id)
     })
-
-    test('Can fetch a key by client id', async (): Promise<void> => {
-      const client = await clientService.createClient(TEST_CLIENT)
-      const keyOption = {
-        id: KEY_UUID,
-        clientId: client.id,
-        jwk: {
-          ...TEST_CLIENT_KEY,
-          client: {
-            id: client.id,
-            name: client.name,
-            uri: client.uri,
-            image: '',
-            email: ''
-          }
-        }
-      }
-      await clientService.addKeyToClient(keyOption)
-      const key = await clientKeysService.getKeyByClientId(client.id)
-      await expect(key.id).toEqual(KEY_UUID)
-    })
   })
 
   describe('Revoke Client Keys', (): void => {
