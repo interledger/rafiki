@@ -110,7 +110,13 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
 }
 
 export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
-  assert.equal(wh.type, EventType.IncomingPaymentCompleted)
+  if (
+    wh.type !== EventType.IncomingPaymentCompleted &&
+    wh.type !== EventType.IncomingPaymentExpired
+  ) {
+    assert.fail('invalid event type')
+  }
+
   const payment = wh.data['incomingPayment']
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
