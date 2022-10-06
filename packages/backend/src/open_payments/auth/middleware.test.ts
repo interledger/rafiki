@@ -19,6 +19,7 @@ import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
 import { KeyInfo } from 'auth'
 import { TokenInfo, TokenInfoJSON } from './service'
+import { Body } from 'node-mocks-http'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -58,6 +59,18 @@ describe('Auth Middleware', (): void => {
     grantReferenceService = await deps.use('grantReferenceService')
   })
 
+  function generateContentDigest(body?: Body) {
+    if (body) {
+      return (
+        'sha-256=:' +
+        createHash('sha256').update(JSON.stringify(body)).digest('base64') +
+        ':'
+      )
+    } else {
+      return ''
+    }
+  }
+
   beforeEach(async (): Promise<void> => {
     const body = {
       access_token: token,
@@ -72,9 +85,8 @@ describe('Auth Middleware', (): void => {
           Signature: 'sig1=:aGVsbG8=:',
           'Signature-Input':
             'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': `sha-256=:${createHash('sha256')
-            .update(JSON.stringify(body))
-            .digest('base64')}:`
+          'Content-Digest': generateContentDigest(body),
+          'Content-Length': JSON.stringify(body).length.toString()
         },
         body
       },
@@ -303,7 +315,6 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 200 with valid http signature', async (): Promise<void> => {
-    ctx.request.headers['content-length'] = '1234'
     mockKeyInfo.jwk.x = '051208da-f6b6-4ed0-b49b-8b004390FFFF'
     const grant = new TokenInfo(
       {
@@ -445,6 +456,57 @@ describe('Auth Middleware', (): void => {
         'signature-input'
       ].replace('gnap-key', 'mismatched-key')
     }
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.done()
+  })
+
+  test('returns 401 if content-digest does not match the body', async (): Promise<void> => {
+    const body = {
+      access_token: token,
+      proof: 'httpsig',
+      resource_server: 'test'
+    }
+    ctx = setup({
+      reqOpts: {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `GNAP ${token}`,
+          Signature: 'sig1=:aGVsbG8=:',
+          'Signature-Input':
+            'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
+          'Content-Digest': generateContentDigest({
+            invalid: 'this is invalid'
+          }),
+          'Content-Length': JSON.stringify(body).length.toString()
+        },
+        body
+      },
+      paymentPointer: await createPaymentPointer(deps)
+    })
+    ctx.container = deps
+    mockKeyInfo.jwk.x = '051208da-f6b6-4ed0-b49b-8b004390FFFF'
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
