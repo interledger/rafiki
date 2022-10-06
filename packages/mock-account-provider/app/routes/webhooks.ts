@@ -8,6 +8,7 @@ import { apolloClient } from '~/lib/apolloClient'
 
 export enum EventType {
   IncomingPaymentCompleted = 'incoming_payment.completed',
+  IncomingPaymentExpired = 'incoming_payment.expired',
   OutgoingPaymentCreated = 'outgoing_payment.created',
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed'
@@ -36,7 +37,8 @@ export async function action({ request }: ActionArgs) {
     case EventType.OutgoingPaymentFailed:
       return handleOutgoingPaymentCompletedFailed(wh)
     case EventType.IncomingPaymentCompleted:
-      return handleIncomingPaymentCompleted(wh)
+    case EventType.IncomingPaymentExpired:
+      return handleIncomingPaymentCompletedExpired(wh)
   }
 
   return json(undefined, { status: 200 })
@@ -107,7 +109,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   return json(undefined, { status: 200 })
 }
 
-export async function handleIncomingPaymentCompleted(wh: WebHook) {
+export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   assert.equal(wh.type, EventType.IncomingPaymentCompleted)
   const payment = wh.data['incomingPayment']
   const pp = payment['paymentPointerId'] as string
