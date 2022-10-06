@@ -33,6 +33,19 @@ function nodeAlgo(algorithm: string): string {
   }
 }
 
+function bodyToString(request: RequestLike): string {
+  if (request.body) {
+    if (typeof request.body === 'string') {
+      return request.body
+    } else {
+      // JSON
+      return JSON.stringify(request.body)
+    }
+  } else {
+    return ''
+  }
+}
+
 export function createContentDigestHeader(
   body: string | Buffer | undefined,
   algorithms: DigestAlgorithm[]
@@ -54,14 +67,25 @@ export function verifyContentDigest(request: RequestLike) {
 
   const digests = digestHeaderString.split(',')
   return digests
-    .map(async (digestHeader) => {
-      const [key, value] = digestHeader.split('=')
-      if (!value.startsWith(':') || !value.endsWith(':')) {
+    .map((digestHeader) => {
+      /**
+       * the expected format is:
+       *    <optional whitespace><key><optional whitespace>=<optional whitespace><value><optional whitespace>
+       * where
+       *    <optional whitespace> contains only spaces and tabs or no characters at all
+       *    <key> contains only lowercase a-z chars, asterisks and hyphens (the 1st character cannot be a hyphen)
+       *    <value> contains only base64 characters and is surrounded with colons on either side
+       */
+      const [, key, value] =
+        digestHeader.match(
+          /^[\s]{0,}([a-z*][a-z*0-9-]{1,})[\s]{0,}=[\s]{0,}(:[A-Za-z0-9+/=]{1,}:)[\s]{0,}$/
+        ) || []
+      if (!key || !value || !value.startsWith(':') || !value.endsWith(':')) {
         throw new Error('Error parsing digest value')
       }
       const digest = value.substring(1, value.length - 1)
       const hash = createHash(nodeAlgo(key.trim()))
-        .update((request as any).body || '')
+        .update(bodyToString(request))
         .digest('base64')
       return digest === hash
     })
