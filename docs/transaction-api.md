@@ -87,7 +87,7 @@ Credit `paymentPointer.received` to the wallet balance for `paymentPointer.id`, 
 
 #### `incoming_payment.expired`
 
-Incoming payment has expired.
+Incoming payment has expired (but received some amount).
 
 Credit `incomingPayment.received` to the wallet balance for `incomingPayment.accountId`, and call `Mutation.withdrawEventLiquidity` with the event id.
 
