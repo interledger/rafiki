@@ -1,7 +1,6 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { mockAccounts } from '~/lib/accounts.server'
-import assert from 'assert'
 import { gql } from '@apollo/client'
 import type { LiquidityMutationResponse } from '../../generated/graphql'
 import { apolloClient } from '~/lib/apolloClient'
@@ -49,12 +48,17 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     wh.type !== EventType.OutgoingPaymentCompleted &&
     wh.type !== EventType.OutgoingPaymentFailed
   ) {
-    assert.fail('invalid event type')
+    throw json('Invalid event type when handling outgoing payment webhook', {
+      status: 500
+    })
   }
   const payment = wh.data['payment']
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
-  assert.ok(acc)
+
+  if (!acc) {
+    throw json('No account found for payment pointer', { status: 500 })
+  }
 
   const amtSend = payment['sendAmount'] as Amount
   const amtSent = payment['sentAmount'] as Amount
@@ -72,11 +76,19 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
 }
 
 export async function handleOutgoingPaymentCreated(wh: WebHook) {
-  assert.equal(wh.type, EventType.OutgoingPaymentCreated)
+  if (wh.type !== EventType.OutgoingPaymentCreated) {
+    throw json('Invalid event type when handling outgoing payment webhook', {
+      status: 500
+    })
+  }
+
   const payment = wh.data['payment']
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
-  assert.ok(acc)
+
+  if (!acc) {
+    throw json('No account found for payment pointer', { status: 500 })
+  }
 
   const amt = payment['sendAmount'] as Amount
   await mockAccounts.pendingDebit(acc.id, amt.value)
@@ -114,15 +126,20 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     wh.type !== EventType.IncomingPaymentCompleted &&
     wh.type !== EventType.IncomingPaymentExpired
   ) {
-    assert.fail('invalid event type')
+    throw json('Invalid event type when handling incoming payment webhook', {
+      status: 500
+    })
   }
 
   const payment = wh.data['incomingPayment']
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
-  assert.ok(acc)
 
-  const amt = payment['receiveAmount'] as Amount
+  if (!acc) {
+    throw json('No account found for payment pointer', { status: 500 })
+  }
+
+  const amt = payment['receivedAmount'] as Amount
   await mockAccounts.credit(acc.id, amt.value, false)
 
   await apolloClient
