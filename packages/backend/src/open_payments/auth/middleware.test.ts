@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { createHash } from 'crypto'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -19,7 +18,7 @@ import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
 import { KeyInfo } from 'auth'
 import { TokenInfo, TokenInfoJSON } from './service'
-import { Body } from 'node-mocks-http'
+import { createContentDigestHeader } from 'http-message-signatures'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -59,24 +58,13 @@ describe('Auth Middleware', (): void => {
     grantReferenceService = await deps.use('grantReferenceService')
   })
 
-  function generateContentDigest(body?: Body) {
-    if (body) {
-      return (
-        'sha-256=:' +
-        createHash('sha256').update(JSON.stringify(body)).digest('base64') +
-        ':'
-      )
-    } else {
-      return ''
-    }
-  }
-
   beforeEach(async (): Promise<void> => {
     const body = {
       access_token: token,
       proof: 'httpsig',
       resource_server: 'test'
     }
+    const bodyString = JSON.stringify(body)
     ctx = setup({
       reqOpts: {
         headers: {
@@ -85,8 +73,8 @@ describe('Auth Middleware', (): void => {
           Signature: 'sig1=:aGVsbG8=:',
           'Signature-Input':
             'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': generateContentDigest(body),
-          'Content-Length': JSON.stringify(body).length.toString()
+          'Content-Digest': createContentDigestHeader(bodyString, ['sha-256']),
+          'Content-Length': bodyString.length.toString()
         },
         body
       },
@@ -315,7 +303,6 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 200 with valid http signature', async (): Promise<void> => {
-    mockKeyInfo.jwk.x = '051208da-f6b6-4ed0-b49b-8b004390FFFF'
     const grant = new TokenInfo(
       {
         active: true,
@@ -338,6 +325,34 @@ describe('Auth Middleware', (): void => {
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.not.toThrow()
     expect(next).toHaveBeenCalled()
+    scope.done()
+  })
+
+  test('returns 401 for invalid http signature', async (): Promise<void> => {
+    mockKeyInfo.jwk.alg = 'EC'
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: grant.clientId
+    })
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
     scope.done()
   })
 
@@ -476,9 +491,12 @@ describe('Auth Middleware', (): void => {
           Signature: 'sig1=:aGVsbG8=:',
           'Signature-Input':
             'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': generateContentDigest({
-            invalid: 'this is invalid'
-          }),
+          'Content-Digest': createContentDigestHeader(
+            JSON.stringify({
+              invalid: 'this is invalid'
+            }),
+            ['sha-256']
+          ),
           'Content-Length': JSON.stringify(body).length.toString()
         },
         body
@@ -486,7 +504,6 @@ describe('Auth Middleware', (): void => {
       paymentPointer: await createPaymentPointer(deps)
     })
     ctx.container = deps
-    mockKeyInfo.jwk.x = '051208da-f6b6-4ed0-b49b-8b004390FFFF'
     const grant = new TokenInfo(
       {
         active: true,
