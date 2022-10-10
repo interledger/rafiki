@@ -19,9 +19,14 @@ describe('Config', (): void => {
     test('can provision key', async (): Promise<void> => {
       expect(fs.existsSync(TMP_DIR)).toBe(false)
       expect(fs.existsSync(PRIVATE_KEY_FILE)).toBe(false)
-      expect(parseOrProvisionKey(PRIVATE_KEY_FILE)).toBeInstanceOf(
-        crypto.KeyObject
-      )
+      const { key, jwk } = parseOrProvisionKey(PRIVATE_KEY_FILE)
+      expect(key).toBeInstanceOf(crypto.KeyObject)
+      expect(jwk).toMatchObject({
+        crv: 'Ed25519',
+        kty: 'OKP',
+        d: expect.any(String),
+        x: expect.any(String)
+      })
       expect(fs.existsSync(PRIVATE_KEY_FILE)).toBe(true)
     })
     test('can parse key', async (): Promise<void> => {
@@ -34,9 +39,15 @@ describe('Config', (): void => {
       )
       assert.ok(fs.existsSync(keyfile))
       const fileStats = fs.statSync(keyfile)
-      const parsedKey = parseOrProvisionKey(keyfile)
-      expect(parsedKey).toBeInstanceOf(crypto.KeyObject)
-      expect(parsedKey.export({ format: 'pem', type: 'pkcs8' })).toEqual(
+      const { key, jwk } = parseOrProvisionKey(keyfile)
+      expect(key).toBeInstanceOf(crypto.KeyObject)
+      expect(jwk).toMatchObject({
+        crv: 'Ed25519',
+        kty: 'OKP',
+        d: expect.any(String),
+        x: expect.any(String)
+      })
+      expect(key.export({ format: 'pem', type: 'pkcs8' })).toEqual(
         keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
       )
       expect(fs.statSync(keyfile).mtimeMs).toEqual(fileStats.mtimeMs)
@@ -58,10 +69,14 @@ describe('Config', (): void => {
         )
         assert.ok(fs.existsSync(keyfile))
         const fileStats = fs.statSync(keyfile)
-        const key = parseOrProvisionKey(keyfile)
+        const { key, jwk } = parseOrProvisionKey(keyfile)
         expect(key).toBeInstanceOf(crypto.KeyObject)
-        const jwk = key.export({ format: 'jwk' })
-        expect(jwk.crv).toEqual('Ed25519')
+        expect(jwk).toMatchObject({
+          crv: 'Ed25519',
+          kty: 'OKP',
+          d: expect.any(String),
+          x: expect.any(String)
+        })
         expect(key.export({ format: 'pem', type: 'pkcs8' })).not.toEqual(
           keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
         )

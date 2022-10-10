@@ -145,12 +145,15 @@ function parseRedisTlsConfig(
 }
 
 // exported for testing
-export function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
+export function parseOrProvisionKey(keyPath: string): {
+  key: crypto.KeyObject
+  jwk: crypto.JsonWebKey
+} {
   try {
     const key = crypto.createPrivateKey(fs.readFileSync(keyPath))
     const jwk = key.export({ format: 'jwk' })
     if (jwk.crv === 'Ed25519') {
-      return key
+      return { key, jwk }
     } else {
       console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')
     }
@@ -165,5 +168,8 @@ export function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
     PRIVATE_KEY_FILE,
     keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
   )
-  return keypair.privateKey
+  return {
+    key: keypair.privateKey,
+    jwk: keypair.privateKey.export({ format: 'jwk' })
+  }
 }
