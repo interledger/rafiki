@@ -1,0 +1,23 @@
+{
+  "name": "open-payments-client",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -fr dist/",
+    "prepack": "pnpm build",
+    "generate": "npx openapi-typescript https://raw.githubusercontent.com/interledger/open-payments/main/open-api-spec.yaml --output src/types.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript-codegen": "^0.23.0",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "axios": "^1.1.2"
+  }
+}
