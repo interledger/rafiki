@@ -27,7 +27,6 @@ const get = async <T>(axios: AxiosInstance, args: GetArgs): Promise<T> => {
 
   if (accessToken) {
     headers['Authorization'] = `GNAP ${accessToken}`
-    // TODO: https://github.com/interledger/rafiki/issues/587
     headers['Signature'] = 'TODO'
     headers['Signature-Input'] = 'TODO'
   }
@@ -62,15 +61,4 @@ const createClient = (
   }
 }
 
-const openPaymentsClient = createClient({
-  timeout: 5_000
-})
-
-const incomingPayment = await openPaymentsClient.incomingPayment.get({
-  url: '',
-  accessToken: ''
-})
-
-
-incomingPayment.
 export { IncomingPayment, OpenPaymentsClient, createClient }
