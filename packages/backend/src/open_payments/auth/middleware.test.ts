@@ -318,10 +318,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.not.toThrow()
     expect(next).toHaveBeenCalled()
@@ -345,10 +341,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
@@ -373,10 +365,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
@@ -400,10 +388,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     delete ctx.request.headers['signature']
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -428,10 +412,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     delete ctx.request.headers['signature-input']
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
@@ -456,10 +436,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     ctx.request.headers['signature'] = 'sig1=:aGVsbG8=:'
     if (Array.isArray(ctx.request.headers['signature-input'])) {
@@ -519,10 +495,6 @@ describe('Auth Middleware', (): void => {
       },
       mockKeyInfo
     )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
