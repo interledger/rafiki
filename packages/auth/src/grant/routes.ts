@@ -209,7 +209,7 @@ async function startInteraction(
   ctx.session.nonce = grant.interactNonce
 
   const interactionUrl = new URL(config.identityServerDomain)
-  interactionUrl.searchParams.set('interactRef', grant.interactRef)
+  interactionUrl.searchParams.set('interactId', grant.interactId)
   interactionUrl.searchParams.set('nonce', grant.interactNonce)
 
   ctx.redirect(interactionUrl.toString())
