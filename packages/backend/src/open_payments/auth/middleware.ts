@@ -2,57 +2,10 @@ import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
-import {
-  createVerifier,
-  httpis,
-  verifyContentDigest
-} from 'http-message-signatures'
-import { Request as KoaRequest } from 'koa'
-import { JWKWithRequired } from 'auth'
+import { verifySig } from 'auth'
 
-async function verifyRequest(
-  koaRequest: KoaRequest,
-  jwk: JWKWithRequired
-): Promise<void> {
-  const { kid, kty } = jwk
-
-  if (kty !== 'OKP') {
-    throw new Error('invalid key type')
-  }
-
-  if (!koaRequest.headers['signature']) {
-    throw new Error('signature is missing')
-  }
-
-  if (!koaRequest.headers['signature-input']) {
-    throw new Error('signature-input is missing')
-  }
-
-  const verifier = createVerifier('ecdsa-p256-sha256', jwk.x)
-  const signatures = httpis.parseSignatures(koaRequest)
-
-  for (const [, { keyid }] of signatures) {
-    if (!keyid) {
-      throw new Error(`The signature input is missing the 'keyid' parameter`)
-    } else if (keyid != kid) {
-      throw new Error(
-        `The 'keyid' parameter does not match the key id specified by the JWK`
-      )
-    } else {
-      const headerSuccess = await httpis.verify(koaRequest, {
-        format: 'httpbis',
-        verifiers: {
-          [kid]: verifier
-        }
-      })
-
-      const bodySuccess = !koaRequest.body || verifyContentDigest(koaRequest)
-
-      if (!headerSuccess || !bodySuccess) {
-        throw new Error('signature is not valid')
-      }
-    }
-  }
+function stringifyHeader(header: string | Array<string>): string {
+  return Array.isArray(header) ? header.join(' ') : header
 }
 
 export function createAuthMiddleware({
@@ -99,7 +52,16 @@ export function createAuthMiddleware({
         ctx.throw(403, 'Insufficient Grant')
       }
       try {
-        await verifyRequest(ctx.request, tokenInfo.key.jwk)
+        const sig = stringifyHeader(ctx.headers['signature'])
+        const sigInput = stringifyHeader(ctx.headers['signature-input'])
+        const successfullyVerified = await verifySig(
+          sig.match(/:([^:]+):/)[1],
+          tokenInfo.key.jwk,
+          sigInput
+        )
+        if (!successfullyVerified) {
+          ctx.throw(401, 'Invalid signature')
+        }
       } catch (e) {
         ctx.status = 401
         ctx.throw(401, `Invalid signature: ${e.message}`)

@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { createHash } from 'crypto'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -18,7 +19,6 @@ import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
 import { KeyInfo } from 'auth'
 import { TokenInfo, TokenInfoJSON } from './service'
-import { createContentDigestHeader } from 'http-message-signatures'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -41,6 +41,16 @@ describe('Auth Middleware', (): void => {
   let grantReferenceService: GrantReferenceService
   let mockKeyInfo: KeyInfo
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
+  const signature =
+    '6o6YhXVuXxsOxRFXoSr3pmIAm2qTLLZYXUt9wMffVtnDp1U9BBSPRY3AVG9irx/mtl2jpbFXnlsadcDSiciXBQ=='
+
+  function createContentDigestHeader(bodyString: string): string {
+    return (
+      'sha-256=:' +
+      createHash('sha256').update(bodyString).digest('base64') +
+      ':'
+    )
+  }
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -70,10 +80,10 @@ describe('Auth Middleware', (): void => {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: 'sig1=:aGVsbG8=:',
+          Signature: `sig1=:${signature}:`,
           'Signature-Input':
             'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': createContentDigestHeader(bodyString, ['sha-256']),
+          'Content-Digest': createContentDigestHeader(bodyString),
           'Content-Length': bodyString.length.toString()
         },
         body
@@ -87,7 +97,7 @@ describe('Auth Middleware', (): void => {
         alg: 'EdDSA',
         kty: 'OKP',
         crv: 'Ed25519',
-        x: '051208da-f6b6-4ed0-b49b-8b0043900eee',
+        x: 'LZxw1dpic_uV0kraK8_HFRuIaj_RgNypcmSQohvCTZo',
         kid: 'gnap-key'
       },
       proof: 'httpsig'
@@ -325,7 +335,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 for invalid http signature', async (): Promise<void> => {
-    mockKeyInfo.jwk.alg = 'EC'
+    ctx.headers['Signature'] = 'sig1=:aaaaaaaaaa=:'
     const grant = new TokenInfo(
       {
         active: true,
@@ -437,7 +447,7 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    ctx.request.headers['signature'] = 'sig1=:aGVsbG8=:'
+    ctx.request.headers['signature'] = `sig1=:${signature}=:`
     if (Array.isArray(ctx.request.headers['signature-input'])) {
       ctx.request.headers['signature-input'] = ctx.request.headers[
         'signature-input'
@@ -464,14 +474,13 @@ describe('Auth Middleware', (): void => {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: 'sig1=:aGVsbG8=:',
+          Signature: `sig1=:${signature}=:`,
           'Signature-Input':
             'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
           'Content-Digest': createContentDigestHeader(
             JSON.stringify({
               invalid: 'this is invalid'
-            }),
-            ['sha-256']
+            })
           ),
           'Content-Length': JSON.stringify(body).length.toString()
         },
