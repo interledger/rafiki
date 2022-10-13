@@ -187,15 +187,6 @@ export function initIocContainer(
       logger: await deps.use('logger')
     })
   })
-  container.singleton('openPaymentsClientService', async (deps) => {
-    const config = await deps.use('config')
-    return await createOpenPaymentsClientService({
-      logger: await deps.use('logger'),
-      // TODO: https://github.com/interledger/rafiki/issues/583
-      accessToken: config.devAccessToken,
-      openApi: await deps.use('openApi')
-    })
-  })
   container.singleton('incomingPaymentService', async (deps) => {
     return await createIncomingPaymentService({
       logger: await deps.use('logger'),
@@ -236,6 +227,19 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       connectionService: await deps.use('connectionService')
+    })
+  })
+  container.singleton('openPaymentsClientService', async (deps) => {
+    const config = await deps.use('config')
+    return await createOpenPaymentsClientService({
+      logger: await deps.use('logger'),
+      // TODO: https://github.com/interledger/rafiki/issues/583
+      accessToken: config.devAccessToken,
+      connectionRoutes: await deps.use('connectionRoutes'),
+      incomingPaymentRoutes: await deps.use('incomingPaymentRoutes'),
+      openApi: await deps.use('openApi'),
+      openPaymentsUrl: config.openPaymentsUrl,
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
 
