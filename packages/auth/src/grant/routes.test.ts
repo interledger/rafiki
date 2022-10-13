@@ -12,7 +12,7 @@ import { Config, IAppConfig } from '../config/app'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { GrantRoutes } from './routes'
+import { GrantRoutes, GrantChoices } from './routes'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
@@ -637,8 +637,8 @@ describe('Grant Routes', (): void => {
     })
   })
 
-  describe('accept grant', (): void => {
-    test('cannot accept grant without secret', async (): Promise<void> => {
+  describe('accept/reject grant', (): void => {
+    test('cannot accept/reject grant without secret', async (): Promise<void> => {
       const ctx = createContext(
         {
           headers: {
@@ -646,10 +646,10 @@ describe('Grant Routes', (): void => {
             'Content-Type': 'application/json'
           }
         },
-        { id: grant.interactId, nonce: grant.interactNonce }
+        { id: grant.interactId, nonce: grant.interactNonce, choice: GrantChoices.Accept }
       )
 
-      await expect(grantRoutes.interaction.accept(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(ctx.body).toEqual({
         error: 'invalid_interaction'
@@ -665,43 +665,17 @@ describe('Grant Routes', (): void => {
             'x-idp-secret': Config.identityServerSecret
           }
         },
-        { id: grant.interactId, nonce: grant.interactNonce }
+        { id: grant.interactId, nonce: grant.interactNonce, choice: GrantChoices.Accept }
       )
 
-      await expect(grantRoutes.interaction.accept(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(202)
 
       const issuedGrant = await Grant.query().findById(grant.id)
       expect(issuedGrant.state).toEqual(GrantState.Granted)
-
-      expect(ctx.body).toEqual({
-        redirectUri:
-          Config.authServerDomain +
-          `/${issuedGrant.interactId}/${issuedGrant.interactNonce}/finish`
-      })
     })
-  })
-
-  describe('reject grant', (): void => {
-    test('Cannot reject grant without secret', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          }
-        },
-        {}
-      )
-
-      await expect(grantRoutes.interaction.reject(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({
-        error: 'invalid_interaction'
-      })
-    })
-
-    test('Cannot reject grant if grant does not exist', async (): Promise<void> => {
+    
+    test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
       const interactId = v4()
       const nonce = crypto.randomBytes(8).toString('hex').toUpperCase()
       const ctx = createContext(
@@ -715,7 +689,7 @@ describe('Grant Routes', (): void => {
         { id: interactId, nonce }
       )
 
-      await expect(grantRoutes.interaction.reject(ctx)).resolves.toBeUndefined()
+      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
     })
 
@@ -728,20 +702,14 @@ describe('Grant Routes', (): void => {
             'x-idp-secret': Config.identityServerSecret
           }
         },
-        { id: grant.interactId, nonce: grant.interactNonce }
+        { id: grant.interactId, nonce: grant.interactNonce, choice: GrantChoices.Reject }
       )
 
-      await expect(grantRoutes.interaction.reject(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(200)
+      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
+      expect(ctx.status).toBe(202)
 
       const issuedGrant = await Grant.query().findById(grant.id)
       expect(issuedGrant.state).toEqual(GrantState.Rejected)
-
-      expect(ctx.body).toEqual({
-        redirectUri:
-          Config.authServerDomain +
-          `/${issuedGrant.interactId}/${issuedGrant.interactNonce}/finish`
-      })
     })
   })
 

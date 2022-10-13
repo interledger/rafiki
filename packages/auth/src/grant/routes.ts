@@ -30,8 +30,7 @@ export interface GrantRoutes {
   interaction: {
     start(ctx: AppContext): Promise<void>
     finish(ctx: AppContext): Promise<void>
-    accept(ctx: AppContext): Promise<void>
-    reject(ctx: AppContext): Promise<void>
+    acceptOrReject(ctx: AppContext): Promise<void>
     details(ctx: AppContext): Promise<void>
   }
   continue(ctx: AppContext): Promise<void>
@@ -62,8 +61,7 @@ export function createGrantRoutes({
     interaction: {
       start: (ctx: AppContext) => startInteraction(deps, ctx),
       finish: (ctx: AppContext) => finishInteraction(deps, ctx),
-      accept: (ctx: AppContext) => acceptGrant(deps, ctx),
-      reject: (ctx: AppContext) => rejectGrant(deps, ctx),
+      acceptOrReject: (ctx: AppContext) => handleGrantChoice(deps, ctx),
       details: (ctx: AppContext) => getGrantDetails(deps, ctx)
     },
     continue: (ctx: AppContext) => continueGrant(deps, ctx)
@@ -217,12 +215,18 @@ async function startInteraction(
   ctx.redirect(interactionUrl.toString())
 }
 
-async function acceptGrant(
+export enum GrantChoices {
+  Accept = 'accept',
+  Reject = 'reject'
+}
+
+// TODO: allow idp to specify the reason for rejection
+async function handleGrantChoice(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  // TODO: check redis for a session
-  const { id: interactId, nonce } = ctx.params
+  // TODO: check redis for session
+  const { id: interactId, nonce, choice } = ctx.params
   const { config, grantService } = deps
 
   if (
@@ -265,15 +269,19 @@ async function acceptGrant(
     ctx.body = {
       error: 'request_denied'
     }
+    return
   }
 
-  await grantService.issueGrant(grant.id)
-
-  ctx.body = {
-    redirectUri:
-      config.authServerDomain +
-      `/${grant.interactId}/${grant.interactNonce}/finish`
+  if (choice === GrantChoices.Accept) {
+    await grantService.issueGrant(grant.id)
+  } else if (choice === GrantChoices.Reject) {
+    await grantService.rejectGrant(grant.id)
+  } else {
+    ctx.status = 404
+    return
   }
+
+  ctx.status = 202
 }
 
 async function finishInteraction(
@@ -323,49 +331,6 @@ async function finishInteraction(
     // Grant is not in either an accepted or rejected state
     clientRedirectUri.searchParams.set('result', 'grant_invalid')
     ctx.redirect(clientRedirectUri.toString())
-  }
-}
-
-// TODO: allow idp to specify the reason for rejection
-async function rejectGrant(
-  deps: ServiceDependencies,
-  ctx: AppContext
-): Promise<void> {
-  // TODO: check redis for a session
-  const { id: interactId, nonce } = ctx.params
-
-  const { grantService, config } = deps
-
-  if (
-    !ctx.headers['x-idp-secret'] ||
-    !crypto.timingSafeEqual(
-      Buffer.from(ctx.headers['x-idp-secret'] as string),
-      Buffer.from(deps.config.identityServerSecret)
-    )
-  ) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_interaction'
-    }
-    return
-  }
-
-  const grant = await grantService.getByInteractionSession(interactId, nonce)
-
-  if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
-  }
-
-  await deps.grantService.rejectGrant(grant.id)
-
-  ctx.body = {
-    redirectUri:
-      config.authServerDomain +
-      `/${grant.interactId}/${grant.interactNonce}/finish`
   }
 }
 
