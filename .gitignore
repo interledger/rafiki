@@ -39,5 +39,3 @@ dist
 **/node_modules
 
 **/.terraform
-
-packages/http-message-signatures/lib
