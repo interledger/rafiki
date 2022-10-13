@@ -646,10 +646,16 @@ describe('Grant Routes', (): void => {
             'Content-Type': 'application/json'
           }
         },
-        { id: grant.interactId, nonce: grant.interactNonce, choice: GrantChoices.Accept }
+        {
+          id: grant.interactId,
+          nonce: grant.interactNonce,
+          choice: GrantChoices.Accept
+        }
       )
 
-      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
+      await expect(
+        grantRoutes.interaction.acceptOrReject(ctx)
+      ).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(ctx.body).toEqual({
         error: 'invalid_interaction'
@@ -665,16 +671,22 @@ describe('Grant Routes', (): void => {
             'x-idp-secret': Config.identityServerSecret
           }
         },
-        { id: grant.interactId, nonce: grant.interactNonce, choice: GrantChoices.Accept }
+        {
+          id: grant.interactId,
+          nonce: grant.interactNonce,
+          choice: GrantChoices.Accept
+        }
       )
 
-      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
+      await expect(
+        grantRoutes.interaction.acceptOrReject(ctx)
+      ).resolves.toBeUndefined()
       expect(ctx.status).toBe(202)
 
       const issuedGrant = await Grant.query().findById(grant.id)
       expect(issuedGrant.state).toEqual(GrantState.Granted)
     })
-    
+
     test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
       const interactId = v4()
       const nonce = crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -689,7 +701,9 @@ describe('Grant Routes', (): void => {
         { id: interactId, nonce }
       )
 
-      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
+      await expect(
+        grantRoutes.interaction.acceptOrReject(ctx)
+      ).resolves.toBeUndefined()
       expect(ctx.status).toBe(404)
     })
 
@@ -702,10 +716,16 @@ describe('Grant Routes', (): void => {
             'x-idp-secret': Config.identityServerSecret
           }
         },
-        { id: grant.interactId, nonce: grant.interactNonce, choice: GrantChoices.Reject }
+        {
+          id: grant.interactId,
+          nonce: grant.interactNonce,
+          choice: GrantChoices.Reject
+        }
       )
 
-      await expect(grantRoutes.interaction.acceptOrReject(ctx)).resolves.toBeUndefined()
+      await expect(
+        grantRoutes.interaction.acceptOrReject(ctx)
+      ).resolves.toBeUndefined()
       expect(ctx.status).toBe(202)
 
       const issuedGrant = await Grant.query().findById(grant.id)

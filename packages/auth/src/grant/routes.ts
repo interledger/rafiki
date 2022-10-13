@@ -233,7 +233,7 @@ async function handleGrantChoice(
     !ctx.headers['x-idp-secret'] ||
     !crypto.timingSafeEqual(
       Buffer.from(ctx.headers['x-idp-secret'] as string),
-      Buffer.from(deps.config.identityServerSecret)
+      Buffer.from(config.identityServerSecret)
     )
   ) {
     ctx.status = 401
