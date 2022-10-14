@@ -39,9 +39,8 @@ const get = async <T>(axios: AxiosInstance, args: GetArgs): Promise<T> => {
 export const createClient = (
   args?: CreateOpenPaymentClientArgs
 ): OpenPaymentsClient => {
-  const defaultTimeout = config.DEFAULT_REQUEST_TIMEOUT || 3_000
   const axiosInstance = axios.create({
-    timeout: args.timeout ?? defaultTimeout
+    timeout: args.timeout ?? config.DEFAULT_REQUEST_TIMEOUT
   })
 
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
