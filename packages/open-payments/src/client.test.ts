@@ -21,10 +21,6 @@ describe('open-payments', (): void => {
       jest.spyOn(axiosInstance, 'get')
     })
 
-    afterEach(() => {
-      jest.clearAllMocks()
-    })
-
     test('sets headers properly if accessToken provided', async (): Promise<void> => {
       nock(baseUrl)
         .get('/incoming-payment')
