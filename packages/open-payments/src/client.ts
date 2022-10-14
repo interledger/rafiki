@@ -8,7 +8,7 @@ interface CreateOpenPaymentClientArgs {
 
 interface GetArgs {
   url: string
-  accessToken: string
+  accessToken?: string
 }
 
 export interface OpenPaymentsClient {
@@ -20,7 +20,10 @@ export interface OpenPaymentsClient {
   }
 }
 
-const get = async <T>(axios: AxiosInstance, args: GetArgs): Promise<T> => {
+export const get = async <T>(
+  axios: AxiosInstance,
+  args: GetArgs
+): Promise<T> => {
   const { url, accessToken } = args
 
   const { data } = await axios.get(url, {
@@ -36,14 +39,22 @@ const get = async <T>(axios: AxiosInstance, args: GetArgs): Promise<T> => {
   return data
 }
 
-export const createClient = (
+export const createAxiosInstance = (
   args?: CreateOpenPaymentClientArgs
-): OpenPaymentsClient => {
+): AxiosInstance => {
   const axiosInstance = axios.create({
-    timeout: args.timeout ?? config.DEFAULT_REQUEST_TIMEOUT
+    timeout: args?.timeout ?? config.DEFAULT_REQUEST_TIMEOUT
   })
 
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
+
+  return axiosInstance
+}
+
+export const createClient = (
+  args?: CreateOpenPaymentClientArgs
+): OpenPaymentsClient => {
+  const axios = createAxiosInstance(args)
 
   return {
     incomingPayment: {

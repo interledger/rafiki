@@ -9,11 +9,13 @@
   "scripts": {
     "build": "pnpm clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
+    "generate:types": "npx ts-node scripts/generate-types.ts",
     "prepack": "pnpm build",
-    "generate:types": "npx ts-node scripts/generate-types.ts"
+    "test": "jest --passWithNoTests"
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
+    "nock": "^13.2.9",
     "openapi-typescript": "^4.5.0",
     "ts-node": "^10.7.0",
     "typescript": "^4.3.0"
