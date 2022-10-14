@@ -28,13 +28,12 @@ describe('Config', (): void => {
         }
         expect(fs.existsSync(TMP_DIR)).toBe(tmpDirExists)
         expect(fs.existsSync(PRIVATE_KEY_FILE)).toBe(false)
-        const { key, jwk } = parseOrProvisionKey(PRIVATE_KEY_FILE)
+        const key = parseOrProvisionKey(PRIVATE_KEY_FILE)
         expect(key).toMatchObject({
           asymmetricKeyType: 'ed25519',
           type: 'private'
         })
-        expect(jwk).toEqual(key.export({ format: 'jwk' }))
-        expect(jwk).toEqual({
+        expect(key.export({ format: 'jwk' })).toEqual({
           crv: 'Ed25519',
           kty: 'OKP',
           d: expect.any(String),
@@ -55,9 +54,9 @@ describe('Config', (): void => {
       )
       assert.ok(fs.existsSync(keyfile))
       const fileStats = fs.statSync(keyfile)
-      const { key, jwk } = parseOrProvisionKey(keyfile)
+      const key = parseOrProvisionKey(keyfile)
       expect(key).toBeInstanceOf(crypto.KeyObject)
-      expect(jwk).toEqual({
+      expect(key.export({ format: 'jwk' })).toEqual({
         crv: 'Ed25519',
         kty: 'OKP',
         d: expect.any(String),
@@ -85,9 +84,9 @@ describe('Config', (): void => {
         )
         assert.ok(fs.existsSync(keyfile))
         const fileStats = fs.statSync(keyfile)
-        const { key, jwk } = parseOrProvisionKey(keyfile)
+        const key = parseOrProvisionKey(keyfile)
         expect(key).toBeInstanceOf(crypto.KeyObject)
-        expect(jwk).toMatchObject({
+        expect(key.export({ format: 'jwk' })).toMatchObject({
           crv: 'Ed25519',
           kty: 'OKP',
           d: expect.any(String),
