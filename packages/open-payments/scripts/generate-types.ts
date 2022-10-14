@@ -1,9 +1,9 @@
 import fs from 'fs'
 import openapiTS from 'openapi-typescript'
-import config from '../config.js'
+import config from '../src/config'
 ;(async () => {
   try {
-    const output = await openapiTS(new URL(config.OPEN_PAYMENTS_OPEN_API_URL))
+    const output = await openapiTS(config.OPEN_PAYMENTS_OPEN_API_URL)
     const fileName = 'src/generated/types.ts'
 
     fs.writeFile(fileName, output, (error) => {

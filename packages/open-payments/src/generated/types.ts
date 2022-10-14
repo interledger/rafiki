@@ -157,10 +157,7 @@ export interface components {
        * @description The URL of the payment pointer this payment is being made into.
        */
       paymentPointer: string;
-      /**
-       * @description Describes whether the incoming payment has completed receiving fund.
-       * @default false
-       */
+      /** @description Describes whether the incoming payment has completed receiving fund. */
       completed: boolean;
       /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
       incomingAmount?: components["schemas"]["amount"];
@@ -224,10 +221,7 @@ export interface components {
        * @description The URL of the quote defining this payment's amounts.
        */
       quoteId?: string;
-      /**
-       * @description Describes whether the payment failed to send its full amount.
-       * @default false
-       */
+      /** @description Describes whether the payment failed to send its full amount. */
       failed?: boolean;
       /** @description The URL of the incoming payment or ILP STREAM Connection that is being paid. */
       receiver: components["schemas"]["receiver"];
