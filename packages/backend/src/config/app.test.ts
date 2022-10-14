@@ -6,7 +6,6 @@ import { parseOrProvisionKey } from './app'
 describe('Config', (): void => {
   describe('parseOrProvisionKey', (): void => {
     const TMP_DIR = './tmp'
-    const PRIVATE_KEY_FILE = `${TMP_DIR}/private-key.pem`
 
     beforeEach(async (): Promise<void> => {
       fs.rmSync(TMP_DIR, { recursive: true, force: true })
@@ -27,8 +26,7 @@ describe('Config', (): void => {
           fs.mkdirSync(TMP_DIR)
         }
         expect(fs.existsSync(TMP_DIR)).toBe(tmpDirExists)
-        expect(fs.existsSync(PRIVATE_KEY_FILE)).toBe(false)
-        const key = parseOrProvisionKey(PRIVATE_KEY_FILE)
+        const key = parseOrProvisionKey(`${TMP_DIR}/private-key.pem`)
         expect(key).toMatchObject({
           asymmetricKeyType: 'ed25519',
           type: 'private'
@@ -39,7 +37,9 @@ describe('Config', (): void => {
           d: expect.any(String),
           x: expect.any(String)
         })
-        expect(fs.readFileSync(PRIVATE_KEY_FILE, 'utf8')).toEqual(
+        const keyfiles = fs.readdirSync(TMP_DIR)
+        expect(keyfiles.length).toBe(1)
+        expect(fs.readFileSync(`${TMP_DIR}/${keyfiles[0]}`, 'utf8')).toEqual(
           key.export({ format: 'pem', type: 'pkcs8' })
         )
       }
@@ -66,44 +66,33 @@ describe('Config', (): void => {
         keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
       )
       expect(fs.statSync(keyfile).mtimeMs).toEqual(fileStats.mtimeMs)
-      expect(fs.existsSync(PRIVATE_KEY_FILE)).toEqual(false)
+      expect(fs.readdirSync(TMP_DIR).length).toEqual(1)
     })
-    test.each`
-      filename
-      ${'test-private-key.pem'}
-      ${'private-key.pem'}
-    `(
-      'generates new key if wrong curve',
-      async ({ filename }): Promise<void> => {
-        const keypair = crypto.generateKeyPairSync('ed448')
-        const keyfile = `${TMP_DIR}/${filename}`
-        fs.mkdirSync(TMP_DIR)
-        fs.writeFileSync(
-          keyfile,
-          keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
-        )
-        assert.ok(fs.existsSync(keyfile))
-        const fileStats = fs.statSync(keyfile)
-        const key = parseOrProvisionKey(keyfile)
-        expect(key).toBeInstanceOf(crypto.KeyObject)
-        expect(key.export({ format: 'jwk' })).toMatchObject({
-          crv: 'Ed25519',
-          kty: 'OKP',
-          d: expect.any(String),
-          x: expect.any(String)
-        })
-        expect(key.export({ format: 'pem', type: 'pkcs8' })).not.toEqual(
-          keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
-        )
-        if (keyfile === PRIVATE_KEY_FILE) {
-          expect(fs.statSync(keyfile).mtimeMs).toBeGreaterThan(
-            fileStats.mtimeMs
-          )
-        } else {
-          expect(fs.existsSync(PRIVATE_KEY_FILE)).toBe(true)
-          expect(fs.statSync(keyfile).mtimeMs).toEqual(fileStats.mtimeMs)
-        }
-      }
-    )
+    test('generates new key if wrong curve', async (): Promise<void> => {
+      const keypair = crypto.generateKeyPairSync('ed448')
+      const keyfile = `${TMP_DIR}/test-private-key.pem`
+      fs.mkdirSync(TMP_DIR)
+      fs.writeFileSync(
+        keyfile,
+        keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
+      )
+      assert.ok(fs.existsSync(keyfile))
+      const fileStats = fs.statSync(keyfile)
+      const key = parseOrProvisionKey(keyfile)
+      expect(key).toBeInstanceOf(crypto.KeyObject)
+      expect(key.export({ format: 'jwk' })).toMatchObject({
+        crv: 'Ed25519',
+        kty: 'OKP',
+        d: expect.any(String),
+        x: expect.any(String)
+      })
+      expect(key.export({ format: 'pem', type: 'pkcs8' })).not.toEqual(
+        keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
+      )
+      const keyfiles = fs.readdirSync(TMP_DIR)
+      expect(keyfiles.length).toEqual(2)
+      expect(keyfiles.filter((f) => f.startsWith('private')).length).toEqual(1)
+      expect(fs.statSync(keyfile).mtimeMs).toEqual(fileStats.mtimeMs)
+    })
   })
 })

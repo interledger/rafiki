@@ -25,7 +25,7 @@ function envFloat(name: string, value: number): number {
 export type IAppConfig = typeof Config
 
 const TMP_DIR = './tmp'
-const PRIVATE_KEY_FILE = `${TMP_DIR}/private-key.pem`
+const PRIVATE_KEY_FILE = `${TMP_DIR}/private-key-${new Date().getTime()}.pem`
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
