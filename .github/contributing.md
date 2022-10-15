@@ -34,74 +34,37 @@ Discussions are where we have conversations about Rafiki.
 If you would like to discuss topics about the broader ecosystem, have a new idea, or want to show off your work - join us in [discussions](https://github.com/interledger/rafiki/discussions).
 
 ### :beetle: Issues
-We use Github issues to track tasks that contributors can help with. We haven't finalised labels yet for contributors to tackle. If you want to help with work related to an issue, please comment on the issue before starting work on it.
+We use GitHub issues to track tasks that contributors can help with. We haven't finalized labels yet for contributors to tackle. If you want to help with work related to an issue, please comment on the issue before starting work on it.
 
-If you've found something that needs fixing, search open issues to see if someone else has reported the same thing. If it's something new, open an issue. We'll use the issue to have a conversation about the problem you want to fix.
+If you've found something that needs fixing, search open issues to see if someone else has reported the same thing. If it's something new, open an issue. We'll use the issue to discuss the problem you want to fix.
 
 ### :hammer_and_wrench: Pull requests
 Feel free to fork and create a pull request on changes you think you can contribute.
 
 The team will review your pull request as soon as possible.
 
+### :books: Documentation
+We maintain documentation for Rafiki on [rafiki.dev](https://github.com/interledger/rafiki.dev). A list of issues being tracked across the Interledger ecosystem (including rafiki) is maintained in the [Documentation project](https://github.com/orgs/interledger/projects/5/views/1).
+
+
 ## Working in the rafiki repository
 
-This project uses yarn 2. We use [zero-installs](https://yarnpkg.com/features/zero-installs)
-which means you won't need to install dependencies when you clone the repo.
-This does have [security implications](https://yarnpkg.com/features/zero-installs#does-it-have-security-implications)
-that are checked in CI.
+This project uses pnpm. A list of steps for setting up a [local development environment](https://github.com/interledger/rafiki#local-development-enironment) can be found in the Readme.
 
-> DO NOT use `npm install`, this will cause the project to spontaneously self-destruct :boom:
-
-```shell
-# Clone with SSH
-git clone git@github.com:interledger/rafiki.git
-
-# Build dependencies with install scripts
-yarn install --immutable --immutable-cache
-```
-
-### Workspaces
-
-We use [yarn workspaces](https://yarnpkg.com/features/workspaces) to manage the monorepo.
-The [workspace](https://yarnpkg.com/cli/workspace) command should be used when
-you want to run yarn commands in specific workspaces:
-
-```shell
-# Add a package (package_name) to a single workspace(workspace_name):
-yarn workspace <workspace_name> add <package_name>
-
-# Run a script on a single workspace(workspace_name):
-yarn workspace <workspace_name> <script_name>
-```
-
-#### How to share scripts between workspaces?
-
-Any script with a colon in its name (`build:foo`) can be called from any workspace.
-Additionally, `$INIT_CWD` will always point to the directory running the script.
-
-We utilize this to write shared scripts once:
-
-```shell
-# Lint in the current workspace
-cd packages/backend
-yarn lint # runs yarn lint:local
-
-# OR use the workspaces command
-yarn workspace backend lint # runs yarn lint:local in the packages/backend directory
-```
+> DO NOT use `npm install`. This will cause the project to spontaneously self-destruct :boom:
 
 ### Labels
 
-We use labels to communicate the intention of issues and prs.
+We use labels to communicate the intention of issues and PRs.
 
 - `discussions:` prefix denotes issues that can be converted to discussions.
 - `good first issue` are great issues for newcomers to take on.
-- `pkg:` prefix denotes issues/prs related to a specific package.
+- `pkg:` prefix denotes issues/PRs related to a specific package.
 - `team:` prefix lets contributors know if the issue will be done by the core team or not.
 - `triage` issues that the core team needs to assign labels to.
-- `type:` prefix denotes a specific action/category to issues/prs.
+- `type:` prefix denotes a specific action/category to issues/PRs.
 
-Some labels will be automatically assigned to prs.
+Some labels will be automatically assigned to PRs.
 
 ### Code quality
 
@@ -183,6 +146,6 @@ each package to suit the package's requirements.
 
 #### CI
 
-We use Github actions to manage our CI pipeline.
+We use GitHub actions to manage our CI pipeline.
 
 The workflows can be found in `.github/workflows`
