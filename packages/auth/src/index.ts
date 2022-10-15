@@ -15,7 +15,7 @@ import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
 
 export { JWKWithRequired, KeyInfo } from './client/service'
-export { verifySig } from './signature/middleware'
+export { verifySigAndChallenge } from './signature/middleware'
 const container = initIocContainer(Config)
 const app = new App(container)
 

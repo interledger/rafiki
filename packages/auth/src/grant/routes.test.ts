@@ -19,7 +19,7 @@ import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 
-export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
+export { KEY_REGISTRY_ORIGIN } from '../tests/signature'
 export const KID_PATH = '/keys/base-test-key'
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',

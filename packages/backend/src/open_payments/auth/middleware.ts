@@ -2,11 +2,7 @@ import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
-import { verifySig } from 'auth'
-
-function stringifyHeader(header: string | Array<string>): string {
-  return Array.isArray(header) ? header.join(' ') : header
-}
+import { verifySigAndChallenge } from 'auth'
 
 export function createAuthMiddleware({
   type,
@@ -52,14 +48,7 @@ export function createAuthMiddleware({
         ctx.throw(403, 'Insufficient Grant')
       }
       try {
-        const sig = stringifyHeader(ctx.headers['signature'])
-        const sigInput = stringifyHeader(ctx.headers['signature-input'])
-        const successfullyVerified = await verifySig(
-          sig.match(/:([^:]+):/)[1],
-          tokenInfo.key.jwk,
-          sigInput
-        )
-        if (!successfullyVerified) {
+        if (!(await verifySigAndChallenge(tokenInfo.key.jwk, ctx))) {
           ctx.throw(401, 'Invalid signature')
         }
       } catch (e) {

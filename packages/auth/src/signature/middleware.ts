@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import * as crypto from 'crypto'
+import { IncomingHttpHeaders } from 'http'
 import { importJWK } from 'jose'
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
 import { JWKWithRequired } from '../client/service'
+import { Request } from 'koa'
 
-export async function verifySig(
+async function verifySig(
   sig: string,
   jwk: JWKWithRequired,
   challenge: string
@@ -17,9 +19,41 @@ export async function verifySig(
   return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
 }
 
-async function verifySigAndChallenge(
+export interface MinimalAppContext {
+  headers: IncomingHttpHeaders
+  request: Request
+  throw(
+    message: string,
+    code?: number,
+    properties?: Record<
+      string,
+      | string
+      | number
+      | string
+      | number
+      | Record<string, string | number | string | number>
+    >
+  ): never
+  throw(status: number): never
+  throw(
+    ...properties: Array<
+      | number
+      | string
+      | Record<
+          string,
+          | string
+          | number
+          | string
+          | number
+          | Record<string, string | number | string | number>
+        >
+    >
+  ): never
+}
+
+export async function verifySigAndChallenge(
   clientKey: JWKWithRequired,
-  ctx: HttpSigContext
+  ctx: MinimalAppContext
 ): Promise<boolean> {
   const sig = ctx.headers['signature'] as string
   const sigInput = ctx.headers['signature-input'] as string
@@ -68,7 +102,7 @@ function getSigInputComponents(sigInput: string): string[] | null {
 
 function validateSigInputComponents(
   sigInputComponents: string[],
-  ctx: AppContext
+  ctx: MinimalAppContext
 ): boolean {
   // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-7.3.1
 
@@ -88,7 +122,7 @@ function validateSigInputComponents(
 
 export function sigInputToChallenge(
   sigInput: string,
-  ctx: AppContext
+  ctx: MinimalAppContext
 ): string | null {
   const sigInputComponents = getSigInputComponents(sigInput)
 

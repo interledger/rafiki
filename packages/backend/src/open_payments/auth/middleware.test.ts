@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { createHash } from 'crypto'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -10,6 +9,7 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices, PaymentPointerContext } from '../../app'
+import { Body, RequestMethod } from 'node-mocks-http'
 import { HttpMethod, ValidateFunction } from 'openapi'
 import { setup } from '../../shared/routes.test'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -17,7 +17,8 @@ import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
-import { KeyInfo } from 'auth'
+import { JWKWithRequired, KeyInfo } from 'auth'
+import { generateTestKeys, generateSigHeaders } from 'auth/src/tests/signature'
 import { TokenInfo, TokenInfoJSON } from './service'
 
 type AppMiddleware = (
@@ -41,16 +42,17 @@ describe('Auth Middleware', (): void => {
   let grantReferenceService: GrantReferenceService
   let mockKeyInfo: KeyInfo
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
-  const signature =
-    '6o6YhXVuXxsOxRFXoSr3pmIAm2qTLLZYXUt9wMffVtnDp1U9BBSPRY3AVG9irx/mtl2jpbFXnlsadcDSiciXBQ=='
-
-  function createContentDigestHeader(bodyString: string): string {
-    return (
-      'sha-256=:' +
-      createHash('sha256').update(bodyString).digest('base64') +
-      ':'
-    )
+  let requestPath: string
+  let requestAuthorization: string
+  let requestBody: Body
+  let requestUrl: string
+  let requestMethod: RequestMethod
+  let requestSignatureHeaders: {
+    sigInput: string
+    signature: string
+    contentDigest?: string
   }
+  let requestJwk: JWKWithRequired
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -61,45 +63,54 @@ describe('Auth Middleware', (): void => {
       action: AccessAction.Read
     })
     const authOpenApi = await deps.use('authOpenApi')
+    requestPath = '/introspect'
     validateRequest = authOpenApi.createRequestValidator({
-      path: '/introspect',
+      path: requestPath,
       method: HttpMethod.POST
     })
     grantReferenceService = await deps.use('grantReferenceService')
-  })
-
-  beforeEach(async (): Promise<void> => {
-    const body = {
+    const { publicKey, privateKey } = await generateTestKeys()
+    requestMethod = HttpMethod.POST.toUpperCase() as RequestMethod
+    requestBody = {
       access_token: token,
       proof: 'httpsig',
       resource_server: 'test'
     }
-    const bodyString = JSON.stringify(body)
+    requestAuthorization = `GNAP ${token}`
+    requestUrl = Config.authServerGrantUrl + requestPath //'http://127.0.0.1:3006/introspect'//authServerIntrospectionUrl.toString()//'http://example.com/introspect'//authServerIntrospectionUrl.toString()
+    requestSignatureHeaders = await generateSigHeaders(
+      privateKey,
+      requestUrl,
+      requestMethod,
+      {
+        body: requestBody,
+        authorization: requestAuthorization
+      }
+    )
+    requestJwk = publicKey
+  })
+
+  beforeEach(async (): Promise<void> => {
     ctx = setup({
       reqOpts: {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: `sig1=:${signature}:`,
-          'Signature-Input':
-            'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': createContentDigestHeader(bodyString),
-          'Content-Length': bodyString.length.toString()
+          Signature: `sig1=:${requestSignatureHeaders.signature}:`,
+          'Signature-Input': requestSignatureHeaders.sigInput,
+          'Content-Digest': requestSignatureHeaders.contentDigest,
+          'Content-Length': JSON.stringify(requestBody).length.toString()
         },
-        body
+        method: requestMethod,
+        body: requestBody,
+        url: requestUrl
       },
       paymentPointer: await createPaymentPointer(deps)
     })
     ctx.container = deps
     next = jest.fn()
     mockKeyInfo = {
-      jwk: {
-        alg: 'EdDSA',
-        kty: 'OKP',
-        crv: 'Ed25519',
-        x: 'LZxw1dpic_uV0kraK8_HFRuIaj_RgNypcmSQohvCTZo',
-        kid: 'gnap-key'
-      },
+      jwk: requestJwk,
       proof: 'httpsig'
     }
   })
@@ -335,7 +346,21 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 for invalid http signature', async (): Promise<void> => {
-    ctx.headers['Signature'] = 'sig1=:aaaaaaaaaa=:'
+    ctx = setup({
+      reqOpts: {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `GNAP ${token}`,
+          Signature: 'aaaaaaaaaa=',
+          'Signature-Input': requestSignatureHeaders.sigInput,
+          'Content-Digest': requestSignatureHeaders.contentDigest,
+          'Content-Length': JSON.stringify(requestBody).length.toString()
+        },
+        body: requestBody
+      },
+      paymentPointer: await createPaymentPointer(deps)
+    })
+    ctx.container = deps
     const grant = new TokenInfo(
       {
         active: true,
@@ -447,7 +472,6 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    ctx.request.headers['signature'] = `sig1=:${signature}=:`
     if (Array.isArray(ctx.request.headers['signature-input'])) {
       ctx.request.headers['signature-input'] = ctx.request.headers[
         'signature-input'
@@ -464,27 +488,17 @@ describe('Auth Middleware', (): void => {
   })
 
   test.skip('returns 401 if content-digest does not match the body', async (): Promise<void> => {
-    const body = {
-      access_token: token,
-      proof: 'httpsig',
-      resource_server: 'test'
-    }
     ctx = setup({
       reqOpts: {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: `sig1=:${signature}=:`,
-          'Signature-Input':
-            'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"',
-          'Content-Digest': createContentDigestHeader(
-            JSON.stringify({
-              invalid: 'this is invalid'
-            })
-          ),
-          'Content-Length': JSON.stringify(body).length.toString()
+          Signature: requestSignatureHeaders.signature,
+          'Signature-Input': requestSignatureHeaders.sigInput,
+          'Content-Digest': requestSignatureHeaders.contentDigest,
+          'Content-Length': JSON.stringify(requestBody).length.toString()
         },
-        body
+        body: requestBody
       },
       paymentPointer: await createPaymentPointer(deps)
     })
