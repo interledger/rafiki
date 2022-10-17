@@ -55,14 +55,21 @@ export function createAuthMiddleware({
             )
             ctx.throw(500)
           }
-        } else {
-          await grantReferenceService.create(
-            {
-              id: grant.grant,
-              clientId: grant.clientId
-            },
-            trx
-          )
+        } else if (action === AccessAction.Create) {
+          // Grant and client ID's are only stored for create routes
+          if (
+            type === AccessType.IncomingPayment ||
+            type === AccessType.OutgoingPayment ||
+            type === AccessType.Quote
+          ) {
+            await grantReferenceService.create(
+              {
+                id: grant.grant,
+                clientId: grant.clientId
+              },
+              trx
+            )
+          }
         }
       })
       ctx.grant = grant

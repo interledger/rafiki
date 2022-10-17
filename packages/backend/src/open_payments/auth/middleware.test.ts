@@ -223,12 +223,84 @@ describe('Auth Middleware', (): void => {
       const next = jest.fn().mockImplementation(async () => {
         await expect(
           GrantReference.query().findById(grant.grant)
+        ).resolves.toBeUndefined()
+      })
+      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+      expect(next).toHaveBeenCalled()
+      expect(ctx.grant).toEqual(grant)
+      scope.isDone()
+    }
+  )
+  test.each`
+    type                          | description
+    ${AccessType.IncomingPayment} | ${'incoming payments'}
+    ${AccessType.OutgoingPayment} | ${'outgoing payments'}
+    ${AccessType.Quote}           | ${'quotes'}
+  `(
+    'Stores grant details for $description on the the create path',
+    async ({ type }): Promise<void> => {
+      const createPathAuthMiddleware: AppMiddleware = createAuthMiddleware({
+        type: type,
+        action: AccessAction.Create
+      })
+      const grant = new Grant({
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: type,
+            actions: [AccessAction.Create],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      })
+      const scope = mockAuthServer(grant.toJSON())
+      const next = jest.fn().mockImplementation(async () => {
+        await expect(
+          GrantReference.query().findById(grant.grant)
         ).resolves.toEqual({
           id: grant.grant,
           clientId: grant.clientId
         })
       })
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+      await expect(createPathAuthMiddleware(ctx, next)).resolves.toBeUndefined()
+      expect(next).toHaveBeenCalled()
+      expect(ctx.grant).toEqual(grant)
+      scope.isDone()
+    }
+  )
+  test.each`
+    type                          | description
+    ${AccessType.IncomingPayment} | ${'incoming payments'}
+    ${AccessType.OutgoingPayment} | ${'outgoing payments'}
+    ${AccessType.Quote}           | ${'quotes'}
+  `(
+    'Does not store grant details for $description on the read path',
+    async ({ type }): Promise<void> => {
+      const readPathAuthMiddleware: AppMiddleware = createAuthMiddleware({
+        type: type,
+        action: AccessAction.Read
+      })
+      const grant = new Grant({
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: type,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      })
+      const scope = mockAuthServer(grant.toJSON())
+      const next = jest.fn().mockImplementation(async () => {
+        await expect(
+          GrantReference.query().findById(grant.grant)
+        ).resolves.toBeUndefined()
+      })
+      await expect(readPathAuthMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
       scope.isDone()
