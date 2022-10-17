@@ -731,6 +731,31 @@ describe('Grant Routes', (): void => {
       const issuedGrant = await Grant.query().findById(grant.id)
       expect(issuedGrant.state).toEqual(GrantState.Rejected)
     })
+
+    test('Cannot make invalid grant choice', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'x-idp-secret': Config.identityServerSecret
+          }
+        },
+        {
+          id: grant.interactId,
+          nonce: grant.interactNonce,
+          choice: 'invalidChoice'
+        }
+      )
+
+      await expect(
+        grantRoutes.interaction.acceptOrReject(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.status).toBe(404)
+
+      const issuedGrant = await Grant.query().findById(grant.id)
+      expect(issuedGrant.state).toEqual(GrantState.Pending)
+    })
   })
 
   describe('Grant details', (): void => {

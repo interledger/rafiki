@@ -225,7 +225,7 @@ async function handleGrantChoice(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  // TODO: check redis for session
+  // TODO: check redis for a session
   const { id: interactId, nonce, choice } = ctx.params
   const { config, grantService } = deps
 
