@@ -18,7 +18,7 @@ describe('ilp-stream-connection', (): void => {
 
   const axiosInstance = createAxiosInstance()
 
-  describe('getIncomingPayment', (): void => {
+  describe('getILPStreamConnection', (): void => {
     test('calls createResponseValidator properly', async (): Promise<void> => {
       const createResponseValidatorSpy = jest.spyOn(
         openApi,
