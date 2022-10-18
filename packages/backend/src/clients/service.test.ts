@@ -75,6 +75,17 @@ describe('Client Key Service', (): void => {
       await expect(fetchedClient.uri).toEqual(Client.uri)
       await expect(fetchedClient.keys).toHaveLength(0)
     })
+    test('Can get client using payment pointer url (with empty keys)', async (): Promise<void> => {
+      const Client = await clientService.createClient(TEST_CLIENT)
+
+      const fetchedClient = await clientService.getClientByPaymentPointerUrl(
+        Client.paymentPointerUrl
+      )
+      await expect(fetchedClient.id).toEqual(Client.id)
+      await expect(fetchedClient.name).toEqual(Client.name)
+      await expect(fetchedClient.uri).toEqual(Client.uri)
+      await expect(fetchedClient.keys).toHaveLength(0)
+    })
   })
   describe('Manage Client Keys', (): void => {
     test('Can add a key to a client', async (): Promise<void> => {

@@ -19,6 +19,7 @@ export interface AddKeyToClientOptions {
 
 export interface ClientService {
   getClient(id: string): Promise<Client | undefined>
+  getClientByPaymentPointerUrl(url: string): Promise<Client | undefined>
   createClient(options: CreateClientOptions): Promise<Client>
   addKeyToClient(options: AddKeyToClientOptions): Promise<Client>
 }
@@ -40,6 +41,8 @@ export async function createClientService({
   }
   return {
     getClient: (id) => getClient(deps, id),
+    getClientByPaymentPointerUrl: (url) =>
+      getClientByPaymentPointerUrl(deps, url),
     createClient: (options) => createClient(deps, options),
     addKeyToClient: (options) => addKeyToClient(deps, options)
   }
@@ -50,6 +53,17 @@ async function getClient(
   id: string
 ): Promise<Client | undefined> {
   const client = await Client.query(deps.knex).findById(id)
+  client.keys = await getClientKeys(deps, client.id)
+  return client
+}
+
+async function getClientByPaymentPointerUrl(
+  deps: ServiceDependencies,
+  paymentPointerUrl: string
+) {
+  const client = await Client.query(deps.knex)
+    .where('paymentPointerUrl', paymentPointerUrl)
+    .first()
   client.keys = await getClientKeys(deps, client.id)
   return client
 }
