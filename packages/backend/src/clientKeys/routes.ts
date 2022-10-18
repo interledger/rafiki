@@ -40,7 +40,8 @@ export async function getKeyById(
       name: clientDetails.name,
       uri: clientDetails.uri,
       email: clientDetails.email,
-      image: clientDetails.image
+      image: clientDetails.image,
+      paymentPointerUrl: clientDetails.paymentPointerUrl
     }
   }
 }

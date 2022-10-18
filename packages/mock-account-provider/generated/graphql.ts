@@ -111,6 +111,7 @@ export type Client = Model & {
   image: Scalars['String'];
   keys: Array<ClientKeys>;
   name: Scalars['String'];
+  paymentPointerUrl: Scalars['String'];
   uri: Scalars['String'];
 };
 
@@ -154,6 +155,7 @@ export type CreateClientInput = {
   email: Scalars['String'];
   image: Scalars['String'];
   name: Scalars['String'];
+  paymentPointerUrl: Scalars['String'];
   uri: Scalars['String'];
 };
 
@@ -1165,6 +1167,7 @@ export type ClientResolvers<ContextType = any, ParentType extends ResolversParen
   image?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   keys?: Resolver<Array<ResolversTypes['ClientKeys']>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  paymentPointerUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   uri?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

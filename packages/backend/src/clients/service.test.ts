@@ -13,6 +13,7 @@ import { faker } from '@faker-js/faker'
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_CLIENT = {
   name: faker.name.firstName(),
+  paymentPointerUrl: faker.internet.url(),
   uri: faker.internet.url(),
   email: faker.internet.exampleEmail(),
   image: faker.image.avatar()

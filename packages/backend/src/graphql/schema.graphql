@@ -258,6 +258,7 @@ input CreateClientInput {
   uri: String!
   image: String!
   email: String!
+  paymentPointerUrl: String!
 }
 
 input AddKeyToClientInput {
@@ -534,6 +535,7 @@ type Client implements Model {
   image: String!
   email: String!
   keys: [ClientKeys!]!
+  paymentPointerUrl: String!
   createdAt: String!
 }
 

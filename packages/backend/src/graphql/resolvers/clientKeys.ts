@@ -134,6 +134,7 @@ export const clientToGraphql = (client: Client): SchemaClient => ({
   uri: client.uri,
   email: client.email,
   image: client.image,
+  paymentPointerUrl: client.paymentPointerUrl,
   keys:
     client.keys != null
       ? client.keys.map((key) => ({

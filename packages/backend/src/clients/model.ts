@@ -7,6 +7,8 @@ export class Client extends BaseModel {
     return 'clients'
   }
 
+  public paymentPointerUrl!: string
+
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   static relationMappings = () => ({
     keys: {

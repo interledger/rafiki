@@ -16,7 +16,8 @@ const TEST_CLIENT = {
   name: faker.name.firstName(),
   uri: faker.internet.url(),
   email: faker.internet.exampleEmail(),
-  image: faker.image.avatar()
+  image: faker.image.avatar(),
+  paymentPointerUrl: faker.internet.url()
 }
 const KEY_UUID = uuid()
 const TEST_KID_PATH = '/keys/' + KEY_UUID

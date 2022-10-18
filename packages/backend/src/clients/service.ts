@@ -6,6 +6,7 @@ import { ClientKeys } from '../clientKeys/model'
 import { JWKWithRequired } from 'auth'
 
 export interface CreateClientOptions {
+  paymentPointerUrl: string
   name: string
   uri: string
 }

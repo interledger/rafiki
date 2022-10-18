@@ -104,5 +104,3 @@ export const listTests = <Type extends BaseResponse>({
     )
   })
 }
-
-test.todo('test suite must contain at least one test')
