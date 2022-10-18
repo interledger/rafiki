@@ -350,6 +350,13 @@ export class App {
       (ctx: ClientKeysContext): Promise<void> => clientKeysRoutes.get(ctx)
     )
 
+    router.get(
+      PAYMENT_POINTER_PATH + '/jwks.json',
+      createPaymentPointerMiddleware(),
+      (ctx: PaymentPointerContext): Promise<void> =>
+        paymentPointerRoutes.getKeys(ctx)
+    )
+
     // Add the payment pointer query route last.
     // Otherwise it will be matched instead of other Open Payments endpoints.
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment

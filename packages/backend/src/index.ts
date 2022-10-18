@@ -205,7 +205,8 @@ export function initIocContainer(
   })
   container.singleton('paymentPointerRoutes', async (deps) => {
     return createPaymentPointerRoutes({
-      config: await deps.use('config')
+      config: await deps.use('config'),
+      clientService: await deps.use('clientService')
     })
   })
   container.singleton('clientKeysRoutes', async (deps) => {
