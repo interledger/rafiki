@@ -8,7 +8,7 @@ interface BaseResponse {
   id: string
 }
 
-interface SetupOptions {
+export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
   params?: Record<string, string>
   paymentPointer: PaymentPointer

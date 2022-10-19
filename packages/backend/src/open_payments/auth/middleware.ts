@@ -2,7 +2,7 @@ import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
-import { verifySigAndChallenge } from 'auth'
+import { HttpSigContext, verifySigAndChallenge } from 'auth'
 
 export function createAuthMiddleware({
   type,
@@ -12,7 +12,7 @@ export function createAuthMiddleware({
   action: AccessAction
 }) {
   return async (
-    ctx: PaymentPointerContext,
+    ctx: HttpSigContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     const config = await ctx.container.use('config')

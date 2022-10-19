@@ -8,21 +8,21 @@ import { GrantJSON, AccessType, AccessAction } from './grant'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppServices, PaymentPointerContext } from '../../app'
+import { AppServices } from '../../app'
 import { Body, RequestMethod } from 'node-mocks-http'
 import { HttpMethod, ValidateFunction } from 'openapi'
-import { setup } from '../../shared/routes.test'
+import { setup, SetupOptions } from '../../shared/routes.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
-import { JWKWithRequired, KeyInfo } from 'auth'
+import { HttpSigContext, JWKWithRequired, KeyInfo } from 'auth'
 import { generateTestKeys, generateSigHeaders } from 'auth/src/tests/signature'
 import { TokenInfo, TokenInfoJSON } from './service'
 
 type AppMiddleware = (
-  ctx: PaymentPointerContext,
+  ctx: HttpSigContext,
   next: () => Promise<void>
 ) => Promise<void>
 
@@ -36,7 +36,7 @@ describe('Auth Middleware', (): void => {
   let appContainer: TestContainer
   let authServerIntrospectionUrl: URL
   let middleware: AppMiddleware
-  let ctx: PaymentPointerContext
+  let ctx: HttpSigContext
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: ValidateFunction<IntrospectionBody>
   let grantReferenceService: GrantReferenceService
@@ -90,8 +90,20 @@ describe('Auth Middleware', (): void => {
     requestJwk = publicKey
   })
 
+  function setupHttpSigContext(options: SetupOptions): HttpSigContext {
+    const context = setup(options)
+    if (!context.headers['signature'] || !context.request.headers['signature']) {
+      throw new Error('missing signature header')
+    }
+    if (!context.headers['signature-input'] || !context.request.headers['signature-input']) {
+      throw new Error('missing signature-input header')
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return context as any
+  }
+
   beforeEach(async (): Promise<void> => {
-    ctx = setup({
+    ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
           Accept: 'application/json',
@@ -346,7 +358,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 for invalid http signature', async (): Promise<void> => {
-    ctx = setup({
+    ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
           Accept: 'application/json',
@@ -472,15 +484,9 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    if (Array.isArray(ctx.request.headers['signature-input'])) {
-      ctx.request.headers['signature-input'] = ctx.request.headers[
-        'signature-input'
-      ].map((h) => h.replace('gnap-key', 'mismatched-key'))
-    } else {
-      ctx.request.headers['signature-input'] = ctx.request.headers[
-        'signature-input'
-      ].replace('gnap-key', 'mismatched-key')
-    }
+    ctx.request.headers['signature-input'] = ctx.request.headers[
+      'signature-input'
+    ].replace('gnap-key', 'mismatched-key')
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
@@ -488,7 +494,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test.skip('returns 401 if content-digest does not match the body', async (): Promise<void> => {
-    ctx = setup({
+    ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
           Accept: 'application/json',
