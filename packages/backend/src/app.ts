@@ -48,7 +48,6 @@ import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { ClientKeysService } from './clientKeys/service'
-import { ClientService } from './clients/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
 
 export interface AppContextData {
@@ -150,7 +149,6 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
-  clientService: Promise<ClientService>
   clientKeysService: Promise<ClientKeysService>
   grantReferenceService: Promise<GrantReferenceService>
 }
