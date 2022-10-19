@@ -1,4 +1,5 @@
 import jestOpenAPI from 'jest-openapi'
+import assert from 'assert'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
@@ -10,17 +11,14 @@ import { initIocContainer } from '../'
 import { AppServices, ClientKeysContext } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { ClientKeysRoutes } from './routes'
-import { faker } from '@faker-js/faker'
-import { ClientService } from '../clients/service'
+import {
+  AddKeyToPaymentPointerOptions,
+  PaymentPointerService
+} from '../open_payments/payment_pointer/service'
+import { randomAsset } from '../tests/asset'
+import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-const TEST_CLIENT = {
-  id: uuid(),
-  name: faker.name.firstName(),
-  uri: faker.internet.url(),
-  email: faker.internet.exampleEmail(),
-  image: faker.image.avatar()
-}
 const KEY_UUID = uuid()
 const TEST_KID_PATH = '/keys/' + KEY_UUID
 const TEST_CLIENT_KEY = {
@@ -37,7 +35,7 @@ describe('Client Keys Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let clientService: ClientService
+  let paymentPointerService: PaymentPointerService
   let config: IAppConfig
   let clientKeysRoutes: ClientKeysRoutes
   const mockMessageProducer = {
@@ -54,7 +52,7 @@ describe('Client Keys Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    clientService = await deps.use('clientService')
+    paymentPointerService = await deps.use('paymentPointerService')
     clientKeysRoutes = await deps.use('clientKeysRoutes')
   })
 
@@ -81,13 +79,18 @@ describe('Client Keys Routes', (): void => {
     })
 
     test('returns 200 with JWK set as body for valid key', async (): Promise<void> => {
-      const client = await clientService.createClient(TEST_CLIENT)
-      const keyOption = {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const keyOption: AddKeyToPaymentPointerOptions = {
         id: KEY_UUID,
-        clientId: client.id,
+        paymentPointerId: paymentPointer.id,
         jwk: TEST_CLIENT_KEY
       }
-      await clientService.addKeyToClient(keyOption)
+      await paymentPointerService.addKeyToPaymentPointer(keyOption)
 
       const ctx = createContext<ClientKeysContext>(
         {
@@ -100,7 +103,11 @@ describe('Client Keys Routes', (): void => {
       await expect(clientKeysRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         key: TEST_CLIENT_KEY,
-        client: TEST_CLIENT
+        client: {
+          id: paymentPointer.id,
+          name: paymentPointer.publicName,
+          uri: paymentPointer.url
+        }
       })
     })
   })

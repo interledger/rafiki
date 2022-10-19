@@ -1,10 +1,10 @@
 import { ClientKeysContext } from '../app'
-import { ClientService } from '../clients/service'
+import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 import { ClientKeysService } from './service'
 
 interface ServiceDependencies {
   clientKeysService: ClientKeysService
-  clientService: ClientService
+  paymentPointerService: PaymentPointerService
 }
 
 export interface ClientKeysRoutes {
@@ -28,7 +28,9 @@ export async function getKeyById(
     ctx.throw(404)
   }
 
-  const clientDetails = await deps.clientService.getClient(key.clientId)
+  const clientDetails = await deps.paymentPointerService.get(
+    key.paymentPointerId
+  )
   if (!clientDetails) {
     ctx.throw(404)
   }
@@ -37,10 +39,8 @@ export async function getKeyById(
     key: key.jwk,
     client: {
       id: clientDetails.id,
-      name: clientDetails.name,
-      uri: clientDetails.uri,
-      email: clientDetails.email,
-      image: clientDetails.image
+      name: clientDetails.publicName,
+      uri: clientDetails.url
     }
   }
 }

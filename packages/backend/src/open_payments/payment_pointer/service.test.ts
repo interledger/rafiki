@@ -9,6 +9,7 @@ import {
   PaymentPointerEventType
 } from './model'
 import {
+  AddKeyToPaymentPointerOptions,
   CreateOptions,
   FORBIDDEN_PATHS,
   PaymentPointerService
@@ -407,5 +408,39 @@ describe('Open Payments Payment Pointer Service', (): void => {
         }
       }
     )
+  })
+
+  describe('addKeyToPaymentPointer', (): void => {
+    test('adds a key to a payment pointer', async (): Promise<void> => {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/.well-known/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const TEST_KEY = {
+        kid: uuid(),
+        x: 'test-public-key',
+        kty: 'OKP',
+        alg: 'EdDSA',
+        crv: 'Ed25519',
+        key_ops: ['sign', 'verify'],
+        use: 'sig'
+      }
+
+      const options: AddKeyToPaymentPointerOptions = {
+        id: uuid(),
+        paymentPointerId: paymentPointer.id,
+        jwk: TEST_KEY
+      }
+      const paymentPointerWithKey =
+        await paymentPointerService.addKeyToPaymentPointer(options)
+
+      await expect(paymentPointerWithKey.keys[0].id).toEqual(options.id)
+      await expect(paymentPointerWithKey.keys[0].paymentPointerId).toEqual(
+        options.paymentPointerId
+      )
+      await expect(paymentPointerWithKey.keys).toHaveLength(1)
+    })
   })
 })

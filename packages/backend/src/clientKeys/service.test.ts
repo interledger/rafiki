@@ -1,6 +1,7 @@
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
+import assert from 'assert'
 import { ClientKeysService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -8,16 +9,14 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { faker } from '@faker-js/faker'
-import { AddKeyToClientOptions, ClientService } from '../clients/service'
+import { randomAsset } from '../tests/asset'
+import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
+import {
+  AddKeyToPaymentPointerOptions,
+  PaymentPointerService
+} from '../open_payments/payment_pointer/service'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-const TEST_CLIENT = {
-  name: faker.name.firstName(),
-  uri: faker.internet.url(),
-  email: faker.internet.exampleEmail(),
-  image: faker.image.avatar()
-}
 const KEY_UUID = uuid()
 const TEST_KID_PATH = '/keys/' + KEY_UUID
 const TEST_CLIENT_KEY = {
@@ -34,7 +33,7 @@ describe('Client Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let clientKeysService: ClientKeysService
-  let clientService: ClientService
+  let paymentPointerService: PaymentPointerService
   let knex: Knex
   const mockMessageProducer = {
     send: jest.fn()
@@ -46,7 +45,7 @@ describe('Client Key Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     clientKeysService = await deps.use('clientKeysService')
-    clientService = await deps.use('clientService')
+    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -60,36 +59,38 @@ describe('Client Key Service', (): void => {
 
   describe('Fetch Client Keys', (): void => {
     test('Can fetch a key by kid', async (): Promise<void> => {
-      const client = await clientService.createClient(TEST_CLIENT)
-      const keyOption = {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/.well-known/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const keyOption: AddKeyToPaymentPointerOptions = {
         id: KEY_UUID,
-        clientId: client.id,
-        jwk: {
-          ...TEST_CLIENT_KEY,
-          client: {
-            id: client.id,
-            name: client.name,
-            uri: client.uri,
-            image: '',
-            email: ''
-          }
-        }
+        paymentPointerId: paymentPointer.id,
+        jwk: TEST_CLIENT_KEY
       }
-      await clientService.addKeyToClient(keyOption)
+
+      await paymentPointerService.addKeyToPaymentPointer(keyOption)
       const key = await clientKeysService.getKeyById(KEY_UUID)
-      await expect(key.clientId).toEqual(client.id)
+      await expect(key.paymentPointerId).toEqual(paymentPointer.id)
     })
   })
 
   describe('Revoke Client Keys', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const client = await clientService.createClient(TEST_CLIENT)
-      const keyOption: AddKeyToClientOptions = {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/.well-known/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const keyOption: AddKeyToPaymentPointerOptions = {
         id: KEY_UUID,
-        clientId: client.id,
+        paymentPointerId: paymentPointer.id,
         jwk: TEST_CLIENT_KEY
       }
-      await clientService.addKeyToClient(keyOption)
+      await paymentPointerService.addKeyToPaymentPointer(keyOption)
 
       await clientKeysService.revokeKeyById(KEY_UUID)
       const revokedKey = await clientKeysService.getKeyById(KEY_UUID)

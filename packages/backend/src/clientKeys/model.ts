@@ -9,7 +9,7 @@ export class ClientKeys extends BaseModel {
 
   // The id should be the same as the id in the kid.
   public id!: string
-  public clientId!: string
+  public paymentPointerId!: string
 
   public jwk!: JWKWithRequired
 }

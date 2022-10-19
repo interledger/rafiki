@@ -5,6 +5,7 @@ import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
+import { ClientKeys } from '../../clientKeys/model'
 
 export class PaymentPointer
   extends BaseModel
@@ -14,7 +15,7 @@ export class PaymentPointer
     return 'paymentPointers'
   }
 
-  static relationMappings = {
+  static relationMappings = () => ({
     asset: {
       relation: Model.HasOneRelation,
       modelClass: Asset,
@@ -22,8 +23,18 @@ export class PaymentPointer
         from: 'paymentPointers.assetId',
         to: 'assets.id'
       }
+    },
+    keys: {
+      relation: Model.HasManyRelation,
+      modelClass: ClientKeys,
+      join: {
+        from: 'paymentPointers.id',
+        to: 'clientKeys.paymentPointerId'
+      }
     }
-  }
+  })
+
+  public keys!: ClientKeys[]
 
   public url!: string
   public publicName?: string
