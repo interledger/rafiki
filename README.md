@@ -45,7 +45,7 @@ More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
 
 [Add to Google Calendar](https://calendar.google.com/event?action=TEMPLATE&tmeid=NXVsMWhsb3NnbG9hbDFkazE0dTBhZGZ1Z25fMjAyMjAzMjFUMTcwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
 
-## Local Development Enironment
+## Local Development Environment
 
 ### Prequisites
 

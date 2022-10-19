@@ -44,7 +44,7 @@ Feel free to fork and create a pull request on changes you think you can contrib
 The team will review your pull request as soon as possible.
 
 ### :books: Documentation
-We maintain documentation for Rafiki on [rafiki.dev](https://github.com/interledger/rafiki.dev). A list of issues being tracked across the Interledger ecosystem (including rafiki) is maintained in the [Documentation project](https://github.com/orgs/interledger/projects/5/views/1).
+We started to maintain public-facing documentation for Rafiki on [rafiki.dev](https://github.com/interledger/rafiki.dev). The project is new, and available documentation there is scarce. We'd love help to fill that out. A list of issues being tracked across the Interledger ecosystem (including rafiki) is maintained in the [Documentation project](https://github.com/orgs/interledger/projects/5/views/1).
 
 
 ## Working in the rafiki repository
