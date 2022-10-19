@@ -49,7 +49,7 @@ We started to maintain public-facing documentation for Rafiki on [rafiki.dev](ht
 
 ## Working in the rafiki repository
 
-This project uses pnpm. A list of steps for setting up a [local development environment](https://github.com/interledger/rafiki#local-development-enironment) can be found in the Readme.
+This project uses pnpm. A list of steps for setting up a [local development environment](https://github.com/interledger/rafiki#local-development-environment) can be found in the Readme.
 
 > DO NOT use `npm install`. This will cause the project to spontaneously self-destruct :boom:
 
