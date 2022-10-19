@@ -1,66 +1,7 @@
-import {
-  ResolversTypes,
-  Client as SchemaClient,
-  MutationResolvers,
-  QueryResolvers
-} from '../generated/graphql'
+import { ResolversTypes, MutationResolvers } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import { Client } from '../../clients/model'
-
-export const getClient: QueryResolvers<ApolloContext>['client'] = async (
-  parent,
-  args,
-  ctx
-): Promise<ResolversTypes['Client']> => {
-  try {
-    const clientService = await ctx.container.use('clientService')
-    const client = await clientService.getClient(args.id)
-    if (!client) {
-      throw new Error('Client not found')
-    }
-
-    return clientToGraphql(client)
-  } catch (err) {
-    ctx.logger.error(
-      {
-        options: args.id,
-        err
-      },
-      'Error getting client'
-    )
-  }
-}
-
-export const createClient: MutationResolvers<ApolloContext>['createClient'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['CreateClientMutationResponse']> => {
-    try {
-      const clientService = await ctx.container.use('clientService')
-      const client = await clientService.createClient(args.input)
-      return {
-        code: '200',
-        success: true,
-        message: 'Created Client',
-        client: clientToGraphql(client)
-      }
-    } catch (error) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          error
-        },
-        'error creating client'
-      )
-      return {
-        code: '500',
-        message: 'Error trying to create client',
-        success: false
-      }
-    }
-  }
+import { paymentPointerToGraphql } from './payment_pointer'
+import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 
 export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'] =
   async (
@@ -71,6 +12,7 @@ export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'
     try {
       const clientKeysService = await ctx.container.use('clientKeysService')
       const keyId = await clientKeysService.revokeKeyById(args.keyId)
+
       return {
         code: '200',
         success: true,
@@ -85,6 +27,7 @@ export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'
         },
         'error revoking client key'
       )
+
       return {
         code: '500',
         message: 'Error trying to revoke client key',
@@ -101,16 +44,19 @@ export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] 
     ctx
   ): Promise<ResolversTypes['AddKeyToClientMutationResponse']> => {
     try {
-      const clientService = await ctx.container.use('clientService')
-      const client = await clientService.addKeyToClient({
+      const paymentPointerService: PaymentPointerService =
+        await ctx.container.use('paymentPointerService')
+
+      const client = await paymentPointerService.addKeyToPaymentPointer({
         ...args.input,
         jwk: JSON.parse(args.input.jwk)
       })
+
       return {
         code: '200',
         success: true,
         message: 'Added Key To Client',
-        client: clientToGraphql(client)
+        paymentPointer: paymentPointerToGraphql(client)
       }
     } catch (error) {
       ctx.logger.error(
@@ -120,6 +66,7 @@ export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] 
         },
         'error adding key to client'
       )
+
       return {
         code: '500',
         message: 'Error trying to add key to client',
@@ -127,21 +74,3 @@ export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] 
       }
     }
   }
-
-export const clientToGraphql = (client: Client): SchemaClient => ({
-  id: client.id,
-  name: client.name,
-  uri: client.uri,
-  email: client.email,
-  image: client.image,
-  keys:
-    client.keys != null
-      ? client.keys.map((key) => ({
-          id: key.id,
-          clientId: key.clientId,
-          jwk: JSON.stringify(key.jwk),
-          createdAt: new Date(+client.createdAt).toISOString()
-        }))
-      : [],
-  createdAt: new Date(+client.createdAt).toISOString()
-})

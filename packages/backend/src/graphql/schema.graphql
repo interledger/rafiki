@@ -31,7 +31,6 @@ type Query {
 
   quote(id: String!): Quote
   outgoingPayment(id: String!): OutgoingPayment
-  client(id: String!): Client
 }
 
 type Mutation {
@@ -108,9 +107,6 @@ type Mutation {
 
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
-
-  "Create Client"
-  createClient(input: CreateClientInput!): CreateClientMutationResponse
 
   "Add Key to Client"
   addKeyToClient(input: AddKeyToClientInput!): AddKeyToClientMutationResponse
@@ -253,16 +249,9 @@ input CreatePaymentPointerWithdrawalInput {
   id: String!
 }
 
-input CreateClientInput {
-  name: String!
-  uri: String!
-  image: String!
-  email: String!
-}
-
 input AddKeyToClientInput {
   id: String!
-  clientId: String!
+  paymentPointerId: String!
   jwk: String!
 }
 
@@ -369,6 +358,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): OutgoingPaymentConnection
+  keys: [ClientKeys!]!
   createdAt: String!
 }
 
@@ -527,19 +517,9 @@ input CreatePaymentPointerInput {
   publicName: String
 }
 
-type Client implements Model {
-  id: ID!
-  name: String!
-  uri: String!
-  image: String!
-  email: String!
-  keys: [ClientKeys!]!
-  createdAt: String!
-}
-
 type ClientKeys implements Model {
   id: ID!
-  clientId: String!
+  paymentPointerId: String!
   jwk: String!
   createdAt: String!
 }
@@ -630,18 +610,11 @@ type PaymentPointerWithdrawalMutationResponse implements MutationResponse {
   withdrawal: PaymentPointerWithdrawal
 }
 
-type CreateClientMutationResponse implements MutationResponse {
-  code: String!
-  success: Boolean!
-  message: String!
-  client: Client
-}
-
 type AddKeyToClientMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  client: Client
+  paymentPointer: PaymentPointer
 }
 
 type RevokeClientKeyMutationResponse implements MutationResponse {
