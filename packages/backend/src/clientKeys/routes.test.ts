@@ -103,7 +103,7 @@ describe('Client Keys Routes', (): void => {
       await expect(clientKeysRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         key: TEST_CLIENT_KEY,
-        client: {
+        paymentPointer: {
           id: paymentPointer.id,
           name: paymentPointer.publicName,
           uri: paymentPointer.url

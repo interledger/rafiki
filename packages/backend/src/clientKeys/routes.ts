@@ -37,7 +37,7 @@ export async function getKeyById(
 
   ctx.body = {
     key: key.jwk,
-    client: {
+    paymentPointer: {
       id: clientDetails.id,
       name: clientDetails.publicName,
       uri: clientDetails.url

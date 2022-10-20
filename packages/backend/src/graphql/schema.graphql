@@ -109,9 +109,13 @@ type Mutation {
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
   "Add Key to Client"
-  addKeyToClient(input: AddKeyToClientInput!): AddKeyToClientMutationResponse
+  addKeyToPaymentPointer(
+    input: AddKeyToPaymentPointerInput!
+  ): AddKeyToPaymentPointerMutationResponse
 
-  revokeClientKey(keyId: String!): RevokeClientKeyMutationResponse
+  revokePaymentPointerKey(
+    keyId: String!
+  ): RevokePaymentPointerKeyMutationResponse
 
   "Create API Key"
   createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
@@ -249,7 +253,7 @@ input CreatePaymentPointerWithdrawalInput {
   id: String!
 }
 
-input AddKeyToClientInput {
+input AddKeyToPaymentPointerInput {
   id: String!
   paymentPointerId: String!
   jwk: String!
@@ -519,7 +523,7 @@ input CreatePaymentPointerInput {
 
 type ClientKeys implements Model {
   id: ID!
-  paymentPointerId: String!
+  paymentPointerId: ID!
   jwk: String!
   createdAt: String!
 }
@@ -610,14 +614,14 @@ type PaymentPointerWithdrawalMutationResponse implements MutationResponse {
   withdrawal: PaymentPointerWithdrawal
 }
 
-type AddKeyToClientMutationResponse implements MutationResponse {
+type AddKeyToPaymentPointerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
   paymentPointer: PaymentPointer
 }
 
-type RevokeClientKeyMutationResponse implements MutationResponse {
+type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

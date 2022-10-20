@@ -10,9 +10,9 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  AddKeyToClientInput,
-  AddKeyToClientMutationResponse,
-  RevokeClientKeyMutationResponse
+  AddKeyToPaymentPointerInput,
+  AddKeyToPaymentPointerMutationResponse,
+  RevokePaymentPointerKeyMutationResponse
 } from '../generated/graphql'
 import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { randomAsset } from '../../tests/asset'
@@ -53,7 +53,7 @@ describe('Client Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Add Client Keys', (): void => {
+  describe('Add Payment Pointer Keys', (): void => {
     test('Can add keys to a payment pointer', async (): Promise<void> => {
       const paymentPointer = await paymentPointerService.create({
         url: 'https://alice.me/.well-known/pay',
@@ -61,7 +61,7 @@ describe('Client Resolvers', (): void => {
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      const input: AddKeyToClientInput = {
+      const input: AddKeyToPaymentPointerInput = {
         id: KEY_UUID,
         paymentPointerId: paymentPointer.id,
         jwk: JSON.stringify(TEST_KEY)
@@ -70,8 +70,10 @@ describe('Client Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddKeyToClient($input: AddKeyToClientInput!) {
-              addKeyToClient(input: $input) {
+            mutation AddKeyToPaymentPointer(
+              $input: AddKeyToPaymentPointerInput!
+            ) {
+              addKeyToPaymentPointer(input: $input) {
                 code
                 success
                 message
@@ -88,9 +90,9 @@ describe('Client Resolvers', (): void => {
             input
           }
         })
-        .then((query): AddKeyToClientMutationResponse => {
+        .then((query): AddKeyToPaymentPointerMutationResponse => {
           if (query.data) {
-            return query.data.addKeyToClient
+            return query.data.addKeyToPaymentPointer
           } else {
             throw new Error('Data was empty')
           }
@@ -133,7 +135,7 @@ describe('Client Resolvers', (): void => {
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      const input: AddKeyToClientInput = {
+      const input: AddKeyToPaymentPointerInput = {
         id: KEY_UUID,
         paymentPointerId: paymentPointer.id,
         jwk: JSON.stringify(TEST_KEY)
@@ -142,8 +144,10 @@ describe('Client Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddKeyToClient($input: AddKeyToClientInput!) {
-              addKeyToClient(input: $input) {
+            mutation AddKeyToPaymentPointer(
+              $input: AddKeyToPaymentPointerInput!
+            ) {
+              addKeyToPaymentPointer(input: $input) {
                 code
                 success
                 message
@@ -160,16 +164,18 @@ describe('Client Resolvers', (): void => {
             input
           }
         })
-        .then((query): AddKeyToClientMutationResponse => {
+        .then((query): AddKeyToPaymentPointerMutationResponse => {
           if (query.data) {
-            return query.data.addKeyToClient
+            return query.data.addKeyToPaymentPointer
           } else {
             throw new Error('Data was empty')
           }
         })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to add key to client')
+      expect(response.message).toBe(
+        'Error trying to add key to payment pointer'
+      )
     })
   })
 
@@ -190,8 +196,8 @@ describe('Client Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation revokeClientKey($keyId: String!) {
-              revokeClientKey(keyId: $keyId) {
+            mutation revokePaymentPointerKey($keyId: String!) {
+              revokePaymentPointerKey(keyId: $keyId) {
                 code
                 success
                 message
@@ -203,9 +209,9 @@ describe('Client Resolvers', (): void => {
             keyId: KEY_UUID
           }
         })
-        .then((query): RevokeClientKeyMutationResponse => {
+        .then((query): RevokePaymentPointerKeyMutationResponse => {
           if (query.data) {
-            return query.data.revokeClientKey
+            return query.data.revokePaymentPointerKey
           } else {
             throw new Error('Data was empty')
           }

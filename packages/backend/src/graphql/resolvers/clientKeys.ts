@@ -1,14 +1,13 @@
 import { ResolversTypes, MutationResolvers } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { paymentPointerToGraphql } from './payment_pointer'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 
-export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'] =
+export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePaymentPointerKey'] =
   async (
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['RevokeClientKeyMutationResponse']> => {
+  ): Promise<ResolversTypes['RevokePaymentPointerKeyMutationResponse']> => {
     try {
       const clientKeysService = await ctx.container.use('clientKeysService')
       const keyId = await clientKeysService.revokeKeyById(args.keyId)
@@ -16,7 +15,7 @@ export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'
       return {
         code: '200',
         success: true,
-        message: 'Client key revoked',
+        message: 'Payment pointer key revoked',
         keyId: keyId
       }
     } catch (error) {
@@ -25,38 +24,41 @@ export const revokeClientKey: MutationResolvers<ApolloContext>['revokeClientKey'
           options: args.keyId,
           error
         },
-        'error revoking client key'
+        'error revoking payment pointer key'
       )
 
       return {
         code: '500',
-        message: 'Error trying to revoke client key',
+        message: 'Error trying to revoke payment pointer key',
         success: false,
         keyId: args.keyId
       }
     }
   }
 
-export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] =
+export const addKeyToPaymentPointer: MutationResolvers<ApolloContext>['addKeyToPaymentPointer'] =
   async (
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['AddKeyToClientMutationResponse']> => {
+  ): Promise<ResolversTypes['AddKeyToPaymentPointerMutationResponse']> => {
     try {
-      const paymentPointerService: PaymentPointerService =
-        await ctx.container.use('paymentPointerService')
+      const paymentPointerService = await ctx.container.use(
+        'paymentPointerService'
+      )
 
-      const client = await paymentPointerService.addKeyToPaymentPointer({
-        ...args.input,
-        jwk: JSON.parse(args.input.jwk)
-      })
+      const paymentPointer = await paymentPointerService.addKeyToPaymentPointer(
+        {
+          ...args.input,
+          jwk: JSON.parse(args.input.jwk)
+        }
+      )
 
       return {
         code: '200',
         success: true,
-        message: 'Added Key To Client',
-        paymentPointer: paymentPointerToGraphql(client)
+        message: 'Added Key To Payment Pointer',
+        paymentPointer: paymentPointerToGraphql(paymentPointer)
       }
     } catch (error) {
       ctx.logger.error(
@@ -64,12 +66,12 @@ export const addKeyToClient: MutationResolvers<ApolloContext>['addKeyToClient'] 
           options: args.input,
           error
         },
-        'error adding key to client'
+        'error adding key to payment pointer'
       )
 
       return {
         code: '500',
-        message: 'Error trying to add key to client',
+        message: 'Error trying to add key to payment pointer',
         success: false
       }
     }

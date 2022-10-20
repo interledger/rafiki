@@ -69,7 +69,7 @@
       },
       {
         "kind": "INPUT_OBJECT",
-        "name": "AddKeyToClientInput",
+        "name": "AddKeyToPaymentPointerInput",
         "description": null,
         "fields": null,
         "inputFields": [
@@ -128,7 +128,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "AddKeyToClientMutationResponse",
+        "name": "AddKeyToPaymentPointerMutationResponse",
         "description": null,
         "fields": [
           {
@@ -856,7 +856,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "ID",
                 "ofType": null
               }
             },
@@ -2677,7 +2677,7 @@
             "deprecationReason": null
           },
           {
-            "name": "addKeyToClient",
+            "name": "addKeyToPaymentPointer",
             "description": "Add Key to Client",
             "args": [
               {
@@ -2688,7 +2688,7 @@
                   "name": null,
                   "ofType": {
                     "kind": "INPUT_OBJECT",
-                    "name": "AddKeyToClientInput",
+                    "name": "AddKeyToPaymentPointerInput",
                     "ofType": null
                   }
                 },
@@ -2699,7 +2699,7 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "AddKeyToClientMutationResponse",
+              "name": "AddKeyToPaymentPointerMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3227,7 +3227,7 @@
             "deprecationReason": null
           },
           {
-            "name": "revokeClientKey",
+            "name": "revokePaymentPointerKey",
             "description": null,
             "args": [
               {
@@ -3249,7 +3249,7 @@
             ],
             "type": {
               "kind": "OBJECT",
-              "name": "RevokeClientKeyMutationResponse",
+              "name": "RevokePaymentPointerKeyMutationResponse",
               "ofType": null
             },
             "isDeprecated": false,
@@ -3507,7 +3507,7 @@
         "possibleTypes": [
           {
             "kind": "OBJECT",
-            "name": "AddKeyToClientMutationResponse",
+            "name": "AddKeyToPaymentPointerMutationResponse",
             "ofType": null
           },
           {
@@ -3562,7 +3562,7 @@
           },
           {
             "kind": "OBJECT",
-            "name": "RevokeClientKeyMutationResponse",
+            "name": "RevokePaymentPointerKeyMutationResponse",
             "ofType": null
           },
           {
@@ -5570,7 +5570,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "RevokeClientKeyMutationResponse",
+        "name": "RevokePaymentPointerKeyMutationResponse",
         "description": null,
         "fields": [
           {

@@ -35,7 +35,7 @@ import {
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
-import { addKeyToClient, revokeClientKey } from './clientKeys'
+import { addKeyToPaymentPointer, revokePaymentPointerKey } from './clientKeys'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -54,8 +54,8 @@ export const resolvers: Resolvers = {
     quotes: getPaymentPointerQuotes
   },
   Mutation: {
-    revokeClientKey,
-    addKeyToClient,
+    addKeyToPaymentPointer,
+    revokePaymentPointerKey,
     createPaymentPointer,
     triggerPaymentPointerEvents,
     createAsset,
