@@ -107,7 +107,7 @@ describe('Client Resolvers', (): void => {
         id: response.paymentPointer.id,
         keys: [
           {
-            __typename: 'ClientKeys',
+            __typename: 'PaymentPointerKeys',
             id: KEY_UUID
           }
         ]

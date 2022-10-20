@@ -1,10 +1,10 @@
 import { TransactionOrKnex } from 'objection'
 
-import { ClientKeys } from './model'
+import { PaymentPointerKeys } from './model'
 import { BaseService } from '../shared/baseService'
 
-export interface ClientKeysService {
-  getKeyById(keyId: string): Promise<ClientKeys>
+export interface PaymentPointerKeysService {
+  getKeyById(keyId: string): Promise<PaymentPointerKeys>
   revokeKeyById(keyId: string): Promise<string>
 }
 
@@ -12,12 +12,12 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
 }
 
-export async function createClientKeysService({
+export async function createPaymentPointerKeysService({
   logger,
   knex
-}: ServiceDependencies): Promise<ClientKeysService> {
+}: ServiceDependencies): Promise<PaymentPointerKeysService> {
   const log = logger.child({
-    service: 'ClientKeysService'
+    service: 'PaymentPointerKeysService'
   })
   const deps: ServiceDependencies = {
     logger: log,
@@ -33,8 +33,8 @@ async function getKeyById(
   deps: ServiceDependencies,
   // In the form https://somedomain/keys/{keyId}
   keyId: string
-): Promise<ClientKeys> {
-  const key = await ClientKeys.query(deps.knex).findById(keyId)
+): Promise<PaymentPointerKeys> {
+  const key = await PaymentPointerKeys.query(deps.knex).findById(keyId)
   if (!key) return null
   return key
 }
@@ -43,7 +43,7 @@ async function revokeKeyById(
   deps: ServiceDependencies,
   keyId: string
 ): Promise<string> {
-  const key = await ClientKeys.query(deps.knex).findById(keyId)
+  const key = await PaymentPointerKeys.query(deps.knex).findById(keyId)
 
   const revokedJwk = key.jwk
   revokedJwk.revoked = true

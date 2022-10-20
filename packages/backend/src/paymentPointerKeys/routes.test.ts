@@ -7,10 +7,10 @@ import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices, ClientKeysContext } from '../app'
+import { initIocContainer } from '..'
+import { AppServices, PaymentPointerKeysContext } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { ClientKeysRoutes } from './routes'
+import { PaymentPointerKeysRoutes } from './routes'
 import {
   AddKeyToPaymentPointerOptions,
   PaymentPointerService
@@ -21,7 +21,7 @@ import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const KEY_UUID = uuid()
 const TEST_KID_PATH = '/keys/' + KEY_UUID
-const TEST_CLIENT_KEY = {
+const TEST_KEY = {
   kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
   x: 'test-public-key',
   kty: 'OKP',
@@ -31,13 +31,13 @@ const TEST_CLIENT_KEY = {
   use: 'sig'
 }
 
-describe('Client Keys Routes', (): void => {
+describe('Payment Pointer Keys Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let paymentPointerService: PaymentPointerService
   let config: IAppConfig
-  let clientKeysRoutes: ClientKeysRoutes
+  let paymentPointerKeysRoutes: PaymentPointerKeysRoutes
   const mockMessageProducer = {
     send: jest.fn()
   }
@@ -53,7 +53,7 @@ describe('Client Keys Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointerService = await deps.use('paymentPointerService')
-    clientKeysRoutes = await deps.use('clientKeysRoutes')
+    paymentPointerKeysRoutes = await deps.use('paymentPointerKeysRoutes')
   })
 
   afterEach(async (): Promise<void> => {
@@ -66,13 +66,13 @@ describe('Client Keys Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 404 for nonexistent key', async (): Promise<void> => {
-      const ctx = createContext<ClientKeysContext>(
+      const ctx = createContext<PaymentPointerKeysContext>(
         {
           headers: { Accept: 'application/json' }
         },
         { keyId: uuid() }
       )
-      await expect(clientKeysRoutes.get(ctx)).rejects.toHaveProperty(
+      await expect(paymentPointerKeysRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
         404
       )
@@ -88,11 +88,11 @@ describe('Client Keys Routes', (): void => {
       const keyOption: AddKeyToPaymentPointerOptions = {
         id: KEY_UUID,
         paymentPointerId: paymentPointer.id,
-        jwk: TEST_CLIENT_KEY
+        jwk: TEST_KEY
       }
       await paymentPointerService.addKeyToPaymentPointer(keyOption)
 
-      const ctx = createContext<ClientKeysContext>(
+      const ctx = createContext<PaymentPointerKeysContext>(
         {
           headers: { Accept: 'application/json' },
           url: `/keys/${KEY_UUID}`
@@ -100,9 +100,9 @@ describe('Client Keys Routes', (): void => {
         { keyId: KEY_UUID }
       )
 
-      await expect(clientKeysRoutes.get(ctx)).resolves.toBeUndefined()
+      await expect(paymentPointerKeysRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
-        key: TEST_CLIENT_KEY,
+        key: TEST_KEY,
         paymentPointer: {
           id: paymentPointer.id,
           name: paymentPointer.publicName,

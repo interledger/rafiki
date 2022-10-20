@@ -362,7 +362,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): OutgoingPaymentConnection
-  keys: [ClientKeys!]!
+  keys: [PaymentPointerKeys!]!
   createdAt: String!
 }
 
@@ -521,7 +521,7 @@ input CreatePaymentPointerInput {
   publicName: String
 }
 
-type ClientKeys implements Model {
+type PaymentPointerKeys implements Model {
   id: ID!
   paymentPointerId: ID!
   jwk: String!

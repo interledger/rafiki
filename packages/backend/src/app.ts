@@ -31,7 +31,7 @@ import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { ClientKeysRoutes } from './clientKeys/routes'
+import { PaymentPointerKeysRoutes } from './paymentPointerKeys/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -47,7 +47,7 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
-import { ClientKeysService } from './clientKeys/service'
+import { PaymentPointerKeysService } from './paymentPointerKeys/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
 
 export interface AppContextData {
@@ -78,7 +78,7 @@ type Context<T> = Omit<AppContext, 'request'> & {
   request: T
 }
 
-export type ClientKeysContext = Context<AppRequest<'keyId'>>
+export type PaymentPointerKeysContext = Context<AppRequest<'keyId'>>
 
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
@@ -138,7 +138,7 @@ export interface AppServices {
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
-  clientKeysRoutes: Promise<ClientKeysRoutes>
+  paymentPointerKeysRoutes: Promise<PaymentPointerKeysRoutes>
   paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
@@ -149,7 +149,7 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
-  clientKeysService: Promise<ClientKeysService>
+  paymentPointerKeysService: Promise<PaymentPointerKeysService>
   grantReferenceService: Promise<GrantReferenceService>
 }
 
@@ -247,7 +247,9 @@ export class App {
     })
 
     const spspRoutes = await this.container.use('spspRoutes')
-    const clientKeysRoutes = await this.container.use('clientKeysRoutes')
+    const paymentPointerKeysRoutes = await this.container.use(
+      'paymentPointerKeysRoutes'
+    )
     const paymentPointerRoutes = await this.container.use(
       'paymentPointerRoutes'
     )
@@ -345,7 +347,8 @@ export class App {
     }
     router.get(
       '/keys/{keyId}',
-      (ctx: ClientKeysContext): Promise<void> => clientKeysRoutes.get(ctx)
+      (ctx: PaymentPointerKeysContext): Promise<void> =>
+        paymentPointerKeysRoutes.get(ctx)
     )
 
     // Add the payment pointer query route last.

@@ -1,5 +1,5 @@
 exports.up = function (knex) {
-  return knex.schema.createTable('clientKeys', function (table) {
+  return knex.schema.createTable('paymentPointerKeys', function (table) {
     table.uuid('id').notNullable().primary()
     table.uuid('paymentPointerId').notNullable()
     table.foreign('paymentPointerId').references('paymentPointers.id')
@@ -11,5 +11,5 @@ exports.up = function (knex) {
 }
 
 exports.down = function (knex) {
-  return knex.schema.dropTableIfExists('clientKeys')
+  return knex.schema.dropTableIfExists('paymentPointerKeys')
 }

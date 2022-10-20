@@ -9,8 +9,10 @@ export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePa
     ctx
   ): Promise<ResolversTypes['RevokePaymentPointerKeyMutationResponse']> => {
     try {
-      const clientKeysService = await ctx.container.use('clientKeysService')
-      const keyId = await clientKeysService.revokeKeyById(args.keyId)
+      const paymentPointerKeysService = await ctx.container.use(
+        'paymentPointerKeysService'
+      )
+      const keyId = await paymentPointerKeysService.revokeKeyById(args.keyId)
 
       return {
         code: '200',
