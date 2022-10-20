@@ -1,5 +1,4 @@
 import { AccessType, AccessAction } from './grant'
-import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
 import { HttpSigContext, verifySigAndChallenge } from 'auth'

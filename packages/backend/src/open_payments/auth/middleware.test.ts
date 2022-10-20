@@ -92,10 +92,16 @@ describe('Auth Middleware', (): void => {
 
   function setupHttpSigContext(options: SetupOptions): HttpSigContext {
     const context = setup(options)
-    if (!context.headers['signature'] || !context.request.headers['signature']) {
+    if (
+      !context.headers['signature'] ||
+      !context.request.headers['signature']
+    ) {
       throw new Error('missing signature header')
     }
-    if (!context.headers['signature-input'] || !context.request.headers['signature-input']) {
+    if (
+      !context.headers['signature-input'] ||
+      !context.request.headers['signature-input']
+    ) {
       throw new Error('missing signature-input header')
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
