@@ -155,7 +155,6 @@ async function processNextPaymentPointers(
       .skipLocked()
       .where('processAt', '<=', now)
       .withGraphFetched('asset')
-      .withGraphFetched('keys')
 
     const deps = {
       ...deps_,
