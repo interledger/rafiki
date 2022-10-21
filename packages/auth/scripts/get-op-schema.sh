@@ -9,5 +9,5 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../openapi" >/dev/null 2>&1 && pwd )
 
-curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/main/openapi/shared/schemas.yaml
+curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/main/openapi/schemas.yaml
 
