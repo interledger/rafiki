@@ -445,7 +445,7 @@ describe('Grant Routes', (): void => {
         )
 
         const redirectUrl = new URL(config.identityServerDomain)
-        redirectUrl.searchParams.set('interactRef', grant.interactRef)
+        redirectUrl.searchParams.set('interactId', grant.interactId)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
         await expect(

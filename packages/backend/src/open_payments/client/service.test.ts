@@ -1,5 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
+import axios from 'axios'
 import { Knex } from 'knex'
 import nock from 'nock'
 import { URL } from 'url'
@@ -39,97 +40,153 @@ describe('Open Payments Client Service', (): void => {
     await appContainer.shutdown()
   })
   describe.each`
-    urlPath                  | description
-    ${CONNECTION_PATH}       | ${'connection'}
-    ${INCOMING_PAYMENT_PATH} | ${'incoming payment'}
-  `('receiver.get - $description', ({ urlPath }): void => {
-    if (urlPath === CONNECTION_PATH) {
-      test('resolves connection from Open Payments server', async (): Promise<void> => {
-        const paymentPointer = await createPaymentPointer(deps, {
-          mockServerPort: appContainer.openPaymentsPort
-        })
-        const incomingPayment = await createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id
-        })
-        const receiver = await clientService.receiver.get(
-          `${Config.openPaymentsUrl}/${urlPath}/${incomingPayment.connectionId}`
-        )
-        paymentPointer.scope.isDone()
-        expect(receiver.assetCode).toEqual(paymentPointer.asset.code)
-        expect(receiver.assetScale).toEqual(paymentPointer.asset.scale)
-        expect(receiver.incomingAmount).toBeUndefined()
-        expect(receiver.receivedAmount).toBeUndefined()
-        expect(receiver.ilpAddress).toEqual(expect.any(String))
-        expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
-      })
-    } else {
-      test.each`
-        incomingAmount | description  | externalRef
-        ${undefined}   | ${undefined} | ${undefined}
-        ${BigInt(123)} | ${'Test'}    | ${'#123'}
-      `(
-        'resolves incoming payment from Open Payments server',
-        async ({ incomingAmount, description, externalRef }): Promise<void> => {
-          const paymentPointer = await createPaymentPointer(deps, {
-            mockServerPort: appContainer.openPaymentsPort
+    local    | description
+    ${true}  | ${'local'}
+    ${false} | ${'remote'}
+  `('receiver.get - $description', ({ local }): void => {
+    describe.each`
+      urlPath                  | description
+      ${CONNECTION_PATH}       | ${'connection'}
+      ${INCOMING_PAYMENT_PATH} | ${'incoming payment'}
+    `('$description', ({ urlPath }): void => {
+      if (urlPath === CONNECTION_PATH) {
+        test('resolves connection from Open Payments server', async (): Promise<void> => {
+          const paymentPointer = await createPaymentPointer(deps)
+          const { connectionId } = await createIncomingPayment(deps, {
+            paymentPointerId: paymentPointer.id
           })
-          const incomingPayment = await createIncomingPayment(deps, {
-            paymentPointerId: paymentPointer.id,
-            description,
-            incomingAmount: incomingAmount && {
-              value: incomingAmount,
-              assetCode: paymentPointer.asset.code,
-              assetScale: paymentPointer.asset.scale
-            },
-            externalRef
+          const localUrl = `${Config.openPaymentsUrl}/${urlPath}/${connectionId}`
+          const remoteUrl = new URL(
+            `${faker.internet.url()}/${urlPath}/${connectionId}`
+          )
+          const scope = nock(remoteUrl.origin)
+            .get(remoteUrl.pathname)
+            .reply(200, function () {
+              return axios
+                .get(localUrl, {
+                  headers: this.req.headers
+                })
+                .then((res) => res.data)
+            })
+
+          await expect(
+            clientService.receiver.get(local ? localUrl : remoteUrl.href)
+          ).resolves.toMatchObject({
+            assetCode: paymentPointer.asset.code,
+            assetScale: paymentPointer.asset.scale,
+            incomingAmount: undefined,
+            receivedAmount: undefined,
+            ilpAddress: expect.any(String),
+            sharedSecret: expect.any(Buffer)
           })
-          const receiver = await clientService.receiver.get(incomingPayment.url)
-          paymentPointer.scope.isDone()
-          expect(receiver.assetCode).toEqual(paymentPointer.asset.code)
-          expect(receiver.assetScale).toEqual(paymentPointer.asset.scale)
-          expect(receiver.incomingAmount).toEqual(
-            incomingPayment.incomingAmount
-          )
-          expect(receiver.receivedAmount).toEqual(
-            incomingPayment.receivedAmount
-          )
-          expect(receiver.ilpAddress).toEqual(expect.any(String))
-          expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
+          expect(local).not.toEqual(scope.isDone())
+        })
+        if (local) {
+          test('returns undefined for unknown connection', async (): Promise<void> => {
+            await expect(
+              clientService.receiver.get(
+                `${Config.openPaymentsUrl}/${urlPath}/${uuid()}`
+              )
+            ).resolves.toBeUndefined()
+          })
         }
-      )
-    }
-    test.each`
-      statusCode
-      ${404}
-      ${500}
-    `(
-      'returns undefined for unsuccessful request ($statusCode)',
-      async ({ statusCode }): Promise<void> => {
-        const receiverUrl = new URL(
-          `${faker.internet.url()}/${urlPath}/${uuid()}`
+      } else {
+        test.each`
+          incomingAmount | description  | externalRef
+          ${undefined}   | ${undefined} | ${undefined}
+          ${BigInt(123)} | ${'Test'}    | ${'#123'}
+        `(
+          'resolves incoming payment from Open Payments server',
+          async ({
+            incomingAmount,
+            description,
+            externalRef
+          }): Promise<void> => {
+            const paymentPointer = await createPaymentPointer(deps, {
+              mockServerPort: appContainer.openPaymentsPort
+            })
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: paymentPointer.id,
+              description,
+              incomingAmount: incomingAmount && {
+                value: incomingAmount,
+                assetCode: paymentPointer.asset.code,
+                assetScale: paymentPointer.asset.scale
+              },
+              externalRef
+            })
+            let spy: jest.SpyInstance
+            if (!local) {
+              const paymentPointerService = await deps.use(
+                'paymentPointerService'
+              )
+              spy = jest
+                .spyOn(paymentPointerService, 'getByUrl')
+                .mockResolvedValueOnce(undefined)
+            }
+            const receiver = await clientService.receiver.get(
+              incomingPayment.url
+            )
+            if (!local) {
+              expect(spy).toHaveBeenCalledWith(paymentPointer.url)
+            }
+            expect(local).not.toEqual(paymentPointer.scope.isDone())
+            expect(receiver).toMatchObject({
+              assetCode: paymentPointer.asset.code,
+              assetScale: paymentPointer.asset.scale,
+              incomingAmount: incomingPayment.incomingAmount,
+              receivedAmount: incomingPayment.receivedAmount,
+              ilpAddress: expect.any(String),
+              sharedSecret: expect.any(Buffer)
+            })
+          }
         )
-        const scope = nock(receiverUrl.host)
-          .get(receiverUrl.pathname)
-          .reply(statusCode)
-        scope.isDone()
-        await expect(
-          clientService.receiver.get(receiverUrl.href)
-        ).resolves.toBeUndefined()
+        if (local) {
+          test('returns undefined for unknown incoming payment', async (): Promise<void> => {
+            const paymentPointer = await createPaymentPointer(deps)
+            await expect(
+              clientService.receiver.get(
+                `${paymentPointer.url}/${urlPath}/${uuid()}`
+              )
+            ).resolves.toBeUndefined()
+          })
+        }
       }
-    )
-    test(`returns undefined for invalid response`, async (): Promise<void> => {
-      const receiverUrl = new URL(
-        `${faker.internet.url()}/${urlPath}/${uuid()}`
-      )
-      const scope = nock(receiverUrl.host)
-        .get(receiverUrl.pathname)
-        .reply(200, () => ({
-          validReceiver: 0
-        }))
-      scope.isDone()
-      await expect(
-        clientService.receiver.get(receiverUrl.href)
-      ).resolves.toBeUndefined()
+      if (!local) {
+        test.each`
+          statusCode
+          ${404}
+          ${500}
+        `(
+          'returns undefined for unsuccessful request ($statusCode)',
+          async ({ statusCode }): Promise<void> => {
+            const receiverUrl = new URL(
+              `${faker.internet.url()}/${urlPath}/${uuid()}`
+            )
+            const scope = nock(receiverUrl.origin)
+              .get(receiverUrl.pathname)
+              .reply(statusCode)
+            await expect(
+              clientService.receiver.get(receiverUrl.href)
+            ).resolves.toBeUndefined()
+            scope.done()
+          }
+        )
+        test(`returns undefined for invalid response`, async (): Promise<void> => {
+          const receiverUrl = new URL(
+            `${faker.internet.url()}/${urlPath}/${uuid()}`
+          )
+          const scope = nock(receiverUrl.origin)
+            .get(receiverUrl.pathname)
+            .reply(200, () => ({
+              validReceiver: 0
+            }))
+          await expect(
+            clientService.receiver.get(receiverUrl.href)
+          ).resolves.toBeUndefined()
+          scope.done()
+        })
+      }
     })
   })
 })

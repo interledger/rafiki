@@ -133,7 +133,9 @@ async function createGrantInitiation(
   ctx.status = 200
   ctx.body = {
     interact: {
-      redirect: config.authServerDomain + `/interact/${grant.interactId}`,
+      redirect:
+        config.authServerDomain +
+        `/interact/${grant.interactId}/${grant.interactNonce}`,
       finish: grant.interactNonce
     },
     continue: {
@@ -209,7 +211,7 @@ async function startInteraction(
   ctx.session.nonce = grant.interactNonce
 
   const interactionUrl = new URL(config.identityServerDomain)
-  interactionUrl.searchParams.set('interactRef', grant.interactRef)
+  interactionUrl.searchParams.set('interactId', grant.interactId)
   interactionUrl.searchParams.set('nonce', grant.interactNonce)
 
   ctx.redirect(interactionUrl.toString())
