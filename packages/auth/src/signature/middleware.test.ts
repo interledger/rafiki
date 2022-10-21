@@ -29,6 +29,7 @@ import {
   grantContinueHttpsigMiddleware,
   grantInitiationHttpsigMiddleware
 } from './middleware'
+import test from 'node:test'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -373,6 +374,41 @@ describe('Signature Service', (): void => {
       await expect(
         grantContinueHttpsigMiddleware(ctx, next)
       ).rejects.toHaveProperty('status', 401)
+
+      scope.isDone()
+    })
+
+    test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is set', async (): Promise<void> => {
+      deps = await initIocContainer(Config)
+      Config.bypassSignatureValidation = true
+      appContainer = await createTestApp(deps)
+
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(keyPath)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${grant.continueToken}`
+          },
+          url: '/continue',
+          method: 'POST'
+        },
+        { id: grant.continueId },
+        { interact_ref: grant.interactRef },
+        privateKey,
+        deps
+      )
+
+      ctx.headers['signature'] = 'wrong-signature'
+
+      expect(next).toHaveBeenCalled()
+      expect(ctx.response.status).toEqual(200)
 
       scope.isDone()
     })
