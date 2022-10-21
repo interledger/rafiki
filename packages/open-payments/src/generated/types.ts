@@ -14,6 +14,10 @@ export interface paths {
      */
     get: operations["get-payment-pointer"];
   };
+  "/jwks.json": {
+    /** Retrieve the public keys of the Payment Pointer. */
+    get: operations["get-payment-pointer-keys"];
+  };
   "/connections/{id}": {
     /**
      * *NB* Use server url specific to this path.
@@ -114,14 +118,20 @@ export interface components {
       id: string;
       /** @description A public name for the account. This should be set by the account holder with their provider to provide a hint to counterparties as to the identity of the account holder. */
       publicName?: string;
-      /** @description The asset code of the account. */
-      assetCode: components["schemas"]["assetCode"];
-      assetScale: components["schemas"]["assetScale"];
+      assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetCode"];
+      assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetScale"];
       /**
        * Format: uri
        * @description The URL of the authorization server endpoint for getting grants and access tokens for this payment pointer.
        */
       authServer: string;
+    };
+    /**
+     * JSON Web Key Set document
+     * @description A JSON Web Key Set document according to [rfc7517](https://datatracker.ietf.org/doc/html/rfc7517) listing the keys associated with this payment pointer. These keys are used to sign requests made by this payment pointer.
+     */
+    "json-web-key-set": {
+      keys: components["schemas"]["json-web-key"][];
     };
     /**
      * ILP Stream Connection
@@ -137,10 +147,8 @@ export interface components {
       ilpAddress: string;
       /** @description The base64 url-encoded shared secret to use when establishing a STREAM connection. */
       sharedSecret: string;
-      /** @description The asset code of the amount. */
-      assetCode: components["schemas"]["assetCode"];
-      /** @description The scale of the amount. */
-      assetScale: components["schemas"]["assetScale"];
+      assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetCode"];
+      assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetScale"];
     };
     /**
      * Incoming Payment
@@ -160,9 +168,9 @@ export interface components {
       /** @description Describes whether the incoming payment has completed receiving fund. */
       completed: boolean;
       /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
-      incomingAmount?: components["schemas"]["amount"];
+      incomingAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that has been paid into the payment pointer under this incoming payment. */
-      receivedAmount: components["schemas"]["amount"];
+      receivedAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
       /**
        * Format: date-time
        * @description The date and time when payments under this incoming payment will no longer be accepted.
@@ -224,13 +232,13 @@ export interface components {
       /** @description Describes whether the payment failed to send its full amount. */
       failed?: boolean;
       /** @description The URL of the incoming payment or ILP STREAM Connection that is being paid. */
-      receiver: components["schemas"]["receiver"];
+      receiver: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
       /** @description The total amount that should be received by the receiver when this outgoing payment has been paid. */
-      receiveAmount: components["schemas"]["amount"];
+      receiveAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that should be sent when this outgoing payment has been paid. */
-      sendAmount: components["schemas"]["amount"];
+      sendAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that has been sent under this outgoing payment. */
-      sentAmount: components["schemas"]["amount"];
+      sentAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description Human readable description of the outgoing payment that will be visible to the account holder and shared with the receiver. */
       description?: string;
       /** @description A reference that can be used by external systems to reconcile this payment with their systems. E.g. An invoice number. (Optional) */
@@ -261,12 +269,9 @@ export interface components {
        * @description The URL of the payment pointer from which this quote's payment would be sent.
        */
       paymentPointer: string;
-      /** @description The URL of the incoming payment or ILP Stream Connection that would be paid. */
-      receiver: components["schemas"]["receiver"];
-      /** @description The total amount that should be received by the receiver. */
-      receiveAmount: components["schemas"]["amount"];
-      /** @description The total amount that should be sent by the sender. */
-      sendAmount: components["schemas"]["amount"];
+      receiver: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
+      receiveAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      sendAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The date and time when the calculated `sendAmount` is no longer valid. */
       expiresAt?: string;
       /**
@@ -275,43 +280,6 @@ export interface components {
        */
       createdAt: string;
     };
-    /**
-     * Amount
-     * @description All amounts in open payments are represented as a value and an asset code and scale.
-     *
-     * The `value` is an unsigned 64-bit integer amount, represented as a string.
-     *
-     * The `assetCode` is a code that indicates the underlying asset. In most cases this SHOULD be a 3-character ISO 4217 currency code.
-     *
-     * The `assetScale` indicates how the `value` has been scaled relative to the natural scale of the asset. For example, an `value` of `"1234"` with an `assetScale` of `2` represents an amount of 12.34.
-     */
-    amount: {
-      /**
-       * Format: uint64
-       * @description The amount, scaled by the given scale.
-       */
-      value: string;
-      /** @description The asset code of the amount. */
-      assetCode: components["schemas"]["assetCode"];
-      /** @description The scale of the amount. */
-      assetScale: components["schemas"]["assetScale"];
-    };
-    /**
-     * Asset code
-     * @description This SHOULD be an ISO4217 currency code.
-     */
-    assetCode: string;
-    /**
-     * Asset scale
-     * @description The scale of amounts denoted in the corresponding asset code.
-     */
-    assetScale: number;
-    /**
-     * Receiver
-     * Format: uri
-     * @description The URL of the incoming payment or ILP STREAM connection that is being paid.
-     */
-    receiver: string;
     /** @description Pagination parameters */
     pagination:
       | components["schemas"]["forward-pagination"]
@@ -339,6 +307,18 @@ export interface components {
       hasNextPage: boolean;
       /** @description Describes whether the data set has previous entries. */
       hasPreviousPage: boolean;
+    };
+    /**
+     * Ed25519 Public Key
+     * @description A JWK representation of an Ed25519 Public Key
+     */
+    "json-web-key": {
+      kid: string;
+      use?: "sig";
+      kty: "OKP";
+      crv: "Ed25519";
+      /** @description The base64 url-encoded public key. */
+      x: string;
     };
   };
   responses: {
@@ -374,6 +354,19 @@ export interface operations {
         };
       };
       /** Payment Pointer Not Found */
+      404: unknown;
+    };
+  };
+  /** Retrieve the public keys of the Payment Pointer. */
+  "get-payment-pointer-keys": {
+    responses: {
+      /** JWKS Document Found */
+      200: {
+        content: {
+          "application/json": components["schemas"]["json-web-key-set"];
+        };
+      };
+      /** JWKS Document Not Found */
       404: unknown;
     };
   };
@@ -465,7 +458,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
-          incomingAmount?: components["schemas"]["amount"];
+          incomingAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
           /**
            * Format: date-time
            * @description The date and time when payments into the incoming payment must no longer be accepted.
@@ -578,9 +571,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          receiver: components["schemas"]["receiver"];
-          receiveAmount?: components["schemas"]["amount"];
-          sendAmount?: components["schemas"]["amount"];
+          receiver: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
+          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
         };
       };
     };
@@ -699,4 +692,136 @@ export interface operations {
   };
 }
 
-export interface external {}
+export interface external {
+  "https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml": {
+    paths: {};
+    components: {
+      schemas: {
+        /** @description A description of the rights associated with this access token. */
+        access: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-item"][];
+        /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
+        "access-item":
+          | external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-incoming"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-quote"];
+        /** access-incoming */
+        "access-incoming": {
+          /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
+          type: "incoming-payment";
+          /** @description The types of actions the client instance will take at the RS as an array of strings. */
+          actions: (
+            | "create"
+            | "complete"
+            | "read"
+            | "read-all"
+            | "list"
+            | "list-all"
+          )[];
+          /**
+           * Format: uri
+           * @description A string identifier indicating a specific resource at the RS.
+           */
+          identifier?: string;
+        };
+        /** access-outgoing */
+        "access-outgoing": {
+          /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
+          type: "outgoing-payment";
+          /** @description The types of actions the client instance will take at the RS as an array of strings. */
+          actions: ("create" | "read" | "read-all" | "list" | "list-all")[];
+          /**
+           * Format: uri
+           * @description A string identifier indicating a specific resource at the RS.
+           */
+          identifier: string;
+          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
+        };
+        /** access-quote */
+        "access-quote": {
+          /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
+          type: "quote";
+          /** @description The types of actions the client instance will take at the RS as an array of strings. */
+          actions: ("create" | "read" | "read-all")[];
+        };
+        /**
+         * amount
+         * @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.
+         */
+        amount: {
+          /**
+           * Format: uint64
+           * @description The value is an unsigned 64-bit integer amount, represented as a string.
+           */
+          value: string;
+          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetCode"];
+          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetScale"];
+        };
+        /**
+         * Asset code
+         * @description The assetCode is a code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
+         */
+        assetCode: string;
+        /**
+         * Asset scale
+         * @description The scale of amounts denoted in the corresponding asset code.
+         */
+        assetScale: number;
+        /**
+         * Interval
+         * @description [ISO8601 repeating interval](https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals)
+         */
+        interval: string;
+        /**
+         * key
+         * @description A key presented by value MUST be a public key.
+         */
+        key: {
+          /** @description The form of proof that the client instance will use when presenting the key. */
+          proof: "httpsig";
+          /** @description The public key and its properties represented as a JSON Web Key [[RFC7517](https://datatracker.ietf.org/doc/html/rfc7517)]. */
+          jwk: {
+            /** @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
+            alg: "EdDSA";
+            /** @description A Key ID can be used to match a specific key. */
+            kid: string;
+            /** @description The Key Type. The only allowed value is `OKP`. */
+            kty: "OKP";
+            /** @description The intended use of the key. */
+            use?: "sig";
+            /** @description The cryptographic curve used with the key. The only allowed value is `Ed25519`. */
+            crv: "Ed25519";
+            /** @description Public key encoded using the `base64url` encoding. */
+            x: string;
+            /** @description Array of allowed operations this key may be used for. */
+            key_ops?: ("sign" | "verify")[];
+            /** @description UNIX timestamp indicating the earliest this key may be used. */
+            nbf?: number;
+            /** @description UNIX timestamp indicating the latest this key may be used. */
+            exp?: number;
+            /** @description The revocation status of the key. */
+            revoked?: boolean;
+          };
+        };
+        /**
+         * limits-outgoing
+         * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
+         */
+        "limits-outgoing": Partial<unknown> & {
+          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
+          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["interval"];
+        };
+        "list-actions": "list" | "list-all";
+        "read-actions": "read" | "read-all";
+        /**
+         * Receiver
+         * Format: uri
+         * @description The URL of the incoming payment or ILP STREAM connection that is being paid.
+         */
+        receiver: string;
+      };
+    };
+    operations: {};
+  };
+}
