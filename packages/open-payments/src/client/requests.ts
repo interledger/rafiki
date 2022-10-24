@@ -11,7 +11,7 @@ export interface GetArgs {
 export const get = async <T>(
   axios: AxiosInstance,
   args: GetArgs,
-  responseValidator: ValidateFunction<T>
+  openApiResponseValidator: ValidateFunction<T>
 ): Promise<T> => {
   const { url, accessToken } = args
 
@@ -26,7 +26,7 @@ export const get = async <T>(
         : {}
     })
 
-    if (!responseValidator(data)) {
+    if (!openApiResponseValidator(data)) {
       const errorMessage = 'Failed to validate OpenApi response'
       console.log(errorMessage, {
         url,
