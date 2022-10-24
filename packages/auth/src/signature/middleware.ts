@@ -23,8 +23,8 @@ async function verifySigAndChallenge(
 ): Promise<boolean> {
   const config = await ctx.container.use('config')
   if (config.bypassSignatureValidation) {
-    // bypass 
-    return true;
+    // bypass
+    return true
   }
 
   const sig = ctx.headers['signature'] as string
