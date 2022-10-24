@@ -1,10 +1,10 @@
 import { TransactionOrKnex } from 'objection'
 
-import { PaymentPointerKeys } from './model'
+import { PaymentPointerKey } from './model'
 import { BaseService } from '../shared/baseService'
 
 export interface PaymentPointerKeysService {
-  getKeyById(keyId: string): Promise<PaymentPointerKeys>
+  getKeyById(keyId: string): Promise<PaymentPointerKey>
   revokeKeyById(keyId: string): Promise<string>
 }
 
@@ -33,8 +33,8 @@ async function getKeyById(
   deps: ServiceDependencies,
   // In the form https://somedomain/keys/{keyId}
   keyId: string
-): Promise<PaymentPointerKeys> {
-  const key = await PaymentPointerKeys.query(deps.knex).findById(keyId)
+): Promise<PaymentPointerKey> {
+  const key = await PaymentPointerKey.query(deps.knex).findById(keyId)
   if (!key) return null
   return key
 }
@@ -43,7 +43,7 @@ async function revokeKeyById(
   deps: ServiceDependencies,
   keyId: string
 ): Promise<string> {
-  const key = await PaymentPointerKeys.query(deps.knex).findById(keyId)
+  const key = await PaymentPointerKey.query(deps.knex).findById(keyId)
 
   const revokedJwk = key.jwk
   revokedJwk.revoked = true

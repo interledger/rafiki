@@ -2,7 +2,7 @@ import { BaseModel } from '../shared/baseModel'
 
 import { JWKWithRequired } from 'auth'
 
-export class PaymentPointerKeys extends BaseModel {
+export class PaymentPointerKey extends BaseModel {
   public static get tableName(): string {
     return 'paymentPointerKeys'
   }

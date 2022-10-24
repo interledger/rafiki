@@ -11,7 +11,7 @@ import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
 import { JWKWithRequired } from 'auth'
-import { PaymentPointerKeys } from '../../paymentPointerKeys/model'
+import { PaymentPointerKey } from '../../paymentPointerKeys/model'
 
 export interface CreateOptions {
   url: string
@@ -228,6 +228,6 @@ async function addKeyToPaymentPointer(
   deps: ServiceDependencies,
   options: AddKeyToPaymentPointerOptions
 ): Promise<PaymentPointer> {
-  await PaymentPointerKeys.query(deps.knex).insertAndFetch(options)
+  await PaymentPointerKey.query(deps.knex).insertAndFetch(options)
   return getPaymentPointer(deps, options.paymentPointerId)
 }

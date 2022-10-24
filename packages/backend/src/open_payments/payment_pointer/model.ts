@@ -5,7 +5,7 @@ import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
-import { PaymentPointerKeys } from '../../paymentPointerKeys/model'
+import { PaymentPointerKey } from '../../paymentPointerKeys/model'
 
 export class PaymentPointer
   extends BaseModel
@@ -26,7 +26,7 @@ export class PaymentPointer
     },
     keys: {
       relation: Model.HasManyRelation,
-      modelClass: PaymentPointerKeys,
+      modelClass: PaymentPointerKey,
       join: {
         from: 'paymentPointers.id',
         to: 'paymentPointerKeys.paymentPointerId'
@@ -34,7 +34,7 @@ export class PaymentPointer
     }
   })
 
-  public keys!: PaymentPointerKeys[]
+  public keys!: PaymentPointerKey[]
 
   public url!: string
   public publicName?: string
