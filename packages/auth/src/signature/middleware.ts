@@ -8,7 +8,7 @@ import { Grant } from '../grant/model'
 import { JWKWithRequired } from '../client/service'
 import { Context } from 'koa'
 
-async function verifySig(
+export async function verifySig(
   sig: string,
   jwk: JWKWithRequired,
   challenge: string
