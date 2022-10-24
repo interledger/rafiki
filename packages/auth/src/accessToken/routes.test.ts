@@ -34,7 +34,8 @@ describe('Access Token Routes', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     accessTokenRoutes = await deps.use('accessTokenRoutes')
-    jestOpenAPI(await deps.use('openApi'))
+    const openApi = await deps.use('openApi')
+    jestOpenAPI(openApi.authServerClientSpec)
 
     const keys = await generateTestKeys()
     testJwk = keys.publicKey

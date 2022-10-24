@@ -27,9 +27,17 @@ export const Config = {
           'AUTH_DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/auth_development'
         ),
-  authServerSpec: envString(
-    'AUTH_SERVER_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/16cff7a2605cb90d0e5b5d34ba32c8263d694f2b/auth-server-open-api-spec.yaml'
+  authServerIdpSpec: envString(
+    'AUTH_SERVER_IDP_SPEC',
+    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/AS/IdP/openapi.yaml'
+  ),
+  authServerClientSpec: envString(
+    'AUTH_SERVER_CLIENT_SPEC',
+    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/AS/client/openapi.yaml'
+  ),
+  authServerRsSpec: envString(
+    'AUTH_SERVER_RS_SPEC',
+    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/AS/RS/openapi.yaml'
   ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
