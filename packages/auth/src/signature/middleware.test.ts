@@ -29,7 +29,6 @@ import {
   grantContinueHttpsigMiddleware,
   grantInitiationHttpsigMiddleware
 } from './middleware'
-import test from 'node:test'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
