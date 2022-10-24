@@ -406,6 +406,8 @@ describe('Signature Service', (): void => {
 
       ctx.headers['signature'] = 'wrong-signature'
 
+      await grantInitiationHttpsigMiddleware(ctx, next)
+
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
 
