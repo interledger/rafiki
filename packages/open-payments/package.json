@@ -7,7 +7,8 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "pnpm clean && tsc --build tsconfig.json",
+    "build:deps": "pnpm --filter openapi build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
     "generate:types": "npx ts-node scripts/generate-types.ts",
     "prepack": "pnpm build",
