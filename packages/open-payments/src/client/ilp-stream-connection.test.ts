@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createILPStreamConnectionRoutes } from './ilp-stream-connection'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
-import { createAxiosInstance } from './requests'
 import config from '../config'
-import { silentLogger } from '../test/helpers'
+import { defaultAxiosInstance, silentLogger } from '../test/helpers'
 
 describe('ilp-stream-connection', (): void => {
   let openApi: OpenAPI
@@ -12,7 +11,7 @@ describe('ilp-stream-connection', (): void => {
     openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
   })
 
-  const axiosInstance = createAxiosInstance()
+  const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
 
   describe('createILPStreamConnectionRoutes', (): void => {

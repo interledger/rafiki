@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createIncomingPaymentRoutes } from './incoming-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
-import { createAxiosInstance } from './requests'
 import config from '../config'
-import { silentLogger } from '../test/helpers'
+import { defaultAxiosInstance, silentLogger } from '../test/helpers'
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
@@ -12,7 +11,7 @@ describe('incoming-payment', (): void => {
     openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
   })
 
-  const axiosInstance = createAxiosInstance()
+  const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
 
   describe('createIncomingPaymentRoutes', (): void => {

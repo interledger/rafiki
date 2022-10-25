@@ -1,7 +1,6 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, { AxiosError, AxiosInstance } from 'axios'
 import { ValidateFunction } from 'openapi'
-import { ClientDeps, CreateOpenPaymentClientArgs } from '.'
-import config from '../config'
+import { ClientDeps } from '.'
 
 export interface GetArgs {
   url: string
@@ -29,30 +28,25 @@ export const get = async <T>(
 
     if (!openApiResponseValidator(data)) {
       const errorMessage = 'Failed to validate OpenApi response'
-      logger.error(errorMessage, {
-        url,
-        data: JSON.stringify(data)
-      })
+      logger.error({ data: JSON.stringify(data), url }, errorMessage)
 
       throw new Error(errorMessage)
     }
 
     return data
   } catch (error) {
-    logger.error('Error when making Open Payments GET request', {
-      errorMessage: error?.message,
-      url
-    })
+    const errorMessage = 'Error when making Open Payments GET request'
+    logger.error({ errorMessage: error?.message, url }, errorMessage)
 
-    throw error
+    throw new Error(errorMessage)
   }
 }
 
-export const createAxiosInstance = (
-  args?: CreateOpenPaymentClientArgs
-): AxiosInstance => {
+export const createAxiosInstance = (args: {
+  requestTimeoutMs: number
+}): AxiosInstance => {
   const axiosInstance = axios.create({
-    timeout: args?.timeout ?? config.DEFAULT_REQUEST_TIMEOUT
+    timeout: args.requestTimeoutMs
   })
 
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'

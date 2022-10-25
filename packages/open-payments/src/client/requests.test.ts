@@ -8,17 +8,21 @@ describe('requests', (): void => {
 
   describe('createAxiosInstance', (): void => {
     test('sets timeout properly', async (): Promise<void> => {
-      expect(createAxiosInstance({ timeout: 1000 }).defaults.timeout).toBe(1000)
+      expect(
+        createAxiosInstance({ requestTimeoutMs: 1000 }).defaults.timeout
+      ).toBe(1000)
     })
     test('sets Content-Type header properly', async (): Promise<void> => {
       expect(
-        createAxiosInstance().defaults.headers.common['Content-Type']
+        createAxiosInstance({ requestTimeoutMs: 0 }).defaults.headers.common[
+          'Content-Type'
+        ]
       ).toBe('application/json')
     })
   })
 
   describe('get', (): void => {
-    const axiosInstance = createAxiosInstance()
+    const axiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
     const baseUrl = 'http://localhost:1000'
     const successfulValidator = (data: unknown): data is unknown => true
     const failedValidator = (data: unknown): data is unknown => false

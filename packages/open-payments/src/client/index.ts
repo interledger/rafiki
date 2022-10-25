@@ -13,9 +13,8 @@ import { createAxiosInstance } from './requests'
 import { AxiosInstance } from 'axios'
 
 export interface CreateOpenPaymentClientArgs {
-  timeout?: number
+  requestTimeoutMs?: number
   logger?: Logger
-  loggerLevel?: LogLevel
 }
 
 export interface ClientDeps {
@@ -32,13 +31,12 @@ export interface OpenPaymentsClient {
 export const createClient = async (
   args?: CreateOpenPaymentClientArgs
 ): Promise<OpenPaymentsClient> => {
-  const axiosInstance = createAxiosInstance(args)
+  const axiosInstance = createAxiosInstance({
+    requestTimeoutMs:
+      args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
+  })
   const openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
-  const logger =
-    args.logger ??
-    createLogger({
-      level: args.loggerLevel ?? 'info'
-    })
+  const logger = args?.logger ?? createLogger()
   const deps = { axiosInstance, openApi, logger }
 
   return {
