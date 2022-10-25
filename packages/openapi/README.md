@@ -23,7 +23,7 @@ pnpm --filter openapi test
 First, instantiate an `OpenAPI` validator object with a reference to your OpenAPI spec:
 
 ```ts
-const openApi = await createOpenAPI(OPEN_API_URL)
+const openApi = await createOpenAPI(OPEN_API_URL_OR_FILE_PATH)
 ```
 
 Then, validate requests and responses as such:
@@ -34,14 +34,14 @@ const validateRequest = openApi.createRequestValidator({
   method: HttpMethod.GET
 })
 
-validateRequest(data) // true or false
+validateRequest(request) // true or false
 
 const validateResponse = openApi.createResponseValidator({
   path: '/resource/{id}',
   method: HttpMethod.GET
 })
 
-validateResponse(data) // true or false
+validateResponse(response.body) // true or false
 ```
 
 > **Note**
