@@ -1,32 +1,31 @@
-export default function Index() {
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
+
+import { getAccountBalances } from '../lib/balances.server'
+
+type LoaderData = {
+  // this is a handy way to say: "posts is whatever type getPosts resolves to"
+  accountBalances: Awaited<ReturnType<typeof getAccountBalances>>;
+};
+
+export const loader = async () => {
+  return json<LoaderData>({
+    accountBalances: await getAccountBalances(),
+  });
+};
+
+export default function Posts() {
+  const { accountBalances } = useLoaderData() as LoaderData
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
+    <main>
+      <h1>Balances</h1>
       <ul>
-        <li>
-          <a
-            target='_blank'
-            href='https://remix.run/tutorials/blog'
-            rel='noreferrer'
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target='_blank'
-            href='https://remix.run/tutorials/jokes'
-            rel='noreferrer'
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target='_blank' href='https://remix.run/docs' rel='noreferrer'>
-            Remix Docs
-          </a>
-        </li>
+        {accountBalances.map((accBal) => (
+          <li key={accBal.paymentPointer}>
+            {accBal.paymentPointer}: {accBal.balance}
+          </li>
+        ))}
       </ul>
-    </div>
+    </main>
   )
 }
