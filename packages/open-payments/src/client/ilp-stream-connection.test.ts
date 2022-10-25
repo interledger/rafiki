@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { getILPStreamConnection } from './ilp-stream-connection'
+import { createILPStreamConnectionRoutes } from './ilp-stream-connection'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import { createAxiosInstance } from './requests'
 import config from '../config'
-
-jest.mock('./requests', () => ({
-  ...jest.requireActual('./requests'),
-  get: jest.fn()
-}))
 
 describe('ilp-stream-connection', (): void => {
   let openApi: OpenAPI
@@ -18,17 +13,12 @@ describe('ilp-stream-connection', (): void => {
 
   const axiosInstance = createAxiosInstance()
 
-  describe('getILPStreamConnection', (): void => {
+  describe('createILPStreamConnectionRoutes', (): void => {
     test('calls createResponseValidator properly', async (): Promise<void> => {
-      const createResponseValidatorSpy = jest.spyOn(
-        openApi,
-        'createResponseValidator'
-      )
+      jest.spyOn(openApi, 'createResponseValidator')
 
-      await getILPStreamConnection(axiosInstance, openApi, {
-        url: 'http://localhost:1000/incoming-payment'
-      })
-      expect(createResponseValidatorSpy).toHaveBeenCalledWith({
+      createILPStreamConnectionRoutes(axiosInstance, openApi)
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/connections/{id}',
         method: HttpMethod.GET
       })
