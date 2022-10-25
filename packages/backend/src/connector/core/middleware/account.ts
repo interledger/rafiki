@@ -46,9 +46,9 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       OutgoingAccount | undefined
     > => {
       if (ctx.state.streamDestination) {
-        const incomingPayment = await incomingPayments.get(
-          ctx.state.streamDestination
-        )
+        const incomingPayment = await incomingPayments.get({
+          id: ctx.state.streamDestination
+        })
         if (incomingPayment) {
           if (
             incomingPayment.state === IncomingPaymentState.Completed ||

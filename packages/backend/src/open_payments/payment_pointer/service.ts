@@ -5,7 +5,10 @@ import { PaymentPointerError } from './errors'
 import {
   PaymentPointer,
   PaymentPointerEvent,
-  PaymentPointerEventType
+  PaymentPointerEventType,
+  GetOptions,
+  ListOptions,
+  PaymentPointerSubresource
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
@@ -207,4 +210,16 @@ async function createWithdrawalEvent(
   await paymentPointer.$query(deps.knex).patch({
     totalEventsAmount: paymentPointer.totalEventsAmount + amount
   })
+}
+
+export interface CreateSubresourceOptions {
+  paymentPointerId: string
+}
+
+export interface PaymentPointerSubresourceService<
+  M extends PaymentPointerSubresource
+> {
+  get(options: GetOptions): Promise<M | undefined>
+  create(options: { paymentPointerId: string }): Promise<M | string>
+  getPaymentPointerPage(options: ListOptions): Promise<M[]>
 }

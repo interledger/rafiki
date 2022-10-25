@@ -3,13 +3,14 @@ import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON } from '../../amount'
 import { ConnectionJSON } from '../../connection/service'
-import { PaymentPointer } from '../../payment_pointer/model'
+import {
+  PaymentPointer,
+  PaymentPointerSubresource
+} from '../../payment_pointer/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
-import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
-import { GrantReference } from '../../grantReference/model'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
@@ -52,46 +53,32 @@ export class IncomingPaymentEvent extends WebhookEvent {
 }
 
 export class IncomingPayment
-  extends BaseModel
+  extends PaymentPointerSubresource
   implements ConnectorAccount, LiquidityAccount
 {
   public static get tableName(): string {
     return 'incomingPayments'
   }
+  public static readonly urlPath = '/incoming-payments'
 
   static get virtualAttributes(): string[] {
     return ['completed', 'incomingAmount', 'receivedAmount', 'url']
   }
 
-  static relationMappings = {
-    asset: {
-      relation: Model.HasOneRelation,
-      modelClass: Asset,
-      join: {
-        from: 'incomingPayments.assetId',
-        to: 'assets.id'
-      }
-    },
-    paymentPointer: {
-      relation: Model.BelongsToOneRelation,
-      modelClass: PaymentPointer,
-      join: {
-        from: 'incomingPayments.paymentPointerId',
-        to: 'paymentPointers.id'
-      }
-    },
-    grantRef: {
-      relation: Model.HasOneRelation,
-      modelClass: GrantReference,
-      join: {
-        from: 'incomingPayments.grantId',
-        to: 'grantReferences.id'
+  static get relationMappings() {
+    return {
+      ...super.relationMappings,
+      asset: {
+        relation: Model.HasOneRelation,
+        modelClass: Asset,
+        join: {
+          from: 'incomingPayments.assetId',
+          to: 'assets.id'
+        }
       }
     }
   }
 
-  // Open payments paymentPointer id this incoming payment is for
-  public paymentPointerId!: string
   public paymentPointer!: PaymentPointer
   public description?: string
   public expiresAt!: Date
@@ -99,9 +86,6 @@ export class IncomingPayment
   public externalRef?: string
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the connectionId. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public connectionId?: string | null
-
-  public grantId?: string
-  public grantRef?: GrantReference
 
   public processAt!: Date | null
 
@@ -143,7 +127,7 @@ export class IncomingPayment
   }
 
   public get url(): string {
-    return `${this.paymentPointer.url}/incoming-payments/${this.id}`
+    return `${this.paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({

@@ -6,7 +6,6 @@ import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { QuoteError, isQuoteError } from './errors'
-import { Quote } from './model'
 import {
   QuoteService,
   CreateQuoteOptions,
@@ -17,11 +16,13 @@ import { IAppConfig, Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
+import { createGrant } from '../../tests/grant'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import {
   createPaymentPointer,
   MockPaymentPointer
 } from '../../tests/paymentPointer'
+import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import { Amount, AmountJSON, serializeAmount } from '../amount'
@@ -29,8 +30,7 @@ import {
   IncomingPayment,
   IncomingPaymentState
 } from '../payment/incoming/model'
-import { Pagination } from '../../shared/baseModel'
-import { getPageTests } from '../../shared/baseModel.test'
+import { getTests } from '../payment_pointer/model.test'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
 
@@ -40,7 +40,6 @@ describe('QuoteService', (): void => {
   let quoteService: QuoteService
   let knex: Knex
   let paymentPointerId: string
-  let assetId: string
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
@@ -98,7 +97,6 @@ describe('QuoteService', (): void => {
       }
     })
     paymentPointerId = paymentPointer.id
-    assetId = paymentPointer.assetId
     receivingPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
@@ -127,9 +125,25 @@ describe('QuoteService', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
-    it('returns undefined when no quote exists', async () => {
-      await expect(quoteService.get(uuid())).resolves.toBeUndefined()
+  describe('get/getPaymentPointerPage', (): void => {
+    getTests({
+      createGrant: async (options) => createGrant(deps, options),
+      createModel: ({ grant }) =>
+        createQuote(deps, {
+          paymentPointerId,
+          receiver: `${
+            receivingPaymentPointer.url
+          }/incoming-payments/${uuid()}`,
+          sendAmount: {
+            value: BigInt(56),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          grantId: grant?.grant,
+          validDestination: false
+        }),
+      get: (options) => quoteService.get(options),
+      list: (options) => quoteService.getPaymentPointerPage(options)
     })
   })
 
@@ -226,6 +240,7 @@ describe('QuoteService', (): void => {
         let options: CreateQuoteOptions
         let incomingPayment: IncomingPayment
         let expected: ExpectedQuote
+        const grantId = uuid()
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
@@ -246,6 +261,11 @@ describe('QuoteService', (): void => {
             ...options,
             paymentType
           }
+
+          await grantReferenceService.create({
+            id: grantId,
+            clientId: uuid()
+          })
         })
 
         if (!sendAmount && !receiveAmount && !incomingAmount) {
@@ -256,52 +276,68 @@ describe('QuoteService', (): void => {
           })
         } else {
           if (sendAmount || receiveAmount) {
-            it('creates a Quote', async () => {
-              const walletScope = mockWalletQuote({
-                expected
-              })
-              const quote = await quoteService.create(options)
-              assert.ok(!isQuoteError(quote))
-              walletScope.isDone()
-              expect(quote).toMatchObject({
-                paymentPointerId,
-                receiver: options.receiver,
-                sendAmount: sendAmount || {
-                  value: BigInt(
-                    Math.ceil(
-                      Number(receiveAmount.value) /
-                        quote.minExchangeRate.valueOf()
-                    )
+            it.each`
+              grantId      | description
+              ${grantId}   | ${'with a grantId'}
+              ${undefined} | ${'without a grantId'}
+            `(
+              'creates a Quote $description',
+              async ({ grantId }): Promise<void> => {
+                const walletScope = mockWalletQuote({
+                  expected
+                })
+                const quote = await quoteService.create({
+                  ...options,
+                  grantId
+                })
+                assert.ok(!isQuoteError(quote))
+                walletScope.isDone()
+                expect(quote).toMatchObject({
+                  paymentPointerId,
+                  receiver: options.receiver,
+                  sendAmount: sendAmount || {
+                    value: BigInt(
+                      Math.ceil(
+                        Number(receiveAmount.value) /
+                          quote.minExchangeRate.valueOf()
+                      )
+                    ),
+                    assetCode: asset.code,
+                    assetScale: asset.scale
+                  },
+                  receiveAmount: receiveAmount || {
+                    value: BigInt(
+                      Math.ceil(
+                        Number(sendAmount.value) *
+                          quote.minExchangeRate.valueOf()
+                      )
+                    ),
+                    assetCode: destinationAsset.code,
+                    assetScale: destinationAsset.scale
+                  },
+                  maxPacketAmount: BigInt('9223372036854775807'),
+                  createdAt: expect.any(Date),
+                  updatedAt: expect.any(Date),
+                  expiresAt: new Date(
+                    quote.createdAt.getTime() + config.quoteLifespan
                   ),
-                  assetCode: asset.code,
-                  assetScale: asset.scale
-                },
-                receiveAmount: receiveAmount || {
-                  value: BigInt(
-                    Math.ceil(
-                      Number(sendAmount.value) * quote.minExchangeRate.valueOf()
-                    )
-                  ),
-                  assetCode: destinationAsset.code,
-                  assetScale: destinationAsset.scale
-                },
-                maxPacketAmount: BigInt('9223372036854775807'),
-                createdAt: expect.any(Date),
-                updatedAt: expect.any(Date),
-                expiresAt: new Date(
-                  quote.createdAt.getTime() + config.quoteLifespan
+                  grantId: grantId || null
+                })
+                expect(quote.minExchangeRate.valueOf()).toBe(
+                  0.5 * (1 - config.slippage)
                 )
-              })
-              expect(quote.minExchangeRate.valueOf()).toBe(
-                0.5 * (1 - config.slippage)
-              )
-              expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
-              expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
-                0.500000000001
-              )
+                expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
+                expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
+                  0.500000000001
+                )
 
-              await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
-            })
+                await expect(
+                  quoteService.get({
+                    id: quote.id
+                  })
+                ).resolves.toEqual(quote)
+              }
+            )
 
             if (incomingAmount) {
               it('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
@@ -325,42 +361,57 @@ describe('QuoteService', (): void => {
             }
           } else {
             if (incomingAmount) {
-              it('creates a Quote', async () => {
-                const scope = mockWalletQuote({
-                  expected
-                })
-                const quote = await quoteService.create(options)
-                scope.isDone()
-                assert.ok(!isQuoteError(quote))
-                expect(quote).toMatchObject({
-                  ...options,
-                  maxPacketAmount: BigInt('9223372036854775807'),
-                  sendAmount: {
-                    value: BigInt(
-                      Math.ceil(
-                        Number(incomingAmount.value) /
-                          quote.minExchangeRate.valueOf()
-                      )
+              it.each`
+                grantId      | description
+                ${grantId}   | ${'with a grantId'}
+                ${undefined} | ${'without a grantId'}
+              `(
+                'creates a Quote $description',
+                async ({ grantId }): Promise<void> => {
+                  const scope = mockWalletQuote({
+                    expected
+                  })
+                  const quote = await quoteService.create({
+                    ...options,
+                    grantId
+                  })
+                  scope.isDone()
+                  assert.ok(!isQuoteError(quote))
+                  expect(quote).toMatchObject({
+                    ...options,
+                    maxPacketAmount: BigInt('9223372036854775807'),
+                    sendAmount: {
+                      value: BigInt(
+                        Math.ceil(
+                          Number(incomingAmount.value) /
+                            quote.minExchangeRate.valueOf()
+                        )
+                      ),
+                      assetCode: asset.code,
+                      assetScale: asset.scale
+                    },
+                    receiveAmount: incomingAmount,
+                    createdAt: expect.any(Date),
+                    updatedAt: expect.any(Date),
+                    expiresAt: new Date(
+                      quote.createdAt.getTime() + config.quoteLifespan
                     ),
-                    assetCode: asset.code,
-                    assetScale: asset.scale
-                  },
-                  receiveAmount: incomingAmount,
-                  createdAt: expect.any(Date),
-                  updatedAt: expect.any(Date),
-                  expiresAt: new Date(
-                    quote.createdAt.getTime() + config.quoteLifespan
+                    grantId: grantId || null
+                  })
+                  expect(quote.minExchangeRate.valueOf()).toBe(
+                    0.5 * (1 - config.slippage)
                   )
-                })
-                expect(quote.minExchangeRate.valueOf()).toBe(
-                  0.5 * (1 - config.slippage)
-                )
-                expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
-                expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
-                  0.500000000001
-                )
-                await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
-              })
+                  expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
+                  expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
+                    0.500000000001
+                  )
+                  await expect(
+                    quoteService.get({
+                      id: quote.id
+                    })
+                  ).resolves.toEqual(quote)
+                }
+              )
             }
           }
 
@@ -396,7 +447,11 @@ describe('QuoteService', (): void => {
                 0.500000000001
               )
 
-              await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
+              await expect(
+                quoteService.get({
+                  id: quote.id
+                })
+              ).resolves.toEqual(quote)
             })
 
             it.each`
@@ -453,7 +508,11 @@ describe('QuoteService', (): void => {
                 0.500000000001
               )
 
-              await expect(quoteService.get(quote.id)).resolves.toEqual(quote)
+              await expect(
+                quoteService.get({
+                  id: quote.id
+                })
+              ).resolves.toEqual(quote)
             })
 
             it.each`
@@ -582,37 +641,6 @@ describe('QuoteService', (): void => {
           sendAmount
         })
       ).rejects.toThrow('missing prices')
-    })
-  })
-
-  describe('getPaymentPointerPage', (): void => {
-    getPageTests({
-      createModel: async () =>
-        Quote.query(knex).insertAndFetch({
-          paymentPointerId,
-          assetId,
-          receiver: `${
-            receivingPaymentPointer.url
-          }/incoming-payments/${uuid()}`,
-          sendAmount,
-          receiveAmount,
-          maxPacketAmount: BigInt('9223372036854775807'),
-          lowEstimatedExchangeRate: Pay.Ratio.of(
-            Pay.Int.from(500000000000n) as Pay.PositiveInt,
-            Pay.Int.from(1000000000000n) as Pay.PositiveInt
-          ),
-          highEstimatedExchangeRate: Pay.Ratio.of(
-            Pay.Int.from(500000000001n) as Pay.PositiveInt,
-            Pay.Int.from(1000000000000n) as Pay.PositiveInt
-          ),
-          minExchangeRate: Pay.Ratio.of(
-            Pay.Int.from(495n) as Pay.PositiveInt,
-            Pay.Int.from(1000n) as Pay.PositiveInt
-          ),
-          expiresAt: new Date(Date.now() + config.quoteLifespan)
-        }),
-      getPage: (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage(paymentPointerId, pagination)
     })
   })
 })
