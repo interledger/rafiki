@@ -1,5 +1,5 @@
 import { createOpenAPI, OpenAPI } from 'openapi'
-import createLogger, { Logger, LevelWithSilent as LogLevel } from 'pino'
+import createLogger, { Logger } from 'pino'
 import config from '../config'
 import {
   createIncomingPaymentRoutes,

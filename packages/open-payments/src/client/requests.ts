@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance } from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import { ValidateFunction } from 'openapi'
 import { ClientDeps } from '.'
 
