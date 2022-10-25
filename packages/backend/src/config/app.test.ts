@@ -26,7 +26,7 @@ describe('Config', (): void => {
           fs.mkdirSync(TMP_DIR)
         }
         expect(fs.existsSync(TMP_DIR)).toBe(tmpDirExists)
-        const key = parseOrProvisionKey(`${TMP_DIR}/private-key.pem`)
+        const key = parseOrProvisionKey(undefined)
         expect(key).toMatchObject({
           asymmetricKeyType: 'ed25519',
           type: 'private'
@@ -44,6 +44,11 @@ describe('Config', (): void => {
         )
       }
     )
+    test('throws if cannot read file', async (): Promise<void> => {
+      expect(() => {
+        parseOrProvisionKey(`${TMP_DIR}/private-key.pem`)
+      }).toThrow()
+    })
     test('can parse key', async (): Promise<void> => {
       const keypair = crypto.generateKeyPairSync('ed25519')
       const keyfile = `${TMP_DIR}/test-private-key.pem`

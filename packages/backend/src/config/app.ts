@@ -112,9 +112,7 @@ export const Config = {
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
   ),
-  privateKey: parseOrProvisionKey(
-    envString('PRIVATE_KEY_PATH', PRIVATE_KEY_FILE)
-  ),
+  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', undefined)),
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
@@ -145,17 +143,22 @@ function parseRedisTlsConfig(
 }
 
 // exported for testing
-export function parseOrProvisionKey(keyPath: string): crypto.KeyObject {
-  try {
-    const key = crypto.createPrivateKey(fs.readFileSync(keyPath))
-    const jwk = key.export({ format: 'jwk' })
-    if (jwk.crv === 'Ed25519') {
-      return key
-    } else {
-      console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')
+export function parseOrProvisionKey(
+  keyFile: string | undefined
+): crypto.KeyObject {
+  if (keyFile) {
+    try {
+      const key = crypto.createPrivateKey(fs.readFileSync(keyFile))
+      const jwk = key.export({ format: 'jwk' })
+      if (jwk.crv === 'Ed25519') {
+        return key
+      } else {
+        console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')
+      }
+    } catch (err) {
+      console.log('Private key could not be loaded.')
+      throw err
     }
-  } catch {
-    console.log('Private key could not be loaded. Generating new key.')
   }
   const keypair = crypto.generateKeyPairSync('ed25519')
   if (!fs.existsSync(TMP_DIR)) {
