@@ -48,8 +48,6 @@ validateResponse(data) // true or false
 >
 > The underlying response & request validator [packages](https://github.com/kogosoftwarellc/open-api/tree/master/packages) use the [Ajv schema validator](https://ajv.js.org) library. Each time validators are created via `createRequestValidator` and `createResponseValidator`, a `new Ajv()` instance is also [created](https://github.com/kogosoftwarellc/open-api/blob/master/packages/openapi-response-validator/index.ts). Since Ajv [recommends](https://ajv.js.org/guide/managing-schemas.html#compiling-during-initialization) instantiating once at initialization, these validators should also be instantiated just once during the lifecycle of the application to avoid any issues.
 
-
-
 <br>
 
 Likewise, you can validate both requests and responses inside a middleware method, using `createValidatorMiddleware`:
@@ -58,10 +56,10 @@ Likewise, you can validate both requests and responses inside a middleware metho
 const openApi = await createOpenAPI(OPEN_API_URL)
 const router = new SomeRouter()
 router.get(
-    '/resource/{id}',
-    createValidatorMiddleware(openApi, {
-        path: '/resource/{id}',
-        method: HttpMethod.GET
-    })
+  '/resource/{id}',
+  createValidatorMiddleware(openApi, {
+    path: '/resource/{id}',
+    method: HttpMethod.GET
+  })
 )
 ```
