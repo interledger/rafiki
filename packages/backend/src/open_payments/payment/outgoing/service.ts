@@ -2,7 +2,8 @@ import assert from 'assert'
 import {
   ForeignKeyViolationError,
   TransactionOrKnex,
-  UniqueViolationError
+  UniqueViolationError,
+  Transaction
 } from 'objection'
 
 import { BaseService } from '../../../shared/baseService'
@@ -253,7 +254,7 @@ async function validateGrant(
   }
 
   //lock grant
-  await deps.grantReferenceService.lock(grant.grant, deps.knex)
+  await deps.grantReferenceService.lock(grant.grant, deps.knex as Transaction)
 
   if (callback) await new Promise(callback)
 

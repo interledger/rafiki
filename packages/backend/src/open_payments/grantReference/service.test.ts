@@ -49,9 +49,7 @@ describe('Grant Reference Service', (): void => {
         const retrievedRef = await grantReferenceService.get(id, trx)
         expect(grantRef).toEqual(retrievedRef)
         await trx.rollback()
-        await expect(
-          await grantReferenceService.get(id)
-        ).resolves.toBeUndefined()
+        await expect(grantReferenceService.get(id)).resolves.toBeUndefined()
       })
     })
 

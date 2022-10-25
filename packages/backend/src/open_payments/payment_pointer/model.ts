@@ -1,4 +1,5 @@
 import { Model, Page } from 'objection'
+import { PaymentPointer as OpenPaymentsPaymentPointer } from 'open-payments'
 import { GrantReference } from '../grantReference/model'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
@@ -82,6 +83,20 @@ export class PaymentPointer
         createdAt: new Date(+this.createdAt).toISOString(),
         received: received.toString()
       }
+    }
+  }
+
+  public toOpenPaymentsType({
+    authServer
+  }: {
+    authServer: string
+  }): OpenPaymentsPaymentPointer {
+    return {
+      id: this.url,
+      publicName: this.publicName,
+      assetCode: this.asset.code,
+      assetScale: this.asset.scale,
+      authServer
     }
   }
 }
