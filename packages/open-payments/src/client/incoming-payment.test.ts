@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { getIncomingPayment } from './incoming-payment'
+import { createIncomingPaymentRoutes } from './incoming-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
-import { createAxiosInstance } from './requests'
 import config from '../config'
-
-jest.mock('./requests', () => ({
-  ...jest.requireActual('./requests'),
-  get: jest.fn()
-}))
+import { defaultAxiosInstance, silentLogger } from '../test/helpers'
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
@@ -16,19 +11,19 @@ describe('incoming-payment', (): void => {
     openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
   })
 
-  const axiosInstance = createAxiosInstance()
+  const axiosInstance = defaultAxiosInstance
+  const logger = silentLogger
 
-  describe('getIncomingPayment', (): void => {
+  describe('createIncomingPaymentRoutes', (): void => {
     test('calls createResponseValidator properly', async (): Promise<void> => {
-      const createResponseValidatorSpy = jest.spyOn(
-        openApi,
-        'createResponseValidator'
-      )
+      jest.spyOn(openApi, 'createResponseValidator')
 
-      await getIncomingPayment(axiosInstance, openApi, {
-        url: 'http://localhost:1000/incoming-payment'
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
       })
-      expect(createResponseValidatorSpy).toHaveBeenCalledWith({
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/incoming-payments/{id}',
         method: HttpMethod.GET
       })

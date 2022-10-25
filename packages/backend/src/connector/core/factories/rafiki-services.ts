@@ -32,7 +32,8 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
     'incomingPayments',
     ['accounting'],
     (accounting: MockAccountingService) => ({
-      get: async (id: string) => await accounting._getIncomingPayment(id),
+      get: async ({ id }: { id: string }) =>
+        await accounting._getIncomingPayment(id),
       handlePayment: async (_id: string) => {
         return undefined
       }

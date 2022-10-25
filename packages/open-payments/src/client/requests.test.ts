@@ -1,23 +1,28 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createAxiosInstance, get } from './requests'
 import nock from 'nock'
+import { silentLogger } from '../test/helpers'
 
 describe('requests', (): void => {
-  jest.spyOn(console, 'log').mockImplementation(() => {})
+  const logger = silentLogger
 
   describe('createAxiosInstance', (): void => {
     test('sets timeout properly', async (): Promise<void> => {
-      expect(createAxiosInstance({ timeout: 1000 }).defaults.timeout).toBe(1000)
+      expect(
+        createAxiosInstance({ requestTimeoutMs: 1000 }).defaults.timeout
+      ).toBe(1000)
     })
     test('sets Content-Type header properly', async (): Promise<void> => {
       expect(
-        createAxiosInstance().defaults.headers.common['Content-Type']
+        createAxiosInstance({ requestTimeoutMs: 0 }).defaults.headers.common[
+          'Content-Type'
+        ]
       ).toBe('application/json')
     })
   })
 
   describe('get', (): void => {
-    const axiosInstance = createAxiosInstance()
+    const axiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
     const baseUrl = 'http://localhost:1000'
     const successfulValidator = (data: unknown): data is unknown => true
     const failedValidator = (data: unknown): data is unknown => false
@@ -30,7 +35,7 @@ describe('requests', (): void => {
       nock(baseUrl).get('/incoming-payment').reply(200)
 
       await get(
-        axiosInstance,
+        { axiosInstance, logger },
         {
           url: `${baseUrl}/incoming-payment`,
           accessToken: 'accessToken'
@@ -54,7 +59,7 @@ describe('requests', (): void => {
       nock(baseUrl).get('/incoming-payment').reply(200)
 
       await get(
-        axiosInstance,
+        { axiosInstance, logger },
         {
           url: `${baseUrl}/incoming-payment`
         },
@@ -74,13 +79,13 @@ describe('requests', (): void => {
 
       await expect(
         get(
-          axiosInstance,
+          { axiosInstance, logger },
           {
             url: `${baseUrl}/incoming-payment`
           },
           failedValidator
         )
-      ).rejects.toThrow('Failed to validate OpenApi response')
+      ).rejects.toThrow(/Failed to validate OpenApi response/)
     })
   })
 })

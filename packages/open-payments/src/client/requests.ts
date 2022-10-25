@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import { ValidateFunction } from 'openapi'
-import { CreateOpenPaymentClientArgs } from '.'
-import config from '../config'
+import { ClientDeps } from '.'
 
 export interface GetArgs {
   url: string
@@ -9,14 +8,15 @@ export interface GetArgs {
 }
 
 export const get = async <T>(
-  axios: AxiosInstance,
+  clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
   args: GetArgs,
-  responseValidator: ValidateFunction<T>
+  openApiResponseValidator: ValidateFunction<T>
 ): Promise<T> => {
+  const { axiosInstance, logger } = clientDeps
   const { url, accessToken } = args
 
   try {
-    const { data } = await axios.get(url, {
+    const { data } = await axiosInstance.get(url, {
       headers: accessToken
         ? {
             Authorization: `GNAP ${accessToken}`,
@@ -26,32 +26,29 @@ export const get = async <T>(
         : {}
     })
 
-    if (!responseValidator(data)) {
+    if (!openApiResponseValidator(data)) {
       const errorMessage = 'Failed to validate OpenApi response'
-      console.log(errorMessage, {
-        url,
-        data: JSON.stringify(data)
-      })
+      logger.error({ data: JSON.stringify(data), url }, errorMessage)
 
       throw new Error(errorMessage)
     }
 
     return data
   } catch (error) {
-    console.log('Error when making Open Payments GET request', {
-      errorMessage: error?.message,
-      url
-    })
+    const errorMessage = `Error when making Open Payments GET request: ${
+      error?.message ? error.message : 'Unknown error'
+    }`
+    logger.error({ url }, errorMessage)
 
-    throw error
+    throw new Error(errorMessage)
   }
 }
 
-export const createAxiosInstance = (
-  args?: CreateOpenPaymentClientArgs
-): AxiosInstance => {
+export const createAxiosInstance = (args: {
+  requestTimeoutMs: number
+}): AxiosInstance => {
   const axiosInstance = axios.create({
-    timeout: args?.timeout ?? config.DEFAULT_REQUEST_TIMEOUT
+    timeout: args.requestTimeoutMs
   })
 
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'

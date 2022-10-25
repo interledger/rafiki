@@ -3,11 +3,11 @@ import { Knex } from 'knex'
 import { AppServices } from '../app'
 
 import { SPSPRoutes } from './routes'
-import { setup } from '../shared/routes.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { initIocContainer } from '../'
 import { Config } from '../config/app'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { setup } from '../open_payments/payment_pointer/model.test'
 
 import { IocContract } from '@adonisjs/fold'
 import { StreamServer } from '@interledger/stream-receiver'

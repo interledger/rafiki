@@ -1,19 +1,25 @@
-import { AxiosInstance } from 'axios'
-import { OpenAPI, HttpMethod } from 'openapi'
+import { HttpMethod } from 'openapi'
+import { ClientDeps } from '.'
 import { IncomingPayment, getPath } from '../types'
 import { GetArgs, get } from './requests'
 
-export const getIncomingPayment = async (
-  axios: AxiosInstance,
-  openApi: OpenAPI,
-  args: GetArgs
-): Promise<IncomingPayment> => {
-  return get(
-    axios,
-    args,
-    openApi.createResponseValidator({
+export interface IncomingPaymentRoutes {
+  get(args: GetArgs): Promise<IncomingPayment>
+}
+
+export const createIncomingPaymentRoutes = (
+  clientDeps: ClientDeps
+): IncomingPaymentRoutes => {
+  const { axiosInstance, openApi, logger } = clientDeps
+
+  const getIncomingPaymentValidator =
+    openApi.createResponseValidator<IncomingPayment>({
       path: getPath('/incoming-payments/{id}'),
       method: HttpMethod.GET
     })
-  )
+
+  return {
+    get: (args: GetArgs) =>
+      get({ axiosInstance, logger }, args, getIncomingPaymentValidator)
+  }
 }

@@ -115,16 +115,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
-            const page = await incomingPaymentService.getPaymentPointerPage(
-              defaultPaymentPointer.id,
+            const page = await incomingPaymentService.getPaymentPointerPage({
+              paymentPointerId: defaultPaymentPointer.id,
               pagination
-            )
+            })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                incomingPaymentService.getPaymentPointerPage(
-                  defaultPaymentPointer.id,
+                incomingPaymentService.getPaymentPointerPage({
+                  paymentPointerId: defaultPaymentPointer.id,
                   pagination
-                ),
+                }),
               page
             )
             expect(pageInfo).toEqual({
@@ -169,16 +169,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
-            const page = await outgoingPaymentService.getPaymentPointerPage(
-              defaultPaymentPointer.id,
+            const page = await outgoingPaymentService.getPaymentPointerPage({
+              paymentPointerId: defaultPaymentPointer.id,
               pagination
-            )
+            })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                outgoingPaymentService.getPaymentPointerPage(
-                  defaultPaymentPointer.id,
+                outgoingPaymentService.getPaymentPointerPage({
+                  paymentPointerId: defaultPaymentPointer.id,
                   pagination
-                ),
+                }),
               page
             )
             expect(pageInfo).toEqual({
@@ -223,16 +223,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = quoteIds[cursor]
               else pagination.after = quoteIds[cursor]
             }
-            const page = await quoteService.getPaymentPointerPage(
-              defaultPaymentPointer.id,
+            const page = await quoteService.getPaymentPointerPage({
+              paymentPointerId: defaultPaymentPointer.id,
               pagination
-            )
+            })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                quoteService.getPaymentPointerPage(
-                  defaultPaymentPointer.id,
+                quoteService.getPaymentPointerPage({
+                  paymentPointerId: defaultPaymentPointer.id,
                   pagination
-                ),
+                }),
               page
             )
             expect(pageInfo).toEqual({

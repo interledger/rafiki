@@ -15,13 +15,8 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
-import {
-  getPageInfo,
-  parsePaginationQueryParameters
-} from '../../../shared/pagination'
-import { Pagination } from '../../../shared/baseModel'
+import { listSubresource } from '../../payment_pointer/routes'
 import { ConnectionJSON, ConnectionService } from '../../connection/service'
-import { AccessAction } from '../../auth/grant'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -62,20 +57,12 @@ async function getIncomingPayment(
   ctx: ReadContext
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
-  let clientId = undefined
-  const incomingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'incoming-payment'
-  )
-  if (incomingAccess && incomingAccess.length === 1) {
-    clientId = incomingAccess[0].actions.includes(AccessAction.ReadAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
-    incomingPayment = await deps.incomingPaymentService.get(
-      ctx.params.id,
-      clientId
-    )
+    incomingPayment = await deps.incomingPaymentService.get({
+      id: ctx.params.id,
+      clientId: ctx.clientId,
+      paymentPointerId: ctx.paymentPointer.id
+    })
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
   }
@@ -155,42 +142,17 @@ async function listIncomingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const pagination = parsePaginationQueryParameters(ctx.request.query)
-  let clientId = undefined
-  const incomingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'incoming-payment'
-  )
-  if (incomingAccess && incomingAccess.length === 1) {
-    clientId = incomingAccess[0].actions.includes(AccessAction.ListAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
-    const page = await deps.incomingPaymentService.getPaymentPointerPage(
-      ctx.paymentPointer.id,
-      pagination,
-      clientId
-    )
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
-        deps.incomingPaymentService.getPaymentPointerPage(
-          ctx.paymentPointer.id,
-          pagination,
-          clientId
-        ),
-      page
-    )
-    const result = {
-      pagination: pageInfo,
-      result: page.map((item: IncomingPayment) => {
-        return incomingPaymentToBody(
+    await listSubresource({
+      ctx,
+      getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
+      toBody: (payment) =>
+        incomingPaymentToBody(
           deps,
-          item,
-          deps.connectionService.getUrl(item)
+          payment,
+          deps.connectionService.getUrl(payment)
         )
-      })
-    }
-    ctx.body = result
+    })
   } catch (_) {
     ctx.throw(500, 'Error trying to list incoming payments')
   }

@@ -1,36 +1,46 @@
-import { createOpenAPI } from 'openapi'
-
-import { ILPStreamConnection, IncomingPayment } from '../types'
+import { createOpenAPI, OpenAPI } from 'openapi'
+import createLogger, { Logger } from 'pino'
 import config from '../config'
-import { getIncomingPayment } from './incoming-payment'
-import { getILPStreamConnection } from './ilp-stream-connection'
-import { createAxiosInstance, GetArgs } from './requests'
+import {
+  createIncomingPaymentRoutes,
+  IncomingPaymentRoutes
+} from './incoming-payment'
+import {
+  createILPStreamConnectionRoutes,
+  ILPStreamConnectionRoutes
+} from './ilp-stream-connection'
+import { createAxiosInstance } from './requests'
+import { AxiosInstance } from 'axios'
 
 export interface CreateOpenPaymentClientArgs {
-  timeout?: number
+  requestTimeoutMs?: number
+  logger?: Logger
+}
+
+export interface ClientDeps {
+  axiosInstance: AxiosInstance
+  openApi: OpenAPI
+  logger: Logger
 }
 
 export interface OpenPaymentsClient {
-  incomingPayment: {
-    get(args: GetArgs): Promise<IncomingPayment>
-  }
-  ilpStreamConnection: {
-    get(args: GetArgs): Promise<ILPStreamConnection>
-  }
+  incomingPayment: IncomingPaymentRoutes
+  ilpStreamConnection: ILPStreamConnectionRoutes
 }
 
 export const createClient = async (
   args?: CreateOpenPaymentClientArgs
 ): Promise<OpenPaymentsClient> => {
-  const axios = createAxiosInstance(args)
+  const axiosInstance = createAxiosInstance({
+    requestTimeoutMs:
+      args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
+  })
   const openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
+  const logger = args?.logger ?? createLogger()
+  const deps = { axiosInstance, openApi, logger }
 
   return {
-    incomingPayment: {
-      get: (args: GetArgs) => getIncomingPayment(axios, openApi, args)
-    },
-    ilpStreamConnection: {
-      get: (args: GetArgs) => getILPStreamConnection(axios, openApi, args)
-    }
+    incomingPayment: createIncomingPaymentRoutes(deps),
+    ilpStreamConnection: createILPStreamConnectionRoutes(deps)
   }
 }
