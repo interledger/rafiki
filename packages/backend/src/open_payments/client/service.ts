@@ -1,4 +1,5 @@
 import { Counter, ResolvedPayment } from '@interledger/pay'
+import { createMockContext } from '@shopify/jest-koa-mocks'
 import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios'
 import base64url from 'base64url'
 import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
@@ -13,10 +14,6 @@ import { PaymentPointerService } from '../payment_pointer/service'
 import { ReadContext } from '../../app'
 import { AssetOptions } from '../../asset/service'
 import { BaseService } from '../../shared/baseService'
-// TODO: move out of *.tests
-import { setup } from '../../shared/routes.test'
-// TODO: move out of /tests
-import { createContext } from '../../tests/context'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -179,6 +176,15 @@ async function getResource({
   })
 }
 
+const createReadContext = (params: { id: string }): ReadContext =>
+  createMockContext({
+    headers: { Accept: 'application/json' },
+    method: 'GET',
+    customProperties: {
+      params
+    }
+  }) as ReadContext
+
 async function getConnection(
   deps: ServiceDependencies,
   url: string
@@ -186,15 +192,9 @@ async function getConnection(
   try {
     // Check if this is a local incoming payment connection
     if (url.startsWith(`${deps.openPaymentsUrl}/connections/`)) {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' },
-          method: 'GET'
-        },
-        {
-          id: url.slice(-36)
-        }
-      )
+      const ctx = createReadContext({
+        id: url.slice(-36)
+      })
       await deps.connectionRoutes.get(ctx)
       return ctx.body as ConnectionJSON
     }
@@ -232,16 +232,10 @@ async function getIncomingPayment(
       match.paymentPointerUrl
     )
     if (paymentPointer) {
-      const ctx = setup<ReadContext>({
-        reqOpts: {
-          headers: { Accept: 'application/json' },
-          method: 'GET'
-        },
-        params: {
-          id: match.id
-        },
-        paymentPointer
+      const ctx = createReadContext({
+        id: match.id
       })
+      ctx.paymentPointer = paymentPointer
       await deps.incomingPaymentRoutes.get(ctx)
       return ctx.body as IncomingPaymentJSON
     }
