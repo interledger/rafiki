@@ -29,15 +29,15 @@ export const Config = {
         ),
   authServerIdpSpec: envString(
     'AUTH_SERVER_IDP_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/AS/IdP/openapi.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/3a5ba9d17b63e699eb1817dbb2bebaa10bf65fda/openapi/AS/IdP/openapi.yaml'
   ),
   authServerClientSpec: envString(
     'AUTH_SERVER_CLIENT_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/AS/client/openapi.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/3a5ba9d17b63e699eb1817dbb2bebaa10bf65fda/openapi/AS/client/openapi.yaml'
   ),
   authServerRsSpec: envString(
     'AUTH_SERVER_RS_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/AS/RS/openapi.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/3a5ba9d17b63e699eb1817dbb2bebaa10bf65fda/openapi/AS/RS/openapi.yaml'
   ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
