@@ -3,6 +3,7 @@ import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { Amount, AmountJSON } from '../amount'
+import { Grant } from '../grant/model'
 import { PaymentPointerSubresource } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
 
@@ -34,6 +35,14 @@ export class Quote extends PaymentPointerSubresource {
           from: 'quotes.assetId',
           to: 'assets.id'
         }
+      },
+      receiverGrant: {
+        relation: Model.HasOneRelation,
+        modelClass: Grant,
+        join: {
+          from: 'quotes.receiverGrantId',
+          to: 'grants.id'
+        }
       }
     }
   }
@@ -41,6 +50,10 @@ export class Quote extends PaymentPointerSubresource {
   public expiresAt!: Date
 
   public receiver!: string
+
+  // Grant used to query incoming payment receiver
+  public receiverGrantId?: string
+  public receiverGrant?: Grant
 
   private sendAmountValue!: bigint
 

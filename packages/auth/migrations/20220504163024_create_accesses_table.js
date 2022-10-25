@@ -1,7 +1,12 @@
 exports.up = function (knex) {
   return knex.schema.createTable('accesses', function (table) {
     table.uuid('id').notNullable().primary()
-    table.string('type').notNullable()
+    table
+      .enu('type', ['incoming-payment', 'outgoing-payment', 'quote'], {
+        useNative: true,
+        enumName: 'access_type'
+      })
+      .notNullable()
     table.specificType('actions', 'text[]').notNullable()
     table.string('identifier')
     table.jsonb('limits')

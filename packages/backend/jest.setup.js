@@ -58,6 +58,23 @@ module.exports = async (globalConfig) => {
     await db.migrate.latest({
       directory: __dirname + '/migrations'
     })
+    // Set type parser for array of custom access_action enum type
+    const { textArrayOid } = await db
+      .first('typarray as textArrayOid')
+      .from('pg_type')
+      .where({
+        typname: 'text'
+      })
+    const { accessActionArrayOid } = await db
+      .first('typarray as accessActionArrayOid')
+      .from('pg_type')
+      .where({
+        typname: 'access_action'
+      })
+    db.client.driver.types.setTypeParser(
+      accessActionArrayOid,
+      db.client.driver.types.getTypeParser(textArrayOid)
+    )
 
     for (let i = 1; i <= workers; i++) {
       const workerDatabaseName = `testing_${i}`

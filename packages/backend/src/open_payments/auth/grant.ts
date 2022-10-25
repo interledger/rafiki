@@ -1,7 +1,10 @@
+import { AccessType, AccessAction } from 'auth'
 import assert from 'assert'
 import { Interval, Duration, DateTime, Settings } from 'luxon'
 
 import { Amount } from '../amount'
+
+export { AccessType, AccessAction }
 
 Settings.defaultZone = 'utc'
 
@@ -9,21 +12,6 @@ interface AmountJSON {
   value: string
   assetCode: string
   assetScale: number
-}
-
-export enum AccessType {
-  IncomingPayment = 'incoming-payment',
-  OutgoingPayment = 'outgoing-payment',
-  Quote = 'quote'
-}
-
-export enum AccessAction {
-  Create = 'create',
-  Read = 'read',
-  ReadAll = 'read-all',
-  Complete = 'complete',
-  List = 'list',
-  ListAll = 'list-all'
 }
 
 export interface AccessLimits {

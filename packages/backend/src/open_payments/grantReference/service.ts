@@ -1,13 +1,13 @@
-import { Transaction, TransactionOrKnex } from 'objection'
+import { Transaction } from 'objection'
 import { GrantReference } from './model'
 
 export interface GrantReferenceService {
-  get(grantId: string, trx?: Transaction): Promise<GrantReference>
+  get(grantId: string, trx?: Transaction): Promise<GrantReference | undefined>
   create(
     options: CreateGrantReferenceOptions,
     trx?: Transaction
   ): Promise<GrantReference>
-  lock(grantId: string, trx: TransactionOrKnex): Promise<void>
+  lock(grantId: string, trx: Transaction): Promise<void>
 }
 
 export async function createGrantReferenceService(): Promise<GrantReferenceService> {
@@ -34,7 +34,7 @@ async function createGrantReference(
   return await GrantReference.query(trx).insertAndFetch(options)
 }
 
-async function lockGrantReference(grantId: string, trx: TransactionOrKnex) {
+async function lockGrantReference(grantId: string, trx: Transaction) {
   // TODO: update to use objection once it supports forNoKeyUpdate
   await trx<GrantReference>('grantReferences')
     .select()

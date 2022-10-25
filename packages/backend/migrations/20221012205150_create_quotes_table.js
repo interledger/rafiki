@@ -29,6 +29,9 @@ exports.up = function (knex) {
     table.string('grantId').nullable()
     table.foreign('grantId').references('grantReferences.id')
 
+    table.uuid('receiverGrantId')
+    table.foreign('receiverGrantId').references('grants.id')
+
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
