@@ -71,7 +71,8 @@ describe('Access Token Routes', (): void => {
     actions: [Action.Read, Action.Create],
     identifier: `https://example.com/${v4()}`,
     limits: {
-      receiver: 'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
+      receiver:
+        'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
       sendAmount: {
         value: '400',
         assetCode: 'USD',
