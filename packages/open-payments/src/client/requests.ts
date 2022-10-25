@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import { ValidateFunction } from 'openapi'
-import { CreateOpenPaymentClientArgs } from '.'
+import { ClientDeps, CreateOpenPaymentClientArgs } from '.'
 import config from '../config'
 
 export interface GetArgs {
@@ -9,14 +9,15 @@ export interface GetArgs {
 }
 
 export const get = async <T>(
-  axios: AxiosInstance,
+  clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
   args: GetArgs,
   openApiResponseValidator: ValidateFunction<T>
 ): Promise<T> => {
+  const { axiosInstance, logger } = clientDeps
   const { url, accessToken } = args
 
   try {
-    const { data } = await axios.get(url, {
+    const { data } = await axiosInstance.get(url, {
       headers: accessToken
         ? {
             Authorization: `GNAP ${accessToken}`,
@@ -28,7 +29,7 @@ export const get = async <T>(
 
     if (!openApiResponseValidator(data)) {
       const errorMessage = 'Failed to validate OpenApi response'
-      console.log(errorMessage, {
+      logger.error(errorMessage, {
         url,
         data: JSON.stringify(data)
       })
@@ -38,7 +39,7 @@ export const get = async <T>(
 
     return data
   } catch (error) {
-    console.log('Error when making Open Payments GET request', {
+    logger.error('Error when making Open Payments GET request', {
       errorMessage: error?.message,
       url
     })

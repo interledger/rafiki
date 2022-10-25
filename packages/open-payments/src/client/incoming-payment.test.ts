@@ -3,6 +3,7 @@ import { createIncomingPaymentRoutes } from './incoming-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import { createAxiosInstance } from './requests'
 import config from '../config'
+import { silentLogger } from '../test/helpers'
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
@@ -12,12 +13,17 @@ describe('incoming-payment', (): void => {
   })
 
   const axiosInstance = createAxiosInstance()
+  const logger = silentLogger
 
   describe('createIncomingPaymentRoutes', (): void => {
     test('calls createResponseValidator properly', async (): Promise<void> => {
       jest.spyOn(openApi, 'createResponseValidator')
 
-      createIncomingPaymentRoutes(axiosInstance, openApi)
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/incoming-payments/{id}',
         method: HttpMethod.GET

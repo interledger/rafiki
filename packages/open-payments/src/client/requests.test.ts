@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createAxiosInstance, get } from './requests'
 import nock from 'nock'
+import { silentLogger } from '../test/helpers'
 
 describe('requests', (): void => {
-  jest.spyOn(console, 'log').mockImplementation(() => {})
+  const logger = silentLogger
 
   describe('createAxiosInstance', (): void => {
     test('sets timeout properly', async (): Promise<void> => {
@@ -30,7 +31,7 @@ describe('requests', (): void => {
       nock(baseUrl).get('/incoming-payment').reply(200)
 
       await get(
-        axiosInstance,
+        { axiosInstance, logger },
         {
           url: `${baseUrl}/incoming-payment`,
           accessToken: 'accessToken'
@@ -54,7 +55,7 @@ describe('requests', (): void => {
       nock(baseUrl).get('/incoming-payment').reply(200)
 
       await get(
-        axiosInstance,
+        { axiosInstance, logger },
         {
           url: `${baseUrl}/incoming-payment`
         },
@@ -74,7 +75,7 @@ describe('requests', (): void => {
 
       await expect(
         get(
-          axiosInstance,
+          { axiosInstance, logger },
           {
             url: `${baseUrl}/incoming-payment`
           },
