@@ -7,5 +7,5 @@
     "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts", "src/scripts/*"]
+  "exclude": ["**/*.test.ts", "src/scripts/*", "src/test/*"]
 }
