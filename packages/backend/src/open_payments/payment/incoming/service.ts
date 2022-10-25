@@ -5,12 +5,16 @@ import {
   IncomingPaymentState
 } from './model'
 import { AccountingService } from '../../../accounting/service'
-import { Pagination } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import assert from 'assert'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
-import { PaymentPointerService } from '../../payment_pointer/service'
+import { GetOptions, ListOptions } from '../../payment_pointer/model'
+import {
+  PaymentPointerService,
+  PaymentPointerSubresourceService
+} from '../../payment_pointer/service'
+
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
 import { end, parse } from 'iso8601-duration'
@@ -32,18 +36,13 @@ export interface CreateIncomingPaymentOptions {
   externalRef?: string
 }
 
-export interface IncomingPaymentService {
-  get(id: string, clientId?: string): Promise<IncomingPayment | undefined>
+export interface IncomingPaymentService
+  extends PaymentPointerSubresourceService<IncomingPayment> {
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
-  getPaymentPointerPage(
-    paymentPointerId: string,
-    pagination?: Pagination,
-    clientId?: string
-  ): Promise<IncomingPayment[]>
   processNext(): Promise<string | undefined>
   getByConnection(connectionId: string): Promise<IncomingPayment | undefined>
 }
@@ -65,34 +64,34 @@ export async function createIncomingPaymentService(
     logger: log
   }
   return {
-    get: (id, clientId) => getIncomingPayment(deps, 'id', id, clientId),
+    get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
-    getPaymentPointerPage: (paymentPointerId, pagination, clientId) =>
-      getPaymentPointerPage(deps, paymentPointerId, pagination, clientId),
+    getPaymentPointerPage: (options) => getPaymentPointerPage(deps, options),
     processNext: () => processNextIncomingPayment(deps),
     getByConnection: (connectionId) =>
-      getIncomingPayment(deps, 'connectionId', connectionId)
+      getIncomingPaymentByConnection(deps, connectionId)
   }
 }
 
 async function getIncomingPayment(
   deps: ServiceDependencies,
-  key: string,
-  value: string,
-  clientId?: string
+  options: GetOptions
 ): Promise<IncomingPayment | undefined> {
-  let incomingPayment: IncomingPayment
-  if (!clientId) {
-    incomingPayment = await IncomingPayment.query(deps.knex)
-      .findOne(key, value)
-      .withGraphFetched('[asset, paymentPointer]')
-  } else {
-    incomingPayment = await IncomingPayment.query(deps.knex)
-      .findOne(`incomingPayments.${key}`, value)
-      .withGraphJoined('[asset, paymentPointer, grantRef]')
-      .where('grantRef.clientId', clientId)
-  }
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .get(options)
+    .withGraphFetched('[asset, paymentPointer]')
+  if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
+  else return
+}
+
+async function getIncomingPaymentByConnection(
+  deps: ServiceDependencies,
+  connectionId: string
+): Promise<IncomingPayment | undefined> {
+  const incomingPayment = await IncomingPayment.query(deps.knex)
+    .findOne({ connectionId })
+    .withGraphFetched('[asset, paymentPointer]')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
 }
@@ -254,26 +253,11 @@ async function handleDeactivated(
 
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
-  paymentPointerId: string,
-  pagination?: Pagination,
-  clientId?: string
+  options: ListOptions
 ): Promise<IncomingPayment[]> {
-  let page: IncomingPayment[]
-  if (!clientId) {
-    page = await IncomingPayment.query(deps.knex)
-      .getPage(pagination)
-      .where({
-        paymentPointerId
-      })
-      .withGraphFetched('[asset, paymentPointer]')
-  } else {
-    page = await IncomingPayment.query(deps.knex)
-      .getPage(pagination)
-      .where('incomingPayments.paymentPointerId', paymentPointerId)
-      .andWhere('grantRef.clientId', clientId)
-      .withGraphJoined('[asset, paymentPointer, grantRef]')
-  }
-
+  const page = await IncomingPayment.query(deps.knex)
+    .list(options)
+    .withGraphFetched('[asset, paymentPointer]')
   const amounts = await deps.accountingService.getAccountsTotalReceived(
     page.map((payment: IncomingPayment) => payment.id)
   )

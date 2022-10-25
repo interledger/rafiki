@@ -84,6 +84,7 @@ export type ClientKeysContext = Context<AppRequest<'keyId'>>
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
+  clientId?: string
 }
 
 // Payment pointer subresources

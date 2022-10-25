@@ -22,7 +22,9 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   ctx
 ): Promise<ResolversTypes['Quote']> => {
   const quoteService = await ctx.container.use('quoteService')
-  const quote = await quoteService.get(args.id)
+  const quote = await quoteService.get({
+    id: args.id
+  })
   if (!quote) throw new Error('quote does not exist')
   return quoteToGraphql(quote)
 }
@@ -56,10 +58,16 @@ export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['qu
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
     if (!parent.id) throw new Error('missing payment pointer id')
     const quoteService = await ctx.container.use('quoteService')
-    const quotes = await quoteService.getPaymentPointerPage(parent.id, args)
+    const quotes = await quoteService.getPaymentPointerPage({
+      paymentPointerId: parent.id,
+      pagination: args
+    })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage(parent.id as string, pagination),
+        quoteService.getPaymentPointerPage({
+          paymentPointerId: parent.id as string,
+          pagination
+        }),
       quotes
     )
     return {
