@@ -26,7 +26,7 @@ First, instantiate an `OpenAPI` validator object with a reference to your OpenAP
 const openApi = await createOpenAPI(OPEN_API_URL)
 ```
 
-Then, responses and requests validators can be created and used as such:
+Then, validate requests and responses as such:
 
 ```ts
 const validateRequest = openApi.createRequestValidator({
@@ -45,17 +45,23 @@ validateResponse(data) // true or false
 ```
 
 > **Note**
-> The underlying response & request validator [packages](https://github.com/kogosoftwarellc/open-api/tree/master/packages) use the [Ajv schema validator](https://ajv.js.org) library. When a request and a validator is created, a `new Ajv()` instance is also created. However, Avj [recommends](https://ajv.js.org/guide/managing-schemas.html#compiling-during-initialization) instantiating once at initialization. This means validators (`openApi.createRequestValidator` and `openApi.createResponseValidator`) should also be instantiated once during the lifecycle of the applcation to avoid any issues.
+>
+> The underlying response & request validator [packages](https://github.com/kogosoftwarellc/open-api/tree/master/packages) use the [Ajv schema validator](https://ajv.js.org) library. Each time validators are created via `createRequestValidator` and `createResponseValidator`, a `new Ajv()` instance is also [created](https://github.com/kogosoftwarellc/open-api/blob/master/packages/openapi-response-validator/index.ts). Since Ajv [recommends](https://ajv.js.org/guide/managing-schemas.html#compiling-during-initialization) instantiating once at initialization, these validators should also be instantiated just once during the lifecycle of the application to avoid any issues.
 
-Likewise, you can validate both requests and responses in a middleware, using the `createValidatorMiddleware` method:
+
+
+<br>
+
+Likewise, you can validate both requests and responses inside a middleware method, using `createValidatorMiddleware`:
 
 ```ts
 const openApi = await createOpenAPI(OPEN_API_URL)
 const router = new SomeRouter()
 router.get(
-    '/example',
+    '/resource/{id}',
     createValidatorMiddleware(openApi, {
-    path: '/example',
-    method: HttpMethod.GET
-})
+        path: '/resource/{id}',
+        method: HttpMethod.GET
+    })
+)
 ```
