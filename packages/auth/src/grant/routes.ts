@@ -437,7 +437,7 @@ function createGrantBody({
       value: accessToken.value,
       manage: domain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
-      expiresIn: accessToken.expiresIn
+      expires_in: accessToken.expiresIn
     },
     continue: {
       access_token: {
