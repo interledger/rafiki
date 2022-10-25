@@ -85,7 +85,7 @@ describe('requests', (): void => {
           },
           failedValidator
         )
-      ).rejects.toThrow('Failed to validate OpenApi response')
+      ).rejects.toThrow(/Failed to validate OpenApi response/)
     })
   })
 })

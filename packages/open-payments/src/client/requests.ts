@@ -35,8 +35,10 @@ export const get = async <T>(
 
     return data
   } catch (error) {
-    const errorMessage = 'Error when making Open Payments GET request'
-    logger.error({ errorMessage: error?.message, url }, errorMessage)
+    const errorMessage = `Error when making Open Payments GET request: ${
+      error?.message ? error.message : 'Unknown error'
+    }`
+    logger.error({ url }, errorMessage)
 
     throw new Error(errorMessage)
   }
