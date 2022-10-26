@@ -36,9 +36,9 @@ import {
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
 import {
-  addKeyToPaymentPointer,
+  createPaymentPointerKey,
   revokePaymentPointerKey
-} from './paymentPointerKeys'
+} from './paymentPointerKey'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -57,7 +57,7 @@ export const resolvers: Resolvers = {
     quotes: getPaymentPointerQuotes
   },
   Mutation: {
-    addKeyToPaymentPointer,
+    createPaymentPointerKey,
     revokePaymentPointerKey,
     createPaymentPointer,
     triggerPaymentPointerEvents,

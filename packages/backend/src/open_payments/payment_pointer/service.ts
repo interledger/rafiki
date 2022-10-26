@@ -10,8 +10,6 @@ import {
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 import { AssetService, AssetOptions } from '../../asset/service'
-import { JWKWithRequired } from 'auth'
-import { PaymentPointerKey } from '../../paymentPointerKeys/model'
 
 export interface CreateOptions {
   url: string
@@ -23,9 +21,6 @@ export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
-  addKeyToPaymentPointer(
-    options: AddKeyToPaymentPointerOptions
-  ): Promise<PaymentPointer>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
 }
@@ -55,7 +50,6 @@ export async function createPaymentPointerService({
     create: (options) => createPaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
     getByUrl: (url) => getPaymentPointerByUrl(deps, url),
-    addKeyToPaymentPointer: (options) => addKeyToPaymentPointer(deps, options),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
   }
@@ -99,7 +93,6 @@ async function createPaymentPointer(
       assetId: asset.id
     })
     .withGraphFetched('asset')
-    .withGraphFetched('keys')
 }
 
 async function getPaymentPointer(
@@ -109,7 +102,6 @@ async function getPaymentPointer(
   return await PaymentPointer.query(deps.knex)
     .findById(id)
     .withGraphFetched('asset')
-    .withGraphFetched('keys')
 }
 
 async function getPaymentPointerByUrl(
@@ -119,7 +111,6 @@ async function getPaymentPointerByUrl(
   const paymentPointer = await PaymentPointer.query(deps.knex)
     .findOne({ url })
     .withGraphFetched('asset')
-    .withGraphFetched('keys')
   return paymentPointer || undefined
 }
 
@@ -216,18 +207,4 @@ async function createWithdrawalEvent(
   await paymentPointer.$query(deps.knex).patch({
     totalEventsAmount: paymentPointer.totalEventsAmount + amount
   })
-}
-
-export interface AddKeyToPaymentPointerOptions {
-  id: string
-  paymentPointerId: string
-  jwk: JWKWithRequired
-}
-
-async function addKeyToPaymentPointer(
-  deps: ServiceDependencies,
-  options: AddKeyToPaymentPointerOptions
-): Promise<PaymentPointer> {
-  await PaymentPointerKey.query(deps.knex).insertAndFetch(options)
-  return getPaymentPointer(deps, options.paymentPointerId)
 }

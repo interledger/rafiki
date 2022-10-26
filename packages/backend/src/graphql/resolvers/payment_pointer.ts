@@ -98,14 +98,5 @@ export const paymentPointerToGraphql = (
   url: paymentPointer.url,
   asset: assetToGraphql(paymentPointer.asset),
   publicName: paymentPointer.publicName ?? undefined,
-  keys:
-    paymentPointer.keys != null
-      ? paymentPointer.keys.map((key) => ({
-          id: key.id,
-          paymentPointerId: key.paymentPointerId,
-          jwk: JSON.stringify(key.jwk),
-          createdAt: new Date(+paymentPointer.createdAt).toISOString()
-        }))
-      : [],
   createdAt: new Date(+paymentPointer.createdAt).toISOString()
 })

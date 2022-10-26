@@ -10,19 +10,17 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  AddKeyToPaymentPointerInput,
-  AddKeyToPaymentPointerMutationResponse,
+  CreatePaymentPointerKeyInput,
+  CreatePaymentPointerKeyMutationResponse,
   RevokePaymentPointerKeyMutationResponse
 } from '../generated/graphql'
 import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { randomAsset } from '../../tests/asset'
 import { isPaymentPointerError } from '../../open_payments/payment_pointer/errors'
+import { PaymentPointerKeyService } from '../../paymentPointerKey/service'
 
-const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-const KEY_UUID = uuid()
-const TEST_KID_PATH = '/keys/' + KEY_UUID
 const TEST_KEY = {
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  kid: uuid(),
   x: 'test-public-key',
   kty: 'OKP',
   alg: 'EdDSA',
@@ -31,17 +29,19 @@ const TEST_KEY = {
   use: 'sig'
 }
 
-describe('Client Resolvers', (): void => {
+describe('Payment Pointer Key Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
   let paymentPointerService: PaymentPointerService
+  let paymentPointerKeyService: PaymentPointerKeyService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     paymentPointerService = await deps.use('paymentPointerService')
+    paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -53,16 +53,15 @@ describe('Client Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Add Payment Pointer Keys', (): void => {
-    test('Can add keys to a payment pointer', async (): Promise<void> => {
+  describe('Create Payment Pointer Keys', (): void => {
+    test('Can create payment pointer key', async (): Promise<void> => {
       const paymentPointer = await paymentPointerService.create({
         url: 'https://alice.me/.well-known/pay',
         asset: randomAsset()
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      const input: AddKeyToPaymentPointerInput = {
-        id: KEY_UUID,
+      const input: CreatePaymentPointerKeyInput = {
         paymentPointerId: paymentPointer.id,
         jwk: JSON.stringify(TEST_KEY)
       }
@@ -70,18 +69,18 @@ describe('Client Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddKeyToPaymentPointer(
-              $input: AddKeyToPaymentPointerInput!
+            mutation CreatePaymentPointerKey(
+              $input: CreatePaymentPointerKeyInput!
             ) {
-              addKeyToPaymentPointer(input: $input) {
+              createPaymentPointerKey(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                paymentPointerKey {
                   id
-                  keys {
-                    id
-                  }
+                  paymentPointerId
+                  jwk
+                  createdAt
                 }
               }
             }
@@ -90,9 +89,9 @@ describe('Client Resolvers', (): void => {
             input
           }
         })
-        .then((query): AddKeyToPaymentPointerMutationResponse => {
+        .then((query): CreatePaymentPointerKeyMutationResponse => {
           if (query.data) {
-            return query.data.addKeyToPaymentPointer
+            return query.data.createPaymentPointerKey
           } else {
             throw new Error('Data was empty')
           }
@@ -100,31 +99,17 @@ describe('Client Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      assert(response.paymentPointer)
-
-      expect(response.paymentPointer).toEqual({
-        __typename: 'PaymentPointer',
-        id: response.paymentPointer.id,
-        keys: [
-          {
-            __typename: 'PaymentPointerKeys',
-            id: KEY_UUID
-          }
-        ]
+      assert.ok(response.paymentPointerKey)
+      expect(response.paymentPointerKey).toMatchObject({
+        __typename: 'PaymentPointerKey',
+        paymentPointerId: input.paymentPointerId
       })
-
-      expect(response.paymentPointer.keys).toHaveLength(1)
-
-      await expect(
-        paymentPointerService.get(response.paymentPointer.id)
-      ).resolves.toMatchObject({
-        id: response.paymentPointer.id
-      })
+      expect(JSON.parse(input.jwk)).toEqual(TEST_KEY)
     })
 
     test('500', async (): Promise<void> => {
       jest
-        .spyOn(paymentPointerService, 'addKeyToPaymentPointer')
+        .spyOn(paymentPointerKeyService, 'create')
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
@@ -135,8 +120,7 @@ describe('Client Resolvers', (): void => {
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      const input: AddKeyToPaymentPointerInput = {
-        id: KEY_UUID,
+      const input = {
         paymentPointerId: paymentPointer.id,
         jwk: JSON.stringify(TEST_KEY)
       }
@@ -144,18 +128,18 @@ describe('Client Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation AddKeyToPaymentPointer(
-              $input: AddKeyToPaymentPointerInput!
+            mutation CreatePaymentPointerKey(
+              $input: CreatePaymentPointerKeyInput!
             ) {
-              addKeyToPaymentPointer(input: $input) {
+              createPaymentPointerKey(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                paymentPointerKey {
                   id
-                  keys {
-                    id
-                  }
+                  paymentPointerId
+                  jwk
+                  createdAt
                 }
               }
             }
@@ -164,9 +148,9 @@ describe('Client Resolvers', (): void => {
             input
           }
         })
-        .then((query): AddKeyToPaymentPointerMutationResponse => {
+        .then((query): CreatePaymentPointerKeyMutationResponse => {
           if (query.data) {
-            return query.data.addKeyToPaymentPointer
+            return query.data.createPaymentPointerKey
           } else {
             throw new Error('Data was empty')
           }
@@ -174,7 +158,7 @@ describe('Client Resolvers', (): void => {
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe(
-        'Error trying to add key to payment pointer'
+        'Error trying to create payment pointer key'
       )
     })
   })
@@ -187,8 +171,7 @@ describe('Client Resolvers', (): void => {
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      await paymentPointerService.addKeyToPaymentPointer({
-        id: KEY_UUID,
+      const key = await paymentPointerKeyService.create({
         paymentPointerId: paymentPointer.id,
         jwk: TEST_KEY
       })
@@ -206,7 +189,7 @@ describe('Client Resolvers', (): void => {
             }
           `,
           variables: {
-            keyId: KEY_UUID
+            keyId: key.id
           }
         })
         .then((query): RevokePaymentPointerKeyMutationResponse => {
@@ -219,7 +202,7 @@ describe('Client Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toBe('200')
-      expect(response.keyId).toBe(KEY_UUID)
+      expect(response.keyId).toBe(key.id)
     })
   })
 })

@@ -31,7 +31,7 @@ import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { PaymentPointerKeysRoutes } from './paymentPointerKeys/routes'
+import { PaymentPointerKeysRoutes } from './paymentPointerKey/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -47,7 +47,7 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
-import { PaymentPointerKeysService } from './paymentPointerKeys/service'
+import { PaymentPointerKeyService } from './paymentPointerKey/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
 
 export interface AppContextData {
@@ -149,7 +149,7 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
-  paymentPointerKeysService: Promise<PaymentPointerKeysService>
+  paymentPointerKeyService: Promise<PaymentPointerKeyService>
   grantReferenceService: Promise<GrantReferenceService>
 }
 

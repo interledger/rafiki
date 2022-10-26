@@ -11,18 +11,13 @@ import { initIocContainer } from '..'
 import { AppServices, PaymentPointerKeysContext } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { PaymentPointerKeysRoutes } from './routes'
-import {
-  AddKeyToPaymentPointerOptions,
-  PaymentPointerService
-} from '../open_payments/payment_pointer/service'
+import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 import { randomAsset } from '../tests/asset'
 import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
+import { PaymentPointerKeyService } from './service'
 
-const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-const KEY_UUID = uuid()
-const TEST_KID_PATH = '/keys/' + KEY_UUID
 const TEST_KEY = {
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+  kid: uuid(),
   x: 'test-public-key',
   kty: 'OKP',
   alg: 'EdDSA',
@@ -36,6 +31,7 @@ describe('Payment Pointer Keys Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let paymentPointerService: PaymentPointerService
+  let paymentPointerKeyService: PaymentPointerKeyService
   let config: IAppConfig
   let paymentPointerKeysRoutes: PaymentPointerKeysRoutes
   const mockMessageProducer = {
@@ -53,6 +49,7 @@ describe('Payment Pointer Keys Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointerService = await deps.use('paymentPointerService')
+    paymentPointerKeyService = await deps.use('paymentPointerKeyService')
     paymentPointerKeysRoutes = await deps.use('paymentPointerKeysRoutes')
   })
 
@@ -85,19 +82,18 @@ describe('Payment Pointer Keys Routes', (): void => {
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      const keyOption: AddKeyToPaymentPointerOptions = {
-        id: KEY_UUID,
+      const keyOption = {
         paymentPointerId: paymentPointer.id,
         jwk: TEST_KEY
       }
-      await paymentPointerService.addKeyToPaymentPointer(keyOption)
+      const key = await paymentPointerKeyService.create(keyOption)
 
       const ctx = createContext<PaymentPointerKeysContext>(
         {
           headers: { Accept: 'application/json' },
-          url: `/keys/${KEY_UUID}`
+          url: `/keys/${key.id}`
         },
-        { keyId: KEY_UUID }
+        { keyId: key.id }
       )
 
       await expect(paymentPointerKeysRoutes.get(ctx)).resolves.toBeUndefined()

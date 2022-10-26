@@ -27,7 +27,7 @@ import { createAuthService } from './open_payments/auth/service'
 import { createOpenPaymentsClientService } from './open_payments/client/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
-import { createPaymentPointerKeysRoutes } from './paymentPointerKeys/routes'
+import { createPaymentPointerKeysRoutes } from './paymentPointerKey/routes'
 import { createPaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
@@ -39,7 +39,7 @@ import { createApiKeyService } from './apiKey/service'
 import { createOpenAPI } from 'openapi'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
-import { createPaymentPointerKeysService } from './paymentPointerKeys/service'
+import { createPaymentPointerKeyService } from './paymentPointerKey/service'
 import { createGrantReferenceService } from './open_payments/grantReference/service'
 
 BigInt.prototype.toJSON = function () {
@@ -209,7 +209,7 @@ export function initIocContainer(
   })
   container.singleton('paymentPointerKeysRoutes', async (deps) => {
     return createPaymentPointerKeysRoutes({
-      paymentPointerKeysService: await deps.use('paymentPointerKeysService'),
+      paymentPointerKeyService: await deps.use('paymentPointerKeyService'),
       paymentPointerService: await deps.use('paymentPointerService')
     })
   })
@@ -251,8 +251,8 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('paymentPointerKeysService', async (deps) => {
-    return createPaymentPointerKeysService({
+  container.singleton('paymentPointerKeyService', async (deps) => {
+    return createPaymentPointerKeyService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
     })

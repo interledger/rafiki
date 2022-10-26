@@ -108,10 +108,10 @@ type Mutation {
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
-  "Add Key to Client"
-  addKeyToPaymentPointer(
-    input: AddKeyToPaymentPointerInput!
-  ): AddKeyToPaymentPointerMutationResponse
+  "Create payment pointer key"
+  createPaymentPointerKey(
+    input: CreatePaymentPointerKeyInput!
+  ): CreatePaymentPointerKeyMutationResponse
 
   revokePaymentPointerKey(
     keyId: String!
@@ -253,8 +253,7 @@ input CreatePaymentPointerWithdrawalInput {
   id: String!
 }
 
-input AddKeyToPaymentPointerInput {
-  id: String!
+input CreatePaymentPointerKeyInput {
   paymentPointerId: String!
   jwk: String!
 }
@@ -362,7 +361,6 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): OutgoingPaymentConnection
-  keys: [PaymentPointerKeys!]!
   createdAt: String!
 }
 
@@ -521,7 +519,7 @@ input CreatePaymentPointerInput {
   publicName: String
 }
 
-type PaymentPointerKeys implements Model {
+type PaymentPointerKey implements Model {
   id: ID!
   paymentPointerId: ID!
   jwk: String!
@@ -614,11 +612,11 @@ type PaymentPointerWithdrawalMutationResponse implements MutationResponse {
   withdrawal: PaymentPointerWithdrawal
 }
 
-type AddKeyToPaymentPointerMutationResponse implements MutationResponse {
+type CreatePaymentPointerKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  paymentPointer: PaymentPointer
+  paymentPointerKey: PaymentPointerKey
 }
 
 type RevokePaymentPointerKeyMutationResponse implements MutationResponse {

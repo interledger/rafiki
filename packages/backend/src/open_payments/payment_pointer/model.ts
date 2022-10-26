@@ -5,7 +5,7 @@ import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
-import { PaymentPointerKey } from '../../paymentPointerKeys/model'
+import { PaymentPointerKey } from '../../paymentPointerKey/model'
 
 export class PaymentPointer
   extends BaseModel
@@ -34,7 +34,7 @@ export class PaymentPointer
     }
   })
 
-  public keys!: PaymentPointerKey[]
+  public keys?: PaymentPointerKey[]
 
   public url!: string
   public publicName?: string
