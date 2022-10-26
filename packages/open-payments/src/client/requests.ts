@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios'
 import { ValidateFunction } from 'openapi'
 import { ClientDeps } from '.'
 
-export interface GetArgs {
+interface GetArgs {
   url: string
   accessToken?: string
 }
