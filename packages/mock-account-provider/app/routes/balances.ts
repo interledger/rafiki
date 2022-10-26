@@ -1,6 +1,6 @@
 import { json } from '@remix-run/node'
-import { getAccountBalances } from '~/lib/balances.server'
+import { getAccountsWithBalance } from '../lib/balances.server'
 
 export async function loader() {
-  return json(await getAccountBalances(), { status: 200 })
+  return json(await getAccountsWithBalance(), { status: 200 })
 }
