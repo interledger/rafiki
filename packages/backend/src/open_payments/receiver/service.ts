@@ -1,15 +1,13 @@
-import { parseAmount } from '../amount'
-
-import { ConnectionService } from '../connection/service'
-
-import { PaymentPointerService } from '../payment_pointer/service'
-import { BaseService } from '../../shared/baseService'
-
 import {
   OpenPaymentsClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   ILPStreamConnection as OpenPaymentsConnection
 } from 'open-payments'
+
+import { parseAmount } from '../amount'
+import { ConnectionService } from '../connection/service'
+import { PaymentPointerService } from '../payment_pointer/service'
+import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
@@ -132,7 +130,7 @@ async function getIncomingPayment(
       urlParseResult.paymentPointerUrl
     )
     if (paymentPointer) {
-      return getLocalIncomingPayment({
+      return await getLocalIncomingPayment({
         deps,
         id: urlParseResult.id,
         paymentPointer

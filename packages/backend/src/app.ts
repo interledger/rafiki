@@ -50,6 +50,7 @@ import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { ClientKeysService } from './clientKeys/service'
 import { ClientService } from './clients/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
+import { OpenPaymentsClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -154,6 +155,7 @@ export interface AppServices {
   clientService: Promise<ClientService>
   clientKeysService: Promise<ClientKeysService>
   grantReferenceService: Promise<GrantReferenceService>
+  openPaymentsClient: Promise<OpenPaymentsClient>
 }
 
 export type AppContainer = IocContract<AppServices>
