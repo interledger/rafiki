@@ -7,7 +7,7 @@ import { URL } from 'url'
 
 import { Amount, parseAmount } from '../amount'
 import { ConnectionRoutes } from '../connection/routes'
-import { ConnectionBase, ConnectionJSON } from '../connection/service'
+import { ConnectionBase, ConnectionJSON } from '../connection/model'
 import { IncomingPaymentJSON } from '../payment/incoming/model'
 import { IncomingPaymentRoutes } from '../payment/incoming/routes'
 import { PaymentPointerService } from '../payment_pointer/service'

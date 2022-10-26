@@ -2,7 +2,7 @@ import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON } from '../../amount'
-import { ConnectionJSON } from '../../connection/service'
+import { Connection, ConnectionJSON } from '../../connection/model'
 import {
   PaymentPointer,
   PaymentPointerSubresource
@@ -11,6 +11,7 @@ import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { WebhookEvent } from '../../../webhook/model'
+import { IncomingPayment as OpenPaymentsIncomingPayment } from 'open-payments'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
@@ -236,6 +237,30 @@ export class IncomingPayment
       payment.externalRef = json.externalRef
     }
     return payment
+  }
+
+  public toOpenPaymentsType({
+    ilpStreamConnection
+  }: {
+    ilpStreamConnection: Connection
+  }): OpenPaymentsIncomingPayment {
+    return {
+      id: this.id,
+      paymentPointer: this.paymentPointer.url,
+      incomingAmount: {
+        ...this.incomingAmount,
+        value: this.incomingAmount.value.toString()
+      },
+      receivedAmount: {
+        ...this.receivedAmount,
+        value: this.receivedAmount.value.toString()
+      },
+      completed: this.completed,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+      expiresAt: this.expiresAt.toISOString(),
+      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
+    }
   }
 }
 
