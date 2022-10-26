@@ -279,7 +279,7 @@ export class App {
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),
