@@ -27,7 +27,7 @@ import { createAuthService } from './open_payments/auth/service'
 import { createOpenPaymentsClientService } from './open_payments/client/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
-import { createPaymentPointerKeysRoutes } from './paymentPointerKey/routes'
+import { createPaymentPointerKeyRoutes } from './paymentPointerKey/routes'
 import { createPaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
@@ -207,8 +207,8 @@ export function initIocContainer(
       config: await deps.use('config')
     })
   })
-  container.singleton('paymentPointerKeysRoutes', async (deps) => {
-    return createPaymentPointerKeysRoutes({
+  container.singleton('paymentPointerKeyRoutes', async (deps) => {
+    return createPaymentPointerKeyRoutes({
       paymentPointerKeyService: await deps.use('paymentPointerKeyService'),
       paymentPointerService: await deps.use('paymentPointerService')
     })

@@ -31,7 +31,7 @@ import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { PaymentPointerKeysRoutes } from './paymentPointerKey/routes'
+import { PaymentPointerKeyRoutes } from './paymentPointerKey/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -78,7 +78,7 @@ type Context<T> = Omit<AppContext, 'request'> & {
   request: T
 }
 
-export type PaymentPointerKeysContext = Context<AppRequest<'keyId'>>
+export type PaymentPointerKeyContext = Context<AppRequest<'keyId'>>
 
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
@@ -138,7 +138,7 @@ export interface AppServices {
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
-  paymentPointerKeysRoutes: Promise<PaymentPointerKeysRoutes>
+  paymentPointerKeyRoutes: Promise<PaymentPointerKeyRoutes>
   paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
@@ -247,8 +247,8 @@ export class App {
     })
 
     const spspRoutes = await this.container.use('spspRoutes')
-    const paymentPointerKeysRoutes = await this.container.use(
-      'paymentPointerKeysRoutes'
+    const paymentPointerKeyRoutes = await this.container.use(
+      'paymentPointerKeyRoutes'
     )
     const paymentPointerRoutes = await this.container.use(
       'paymentPointerRoutes'
@@ -347,8 +347,8 @@ export class App {
     }
     router.get(
       '/keys/{keyId}',
-      (ctx: PaymentPointerKeysContext): Promise<void> =>
-        paymentPointerKeysRoutes.get(ctx)
+      (ctx: PaymentPointerKeyContext): Promise<void> =>
+        paymentPointerKeyRoutes.get(ctx)
     )
 
     // Add the payment pointer query route last.

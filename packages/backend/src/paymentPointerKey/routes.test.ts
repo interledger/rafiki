@@ -8,9 +8,9 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
-import { AppServices, PaymentPointerKeysContext } from '../app'
+import { AppServices, PaymentPointerKeyContext } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { PaymentPointerKeysRoutes } from './routes'
+import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 import { randomAsset } from '../tests/asset'
 import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
@@ -33,7 +33,7 @@ describe('Payment Pointer Keys Routes', (): void => {
   let paymentPointerService: PaymentPointerService
   let paymentPointerKeyService: PaymentPointerKeyService
   let config: IAppConfig
-  let paymentPointerKeysRoutes: PaymentPointerKeysRoutes
+  let paymentPointerKeyRoutes: PaymentPointerKeyRoutes
   const mockMessageProducer = {
     send: jest.fn()
   }
@@ -50,7 +50,7 @@ describe('Payment Pointer Keys Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     paymentPointerService = await deps.use('paymentPointerService')
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
-    paymentPointerKeysRoutes = await deps.use('paymentPointerKeysRoutes')
+    paymentPointerKeyRoutes = await deps.use('paymentPointerKeyRoutes')
   })
 
   afterEach(async (): Promise<void> => {
@@ -63,13 +63,13 @@ describe('Payment Pointer Keys Routes', (): void => {
 
   describe('get', (): void => {
     test('returns 404 for nonexistent key', async (): Promise<void> => {
-      const ctx = createContext<PaymentPointerKeysContext>(
+      const ctx = createContext<PaymentPointerKeyContext>(
         {
           headers: { Accept: 'application/json' }
         },
         { keyId: uuid() }
       )
-      await expect(paymentPointerKeysRoutes.get(ctx)).rejects.toHaveProperty(
+      await expect(paymentPointerKeyRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
         404
       )
@@ -88,7 +88,7 @@ describe('Payment Pointer Keys Routes', (): void => {
       }
       const key = await paymentPointerKeyService.create(keyOption)
 
-      const ctx = createContext<PaymentPointerKeysContext>(
+      const ctx = createContext<PaymentPointerKeyContext>(
         {
           headers: { Accept: 'application/json' },
           url: `/keys/${key.id}`
@@ -96,7 +96,7 @@ describe('Payment Pointer Keys Routes', (): void => {
         { keyId: key.id }
       )
 
-      await expect(paymentPointerKeysRoutes.get(ctx)).resolves.toBeUndefined()
+      await expect(paymentPointerKeyRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         key: TEST_KEY,
         paymentPointer: {

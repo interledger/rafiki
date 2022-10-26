@@ -1,4 +1,4 @@
-import { PaymentPointerKeysContext } from '../app'
+import { PaymentPointerKeyContext } from '../app'
 import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 import { PaymentPointerKeyService } from './service'
 
@@ -7,21 +7,21 @@ interface ServiceDependencies {
   paymentPointerService: PaymentPointerService
 }
 
-export interface PaymentPointerKeysRoutes {
-  get(ctx: PaymentPointerKeysContext): Promise<void>
+export interface PaymentPointerKeyRoutes {
+  get(ctx: PaymentPointerKeyContext): Promise<void>
 }
 
-export function createPaymentPointerKeysRoutes(
+export function createPaymentPointerKeyRoutes(
   deps: ServiceDependencies
-): PaymentPointerKeysRoutes {
+): PaymentPointerKeyRoutes {
   return {
-    get: (ctx: PaymentPointerKeysContext) => getKeyById(deps, ctx)
+    get: (ctx: PaymentPointerKeyContext) => getKeyById(deps, ctx)
   }
 }
 
 export async function getKeyById(
   deps: ServiceDependencies,
-  ctx: PaymentPointerKeysContext
+  ctx: PaymentPointerKeyContext
 ): Promise<void> {
   const key = await deps.paymentPointerKeyService.getKeyById(ctx.params.keyId)
   if (!key) {
