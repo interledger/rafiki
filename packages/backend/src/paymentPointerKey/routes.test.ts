@@ -8,7 +8,11 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
-import { AppServices, PaymentPointerKeyContext } from '../app'
+import {
+  AppServices,
+  PaymentPointerContext,
+  PaymentPointerKeyContext
+} from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerService } from '../open_payments/payment_pointer/service'
@@ -105,6 +109,65 @@ describe('Payment Pointer Keys Routes', (): void => {
           uri: paymentPointer.url
         }
       })
+    })
+  })
+
+  describe('getKeys', (): void => {
+    test('returns 200 with all keys for a payment pointer', async (): Promise<void> => {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const keyOption = {
+        paymentPointerId: paymentPointer.id,
+        jwk: TEST_KEY
+      }
+      const key = await paymentPointerKeyService.create(keyOption)
+
+      const ctx = createContext<PaymentPointerContext>({
+        headers: { Accept: 'application/json' },
+        url: `/`
+      })
+      ctx.paymentPointer = paymentPointer
+
+      await expect(
+        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.body[0]).toEqual(key.jwk)
+      expect(ctx.body).toHaveLength(1)
+    })
+
+    test('returns 200 with empty array if no keys for a payment pointer', async (): Promise<void> => {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const ctx = createContext<PaymentPointerContext>({
+        headers: { Accept: 'application/json' },
+        url: `/`
+      })
+      ctx.paymentPointer = paymentPointer
+
+      await expect(
+        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.body).toEqual([])
+    })
+
+    test('returns 404 if payment pointer does not exist', async (): Promise<void> => {
+      const ctx = createContext<PaymentPointerContext>({
+        headers: { Accept: 'application/json' },
+        url: `/`
+      })
+      ctx.paymentPointer = undefined
+
+      await expect(
+        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      ).rejects.toHaveProperty('status', 404)
     })
   })
 })
