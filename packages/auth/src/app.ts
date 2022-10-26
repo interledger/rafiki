@@ -276,24 +276,14 @@ export class App {
       grantRoutes.interaction.details
     )
 
-    // Grant accept
+    // Grant accept/reject
     this.publicRouter.post(
-      '/grant/:id/:nonce/accept',
+      '/grant/:id/:nonce/:choice',
       createValidatorMiddleware(openApi, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),
-      grantRoutes.interaction.accept
-    )
-
-    // Grant reject
-    this.publicRouter.post(
-      '/grant/:id/:nonce/reject',
-      createValidatorMiddleware(openApi, {
-        path: '/grant/{id}/{nonce}/{choice}',
-        method: HttpMethod.POST
-      }),
-      grantRoutes.interaction.reject
+      grantRoutes.interaction.acceptOrReject
     )
 
     this.koa.use(this.publicRouter.middleware())
