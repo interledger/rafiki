@@ -1,9 +1,9 @@
-import { createILPStreamConnectionRoutes } from './ilp-stream-connection'
+import { createPaymentPointerRoutes } from './payment-pointer'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import config from '../config'
 import { defaultAxiosInstance, silentLogger } from '../test/helpers'
 
-describe('ilp-stream-connection', (): void => {
+describe('payment-pointer', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
@@ -13,13 +13,17 @@ describe('ilp-stream-connection', (): void => {
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
 
-  describe('createILPStreamConnectionRoutes', (): void => {
+  describe('createPaymentPointerRoutes', (): void => {
     test('calls createResponseValidator properly', async (): Promise<void> => {
       jest.spyOn(openApi, 'createResponseValidator')
 
-      createILPStreamConnectionRoutes({ axiosInstance, openApi, logger })
+      createPaymentPointerRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/connections/{id}',
+        path: '/',
         method: HttpMethod.GET
       })
     })
