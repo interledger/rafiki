@@ -79,7 +79,7 @@ export class Grant {
   public readonly access: GrantAccess[]
   public readonly clientId: string
 
-  public includesAccess({
+  public findAccess({
     type,
     action,
     identifier
@@ -87,8 +87,8 @@ export class Grant {
     type: AccessType
     action: AccessAction
     identifier: string
-  }): boolean {
-    return !!this.access?.find(
+  }): GrantAccess | undefined {
+    return this.access?.find(
       (access) =>
         access.type === type &&
         (!access.identifier || access.identifier === identifier) &&

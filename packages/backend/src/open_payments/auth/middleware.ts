@@ -37,13 +37,12 @@ export function createAuthMiddleware({
       if (!grant || !grant.active) {
         ctx.throw(401, 'Invalid Token')
       }
-      if (
-        !grant.includesAccess({
-          type,
-          action,
-          identifier: ctx.paymentPointer.url
-        })
-      ) {
+      const access = grant.findAccess({
+        type,
+        action,
+        identifier: ctx.paymentPointer.url
+      })
+      if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
       await GrantReference.transaction(async (trx: Transaction) => {
@@ -66,6 +65,13 @@ export function createAuthMiddleware({
         }
       })
       ctx.grant = grant
+
+      // Unless the relevant grant action is ReadAll/ListAll add the
+      // clientId to ctx for Read/List filtering
+      if (access.actions.includes(action)) {
+        ctx.clientId = grant.clientId
+      }
+
       await next()
     } catch (err) {
       if (err.status === 401) {
