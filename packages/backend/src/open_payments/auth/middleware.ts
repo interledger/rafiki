@@ -33,21 +33,20 @@ export function createAuthMiddleware({
         return
       }
       const authService = await ctx.container.use('authService')
-      const tokenInfo = await authService.introspect(token)
-      if (!tokenInfo || !tokenInfo.active) {
+      const grant = await authService.introspect(token)
+      if (!grant || !grant.active) {
         ctx.throw(401, 'Invalid Token')
       }
-      if (
-        !tokenInfo.includesAccess({
-          type,
-          action,
-          identifier: ctx.paymentPointer.url
-        })
-      ) {
+      const access = grant.findAccess({
+        type,
+        action,
+        identifier: ctx.paymentPointer.url
+      })
+      if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
       try {
-        if (!(await verifySigAndChallenge(tokenInfo.key.jwk, ctx))) {
+        if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
           ctx.throw(401, 'Invalid signature')
         }
       } catch (e) {
@@ -55,25 +54,25 @@ export function createAuthMiddleware({
         ctx.throw(401, `Invalid signature: ${e.message}`)
       }
       await GrantReference.transaction(async (trx: Transaction) => {
-        const grantRef = await grantReferenceService.get(tokenInfo.grant, trx)
+        const grantRef = await grantReferenceService.get(grant.grant, trx)
         if (grantRef) {
-          if (grantRef.clientId !== tokenInfo.clientId) {
+          if (grantRef.clientId !== grant.clientId) {
             logger.debug(
-              `clientID ${tokenInfo.clientId} for grant ${tokenInfo.grant} does not match internal reference clientId ${grantRef.clientId}.`
+              `clientID ${grant.clientId} for grant ${grant.grant} does not match internal reference clientId ${grantRef.clientId}.`
             )
             ctx.throw(500)
           }
         } else {
           await grantReferenceService.create(
             {
-              id: tokenInfo.grant,
-              clientId: tokenInfo.clientId
+              id: grant.grant,
+              clientId: grant.clientId
             },
             trx
           )
         }
       })
-      ctx.grant = tokenInfo
+      ctx.grant = grant
       await next()
     } catch (err) {
       if (err.status === 401) {
