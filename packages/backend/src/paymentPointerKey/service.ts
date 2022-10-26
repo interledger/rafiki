@@ -8,6 +8,9 @@ export interface PaymentPointerKeyService {
   create(options: CreateOptions): Promise<PaymentPointerKey>
   getKeyById(keyId: string): Promise<PaymentPointerKey>
   revokeKeyById(keyId: string): Promise<string>
+  getKeysByPaymentPointerId(
+    paymentPointerId: string
+  ): Promise<PaymentPointerKey[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -28,7 +31,9 @@ export async function createPaymentPointerKeyService({
   return {
     create: (options) => create(deps, options),
     getKeyById: (keyId) => getKeyById(deps, keyId),
-    revokeKeyById: (keyId) => revokeKeyById(deps, keyId)
+    revokeKeyById: (keyId) => revokeKeyById(deps, keyId),
+    getKeysByPaymentPointerId: (paymentPointerId) =>
+      getKeysByPaymentPointerId(deps, paymentPointerId)
   }
 }
 
@@ -82,4 +87,14 @@ async function revokeKeyById(
     )
     throw error
   }
+}
+
+async function getKeysByPaymentPointerId(
+  deps: ServiceDependencies,
+  paymentPointerId: string
+): Promise<PaymentPointerKey[]> {
+  const keys = await PaymentPointerKey.query(deps.knex).where({
+    paymentPointerId
+  })
+  return keys
 }

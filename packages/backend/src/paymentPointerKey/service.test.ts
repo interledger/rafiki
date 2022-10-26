@@ -13,11 +13,8 @@ import { randomAsset } from '../tests/asset'
 import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 
-const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-const KEY_UUID = uuid()
-const TEST_KID_PATH = '/keys/' + KEY_UUID
-const TEST_CLIENT_KEY = {
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
+const TEST_KEY = {
+  kid: uuid(),
   x: 'test-public-key',
   kty: 'OKP',
   alg: 'EdDSA',
@@ -62,16 +59,6 @@ describe('Payment Pointer Key Service', (): void => {
       })
       assert.ok(!isPaymentPointerError(paymentPointer))
 
-      const TEST_KEY = {
-        kid: uuid(),
-        x: 'test-public-key',
-        kty: 'OKP',
-        alg: 'EdDSA',
-        crv: 'Ed25519',
-        key_ops: ['sign', 'verify'],
-        use: 'sig'
-      }
-
       const options = {
         paymentPointerId: paymentPointer.id,
         jwk: TEST_KEY
@@ -96,13 +83,36 @@ describe('Payment Pointer Key Service', (): void => {
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,
-        jwk: TEST_CLIENT_KEY
+        jwk: TEST_KEY
       }
 
       const keyDetails = await paymentPointerKeyService.create(keyOption)
 
       const key = await paymentPointerKeyService.getKeyById(keyDetails.id)
       await expect(key.paymentPointerId).toEqual(paymentPointer.id)
+    })
+
+    test('Can fetch keys by payment pointer id', async (): Promise<void> => {
+      const paymentPointer = await paymentPointerService.create({
+        url: 'https://alice.me/.well-known/pay',
+        asset: randomAsset()
+      })
+      assert.ok(!isPaymentPointerError(paymentPointer))
+
+      const keyOption = {
+        paymentPointerId: paymentPointer.id,
+        jwk: TEST_KEY
+      }
+
+      await paymentPointerKeyService.create(keyOption)
+
+      const keys = await paymentPointerKeyService.getKeysByPaymentPointerId(
+        paymentPointer.id
+      )
+
+      expect(keys.length).toEqual(1)
+      expect(keys[0].paymentPointerId).toEqual(paymentPointer.id)
+      expect(keys[0].jwk).toEqual(TEST_KEY)
     })
   })
 
@@ -116,7 +126,7 @@ describe('Payment Pointer Key Service', (): void => {
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,
-        jwk: TEST_CLIENT_KEY
+        jwk: TEST_KEY
       }
 
       const keyDetails = await paymentPointerKeyService.create(keyOption)
