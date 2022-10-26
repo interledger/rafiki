@@ -8,11 +8,7 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
-import {
-  AppServices,
-  PaymentPointerContext,
-  PaymentPointerKeyContext
-} from '../app'
+import { AppServices, PaymentPointerContext } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerService } from '../open_payments/payment_pointer/service'
@@ -63,53 +59,6 @@ describe('Payment Pointer Keys Routes', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-  })
-
-  describe('get', (): void => {
-    test('returns 404 for nonexistent key', async (): Promise<void> => {
-      const ctx = createContext<PaymentPointerKeyContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { keyId: uuid() }
-      )
-      await expect(paymentPointerKeyRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        404
-      )
-    })
-
-    test('returns 200 with JWK set as body for valid key', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/pay',
-        asset: randomAsset()
-      })
-      assert.ok(!isPaymentPointerError(paymentPointer))
-
-      const keyOption = {
-        paymentPointerId: paymentPointer.id,
-        jwk: TEST_KEY
-      }
-      const key = await paymentPointerKeyService.create(keyOption)
-
-      const ctx = createContext<PaymentPointerKeyContext>(
-        {
-          headers: { Accept: 'application/json' },
-          url: `/keys/${key.id}`
-        },
-        { keyId: key.id }
-      )
-
-      await expect(paymentPointerKeyRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.body).toEqual({
-        key: TEST_KEY,
-        paymentPointer: {
-          id: paymentPointer.id,
-          name: paymentPointer.publicName,
-          uri: paymentPointer.url
-        }
-      })
-    })
   })
 
   describe('getKeys', (): void => {

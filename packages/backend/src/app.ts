@@ -74,12 +74,6 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-type Context<T> = Omit<AppContext, 'request'> & {
-  request: T
-}
-
-export type PaymentPointerKeyContext = Context<AppRequest<'keyId'>>
-
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
@@ -345,12 +339,6 @@ export class App {
         }
       }
     }
-    router.get(
-      '/keys/{keyId}',
-      (ctx: PaymentPointerKeyContext): Promise<void> =>
-        paymentPointerKeyRoutes.get(ctx)
-    )
-
     router.get(
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
