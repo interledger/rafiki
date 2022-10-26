@@ -1,3 +1,4 @@
+import { KeyLike } from 'crypto'
 import { createOpenAPI, OpenAPI } from 'openapi'
 import createLogger, { Logger } from 'pino'
 import config from '../config'
@@ -19,6 +20,8 @@ import { AxiosInstance } from 'axios'
 export interface CreateOpenPaymentClientArgs {
   requestTimeoutMs?: number
   logger?: Logger
+  privateKey: KeyLike
+  keyId: string
 }
 
 export interface ClientDeps {
@@ -34,9 +37,11 @@ export interface OpenPaymentsClient {
 }
 
 export const createClient = async (
-  args?: CreateOpenPaymentClientArgs
+  args: CreateOpenPaymentClientArgs
 ): Promise<OpenPaymentsClient> => {
   const axiosInstance = createAxiosInstance({
+    privateKey: args.privateKey,
+    keyId: args.keyId,
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
