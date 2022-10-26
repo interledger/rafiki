@@ -30,7 +30,7 @@ export default function Accounts() {
             <td>{i + 1}</td>
             <td>{acc.name}</td>
             <td>{acc.paymentPointer}</td>
-            <td>$ {(Number(acc.balance)/100).toFixed(2)}</td>
+            <td>$ {(Number(acc.balance) / 100).toFixed(2)}</td>
           </tr>
         ))}
       </table>
