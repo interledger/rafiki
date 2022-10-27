@@ -74,24 +74,6 @@ describe('Payment Pointer Key Service', (): void => {
   })
 
   describe('Fetch Payment Pointer Keys', (): void => {
-    test('Can fetch a key by kid', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
-      })
-      assert.ok(!isPaymentPointerError(paymentPointer))
-
-      const keyOption = {
-        paymentPointerId: paymentPointer.id,
-        jwk: TEST_KEY
-      }
-
-      const keyDetails = await paymentPointerKeyService.create(keyOption)
-
-      const key = await paymentPointerKeyService.getKeyById(keyDetails.id)
-      await expect(key.paymentPointerId).toEqual(paymentPointer.id)
-    })
-
     test('Can fetch keys by payment pointer id', async (): Promise<void> => {
       const paymentPointer = await paymentPointerService.create({
         url: 'https://alice.me/.well-known/pay',
@@ -129,14 +111,10 @@ describe('Payment Pointer Key Service', (): void => {
         jwk: TEST_KEY
       }
 
-      const keyDetails = await paymentPointerKeyService.create(keyOption)
-      await paymentPointerKeyService.revokeKeyById(keyDetails.id)
+      const key = await paymentPointerKeyService.create(keyOption)
+      const revokedKeyId = await paymentPointerKeyService.revokeKeyById(key.id)
 
-      const revokedKey = await paymentPointerKeyService.getKeyById(
-        keyDetails.id
-      )
-
-      expect(revokedKey.jwk.revoked).toEqual(true)
+      expect(revokedKeyId).toEqual(key.id)
     })
   })
 })

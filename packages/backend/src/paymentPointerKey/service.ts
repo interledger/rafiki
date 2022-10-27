@@ -6,7 +6,6 @@ import { JWKWithRequired } from 'auth'
 
 export interface PaymentPointerKeyService {
   create(options: CreateOptions): Promise<PaymentPointerKey>
-  getKeyById(keyId: string): Promise<PaymentPointerKey>
   revokeKeyById(keyId: string): Promise<string>
   getKeysByPaymentPointerId(
     paymentPointerId: string
@@ -30,7 +29,6 @@ export async function createPaymentPointerKeyService({
   }
   return {
     create: (options) => create(deps, options),
-    getKeyById: (keyId) => getKeyById(deps, keyId),
     revokeKeyById: (keyId) => revokeKeyById(deps, keyId),
     getKeysByPaymentPointerId: (paymentPointerId) =>
       getKeysByPaymentPointerId(deps, paymentPointerId)
@@ -50,16 +48,6 @@ async function create(
     paymentPointerId: options.paymentPointerId,
     jwk: options.jwk
   })
-  return key
-}
-
-async function getKeyById(
-  deps: ServiceDependencies,
-  // In the form https://somedomain/keys/{keyId}
-  keyId: string
-): Promise<PaymentPointerKey> {
-  const key = await PaymentPointerKey.query(deps.knex).findById(keyId)
-  if (!key) return null
   return key
 }
 
