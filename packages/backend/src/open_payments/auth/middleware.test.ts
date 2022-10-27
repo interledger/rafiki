@@ -77,7 +77,7 @@ describe('Auth Middleware', (): void => {
       resource_server: 'test'
     }
     requestAuthorization = `GNAP ${token}`
-    requestUrl = Config.authServerGrantUrl + requestPath //'http://127.0.0.1:3006/introspect'//authServerIntrospectionUrl.toString()//'http://example.com/introspect'//authServerIntrospectionUrl.toString()
+    requestUrl = Config.authServerGrantUrl + requestPath //'http://127.0.0.1:3006/introspect'
     requestSignatureHeaders = await generateSigHeaders(
       privateKey,
       requestUrl,
