@@ -339,11 +339,18 @@ export class App {
         }
       }
     }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     router.get(
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
-      (ctx: PaymentPointerContext): Promise<void> =>
-        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+        path: '/',
+        method: HttpMethod.GET
+      }),
+      async (ctx: PaymentPointerContext): Promise<void> =>
+        await paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
     )
 
     // Add the payment pointer query route last.

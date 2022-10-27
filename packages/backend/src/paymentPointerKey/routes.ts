@@ -32,5 +32,7 @@ export async function getKeysByPaymentPointerId(
     ctx.paymentPointer.id
   )
 
-  ctx.body = keys.map((key) => key.jwk)
+  ctx.body = {
+    keys: keys.map((key) => key.jwk)
+  }
 }

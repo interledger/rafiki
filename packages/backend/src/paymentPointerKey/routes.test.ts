@@ -77,15 +77,17 @@ describe('Payment Pointer Keys Routes', (): void => {
 
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },
-        url: `/`
+        url: `/jwks.json`
       })
       ctx.paymentPointer = paymentPointer
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
       ).resolves.toBeUndefined()
-      expect(ctx.body[0]).toEqual(key.jwk)
-      expect(ctx.body).toHaveLength(1)
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.body).toEqual({
+        keys: [key.jwk]
+      })
     })
 
     test('returns 200 with empty array if no keys for a payment pointer', async (): Promise<void> => {
@@ -97,20 +99,22 @@ describe('Payment Pointer Keys Routes', (): void => {
 
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },
-        url: `/`
+        url: `/jwks.json`
       })
       ctx.paymentPointer = paymentPointer
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
       ).resolves.toBeUndefined()
-      expect(ctx.body).toEqual([])
+      expect(ctx.body).toEqual({
+        keys: []
+      })
     })
 
     test('returns 404 if payment pointer does not exist', async (): Promise<void> => {
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },
-        url: `/`
+        url: `/jwks.json`
       })
       ctx.paymentPointer = undefined
 
