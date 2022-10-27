@@ -9,6 +9,10 @@ import {
   createILPStreamConnectionRoutes,
   ILPStreamConnectionRoutes
 } from './ilp-stream-connection'
+import {
+  createPaymentPointerRoutes,
+  PaymentPointerRoutes
+} from './payment-pointer'
 import { createAxiosInstance } from './requests'
 import { AxiosInstance } from 'axios'
 
@@ -26,6 +30,7 @@ export interface ClientDeps {
 export interface OpenPaymentsClient {
   incomingPayment: IncomingPaymentRoutes
   ilpStreamConnection: ILPStreamConnectionRoutes
+  paymentPointer: PaymentPointerRoutes
 }
 
 export const createClient = async (
@@ -41,6 +46,7 @@ export const createClient = async (
 
   return {
     incomingPayment: createIncomingPaymentRoutes(deps),
-    ilpStreamConnection: createILPStreamConnectionRoutes(deps)
+    ilpStreamConnection: createILPStreamConnectionRoutes(deps),
+    paymentPointer: createPaymentPointerRoutes(deps)
   }
 }
