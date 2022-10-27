@@ -425,54 +425,6 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test('returns 401 if signature header is missing', async (): Promise<void> => {
-    const grant = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.Read],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      mockKeyInfo
-    )
-    const scope = mockAuthServer(grant.toJSON())
-    delete ctx.request.headers['signature']
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.status).toBe(401)
-    expect(next).not.toHaveBeenCalled()
-    scope.done()
-  })
-
-  test('returns 401 if signature-input header is missing', async (): Promise<void> => {
-    const grant = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.Read],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      mockKeyInfo
-    )
-    const scope = mockAuthServer(grant.toJSON())
-    delete ctx.request.headers['signature-input']
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(ctx.status).toBe(401)
-    expect(next).not.toHaveBeenCalled()
-    scope.done()
-  })
-
   test('returns 401 if any signature keyid does not match the jwk key id', async (): Promise<void> => {
     const grant = new TokenInfo(
       {
