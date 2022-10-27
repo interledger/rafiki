@@ -6,6 +6,8 @@ export type AccountWithBalance = {
   paymentPointerID: string
   paymentPointer: string
   balance: string
+  assetCode: string
+  assetScale: number
 }
 
 export async function getAccountsWithBalance(): Promise<
@@ -18,7 +20,11 @@ export async function getAccountsWithBalance(): Promise<
       name: acc.name,
       paymentPointerID: acc.paymentPointerID,
       paymentPointer: acc.paymentPointer,
-      balance: (BigInt(acc.creditsPosted) - BigInt(acc.debitsPosted)).toString()
+      balance: (
+        BigInt(acc.creditsPosted) - BigInt(acc.debitsPosted)
+      ).toString(),
+      assetCode: acc.assetCode,
+      assetScale: acc.assetScale
     }
   })
 }
