@@ -346,7 +346,7 @@ export class App {
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<PaymentPointerContext>(openApi, {
-        path: '/',
+        path: '/jwks.json',
         method: HttpMethod.GET
       }),
       async (ctx: PaymentPointerContext): Promise<void> =>
