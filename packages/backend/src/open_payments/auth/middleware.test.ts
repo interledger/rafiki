@@ -11,7 +11,6 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { Body, RequestMethod } from 'node-mocks-http'
 import { HttpMethod, ValidateFunction } from 'openapi'
-import { setup, SetupOptions } from '../payment_pointer/model.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
@@ -20,6 +19,7 @@ import { GrantReferenceService } from '../grantReference/service'
 import { HttpSigContext, JWKWithRequired, KeyInfo } from 'auth'
 import { generateTestKeys, generateSigHeaders } from 'auth/src/tests/signature'
 import { TokenInfo, TokenInfoJSON } from './service'
+import { setup, SetupOptions } from '../payment_pointer/model.test'
 
 type AppMiddleware = (
   ctx: HttpSigContext,
