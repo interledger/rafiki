@@ -51,7 +51,7 @@ export function createAuthMiddleware({
         }
       } catch (e) {
         ctx.status = 401
-        ctx.throw(401, `Invalid signature: ${e.message}`)
+        ctx.throw(401, `Invalid signature`)
       }
       await GrantReference.transaction(async (trx: Transaction) => {
         const grantRef = await grantReferenceService.get(grant.grant, trx)
