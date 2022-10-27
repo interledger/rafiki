@@ -22,7 +22,9 @@ export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const payment = await outgoingPaymentService.get(args.id)
+    const payment = await outgoingPaymentService.get({
+      id: args.id
+    })
     if (!payment) throw new Error('payment does not exist')
     return paymentToGraphql(payment)
   }
@@ -69,15 +71,17 @@ export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloCo
       'outgoingPaymentService'
     )
     const outgoingPayments = await outgoingPaymentService.getPaymentPointerPage(
-      parent.id,
-      args
+      {
+        paymentPointerId: parent.id,
+        pagination: args
+      }
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage(
-          parent.id as string,
+        outgoingPaymentService.getPaymentPointerPage({
+          paymentPointerId: parent.id as string,
           pagination
-        ),
+        }),
       outgoingPayments
     )
     return {

@@ -16,10 +16,10 @@ import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
+import { setup, SetupOptions } from '../payment_pointer/model.test'
 import { HttpSigContext, JWKWithRequired, KeyInfo } from 'auth'
 import { generateTestKeys, generateSigHeaders } from 'auth/src/tests/signature'
 import { TokenInfo, TokenInfoJSON } from './service'
-import { setup, SetupOptions } from '../payment_pointer/model.test'
 
 type AppMiddleware = (
   ctx: HttpSigContext,
