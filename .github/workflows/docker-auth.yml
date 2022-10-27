@@ -10,7 +10,6 @@ name: Build / Release Auth Docker Image
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
     strategy:
       matrix:
         platform: [linux/amd64, linux/arm64]
