@@ -9,7 +9,7 @@ import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices, PaymentPointerContext } from '../../app'
-import { HttpMethod, ValidateFunction } from 'openapi'
+import { HttpMethod, RequestValidator } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
@@ -34,7 +34,7 @@ describe('Auth Middleware', (): void => {
   let middleware: AppMiddleware
   let ctx: PaymentPointerContext
   let next: jest.MockedFunction<() => Promise<void>>
-  let validateRequest: ValidateFunction<IntrospectionBody>
+  let validateRequest: RequestValidator<IntrospectionBody>
   let grantReferenceService: GrantReferenceService
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
 

@@ -2,7 +2,7 @@ import { Counter, ResolvedPayment } from '@interledger/pay'
 import { createMockContext } from '@shopify/jest-koa-mocks'
 import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios'
 import base64url from 'base64url'
-import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
+import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
 import { URL } from 'url'
 
 import { Amount, parseAmount } from '../amount'
@@ -114,8 +114,8 @@ interface ServiceDependencies extends BaseService {
   openApi: OpenAPI
   openPaymentsUrl: string
   paymentPointerService: PaymentPointerService
-  validateConnection: ValidateFunction<ConnectionJSON>
-  validateIncomingPayment: ValidateFunction<IncomingPaymentJSON>
+  validateConnection: ResponseValidator<ConnectionJSON>
+  validateIncomingPayment: ResponseValidator<IncomingPaymentJSON>
 }
 
 export async function createOpenPaymentsClientService(
