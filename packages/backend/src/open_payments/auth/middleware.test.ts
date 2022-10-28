@@ -42,6 +42,11 @@ describe('Auth Middleware', (): void => {
   let grantReferenceService: GrantReferenceService
   let mockKeyInfo: KeyInfo
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
+  let generatedKeyPair: {
+    keyId: string
+    publicKey: JWKWithRequired
+    privateKey: JWKWithRequired
+  }
   let requestPath: string
   let requestAuthorization: string
   let requestBody: Body
@@ -53,42 +58,6 @@ describe('Auth Middleware', (): void => {
     contentDigest?: string
   }
   let requestJwk: JWKWithRequired
-
-  beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
-    appContainer = await createTestApp(deps)
-    authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
-    middleware = createAuthMiddleware({
-      type: AccessType.IncomingPayment,
-      action: AccessAction.Read
-    })
-    const authOpenApi = await deps.use('authOpenApi')
-    requestPath = '/introspect'
-    validateRequest = authOpenApi.createRequestValidator({
-      path: requestPath,
-      method: HttpMethod.POST
-    })
-    grantReferenceService = await deps.use('grantReferenceService')
-    const { publicKey, privateKey } = await generateTestKeys()
-    requestMethod = HttpMethod.POST.toUpperCase() as RequestMethod
-    requestBody = {
-      access_token: token,
-      proof: 'httpsig',
-      resource_server: 'test'
-    }
-    requestAuthorization = `GNAP ${token}`
-    requestUrl = Config.authServerGrantUrl + requestPath //'http://127.0.0.1:3006/introspect'
-    requestSignatureHeaders = await generateSigHeaders(
-      privateKey,
-      requestUrl,
-      requestMethod,
-      {
-        body: requestBody,
-        authorization: requestAuthorization
-      }
-    )
-    requestJwk = publicKey
-  })
 
   function setupHttpSigContext(options: SetupOptions): HttpSigContext {
     const context = setup(options)
@@ -108,7 +77,18 @@ describe('Auth Middleware', (): void => {
     return context as any
   }
 
-  beforeEach(async (): Promise<void> => {
+  async function prepareTest(includeBody: boolean) {
+    requestSignatureHeaders = await generateSigHeaders(
+      generatedKeyPair.privateKey,
+      requestUrl,
+      requestMethod,
+      {
+        body: includeBody ? requestBody : undefined,
+        authorization: requestAuthorization
+      }
+    )
+    requestJwk = generatedKeyPair.publicKey
+
     ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
@@ -116,11 +96,15 @@ describe('Auth Middleware', (): void => {
           Authorization: `GNAP ${token}`,
           Signature: `sig1=:${requestSignatureHeaders.signature}:`,
           'Signature-Input': requestSignatureHeaders.sigInput,
-          'Content-Digest': requestSignatureHeaders.contentDigest,
-          'Content-Length': JSON.stringify(requestBody).length.toString()
+          'Content-Digest': includeBody
+            ? requestSignatureHeaders.contentDigest
+            : undefined,
+          'Content-Length': includeBody
+            ? JSON.stringify(requestBody).length.toString()
+            : undefined
         },
         method: requestMethod,
-        body: requestBody,
+        body: includeBody ? requestBody : undefined,
         url: requestUrl
       },
       paymentPointer: await createPaymentPointer(deps)
@@ -131,6 +115,36 @@ describe('Auth Middleware', (): void => {
       jwk: requestJwk,
       proof: 'httpsig'
     }
+  }
+
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+    authServerIntrospectionUrl = new URL(Config.authServerIntrospectionUrl)
+    middleware = createAuthMiddleware({
+      type: AccessType.IncomingPayment,
+      action: AccessAction.Read
+    })
+    const authOpenApi = await deps.use('authOpenApi')
+    requestPath = '/introspect'
+    validateRequest = authOpenApi.createRequestValidator({
+      path: requestPath,
+      method: HttpMethod.POST
+    })
+    grantReferenceService = await deps.use('grantReferenceService')
+    generatedKeyPair = await generateTestKeys()
+    requestMethod = HttpMethod.POST.toUpperCase() as RequestMethod
+    requestBody = {
+      access_token: token,
+      proof: 'httpsig',
+      resource_server: 'test'
+    }
+    requestAuthorization = `GNAP ${token}`
+    requestUrl = Config.authServerGrantUrl + requestPath //'http://127.0.0.1:3006/introspect'
+  })
+
+  beforeEach(async (): Promise<void> => {
+    await prepareTest(true)
   })
 
   afterAll(async (): Promise<void> => {
@@ -341,7 +355,8 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test('returns 200 with valid http signature', async (): Promise<void> => {
+  test('returns 200 with valid http signature without body', async (): Promise<void> => {
+    prepareTest(false)
     const grant = new TokenInfo(
       {
         active: true,
@@ -363,7 +378,67 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test('returns 401 for invalid http signature', async (): Promise<void> => {
+  test('returns 200 with valid http signature with body', async (): Promise<void> => {
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).resolves.not.toThrow()
+    expect(next).toHaveBeenCalled()
+    scope.done()
+  })
+
+  test('returns 401 for invalid http signature without body', async (): Promise<void> => {
+    ctx = setupHttpSigContext({
+      reqOpts: {
+        headers: {
+          Accept: 'application/json',
+          Authorization: `GNAP ${token}`,
+          Signature: 'aaaaaaaaaa=',
+          'Signature-Input': requestSignatureHeaders.sigInput
+        },
+        method: requestMethod,
+        url: requestUrl
+      },
+      paymentPointer: await createPaymentPointer(deps)
+    })
+    ctx.container = deps
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.headers.signature).toBe('aaaaaaaaaa=')
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.done()
+  })
+
+  test('returns 401 for invalid http signature with body', async (): Promise<void> => {
     ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
@@ -374,7 +449,9 @@ describe('Auth Middleware', (): void => {
           'Content-Digest': requestSignatureHeaders.contentDigest,
           'Content-Length': JSON.stringify(requestBody).length.toString()
         },
-        body: requestBody
+        method: requestMethod,
+        body: requestBody,
+        url: requestUrl
       },
       paymentPointer: await createPaymentPointer(deps)
     })
@@ -401,7 +478,8 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test('returns 401 for invalid key type', async (): Promise<void> => {
+  test('returns 401 for invalid key type without body', async (): Promise<void> => {
+    prepareTest(false)
     mockKeyInfo.jwk.kty = 'EC'
     const grant = new TokenInfo(
       {
@@ -425,7 +503,32 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test('returns 401 if any signature keyid does not match the jwk key id', async (): Promise<void> => {
+  test('returns 401 for invalid key type with body', async (): Promise<void> => {
+    mockKeyInfo.jwk.kty = 'EC'
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.done()
+  })
+
+  test('returns 401 if any signature keyid does not match the jwk key id without body', async (): Promise<void> => {
+    prepareTest(false)
     const grant = new TokenInfo(
       {
         active: true,
@@ -451,18 +554,46 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test.skip('returns 401 if content-digest does not match the body', async (): Promise<void> => {
+  test('returns 401 if any signature keyid does not match the jwk key id with body', async (): Promise<void> => {
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+    const scope = mockAuthServer(grant.toJSON())
+    ctx.request.headers['signature-input'] = ctx.request.headers[
+      'signature-input'
+    ].replace('gnap-key', 'mismatched-key')
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(ctx.status).toBe(401)
+    expect(next).not.toHaveBeenCalled()
+    scope.done()
+  })
+
+  test('returns 401 if content-digest does not match the body', async (): Promise<void> => {
     ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: requestSignatureHeaders.signature,
+          Signature: `sig1=:${requestSignatureHeaders.signature}:`,
           'Signature-Input': requestSignatureHeaders.sigInput,
-          'Content-Digest': requestSignatureHeaders.contentDigest,
+          'Content-Digest': 'aaaaaaaaaa=',
           'Content-Length': JSON.stringify(requestBody).length.toString()
         },
-        body: requestBody
+        method: requestMethod,
+        body: requestBody,
+        url: requestUrl
       },
       paymentPointer: await createPaymentPointer(deps)
     })
