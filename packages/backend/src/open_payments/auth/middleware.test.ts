@@ -231,56 +231,50 @@ describe('Auth Middleware', (): void => {
       scope.isDone()
     }
   )
-  test.each`
-    type                          | description
-    ${AccessType.IncomingPayment} | ${'incoming payments'}
-    ${AccessType.OutgoingPayment} | ${'outgoing payments'}
-    ${AccessType.Quote}           | ${'quotes'}
-  `(
-    'Stores grant details for $description on the the create path',
-    async ({ type }): Promise<void> => {
-      const createPathAuthMiddleware: AppMiddleware = createAuthMiddleware({
-        type: type,
-        action: AccessAction.Create
-      })
-      const grant = new Grant({
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: type,
-            actions: [AccessAction.Create],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      })
-      const scope = mockAuthServer(grant.toJSON())
-      const next = jest.fn().mockImplementation(async () => {
-        await expect(
-          GrantReference.query().findById(grant.grant)
-        ).resolves.toEqual({
-          id: grant.grant,
-          clientId: grant.clientId
+  const table: {
+    type: AccessType
+    action: AccessAction
+    description: string
+  }[] = []
+  Object.values(AccessType).forEach((type) => {
+    Object.values(AccessAction).forEach((action) => {
+      // The complete path is not valid for outgoing payments
+      // Create and read are the only valid paths for quotes
+      if (
+        !(
+          type === AccessType.OutgoingPayment && action == AccessAction.Complete
+        ) &&
+        type !== AccessType.Quote
+      ) {
+        table.push({
+          type: type,
+          action: action,
+          description:
+            action === AccessAction.Create
+              ? 'stores grant details'
+              : 'does not store grant details'
         })
-      })
-      await expect(createPathAuthMiddleware(ctx, next)).resolves.toBeUndefined()
-      expect(next).toHaveBeenCalled()
-      expect(ctx.grant).toEqual(grant)
-      scope.isDone()
-    }
-  )
-  test.each`
-    type                          | description
-    ${AccessType.IncomingPayment} | ${'incoming payments'}
-    ${AccessType.OutgoingPayment} | ${'outgoing payments'}
-    ${AccessType.Quote}           | ${'quotes'}
-  `(
-    'Does not store grant details for $description on the read path',
-    async ({ type }): Promise<void> => {
-      const readPathAuthMiddleware: AppMiddleware = createAuthMiddleware({
+      } else if (
+        type === AccessType.Quote &&
+        (action === AccessAction.Create || action === AccessAction.Read)
+      ) {
+        table.push({
+          type: type,
+          action: action,
+          description:
+            action === AccessAction.Create
+              ? 'stores grant details'
+              : 'does not store grant details'
+        })
+      }
+    })
+  })
+  test.each(table)(
+    '$description for $type on the $action path',
+    async ({ type, action }): Promise<void> => {
+      const actionPathMiddleware: AppMiddleware = createAuthMiddleware({
         type: type,
-        action: AccessAction.Read
+        action: action
       })
       const grant = new Grant({
         active: true,
@@ -289,18 +283,30 @@ describe('Auth Middleware', (): void => {
         access: [
           {
             type: type,
-            actions: [AccessAction.Read],
+            actions: [action],
             identifier: ctx.paymentPointer.url
           }
         ]
       })
       const scope = mockAuthServer(grant.toJSON())
-      const next = jest.fn().mockImplementation(async () => {
-        await expect(
-          GrantReference.query().findById(grant.grant)
-        ).resolves.toBeUndefined()
-      })
-      await expect(readPathAuthMiddleware(ctx, next)).resolves.toBeUndefined()
+      let next
+      if (action === AccessAction.Create) {
+        next = jest.fn().mockImplementation(async () => {
+          await expect(
+            GrantReference.query().findById(grant.grant)
+          ).resolves.toEqual({
+            id: grant.grant,
+            clientId: grant.clientId
+          })
+        })
+      } else {
+        next = jest.fn().mockImplementation(async () => {
+          await expect(
+            GrantReference.query().findById(grant.grant)
+          ).resolves.toBeUndefined()
+        })
+      }
+      await expect(actionPathMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
       scope.isDone()
