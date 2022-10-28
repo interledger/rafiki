@@ -63,9 +63,9 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   const amtSend = payment['sendAmount'] as Amount
   const amtSent = payment['sentAmount'] as Amount
 
-  const toVoid = amtSend.value - amtSent.value
+  const toVoid = BigInt(amtSend.value) - BigInt(amtSent.value)
 
-  await mockAccounts.debit(acc.id, amtSent.value, true)
+  await mockAccounts.debit(acc.id, BigInt(amtSent.value), true)
   if (toVoid > 0) {
     await mockAccounts.voidPendingDebit(acc.id, toVoid)
   }
@@ -91,7 +91,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   }
 
   const amt = payment['sendAmount'] as Amount
-  await mockAccounts.pendingDebit(acc.id, amt.value)
+  await mockAccounts.pendingDebit(acc.id, BigInt(amt.value))
 
   // notify rafiki
   await apolloClient
@@ -140,7 +140,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   }
 
   const amt = payment['receivedAmount'] as Amount
-  await mockAccounts.credit(acc.id, amt.value, false)
+  await mockAccounts.credit(acc.id, BigInt(amt.value), false)
 
   await apolloClient
     .mutate({
