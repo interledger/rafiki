@@ -55,6 +55,8 @@ services:
     restart: always
     networks:
       rafiki:
+    ports:
+      - '3031:80'
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug

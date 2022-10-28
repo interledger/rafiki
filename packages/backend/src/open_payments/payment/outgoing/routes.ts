@@ -4,12 +4,7 @@ import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
-import {
-  getPageInfo,
-  parsePaginationQueryParameters
-} from '../../../shared/pagination'
-import { Pagination } from '../../../shared/baseModel'
-import { AccessAction } from '../../auth/grant'
+import { listSubresource } from '../../payment_pointer/routes'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -43,20 +38,12 @@ async function getOutgoingPayment(
   ctx: ReadContext
 ): Promise<void> {
   let outgoingPayment: OutgoingPayment | undefined
-  let clientId = undefined
-  const outgoingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'outgoing-payment'
-  )
-  if (outgoingAccess && outgoingAccess.length === 1) {
-    clientId = outgoingAccess[0].actions.includes(AccessAction.ReadAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
-    outgoingPayment = await deps.outgoingPaymentService.get(
-      ctx.params.id,
-      clientId
-    )
+    outgoingPayment = await deps.outgoingPaymentService.get({
+      id: ctx.params.id,
+      clientId: ctx.clientId,
+      paymentPointerId: ctx.paymentPointer.id
+    })
   } catch (_) {
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
@@ -105,38 +92,12 @@ async function listOutgoingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const pagination = parsePaginationQueryParameters(ctx.request.query)
-  let clientId = undefined
-  const outgoingAccess = ctx.grant?.access.filter(
-    (access) => access.type === 'outgoing-payment'
-  )
-  if (outgoingAccess && outgoingAccess.length === 1) {
-    clientId = outgoingAccess[0].actions.includes(AccessAction.ListAll)
-      ? undefined
-      : ctx.grant.clientId
-  }
   try {
-    const page = await deps.outgoingPaymentService.getPaymentPointerPage(
-      ctx.paymentPointer.id,
-      pagination,
-      clientId
-    )
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
-        deps.outgoingPaymentService.getPaymentPointerPage(
-          ctx.paymentPointer.id,
-          pagination
-        ),
-      page
-    )
-    const result = {
-      pagination: pageInfo,
-      result: page.map((item: OutgoingPayment) => {
-        item.paymentPointer = ctx.paymentPointer
-        return outgoingPaymentToBody(deps, item)
-      })
-    }
-    ctx.body = result
+    await listSubresource({
+      ctx,
+      getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
+      toBody: (payment) => outgoingPaymentToBody(deps, payment)
+    })
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')
   }

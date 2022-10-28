@@ -10,12 +10,12 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices, PaymentPointerContext } from '../../app'
 import { HttpMethod, ValidateFunction } from 'openapi'
-import { setup } from '../../shared/routes.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from '../grantReference/model'
 import { GrantReferenceService } from '../grantReference/service'
+import { setup } from '../payment_pointer/model.test'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
