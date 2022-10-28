@@ -94,8 +94,7 @@ async function getConnection(
     }
 
     return await deps.openPaymentsClient.ilpStreamConnection.get({
-      url,
-      accessToken: deps.accessToken
+      url
     })
   } catch (_) {
     return undefined
