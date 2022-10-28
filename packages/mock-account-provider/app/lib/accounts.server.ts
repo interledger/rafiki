@@ -9,6 +9,8 @@ export interface Account {
   debitsPosted: bigint
   creditsPending: bigint
   creditsPosted: bigint
+  assetCode: string
+  assetScale: number
 }
 
 export interface AccountsServer {
@@ -18,7 +20,12 @@ export interface AccountsServer {
     pointerID: string,
     paymentPointer: string
   ): Promise<void>
-  create(id: string, name: string): Promise<void>
+  create(
+    id: string,
+    name: string,
+    assetCode: string,
+    assetScale: number
+  ): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
   getByPaymentPointer(paymentPointer: string): Promise<Account | undefined>
@@ -53,7 +60,12 @@ export class AccountProvider implements AccountsServer {
     acc.paymentPointerID = pointerID
   }
 
-  async create(id: string, name: string): Promise<void> {
+  async create(
+    id: string,
+    name: string,
+    assetCode: string,
+    assetScale: number
+  ): Promise<void> {
     if (this.accounts.has(id)) {
       throw new Error('account already exists')
     }
@@ -65,7 +77,9 @@ export class AccountProvider implements AccountsServer {
       creditsPending: BigInt(0),
       creditsPosted: BigInt(0),
       debitsPending: BigInt(0),
-      debitsPosted: BigInt(0)
+      debitsPosted: BigInt(0),
+      assetCode,
+      assetScale
     })
   }
 

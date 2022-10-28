@@ -7,7 +7,7 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentJSON } from './model'
 import {
   errorToCode,
   errorToMessage,
@@ -163,11 +163,14 @@ function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment,
   ilpStreamConnection?: ConnectionJSON | string
-) {
-  return {
+): IncomingPaymentJSON {
+  const body = {
     ...incomingPayment.toJSON(),
     id: incomingPayment.url,
-    paymentPointer: incomingPayment.paymentPointer.url,
-    ilpStreamConnection
+    paymentPointer: incomingPayment.paymentPointer.url
+  } as unknown as IncomingPaymentJSON
+  if (ilpStreamConnection) {
+    body.ilpStreamConnection = ilpStreamConnection
   }
+  return body
 }
