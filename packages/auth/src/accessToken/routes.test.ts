@@ -203,7 +203,7 @@ describe('Access Token Routes', (): void => {
           jwk: testJwk
         } as ClientKey)
       const tokenCreatedDate = new Date(token.createdAt)
-      const now = new Date(tokenCreatedDate.getTime() + 4000 * 1000)
+      const now = new Date(tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000)
       jest.useFakeTimers({ now })
 
       const ctx = createContext(
