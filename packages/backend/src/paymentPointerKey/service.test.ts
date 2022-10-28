@@ -1,7 +1,6 @@
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import assert from 'assert'
 import { PaymentPointerKeyService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -9,9 +8,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
-import { randomAsset } from '../tests/asset'
-import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
+import { createPaymentPointer } from '../tests/paymentPointer'
 
 const TEST_KEY = {
   kid: uuid(),
@@ -27,7 +24,6 @@ describe('Payment Pointer Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let paymentPointerKeyService: PaymentPointerKeyService
-  let paymentPointerService: PaymentPointerService
   let knex: Knex
   const mockMessageProducer = {
     send: jest.fn()
@@ -39,7 +35,6 @@ describe('Payment Pointer Key Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
-    paymentPointerService = await deps.use('paymentPointerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -53,58 +48,44 @@ describe('Payment Pointer Key Service', (): void => {
 
   describe('create', (): void => {
     test('adds a key to a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const options = {
         paymentPointerId: paymentPointer.id,
         jwk: TEST_KEY
       }
 
-      const paymentPointerKey = await paymentPointerKeyService.create(options)
-
-      await expect(paymentPointerKey.paymentPointerId).toEqual(
-        options.paymentPointerId
-      )
-      await expect(paymentPointerKey.jwk).toEqual(options.jwk)
+      await expect(
+        paymentPointerKeyService.create(options)
+      ).resolves.toMatchObject(options)
     })
   })
 
   describe('Fetch Payment Pointer Keys', (): void => {
     test('Can fetch keys by payment pointer id', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,
         jwk: TEST_KEY
       }
 
-      await paymentPointerKeyService.create(keyOption)
-
-      const keys = await paymentPointerKeyService.getKeysByPaymentPointerId(
-        paymentPointer.id
-      )
-
-      expect(keys.length).toEqual(1)
-      expect(keys[0].paymentPointerId).toEqual(paymentPointer.id)
-      expect(keys[0].jwk).toEqual(TEST_KEY)
+      const key = await paymentPointerKeyService.create(keyOption)
+      await expect(
+        paymentPointerKeyService.getKeysByPaymentPointerId(paymentPointer.id)
+      ).resolves.toEqual([key])
     })
   })
 
   describe('Revoke Payment Pointer Keys', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,

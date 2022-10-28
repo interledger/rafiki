@@ -1,5 +1,4 @@
 import jestOpenAPI from 'jest-openapi'
-import assert from 'assert'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
@@ -11,10 +10,8 @@ import { initIocContainer } from '..'
 import { AppServices, PaymentPointerContext } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
-import { randomAsset } from '../tests/asset'
-import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 import { PaymentPointerKeyService } from './service'
+import { createPaymentPointer } from '../tests/paymentPointer'
 
 const TEST_KEY = {
   kid: uuid(),
@@ -30,7 +27,6 @@ describe('Payment Pointer Keys Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let paymentPointerKeyService: PaymentPointerKeyService
   let config: IAppConfig
   let paymentPointerKeyRoutes: PaymentPointerKeyRoutes
@@ -45,11 +41,10 @@ describe('Payment Pointer Keys Routes', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     jestOpenAPI(await deps.use('openApi'))
+    paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
   beforeEach(async (): Promise<void> => {
-    paymentPointerService = await deps.use('paymentPointerService')
-    paymentPointerKeyService = await deps.use('paymentPointerKeyService')
     paymentPointerKeyRoutes = await deps.use('paymentPointerKeyRoutes')
   })
 
@@ -63,11 +58,9 @@ describe('Payment Pointer Keys Routes', (): void => {
 
   describe('getKeys', (): void => {
     test('returns 200 with all keys for a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,
@@ -91,11 +84,9 @@ describe('Payment Pointer Keys Routes', (): void => {
     })
 
     test('returns 200 with empty array if no keys for a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },

@@ -14,10 +14,8 @@ import {
   CreatePaymentPointerKeyMutationResponse,
   RevokePaymentPointerKeyMutationResponse
 } from '../generated/graphql'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
-import { randomAsset } from '../../tests/asset'
-import { isPaymentPointerError } from '../../open_payments/payment_pointer/errors'
 import { PaymentPointerKeyService } from '../../paymentPointerKey/service'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 
 const TEST_KEY = {
   kid: uuid(),
@@ -33,14 +31,12 @@ describe('Payment Pointer Key Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
   let paymentPointerKeyService: PaymentPointerKeyService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    paymentPointerService = await deps.use('paymentPointerService')
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
@@ -55,11 +51,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
   describe('Create Payment Pointer Keys', (): void => {
     test('Can create payment pointer key', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const input: CreatePaymentPointerKeyInput = {
         paymentPointerId: paymentPointer.id,
@@ -114,11 +108,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const input = {
         paymentPointerId: paymentPointer.id,
@@ -165,11 +157,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
   describe('Revoke key', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create({
-        url: 'https://alice.me/.well-known/pay',
-        asset: randomAsset()
+      const paymentPointer = await createPaymentPointer(deps, {
+        url: 'https://alice.me/.well-known/pay'
       })
-      assert.ok(!isPaymentPointerError(paymentPointer))
 
       const key = await paymentPointerKeyService.create({
         paymentPointerId: paymentPointer.id,
