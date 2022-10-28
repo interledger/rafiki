@@ -7,7 +7,6 @@ export class PaymentPointerKey extends BaseModel {
     return 'paymentPointerKeys'
   }
 
-  // The id should be the same as the id in the kid.
   public id!: string
   public paymentPointerId!: string
 
