@@ -16,18 +16,25 @@ export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePa
       const paymentPointerKeyService = await ctx.container.use(
         'paymentPointerKeyService'
       )
-      const keyId = await paymentPointerKeyService.revokeKeyById(args.keyId)
+      const key = await paymentPointerKeyService.revoke(args.id)
+      if (!key) {
+        return {
+          code: '404',
+          success: false,
+          message: 'Payment pointer key not found'
+        }
+      }
 
       return {
         code: '200',
         success: true,
         message: 'Payment pointer key revoked',
-        keyId: keyId
+        paymentPointerKey: paymentPointerKeyToGraphql(key)
       }
     } catch (error) {
       ctx.logger.error(
         {
-          options: args.keyId,
+          options: args.id,
           error
         },
         'error revoking payment pointer key'
@@ -36,8 +43,7 @@ export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePa
       return {
         code: '500',
         message: 'Error trying to revoke payment pointer key',
-        success: false,
-        keyId: args.keyId
+        success: false
       }
     }
   }

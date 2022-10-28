@@ -6,7 +6,7 @@ import { JWKWithRequired } from 'auth'
 
 export interface PaymentPointerKeyService {
   create(options: CreateOptions): Promise<PaymentPointerKey>
-  revokeKeyById(keyId: string): Promise<string>
+  revoke(id: string): Promise<PaymentPointerKey | undefined>
   getKeysByPaymentPointerId(
     paymentPointerId: string
   ): Promise<PaymentPointerKey[]>
@@ -29,7 +29,7 @@ export async function createPaymentPointerKeyService({
   }
   return {
     create: (options) => create(deps, options),
-    revokeKeyById: (keyId) => revokeKeyById(deps, keyId),
+    revoke: (id) => revoke(deps, id),
     getKeysByPaymentPointerId: (paymentPointerId) =>
       getKeysByPaymentPointerId(deps, paymentPointerId)
   }
@@ -51,11 +51,14 @@ async function create(
   return key
 }
 
-async function revokeKeyById(
+async function revoke(
   deps: ServiceDependencies,
-  keyId: string
-): Promise<string> {
-  const key = await PaymentPointerKey.query(deps.knex).findById(keyId)
+  id: string
+): Promise<PaymentPointerKey | undefined> {
+  const key = await PaymentPointerKey.query(deps.knex).findById(id)
+  if (!key) {
+    return undefined
+  }
 
   const revokedJwk = key.jwk
   revokedJwk.revoked = true
@@ -65,7 +68,7 @@ async function revokeKeyById(
       .$query(deps.knex)
       .patchAndFetch({ jwk: revokedJwk })
 
-    return revokedKey.id
+    return revokedKey
   } catch (error) {
     deps.logger.error(
       {

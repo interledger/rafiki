@@ -3134,7 +3134,7 @@
             "description": null,
             "args": [
               {
-                "name": "keyId",
+                "name": "id",
                 "description": null,
                 "type": {
                   "kind": "NON_NULL",
@@ -5550,7 +5550,7 @@
             "deprecationReason": null
           },
           {
-            "name": "keyId",
+            "name": "message",
             "description": null,
             "args": [],
             "type": {
@@ -5566,17 +5566,13 @@
             "deprecationReason": null
           },
           {
-            "name": "message",
+            "name": "paymentPointerKey",
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
+              "kind": "OBJECT",
+              "name": "PaymentPointerKey",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

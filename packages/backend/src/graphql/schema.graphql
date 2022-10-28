@@ -113,9 +113,7 @@ type Mutation {
     input: CreatePaymentPointerKeyInput!
   ): CreatePaymentPointerKeyMutationResponse
 
-  revokePaymentPointerKey(
-    keyId: String!
-  ): RevokePaymentPointerKeyMutationResponse
+  revokePaymentPointerKey(id: String!): RevokePaymentPointerKeyMutationResponse
 
   "Create API Key"
   createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
@@ -623,7 +621,7 @@ type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  keyId: String!
+  paymentPointerKey: PaymentPointerKey
 }
 
 type CreateApiKeyMutationResponse implements MutationResponse {

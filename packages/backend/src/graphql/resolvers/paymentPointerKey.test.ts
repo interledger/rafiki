@@ -169,17 +169,21 @@ describe('Payment Pointer Key Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation revokePaymentPointerKey($keyId: String!) {
-              revokePaymentPointerKey(keyId: $keyId) {
+            mutation revokePaymentPointerKey($id: String!) {
+              revokePaymentPointerKey(id: $id) {
                 code
                 success
                 message
-                keyId
+                paymentPointerKey {
+                  id
+                  paymentPointerId
+                  jwk
+                }
               }
             }
           `,
           variables: {
-            keyId: key.id
+            id: key.id
           }
         })
         .then((query): RevokePaymentPointerKeyMutationResponse => {
@@ -192,7 +196,50 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toBe('200')
-      expect(response.keyId).toBe(key.id)
+      assert.ok(response.paymentPointerKey)
+      expect(response.paymentPointerKey).toMatchObject({
+        __typename: 'PaymentPointerKey',
+        id: key.id,
+        paymentPointerId: key.paymentPointerId
+      })
+
+      key.jwk.revoked = true
+      expect(JSON.parse(response.paymentPointerKey.jwk)).toEqual(key.jwk)
+    })
+
+    test('Returns 404 if key does not exist', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation revokePaymentPointerKey($id: String!) {
+              revokePaymentPointerKey(id: $id) {
+                code
+                success
+                message
+                paymentPointerKey {
+                  id
+                  paymentPointerId
+                  jwk
+                }
+              }
+            }
+          `,
+          variables: {
+            id: uuid()
+          }
+        })
+        .then((query): RevokePaymentPointerKeyMutationResponse => {
+          if (query.data) {
+            return query.data.revokePaymentPointerKey
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toBe('404')
+      expect(response.message).toBe('Payment pointer key not found')
+      expect(response.paymentPointerKey).toBeNull()
     })
   })
 })
