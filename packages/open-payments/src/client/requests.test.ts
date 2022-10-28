@@ -24,8 +24,13 @@ describe('requests', (): void => {
   describe('get', (): void => {
     const axiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
     const baseUrl = 'http://localhost:1000'
-    const successfulValidator = (data: unknown): data is unknown => true
-    const failedValidator = (data: unknown): data is unknown => false
+
+    const validators = {
+      successfulValidator: (data: unknown): data is unknown => true,
+      failedValidator: (data: unknown): data is unknown => {
+        throw new Error('Failed to validate response')
+      }
+    }
 
     beforeAll(() => {
       jest.spyOn(axiosInstance, 'get')
@@ -40,7 +45,7 @@ describe('requests', (): void => {
           url: `${baseUrl}/incoming-payment`,
           accessToken: 'accessToken'
         },
-        successfulValidator
+        validators.successfulValidator
       )
 
       expect(axiosInstance.get).toHaveBeenCalledWith(
@@ -63,7 +68,7 @@ describe('requests', (): void => {
         {
           url: `${baseUrl}/incoming-payment`
         },
-        successfulValidator
+        validators.successfulValidator
       )
 
       expect(axiosInstance.get).toHaveBeenCalledWith(
@@ -72,6 +77,29 @@ describe('requests', (): void => {
           headers: {}
         }
       )
+    })
+
+    test('calls validator function properly', async (): Promise<void> => {
+      nock(baseUrl)
+        .get('/incoming-payment')
+        .reply(200, () => ({
+          id: 'id'
+        }))
+
+      const validatorSpy = jest.spyOn(validators, 'successfulValidator')
+
+      await get(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/incoming-payment`
+        },
+        validators.successfulValidator
+      )
+
+      expect(validatorSpy).toHaveBeenCalledWith({
+        body: { id: 'id' },
+        status: 200
+      })
     })
 
     test('throws if response validator function fails', async (): Promise<void> => {
@@ -83,7 +111,7 @@ describe('requests', (): void => {
           {
             url: `${baseUrl}/incoming-payment`
           },
-          failedValidator
+          validators.failedValidator
         )
       ).rejects.toThrow(/Failed to validate OpenApi response/)
     })

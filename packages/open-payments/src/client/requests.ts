@@ -10,13 +10,18 @@ interface GetArgs {
 export const get = async <T>(
   clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
   args: GetArgs,
-  openApiResponseValidator: ValidateFunction<T>
+  validateOpenApiResponse: ValidateFunction<T>
 ): Promise<T> => {
   const { axiosInstance, logger } = clientDeps
-  const { url, accessToken } = args
+  const { accessToken } = args
+
+  const requestUrl = new URL(args.url)
+  if (process.env.NODE_ENV === 'development') {
+    requestUrl.protocol = 'http'
+  }
 
   try {
-    const { data } = await axiosInstance.get(url, {
+    const { data, status } = await axiosInstance.get(requestUrl.href, {
       headers: accessToken
         ? {
             Authorization: `GNAP ${accessToken}`,
@@ -26,9 +31,21 @@ export const get = async <T>(
         : {}
     })
 
-    if (!openApiResponseValidator(data)) {
+    try {
+      validateOpenApiResponse({
+        status,
+        body: data
+      })
+    } catch (error) {
       const errorMessage = 'Failed to validate OpenApi response'
-      logger.error({ data: JSON.stringify(data), url }, errorMessage)
+      logger.error(
+        {
+          data: JSON.stringify(data),
+          url: requestUrl.href,
+          validationError: error?.message
+        },
+        errorMessage
+      )
 
       throw new Error(errorMessage)
     }
@@ -38,7 +55,7 @@ export const get = async <T>(
     const errorMessage = `Error when making Open Payments GET request: ${
       error?.message ? error.message : 'Unknown error'
     }`
-    logger.error({ url }, errorMessage)
+    logger.error({ url: requestUrl.href }, errorMessage)
 
     throw new Error(errorMessage)
   }
