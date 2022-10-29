@@ -9,7 +9,7 @@ import {
   GrantAccess,
   GrantAccessJSON
 } from './grant'
-import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
+import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
 
 export interface AuthService {
   introspect(token: string): Promise<Grant | undefined>
@@ -19,7 +19,7 @@ interface ServiceDependencies {
   authServerIntrospectionUrl: string
   authOpenApi: OpenAPI
   logger: Logger
-  validateResponse: ValidateFunction<GrantJSON>
+  validateResponse: ResponseValidator<GrantJSON>
 }
 
 export async function createAuthService(

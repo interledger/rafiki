@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios'
-import { ValidateFunction } from 'openapi'
+import { ResponseValidator } from 'openapi'
 import { ClientDeps } from '.'
 
 interface GetArgs {
@@ -10,7 +10,7 @@ interface GetArgs {
 export const get = async <T>(
   clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
   args: GetArgs,
-  openApiResponseValidator: ValidateFunction<T>
+  openApiResponseValidator: ResponseValidator<T>
 ): Promise<T> => {
   const { axiosInstance, logger } = clientDeps
   const { url, accessToken } = args
