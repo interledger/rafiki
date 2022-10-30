@@ -24,6 +24,19 @@ export interface Amount {
   assetCode: string
   assetScale: number
 }
+export interface AmountJSON {
+  value: string
+  assetCode: string
+  assetScale: number
+}
+
+export function parseAmount(amount: AmountJSON): Amount {
+  return {
+    value: BigInt(amount['value']),
+    assetCode: amount['assetCode'],
+    assetScale: amount['assetScale']
+  }
+}
 
 export async function action({ request }: ActionArgs) {
   const wh: WebHook = await request.json()
@@ -60,12 +73,12 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     throw json('No account found for payment pointer', { status: 500 })
   }
 
-  const amtSend = payment['sendAmount'] as Amount
-  const amtSent = payment['sentAmount'] as Amount
+  const amtSend = parseAmount(payment['sendAmount'])
+  const amtSent = parseAmount(payment['sentAmount'])
 
-  const toVoid = BigInt(amtSend.value) - BigInt(amtSent.value)
+  const toVoid = amtSend.value - amtSent.value
 
-  await mockAccounts.debit(acc.id, BigInt(amtSent.value), true)
+  await mockAccounts.debit(acc.id, amtSent.value, true)
   if (toVoid > 0) {
     await mockAccounts.voidPendingDebit(acc.id, toVoid)
   }
@@ -90,8 +103,8 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw json('No account found for payment pointer', { status: 500 })
   }
 
-  const amt = payment['sendAmount'] as Amount
-  await mockAccounts.pendingDebit(acc.id, BigInt(amt.value))
+  const amt = parseAmount(payment['sendAmount'])
+  await mockAccounts.pendingDebit(acc.id, amt.value)
 
   // notify rafiki
   await apolloClient
@@ -139,8 +152,8 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     throw json('No account found for payment pointer', { status: 500 })
   }
 
-  const amt = payment['receivedAmount'] as Amount
-  await mockAccounts.credit(acc.id, BigInt(amt.value), false)
+  const amt = parseAmount(payment['receivedAmount'])
+  await mockAccounts.credit(acc.id, amt.value, false)
 
   await apolloClient
     .mutate({
