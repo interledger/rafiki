@@ -9,6 +9,7 @@ import {
   defaultAxiosInstance,
   mockILPStreamConnection,
   mockIncomingPayment,
+  mockOpenApiResponseValidators,
   silentLogger
 } from '../test/helpers'
 import nock from 'nock'
@@ -23,12 +24,7 @@ describe('incoming-payment', (): void => {
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
   const baseUrl = 'http://localhost:1000'
-  const openApiValidators = {
-    successfulValidator: <T>(data: T): data is T => true,
-    failedValidator: <T>(data: T): data is T => {
-      throw new Error('Failed to validate response')
-    }
-  }
+  const openApiValidators = mockOpenApiResponseValidators()
 
   describe('createIncomingPaymentRoutes', (): void => {
     test('creates getIncomingPaymentOpenApiValidator properly', async (): Promise<void> => {

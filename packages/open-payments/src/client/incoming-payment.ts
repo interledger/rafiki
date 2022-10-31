@@ -1,4 +1,4 @@
-import { HttpMethod, ValidateFunction } from 'openapi'
+import { HttpMethod, ResponseValidator } from 'openapi'
 import { ClientDeps } from '.'
 import { IncomingPayment, getPath } from '../types'
 import { get } from './requests'
@@ -36,7 +36,7 @@ export const createIncomingPaymentRoutes = (
 export const getIncomingPayment = async (
   clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
   args: GetArgs,
-  validateOpenApiResponse: ValidateFunction<IncomingPayment>
+  validateOpenApiResponse: ResponseValidator<IncomingPayment>
 ) => {
   const { axiosInstance, logger } = clientDeps
   const { url } = args
