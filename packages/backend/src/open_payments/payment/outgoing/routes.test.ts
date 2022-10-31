@@ -29,7 +29,6 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let paymentPointer: PaymentPointer
-  let grant: Grant
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
   const asset = randomAsset()
@@ -64,14 +63,6 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     paymentPointer = await createPaymentPointer(deps, { asset })
-    grant = await createGrant(deps, {
-      access: [
-        {
-          type: AccessType.OutgoingPayment,
-          actions: [AccessAction.Create, AccessAction.Read]
-        }
-      ]
-    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -147,14 +138,29 @@ describe('Outgoing Payment Routes', (): void => {
     })
   })
 
-  describe('create', (): void => {
+  describe.each`
+    withGrant | description
+    ${true}   | ${'grant'}
+    ${false}  | ${'no grant'}
+  `('create ($description)', ({ withGrant }): void => {
     let options: Omit<CreateOutgoingPaymentOptions, 'paymentPointerId'>
+    let grant: Grant | undefined
 
     beforeEach(async (): Promise<void> => {
       options = {
-        grant,
         quoteId: `${paymentPointer.url}/quotes/${uuid()}`
       }
+
+      grant = withGrant
+        ? await createGrant(deps, {
+            access: [
+              {
+                type: AccessType.OutgoingPayment,
+                actions: [AccessAction.Create, AccessAction.Read]
+              }
+            ]
+          })
+        : undefined
     })
 
     function setup(
@@ -170,6 +176,7 @@ describe('Outgoing Payment Routes', (): void => {
       })
       ctx.paymentPointer = paymentPointer
       ctx.request.body = options
+      ctx.grant = grant
       return ctx
     }
 
@@ -202,7 +209,8 @@ describe('Outgoing Payment Routes', (): void => {
           paymentPointerId: paymentPointer.id,
           quoteId: payment.quote.id,
           description,
-          externalRef
+          externalRef,
+          grant
         })
         expect(ctx.response).toSatisfyApiSpec()
         const outgoingPaymentId = (

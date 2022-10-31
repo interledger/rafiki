@@ -104,7 +104,7 @@ async function getPaymentPointer(
 ): Promise<PaymentPointer | undefined> {
   return await PaymentPointer.query(deps.knex)
     .findById(id)
-    .withGraphJoined('asset')
+    .withGraphFetched('asset')
 }
 
 async function getPaymentPointerByUrl(
@@ -113,7 +113,7 @@ async function getPaymentPointerByUrl(
 ): Promise<PaymentPointer | undefined> {
   const paymentPointer = await PaymentPointer.query(deps.knex)
     .findOne({ url })
-    .withGraphJoined('asset')
+    .withGraphFetched('asset')
   return paymentPointer || undefined
 }
 
