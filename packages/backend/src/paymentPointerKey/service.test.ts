@@ -100,5 +100,23 @@ describe('Payment Pointer Key Service', (): void => {
         paymentPointerKeyService.revoke(uuid())
       ).resolves.toBeUndefined()
     })
+
+    test('Returns key if key is already revoked', async (): Promise<void> => {
+      const paymentPointer = await createPaymentPointer(deps)
+
+      const keyOption = {
+        paymentPointerId: paymentPointer.id,
+        jwk: TEST_KEY
+      }
+
+      const key = await paymentPointerKeyService.create(keyOption)
+      key.jwk.revoked = true
+
+      const revokedKey = await paymentPointerKeyService.revoke(key.id)
+
+      expect(revokedKey.id).toEqual(key.id)
+      expect(revokedKey.paymentPointerId).toEqual(key.paymentPointerId)
+      expect(revokedKey.jwk).toEqual(key.jwk)
+    })
   })
 })
