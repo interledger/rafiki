@@ -79,17 +79,15 @@ export const validateIncomingPayment = (
       )
     }
   }
-  if (typeof payment.ilpStreamConnection === 'object') {
-    if (
-      payment.ilpStreamConnection.assetCode !==
-        payment.receivedAmount.assetCode ||
-      payment.ilpStreamConnection.assetScale !==
-        payment.receivedAmount.assetScale
-    ) {
-      throw new Error(
-        'Stream connection asset information does not match incoming payment asset information'
-      )
-    }
+
+  if (
+    payment.ilpStreamConnection.assetCode !==
+      payment.receivedAmount.assetCode ||
+    payment.ilpStreamConnection.assetScale !== payment.receivedAmount.assetScale
+  ) {
+    throw new Error(
+      'Stream connection asset information does not match incoming payment asset information'
+    )
   }
 
   return payment
