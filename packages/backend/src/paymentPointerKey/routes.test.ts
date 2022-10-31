@@ -58,9 +58,7 @@ describe('Payment Pointer Keys Routes', (): void => {
 
   describe('getKeys', (): void => {
     test('returns 200 with all keys for a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,
@@ -84,9 +82,7 @@ describe('Payment Pointer Keys Routes', (): void => {
     })
 
     test('returns 200 with empty array if no keys for a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },

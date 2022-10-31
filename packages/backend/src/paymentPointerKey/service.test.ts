@@ -48,9 +48,7 @@ describe('Payment Pointer Key Service', (): void => {
 
   describe('create', (): void => {
     test('adds a key to a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const options = {
         paymentPointerId: paymentPointer.id,
@@ -65,9 +63,7 @@ describe('Payment Pointer Key Service', (): void => {
 
   describe('Fetch Payment Pointer Keys', (): void => {
     test('Can fetch keys by payment pointer id', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,
@@ -83,9 +79,7 @@ describe('Payment Pointer Key Service', (): void => {
 
   describe('Revoke Payment Pointer Keys', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const keyOption = {
         paymentPointerId: paymentPointer.id,

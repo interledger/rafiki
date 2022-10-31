@@ -51,9 +51,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
   describe('Create Payment Pointer Keys', (): void => {
     test('Can create payment pointer key', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const input: CreatePaymentPointerKeyInput = {
         paymentPointerId: paymentPointer.id,
@@ -108,9 +106,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
           throw new Error('unexpected')
         })
 
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const input = {
         paymentPointerId: paymentPointer.id,
@@ -157,9 +153,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
   describe('Revoke key', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
-        url: 'https://alice.me/.well-known/pay'
-      })
+      const paymentPointer = await createPaymentPointer(deps)
 
       const key = await paymentPointerKeyService.create({
         paymentPointerId: paymentPointer.id,
