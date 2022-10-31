@@ -271,6 +271,11 @@ export async function finalizeQuote(
     'Content-Type': 'application/json'
   }
 
+  const receiver = await deps.clientService.receiver.get(quote.receiver)
+  if (!receiver) {
+    throw QuoteError.InvalidReceiver
+  }
+
   const body = {
     ...quote.toJSON(),
     paymentType: maxReceiveAmountValue
@@ -321,10 +326,22 @@ export async function finalizeQuote(
     }
   }
 
+  // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
+  const maxExpiry = new Date(quote.createdAt.getTime() + deps.quoteLifespan)
+  let quoteExpiry
+  if (
+    receiver.expiresAt &&
+    maxExpiry.getTime() > receiver.expiresAt.getTime()
+  ) {
+    quoteExpiry = receiver.expiresAt
+  } else {
+    quoteExpiry = maxExpiry
+  }
+
   await quote.$query(deps.knex).patch({
     sendAmount,
     receiveAmount,
-    expiresAt: new Date(quote.createdAt.getTime() + deps.quoteLifespan)
+    expiresAt: quoteExpiry
   })
   return quote
 }

@@ -31,10 +31,10 @@ export class Receiver extends ConnectionBase {
     if (typeof incomingPayment.ilpStreamConnection !== 'object') {
       return undefined
     }
-    if (
-      incomingPayment.expiresAt &&
-      new Date(incomingPayment.expiresAt).getTime() <= Date.now()
-    ) {
+    const expiryDate = incomingPayment.expiresAt
+      ? new Date(incomingPayment.expiresAt)
+      : undefined
+    if (expiryDate && expiryDate.getTime() <= Date.now()) {
       return undefined
     }
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
@@ -45,14 +45,16 @@ export class Receiver extends ConnectionBase {
     return new this(
       incomingPayment.ilpStreamConnection,
       incomingAmount?.value,
-      receivedAmount.value
+      receivedAmount.value,
+      expiryDate
     )
   }
 
   private constructor(
     connection: ConnectionJSON,
     private readonly incomingAmountValue?: bigint,
-    private readonly receivedAmountValue?: bigint
+    private readonly receivedAmountValue?: bigint,
+    private readonly expiresAtValue?: Date
   ) {
     super(
       connection.ilpAddress,
@@ -87,6 +89,13 @@ export class Receiver extends ConnectionBase {
         assetCode: this.assetCode,
         assetScale: this.assetScale
       }
+    }
+    return undefined
+  }
+
+  public get expiresAt(): Date | undefined {
+    if (this.expiresAtValue !== undefined) {
+      return this.expiresAtValue
     }
     return undefined
   }

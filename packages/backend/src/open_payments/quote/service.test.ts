@@ -572,6 +572,62 @@ describe('QuoteService', (): void => {
       })
     })
 
+    it.each`
+      expiryDate                                                            | description
+      ${new Date(new Date().getTime() + Config.quoteLifespan - 2 * 60_000)} | ${"the incoming payment's expirataion date"}
+      ${new Date(new Date().getTime() + Config.quoteLifespan + 2 * 60_000)} | ${"the quotation's creation date plus its lifespan"}
+    `(
+      'sets expiry date to $description',
+      async ({ expiryDate }): Promise<void> => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: receivingPaymentPointer.id,
+          grantId: grantRef.id,
+          incomingAmount,
+          expiresAt: expiryDate
+        })
+        const options: CreateQuoteOptions = {
+          paymentPointerId,
+          receiver: incomingPayment.url,
+          receiveAmount
+        }
+        const expected: ExpectedQuote = {
+          ...options,
+          paymentType: Pay.PaymentType.FixedDelivery
+        }
+
+        const walletScope = mockWalletQuote({
+          expected
+        })
+        const quote = await quoteService.create(options)
+        assert.ok(!isQuoteError(quote))
+        walletScope.isDone()
+        const maxExpiration = new Date(
+          quote.createdAt.getTime() + config.quoteLifespan
+        )
+        expect(quote).toMatchObject({
+          paymentPointerId,
+          receiver: options.receiver,
+          sendAmount: {
+            value: BigInt(
+              Math.ceil(
+                Number(receiveAmount.value) / quote.minExchangeRate.valueOf()
+              )
+            ),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          receiveAmount: receiveAmount,
+          maxPacketAmount: BigInt('9223372036854775807'),
+          createdAt: expect.any(Date),
+          updatedAt: expect.any(Date),
+          expiresAt:
+            maxExpiration.getTime() > expiryDate.getTime()
+              ? expiryDate
+              : maxExpiration
+        })
+      }
+    )
+
     it('fails on unknown payment pointer', async (): Promise<void> => {
       await expect(
         quoteService.create({
