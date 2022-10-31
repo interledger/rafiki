@@ -20,8 +20,10 @@ export const get = async <T>(
     requestUrl.protocol = 'http'
   }
 
+  const url = requestUrl.href
+
   try {
-    const { data, status } = await axiosInstance.get(requestUrl.href, {
+    const { data, status } = await axiosInstance.get(url, {
       headers: accessToken
         ? {
             Authorization: `GNAP ${accessToken}`,
@@ -41,7 +43,7 @@ export const get = async <T>(
       logger.error(
         {
           data: JSON.stringify(data),
-          url: requestUrl.href,
+          url,
           validationError: error?.message
         },
         errorMessage
@@ -55,7 +57,7 @@ export const get = async <T>(
     const errorMessage = `Error when making Open Payments GET request: ${
       error?.message ? error.message : 'Unknown error'
     }`
-    logger.error({ url: requestUrl.href }, errorMessage)
+    logger.error({ url }, errorMessage)
 
     throw new Error(errorMessage)
   }

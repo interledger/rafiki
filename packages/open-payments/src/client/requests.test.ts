@@ -80,11 +80,12 @@ describe('requests', (): void => {
     })
 
     test('calls validator function properly', async (): Promise<void> => {
-      nock(baseUrl)
-        .get('/incoming-payment')
-        .reply(200, () => ({
-          id: 'id'
-        }))
+      const status = 200
+      const body = {
+        id: 'id'
+      }
+
+      nock(baseUrl).get('/incoming-payment').reply(status, body)
 
       const validatorSpy = jest.spyOn(validators, 'successfulValidator')
 
@@ -97,8 +98,8 @@ describe('requests', (): void => {
       )
 
       expect(validatorSpy).toHaveBeenCalledWith({
-        body: { id: 'id' },
-        status: 200
+        body,
+        status
       })
     })
 
