@@ -13,10 +13,17 @@ export const get = async <T>(
   openApiResponseValidator: ResponseValidator<T>
 ): Promise<T> => {
   const { axiosInstance, logger } = clientDeps
-  const { url, accessToken } = args
+  const { accessToken } = args
+
+  const requestUrl = new URL(args.url)
+  if (process.env.NODE_ENV === 'development') {
+    requestUrl.protocol = 'http'
+  }
+
+  const url = requestUrl.href
 
   try {
-    const { data } = await axiosInstance.get(url, {
+    const { data, status } = await axiosInstance.get(url, {
       headers: accessToken
         ? {
             Authorization: `GNAP ${accessToken}`,
@@ -26,9 +33,21 @@ export const get = async <T>(
         : {}
     })
 
-    if (!openApiResponseValidator(data)) {
+    try {
+      openApiResponseValidator({
+        status,
+        body: data
+      })
+    } catch (error) {
       const errorMessage = 'Failed to validate OpenApi response'
-      logger.error({ data: JSON.stringify(data), url }, errorMessage)
+      logger.error(
+        {
+          data: JSON.stringify(data),
+          url,
+          validationError: error?.message
+        },
+        errorMessage
+      )
 
       throw new Error(errorMessage)
     }

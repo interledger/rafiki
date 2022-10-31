@@ -34,14 +34,14 @@ const validateRequest = openApi.createRequestValidator({
   method: HttpMethod.GET
 })
 
-validateRequest(request) // true or false
+validateRequest(request) // throws or returns true
 
 const validateResponse = openApi.createResponseValidator({
   path: '/resource/{id}',
   method: HttpMethod.GET
 })
 
-validateResponse(response.body) // true or false
+validateResponse({ body: response.body, status }) // throws or returns true
 ```
 
 > **Note**
