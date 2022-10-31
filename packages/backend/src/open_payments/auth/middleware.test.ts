@@ -231,87 +231,67 @@ describe('Auth Middleware', (): void => {
       scope.isDone()
     }
   )
-  const table: {
-    type: AccessType
-    action: AccessAction
-    description: string
-  }[] = []
+  const types = {
+    [AccessType.IncomingPayment]: Object.values(AccessAction),
+    [AccessType.OutgoingPayment]: Object.values(AccessAction).filter(
+      (action) => action !== AccessAction.Complete
+    ),
+    [AccessType.Quote]: [
+      AccessAction.Create,
+      AccessAction.Read
+      // TODO
+      // AccessAction.ReadAll
+    ]
+  }
   Object.values(AccessType).forEach((type) => {
-    Object.values(AccessAction).forEach((action) => {
-      // The complete path is not valid for outgoing payments
-      // Create and read are the only valid paths for quotes
-      if (
-        !(
-          type === AccessType.OutgoingPayment && action == AccessAction.Complete
-        ) &&
-        type !== AccessType.Quote
-      ) {
-        table.push({
+    for (const action of types[type]) {
+      const description =
+        action === AccessAction.Create
+          ? 'stores grant details'
+          : 'does not store grant details'
+      test(`${description} for ${type} on the ${action} path`, async (): Promise<void> => {
+        const actionPathMiddleware: AppMiddleware = createAuthMiddleware({
           type: type,
-          action: action,
-          description:
-            action === AccessAction.Create
-              ? 'stores grant details'
-              : 'does not store grant details'
+          action: action
         })
-      } else if (
-        type === AccessType.Quote &&
-        (action === AccessAction.Create || action === AccessAction.Read)
-      ) {
-        table.push({
-          type: type,
-          action: action,
-          description:
-            action === AccessAction.Create
-              ? 'stores grant details'
-              : 'does not store grant details'
+        const grant = new Grant({
+          active: true,
+          clientId: uuid(),
+          grant: uuid(),
+          access: [
+            {
+              type: type,
+              actions: [action],
+              identifier: ctx.paymentPointer.url
+            }
+          ]
         })
-      }
-    })
-  })
-  test.each(table)(
-    '$description for $type on the $action path',
-    async ({ type, action }): Promise<void> => {
-      const actionPathMiddleware: AppMiddleware = createAuthMiddleware({
-        type: type,
-        action: action
-      })
-      const grant = new Grant({
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: type,
-            actions: [action],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      })
-      const scope = mockAuthServer(grant.toJSON())
-      let next
-      if (action === AccessAction.Create) {
-        next = jest.fn().mockImplementation(async () => {
-          await expect(
-            GrantReference.query().findById(grant.grant)
-          ).resolves.toEqual({
-            id: grant.grant,
-            clientId: grant.clientId
+        const scope = mockAuthServer(grant.toJSON())
+        let next
+        if (action === AccessAction.Create) {
+          next = jest.fn().mockImplementation(async () => {
+            await expect(
+              GrantReference.query().findById(grant.grant)
+            ).resolves.toEqual({
+              id: grant.grant,
+              clientId: grant.clientId
+            })
           })
-        })
-      } else {
-        next = jest.fn().mockImplementation(async () => {
-          await expect(
-            GrantReference.query().findById(grant.grant)
-          ).resolves.toBeUndefined()
-        })
-      }
-      await expect(actionPathMiddleware(ctx, next)).resolves.toBeUndefined()
-      expect(next).toHaveBeenCalled()
-      expect(ctx.grant).toEqual(grant)
-      scope.isDone()
+        } else {
+          next = jest.fn().mockImplementation(async () => {
+            await expect(
+              GrantReference.query().findById(grant.grant)
+            ).resolves.toBeUndefined()
+          })
+        }
+        await expect(actionPathMiddleware(ctx, next)).resolves.toBeUndefined()
+        expect(next).toHaveBeenCalled()
+        expect(ctx.grant).toEqual(grant)
+        scope.isDone()
+      })
     }
-  )
+  })
+
   test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
     ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
     const authService = await deps.use('authService')
