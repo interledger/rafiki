@@ -13,9 +13,11 @@ export const defaultAxiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
 
 export const mockOpenApiResponseValidators = () => ({
   successfulValidator: ((data: unknown): data is unknown =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     true) as ResponseValidator<any>,
   failedValidator: ((data: unknown): data is unknown => {
     throw new Error('Failed to validate response')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as ResponseValidator<any>
 })
 
