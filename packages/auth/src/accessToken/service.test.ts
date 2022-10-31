@@ -166,9 +166,11 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
-      const now = new Date(new Date().getTime() + 4000)
-      jest.useFakeTimers()
-      jest.setSystemTime(now)
+      const tokenCreatedDate = new Date(token.createdAt)
+      const now = new Date(
+        tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
+      )
+      jest.useFakeTimers({ now })
       const introspection = await accessTokenService.introspect(token.value)
       expect(introspection).toEqual({ active: false })
     })

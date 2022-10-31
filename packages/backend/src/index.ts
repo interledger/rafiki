@@ -27,7 +27,7 @@ import { createAuthService } from './open_payments/auth/service'
 import { createOpenPaymentsClientService } from './open_payments/client/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
-import { createClientKeysRoutes } from './clientKeys/routes'
+import { createPaymentPointerKeyRoutes } from './paymentPointerKey/routes'
 import { createPaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
@@ -40,8 +40,7 @@ import { createOpenAPI } from 'openapi'
 import { createClient as createOpenPaymentsClient } from 'open-payments'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
-import { createClientKeysService } from './clientKeys/service'
-import { createClientService } from './clients/service'
+import { createPaymentPointerKeyService } from './paymentPointerKey/service'
 import { createGrantReferenceService } from './open_payments/grantReference/service'
 import { createReceiverService } from './open_payments/receiver/service'
 
@@ -214,10 +213,10 @@ export function initIocContainer(
       config: await deps.use('config')
     })
   })
-  container.singleton('clientKeysRoutes', async (deps) => {
-    return createClientKeysRoutes({
-      clientKeysService: await deps.use('clientKeysService'),
-      clientService: await deps.use('clientService')
+  container.singleton('paymentPointerKeyRoutes', async (deps) => {
+    return createPaymentPointerKeyRoutes({
+      paymentPointerKeyService: await deps.use('paymentPointerKeyService'),
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('connectionService', async (deps) => {
@@ -271,14 +270,8 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('clientKeysService', async (deps) => {
-    return createClientKeysService({
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex')
-    })
-  })
-  container.singleton('clientService', async (deps) => {
-    return createClientService({
+  container.singleton('paymentPointerKeyService', async (deps) => {
+    return createPaymentPointerKeyService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
     })
