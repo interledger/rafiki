@@ -115,7 +115,7 @@ describe('incoming-payment', (): void => {
       )
     })
 
-    test('throws if receiving and incoming asset scale is different', async (): Promise<void> => {
+    test('throws if receiving and incoming amount asset scales are different', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment({
         incomingAmount: {
           assetCode: 'USD',
@@ -134,7 +134,7 @@ describe('incoming-payment', (): void => {
       )
     })
 
-    test('throws if receiving and incoming asset code is different', async (): Promise<void> => {
+    test('throws if receiving and incoming asset codes are different', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment({
         incomingAmount: {
           assetCode: 'CAD',
@@ -172,7 +172,7 @@ describe('incoming-payment', (): void => {
       )
     })
 
-    test('throws if receiving amount the same as than incoming amount but payment still not complete', async (): Promise<void> => {
+    test('throws if receiving amount is the same as incoming amount but payment status is incomplete', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment({
         incomingAmount: {
           assetCode: 'USD',
@@ -192,7 +192,7 @@ describe('incoming-payment', (): void => {
       )
     })
 
-    test('throws if receiving amount asset code is different that ilp connection asset scale', async (): Promise<void> => {
+    test('throws if receiving amount asset code is different that ilp connection asset code', async (): Promise<void> => {
       const ilpStreamConnection = mockILPStreamConnection({
         assetCode: 'CAD'
       })
