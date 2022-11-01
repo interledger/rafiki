@@ -14,20 +14,24 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
+import { ConnectionService } from '../connection/service'
+import { OpenPaymentsClient } from 'open-payments'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let receiverService: ReceiverService
+  let openPaymentsClient: OpenPaymentsClient
   let knex: Knex
 
-  const CONNECTION_PATH = 'connections'
   const INCOMING_PAYMENT_PATH = 'incoming-payments'
+  const CONNECTION_PATH = 'connections'
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     receiverService = await deps.use('receiverService')
+    openPaymentsClient = await deps.use('openPaymentsClient')
     knex = await deps.use('knex')
   })
 
@@ -39,7 +43,71 @@ describe('Receiver Service', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
   })
-  describe.each`
+
+  describe('get', () => {
+    describe('connections', () => {
+      const CONNECTION_PATH = 'connections'
+
+      test('resolves local connection', async () => {
+        const paymentPointer = await createPaymentPointer(deps)
+        const { connectionId } = await createIncomingPayment(deps, {
+          paymentPointerId: paymentPointer.id
+        })
+        const localUrl = `${Config.openPaymentsUrl}/${CONNECTION_PATH}/${connectionId}`
+
+        await expect(receiverService.get(localUrl)).resolves.toMatchObject({
+          assetCode: paymentPointer.asset.code,
+          assetScale: paymentPointer.asset.scale,
+          incomingAmount: undefined,
+          receivedAmount: undefined,
+          ilpAddress: expect.any(String),
+          sharedSecret: expect.any(Buffer)
+        })
+      })
+
+      test('resolves remote connection', async () => {
+        const paymentPointer = await createPaymentPointer(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: paymentPointer.id
+        })
+
+        const remoteUrl = new URL(
+          `${faker.internet.url()}/${CONNECTION_PATH}/${
+            incomingPayment.connectionId
+          }`
+        )
+        const scope = nock(remoteUrl.origin)
+          .get(remoteUrl.pathname)
+          .reply(200, async function () {
+            const connectionService: ConnectionService = await deps.use(
+              'connectionService'
+            )
+
+            return connectionService.get(incomingPayment)
+          })
+
+        const clientGetConnectionSpy = jest.spyOn(
+          openPaymentsClient,
+          'ilpStreamConnection',
+          'get'
+        )
+
+        await expect(
+          receiverService.get(remoteUrl.href)
+        ).resolves.toMatchObject({
+          assetCode: paymentPointer.asset.code,
+          assetScale: paymentPointer.asset.scale,
+          incomingAmount: undefined,
+          receivedAmount: undefined,
+          ilpAddress: expect.any(String),
+          sharedSecret: expect.any(Buffer)
+        })
+        expect(clientGetConnectionSpy).toHaveBeenCalledWith(remoteUrl.href)
+      })
+    })
+  })
+
+  describe.skip.each`
     local    | description
     ${true}  | ${'local'}
     ${false} | ${'remote'}
