@@ -29,19 +29,19 @@ export const Config = {
         ),
   authServerIdpSpec: envString(
     'AUTH_SERVER_IDP_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/3a5ba9d17b63e699eb1817dbb2bebaa10bf65fda/openapi/AS/IdP/openapi.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/9ea08740c93d8cb743c8dae6626f7a79eed5785f/openapi/AS/IdP/openapi.yaml'
   ),
   authServerClientSpec: envString(
     'AUTH_SERVER_CLIENT_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/3a5ba9d17b63e699eb1817dbb2bebaa10bf65fda/openapi/AS/client/openapi.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/9ea08740c93d8cb743c8dae6626f7a79eed5785f/openapi/AS/client/openapi.yaml'
   ),
   authServerRsSpec: envString(
     'AUTH_SERVER_RS_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/3a5ba9d17b63e699eb1817dbb2bebaa10bf65fda/openapi/AS/RS/openapi.yaml'
+    'https://raw.githubusercontent.com/interledger/open-payments/9ea08740c93d8cb743c8dae6626f7a79eed5785f/openapi/AS/RS/openapi.yaml'
   ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
-    'http://localhost:3004'
+    'http://localhost:3000'
   ),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
   authServerDomain: envString('AUTH_SERVER_DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
