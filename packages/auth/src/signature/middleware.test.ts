@@ -70,36 +70,6 @@ describe('Signature Service', (): void => {
       ).resolves.toBe(true)
     })
 
-    // test('can construct a challenge from signature input', (): void => {
-    //   const sigInputHeader =
-    //     'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'
-    //   const ctx = createContext(
-    //     {
-    //       headers: {
-    //         'Content-Type': 'application/json',
-    //         'Content-Digest': 'sha-256=:test-hash:',
-    //         'Content-Length': '1234',
-    //         'Signature-Input': sigInputHeader,
-    //         Authorization: 'GNAP test-access-token'
-    //       },
-    //       method: 'GET',
-    //       url: '/test'
-    //     },
-    //     {},
-    //     deps
-    //   )
-
-    //   ctx.request.body = { foo: 'bar' }
-
-    //   const challenge = sigInputToChallenge(sigInputHeader, ctx)
-    //   expect(challenge).toEqual(
-    //     `"@method": GET\n"@target-uri": /test\n"content-digest": sha-256=:test-hash:\n"content-length": 1234\n"content-type": application/json\n"authorization": GNAP test-access-token\n"@signature-params": ${sigInputHeader.replace(
-    //       'sig1=',
-    //       ''
-    //     )}`
-    //   )
-    // })
-
     test.each`
       title                                 | withAuthorization | withRequestBody
       ${''}                                 | ${true}           | ${true}
