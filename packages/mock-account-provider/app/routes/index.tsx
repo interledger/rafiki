@@ -1,5 +1,5 @@
 import { json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import { getAccountsWithBalance } from '../lib/balances.server'
 import tableStyle from '../styles/table.css'
 
@@ -28,7 +28,9 @@ export default function Accounts() {
         {accountsWithBalance.map((acc, i) => (
           <tr key={acc.id}>
             <td>{i + 1}</td>
-            <td>{acc.name}</td>
+            <td>
+              <Link to={`/accounts/${acc.id}`}>{acc.name}</Link>
+            </td>
             <td>{acc.paymentPointer}</td>
             <td>
               {(Number(acc.balance) / 100).toFixed(acc.assetScale)}{' '}

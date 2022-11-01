@@ -1,6 +1,7 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { mockAccounts } from '~/lib/accounts.server'
+import type { Amount } from '~/lib/transactions.server'
 import { gql } from '@apollo/client'
 import type { LiquidityMutationResponse } from '../../generated/graphql'
 import { apolloClient } from '~/lib/apolloClient'
@@ -19,11 +20,6 @@ export interface WebHook {
   data: Record<string, unknown>
 }
 
-export interface Amount {
-  value: bigint
-  assetCode: string
-  assetScale: number
-}
 export interface AmountJSON {
   value: string
   assetCode: string
