@@ -54,7 +54,7 @@ export class Receiver extends ConnectionBase {
     connection: ConnectionJSON,
     private readonly incomingAmountValue?: bigint,
     private readonly receivedAmountValue?: bigint,
-    private readonly expiresAtValue?: Date
+    public readonly expiresAt?: Date
   ) {
     super(
       connection.ilpAddress,
@@ -89,13 +89,6 @@ export class Receiver extends ConnectionBase {
         assetCode: this.assetCode,
         assetScale: this.assetScale
       }
-    }
-    return undefined
-  }
-
-  public get expiresAt(): Date | undefined {
-    if (this.expiresAtValue !== undefined) {
-      return this.expiresAtValue
     }
     return undefined
   }

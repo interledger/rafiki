@@ -77,7 +77,9 @@ describe('Open Payments Client Service', (): void => {
             incomingAmount: undefined,
             receivedAmount: undefined,
             ilpAddress: expect.any(String),
-            sharedSecret: expect.any(Buffer)
+            sharedSecret: expect.any(Buffer),
+            expiresAt:
+              urlPath === INCOMING_PAYMENT_PATH ? expect.any(Date) : undefined
           })
           expect(local).not.toEqual(scope.isDone())
         })
@@ -137,7 +139,8 @@ describe('Open Payments Client Service', (): void => {
               incomingAmount: incomingPayment.incomingAmount,
               receivedAmount: incomingPayment.receivedAmount,
               ilpAddress: expect.any(String),
-              sharedSecret: expect.any(Buffer)
+              sharedSecret: expect.any(Buffer),
+              expiresAt: incomingPayment.expiresAt
             })
           }
         )
