@@ -4,7 +4,6 @@ import {
   ILPStreamConnection as OpenPaymentsConnection
 } from 'open-payments'
 
-import { parseAmount } from '../amount'
 import { ConnectionService } from '../connection/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../../shared/baseService'
@@ -136,15 +135,10 @@ async function getIncomingPayment(
       })
     }
 
-    const incomingPayment = await deps.openPaymentsClient.incomingPayment.get({
+    return await deps.openPaymentsClient.incomingPayment.get({
       url,
       accessToken: deps.accessToken
     })
-    if (!isValidIncomingPayment(incomingPayment)) {
-      throw new Error('Invalid incoming payment')
-    }
-
-    return incomingPayment
   } catch (_) {
     return undefined
   }
@@ -175,37 +169,4 @@ async function getLocalIncomingPayment({
   }
 
   return incomingPayment.toOpenPaymentsType({ ilpStreamConnection: connection })
-}
-
-// Validate referential integrity, which cannot be represented in OpenAPI
-function isValidIncomingPayment(
-  payment: OpenPaymentsIncomingPayment
-): payment is OpenPaymentsIncomingPayment {
-  if (payment.incomingAmount) {
-    const incomingAmount = parseAmount(payment.incomingAmount)
-    const receivedAmount = parseAmount(payment.receivedAmount)
-    if (
-      incomingAmount.assetCode !== receivedAmount.assetCode ||
-      incomingAmount.assetScale !== receivedAmount.assetScale
-    ) {
-      return false
-    }
-    if (incomingAmount.value < receivedAmount.value) {
-      return false
-    }
-    if (incomingAmount.value === receivedAmount.value && !payment.completed) {
-      return false
-    }
-  }
-  if (typeof payment.ilpStreamConnection === 'object') {
-    if (
-      payment.ilpStreamConnection.assetCode !==
-        payment.receivedAmount.assetCode ||
-      payment.ilpStreamConnection.assetScale !==
-        payment.receivedAmount.assetScale
-    ) {
-      return false
-    }
-  }
-  return true
 }
