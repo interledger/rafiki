@@ -2,14 +2,13 @@ import { BaseModel } from '../shared/baseModel'
 
 import { JWKWithRequired } from 'auth'
 
-export class ClientKeys extends BaseModel {
+export class PaymentPointerKey extends BaseModel {
   public static get tableName(): string {
-    return 'clientKeys'
+    return 'paymentPointerKeys'
   }
 
-  // The id should be the same as the id in the kid.
   public id!: string
-  public clientId!: string
+  public paymentPointerId!: string
 
   public jwk!: JWKWithRequired
 }

@@ -4,26 +4,27 @@ import { createHmac } from 'crypto'
 import { ModelObject, TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
-import { Pagination } from '../../shared/baseModel'
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount, parseAmount } from '../amount'
 import { OpenPaymentsClientService, Receiver } from '../client/service'
-import { PaymentPointer } from '../payment_pointer/model'
-import { PaymentPointerService } from '../payment_pointer/service'
+import {
+  PaymentPointer,
+  GetOptions,
+  ListOptions
+} from '../payment_pointer/model'
+import {
+  PaymentPointerService,
+  PaymentPointerSubresourceService
+} from '../payment_pointer/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
-export interface QuoteService {
-  get(id: string): Promise<Quote | undefined>
+export interface QuoteService extends PaymentPointerSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
-  getPaymentPointerPage(
-    paymentPointerId: string,
-    pagination?: Pagination
-  ): Promise<Quote[]>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -47,18 +48,17 @@ export async function createQuoteService(
     logger: deps_.logger.child({ service: 'QuoteService' })
   }
   return {
-    get: (id) => getQuote(deps, id),
+    get: (options) => getQuote(deps, options),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
-    getPaymentPointerPage: (paymentPointerId, pagination) =>
-      getPaymentPointerPage(deps, paymentPointerId, pagination)
+    getPaymentPointerPage: (options) => getPaymentPointerPage(deps, options)
   }
 }
 
 async function getQuote(
   deps: ServiceDependencies,
-  id: string
+  options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex).findById(id).withGraphJoined('asset')
+  return Quote.query(deps.knex).get(options).withGraphFetched('asset')
 }
 
 export interface CreateQuoteOptions {
@@ -66,6 +66,7 @@ export interface CreateQuoteOptions {
   sendAmount?: Amount
   receiveAmount?: Amount
   receiver: string
+  grantId?: string
 }
 
 async function createQuote(
@@ -128,7 +129,8 @@ async function createQuote(
           lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
-          expiresAt: new Date(0)
+          expiresAt: new Date(0),
+          grantId: options.grantId
         })
         .withGraphFetched('asset')
 
@@ -150,6 +152,7 @@ async function createQuote(
           knex: trx
         },
         quote,
+        receiver,
         maxReceiveAmountValue
       )
     })
@@ -262,6 +265,7 @@ export async function startQuote(
 export async function finalizeQuote(
   deps: ServiceDependencies,
   quote: Quote,
+  receiver: Receiver,
   maxReceiveAmountValue?: bigint
 ): Promise<Quote> {
   const requestHeaders = {
@@ -319,11 +323,21 @@ export async function finalizeQuote(
     }
   }
 
-  await quote.$query(deps.knex).patch({
+  const patchOptions = {
     sendAmount,
     receiveAmount,
     expiresAt: new Date(quote.createdAt.getTime() + deps.quoteLifespan)
-  })
+  }
+  // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
+  if (
+    receiver.expiresAt &&
+    receiver.expiresAt.getTime() < patchOptions.expiresAt.getTime()
+  ) {
+    patchOptions.expiresAt = receiver.expiresAt
+  }
+
+  await quote.$query(deps.knex).patch(patchOptions)
+
   return quote
 }
 
@@ -344,13 +358,7 @@ export function generateQuoteSignature(
 
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
-  paymentPointerId: string,
-  pagination?: Pagination
+  options: ListOptions
 ): Promise<Quote[]> {
-  return await Quote.query(deps.knex)
-    .getPage(pagination)
-    .where({
-      paymentPointerId
-    })
-    .withGraphFetched('asset')
+  return await Quote.query(deps.knex).list(options).withGraphFetched('asset')
 }

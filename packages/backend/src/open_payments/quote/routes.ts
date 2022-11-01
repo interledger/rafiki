@@ -32,7 +32,11 @@ async function getQuote(
   deps: ServiceDependencies,
   ctx: ReadContext
 ): Promise<void> {
-  const quote = await deps.quoteService.get(ctx.params.id)
+  const quote = await deps.quoteService.get({
+    id: ctx.params.id,
+    clientId: ctx.clientId,
+    paymentPointerId: ctx.paymentPointer.id
+  })
   if (!quote) return ctx.throw(404)
   quote.paymentPointer = ctx.paymentPointer
   const body = quoteToBody(deps, quote)
@@ -55,7 +59,8 @@ async function createQuote(
       paymentPointerId: ctx.paymentPointer.id,
       receiver: body.receiver,
       sendAmount: body.sendAmount && parseAmount(body.sendAmount),
-      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount)
+      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount),
+      grantId: ctx.grant?.grant
     })
 
     if (isQuoteError(quoteOrErr)) {

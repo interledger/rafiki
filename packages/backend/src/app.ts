@@ -31,7 +31,7 @@ import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { ClientKeysRoutes } from './clientKeys/routes'
+import { PaymentPointerKeyRoutes } from './paymentPointerKey/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -47,8 +47,7 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
-import { ClientKeysService } from './clientKeys/service'
-import { ClientService } from './clients/service'
+import { PaymentPointerKeyService } from './paymentPointerKey/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
 
 export interface AppContextData {
@@ -75,15 +74,10 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-type Context<T> = Omit<AppContext, 'request'> & {
-  request: T
-}
-
-export type ClientKeysContext = Context<AppRequest<'keyId'>>
-
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
+  clientId?: string
 }
 
 // Payment pointer subresources
@@ -139,7 +133,7 @@ export interface AppServices {
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
-  clientKeysRoutes: Promise<ClientKeysRoutes>
+  paymentPointerKeyRoutes: Promise<PaymentPointerKeyRoutes>
   paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
@@ -150,8 +144,7 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
-  clientService: Promise<ClientService>
-  clientKeysService: Promise<ClientKeysService>
+  paymentPointerKeyService: Promise<PaymentPointerKeyService>
   grantReferenceService: Promise<GrantReferenceService>
 }
 
@@ -249,7 +242,9 @@ export class App {
     })
 
     const spspRoutes = await this.container.use('spspRoutes')
-    const clientKeysRoutes = await this.container.use('clientKeysRoutes')
+    const paymentPointerKeyRoutes = await this.container.use(
+      'paymentPointerKeyRoutes'
+    )
     const paymentPointerRoutes = await this.container.use(
       'paymentPointerRoutes'
     )
@@ -345,9 +340,18 @@ export class App {
         }
       }
     }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     router.get(
-      '/keys/{keyId}',
-      (ctx: ClientKeysContext): Promise<void> => clientKeysRoutes.get(ctx)
+      PAYMENT_POINTER_PATH + '/jwks.json',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+        path: '/jwks.json',
+        method: HttpMethod.GET
+      }),
+      async (ctx: PaymentPointerContext): Promise<void> =>
+        await paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
     )
 
     // Add the payment pointer query route last.

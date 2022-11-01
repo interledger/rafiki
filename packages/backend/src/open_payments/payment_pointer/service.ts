@@ -5,7 +5,10 @@ import { PaymentPointerError } from './errors'
 import {
   PaymentPointer,
   PaymentPointerEvent,
-  PaymentPointerEventType
+  PaymentPointerEventType,
+  GetOptions,
+  ListOptions,
+  PaymentPointerSubresource
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
@@ -101,7 +104,7 @@ async function getPaymentPointer(
 ): Promise<PaymentPointer | undefined> {
   return await PaymentPointer.query(deps.knex)
     .findById(id)
-    .withGraphJoined('asset')
+    .withGraphFetched('asset')
 }
 
 async function getPaymentPointerByUrl(
@@ -110,7 +113,7 @@ async function getPaymentPointerByUrl(
 ): Promise<PaymentPointer | undefined> {
   const paymentPointer = await PaymentPointer.query(deps.knex)
     .findOne({ url })
-    .withGraphJoined('asset')
+    .withGraphFetched('asset')
   return paymentPointer || undefined
 }
 
@@ -207,4 +210,16 @@ async function createWithdrawalEvent(
   await paymentPointer.$query(deps.knex).patch({
     totalEventsAmount: paymentPointer.totalEventsAmount + amount
   })
+}
+
+export interface CreateSubresourceOptions {
+  paymentPointerId: string
+}
+
+export interface PaymentPointerSubresourceService<
+  M extends PaymentPointerSubresource
+> {
+  get(options: GetOptions): Promise<M | undefined>
+  create(options: { paymentPointerId: string }): Promise<M | string>
+  getPaymentPointerPage(options: ListOptions): Promise<M[]>
 }

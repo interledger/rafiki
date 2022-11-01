@@ -1,7 +1,8 @@
 import { Counter, ResolvedPayment } from '@interledger/pay'
+import { createMockContext } from '@shopify/jest-koa-mocks'
 import axios, { AxiosRequestHeaders, AxiosResponse } from 'axios'
 import base64url from 'base64url'
-import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
+import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
 import { URL } from 'url'
 
 import { Amount, parseAmount } from '../amount'
@@ -13,10 +14,6 @@ import { PaymentPointerService } from '../payment_pointer/service'
 import { ReadContext } from '../../app'
 import { AssetOptions } from '../../asset/service'
 import { BaseService } from '../../shared/baseService'
-// TODO: move out of *.tests
-import { setup } from '../../shared/routes.test'
-// TODO: move out of /tests
-import { createContext } from '../../tests/context'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -34,10 +31,10 @@ export class Receiver extends ConnectionBase {
     if (typeof incomingPayment.ilpStreamConnection !== 'object') {
       return undefined
     }
-    if (
-      incomingPayment.expiresAt &&
-      new Date(incomingPayment.expiresAt).getTime() <= Date.now()
-    ) {
+    const expiryDate = incomingPayment.expiresAt
+      ? new Date(incomingPayment.expiresAt)
+      : undefined
+    if (expiryDate && expiryDate.getTime() <= Date.now()) {
       return undefined
     }
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
@@ -48,14 +45,16 @@ export class Receiver extends ConnectionBase {
     return new this(
       incomingPayment.ilpStreamConnection,
       incomingAmount?.value,
-      receivedAmount.value
+      receivedAmount.value,
+      expiryDate
     )
   }
 
   private constructor(
     connection: ConnectionJSON,
     private readonly incomingAmountValue?: bigint,
-    private readonly receivedAmountValue?: bigint
+    private readonly receivedAmountValue?: bigint,
+    public readonly expiresAt?: Date
   ) {
     super(
       connection.ilpAddress,
@@ -117,8 +116,8 @@ interface ServiceDependencies extends BaseService {
   openApi: OpenAPI
   openPaymentsUrl: string
   paymentPointerService: PaymentPointerService
-  validateConnection: ValidateFunction<ConnectionJSON>
-  validateIncomingPayment: ValidateFunction<IncomingPaymentJSON>
+  validateConnection: ResponseValidator<ConnectionJSON>
+  validateIncomingPayment: ResponseValidator<IncomingPaymentJSON>
 }
 
 export async function createOpenPaymentsClientService(
@@ -179,6 +178,15 @@ async function getResource({
   })
 }
 
+const createReadContext = (params: { id: string }): ReadContext =>
+  createMockContext({
+    headers: { Accept: 'application/json' },
+    method: 'GET',
+    customProperties: {
+      params
+    }
+  }) as ReadContext
+
 async function getConnection(
   deps: ServiceDependencies,
   url: string
@@ -186,15 +194,9 @@ async function getConnection(
   try {
     // Check if this is a local incoming payment connection
     if (url.startsWith(`${deps.openPaymentsUrl}/connections/`)) {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' },
-          method: 'GET'
-        },
-        {
-          id: url.slice(-36)
-        }
-      )
+      const ctx = createReadContext({
+        id: url.slice(-36)
+      })
       await deps.connectionRoutes.get(ctx)
       return ctx.body as ConnectionJSON
     }
@@ -232,16 +234,10 @@ async function getIncomingPayment(
       match.paymentPointerUrl
     )
     if (paymentPointer) {
-      const ctx = setup<ReadContext>({
-        reqOpts: {
-          headers: { Accept: 'application/json' },
-          method: 'GET'
-        },
-        params: {
-          id: match.id
-        },
-        paymentPointer
+      const ctx = createReadContext({
+        id: match.id
       })
+      ctx.paymentPointer = paymentPointer
       await deps.incomingPaymentRoutes.get(ctx)
       return ctx.body as IncomingPaymentJSON
     }

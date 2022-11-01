@@ -1,32 +1,46 @@
-export default function Index() {
+import { json } from '@remix-run/node'
+import { useLoaderData } from '@remix-run/react'
+import { getAccountsWithBalance } from '../lib/balances.server'
+import tableStyle from '../styles/table.css'
+
+type LoaderData = {
+  accountsWithBalance: Awaited<ReturnType<typeof getAccountsWithBalance>>
+}
+
+export const loader = async () => {
+  return json<LoaderData>({
+    accountsWithBalance: await getAccountsWithBalance()
+  })
+}
+
+export default function Accounts() {
+  const { accountsWithBalance } = useLoaderData() as LoaderData
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target='_blank'
-            href='https://remix.run/tutorials/blog'
-            rel='noreferrer'
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target='_blank'
-            href='https://remix.run/tutorials/jokes'
-            rel='noreferrer'
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target='_blank' href='https://remix.run/docs' rel='noreferrer'>
-            Remix Docs
-          </a>
-        </li>
-      </ul>
-    </div>
+    <main>
+      <h1>Accounts</h1>
+      <table>
+        <tr>
+          <th>#</th>
+          <th>Account Name</th>
+          <th>Payment Pointer</th>
+          <th>Balance</th>
+        </tr>
+        {accountsWithBalance.map((acc, i) => (
+          <tr key={acc.id}>
+            <td>{i + 1}</td>
+            <td>{acc.name}</td>
+            <td>{acc.paymentPointer}</td>
+            <td>
+              {(Number(acc.balance) / 100).toFixed(acc.assetScale)}{' '}
+              {acc.assetCode}
+            </td>
+          </tr>
+        ))}
+      </table>
+    </main>
   )
+}
+
+export function links() {
+  return [{ rel: 'stylesheet', href: tableStyle }]
 }

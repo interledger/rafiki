@@ -86,7 +86,9 @@ function validateSigInputComponents(
   return !(
     !sigInputComponents.includes('@method') ||
     !sigInputComponents.includes('@target-uri') ||
-    (ctx.request.body && !sigInputComponents.includes('content-digest')) ||
+    (ctx.request.body &&
+      Object.keys(ctx.request.body).length > 0 &&
+      !sigInputComponents.includes('content-digest')) ||
     (ctx.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )

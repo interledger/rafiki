@@ -9,14 +9,17 @@ import { createContext } from '../../tests/context'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
-import { AppServices, CreateContext, ReadContext } from '../../app'
+import { AppServices, CreateContext } from '../../app'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteService } from './service'
 import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
-import { Amount } from '../amount'
+import { Amount, serializeAmount } from '../amount'
+import { AccessAction, AccessType, Grant } from '../auth/grant'
 import { PaymentPointer } from '../payment_pointer/model'
+import { getRouteTests } from '../payment_pointer/model.test'
 import { randomAsset } from '../../tests/asset'
+import { createGrant } from '../../tests/grant'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 
@@ -37,9 +40,13 @@ describe('Quote Routes', (): void => {
     assetScale: asset.scale
   }
 
-  const createPaymentPointerQuote = async (
+  const createPaymentPointerQuote = async ({
+    paymentPointerId,
+    grantId
+  }: {
     paymentPointerId: string
-  ): Promise<Quote> => {
+    grantId: string
+  }): Promise<Quote> => {
     return await createQuote(deps, {
       paymentPointerId,
       receiver,
@@ -48,6 +55,7 @@ describe('Quote Routes', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale
       },
+      grantId,
       validDestination: false
     })
   }
@@ -81,54 +89,31 @@ describe('Quote Routes', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns 404 for nonexistent quote', async (): Promise<void> => {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        {
-          id: uuid()
-        }
-      )
-      ctx.paymentPointer = paymentPointer
-      await expect(quoteRoutes.get(ctx)).rejects.toHaveProperty('status', 404)
-    })
-
-    test('returns 200 with a quote', async (): Promise<void> => {
-      const quote = await createPaymentPointerQuote(paymentPointer.id)
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' },
-          method: 'GET',
-          url: `/quotes/${quote.id}`
-        },
-        {
-          id: quote.id
-        }
-      )
-      ctx.paymentPointer = paymentPointer
-      await expect(quoteRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.body).toEqual({
+    getRouteTests({
+      createGrant: async (options) => createGrant(deps, options),
+      getPaymentPointer: async () => paymentPointer,
+      createModel: async ({ grant }) =>
+        createPaymentPointerQuote({
+          paymentPointerId: paymentPointer.id,
+          grantId: grant?.grant
+        }),
+      get: (ctx) => quoteRoutes.get(ctx),
+      getBody: (quote) => ({
         id: `${paymentPointer.url}/quotes/${quote.id}`,
         paymentPointer: paymentPointer.url,
         receiver: quote.receiver,
-        sendAmount: {
-          ...quote.sendAmount,
-          value: quote.sendAmount.value.toString()
-        },
-        receiveAmount: {
-          ...quote.receiveAmount,
-          value: quote.receiveAmount.value.toString()
-        },
+        sendAmount: serializeAmount(quote.sendAmount),
+        receiveAmount: serializeAmount(quote.receiveAmount),
         createdAt: quote.createdAt.toISOString(),
         expiresAt: quote.expiresAt.toISOString()
-      })
+      }),
+      urlPath: Quote.urlPath
     })
   })
 
   describe('create', (): void => {
     let options: CreateBody
+    let grant: Grant | undefined
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
@@ -145,6 +130,7 @@ describe('Quote Routes', (): void => {
       ctx.request.body = {
         ...options
       }
+      ctx.grant = grant
       return ctx
     }
 
@@ -175,7 +161,24 @@ describe('Quote Routes', (): void => {
       })
     })
 
-    describe('returns the quote on success', (): void => {
+    describe.each`
+      withGrant | description
+      ${true}   | ${'grant'}
+      ${false}  | ${'no grant'}
+    `('returns the quote on success ($description)', ({ withGrant }): void => {
+      beforeEach(async (): Promise<void> => {
+        grant = withGrant
+          ? await createGrant(deps, {
+              access: [
+                {
+                  type: AccessType.Quote,
+                  actions: [AccessAction.Create, AccessAction.Read]
+                }
+              ]
+            })
+          : undefined
+      })
+
       test.each`
         sendAmount   | receiveAmount | description
         ${'123'}     | ${undefined}  | ${'sendAmount'}
@@ -207,7 +210,8 @@ describe('Quote Routes', (): void => {
             .mockImplementationOnce(async (opts) => {
               quote = await createQuote(deps, {
                 ...opts,
-                validDestination: false
+                validDestination: false,
+                grantId: grant?.grant
               })
               return quote
             })
@@ -222,7 +226,8 @@ describe('Quote Routes', (): void => {
             receiveAmount: options.receiveAmount && {
               ...options.receiveAmount,
               value: BigInt(options.receiveAmount.value)
-            }
+            },
+            grantId: grant?.grant
           })
           expect(ctx.response).toSatisfyApiSpec()
           const quoteId = (
@@ -260,14 +265,16 @@ describe('Quote Routes', (): void => {
           .mockImplementationOnce(async (opts) => {
             quote = await createQuote(deps, {
               ...opts,
-              validDestination: false
+              validDestination: false,
+              grantId: grant?.grant
             })
             return quote
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
-          receiver
+          receiver,
+          grantId: grant?.grant
         })
         expect(ctx.response).toSatisfyApiSpec()
         const quoteId = (
