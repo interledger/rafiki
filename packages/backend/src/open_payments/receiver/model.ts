@@ -8,11 +8,16 @@ import {
   ILPStreamConnection as OpenPaymentsConnection
 } from 'open-payments'
 import { ConnectionBase } from '../connection/model'
-import { isValidIlpAddress } from 'ilp-packet'
+import { IlpAddress, isValidIlpAddress } from 'ilp-packet'
+
+interface OpenPaymentsConnectionWithIlpAddress
+  extends Omit<OpenPaymentsConnection, 'ilpAddress'> {
+  ilpAddress: IlpAddress
+}
 
 export class Receiver extends ConnectionBase {
   static fromConnection(connection: OpenPaymentsConnection): Receiver {
-    return new this(connection)
+    return this.fromOpenPaymentsConnection(connection)
   }
 
   static fromIncomingPayment(
@@ -27,27 +32,43 @@ export class Receiver extends ConnectionBase {
     ) {
       return undefined
     }
-    const receivedAmount = parseAmount(incomingPayment.receivedAmount)
     const incomingAmount = incomingPayment.incomingAmount
       ? parseAmount(incomingPayment.incomingAmount)
       : undefined
+    const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
-    return new this(
+    return this.fromOpenPaymentsConnection(
       incomingPayment.ilpStreamConnection,
       incomingAmount?.value,
       receivedAmount.value
     )
   }
 
-  private constructor(
+  private static fromOpenPaymentsConnection(
     connection: OpenPaymentsConnection,
+    incomingAmountValue?: bigint,
+    receivedAmountValue?: bigint
+  ): Receiver | undefined {
+    if (!isValidIlpAddress(connection.ilpAddress)) {
+      return undefined
+    }
+
+    const validConnection = {
+      id: connection.id,
+      assetCode: connection.assetCode,
+      assetScale: connection.assetScale,
+      sharedSecret: connection.sharedSecret,
+      ilpAddress: connection.ilpAddress as IlpAddress
+    }
+
+    return new this(validConnection, incomingAmountValue, receivedAmountValue)
+  }
+
+  private constructor(
+    connection: OpenPaymentsConnectionWithIlpAddress,
     private readonly incomingAmountValue?: bigint,
     private readonly receivedAmountValue?: bigint
   ) {
-    if (!isValidIlpAddress(connection.ilpAddress)) {
-      throw new Error('Connection has invalid destination address')
-    }
-
     super(
       connection.ilpAddress,
       base64url.toBuffer(connection.sharedSecret),
