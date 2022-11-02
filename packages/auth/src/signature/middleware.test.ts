@@ -443,7 +443,7 @@ describe('Signature Service', (): void => {
 
       Config.bypassSignatureValidation = defaultByPassSignatureValidation
 
-      scope.isDone()
+      scope.done()
     })
 
     test('middleware fails if BYPASS_SIGNATURE_VALIDATION is false with bad signature', async (): Promise<void> => {
