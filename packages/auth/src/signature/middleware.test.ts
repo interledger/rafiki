@@ -6,7 +6,7 @@ import { Knex } from 'knex'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -32,7 +32,8 @@ import {
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
-  let appContainer: TestContainer
+  const appContainers: TestContainer[] = []
+
   let keyPath: string
   let publicKey: JWKWithRequired
   let privateKey: JWKWithRequired
@@ -43,7 +44,8 @@ describe('Signature Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    appContainer = await createTestApp(deps)
+    const appContainer = await createTestApp(deps)
+    appContainers.push(appContainer)
 
     const keys = await generateTestKeys()
     keyPath = '/' + keys.keyId
@@ -57,7 +59,9 @@ describe('Signature Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     nock.restore()
-    await appContainer.shutdown()
+    for (let i = 0; i < appContainers.length; i++) {
+      await appContainers[i].shutdown()
+    }
   })
 
   describe('signatures', (): void => {
@@ -168,8 +172,6 @@ describe('Signature Service', (): void => {
     let next: () => Promise<any>
     let managementId: string
     let tokenManagementUrl: string
-    let config: IAppConfig
-    let defaultBypassSignatureValidation: boolean
 
     const BASE_GRANT = {
       state: GrantState.Pending,
@@ -206,8 +208,6 @@ describe('Signature Service', (): void => {
 
     beforeAll(async (): Promise<void> => {
       knex = await deps.use('knex')
-      config = await deps.use('config')
-      defaultBypassSignatureValidation = config.bypassSignatureValidation
     })
 
     beforeEach(async (): Promise<void> => {
@@ -230,8 +230,6 @@ describe('Signature Service', (): void => {
 
       managementId = token.managementId
       tokenManagementUrl = `/token/${managementId}`
-
-      config.bypassSignatureValidation = defaultBypassSignatureValidation
     })
 
     afterEach(async (): Promise<void> => {
@@ -408,7 +406,13 @@ describe('Signature Service', (): void => {
     })
 
     test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is true with bad signature', async (): Promise<void> => {
-      config.bypassSignatureValidation = true
+      const altDeps = await initIocContainer({
+        ...Config,
+        bypassSignatureValidation: true
+      })
+
+      const altContainer = await createTestApp(altDeps)
+      appContainers.push(altContainer)
 
       nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
@@ -436,7 +440,7 @@ describe('Signature Service', (): void => {
           }
         },
         privateKey,
-        deps
+        altDeps
       )
 
       ctx.headers['signature'] = 'wrong-signature'
