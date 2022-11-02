@@ -59,6 +59,7 @@ describe('Receiver Model', (): void => {
       })
       expect(receiver.ilpAddress).toEqual(expect.any(String))
       expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
+      expect(receiver.expiresAt).toEqual(incomingPayment.expiresAt)
     })
 
     test('fails to create receiver if payment completed', async () => {
@@ -115,6 +116,7 @@ describe('Receiver Model', (): void => {
       expect(receiver.receivedAmount).toBeUndefined()
       expect(receiver.ilpAddress).toEqual(expect.any(String))
       expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
+      expect(receiver.expiresAt).toBeUndefined()
     })
 
     test('returns undefined if invalid ilpAdress', async () => {

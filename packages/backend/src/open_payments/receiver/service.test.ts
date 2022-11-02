@@ -63,7 +63,8 @@ describe('Receiver Service', (): void => {
           incomingAmount: undefined,
           receivedAmount: undefined,
           ilpAddress: expect.any(String),
-          sharedSecret: expect.any(Buffer)
+          sharedSecret: expect.any(Buffer),
+          expiresAt: undefined
         })
       })
 
@@ -91,7 +92,8 @@ describe('Receiver Service', (): void => {
           incomingAmount: undefined,
           receivedAmount: undefined,
           ilpAddress: expect.any(String),
-          sharedSecret: expect.any(Buffer)
+          sharedSecret: expect.any(Buffer),
+          expiresAt: undefined
         })
         expect(clientGetConnectionSpy).toHaveBeenCalledWith({
           url: remoteUrl.href
@@ -133,7 +135,8 @@ describe('Receiver Service', (): void => {
           incomingAmount: incomingPayment.incomingAmount,
           receivedAmount: incomingPayment.receivedAmount,
           ilpAddress: expect.any(String),
-          sharedSecret: expect.any(Buffer)
+          sharedSecret: expect.any(Buffer),
+          expiresAt: expect.any(Date)
         })
       })
 
@@ -168,7 +171,8 @@ describe('Receiver Service', (): void => {
           incomingAmount: incomingPayment.incomingAmount,
           receivedAmount: incomingPayment.receivedAmount,
           ilpAddress: expect.any(String),
-          sharedSecret: expect.any(Buffer)
+          sharedSecret: expect.any(Buffer),
+          expiresAt: expect.any(Date)
         })
         expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
           url: incomingPayment.url,

@@ -26,12 +26,14 @@ export class Receiver extends ConnectionBase {
     if (incomingPayment.completed) {
       return undefined
     }
-    if (
-      incomingPayment.expiresAt &&
-      new Date(incomingPayment.expiresAt).getTime() <= Date.now()
-    ) {
+    const expiresAt = incomingPayment.expiresAt
+      ? new Date(incomingPayment.expiresAt)
+      : undefined
+
+    if (expiresAt && expiresAt.getTime() <= Date.now()) {
       return undefined
     }
+
     const incomingAmount = incomingPayment.incomingAmount
       ? parseAmount(incomingPayment.incomingAmount)
       : undefined
@@ -40,14 +42,16 @@ export class Receiver extends ConnectionBase {
     return this.fromOpenPaymentsConnection(
       incomingPayment.ilpStreamConnection,
       incomingAmount?.value,
-      receivedAmount.value
+      receivedAmount.value,
+      expiresAt
     )
   }
 
   private static fromOpenPaymentsConnection(
     connection: OpenPaymentsConnection,
     incomingAmountValue?: bigint,
-    receivedAmountValue?: bigint
+    receivedAmountValue?: bigint,
+    expiresAt?: Date
   ): Receiver | undefined {
     const ilpAddress = connection.ilpAddress
 
@@ -64,14 +68,16 @@ export class Receiver extends ConnectionBase {
         ilpAddress
       },
       incomingAmountValue,
-      receivedAmountValue
+      receivedAmountValue,
+      expiresAt
     )
   }
 
   private constructor(
     connection: OpenPaymentsConnectionWithIlpAddress,
     private readonly incomingAmountValue?: bigint,
-    private readonly receivedAmountValue?: bigint
+    private readonly receivedAmountValue?: bigint,
+    public readonly expiresAt?: Date
   ) {
     super(
       connection.ilpAddress,
