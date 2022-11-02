@@ -402,8 +402,8 @@ describe('Signature Service', (): void => {
     })
 
     test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is true with bad signature', async (): Promise<void> => {
-      const defaultByPassSignatureValidation = Config.bypassSignatureValidation
-      Config.bypassSignatureValidation = true
+      const config = await appContainer.container.use('config')
+      config.bypassSignatureValidation = true
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
