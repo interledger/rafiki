@@ -79,6 +79,7 @@ async function rotateToken(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
+  // TODO: verify Authorization: GNAP ${accessToken} contains correct token value
   const { id: managementId } = ctx.params
   const result = await deps.accessTokenService.rotate(managementId)
   if (result.success == true) {

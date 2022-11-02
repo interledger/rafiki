@@ -70,35 +70,59 @@ describe('Signature Service', (): void => {
       ).resolves.toBe(true)
     })
 
-    test('can construct a challenge from signature input', (): void => {
-      const sigInputHeader =
-        'sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type" "authorization");created=1618884473;keyid="gnap-key"'
-      const ctx = createContext(
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Content-Digest': 'sha-256=:test-hash:',
-            'Content-Length': '1234',
-            'Signature-Input': sigInputHeader,
-            Authorization: 'GNAP test-access-token'
-          },
-          method: 'GET',
-          url: '/test'
-        },
-        {},
-        deps
-      )
+    test.each`
+      title                                 | withAuthorization | withRequestBody
+      ${''}                                 | ${true}           | ${true}
+      ${' without an authorization header'} | ${false}          | ${true}
+      ${' without a request body'}          | ${true}           | ${false}
+    `(
+      'can construct a challenge from signature input$title',
+      ({ withAuthorization, withRequestBody }): void => {
+        let sigInputHeader = 'sig1=("@method" "@target-uri" "content-type"'
 
-      ctx.request.body = { foo: 'bar' }
+        const headers = {
+          'Content-Type': 'application/json'
+        }
+        let expectedChallenge = `"@method": GET\n"@target-uri": /test\n"content-type": application/json\n`
 
-      const challenge = sigInputToChallenge(sigInputHeader, ctx)
-      expect(challenge).toEqual(
-        `"@method": GET\n"@target-uri": /test\n"content-digest": sha-256=:test-hash:\n"content-length": 1234\n"content-type": application/json\n"authorization": GNAP test-access-token\n"@signature-params": ${sigInputHeader.replace(
+        if (withRequestBody) {
+          sigInputHeader += ' "content-digest" "content-length"'
+          headers['Content-Digest'] = 'sha-256=:test-hash:'
+          headers['Content-Length'] = '1234'
+          expectedChallenge +=
+            '"content-digest": sha-256=:test-hash:\n"content-length": 1234\n'
+        }
+
+        if (withAuthorization) {
+          sigInputHeader += ' "authorization"'
+          headers['Authorization'] = 'GNAP test-access-token'
+          expectedChallenge += '"authorization": GNAP test-access-token\n'
+        }
+
+        sigInputHeader += ');created=1618884473;keyid="gnap-key"'
+        headers['Signature-Input'] = sigInputHeader
+        expectedChallenge += `"@signature-params": ${sigInputHeader.replace(
           'sig1=',
           ''
         )}`
-      )
-    })
+
+        const ctx = createContext(
+          {
+            headers,
+            method: 'GET',
+            url: '/test'
+          },
+          {},
+          deps
+        )
+
+        ctx.request.body = withRequestBody ? { foo: 'bar' } : {}
+
+        const challenge = sigInputToChallenge(sigInputHeader, ctx)
+
+        expect(challenge).toEqual(expectedChallenge)
+      }
+    )
 
     test.each`
       title                                                                               | sigInputHeader
