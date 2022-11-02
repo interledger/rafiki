@@ -95,7 +95,12 @@ async function getConnection(
     return await deps.openPaymentsClient.ilpStreamConnection.get({
       url
     })
-  } catch (_) {
+  } catch (error) {
+    deps.logger.error(
+      { errorMessage: error?.message },
+      'Could not get connection'
+    )
+
     return undefined
   }
 }
@@ -139,7 +144,11 @@ async function getIncomingPayment(
       url,
       accessToken: deps.accessToken
     })
-  } catch (_) {
+  } catch (error) {
+    deps.logger.error(
+      { errorMessage: error?.message },
+      'Could not get incoming payment'
+    )
     return undefined
   }
 }
