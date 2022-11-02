@@ -57,8 +57,6 @@ describe('Receiver Service', (): void => {
 
         const localUrl = `${Config.openPaymentsUrl}/${CONNECTION_PATH}/${connectionId}`
 
-        console.log({ paymentPointer, localUrl })
-
         await expect(receiverService.get(localUrl)).resolves.toMatchObject({
           assetCode: paymentPointer.asset.code,
           assetScale: paymentPointer.asset.scale,
