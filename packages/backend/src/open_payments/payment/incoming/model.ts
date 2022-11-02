@@ -247,10 +247,12 @@ export class IncomingPayment
     return {
       id: this.id,
       paymentPointer: this.paymentPointer.url,
-      incomingAmount: {
-        ...this.incomingAmount,
-        value: this.incomingAmount.value.toString()
-      },
+      incomingAmount: this.incomingAmount
+        ? {
+            ...this.incomingAmount,
+            value: this.incomingAmount.value.toString()
+          }
+        : undefined,
       receivedAmount: {
         ...this.receivedAmount,
         value: this.receivedAmount.value.toString()
