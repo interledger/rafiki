@@ -49,19 +49,23 @@ export class Receiver extends ConnectionBase {
     incomingAmountValue?: bigint,
     receivedAmountValue?: bigint
   ): Receiver | undefined {
-    if (!isValidIlpAddress(connection.ilpAddress)) {
+    const ilpAddress = connection.ilpAddress
+
+    if (!isValidIlpAddress(ilpAddress)) {
       return undefined
     }
 
-    const validConnection = {
-      id: connection.id,
-      assetCode: connection.assetCode,
-      assetScale: connection.assetScale,
-      sharedSecret: connection.sharedSecret,
-      ilpAddress: connection.ilpAddress as IlpAddress
-    }
-
-    return new this(validConnection, incomingAmountValue, receivedAmountValue)
+    return new this(
+      {
+        id: connection.id,
+        assetCode: connection.assetCode,
+        assetScale: connection.assetScale,
+        sharedSecret: connection.sharedSecret,
+        ilpAddress
+      },
+      incomingAmountValue,
+      receivedAmountValue
+    )
   }
 
   private constructor(
