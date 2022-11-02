@@ -24,7 +24,7 @@ import { createAssetService } from './asset/service'
 import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createAuthService } from './open_payments/auth/service'
-import { createOpenPaymentsClientService } from './open_payments/client/service'
+
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createPaymentPointerKeyRoutes } from './paymentPointerKey/routes'
@@ -245,19 +245,6 @@ export function initIocContainer(
       openPaymentsUrl: config.openPaymentsUrl,
       paymentPointerService: await deps.use('paymentPointerService'),
       openPaymentsClient: await deps.use('openPaymentsClient')
-    })
-  })
-  container.singleton('openPaymentsClientService', async (deps) => {
-    const config = await deps.use('config')
-    return await createOpenPaymentsClientService({
-      logger: await deps.use('logger'),
-      // TODO: https://github.com/interledger/rafiki/issues/583
-      accessToken: config.devAccessToken,
-      connectionRoutes: await deps.use('connectionRoutes'),
-      incomingPaymentRoutes: await deps.use('incomingPaymentRoutes'),
-      openApi: await deps.use('openApi'),
-      openPaymentsUrl: config.openPaymentsUrl,
-      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
 
