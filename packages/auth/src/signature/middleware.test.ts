@@ -401,10 +401,9 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is set', async (): Promise<void> => {
-      deps = await initIocContainer(Config)
+    test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is true with bad signature', async (): Promise<void> => {
+      const defaultByPassSignatureValidation = Config.bypassSignatureValidation
       Config.bypassSignatureValidation = true
-      appContainer = await createTestApp(deps)
 
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
@@ -416,14 +415,21 @@ describe('Signature Service', (): void => {
       const ctx = await createContextWithSigHeaders(
         {
           headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${grant.continueToken}`
+            Accept: 'application/json'
           },
-          url: '/continue',
+          url: '/',
           method: 'POST'
         },
-        { id: grant.continueId },
-        { interact_ref: grant.interactRef },
+        {},
+        {
+          client: {
+            display: TEST_CLIENT_DISPLAY,
+            key: {
+              proof: 'httpsig',
+              jwk: testClientKey.jwk
+            }
+          }
+        },
         privateKey,
         deps
       )
@@ -432,8 +438,60 @@ describe('Signature Service', (): void => {
 
       await grantInitiationHttpsigMiddleware(ctx, next)
 
-      expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
+      expect(next).toHaveBeenCalled()
+
+      Config.bypassSignatureValidation = defaultByPassSignatureValidation
+
+      scope.isDone()
+    })
+
+    test('middleware fails if BYPASS_SIGNATURE_VALIDATION is false with bad signature', async (): Promise<void> => {
+      const defaultByPassSignatureValidation = Config.bypassSignatureValidation
+      Config.bypassSignatureValidation = false
+
+      const scope = nock(KEY_REGISTRY_ORIGIN)
+        .get(keyPath)
+        .reply(200, {
+          jwk: testClientKey.jwk,
+          client: TEST_CLIENT
+        } as ClientKey)
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {},
+        {
+          client: {
+            display: TEST_CLIENT_DISPLAY,
+            key: {
+              proof: 'httpsig',
+              jwk: testClientKey.jwk
+            }
+          }
+        },
+        privateKey,
+        deps
+      )
+
+      ctx.headers['signature'] = 'wrong-signature'
+
+      let errorThrown = false
+      try {
+        await grantInitiationHttpsigMiddleware(ctx, next)
+      } catch (e) {
+        expect(e.status).toEqual(401)
+        expect(e.message).toEqual('invalid signature')
+        errorThrown = true
+      }
+      expect(errorThrown).toBe(true)
+
+      Config.bypassSignatureValidation = defaultByPassSignatureValidation
 
       scope.isDone()
     })
