@@ -443,7 +443,8 @@ describe('Signature Service', (): void => {
       expect(next).toHaveBeenCalled()
       config.bypassSignatureValidation = defaultByPassSignatureValidation
 
-      scope.done()
+      // TODO: https://github.com/interledger/rafiki/issues/656
+      // scope.done()
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {
