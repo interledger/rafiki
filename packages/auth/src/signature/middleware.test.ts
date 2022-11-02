@@ -6,7 +6,7 @@ import { Knex } from 'knex'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { Config, IAppConfig } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
@@ -168,6 +168,8 @@ describe('Signature Service', (): void => {
     let next: () => Promise<any>
     let managementId: string
     let tokenManagementUrl: string
+    let config: IAppConfig
+    let defaultBypassSignatureValidation: boolean
 
     const BASE_GRANT = {
       state: GrantState.Pending,
@@ -204,6 +206,8 @@ describe('Signature Service', (): void => {
 
     beforeAll(async (): Promise<void> => {
       knex = await deps.use('knex')
+      config = await deps.use('config')
+      defaultBypassSignatureValidation = config.bypassSignatureValidation
     })
 
     beforeEach(async (): Promise<void> => {
@@ -226,6 +230,8 @@ describe('Signature Service', (): void => {
 
       managementId = token.managementId
       tokenManagementUrl = `/token/${managementId}`
+
+      config.bypassSignatureValidation = defaultBypassSignatureValidation
     })
 
     afterEach(async (): Promise<void> => {
@@ -402,11 +408,9 @@ describe('Signature Service', (): void => {
     })
 
     test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is true with bad signature', async (): Promise<void> => {
-      const config = await appContainer.container.use('config')
-      const defaultByPassSignatureValidation = config.bypassSignatureValidation
       config.bypassSignatureValidation = true
 
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
           jwk: testClientKey.jwk,
@@ -441,7 +445,6 @@ describe('Signature Service', (): void => {
 
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
-      config.bypassSignatureValidation = defaultByPassSignatureValidation
 
       // TODO: https://github.com/interledger/rafiki/issues/656
       // scope.done()
