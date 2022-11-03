@@ -68,7 +68,7 @@ describe('Access Token Routes', (): void => {
 
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
-    actions: [Action.Read, Action.Create],
+    actions: [Action.Read, Action.Create, Action.List],
     identifier: `https://example.com/${v4()}`,
     limits: {
       receiver:
