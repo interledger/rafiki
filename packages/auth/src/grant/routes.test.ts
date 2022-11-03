@@ -220,6 +220,8 @@ describe('Grant Routes', (): void => {
           wait: Config.waitTimeSeconds
         }
       })
+
+      // scope.done() // TODO: fails
     })
 
     test('Can get a software-only authorization grant', async (): Promise<void> => {
@@ -277,6 +279,8 @@ describe('Grant Routes', (): void => {
           uri: expect.any(String)
         }
       })
+
+      // scope.done() // TODO: fails
     })
     test('Does not create grant if token issuance fails', async (): Promise<void> => {
       jest
@@ -321,6 +325,7 @@ describe('Grant Routes', (): void => {
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(500)
+      // scope.done() // TODO: fails
     })
     test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
       nock(KEY_REGISTRY_ORIGIN)
@@ -348,6 +353,8 @@ describe('Grant Routes', (): void => {
 
       await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
       expect(ctx.status).toBe(400)
+
+      // scope.done() // TODO: fails
     })
   })
 
@@ -377,6 +384,7 @@ describe('Grant Routes', (): void => {
         ).resolves.toBeUndefined()
         expect(ctx.status).toBe(401)
         expect(ctx.body).toEqual({ error: 'unknown_request' })
+        // scope.done() // TODO: fails
       })
 
       test('Interaction start fails if client is invalid', async (): Promise<void> => {
@@ -449,6 +457,8 @@ describe('Grant Routes', (): void => {
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
         expect(ctx.session.nonce).toEqual(grant.interactNonce)
+
+        // scope.done() // TODO: fails
       })
     })
 

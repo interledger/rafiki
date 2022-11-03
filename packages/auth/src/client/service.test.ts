@@ -46,7 +46,7 @@ describe('Client Service', (): void => {
     nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
     describe('Client Properties', (): void => {
       test('Can validate client properties with registry', async (): Promise<void> => {
-        nock(KEY_REGISTRY_ORIGIN)
+        const scope = nock(KEY_REGISTRY_ORIGIN)
           .get(keyPath)
           .reply(200, {
             jwk: {
@@ -71,6 +71,7 @@ describe('Client Service', (): void => {
         })
 
         expect(validClient).toEqual(true)
+        scope.done()
       })
 
       test('Cannot validate client with incorrect display name', async (): Promise<void> => {
@@ -95,6 +96,7 @@ describe('Client Service', (): void => {
         })
 
         expect(validClient).toEqual(false)
+        // scope.done() // TODO: fails
       })
 
       test('Cannot validate client with incorrect uri', async (): Promise<void> => {
@@ -119,11 +121,12 @@ describe('Client Service', (): void => {
         })
 
         expect(validClient).toEqual(false)
+        // scope.done() // TODO: fails 
       })
     })
 
     test('Cannot validate client with kid that doesnt resolve', async (): Promise<void> => {
-      nock(KEY_REGISTRY_ORIGIN).get('/wrong').reply(200)
+      const scope = nock(KEY_REGISTRY_ORIGIN).get('/wrong').reply(200)
 
       const validClientKid = await clientService.validateClient({
         display: TEST_CLIENT_DISPLAY,
@@ -137,6 +140,7 @@ describe('Client Service', (): void => {
       })
 
       expect(validClientKid).toEqual(false)
+      scope.done()
     })
 
     test('Cannot validate client with jwk that doesnt have a public key', async (): Promise<void> => {
@@ -164,6 +168,7 @@ describe('Client Service', (): void => {
       })
 
       expect(validClientX).toEqual(false)
+      // scope.done() // TODO: fails
     })
 
     test('Cannot validate client with key that has invalid properties', async (): Promise<void> => {
@@ -227,7 +232,7 @@ describe('Client Service', (): void => {
     test('Cannot validate client with key that is not ready', async (): Promise<void> => {
       const futureDate = new Date()
       futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
-      nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/notready')
         .reply(200, {
           jwk: {
@@ -251,10 +256,11 @@ describe('Client Service', (): void => {
       })
 
       expect(validKeyKid).toEqual(false)
+      scope.done()
     })
 
     test('Cannot validate client with expired key', async (): Promise<void> => {
-      nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/invalidclient')
         .reply(200, {
           jwk: {
@@ -278,10 +284,11 @@ describe('Client Service', (): void => {
       })
 
       expect(validClient).toEqual(false)
+      scope.done()
     })
 
     test('Cannot validate client with revoked key', async (): Promise<void> => {
-      nock(KEY_REGISTRY_ORIGIN)
+      const scope = nock(KEY_REGISTRY_ORIGIN)
         .get('/keys/revoked')
         .reply(200, {
           jwk: {
@@ -305,6 +312,7 @@ describe('Client Service', (): void => {
       })
 
       expect(validClient).toEqual(false)
+      scope.done()
     })
   })
 })
