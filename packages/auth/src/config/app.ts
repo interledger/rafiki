@@ -29,7 +29,7 @@ export const Config = {
         ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
-    'http://localhost:3000'
+    'http://localhost:3300'
   ),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
   authServerDomain: envString('AUTH_SERVER_DOMAIN', 'http://localhost:3006'), // TODO: replace this with whatever frontend port ends up being
