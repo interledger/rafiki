@@ -7,30 +7,31 @@ export interface Amount {
   assetScale: number
 }
 
-export type IncomingPayment = {
-  id: string
-  description: string
-  externalRef: string
-  incomingAmountValue: string
-  receivedAmountValue: string
-  assetCode: string
-  assetScale: number
-  state: string
-  createdAt: string
+export enum TransactionType {
+  IncomingPayment = 'Incoming Payment',
+  OutgoingPayment = 'Outgoing Payment'
 }
 
-export type OutgoingPayment = {
+interface Transaction {
   id: string
-  receiver: string
   description: string
   externalRef: string
-  sendAmountValue: string
-  sentAmountValue: string
-  receiveAmount: Amount
+  createdAt: string
+  amountValue: string
   assetCode: string
   assetScale: number
   state: string
-  createdAt: string
+  type: TransactionType
+}
+
+export interface IncomingPayment extends Transaction {
+  incomingAmountValue: string
+}
+
+export interface OutgoingPayment extends Transaction {
+  receiver: string
+  sendAmountValue: string
+  receiveAmount: Amount
 }
 
 export async function getAccountTransactions(
@@ -45,11 +46,12 @@ export async function getAccountTransactions(
       description: node.description,
       externalRef: node.externalRef,
       incomingAmountValue: node.incomingAmount.value,
-      receivedAmountValue: node.receivedAmount.value,
+      amountValue: node.receivedAmount.value,
       assetCode: node.receivedAmount.assetCode,
       assetScale: node.receivedAmount.assetScale,
       state: node.state,
-      createdAt: node.createdAt
+      createdAt: node.createdAt,
+      type: TransactionType.IncomingPayment
     }
   })
   return transactions.concat(
@@ -60,12 +62,13 @@ export async function getAccountTransactions(
         description: node.description,
         externalRef: node.externalRef,
         sendAmountValue: node.sendAmount.value,
-        sentAmountValue: node.sentAmount.value,
+        amountValue: node.sentAmount.value,
         receiveAmount: node.receiveAmount,
         assetCode: node.sendAmount.assetCode,
         assetScale: node.sendAmount.assetScale,
         state: node.state,
-        createdAt: node.createdAt
+        createdAt: node.createdAt,
+        type: TransactionType.OutgoingPayment
       }
     })
   )

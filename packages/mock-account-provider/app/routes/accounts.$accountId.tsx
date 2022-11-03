@@ -28,11 +28,9 @@ export default function Transactions() {
         {transactions.map((trx) => (
           <tr key={trx.id}>
             <td>{trx.createdAt}</td>
-            <td>{trx.sendAmountValue ? 'Outgoing' : 'Incoming'}</td>
+            <td>{trx.type}</td>
             <td>
-              {(
-                Number(trx.sendAmountValue ?? trx.incomingAmountValue) / 100
-              ).toFixed(trx.assetScale)}{' '}
+              {(Number(trx.amountValue) / 100).toFixed(trx.assetScale)}{' '}
               {trx.assetCode}
             </td>
             <td>{trx.description}</td>
