@@ -11,7 +11,7 @@
     "build": "pnpm build:deps && tsc --build tsconfig.json",
     "clean": "rm -fr dist/",
     "fetch-schemas": "./scripts/get-op-schema.sh",
-    "test": "jest --passWithNoTests --maxWorkers=50%",
+    "test": "pnpm fetch-schemas && jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build"
   },
   "dependencies": {
