@@ -27,11 +27,6 @@ export const Config = {
           'AUTH_DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/auth_development'
         ),
-  authServerSpec: envString(
-    'AUTH_SERVER_SPEC',
-    // TODO: use commit from main once https://github.com/interledger/rafiki/issues/630 is fixed
-    'https://raw.githubusercontent.com/interledger/open-payments/67429f0c7d658c2aaeb59a330be3ec305413f827/openapi/auth-server.yaml'
-  ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
     'http://localhost:3000'
