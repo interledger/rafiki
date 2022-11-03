@@ -59,7 +59,7 @@ describe('Open Payments Client Service', (): void => {
           const remoteUrl = new URL(
             `${faker.internet.url()}/${urlPath}/${connectionId}`
           )
-          const scope = nock(remoteUrl.origin)
+          nock(remoteUrl.origin)
             .get(remoteUrl.pathname)
             .reply(200, function () {
               return axios
@@ -81,7 +81,6 @@ describe('Open Payments Client Service', (): void => {
             expiresAt:
               urlPath === INCOMING_PAYMENT_PATH ? expect.any(Date) : undefined
           })
-          expect(local).not.toEqual(scope.isDone())
         })
         if (local) {
           test('returns undefined for unknown connection', async (): Promise<void> => {
