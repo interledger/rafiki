@@ -136,7 +136,7 @@ describe('Access Token Routes', (): void => {
         .update(TEST_CLIENT.id)
         .digest('hex')
 
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get('/' + keyId)
         .reply(200, {
           client: TEST_CLIENT,
@@ -192,11 +192,10 @@ describe('Access Token Routes', (): void => {
         },
         client_id: clientId
       })
-      scope.isDone()
     })
 
     test('Successfully introspects expired token', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           client: TEST_CLIENT,
@@ -232,8 +231,6 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: false
       })
-
-      scope.isDone()
     })
   })
 
@@ -275,7 +272,7 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           client: TEST_CLIENT,
@@ -301,11 +298,10 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
-      scope.isDone()
     })
 
     test('Returns status 204 if token has expired', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
         .reply(200, {
           client: TEST_CLIENT,
@@ -331,7 +327,6 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
-      scope.isDone()
     })
   })
 

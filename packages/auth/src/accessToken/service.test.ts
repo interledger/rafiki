@@ -146,7 +146,7 @@ describe('Access Token Service', (): void => {
         .update(TEST_CLIENT.id)
         .digest('hex')
 
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
         .reply(200, {
           client: TEST_CLIENT,
@@ -162,7 +162,6 @@ describe('Access Token Service', (): void => {
         key: { proof: 'httpsig', jwk: testJwk },
         clientId
       })
-      scope.isDone()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {

@@ -234,7 +234,7 @@ describe('Signature Service', (): void => {
     })
 
     test('Validate grant initiation request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
           jwk: testClientKey.jwk,
@@ -267,12 +267,10 @@ describe('Signature Service', (): void => {
 
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
-
-      scope.isDone()
     })
 
     test('Validate grant continuation request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
           jwk: testClientKey.jwk,
@@ -297,12 +295,10 @@ describe('Signature Service', (): void => {
       await grantContinueHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
-
-      scope.isDone()
     })
 
     test('Validate token management request with middleware', async () => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
           jwk: testClientKey.jwk,
@@ -331,12 +327,10 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
-
-      scope.isDone()
     })
 
     test('httpsig middleware fails if headers are invalid', async () => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
           jwk: testClientKey.jwk,
@@ -365,12 +359,10 @@ describe('Signature Service', (): void => {
       expect(ctx.response.status).toEqual(400)
       expect(ctx.response.body.error).toEqual('invalid_request')
       expect(ctx.response.body.message).toEqual('invalid signature headers')
-
-      scope.isDone()
     })
 
     test('middleware fails if signature is invalid', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
+      nock(KEY_REGISTRY_ORIGIN)
         .get(keyPath)
         .reply(200, {
           jwk: testClientKey.jwk,
@@ -397,8 +389,6 @@ describe('Signature Service', (): void => {
       await expect(
         grantContinueHttpsigMiddleware(ctx, next)
       ).rejects.toHaveProperty('status', 401)
-
-      scope.isDone()
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {
