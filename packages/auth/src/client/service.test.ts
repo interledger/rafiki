@@ -121,7 +121,7 @@ describe('Client Service', (): void => {
         })
 
         expect(validClient).toEqual(false)
-        // scope.done() // TODO: fails 
+        // scope.done() // TODO: fails
       })
     })
 
