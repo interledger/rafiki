@@ -124,7 +124,7 @@ describe('Auth Middleware', (): void => {
     ${'bad grant'}   | ${'invalid grant'}
     ${inactiveGrant} | ${'inactive grant'}
   `('Returns 401 for $description', async ({ grant }): Promise<void> => {
-    mockAuthServer(grant)
+    const scope = mockAuthServer(grant)
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(ctx.message).toEqual('Invalid Token')
@@ -132,10 +132,11 @@ describe('Auth Middleware', (): void => {
       `GNAP as_uri=${Config.authServerGrantUrl}`
     )
     expect(next).not.toHaveBeenCalled()
+    scope.isDone()
   })
 
   test('returns 403 for unauthorized request', async (): Promise<void> => {
-    mockAuthServer({
+    const scope = mockAuthServer({
       active: true,
       client_id: uuid(),
       grant: uuid(),
@@ -152,6 +153,7 @@ describe('Auth Middleware', (): void => {
       message: 'Insufficient Grant'
     })
     expect(next).not.toHaveBeenCalled()
+    scope.isDone()
   })
   test('returns 500 for not matching clientId', async (): Promise<void> => {
     const grant = new Grant({
@@ -170,11 +172,12 @@ describe('Auth Middleware', (): void => {
       id: grant.grant,
       clientId: uuid()
     })
-    mockAuthServer(grant.toJSON())
+    const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).rejects.toMatchObject({
       status: 500
     })
     expect(next).not.toHaveBeenCalled()
+    scope.isDone()
   })
 
   test.each`
@@ -216,7 +219,7 @@ describe('Auth Middleware', (): void => {
           }
         ]
       })
-      mockAuthServer(grant.toJSON())
+      const scope = mockAuthServer(grant.toJSON())
       const next = jest.fn().mockImplementation(async () => {
         await expect(
           GrantReference.query().findById(grant.grant)
@@ -225,6 +228,7 @@ describe('Auth Middleware', (): void => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
+      scope.isDone()
     }
   )
   const types = {
@@ -262,7 +266,7 @@ describe('Auth Middleware', (): void => {
             }
           ]
         })
-        mockAuthServer(grant.toJSON())
+        const scope = mockAuthServer(grant.toJSON())
         let next
         if (action === AccessAction.Create) {
           next = jest.fn().mockImplementation(async () => {
@@ -283,6 +287,7 @@ describe('Auth Middleware', (): void => {
         await expect(actionPathMiddleware(ctx, next)).resolves.toBeUndefined()
         expect(next).toHaveBeenCalled()
         expect(ctx.grant).toEqual(grant)
+        scope.isDone()
       })
     }
   })
@@ -313,9 +318,10 @@ describe('Auth Middleware', (): void => {
       id: grant.grant,
       clientId: grant.clientId
     })
-    mockAuthServer(grant.toJSON())
+    const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(next).toHaveBeenCalled()
     expect(ctx.grant).toEqual(grant)
+    scope.isDone()
   })
 })
