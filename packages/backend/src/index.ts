@@ -115,8 +115,13 @@ export function initIocContainer(
     return await createOpenAPI(config.authServerSpec)
   })
   container.singleton('openPaymentsClient', async (deps) => {
+    const config = await deps.use('config')
     const logger = await deps.use('logger')
-    return createOpenPaymentsClient({ logger })
+    return createOpenPaymentsClient({
+      logger,
+      keyId: config.keyId,
+      privateKey: config.privateKey
+    })
   })
 
   /**
