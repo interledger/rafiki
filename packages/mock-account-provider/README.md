@@ -67,3 +67,24 @@ Make sure the demo stack is running and not previously seeded.
 Build the code locally with `pnpm build`. Run it with `pnpm run`. To use a
 different config file, set the `SEED_FILE_LOCATION` environment variable, e.g.
 `SEED_FILE_LOCATION=<path to seed file> pnpm run`
+
+# Mock Identity Provider
+
+## "Shoe Shop" Demo
+
+The mock identity provider can be used to test the grant authorization flow using an example "Shoe Shop" site which requests the user's consent to make a purchase and renders a simple screen showing the result.
+
+**NOTE**: The mock identity provider currently only supports the `outgoing-payment` case
+
+The demo works as follows:
+
+1. Create the grant using the necessary `auth` APIs, or use the pre-seeded `demo` grant:
+    - `interactid`: `demo-interact-id`
+    - `nonce`: `demo-interact-nonce`
+    - `returnUrl`: `http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F`
+2. In a browser, navigate to the mock consent screen page at `http://localhost:3300/consent-screen?interactid=<interactid>&nonce=<nonce>&returnUrl=<returnUrl>
+    - for the `demo` grant, the URL would be
+        - (http://localhost:3300/consent-screen?interactid=demo-interact-id&nonce=demo-interact-nonce&returnUrl=http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F)
+    - if you omit the query parameters, you will first be directed to a page allowing you to input the `interactId`, `nonce`, and `returnUrl`
+3. The consent screen will present the send amount, receive amount, and receiver name, and ask the user for consent to complete the transaction
+4. After making a consent choice, the user will be redirected to a page at the Shoe Shop which displays the choice that was made, as well as the Grant ID and Interaction Reference

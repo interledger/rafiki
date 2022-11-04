@@ -4,7 +4,7 @@ import { ApiClient } from '~/lib/apiClient'
 import { parseQueryString } from '~/lib/utils'
 
 function AuthorizedView({ thirdPartyName, currencyDisplayCode, amount }
-: { thirdPartyName: string, currencyDisplayCode: string, amount: number }) {
+  : { thirdPartyName: string, currencyDisplayCode: string, amount: number }) {
   return (<>
     <div className='row'>
       <div className='col-12'>
@@ -13,16 +13,16 @@ function AuthorizedView({ thirdPartyName, currencyDisplayCode, amount }
     </div>
     <div className='row mt-2'>
       <div className='col-12'>
-          <p>
-            You gave {thirdPartyName} permission to send {currencyDisplayCode} {amount.toFixed(2)} out of your account.
-          </p>
+        <p>
+          You gave {thirdPartyName} permission to send {currencyDisplayCode} {amount.toFixed(2)} out of your account.
+        </p>
       </div>
     </div>
   </>)
 }
 
 function RejectedView({ thirdPartyName }
-: { thirdPartyName: string }) {
+  : { thirdPartyName: string }) {
   return (<>
     <div className='row'>
       <div className='col-12'>
@@ -31,9 +31,9 @@ function RejectedView({ thirdPartyName }
     </div>
     <div className='row mt-2'>
       <div className='col-12'>
-          <p>
-            You denied {thirdPartyName} access to your account.
-          </p>
+        <p>
+          You denied {thirdPartyName} access to your account.
+        </p>
       </div>
     </div>
   </>)
@@ -64,36 +64,27 @@ export default function ShoeShop() {
         const acceptanceDecision = !!decision && decision.toLowerCase() === 'accept'
         ApiClient.chooseConsent(interactId, nonce, acceptanceDecision).then((consentResponse) => {
           ApiClient.endInteraction(interactId, nonce)
-              .then((finishResponse) => {
-                let updated = false
-                if (!consentResponse.isFailure && consentResponse.payload && !finishResponse.isFailure && finishResponse.payload) {
-                  //interact_ref
-                  const outgoingPaymentAccess =  consentResponse.payload.find(p => p.type === 'outgoing-payment')
-                  if (outgoingPaymentAccess && outgoingPaymentAccess.limits && outgoingPaymentAccess.limits.sendAmount) {
-                    updated = true
-                    setCtx({
-                      ...ctx,
-                      done: true,
-                      authorized: acceptanceDecision,
-                      interactId,
-                      nonce,
-                      grantId: outgoingPaymentAccess.grantId,
-                      interactionRef: finishResponse.payload.interact_ref,
-                      thirdPartyName: outgoingPaymentAccess.limits.receiver,
-                      currencyDisplayCode: outgoingPaymentAccess.limits.sendAmount.assetCode,
-                      amount: Number(outgoingPaymentAccess.limits.sendAmount.value) / outgoingPaymentAccess.limits.sendAmount.assetScale
-                    })
-                  }
+            .then((finishResponse) => {
+              let updated = false
+              if (!consentResponse.isFailure && consentResponse.payload && !finishResponse.isFailure && finishResponse.payload) {
+                const outgoingPaymentAccess = consentResponse.payload.find(p => p.type === 'outgoing-payment')
+                if (outgoingPaymentAccess && outgoingPaymentAccess.limits && outgoingPaymentAccess.limits.sendAmount) {
+                  updated = true
+                  setCtx({
+                    ...ctx,
+                    done: true,
+                    authorized: acceptanceDecision,
+                    interactId,
+                    nonce,
+                    grantId: outgoingPaymentAccess.grantId,
+                    interactionRef: finishResponse.payload.interact_ref,
+                    thirdPartyName: outgoingPaymentAccess.limits.receiver,
+                    currencyDisplayCode: outgoingPaymentAccess.limits.sendAmount.assetCode,
+                    amount: Number(outgoingPaymentAccess.limits.sendAmount.value) / outgoingPaymentAccess.limits.sendAmount.assetScale
+                  })
+                }
 
-                  if (!updated) {
-                    setCtx({
-                      ...ctx,
-                      done: true,
-                      interactId,
-                      nonce
-                    })
-                  }
-                } else {
+                if (!updated) {
                   setCtx({
                     ...ctx,
                     done: true,
@@ -101,15 +92,23 @@ export default function ShoeShop() {
                     nonce
                   })
                 }
-              })
-              .catch((err) => {
+              } else {
                 setCtx({
                   ...ctx,
                   done: true,
                   interactId,
                   nonce
                 })
+              }
+            })
+            .catch((err) => {
+              setCtx({
+                ...ctx,
+                done: true,
+                interactId,
+                nonce
               })
+            })
         }).catch((err) => {
           setCtx({
             ...ctx,
@@ -124,7 +123,7 @@ export default function ShoeShop() {
 
   return (
     <>
-    <div style={{
+      <div style={{
         background: 'linear-gradient(0deg, rgba(9,9,121,0.8) 0%, rgba(193,1,250,0.8) 50%, rgba(9,9,121,0.8) 100%)',
         position: 'fixed',
         left: 0,
@@ -144,9 +143,9 @@ export default function ShoeShop() {
                   <img src='wallet-shoeshop-icon.png' style={{ scale: '0.7' }}></img>
                 </div>
               </div>
-              { ctx.authorized
-              ? (<AuthorizedView thirdPartyName={ctx.thirdPartyName} currencyDisplayCode={ctx.currencyDisplayCode} amount={ctx.amount} />)
-              : (<RejectedView thirdPartyName={ctx.thirdPartyName} />)
+              {ctx.authorized
+                ? (<AuthorizedView thirdPartyName={ctx.thirdPartyName} currencyDisplayCode={ctx.currencyDisplayCode} amount={ctx.amount} />)
+                : (<RejectedView thirdPartyName={ctx.thirdPartyName} />)
               }
             </div>
           </div>

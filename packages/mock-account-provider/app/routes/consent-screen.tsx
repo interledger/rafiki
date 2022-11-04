@@ -22,12 +22,15 @@ interface GrantAmount {
   currencyDisplayCode: string
 }
 
-function ConsentScreenBody({ thirdPartyName, price, costToUser, returnUrl }
-: { thirdPartyName: string, price: GrantAmount, costToUser: GrantAmount, returnUrl: string }) {
+function ConsentScreenBody({ thirdPartyName, price, costToUser, interactId, nonce, returnUrl }
+  : { thirdPartyName: string, price: GrantAmount, costToUser: GrantAmount, interactId: string, nonce: string, returnUrl: string }) {
 
   const chooseConsent = (accept: boolean) => {
-    const decisionParam = accept ? 'accept' : 'reject'
-    window.location.href = returnUrl + (returnUrl.includes('?') ? '&' : '?') + `decision=${decisionParam}`
+    const href = new URL(returnUrl)
+    href.searchParams.append('interactid', interactId)
+    href.searchParams.append('nonce', nonce)
+    href.searchParams.append('decision', accept ? 'accept' : 'reject')
+    window.location.href = href.toString()
   }
 
   return (<>
@@ -69,7 +72,7 @@ function ConsentScreenBody({ thirdPartyName, price, costToUser, returnUrl }
 }
 
 function PreConsentScreen({ ctx, setCtx }
-: { ctx: ConsentScreenContext, setCtx: Dispatch<SetStateAction<ConsentScreenContext>> }) {
+  : { ctx: ConsentScreenContext, setCtx: Dispatch<SetStateAction<ConsentScreenContext>> }) {
 
   return (<>
     <div className='row mt-2'>
@@ -161,10 +164,12 @@ function PreConsentScreen({ ctx, setCtx }
 
 export default function ConsentScreen() {
   const [ctx, setCtx] = useState({
+    ready: false,
     thirdPartyName: '',
     interactId: 'demo-interact-id',
     nonce: 'demo-interact-nonce',
-    returnUrl: 'http://localhost:3300/shoe-shop?interactid=demo-interact-id&nonce=demo-interact-nonce',
+    returnUrl: 'http://localhost:3300/shoe-shop?',
+    //TODO returnUrl: 'http://localhost:3300/shoe-shop?interactid=demo-interact-id&nonce=demo-interact-nonce',
     accesses: null,
     outgoingPaymentAccess: null,
     price: null,
@@ -173,6 +178,23 @@ export default function ConsentScreen() {
   } as ConsentScreenContext)
   const location = useLocation()
   const queryParams = parseQueryString(location.search)
+
+  useEffect(() => {
+    if (ctx.errors.length === 0 && !ctx.ready && queryParams.has('interactId', 'nonce')) {
+      const interactId = queryParams.getAsString('interactId')
+      const nonce = queryParams.getAsString('nonce')
+      const returnUrl = queryParams.getAsString('returnUrl')
+      if (interactId && nonce) {
+        setCtx({
+          ...ctx,
+          ready: true,
+          interactId,
+          nonce,
+          returnUrl: returnUrl || ctx.returnUrl
+        })
+      }
+    }
+  }, [ctx, setCtx, queryParams])
 
   useEffect(() => {
     if (ctx.errors.length === 0 && ctx.ready && (!ctx.accesses)) {
@@ -214,7 +236,7 @@ export default function ConsentScreen() {
           })
         })
     }
-  }, [ctx, setCtx, queryParams])
+  }, [ctx, setCtx])
 
   useEffect(() => {
     if (ctx.errors.length === 0 && ctx.ready && (ctx.outgoingPaymentAccess && (!ctx.price || !ctx.costToUser))) {
@@ -244,7 +266,7 @@ export default function ConsentScreen() {
 
   return (
     <>
-    <div style={{
+      <div style={{
         background: 'linear-gradient(0deg, rgba(9,9,121,0.8) 0%, rgba(193,1,250,0.8) 50%, rgba(9,9,121,0.8) 100%)',
         position: 'fixed',
         left: 0,
@@ -259,10 +281,10 @@ export default function ConsentScreen() {
         <div className='card text-center mx-auto mt-3 w-50 p-3 justify-center'>
           <div className='card-body d-grid gap-3'>
             {ctx.ready
-            ? (<>{ ctx.errors.length > 0 || !ctx.price || !ctx.costToUser
-              ? (<><h2 className='display-6'>Failed</h2><ul>{ctx.errors.map((e, ei) => <li className='text-danger' key={ei}>{e.message}</li>)}</ul></>)
-              : ( <ConsentScreenBody thirdPartyName={ctx.thirdPartyName} price={ctx.price} costToUser={ctx.costToUser} returnUrl={ctx.returnUrl} />)}</>)
-            : (<PreConsentScreen ctx={ctx} setCtx={setCtx} />)
+              ? (<>{ctx.errors.length > 0 || !ctx.price || !ctx.costToUser
+                ? (<><h2 className='display-6'>Failed</h2><ul>{ctx.errors.map((e, ei) => <li className='text-danger' key={ei}>{e.message}</li>)}</ul></>)
+                : (<ConsentScreenBody thirdPartyName={ctx.thirdPartyName} price={ctx.price} costToUser={ctx.costToUser} interactId={ctx.interactId} nonce={ctx.nonce} returnUrl={ctx.returnUrl} />)}</>)
+              : (<PreConsentScreen ctx={ctx} setCtx={setCtx} />)
             }
           </div>
         </div>
