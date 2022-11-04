@@ -99,7 +99,7 @@ paths:
                 type: object
                 properties:
                   access:
-                    $ref: ./schemas.yaml#/access
+                    $ref: ./schemas.yaml#/components/schemas/access
         '404':
           description: Not Found
       operationId: get-grant
