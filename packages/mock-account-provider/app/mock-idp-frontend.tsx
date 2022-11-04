@@ -1,4 +1,7 @@
-import { useMemo, useState } from 'react'
+import { parse as parseQueryString, ParsedUrlQuery } from 'querystring'
+import { useLocation } from '@remix-run/react'
+import { useEffect, useMemo, useState } from 'react'
+import ConsentScreen from './routes/consent-screen'
 
 const StepNames = {
   startInteraction: 0,
@@ -254,7 +257,7 @@ function StepStatusRow({
   )
 }
 
-export default function ConsentScreen() {
+function DeveloperView() {
   const [ctx, setCtx] = useState({
     currentStep: 0,
     stepStatuses: [
@@ -368,14 +371,14 @@ export default function ConsentScreen() {
                     <form>
                       <div className='form-group'>
                         <label
-                          htmlFor='consent-screen-interactId'
+                          htmlFor='mock-idp-frontend-interactId'
                           style={{ display: 'block' }}
                         >
                           interactId
                         </label>
                         <input
                           className='form-control'
-                          id='consent-screen-interactId'
+                          id='mock-idp-frontend-interactId'
                           type='text'
                           spellCheck={false}
                           value={ctx.interactId}
@@ -389,14 +392,14 @@ export default function ConsentScreen() {
                       </div>
                       <div className='form-group'>
                         <label
-                          htmlFor='consent-screen-nonce'
+                          htmlFor='mock-idp-frontend-nonce'
                           style={{ display: 'block' }}
                         >
                           nonce
                         </label>
                         <input
                           className='form-control'
-                          id='consent-screen-nonce'
+                          id='mock-idp-frontend-nonce'
                           type='text'
                           spellCheck={false}
                           value={ctx.nonce}
@@ -415,8 +418,8 @@ export default function ConsentScreen() {
                           <input
                             className='form-check-input'
                             type='radio'
-                            id='consent-screen-decision-accept'
-                            name='consent-screen-decision'
+                            id='mock-idp-frontend-decision-accept'
+                            name='mock-idp-frontend-decision'
                             disabled={ctx.currentStep > StepNames.chooseConsent}
                             defaultChecked={ctx.acceptanceDecision}
                             onChange={(event) => {
@@ -428,7 +431,7 @@ export default function ConsentScreen() {
                           ></input>
                           <label
                             className='form-check-label'
-                            htmlFor='consent-screen-decision-accept'
+                            htmlFor='mock-idp-frontend-decision-accept'
                           >
                             accept
                           </label>
@@ -437,8 +440,8 @@ export default function ConsentScreen() {
                           <input
                             className='form-check-input'
                             type='radio'
-                            id='consent-screen-decision-reject'
-                            name='consent-screen-decision'
+                            id='mock-idp-frontend-decision-reject'
+                            name='mock-idp-frontend-decision'
                             disabled={ctx.currentStep > StepNames.chooseConsent}
                             defaultChecked={!ctx.acceptanceDecision}
                             onChange={(event) => {
@@ -450,7 +453,7 @@ export default function ConsentScreen() {
                           ></input>
                           <label
                             className='form-check-label'
-                            htmlFor='consent-screen-decision-reject'
+                            htmlFor='mock-idp-frontend-decision-reject'
                           >
                             reject
                           </label>
@@ -530,4 +533,224 @@ export default function ConsentScreen() {
       </div>
     </>
   )
+}
+
+function DemoResultView({ accepted, accesses }: { accepted: boolean, accesses: Array<any/*Access TODO*/> }) {
+  return (
+    <div className='list-group-item'>
+      <div className='card-body'>
+        <div className='row'>
+          {accepted
+            ? (
+              <div className='col-12'>
+                <h2 className='display-6'>Request accepted</h2>
+                <OutputArea serializableValue={accesses} title='grant' />
+              </div>)
+            : (
+              <div className='col-6'>
+                <h2 className='display-6'>Request rejected</h2>
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DemoInitialView({
+  interactId,
+  nonce,
+  setInteractId,
+  setNonce,
+  begin
+}: {
+  interactId: string
+  nonce: string
+  setInteractId: (interactId: string) => void
+  setNonce: (nonce: string) => void
+  begin: () => Promise<void> }) {
+  return (
+    <>
+      <div className='row'>
+        <div className='col-6'>
+          <form>
+            <div className='form-group mt-2'>
+              <label
+                htmlFor='mock-idp-frontend-interactId'
+                style={{ display: 'block' }}
+              >
+                interactId
+              </label>
+              <input
+                className='form-control'
+                id='mock-idp-frontend-interactId'
+                type='text'
+                spellCheck={false}
+                value={interactId}
+                onChange={(event) => {
+                  setInteractId(event.target.value)
+                }}
+              ></input>
+            </div>
+            <div className='form-group mt-2'>
+              <label
+                htmlFor='mock-idp-frontend-nonce'
+                style={{ display: 'block' }}
+              >
+                nonce
+              </label>
+              <input
+                className='form-control'
+                id='mock-idp-frontend-nonce'
+                type='text'
+                spellCheck={false}
+                value={nonce}
+                onChange={(event) => {
+                  setNonce(event.target.value)
+                }}
+              ></input>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div className='row mt-3'>
+        <div className='col-6'>
+          <button
+            type='button'
+            className='btn btn-primary'
+            onClick={() => begin()}
+          >
+            Begin
+          </button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQuery }) {
+  const [ctx, setCtx] = useState({
+    currentStep: queryParams['step'] ? Number(queryParams['step']) : StepNames.startInteraction,
+    previousStepResponse: null as (Error | null),
+    previousStepFailed: false,
+    accesses: [],
+    interactId: 'example-interact-id',
+    nonce: 'example-interact-nonce',
+    interactionUrl: '',
+    acceptanceDecision: queryParams['decision'] ? queryParams['decision'] === 'accept' : false
+  })
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      if (queryParams['step']) {
+        const savedData = JSON.parse(window.localStorage.getItem('mock-idp-data') || '{}')
+        setCtx({
+          ...ctx,
+          ...savedData
+        })
+      } else {
+        window.localStorage.removeItem('mock-idp-data')
+      }
+    }
+  }, [])
+
+  const begin = async () => {
+    let { interactId, nonce, interactionUrl, accesses } = ctx
+    const apiParams = {
+      interactId: interactId,
+      nonce: nonce
+    }
+
+    // start interaction
+
+    let result = await ApiSteps.startInteraction(apiParams)
+    if (result.isFailure || !result.payload) {
+      return
+    } else {
+      interactionUrl = result.payload.interactionUrl
+    }
+    
+    // get grant
+    result = await ApiSteps.getGrant(apiParams)
+    if (result.isFailure || !result.payload) {
+      return
+    } else {
+      accesses = result.payload.grant.access
+    }
+    
+    // redirect to consent screen
+    const returnUrl = new URL(window.location.href)
+    returnUrl.searchParams.set('step', `${StepNames.endInteraction}`)
+
+    const consentScreenUrl = new URL(window.location.origin + '/consent-screen')
+
+    consentScreenUrl.searchParams.append('returnUrl', returnUrl.toString())
+    consentScreenUrl.searchParams.append('requestorName', '<RequestorName>')//TODO!!!
+
+    accesses.forEach((access: any) => {
+      consentScreenUrl.searchParams.append('access', JSON.stringify(access))
+    })
+
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem('mock-idp-data', JSON.stringify({ interactId, nonce, interactionUrl, accesses }))
+    }
+    window.location.href = consentScreenUrl.toString()
+  }
+
+  const reset = () => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem('mock-idp-data')
+    }
+    window.location.href = '/'
+  }
+
+  return (
+    <>
+      <div style={{ padding: '1em' }}>
+        <h3>Mock identity provider</h3>
+        <div className='row'>
+          <div className='col-12'>
+            {ctx.currentStep === StepNames.endInteraction
+              ? (<DemoResultView accepted={ctx.acceptanceDecision} accesses={ctx.accesses} />)
+              : (<DemoInitialView interactId={ctx.interactId} nonce={ctx.nonce} setInteractId={(interactId) => {
+                setCtx({
+                  ...ctx,
+                  interactId: interactId
+                })
+              }} setNonce={(nonce) => {
+                setCtx({
+                  ...ctx,
+                  nonce: nonce
+                })
+              }} begin={begin} />)}
+          </div>
+        </div>
+        <div className='row mt-4'>
+          <div className='col-12'>
+            <button
+              type='button'
+              className='btn btn-outline-secondary'
+              onClick={() => reset()}
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default function MockIdpFrontend() {
+  const location = useLocation()
+  const href = `${location.pathname}${location.search}`
+  const queryParams = parseQueryString(location.search.replace(/^\?/, ''))
+
+  if (queryParams['view'] && queryParams['view'] === 'dev') {
+    return <DeveloperView />
+  } else {
+    // return <DemoView href={href} queryParams={queryParams} />
+    return <ConsentScreen />
+  }
 }
