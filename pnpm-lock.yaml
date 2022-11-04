@@ -126,7 +126,6 @@ importers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
-      '@shopify/jest-koa-mocks': ^5.0.1
       '@types/bcrypt': ^5.0.0
       '@types/jest': ^28.1.7
       '@types/koa': 2.13.5
@@ -198,7 +197,6 @@ importers:
       '@koa/cors': 3.3.0
       '@koa/router': 12.0.0
       '@poppinss/file-generator': 1.0.2
-      '@shopify/jest-koa-mocks': 5.0.1
       '@types/bcrypt': 5.0.0
       add: 2.0.6
       ajv: 8.11.0
@@ -3541,16 +3539,6 @@ packages:
     resolution: {integrity: sha512-LwzQKA4vzIct1zNZzBmRKI9QuNpLgTQMEjsQLf3BXuGYb3QPTP4Yjf6mkdX+X1mYttZ808QpOwAzZjv28kq7DA==}
     dev: true
 
-  /@shopify/jest-koa-mocks/5.0.1:
-    resolution: {integrity: sha512-4YskS9q8+TEHNoyopmuoy2XyhInyqeOl7CF5ShJs19sm6m0EA/jGGvgf/osv2PeTfuf42/L2G9CzWUSg49yTSg==}
-    engines: {node: ^14.17.0 || >=16.0.0}
-    dependencies:
-      koa: 2.13.4
-      node-mocks-http: 1.11.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /@sinclair/typebox/0.24.28:
     resolution: {integrity: sha512-dgJd3HLOkLmz4Bw50eZx/zJwtBq65nms3N9VBYu5LTjJ883oBFkTyXRlCB/ZGGwqYpJJHA5zW2Ibhl5ngITfow==}
     dev: true
@@ -4541,18 +4529,6 @@ packages:
         optional: true
     dependencies:
       ajv: 8.11.0
-    dev: false
-
-  /ajv-formats/2.1.1_ajv@8.11.0:
-    resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
-    dependencies:
-      ajv: 8.11.0
-    dev: true
 
   /ajv/6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
@@ -10802,7 +10778,7 @@ packages:
     resolution: {integrity: sha512-5wpFKMoEbUcjiqo16jIen3Cb2+oApSnYZpWn8WQdRO2q/dNQZZl8Pz6ESwCriiyU5AK4i5ZI6+7O3bHQr6+6+g==}
     dependencies:
       ajv: 8.11.0
-      ajv-formats: 2.1.1_ajv@8.11.0
+      ajv-formats: 2.1.1
       lodash.merge: 4.6.2
       openapi-types: 9.3.1
     dev: true
