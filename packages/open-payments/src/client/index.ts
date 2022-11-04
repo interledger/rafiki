@@ -15,6 +15,7 @@ import {
 } from './payment-pointer'
 import { createAxiosInstance } from './requests'
 import { AxiosInstance } from 'axios'
+import { createGrantRoutes, GrantRoutes } from './grant'
 
 export interface CreateOpenPaymentClientArgs {
   requestTimeoutMs?: number
@@ -31,6 +32,7 @@ export interface OpenPaymentsClient {
   incomingPayment: IncomingPaymentRoutes
   ilpStreamConnection: ILPStreamConnectionRoutes
   paymentPointer: PaymentPointerRoutes
+  grant: GrantRoutes
 }
 
 export const createClient = async (
@@ -43,12 +45,31 @@ export const createClient = async (
   const resourceServerOpenApi = await createOpenAPI(
     config.OPEN_PAYMENTS_RS_OPEN_API_URL
   )
+  const authorizationServerOpenApi = await createOpenAPI(
+    config.OPEN_PAYMENTS_AS_OPEN_API_URL
+  )
   const logger = args?.logger ?? createLogger()
-  const deps = { axiosInstance, openApi: resourceServerOpenApi, logger }
 
   return {
-    incomingPayment: createIncomingPaymentRoutes(deps),
-    ilpStreamConnection: createILPStreamConnectionRoutes(deps),
-    paymentPointer: createPaymentPointerRoutes(deps)
+    incomingPayment: createIncomingPaymentRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    ilpStreamConnection: createILPStreamConnectionRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    paymentPointer: createPaymentPointerRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    grant: createGrantRoutes({
+      axiosInstance,
+      openApi: authorizationServerOpenApi,
+      logger
+    })
   }
 }

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { createAxiosInstance, get } from './requests'
+import { createAxiosInstance, get, post } from './requests'
 import nock from 'nock'
 import { mockOpenApiResponseValidators, silentLogger } from '../test/helpers'
 
@@ -108,6 +108,83 @@ describe('requests', (): void => {
           { axiosInstance, logger },
           {
             url: `${baseUrl}/incoming-payment`
+          },
+          responseValidators.failedValidator
+        )
+      ).rejects.toThrow(/Failed to validate OpenApi response/)
+    })
+  })
+
+  describe('post', (): void => {
+    const axiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
+    const baseUrl = 'http://localhost:1000'
+    const responseValidators = mockOpenApiResponseValidators()
+
+    beforeAll(() => {
+      jest.spyOn(axiosInstance, 'post')
+    })
+
+    test('properly POSTs request', async (): Promise<void> => {
+      const status = 200
+      const body = {
+        id: 'id'
+      }
+
+      nock(baseUrl).post('/grant', body).reply(status, body)
+
+      await post(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/grant`,
+          body
+        },
+        responseValidators.successfulValidator
+      )
+
+      expect(axiosInstance.post).toHaveBeenCalledWith(`${baseUrl}/grant`, body)
+    })
+
+    test('calls validator function properly', async (): Promise<void> => {
+      const status = 200
+      const body = {
+        id: 'id'
+      }
+
+      nock(baseUrl).post('/grant', body).reply(status, body)
+
+      const responseValidatorSpy = jest.spyOn(
+        responseValidators,
+        'successfulValidator'
+      )
+
+      await post(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/grant`,
+          body
+        },
+        responseValidators.successfulValidator
+      )
+
+      expect(responseValidatorSpy).toHaveBeenCalledWith({
+        body,
+        status
+      })
+    })
+
+    test('throws if response validator function fails', async (): Promise<void> => {
+      const status = 200
+      const body = {
+        id: 'id'
+      }
+      nock(baseUrl).post('/grant', body).reply(status, body)
+
+      await expect(
+        post(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/grant`,
+            body
           },
           responseValidators.failedValidator
         )
