@@ -116,7 +116,7 @@ describe('Grant Routes', (): void => {
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
     const openApi = await deps.use('openApi')
-    jestOpenAPI(openApi.clientSpec)
+    jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
   })
 
@@ -849,7 +849,7 @@ describe('Grant Routes', (): void => {
   describe('/continue', (): void => {
     beforeEach(async (): Promise<void> => {
       const openApi = await deps.use('openApi')
-      jestOpenAPI(openApi.clientSpec)
+      jestOpenAPI(openApi.authServerSpec)
     })
     test('Can issue access token', async (): Promise<void> => {
       const grant = await Grant.query().insert({

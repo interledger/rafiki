@@ -35,7 +35,7 @@ describe('Access Token Routes', (): void => {
     knex = await deps.use('knex')
     accessTokenRoutes = await deps.use('accessTokenRoutes')
     const openApi = await deps.use('openApi')
-    jestOpenAPI(openApi.clientSpec)
+    jestOpenAPI(openApi.authServerSpec)
 
     const keys = await generateTestKeys()
     testJwk = keys.publicKey
@@ -361,7 +361,7 @@ describe('Access Token Routes', (): void => {
       managementId = BASE_TOKEN.managementId
 
       const openApi = await deps.use('openApi')
-      jestOpenAPI(openApi.clientSpec)
+      jestOpenAPI(openApi.authServerSpec)
     })
 
     test('Cannot rotate nonexistent token', async (): Promise<void> => {

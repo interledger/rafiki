@@ -191,7 +191,7 @@ export class App {
     // Grant Initiation
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware(openApi.clientSpec, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/',
         method: HttpMethod.POST
       }),
@@ -202,7 +202,7 @@ export class App {
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware(openApi.clientSpec, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
@@ -213,7 +213,7 @@ export class App {
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware(openApi.clientSpec, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
@@ -224,7 +224,7 @@ export class App {
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware(openApi.clientSpec, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),

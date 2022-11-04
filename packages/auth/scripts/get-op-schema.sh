@@ -10,5 +10,5 @@ done
 OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../openapi" >/dev/null 2>&1 && pwd )
 
 # TODO: revert to using main once https://github.com/interledger/rafiki/issues/630 is resolved
-curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/main/openapi/schemas.yaml
-curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/main/openapi/auth-server.yaml
+curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml
+curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/auth-server.yaml

@@ -103,13 +103,13 @@ export function initIocContainer(
   })
 
   container.singleton('openApi', async () => {
-    const clientSpec = await createOpenAPI('./openapi/auth-server.yaml')
+    const authServerSpec = await createOpenAPI('./openapi/auth-server.yaml')
     const resourceServerSpec = await createOpenAPI(
       './openapi/resource-server.yaml'
     )
     const idpSpec = await createOpenAPI('./openapi/id-provider.yaml')
     return {
-      clientSpec,
+      authServerSpec,
       resourceServerSpec,
       idpSpec
     }
