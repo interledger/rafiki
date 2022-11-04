@@ -1,7 +1,7 @@
 import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
-import { Amount, AmountJSON } from '../../amount'
+import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { Connection, ConnectionJSON } from '../../connection/model'
 import {
   PaymentPointer,
@@ -248,15 +248,9 @@ export class IncomingPayment
       id: this.id,
       paymentPointer: this.paymentPointer.url,
       incomingAmount: this.incomingAmount
-        ? {
-            ...this.incomingAmount,
-            value: this.incomingAmount.value.toString()
-          }
+        ? serializeAmount(this.incomingAmount)
         : undefined,
-      receivedAmount: {
-        ...this.receivedAmount,
-        value: this.receivedAmount.value.toString()
-      },
+      receivedAmount: serializeAmount(this.receivedAmount),
       completed: this.completed,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),

@@ -47,19 +47,15 @@ describe('Receiver Model', (): void => {
         })
       )
 
-      expect(receiver.asset).toStrictEqual({
-        code: incomingPayment.asset.code,
-        scale: incomingPayment.asset.scale
-      })
-      expect(receiver.incomingAmount).toBeUndefined()
-      expect(receiver.receivedAmount).toStrictEqual({
+      expect(receiver).toEqual({
         assetCode: incomingPayment.asset.code,
         assetScale: incomingPayment.asset.scale,
-        value: BigInt(0)
+        incomingAmountValue: undefined,
+        receivedAmountValue: BigInt(0),
+        ilpAddress: expect.any(String),
+        sharedSecret: expect.any(Buffer),
+        expiresAt: incomingPayment.expiresAt
       })
-      expect(receiver.ilpAddress).toEqual(expect.any(String))
-      expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
-      expect(receiver.expiresAt).toEqual(incomingPayment.expiresAt)
     })
 
     test('fails to create receiver if payment completed', async () => {
@@ -108,15 +104,15 @@ describe('Receiver Model', (): void => {
         connectionService.get(incomingPayment).toOpenPaymentsType()
       )
 
-      expect(receiver.asset).toStrictEqual({
-        code: incomingPayment.asset.code,
-        scale: incomingPayment.asset.scale
+      expect(receiver).toEqual({
+        assetCode: incomingPayment.asset.code,
+        assetScale: incomingPayment.asset.scale,
+        incomingAmountValue: undefined,
+        receivedAmountValue: undefined,
+        ilpAddress: expect.any(String),
+        sharedSecret: expect.any(Buffer),
+        expiresAt: undefined
       })
-      expect(receiver.incomingAmount).toBeUndefined()
-      expect(receiver.receivedAmount).toBeUndefined()
-      expect(receiver.ilpAddress).toEqual(expect.any(String))
-      expect(receiver.sharedSecret).toEqual(expect.any(Buffer))
-      expect(receiver.expiresAt).toBeUndefined()
     })
 
     test('returns undefined if invalid ilpAdress', async () => {

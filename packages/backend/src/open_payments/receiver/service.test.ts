@@ -57,7 +57,12 @@ describe('Receiver Service', (): void => {
 
         const localUrl = `${Config.openPaymentsUrl}/${CONNECTION_PATH}/${connectionId}`
 
-        await expect(receiverService.get(localUrl)).resolves.toMatchObject({
+        const clientGetConnectionSpy = jest.spyOn(
+          openPaymentsClient.ilpStreamConnection,
+          'get'
+        )
+
+        await expect(receiverService.get(localUrl)).resolves.toEqual({
           assetCode: paymentPointer.asset.code,
           assetScale: paymentPointer.asset.scale,
           incomingAmount: undefined,
@@ -66,6 +71,7 @@ describe('Receiver Service', (): void => {
           sharedSecret: expect.any(Buffer),
           expiresAt: undefined
         })
+        expect(clientGetConnectionSpy).not.toHaveBeenCalled()
       })
 
       test('resolves remote connection', async () => {
@@ -84,9 +90,7 @@ describe('Receiver Service', (): void => {
             connectionService.get(incomingPayment).toOpenPaymentsType()
           )
 
-        await expect(
-          receiverService.get(remoteUrl.href)
-        ).resolves.toMatchObject({
+        await expect(receiverService.get(remoteUrl.href)).resolves.toEqual({
           assetCode: paymentPointer.asset.code,
           assetScale: paymentPointer.asset.scale,
           incomingAmount: undefined,
@@ -100,7 +104,7 @@ describe('Receiver Service', (): void => {
         })
       })
 
-      test('returns undefined for unknown connection', async (): Promise<void> => {
+      test('returns undefined for unknown local connection', async (): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
 
         await expect(
@@ -108,6 +112,51 @@ describe('Receiver Service', (): void => {
             `${paymentPointer.url}/${CONNECTION_PATH}/${uuid()}`
           )
         ).resolves.toBeUndefined()
+      })
+
+      test('returns undefined for unknown remote connection', async (): Promise<void> => {
+        const paymentPointer = await createPaymentPointer(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: paymentPointer.id
+        })
+        const remoteUrl = new URL(
+          `${paymentPointer.url}/${CONNECTION_PATH}/${incomingPayment.connectionId}`
+        )
+
+        const clientGetConnectionSpy = jest
+          .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
+          .mockResolvedValueOnce(undefined)
+
+        await expect(
+          receiverService.get(remoteUrl.href)
+        ).resolves.toBeUndefined()
+        expect(clientGetConnectionSpy).toHaveBeenCalledWith({
+          url: remoteUrl.href
+        })
+      })
+
+      test('returns undefined when fetching remote connection throws', async (): Promise<void> => {
+        const paymentPointer = await createPaymentPointer(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: paymentPointer.id
+        })
+
+        const remoteUrl = new URL(
+          `${paymentPointer.url}/${CONNECTION_PATH}/${incomingPayment.connectionId}`
+        )
+
+        const clientGetConnectionSpy = jest
+          .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
+          .mockImplementationOnce(async () => {
+            throw new Error('Could not get connection')
+          })
+
+        await expect(
+          receiverService.get(remoteUrl.href)
+        ).resolves.toBeUndefined()
+        expect(clientGetConnectionSpy).toHaveBeenCalledWith({
+          url: remoteUrl.href
+        })
       })
     })
 
@@ -127,17 +176,23 @@ describe('Receiver Service', (): void => {
           }
         })
 
-        await expect(
-          receiverService.get(incomingPayment.url)
-        ).resolves.toMatchObject({
-          assetCode: paymentPointer.asset.code,
-          assetScale: paymentPointer.asset.scale,
-          incomingAmount: incomingPayment.incomingAmount,
-          receivedAmount: incomingPayment.receivedAmount,
-          ilpAddress: expect.any(String),
-          sharedSecret: expect.any(Buffer),
-          expiresAt: expect.any(Date)
-        })
+        const clientGetIncomingPaymentSpy = jest.spyOn(
+          openPaymentsClient.ilpStreamConnection,
+          'get'
+        )
+
+        await expect(receiverService.get(incomingPayment.url)).resolves.toEqual(
+          {
+            assetCode: paymentPointer.asset.code,
+            assetScale: paymentPointer.asset.scale,
+            incomingAmountValue: incomingPayment.incomingAmount.value,
+            receivedAmountValue: incomingPayment.receivedAmount.value,
+            ilpAddress: expect.any(String),
+            sharedSecret: expect.any(Buffer),
+            expiresAt: expect.any(Date)
+          }
+        )
+        expect(clientGetIncomingPaymentSpy).not.toHaveBeenCalled()
       })
 
       test('resolves remote incoming payment', async () => {
@@ -163,17 +218,17 @@ describe('Receiver Service', (): void => {
           .spyOn(paymentPointerService, 'getByUrl')
           .mockResolvedValueOnce(undefined)
 
-        await expect(
-          receiverService.get(incomingPayment.url)
-        ).resolves.toMatchObject({
-          assetCode: paymentPointer.asset.code,
-          assetScale: paymentPointer.asset.scale,
-          incomingAmount: incomingPayment.incomingAmount,
-          receivedAmount: incomingPayment.receivedAmount,
-          ilpAddress: expect.any(String),
-          sharedSecret: expect.any(Buffer),
-          expiresAt: expect.any(Date)
-        })
+        await expect(receiverService.get(incomingPayment.url)).resolves.toEqual(
+          {
+            assetCode: paymentPointer.asset.code,
+            assetScale: paymentPointer.asset.scale,
+            incomingAmountValue: incomingPayment.incomingAmount.value,
+            receivedAmountValue: incomingPayment.receivedAmount.value,
+            ilpAddress: expect.any(String),
+            sharedSecret: expect.any(Buffer),
+            expiresAt: expect.any(Date)
+          }
+        )
         expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
           url: incomingPayment.url,
           accessToken: expect.any(String)
