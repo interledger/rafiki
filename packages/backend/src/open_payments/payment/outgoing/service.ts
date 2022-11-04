@@ -15,7 +15,7 @@ import {
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { Grant, AccessLimits, getInterval } from '../../auth/grant'
-import { OpenPaymentsClientService } from '../../client/service'
+import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
 import { PaymentPointerSubresourceService } from '../../payment_pointer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
@@ -43,7 +43,7 @@ export interface OutgoingPaymentService
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  clientService: OpenPaymentsClientService
+  receiverService: ReceiverService
   peerService: PeerService
   grantReferenceService: GrantReferenceService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
@@ -126,7 +126,7 @@ async function createOutgoingPayment(
           throw OutgoingPaymentError.InsufficientGrant
         }
       }
-      const receiver = await deps.clientService.receiver.get(payment.receiver)
+      const receiver = await deps.receiverService.get(payment.receiver)
       if (!receiver) {
         throw OutgoingPaymentError.InvalidQuote
       }

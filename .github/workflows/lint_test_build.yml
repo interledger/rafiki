@@ -27,6 +27,7 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter openapi build
       - run: pnpm --filter auth build
+      - run: pnpm --filter open-payments build
       - run: pnpm --filter backend test
 
   frontend:

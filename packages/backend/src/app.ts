@@ -49,6 +49,7 @@ import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './paymentPointerKey/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
+import { OpenPaymentsClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -146,6 +147,7 @@ export interface AppServices {
   sessionService: Promise<SessionService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   grantReferenceService: Promise<GrantReferenceService>
+  openPaymentsClient: Promise<OpenPaymentsClient>
 }
 
 export type AppContainer = IocContract<AppServices>

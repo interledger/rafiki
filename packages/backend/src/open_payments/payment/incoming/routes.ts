@@ -16,7 +16,8 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../payment_pointer/routes'
-import { ConnectionJSON, ConnectionService } from '../../connection/service'
+import { ConnectionJSON } from '../../connection/model'
+import { ConnectionService } from '../../connection/service'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?

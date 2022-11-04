@@ -8,7 +8,8 @@ import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount, parseAmount } from '../amount'
-import { OpenPaymentsClientService, Receiver } from '../client/service'
+import { ReceiverService } from '../receiver/service'
+import { Receiver } from '../receiver/model'
 import {
   PaymentPointer,
   GetOptions,
@@ -34,7 +35,7 @@ export interface ServiceDependencies extends BaseService {
   quoteLifespan: number // milliseconds
   signatureSecret?: string
   signatureVersion: number
-  clientService: OpenPaymentsClientService
+  receiverService: ReceiverService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
@@ -168,7 +169,7 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const receiver = await deps.clientService.receiver.get(options.receiver)
+  const receiver = await deps.receiverService.get(options.receiver)
   if (!receiver) {
     throw QuoteError.InvalidReceiver
   }
