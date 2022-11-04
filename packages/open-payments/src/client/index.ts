@@ -40,9 +40,11 @@ export const createClient = async (
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
-  const openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
+  const resourceServerOpenApi = await createOpenAPI(
+    config.OPEN_PAYMENTS_RS_OPEN_API_URL
+  )
   const logger = args?.logger ?? createLogger()
-  const deps = { axiosInstance, openApi, logger }
+  const deps = { axiosInstance, openApi: resourceServerOpenApi, logger }
 
   return {
     incomingPayment: createIncomingPaymentRoutes(deps),

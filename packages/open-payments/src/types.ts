@@ -1,9 +1,16 @@
-import { components, paths as Paths } from './generated/types'
+import {
+  components as rsComponents,
+  paths as RSPaths
+} from './generated/resource-server-types'
+import { paths as ASPaths } from './generated/authorization-server-types'
 
-export const getPath = <P extends keyof Paths>(path: P): string =>
+export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
+  path as string
+export const getASPath = <P extends keyof ASPaths>(path: P): string =>
   path as string
 
 export type IncomingPayment =
-  components['schemas']['incoming-payment-with-connection']
-export type ILPStreamConnection = components['schemas']['ilp-stream-connection']
-export type PaymentPointer = components['schemas']['payment-pointer']
+  rsComponents['schemas']['incoming-payment-with-connection']
+export type ILPStreamConnection =
+  rsComponents['schemas']['ilp-stream-connection']
+export type PaymentPointer = rsComponents['schemas']['payment-pointer']

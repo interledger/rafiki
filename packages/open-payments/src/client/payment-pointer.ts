@@ -1,6 +1,6 @@
 import { HttpMethod } from 'openapi'
 import { ClientDeps } from '.'
-import { PaymentPointer, getPath } from '../types'
+import { PaymentPointer, getRSPath } from '../types'
 import { get } from './requests'
 
 interface GetArgs {
@@ -18,7 +18,7 @@ export const createPaymentPointerRoutes = (
 
   const getPaymentPaymentValidator =
     openApi.createResponseValidator<PaymentPointer>({
-      path: getPath('/'),
+      path: getRSPath('/'),
       method: HttpMethod.GET
     })
 
