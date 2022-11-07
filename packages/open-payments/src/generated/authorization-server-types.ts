@@ -52,7 +52,7 @@ export interface components {
       client_id?: string;
       /** @description The public key of the client instance to be used in this request or a reference to a key. */
       key?:
-        | external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["key"]
+        | external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["key"]
         | string;
     };
     /**
@@ -116,7 +116,7 @@ export interface components {
       manage: string;
       /** @description The number of seconds in which the access will expire.  The client instance MUST NOT use the access token past this time.  An RS MUST NOT accept an access token past this time. */
       expires_in?: number;
-      access: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["access"];
+      access: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["access"];
     };
   };
 }
@@ -147,7 +147,7 @@ export interface operations {
       content: {
         "application/json": {
           access_token: {
-            access: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["access"];
+            access: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["access"];
           };
           client: components["schemas"]["client"];
           interact?: components["schemas"]["interact-request"];
@@ -244,17 +244,17 @@ export interface operations {
 }
 
 export interface external {
-  "https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml": {
+  "https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml": {
     paths: {};
     components: {
       schemas: {
         /** @description A description of the rights associated with this access token. */
-        access: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
+        access: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
         "access-item":
-          | external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
-          | external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
-          | external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
+          | external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
         "access-incoming": {
           /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
@@ -285,7 +285,7 @@ export interface external {
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier: string;
-          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
+          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
         };
         /** access-quote */
         "access-quote": {
@@ -304,8 +304,8 @@ export interface external {
            * @description The value is an unsigned 64-bit integer amount, represented as a string.
            */
           value: string;
-          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
-          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
+          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
         };
         /**
          * Asset code
@@ -358,10 +358,10 @@ export interface external {
          * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
          */
         "limits-outgoing": Partial<unknown> & {
-          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
-          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/1e3e118d8b22c5d2942f972e28ebf0f0114d04f5/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
+          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
         };
         "list-actions": "list" | "list-all";
         "read-actions": "read" | "read-all";
