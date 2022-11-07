@@ -8,7 +8,7 @@ import {
   PaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
-import { Receiver } from '../../client/service'
+import { Receiver } from '../../receiver/model'
 import { IlpPlugin } from '../../../shared/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -19,7 +19,7 @@ export async function handleSending(
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
 
-  const receiver = await deps.clientService.receiver.get(payment.receiver)
+  const receiver = await deps.receiverService.get(payment.receiver)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)

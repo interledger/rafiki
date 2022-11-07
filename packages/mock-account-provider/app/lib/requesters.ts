@@ -2,7 +2,8 @@ import { gql } from '@apollo/client'
 import type {
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
-  CreatePaymentPointerMutationResponse
+  CreatePaymentPointerMutationResponse,
+  PaymentPointer
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 
@@ -148,5 +149,92 @@ export async function createPaymentPointer(
         throw new Error('Data was empty')
       }
       return data.createPaymentPointer
+    })
+}
+
+export async function getPaymentPointerPayments(
+  paymentPointerId: string
+  // TODO: pagination
+): Promise<PaymentPointer> {
+  const query = gql`
+    query PaymentPointer($id: String!) {
+      paymentPointer(id: $id) {
+        incomingPayments {
+          edges {
+            node {
+              id
+              state
+              expiresAt
+              incomingAmount {
+                value
+              }
+              receivedAmount {
+                value
+                assetCode
+                assetScale
+              }
+              description
+              externalRef
+              createdAt
+            }
+            cursor
+          }
+          pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+          }
+        }
+        outgoingPayments {
+          edges {
+            node {
+              id
+              state
+              error
+              sendAmount {
+                value
+                assetCode
+                assetScale
+              }
+              receiveAmount {
+                value
+                assetCode
+                assetScale
+              }
+              receiver
+              description
+              externalRef
+              sentAmount {
+                value
+                assetCode
+                assetScale
+              }
+              createdAt
+            }
+            cursor
+          }
+          pageInfo {
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            startCursor
+          }
+        }
+      }
+    }
+  `
+  return apolloClient
+    .query({
+      query,
+      variables: {
+        id: paymentPointerId
+      }
+    })
+    .then(({ data }): PaymentPointer => {
+      if (!data.paymentPointer) {
+        throw new Error('Data was empty')
+      }
+      return data.paymentPointer
     })
 }
