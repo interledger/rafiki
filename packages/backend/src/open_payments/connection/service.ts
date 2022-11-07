@@ -1,68 +1,8 @@
-import base64url from 'base64url'
-import { IlpAddress } from 'ilp-packet'
-import { StreamCredentials, StreamServer } from '@interledger/stream-receiver'
+import { StreamServer } from '@interledger/stream-receiver'
 
 import { BaseService } from '../../shared/baseService'
 import { IncomingPayment } from '../payment/incoming/model'
-
-export type ConnectionJSON = {
-  id: string
-  ilpAddress: IlpAddress
-  sharedSecret: string
-  assetCode: string
-  assetScale: number
-}
-
-export abstract class ConnectionBase {
-  protected constructor(
-    public readonly ilpAddress: IlpAddress,
-    public readonly sharedSecret: Buffer,
-    public readonly assetCode: string,
-    public readonly assetScale: number
-  ) {}
-}
-
-export class Connection extends ConnectionBase {
-  static fromPayment(options: {
-    payment: IncomingPayment
-    credentials: StreamCredentials
-    openPaymentsUrl: string
-  }): Connection {
-    return new this(
-      options.payment.connectionId,
-      options.openPaymentsUrl,
-      options.credentials.ilpAddress,
-      options.credentials.sharedSecret,
-      options.payment.asset.code,
-      options.payment.asset.scale
-    )
-  }
-
-  private constructor(
-    public readonly id: string,
-    private readonly openPaymentsUrl: string,
-    ilpAddress: IlpAddress,
-    sharedSecret: Buffer,
-    assetCode: string,
-    assetScale: number
-  ) {
-    super(ilpAddress, sharedSecret, assetCode, assetScale)
-  }
-
-  public get url(): string {
-    return `${this.openPaymentsUrl}/connections/${this.id}`
-  }
-
-  public toJSON(): ConnectionJSON {
-    return {
-      id: this.url,
-      ilpAddress: this.ilpAddress,
-      sharedSecret: base64url(this.sharedSecret),
-      assetCode: this.assetCode,
-      assetScale: this.assetScale
-    }
-  }
-}
+import { Connection } from './model'
 
 export interface ConnectionService {
   get(payment: IncomingPayment): Connection | undefined

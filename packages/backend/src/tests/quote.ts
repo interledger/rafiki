@@ -35,8 +35,8 @@ export async function createQuote(
   const config = await deps.use('config')
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
-    const clientService = await deps.use('openPaymentsClientService')
-    const receiver = await clientService.receiver.get(receiverUrl)
+    const receiverService = await deps.use('receiverService')
+    const receiver = await receiverService.get(receiverUrl)
     assert.ok(receiver)
     assert.ok(receiver.incomingAmount || receiveAmount || sendAmount)
     if (receiveAmount) {

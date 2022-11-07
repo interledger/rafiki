@@ -7,7 +7,7 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentJSON } from './model'
 import {
   errorToCode,
   errorToMessage,
@@ -16,7 +16,8 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../payment_pointer/routes'
-import { ConnectionJSON, ConnectionService } from '../../connection/service'
+import { ConnectionJSON } from '../../connection/model'
+import { ConnectionService } from '../../connection/service'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -162,11 +163,14 @@ function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment,
   ilpStreamConnection?: ConnectionJSON | string
-) {
-  return {
+): IncomingPaymentJSON {
+  const body = {
     ...incomingPayment.toJSON(),
     id: incomingPayment.url,
-    paymentPointer: incomingPayment.paymentPointer.url,
-    ilpStreamConnection
+    paymentPointer: incomingPayment.paymentPointer.url
+  } as unknown as IncomingPaymentJSON
+  if (ilpStreamConnection) {
+    body.ilpStreamConnection = ilpStreamConnection
   }
+  return body
 }

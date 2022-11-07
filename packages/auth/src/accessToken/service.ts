@@ -79,7 +79,7 @@ export async function createAccessTokenService({
 
 function isTokenExpired(token: AccessToken): boolean {
   const now = new Date(Date.now())
-  const expiresAt = token.createdAt.getTime() + token.expiresIn
+  const expiresAt = token.createdAt.getTime() + token.expiresIn * 1000
   return expiresAt < now.getTime()
 }
 

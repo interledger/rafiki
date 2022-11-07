@@ -11,7 +11,7 @@ exports.seed = function (knex) {
         {
           id: v4(),
           type: 'incoming-payment',
-          actions: ['create', 'read', 'list'],
+          actions: ['create', 'read', 'list', 'complete'],
           grantId: '051208da-f6b6-4ed0-b49b-8b00439003bc',
           createdAt: new Date(),
           updatedAt: new Date()
@@ -36,7 +36,7 @@ exports.seed = function (knex) {
         {
           id: v4(),
           type: 'incoming-payment',
-          actions: ['create', 'read', 'list'],
+          actions: ['create', 'read', 'list', 'complete'],
           grantId: '3afc74b3-ea28-4d7d-a21a-97742c40cdee',
           createdAt: new Date(),
           updatedAt: new Date()

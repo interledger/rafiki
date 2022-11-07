@@ -4,6 +4,9 @@
       "path": "packages/openapi"
     },
     {
+      "path": "packages/open-payments"
+    },
+    {
       "path": "packages/auth"
     },
     {
