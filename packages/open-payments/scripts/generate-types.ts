@@ -25,7 +25,7 @@ const generateTypesFromOpenApi = async (
     )
     await generateTypesFromOpenApi(
       config.OPEN_PAYMENTS_AS_OPEN_API_URL,
-      `${rootFolder}/authorization-server-types.ts`
+      `${rootFolder}/auth-server-types.ts`
     )
   } catch (error) {
     console.log('Error when generating types', {

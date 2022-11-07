@@ -6,7 +6,7 @@ import {
   components as ASComponents,
   paths as ASPaths,
   operations as ASOperations
-} from './generated/authorization-server-types'
+} from './generated/auth-server-types'
 
 export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
   path as string
