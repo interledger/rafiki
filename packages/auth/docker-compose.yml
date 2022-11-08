@@ -11,6 +11,7 @@ services:
     environment:
       POSTGRES_PASSWORD: password
       BYPASS_SIGNATURE_VALIDATION: false
+      BYPASS_OPENAPI_VALIDATION: false
   redis:
     image: "redis:7"
     restart: unless-stopped

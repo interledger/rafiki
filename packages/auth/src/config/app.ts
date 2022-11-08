@@ -44,5 +44,6 @@ export const Config = {
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
   introspectionHttpsig: envBool('INTROSPECTION_HTTPSIG', false),
   incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
-  bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false)
+  bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false),
+  bypassOpenApiValidation: envBool('BYPASS_OPENAPI_VALIDATION', false)
 }

@@ -4,7 +4,8 @@ import Koa from 'koa'
 
 export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
   spec: OpenAPI,
-  options: RequestOptions
+  options: RequestOptions,
+  inactive?: boolean
 ): (ctx: Koa.Context, next: () => Promise<unknown>) => Promise<void> {
   const validateRequest = spec.createRequestValidator<T['request']>(options)
   const validateResponse =
@@ -15,18 +16,22 @@ export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
     ctx: Koa.Context,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
-    try {
-      if (validateRequest(ctx.request)) {
-        await next()
-        if (validateResponse && !validateResponse(ctx.response)) {
+    if (inactive) {
+      await next()
+    } else {
+      ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
+      try {
+        if (validateRequest(ctx.request)) {
+          await next()
+          if (validateResponse && !validateResponse(ctx.response)) {
+            throw new Error('unreachable')
+          }
+        } else {
           throw new Error('unreachable')
         }
-      } else {
-        throw new Error('unreachable')
+      } catch (err) {
+        ctx.throw(err.status || 500, err.errors?.[0])
       }
-    } catch (err) {
-      ctx.throw(err.status || 500, err.errors?.[0])
     }
   }
 }

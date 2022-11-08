@@ -14,6 +14,8 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
       INTROSPECTION_HTTPSIG: "false"
+      BYPASS_SIGNATURE_VALIDATION: 'true'
+      BYPASS_OPENAPI_VALIDATION: 'true'
     depends_on:
       - tigerbeetle
       - database

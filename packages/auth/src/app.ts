@@ -186,15 +186,23 @@ export class App {
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
 
+    this.logger.info(
+      `Auth server - Open API validation inactive: ${this.config.bypassOpenApiValidation}`
+    )
+
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
     // Grant Initiation
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware(openApi, {
-        path: '/',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/',
+          method: HttpMethod.POST
+        },
+        this.config.bypassOpenApiValidation
+      ),
       grantInitiationHttpsigMiddleware,
       grantRoutes.create
     )
@@ -202,10 +210,14 @@ export class App {
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware(openApi, {
-        path: '/continue/{id}',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/continue/{id}',
+          method: HttpMethod.POST
+        },
+        this.config.bypassOpenApiValidation
+      ),
       grantContinueHttpsigMiddleware,
       grantRoutes.continue
     )
@@ -213,10 +225,14 @@ export class App {
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware(openApi, {
-        path: '/token/{id}',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/token/{id}',
+          method: HttpMethod.POST
+        },
+        this.config.bypassOpenApiValidation
+      ),
       tokenHttpsigMiddleware,
       accessTokenRoutes.rotate
     )
@@ -224,10 +240,14 @@ export class App {
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware(openApi, {
-        path: '/token/{id}',
-        method: HttpMethod.DELETE
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/token/{id}',
+          method: HttpMethod.DELETE
+        },
+        this.config.bypassOpenApiValidation
+      ),
       tokenHttpsigMiddleware,
       accessTokenRoutes.revoke
     )
@@ -236,10 +256,14 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware(openApi, {
-        path: '/introspect',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/introspect',
+          method: HttpMethod.POST
+        },
+        this.config.bypassOpenApiValidation
+      ),
       accessTokenRoutes.introspect
     )
 
@@ -249,40 +273,56 @@ export class App {
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware(openApi, {
-        path: '/interact/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/interact/{id}/{nonce}',
+          method: HttpMethod.GET
+        },
+        this.config.bypassOpenApiValidation
+      ),
       grantRoutes.interaction.start
     )
 
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware(openApi, {
-        path: '/interact/{id}/{nonce}/finish',
-        method: HttpMethod.GET
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/interact/{id}/{nonce}/finish',
+          method: HttpMethod.GET
+        },
+        this.config.bypassOpenApiValidation
+      ),
       grantRoutes.interaction.finish
     )
 
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware(openApi, {
-        path: '/grant/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/grant/{id}/{nonce}',
+          method: HttpMethod.GET
+        },
+        this.config.bypassOpenApiValidation
+      ),
       grantRoutes.interaction.details
     )
 
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware(openApi, {
-        path: '/grant/{id}/{nonce}/{choice}',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware(
+        openApi,
+        {
+          path: '/grant/{id}/{nonce}/{choice}',
+          method: HttpMethod.POST
+        },
+        this.config.bypassOpenApiValidation
+      ),
       grantRoutes.interaction.acceptOrReject
     )
 
