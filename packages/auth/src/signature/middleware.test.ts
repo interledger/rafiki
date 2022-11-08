@@ -405,55 +405,6 @@ describe('Signature Service', (): void => {
       scope.isDone()
     })
 
-    test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is true with bad signature', async (): Promise<void> => {
-      const altDeps = await initIocContainer({
-        ...Config,
-        bypassSignatureValidation: true
-      })
-
-      const altContainer = await createTestApp(altDeps)
-      appContainers.push(altContainer)
-
-      nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
-        .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
-
-      const ctx = await createContextWithSigHeaders(
-        {
-          headers: {
-            Accept: 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {},
-        {
-          client: {
-            display: TEST_CLIENT_DISPLAY,
-            key: {
-              proof: 'httpsig',
-              jwk: testClientKey.jwk
-            }
-          }
-        },
-        privateKey,
-        altDeps
-      )
-
-      ctx.headers['signature'] = 'wrong-signature'
-
-      await grantInitiationHttpsigMiddleware(ctx, next)
-
-      expect(ctx.response.status).toEqual(200)
-      expect(next).toHaveBeenCalled()
-
-      // TODO: https://github.com/interledger/rafiki/issues/656
-      // scope.done()
-    })
-
     test('middleware fails if client is invalid', async (): Promise<void> => {
       const ctx = await createContextWithSigHeaders(
         {

@@ -21,12 +21,6 @@ async function verifySigAndChallenge(
   clientKey: JWKWithRequired,
   ctx: HttpSigContext
 ): Promise<boolean> {
-  const config = await ctx.container.use('config')
-  if (config.bypassSignatureValidation) {
-    // bypass
-    return true
-  }
-
   const sig = ctx.headers['signature'] as string
   const sigInput = ctx.headers['signature-input'] as string
   const challenge = sigInputToChallenge(sigInput, ctx)
