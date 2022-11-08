@@ -115,7 +115,8 @@ describe('Grant Routes', (): void => {
     config = await deps.use('config')
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
-    jestOpenAPI(await deps.use('openApi'))
+    const openApi = await deps.use('openApi')
+    jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
   })
 
@@ -360,6 +361,10 @@ describe('Grant Routes', (): void => {
 
   // TODO: validate that routes satisfy API spec
   describe('interaction', (): void => {
+    beforeEach(async (): Promise<void> => {
+      const openApi = await deps.use('openApi')
+      jestOpenAPI(openApi.idpSpec)
+    })
     describe('interaction start', (): void => {
       test('Interaction start fails if grant is invalid', async (): Promise<void> => {
         const scope = nock(KEY_REGISTRY_ORIGIN)
@@ -842,6 +847,10 @@ describe('Grant Routes', (): void => {
   })
 
   describe('/continue', (): void => {
+    beforeEach(async (): Promise<void> => {
+      const openApi = await deps.use('openApi')
+      jestOpenAPI(openApi.authServerSpec)
+    })
     test('Can issue access token', async (): Promise<void> => {
       const grant = await Grant.query().insert({
         ...generateBaseGrant(),

@@ -1,3 +1,4 @@
+import path from 'path'
 import { EventEmitter } from 'events'
 import createLogger from 'pino'
 import { knex } from 'knex'
@@ -102,9 +103,21 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('openApi', async (deps) => {
-    const config = await deps.use('config')
-    return await createOpenAPI(config.authServerSpec)
+  container.singleton('openApi', async () => {
+    const authServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/auth-server.yaml')
+    )
+    const resourceServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/resource-server.yaml')
+    )
+    const idpSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/id-provider.yaml')
+    )
+    return {
+      authServerSpec,
+      resourceServerSpec,
+      idpSpec
+    }
   })
 
   container.singleton(

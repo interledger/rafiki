@@ -191,7 +191,7 @@ export class App {
     // Grant Initiation
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/',
         method: HttpMethod.POST
       }),
@@ -202,7 +202,7 @@ export class App {
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
@@ -213,7 +213,7 @@ export class App {
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
@@ -224,7 +224,7 @@ export class App {
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
@@ -236,7 +236,7 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.resourceServerSpec, {
         path: '/introspect',
         method: HttpMethod.POST
       }),
@@ -249,7 +249,7 @@ export class App {
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -259,7 +259,7 @@ export class App {
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}/finish',
         method: HttpMethod.GET
       }),
@@ -269,7 +269,7 @@ export class App {
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -279,7 +279,7 @@ export class App {
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),

@@ -34,7 +34,8 @@ describe('Access Token Routes', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     accessTokenRoutes = await deps.use('accessTokenRoutes')
-    jestOpenAPI(await deps.use('openApi'))
+    const openApi = await deps.use('openApi')
+    jestOpenAPI(openApi.authServerSpec)
 
     const keys = await generateTestKeys()
     testJwk = keys.publicKey
@@ -67,10 +68,11 @@ describe('Access Token Routes', (): void => {
 
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
-    actions: [Action.Read, Action.Create],
+    actions: [Action.Read, Action.Create, Action.List],
     identifier: `https://example.com/${v4()}`,
     limits: {
-      receiver: 'https://wallet.com/alice',
+      receiver:
+        'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
       sendAmount: {
         value: '400',
         assetCode: 'USD',
@@ -106,6 +108,9 @@ describe('Access Token Routes', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN
       })
+
+      const openApi = await deps.use('openApi')
+      jestOpenAPI(openApi.resourceServerSpec)
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
@@ -354,6 +359,9 @@ describe('Access Token Routes', (): void => {
         ...BASE_TOKEN
       })
       managementId = BASE_TOKEN.managementId
+
+      const openApi = await deps.use('openApi')
+      jestOpenAPI(openApi.authServerSpec)
     })
 
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
