@@ -81,6 +81,9 @@ pnpm --filter open-api test
 # run all tests
 pnpm -r --workspace-concurrency=1 test
 
+# pull in latest openapi specs for auth server:
+pnpm --filter auth fetch-schemas
+
 # format and lint code:
 pnpm format
 

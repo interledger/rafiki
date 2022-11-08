@@ -8,11 +8,12 @@
   "scripts": {
     "knex": "knex",
     "build:deps": "pnpm --filter openapi build",
-    "build": "pnpm build:deps && tsc --build tsconfig.json",
+    "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "fetch-schemas": "./scripts/get-op-schema.sh",
     "test": "jest --passWithNoTests --maxWorkers=50%",
-    "prepack": "pnpm build"
+    "prepack": "pnpm build",
+    "copy-files": "pnpm fetch-schemas && cp -r ./openapi ./dist"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",
