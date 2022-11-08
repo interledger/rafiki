@@ -32,7 +32,7 @@ import {
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
-  const appContainers: TestContainer[] = []
+  let appContainer: TestContainer
 
   let keyPath: string
   let publicKey: JWKWithRequired
@@ -44,8 +44,7 @@ describe('Signature Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    const appContainer = await createTestApp(deps)
-    appContainers.push(appContainer)
+    appContainer = await createTestApp(deps)
 
     const keys = await generateTestKeys()
     keyPath = '/' + keys.keyId
@@ -59,9 +58,7 @@ describe('Signature Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     nock.restore()
-    for (let i = 0; i < appContainers.length; i++) {
-      await appContainers[i].shutdown()
-    }
+    appContainer.shutdown()
   })
 
   describe('signatures', (): void => {
