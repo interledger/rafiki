@@ -13,7 +13,7 @@
     "fetch-schemas": "./scripts/get-op-schema.sh",
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build",
-    "copy-files": "pnpm fetch-schemas && cp -r ./openapi ./dist"
+    "copy-files": "cp -r ./src/openapi ./dist"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",

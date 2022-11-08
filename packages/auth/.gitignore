@@ -1,2 +1,2 @@
-/openapi/schemas.yaml
-/openapi/auth-server.yaml
+/src/openapi/schemas.yaml
+/src/openapi/auth-server.yaml
