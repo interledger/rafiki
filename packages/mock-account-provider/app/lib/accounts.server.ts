@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { json } from '@remix-run/node'
 
 export interface Account {
   id: string
@@ -185,7 +186,9 @@ export class AccountProvider implements AccountsServer {
     assert.ok(acc)
 
     if (acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount) {
-      throw new Error('invalid pending debit amount, insufficient funds')
+      throw json('invalid pending debit amount, insufficient funds', {
+        status: 200
+      })
     }
 
     acc.debitsPending += amount
