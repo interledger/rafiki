@@ -1,7 +1,7 @@
 import { AccessType, AccessAction } from './grant'
-import { PaymentPointerContext } from '../../app'
 import { Transaction } from 'objection'
 import { GrantReference } from '../grantReference/model'
+import { HttpSigContext, verifySigAndChallenge } from 'auth'
 
 export function createAuthMiddleware({
   type,
@@ -11,7 +11,7 @@ export function createAuthMiddleware({
   action: AccessAction
 }) {
   return async (
-    ctx: PaymentPointerContext,
+    ctx: HttpSigContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
@@ -44,6 +44,14 @@ export function createAuthMiddleware({
       })
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
+      }
+      try {
+        if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
+          ctx.throw(401, 'Invalid signature')
+        }
+      } catch (e) {
+        ctx.status = 401
+        ctx.throw(401, `Invalid signature`)
       }
       await GrantReference.transaction(async (trx: Transaction) => {
         const grantRef = await grantReferenceService.get(grant.grant, trx)
