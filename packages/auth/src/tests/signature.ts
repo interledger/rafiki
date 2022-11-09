@@ -25,7 +25,6 @@ const BASE_TEST_KEY_JWK = {
   kty: 'OKP',
   alg: 'EdDSA',
   crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
   use: 'sig'
 }
 
@@ -42,33 +41,40 @@ export async function generateTestKeys(): Promise<{
     keyId,
     publicKey: {
       ...BASE_TEST_KEY_JWK,
-      kid: KEY_REGISTRY_ORIGIN + '/' + keyId,
+      kid: keyId,
       x
     },
     privateKey: {
       ...BASE_TEST_KEY_JWK,
-      kid: KEY_REGISTRY_ORIGIN + '/' + keyId,
+      kid: keyId,
       x,
       d
     }
   }
 }
 
-export async function generateSigHeaders(
-  privateKey: JWKWithRequired,
-  url: string,
-  method: string,
+export async function generateSigHeaders({
+  privateKey,
+  url,
+  method,
+  keyId,
+  optionalComponents
+}: {
+  privateKey: JWKWithRequired
+  url: string
+  method: string
+  keyId: string
   optionalComponents?: {
     body?: unknown
     authorization?: string
   }
-): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
+}): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
   let sigInputComponents = 'sig1=("@method" "@target-uri"'
   const { body, authorization } = optionalComponents ?? {}
   if (body) sigInputComponents += ' "content-digest"'
   if (authorization) sigInputComponents += ' "authorization"'
 
-  const sigInput = sigInputComponents + ');created=1618884473;keyid="gnap-key"'
+  const sigInput = sigInputComponents + `);created=1618884473;keyid="${keyId}"`
   let challenge = `"@method": ${method}\n"@target-uri": ${url}\n`
   let contentDigest
   if (body) {

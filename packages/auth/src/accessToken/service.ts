@@ -4,7 +4,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
-import { ClientService, KeyInfo } from '../client/service'
+import { ClientService, JWKWithRequired } from '../client/service'
 import { AccessToken } from './model'
 import { IAppConfig } from '../config/app'
 import { Access } from '../access/model'
@@ -22,6 +22,11 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   clientService: ClientService
   config: IAppConfig
+}
+
+export interface KeyInfo {
+  proof: string
+  jwk: JWKWithRequired
 }
 
 export interface Introspection extends Partial<Grant> {
@@ -108,17 +113,20 @@ async function introspect(
       return { active: false }
     }
 
-    const clientKey = await deps.clientService.getKeyByKid(grant.clientKeyId)
+    const jwk = await deps.clientService.getKey({
+      client: grant.client,
+      keyId: grant.clientKeyId
+    })
 
     const clientId = crypto
       .createHash('sha256')
-      .update(clientKey.client.id)
+      .update(grant.client)
       .digest('hex')
 
     return {
       active: true,
       ...grant,
-      key: { proof: 'httpsig', jwk: clientKey.jwk },
+      key: { proof: 'httpsig', jwk },
       clientId
     }
   }

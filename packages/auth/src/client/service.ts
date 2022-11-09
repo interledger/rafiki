@@ -1,10 +1,9 @@
-import Axios from 'axios'
-import { JWK } from 'jose'
+import { JWK as JoseWk } from 'jose'
+import { JWK, OpenPaymentsClient } from 'open-payments'
 
 import { BaseService } from '../shared/baseService'
-import { IAppConfig } from '../config/app'
 
-export interface JWKWithRequired extends JWK {
+export interface JWKWithRequired extends JoseWk {
   kid: string
   x: string
   alg: string
@@ -20,140 +19,87 @@ export interface ClientKey {
   client: ClientDetails
 }
 
-interface DisplayInfo {
-  name: string
-  uri: string
-}
-
-export interface KeyInfo {
-  proof: string
-  jwk: JWKWithRequired
-}
-
-export interface ClientInfo {
-  display: DisplayInfo
-  key: KeyInfo
-}
-
 interface ClientDetails {
-  id: string
+  // id: string
   name: string
-  image: string
+  // image: string
   uri: string
-  email: string
+  // email: string
 }
 
 interface ServiceDependencies extends BaseService {
-  config: IAppConfig
+  openPaymentsClient: OpenPaymentsClient
+}
+
+export interface KeyOptions {
+  client: string
+  keyId: string
 }
 
 export interface ClientService {
-  validateClient(clientInfo: ClientInfo): Promise<boolean>
-  getKeyByKid(kid: string): Promise<ClientKey>
+  get(client: string): Promise<ClientDetails | undefined>
+  getKey(options: KeyOptions): Promise<JWK | undefined>
 }
 
-export async function createClientService({
-  logger,
-  config
-}: ServiceDependencies): Promise<ClientService> {
-  const log = logger.child({
-    service: 'ClientService'
-  })
-
+export async function createClientService(
+  deps_: ServiceDependencies
+): Promise<ClientService> {
   const deps: ServiceDependencies = {
-    logger: log,
-    config
+    ...deps_,
+    logger: deps_.logger.child({
+      service: 'ClientService'
+    })
   }
 
   return {
-    validateClient: (clientInfo: ClientInfo) =>
-      validateClient(deps, clientInfo),
-    getKeyByKid: (kid: string) => getKeyByKid(deps, kid)
+    get: (client: string) => getClient(deps, client),
+    getKey: (options: KeyOptions) => getClientKey(deps, options)
   }
 }
 
-async function validateClient(
+async function getClient(
   deps: ServiceDependencies,
-  clientInfo: ClientInfo
-): Promise<boolean> {
-  if (!isClientInfo(clientInfo)) return false
-
-  const { jwk } = clientInfo.key
-
-  const clientKey = await getKeyByKid(deps, jwk.kid)
-
-  if (
-    !clientKey ||
-    !isJWKWithRequired(clientKey.jwk) ||
-    jwk.x !== clientKey.jwk.x ||
-    clientKey.jwk.revoked
-  )
-    return false
-
-  if (
-    clientInfo.display.name !== clientKey.client.name ||
-    clientInfo.display.uri !== clientKey.client.uri
-  )
-    return false
-
-  const currentDate = new Date()
-  if (clientKey.jwk.exp && currentDate >= new Date(clientKey.jwk.exp * 1000))
-    return false
-  if (clientKey.jwk.nbf && currentDate < new Date(clientKey.jwk.nbf * 1000))
-    return false
-
-  return true
-}
-
-async function getKeyByKid(
-  deps: ServiceDependencies,
-  kid: string
-): Promise<ClientKey> {
-  return Axios.get(kid)
-    .then((res) => res.data)
-    .catch((err) => {
-      deps.logger.error(
-        {
-          err,
-          kid: kid
-        },
-        'failed to fetch client info'
-      )
-      return false
+  client: string
+): Promise<ClientDetails> {
+  try {
+    const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
+      url: client
     })
+    // TODO: https://github.com/interledger/rafiki/issues/734
+    return {
+      name: paymentPointer.publicName,
+      uri: client
+    }
+  } catch (error) {
+    deps.logger.debug(
+      {
+        error,
+        client
+      },
+      'retrieving client display info'
+    )
+    return undefined
+  }
 }
 
-function isJWKWithRequired(
-  jwkWithRequired: unknown
-): jwkWithRequired is JWKWithRequired {
-  const jwk = jwkWithRequired as JWKWithRequired
-  return !(
-    jwk.kty !== 'OKP' ||
-    (jwk.use && jwk.use !== 'sig') ||
-    (jwk.key_ops &&
-      (!jwk.key_ops.includes('sign') || !jwk.key_ops.includes('verify'))) ||
-    jwk.alg !== 'EdDSA' ||
-    jwk.crv !== 'Ed25519'
-  )
-}
+async function getClientKey(
+  deps: ServiceDependencies,
+  { client, keyId }
+): Promise<JWK | undefined> {
+  try {
+    const { keys } = await deps.openPaymentsClient.paymentPointer.getKeys({
+      url: client
+    })
 
-function isDisplayInfo(display: unknown): display is DisplayInfo {
-  return (
-    (display as DisplayInfo).name !== undefined &&
-    (display as DisplayInfo).uri !== undefined
-  )
-}
-
-function isKeyInfo(key: unknown): key is KeyInfo {
-  return (
-    (key as KeyInfo).proof !== undefined &&
-    isJWKWithRequired((key as KeyInfo).jwk)
-  )
-}
-
-function isClientInfo(client: unknown): client is ClientInfo {
-  return (
-    isDisplayInfo((client as ClientInfo).display) &&
-    isKeyInfo((client as ClientInfo).key)
-  )
+    return keys.find((key) => key.kid === keyId)
+  } catch (error) {
+    deps.logger.debug(
+      {
+        error,
+        client
+      },
+      'retrieving client key'
+    )
+    return undefined
+  }
 }

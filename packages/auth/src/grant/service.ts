@@ -5,7 +5,6 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
-import { ClientInfo } from '../client/service'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
@@ -35,7 +34,8 @@ export interface GrantRequest {
   access_token: {
     access: AccessRequest[]
   }
-  client: ClientInfo
+  client: string
+  clientKeyId: string
   interact?: {
     start: StartMethod[]
     finish?: {
@@ -122,11 +122,8 @@ async function create(
   const {
     access_token: { access },
     interact,
-    client: {
-      key: {
-        jwk: { kid }
-      }
-    }
+    client,
+    clientKeyId
   } = grantRequest
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
@@ -137,7 +134,8 @@ async function create(
       finishMethod: interact?.finish?.method,
       finishUri: interact?.finish?.uri,
       clientNonce: interact?.finish?.nonce,
-      clientKeyId: kid,
+      client,
+      clientKeyId,
       interactId: interact ? v4() : undefined,
       interactRef: interact ? v4() : undefined,
       interactNonce: interact

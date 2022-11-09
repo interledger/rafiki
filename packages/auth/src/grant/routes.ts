@@ -85,6 +85,7 @@ async function createGrantInitiation(
 
   const { body } = ctx.request
   const { grantService, config } = deps
+  const clientKeyId = ctx.clientKeyId
 
   if (
     !deps.config.incomingPaymentInteraction &&
@@ -98,7 +99,13 @@ async function createGrantInitiation(
     let grant: Grant
     let accessToken: AccessToken
     try {
-      grant = await grantService.create(body, trx)
+      grant = await grantService.create(
+        {
+          ...body,
+          clientKeyId
+        },
+        trx
+      )
       accessToken = await deps.accessTokenService.create(grant.id, {
         trx
       })
@@ -127,7 +134,10 @@ async function createGrantInitiation(
     return
   }
 
-  const grant = await grantService.create(body)
+  const grant = await grantService.create({
+    ...body,
+    clientKeyId
+  })
   ctx.status = 200
   ctx.body = {
     interact: {
@@ -183,7 +193,7 @@ async function startInteraction(
   ctx: AppContext
 ): Promise<void> {
   const { id: interactId, nonce } = ctx.params
-  const { config, grantService, clientService } = deps
+  const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
@@ -195,22 +205,15 @@ async function startInteraction(
     return
   }
 
-  const key = await clientService.getKeyByKid(grant.clientKeyId)
-
-  if (!key) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_client'
-    }
-    return
-  }
-
   // TODO: also establish session in redis with short expiry
   ctx.session.nonce = grant.interactNonce
 
   const interactionUrl = new URL(config.identityServerDomain)
   interactionUrl.searchParams.set('interactId', grant.interactId)
   interactionUrl.searchParams.set('nonce', grant.interactNonce)
+
+  // TODO: https://github.com/interledger/rafiki/issues/738
+  // const client = await clientService.get(grant.client)
 
   ctx.redirect(interactionUrl.toString())
 }

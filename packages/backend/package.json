@@ -4,7 +4,7 @@
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
-    "build:deps": "pnpm --filter openapi build && pnpm --filter auth build && pnpm --filter open-payments build",
+    "build:deps": "pnpm --filter auth build",
     "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
