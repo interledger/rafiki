@@ -96,7 +96,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    throw json('No account found for payment pointer', { status: 500 })
+    throw json('No account found for payment pointer', { status: 200 })
   }
 
   const amt = parseAmount(payment['sendAmount'])
