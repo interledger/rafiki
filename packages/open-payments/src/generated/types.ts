@@ -118,8 +118,8 @@ export interface components {
       id: string;
       /** @description A public name for the account. This should be set by the account holder with their provider to provide a hint to counterparties as to the identity of the account holder. */
       publicName?: string;
-      assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetCode"];
-      assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetScale"];
+      assetCode: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+      assetScale: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
       /**
        * Format: uri
        * @description The URL of the authorization server endpoint for getting grants and access tokens for this payment pointer.
@@ -147,8 +147,8 @@ export interface components {
       ilpAddress: string;
       /** @description The base64 url-encoded shared secret to use when establishing a STREAM connection. */
       sharedSecret: string;
-      assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetCode"];
-      assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetScale"];
+      assetCode: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+      assetScale: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
     };
     /**
      * Incoming Payment
@@ -168,9 +168,9 @@ export interface components {
       /** @description Describes whether the incoming payment has completed receiving fund. */
       completed: boolean;
       /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
-      incomingAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      incomingAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that has been paid into the payment pointer under this incoming payment. */
-      receivedAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      receivedAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /**
        * Format: date-time
        * @description The date and time when payments under this incoming payment will no longer be accepted.
@@ -232,13 +232,13 @@ export interface components {
       /** @description Describes whether the payment failed to send its full amount. */
       failed?: boolean;
       /** @description The URL of the incoming payment or ILP STREAM Connection that is being paid. */
-      receiver: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
+      receiver: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
       /** @description The total amount that should be received by the receiver when this outgoing payment has been paid. */
-      receiveAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      receiveAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that should be sent when this outgoing payment has been paid. */
-      sendAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      sendAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that has been sent under this outgoing payment. */
-      sentAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      sentAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description Human readable description of the outgoing payment that will be visible to the account holder and shared with the receiver. */
       description?: string;
       /** @description A reference that can be used by external systems to reconcile this payment with their systems. E.g. An invoice number. (Optional) */
@@ -269,9 +269,9 @@ export interface components {
        * @description The URL of the payment pointer from which this quote's payment would be sent.
        */
       paymentPointer: string;
-      receiver: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
-      receiveAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
-      sendAmount: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+      receiver: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+      receiveAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      sendAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The date and time when the calculated `sendAmount` is no longer valid. */
       expiresAt?: string;
       /**
@@ -314,6 +314,8 @@ export interface components {
      */
     "json-web-key": {
       kid: string;
+      /** @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
+      alg: "EdDSA";
       use?: "sig";
       kty: "OKP";
       crv: "Ed25519";
@@ -458,7 +460,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
-          incomingAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+          incomingAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
           /**
            * Format: date-time
            * @description The date and time when payments into the incoming payment must no longer be accepted.
@@ -571,9 +573,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          receiver: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
-          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
-          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiver: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+          receiveAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          sendAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
         };
       };
     };
@@ -693,17 +695,17 @@ export interface operations {
 }
 
 export interface external {
-  "https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml": {
+  "https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml": {
     paths: {};
     components: {
       schemas: {
         /** @description A description of the rights associated with this access token. */
-        access: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-item"][];
+        access: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
         "access-item":
-          | external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-incoming"]
-          | external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
-          | external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["access-quote"];
+          | external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
+          | external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
+          | external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
         "access-incoming": {
           /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
@@ -734,7 +736,7 @@ export interface external {
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier: string;
-          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
+          limits?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
         };
         /** access-quote */
         "access-quote": {
@@ -753,8 +755,8 @@ export interface external {
            * @description The value is an unsigned 64-bit integer amount, represented as a string.
            */
           value: string;
-          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetCode"];
-          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["assetScale"];
+          assetCode: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+          assetScale: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
         };
         /**
          * Asset code
@@ -772,45 +774,14 @@ export interface external {
          */
         interval: string;
         /**
-         * key
-         * @description A key presented by value MUST be a public key.
-         */
-        key: {
-          /** @description The form of proof that the client instance will use when presenting the key. */
-          proof: "httpsig";
-          /** @description The public key and its properties represented as a JSON Web Key [[RFC7517](https://datatracker.ietf.org/doc/html/rfc7517)]. */
-          jwk: {
-            /** @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
-            alg: "EdDSA";
-            /** @description A Key ID can be used to match a specific key. */
-            kid: string;
-            /** @description The Key Type. The only allowed value is `OKP`. */
-            kty: "OKP";
-            /** @description The intended use of the key. */
-            use?: "sig";
-            /** @description The cryptographic curve used with the key. The only allowed value is `Ed25519`. */
-            crv: "Ed25519";
-            /** @description Public key encoded using the `base64url` encoding. */
-            x: string;
-            /** @description Array of allowed operations this key may be used for. */
-            key_ops?: ("sign" | "verify")[];
-            /** @description UNIX timestamp indicating the earliest this key may be used. */
-            nbf?: number;
-            /** @description UNIX timestamp indicating the latest this key may be used. */
-            exp?: number;
-            /** @description The revocation status of the key. */
-            revoked?: boolean;
-          };
-        };
-        /**
          * limits-outgoing
          * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
          */
         "limits-outgoing": Partial<unknown> & {
-          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["receiver"];
-          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
-          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["amount"];
-          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/shared/schemas.yaml"]["components"]["schemas"]["interval"];
+          receiver?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+          sendAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiveAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          interval?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
         };
         "list-actions": "list" | "list-all";
         "read-actions": "read" | "read-all";

@@ -1,6 +1,6 @@
 import { HttpMethod } from 'openapi'
 import { ClientDeps } from '.'
-import { PaymentPointer, getPath } from '../types'
+import { JWKS, PaymentPointer, getPath } from '../types'
 import { get } from './requests'
 
 interface GetArgs {
@@ -9,6 +9,7 @@ interface GetArgs {
 
 export interface PaymentPointerRoutes {
   get(args: GetArgs): Promise<PaymentPointer>
+  getKeys(args: GetArgs): Promise<JWKS>
 }
 
 export const createPaymentPointerRoutes = (
@@ -22,8 +23,21 @@ export const createPaymentPointerRoutes = (
       method: HttpMethod.GET
     })
 
+  const getPaymentPaymentKeysValidator = openApi.createResponseValidator<JWKS>({
+    path: getPath('/jwks.json'),
+    method: HttpMethod.GET
+  })
+
   return {
     get: (args: GetArgs) =>
-      get({ axiosInstance, logger }, args, getPaymentPaymentValidator)
+      get({ axiosInstance, logger }, args, getPaymentPaymentValidator),
+    getKeys: (args: GetArgs) =>
+      get(
+        { axiosInstance, logger },
+        {
+          url: `${args.url}/jwks.json`
+        },
+        getPaymentPaymentKeysValidator
+      )
   }
 }

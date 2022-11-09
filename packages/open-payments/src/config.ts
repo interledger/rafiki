@@ -1,5 +1,5 @@
 export default {
   OPEN_PAYMENTS_OPEN_API_URL:
-    'https://raw.githubusercontent.com/interledger/open-payments/7bb2e6a03d7dfe7ecb0553afb6c70741317bb489/openapi/RS/openapi.yaml',
+    'https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/resource-server.yaml',
   DEFAULT_REQUEST_TIMEOUT_MS: 5_000
 }
