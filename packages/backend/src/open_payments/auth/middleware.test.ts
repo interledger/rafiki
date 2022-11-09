@@ -417,7 +417,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 200 with valid http signature without body', async (): Promise<void> => {
-    prepareTest(false)
+    await prepareTest(false)
     const grant = new TokenInfo(
       {
         active: true,
@@ -540,7 +540,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 for invalid key type without body', async (): Promise<void> => {
-    prepareTest(false)
+    await prepareTest(false)
     mockKeyInfo.jwk.kty = 'EC'
     const grant = new TokenInfo(
       {
@@ -589,7 +589,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 if any signature keyid does not match the jwk key id without body', async (): Promise<void> => {
-    prepareTest(false)
+    await prepareTest(false)
     const grant = new TokenInfo(
       {
         active: true,
