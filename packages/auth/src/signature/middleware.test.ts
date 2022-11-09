@@ -32,7 +32,7 @@ import {
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
-  const appContainers: TestContainer[] = []
+  let appContainer: TestContainer
 
   let keyPath: string
   let publicKey: JWKWithRequired
@@ -44,8 +44,7 @@ describe('Signature Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    const appContainer = await createTestApp(deps)
-    appContainers.push(appContainer)
+    appContainer = await createTestApp(deps)
 
     const keys = await generateTestKeys()
     keyPath = '/' + keys.keyId
@@ -59,9 +58,7 @@ describe('Signature Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     nock.restore()
-    for (let i = 0; i < appContainers.length; i++) {
-      await appContainers[i].shutdown()
-    }
+    appContainer.shutdown()
   })
 
   describe('signatures', (): void => {
@@ -403,55 +400,6 @@ describe('Signature Service', (): void => {
       ).rejects.toHaveProperty('status', 401)
 
       scope.isDone()
-    })
-
-    test('middleware succeeds if BYPASS_SIGNATURE_VALIDATION is true with bad signature', async (): Promise<void> => {
-      const altDeps = await initIocContainer({
-        ...Config,
-        bypassSignatureValidation: true
-      })
-
-      const altContainer = await createTestApp(altDeps)
-      appContainers.push(altContainer)
-
-      nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
-        .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
-
-      const ctx = await createContextWithSigHeaders(
-        {
-          headers: {
-            Accept: 'application/json'
-          },
-          url: '/',
-          method: 'POST'
-        },
-        {},
-        {
-          client: {
-            display: TEST_CLIENT_DISPLAY,
-            key: {
-              proof: 'httpsig',
-              jwk: testClientKey.jwk
-            }
-          }
-        },
-        privateKey,
-        altDeps
-      )
-
-      ctx.headers['signature'] = 'wrong-signature'
-
-      await grantInitiationHttpsigMiddleware(ctx, next)
-
-      expect(ctx.response.status).toEqual(200)
-      expect(next).toHaveBeenCalled()
-
-      // TODO: https://github.com/interledger/rafiki/issues/656
-      // scope.done()
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {
