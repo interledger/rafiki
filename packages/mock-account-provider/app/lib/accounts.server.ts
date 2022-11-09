@@ -186,9 +186,7 @@ export class AccountProvider implements AccountsServer {
     assert.ok(acc)
 
     if (acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount) {
-      throw json('invalid pending debit amount, insufficient funds', {
-        status: 200
-      })
+      throw new Error('invalid pending debit amount, insufficient funds')
     }
 
     acc.debitsPending += amount

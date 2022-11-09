@@ -100,7 +100,13 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   }
 
   const amt = parseAmount(payment['sendAmount'])
-  await mockAccounts.pendingDebit(acc.id, amt.value)
+
+  try {
+    await mockAccounts.pendingDebit(acc.id, amt.value)
+  } catch (e) {
+    const errorInfo = e instanceof Error && e.stack ? e.stack : String(e)
+    throw json(errorInfo, { status: 200 })
+  }
 
   // notify rafiki
   await apolloClient
