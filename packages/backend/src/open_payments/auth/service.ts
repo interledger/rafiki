@@ -10,7 +10,7 @@ import {
   GrantAccess,
   GrantAccessJSON
 } from './grant'
-import { OpenAPI, HttpMethod, ValidateFunction } from 'openapi'
+import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
 
 export interface TokenInfoJSON extends GrantJSON {
   key: KeyInfo
@@ -40,7 +40,7 @@ interface ServiceDependencies {
   authServerIntrospectionUrl: string
   authOpenApi: OpenAPI
   logger: Logger
-  validateResponse: ValidateFunction<TokenInfoJSON>
+  validateResponse: ResponseValidator<TokenInfoJSON>
 }
 
 export async function createAuthService(

@@ -15,6 +15,7 @@ import { QuoteService } from './service'
 import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount, serializeAmount } from '../amount'
+import { AccessAction, AccessType, Grant } from '../auth/grant'
 import { PaymentPointer } from '../payment_pointer/model'
 import { getRouteTests } from '../payment_pointer/model.test'
 import { randomAsset } from '../../tests/asset'
@@ -112,6 +113,7 @@ describe('Quote Routes', (): void => {
 
   describe('create', (): void => {
     let options: CreateBody
+    let grant: Grant | undefined
 
     function setup(
       reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
@@ -128,6 +130,7 @@ describe('Quote Routes', (): void => {
       ctx.request.body = {
         ...options
       }
+      ctx.grant = grant
       return ctx
     }
 
@@ -158,7 +161,24 @@ describe('Quote Routes', (): void => {
       })
     })
 
-    describe('returns the quote on success', (): void => {
+    describe.each`
+      withGrant | description
+      ${true}   | ${'grant'}
+      ${false}  | ${'no grant'}
+    `('returns the quote on success ($description)', ({ withGrant }): void => {
+      beforeEach(async (): Promise<void> => {
+        grant = withGrant
+          ? await createGrant(deps, {
+              access: [
+                {
+                  type: AccessType.Quote,
+                  actions: [AccessAction.Create, AccessAction.Read]
+                }
+              ]
+            })
+          : undefined
+      })
+
       test.each`
         sendAmount   | receiveAmount | description
         ${'123'}     | ${undefined}  | ${'sendAmount'}
@@ -190,7 +210,8 @@ describe('Quote Routes', (): void => {
             .mockImplementationOnce(async (opts) => {
               quote = await createQuote(deps, {
                 ...opts,
-                validDestination: false
+                validDestination: false,
+                grantId: grant?.grant
               })
               return quote
             })
@@ -205,7 +226,8 @@ describe('Quote Routes', (): void => {
             receiveAmount: options.receiveAmount && {
               ...options.receiveAmount,
               value: BigInt(options.receiveAmount.value)
-            }
+            },
+            grantId: grant?.grant
           })
           expect(ctx.response).toSatisfyApiSpec()
           const quoteId = (
@@ -243,14 +265,16 @@ describe('Quote Routes', (): void => {
           .mockImplementationOnce(async (opts) => {
             quote = await createQuote(deps, {
               ...opts,
-              validDestination: false
+              validDestination: false,
+              grantId: grant?.grant
             })
             return quote
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
-          receiver
+          receiver,
+          grantId: grant?.grant
         })
         expect(ctx.response).toSatisfyApiSpec()
         const quoteId = (

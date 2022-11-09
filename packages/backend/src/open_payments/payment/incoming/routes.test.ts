@@ -16,7 +16,7 @@ import {
   ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { IncomingPayment, IncomingPaymentJSON } from './model'
+import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
@@ -266,11 +266,6 @@ describe('Incoming Payment Routes', (): void => {
       })
       ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
-      // Delete undefined ilpStreamConnection to satisfy toSatisfyApiSpec
-      expect(
-        (ctx.body as IncomingPaymentJSON).ilpStreamConnection
-      ).toBeUndefined()
-      delete (ctx.body as IncomingPaymentJSON).ilpStreamConnection
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
         id: incomingPayment.url,

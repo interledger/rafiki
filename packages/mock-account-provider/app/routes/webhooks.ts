@@ -1,6 +1,7 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import { mockAccounts } from '~/lib/accounts.server'
+import type { Amount } from '~/lib/transactions.server'
 import { gql } from '@apollo/client'
 import type { LiquidityMutationResponse } from '../../generated/graphql'
 import { apolloClient } from '~/lib/apolloClient'
@@ -19,10 +20,18 @@ export interface WebHook {
   data: Record<string, unknown>
 }
 
-export interface Amount {
-  value: bigint
+export interface AmountJSON {
+  value: string
   assetCode: string
   assetScale: number
+}
+
+export function parseAmount(amount: AmountJSON): Amount {
+  return {
+    value: BigInt(amount['value']),
+    assetCode: amount['assetCode'],
+    assetScale: amount['assetScale']
+  }
 }
 
 export async function action({ request }: ActionArgs) {
@@ -60,8 +69,8 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     throw json('No account found for payment pointer', { status: 500 })
   }
 
-  const amtSend = payment['sendAmount'] as Amount
-  const amtSent = payment['sentAmount'] as Amount
+  const amtSend = parseAmount(payment['sendAmount'])
+  const amtSent = parseAmount(payment['sentAmount'])
 
   const toVoid = amtSend.value - amtSent.value
 
@@ -90,7 +99,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw json('No account found for payment pointer', { status: 500 })
   }
 
-  const amt = payment['sendAmount'] as Amount
+  const amt = parseAmount(payment['sendAmount'])
   await mockAccounts.pendingDebit(acc.id, amt.value)
 
   // notify rafiki
@@ -139,7 +148,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     throw json('No account found for payment pointer', { status: 500 })
   }
 
-  const amt = payment['receivedAmount'] as Amount
+  const amt = parseAmount(payment['receivedAmount'])
   await mockAccounts.credit(acc.id, amt.value, false)
 
   await apolloClient

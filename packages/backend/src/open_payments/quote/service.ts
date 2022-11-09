@@ -8,7 +8,8 @@ import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
 import { Amount, parseAmount } from '../amount'
-import { OpenPaymentsClientService, Receiver } from '../client/service'
+import { ReceiverService } from '../receiver/service'
+import { Receiver } from '../receiver/model'
 import {
   PaymentPointer,
   GetOptions,
@@ -34,7 +35,7 @@ export interface ServiceDependencies extends BaseService {
   quoteLifespan: number // milliseconds
   signatureSecret?: string
   signatureVersion: number
-  clientService: OpenPaymentsClientService
+  receiverService: ReceiverService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
@@ -152,6 +153,7 @@ async function createQuote(
           knex: trx
         },
         quote,
+        receiver,
         maxReceiveAmountValue
       )
     })
@@ -167,7 +169,7 @@ export async function resolveReceiver(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Receiver> {
-  const receiver = await deps.clientService.receiver.get(options.receiver)
+  const receiver = await deps.receiverService.get(options.receiver)
   if (!receiver) {
     throw QuoteError.InvalidReceiver
   }
@@ -264,6 +266,7 @@ export async function startQuote(
 export async function finalizeQuote(
   deps: ServiceDependencies,
   quote: Quote,
+  receiver: Receiver,
   maxReceiveAmountValue?: bigint
 ): Promise<Quote> {
   const requestHeaders = {
@@ -321,11 +324,21 @@ export async function finalizeQuote(
     }
   }
 
-  await quote.$query(deps.knex).patch({
+  const patchOptions = {
     sendAmount,
     receiveAmount,
     expiresAt: new Date(quote.createdAt.getTime() + deps.quoteLifespan)
-  })
+  }
+  // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
+  if (
+    receiver.expiresAt &&
+    receiver.expiresAt.getTime() < patchOptions.expiresAt.getTime()
+  ) {
+    patchOptions.expiresAt = receiver.expiresAt
+  }
+
+  await quote.$query(deps.knex).patch(patchOptions)
+
   return quote
 }
 

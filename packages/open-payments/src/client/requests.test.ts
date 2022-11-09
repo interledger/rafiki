@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createAxiosInstance, get } from './requests'
 import nock from 'nock'
-import { silentLogger } from '../test/helpers'
+import { mockOpenApiResponseValidators, silentLogger } from '../test/helpers'
 
 describe('requests', (): void => {
   const logger = silentLogger
@@ -24,8 +24,7 @@ describe('requests', (): void => {
   describe('get', (): void => {
     const axiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
     const baseUrl = 'http://localhost:1000'
-    const successfulValidator = (data: unknown): data is unknown => true
-    const failedValidator = (data: unknown): data is unknown => false
+    const responseValidators = mockOpenApiResponseValidators()
 
     beforeAll(() => {
       jest.spyOn(axiosInstance, 'get')
@@ -40,7 +39,7 @@ describe('requests', (): void => {
           url: `${baseUrl}/incoming-payment`,
           accessToken: 'accessToken'
         },
-        successfulValidator
+        responseValidators.successfulValidator
       )
 
       expect(axiosInstance.get).toHaveBeenCalledWith(
@@ -63,7 +62,7 @@ describe('requests', (): void => {
         {
           url: `${baseUrl}/incoming-payment`
         },
-        successfulValidator
+        responseValidators.successfulValidator
       )
 
       expect(axiosInstance.get).toHaveBeenCalledWith(
@@ -72,6 +71,33 @@ describe('requests', (): void => {
           headers: {}
         }
       )
+    })
+
+    test('calls validator function properly', async (): Promise<void> => {
+      const status = 200
+      const body = {
+        id: 'id'
+      }
+
+      nock(baseUrl).get('/incoming-payment').reply(status, body)
+
+      const responseValidatorSpy = jest.spyOn(
+        responseValidators,
+        'successfulValidator'
+      )
+
+      await get(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/incoming-payment`
+        },
+        responseValidators.successfulValidator
+      )
+
+      expect(responseValidatorSpy).toHaveBeenCalledWith({
+        body,
+        status
+      })
     })
 
     test('throws if response validator function fails', async (): Promise<void> => {
@@ -83,7 +109,7 @@ describe('requests', (): void => {
           {
             url: `${baseUrl}/incoming-payment`
           },
-          failedValidator
+          responseValidators.failedValidator
         )
       ).rejects.toThrow(/Failed to validate OpenApi response/)
     })

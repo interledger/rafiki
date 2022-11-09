@@ -50,10 +50,10 @@ importers:
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
-      '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
       '@types/koa__router': ^8.0.11
+      '@types/koa-bodyparser': ^4.3.7
+      '@types/koa-session': ^5.10.6
       '@types/uuid': ^8.3.4
       ajv: ^8.11.0
       axios: ^0.27.2
@@ -98,10 +98,10 @@ importers:
     devDependencies:
       '@types/jest': 28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
-      '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
+      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-session': 5.10.6
       '@types/uuid': 8.3.4
       jest-openapi: 0.14.2
       nock: 13.2.9
@@ -126,13 +126,12 @@ importers:
       '@koa/cors': ^3.1.0
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
-      '@shopify/jest-koa-mocks': ^5.0.1
       '@types/bcrypt': ^5.0.0
       '@types/jest': ^28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
+      '@types/koa-bodyparser': ^4.3.7
       '@types/lodash': ^4.14.184
       '@types/luxon': ^3.0.0
       '@types/react': ^18.0.17
@@ -171,6 +170,7 @@ importers:
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
       oer-utils: 5.1.3-alpha.1
+      open-payments: workspace:../open-payments
       openapi: workspace:../openapi
       openapi-types: ^12.0.0
       pg: ^8.6.0
@@ -197,7 +197,6 @@ importers:
       '@koa/cors': 3.3.0
       '@koa/router': 12.0.0
       '@poppinss/file-generator': 1.0.2
-      '@shopify/jest-koa-mocks': 5.0.1
       '@types/bcrypt': 5.0.0
       add: 2.0.6
       ajv: 8.11.0
@@ -224,6 +223,7 @@ importers:
       objection: 3.0.1_knex@0.95.15
       objection-db-errors: 1.1.2_objection@3.0.1
       oer-utils: 5.1.3-alpha.1
+      open-payments: link:../open-payments
       openapi: link:../openapi
       pg: 8.7.3
       pino: 8.4.2
@@ -238,9 +238,9 @@ importers:
       '@graphql-codegen/typescript-resolvers': 2.7.3_graphql@16.6.0
       '@types/jest': 28.1.7
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
+      '@types/koa-bodyparser': 4.3.7
       '@types/lodash': 4.14.184
       '@types/luxon': 3.0.0
       '@types/react': 18.0.17
@@ -311,22 +311,26 @@ importers:
     specifiers:
       '@types/node': ^18.7.12
       axios: ^1.1.2
+      base64url: ^3.0.1
       nock: ^13.2.9
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.4.2
       ts-node: ^10.7.0
       typescript: ^4.3.0
+      uuid: ^8.3.2
     dependencies:
       axios: 1.1.2
       openapi: link:../openapi
       pino: 8.4.2
     devDependencies:
       '@types/node': 18.7.13
+      base64url: 3.0.1
       nock: 13.2.9
       openapi-typescript: 4.5.0
       ts-node: 10.9.1_ieummqxttktzud32hpyrer46t4
       typescript: 4.8.4
+      uuid: 8.3.2
 
   packages/openapi:
     specifiers:
@@ -3535,16 +3539,6 @@ packages:
     resolution: {integrity: sha512-LwzQKA4vzIct1zNZzBmRKI9QuNpLgTQMEjsQLf3BXuGYb3QPTP4Yjf6mkdX+X1mYttZ808QpOwAzZjv28kq7DA==}
     dev: true
 
-  /@shopify/jest-koa-mocks/5.0.1:
-    resolution: {integrity: sha512-4YskS9q8+TEHNoyopmuoy2XyhInyqeOl7CF5ShJs19sm6m0EA/jGGvgf/osv2PeTfuf42/L2G9CzWUSg49yTSg==}
-    engines: {node: ^14.17.0 || >=16.0.0}
-    dependencies:
-      koa: 2.13.4
-      node-mocks-http: 1.11.0
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /@sinclair/typebox/0.24.28:
     resolution: {integrity: sha512-dgJd3HLOkLmz4Bw50eZx/zJwtBq65nms3N9VBYu5LTjJ883oBFkTyXRlCB/ZGGwqYpJJHA5zW2Ibhl5ngITfow==}
     dev: true
@@ -4535,18 +4529,6 @@ packages:
         optional: true
     dependencies:
       ajv: 8.11.0
-    dev: false
-
-  /ajv-formats/2.1.1_ajv@8.11.0:
-    resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
-    peerDependenciesMeta:
-      ajv:
-        optional: true
-    dependencies:
-      ajv: 8.11.0
-    dev: true
 
   /ajv/6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
@@ -4700,9 +4682,9 @@ packages:
       '@koa/cors': 3.3.0
       '@types/accepts': 1.3.5
       '@types/koa': 2.13.5
+      '@types/koa__cors': 3.3.0
       '@types/koa-bodyparser': 4.3.7
       '@types/koa-compose': 3.2.5
-      '@types/koa__cors': 3.3.0
       accepts: 1.3.8
       apollo-server-core: 3.10.1_graphql@16.6.0
       apollo-server-types: 3.6.2_graphql@16.6.0
@@ -5203,7 +5185,6 @@ packages:
   /base64url/3.0.1:
     resolution: {integrity: sha512-ir1UPr3dkwexU7FdV8qBBbNDRUhMmIekYMFZfi+C/sLNnRESKPl23nB9b2pltqfOQNnGzsDdId90AEtG5tCx4A==}
     engines: {node: '>=6.0.0'}
-    dev: false
 
   /basic-auth/2.0.1:
     resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
@@ -5864,8 +5845,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      JSONStream: 1.3.5
       is-text-path: 1.0.1
+      JSONStream: 1.3.5
       lodash: 4.17.21
       meow: 8.1.2
       split2: 3.2.2
@@ -10797,7 +10778,7 @@ packages:
     resolution: {integrity: sha512-5wpFKMoEbUcjiqo16jIen3Cb2+oApSnYZpWn8WQdRO2q/dNQZZl8Pz6ESwCriiyU5AK4i5ZI6+7O3bHQr6+6+g==}
     dependencies:
       ajv: 8.11.0
-      ajv-formats: 2.1.1_ajv@8.11.0
+      ajv-formats: 2.1.1
       lodash.merge: 4.6.2
       openapi-types: 9.3.1
     dev: true

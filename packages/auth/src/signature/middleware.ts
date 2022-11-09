@@ -22,6 +22,12 @@ export async function verifySigAndChallenge(
   clientKey: JWKWithRequired,
   ctx: HttpSigContext
 ): Promise<boolean> {
+  const config = await ctx.container.use('config')
+  if (config.bypassSignatureValidation) {
+    // bypass
+    return true
+  }
+
   const sig = ctx.headers['signature'] as string
   const sigInput = ctx.headers['signature-input'] as string
   const challenge = sigInputToChallenge(sigInput, ctx)
@@ -81,7 +87,9 @@ function validateSigInputComponents(
   return !(
     !sigInputComponents.includes('@method') ||
     !sigInputComponents.includes('@target-uri') ||
-    (ctx.request.body && !sigInputComponents.includes('content-digest')) ||
+    (ctx.request.body &&
+      Object.keys(ctx.request.body).length > 0 &&
+      !sigInputComponents.includes('content-digest')) ||
     (ctx.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )

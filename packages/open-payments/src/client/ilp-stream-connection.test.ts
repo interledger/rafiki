@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
 import { createILPStreamConnectionRoutes } from './ilp-stream-connection'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import config from '../config'
