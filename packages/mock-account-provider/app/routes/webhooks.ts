@@ -34,19 +34,28 @@ export function parseAmount(amount: AmountJSON): Amount {
   }
 }
 
+export function parseError(e: unknown): string {
+  return e instanceof Error && e.stack ? e.stack : String(e)
+}
+
 export async function action({ request }: ActionArgs) {
   const wh: WebHook = await request.json()
   console.log('received webhook: ', JSON.stringify(wh))
 
   switch (wh.type) {
     case EventType.OutgoingPaymentCreated:
-      return handleOutgoingPaymentCreated(wh)
+      handleOutgoingPaymentCreated(wh)
+      break
     case EventType.OutgoingPaymentCompleted:
     case EventType.OutgoingPaymentFailed:
-      return handleOutgoingPaymentCompletedFailed(wh)
+      handleOutgoingPaymentCompletedFailed(wh)
+      break
     case EventType.IncomingPaymentCompleted:
     case EventType.IncomingPaymentExpired:
-      return handleIncomingPaymentCompletedExpired(wh)
+      handleIncomingPaymentCompletedExpired(wh)
+      break
+    default:
+      console.log(`unknown event type: ${wh.type}`)
   }
 
   return json(undefined, { status: 200 })
@@ -66,7 +75,8 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    throw json('No account found for payment pointer', { status: 500 })
+    console.log('No account found for payment pointer')
+    return
   }
 
   const amtSend = parseAmount(payment['sendAmount'])
@@ -96,7 +106,8 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    throw json('No account found for payment pointer', { status: 200 })
+    console.log('No account found for payment pointer')
+    return
   }
 
   const amt = parseAmount(payment['sendAmount'])
@@ -104,8 +115,9 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   try {
     await mockAccounts.pendingDebit(acc.id, amt.value)
   } catch (e) {
-    const errorInfo = e instanceof Error && e.stack ? e.stack : String(e)
-    throw json(errorInfo, { status: 200 })
+    const errorInfo = parseError(e)
+    console.log(errorInfo)
+    return
   }
 
   // notify rafiki
@@ -151,7 +163,8 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    throw json('No account found for payment pointer', { status: 500 })
+    console.log('No account found for payment pointer')
+    return
   }
 
   const amt = parseAmount(payment['receivedAmount'])
