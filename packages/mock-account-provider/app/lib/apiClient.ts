@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Access } from './types'
+import type { Access } from './types'
 
 export const StepNames = {
   startInteraction: 0,
@@ -9,15 +9,18 @@ export const StepNames = {
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-export type ApiResponse<T = any> = ({
-  readonly payload?: T
-  readonly isFailure: false
-} | {
-    readonly isFailure: true
-    readonly errors: Array<string>
-}) & {
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    readonly contextUpdates?: { [key: string]: any }
+export type ApiResponse<T = any> = (
+  | {
+      readonly payload?: T
+      readonly isFailure: false
+    }
+  | {
+      readonly isFailure: true
+      readonly errors: Array<string>
+    }
+) & {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  readonly contextUpdates?: { [key: string]: any }
 }
 
 export class ApiClient {
@@ -33,11 +36,14 @@ export class ApiClient {
   ): Promise<ApiResponse> {
     // get grant --> GET /grant/:id/:nonce
     const { interactId, nonce } = params
-    const response = await axios.get(`http://localhost:3006/grant/${interactId}/${nonce}`, {
-      headers: {
-        'x-idp-secret': 'replace-me'
+    const response = await axios.get(
+      `http://localhost:3006/grant/${interactId}/${nonce}`,
+      {
+        headers: {
+          'x-idp-secret': 'replace-me'
+        }
       }
-    })
+    )
     if (response.status === 200) {
       return {
         isFailure: false,
@@ -55,17 +61,22 @@ export class ApiClient {
   }
 
   public static async chooseConsent(
-    interactId: string, nonce: string, acceptanceDecision: boolean
+    interactId: string,
+    nonce: string,
+    acceptanceDecision: boolean
   ): Promise<ApiResponse<Array<Access>>> {
     // make choice --> POST /grant/:id/:nonce/accept or /grant/:id/:nonce/reject
-    const acceptanceSubPath =
-      acceptanceDecision ? 'accept' : 'reject'
+    const acceptanceSubPath = acceptanceDecision ? 'accept' : 'reject'
 
-    const response = await axios.post(`http://localhost:3006/grant/${interactId}/${nonce}/${acceptanceSubPath}`, {}, {
-      headers: {
-        'x-idp-secret': 'replace-me'
+    const response = await axios.post(
+      `http://localhost:3006/grant/${interactId}/${nonce}/${acceptanceSubPath}`,
+      {},
+      {
+        headers: {
+          'x-idp-secret': 'replace-me'
+        }
       }
-    })
+    )
 
     if (response.status === 202) {
       return {
@@ -80,7 +91,8 @@ export class ApiClient {
   }
 
   public static async endInteraction(
-    interactId: string, nonce: string
+    interactId: string,
+    nonce: string
   ): Promise<ApiResponse> {
     window.location.href = `http://localhost:3006/interact/${interactId}/${nonce}/finish`
     return {

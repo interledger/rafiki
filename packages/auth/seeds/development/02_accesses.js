@@ -72,7 +72,8 @@ exports.seed = function (knex) {
           grantId: '295a5695-998a-4167-b50a-a6ae774d0bfd',
           createdAt: new Date(),
           updatedAt: new Date(),
-          limits: '{"receiver":"Shoe Shop","receiveAmount":{"value":"74990000000","assetCode":"USD","assetScale":1000000000},"sendAmount":{"value":"76780000000","assetCode":"EUR","assetScale":1000000000}}'
+          limits:
+            '{"receiver":"Shoe Shop","receiveAmount":{"value":"74990000000","assetCode":"USD","assetScale":1000000000},"sendAmount":{"value":"76780000000","assetCode":"EUR","assetScale":1000000000}}'
         },
         {
           id: v4(),
@@ -81,7 +82,7 @@ exports.seed = function (knex) {
           grantId: '295a5695-998a-4167-b50a-a6ae774d0bfd',
           createdAt: new Date(),
           updatedAt: new Date()
-        },
+        }
       ])
     })
 }

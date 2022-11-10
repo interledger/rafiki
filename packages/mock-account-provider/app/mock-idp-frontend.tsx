@@ -1,4 +1,5 @@
-import { parse as parseQueryString, ParsedUrlQuery } from 'querystring'
+import type { ParsedUrlQuery } from 'querystring'
+import { parse as parseQueryString } from 'querystring'
 import { useLocation } from '@remix-run/react'
 import { useEffect, useMemo, useState } from 'react'
 import ConsentScreen from './routes/consent-screen'
@@ -535,23 +536,27 @@ function DeveloperView() {
   )
 }
 
-function DemoResultView({ accepted, accesses }: { accepted: boolean, accesses: Array<any/*Access TODO*/> }) {
+function DemoResultView({
+  accepted,
+  accesses
+}: {
+  accepted: boolean
+  accesses: Array<any /*Access TODO*/>
+}) {
   return (
     <div className='list-group-item'>
       <div className='card-body'>
         <div className='row'>
-          {accepted
-            ? (
-              <div className='col-12'>
-                <h2 className='display-6'>Request accepted</h2>
-                <OutputArea serializableValue={accesses} title='grant' />
-              </div>)
-            : (
-              <div className='col-6'>
-                <h2 className='display-6'>Request rejected</h2>
-              </div>
-            )
-          }
+          {accepted ? (
+            <div className='col-12'>
+              <h2 className='display-6'>Request accepted</h2>
+              <OutputArea serializableValue={accesses} title='grant' />
+            </div>
+          ) : (
+            <div className='col-6'>
+              <h2 className='display-6'>Request rejected</h2>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -569,7 +574,8 @@ function DemoInitialView({
   nonce: string
   setInteractId: (interactId: string) => void
   setNonce: (nonce: string) => void
-  begin: () => Promise<void> }) {
+  begin: () => Promise<void>
+}) {
   return (
     <>
       <div className='row'>
@@ -629,22 +635,34 @@ function DemoInitialView({
   )
 }
 
-function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQuery }) {
+function DemoView({
+  href,
+  queryParams
+}: {
+  href: string
+  queryParams: ParsedUrlQuery
+}) {
   const [ctx, setCtx] = useState({
-    currentStep: queryParams['step'] ? Number(queryParams['step']) : StepNames.startInteraction,
-    previousStepResponse: null as (Error | null),
+    currentStep: queryParams['step']
+      ? Number(queryParams['step'])
+      : StepNames.startInteraction,
+    previousStepResponse: null as Error | null,
     previousStepFailed: false,
     accesses: [],
     interactId: 'example-interact-id',
     nonce: 'example-interact-nonce',
     interactionUrl: '',
-    acceptanceDecision: queryParams['decision'] ? queryParams['decision'] === 'accept' : false
+    acceptanceDecision: queryParams['decision']
+      ? queryParams['decision'] === 'accept'
+      : false
   })
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.localStorage) {
       if (queryParams['step']) {
-        const savedData = JSON.parse(window.localStorage.getItem('mock-idp-data') || '{}')
+        const savedData = JSON.parse(
+          window.localStorage.getItem('mock-idp-data') || '{}'
+        )
         setCtx({
           ...ctx,
           ...savedData
@@ -656,7 +674,8 @@ function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQ
   }, [])
 
   const begin = async () => {
-    let { interactId, nonce, interactionUrl, accesses } = ctx
+    const { interactId, nonce } = ctx
+    let { interactionUrl, accesses } = ctx
     const apiParams = {
       interactId: interactId,
       nonce: nonce
@@ -670,7 +689,7 @@ function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQ
     } else {
       interactionUrl = result.payload.interactionUrl
     }
-    
+
     // get grant
     result = await ApiSteps.getGrant(apiParams)
     if (result.isFailure || !result.payload) {
@@ -678,7 +697,7 @@ function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQ
     } else {
       accesses = result.payload.grant.access
     }
-    
+
     // redirect to consent screen
     const returnUrl = new URL(window.location.href)
     returnUrl.searchParams.set('step', `${StepNames.endInteraction}`)
@@ -686,14 +705,17 @@ function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQ
     const consentScreenUrl = new URL(window.location.origin + '/consent-screen')
 
     consentScreenUrl.searchParams.append('returnUrl', returnUrl.toString())
-    consentScreenUrl.searchParams.append('requestorName', '<RequestorName>')//TODO!!!
+    consentScreenUrl.searchParams.append('requestorName', '<RequestorName>') //TODO!!!
 
     accesses.forEach((access: any) => {
       consentScreenUrl.searchParams.append('access', JSON.stringify(access))
     })
 
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem('mock-idp-data', JSON.stringify({ interactId, nonce, interactionUrl, accesses }))
+      localStorage.setItem(
+        'mock-idp-data',
+        JSON.stringify({ interactId, nonce, interactionUrl, accesses })
+      )
     }
     window.location.href = consentScreenUrl.toString()
   }
@@ -711,19 +733,30 @@ function DemoView({ href, queryParams }: { href: string, queryParams: ParsedUrlQ
         <h3>Mock identity provider</h3>
         <div className='row'>
           <div className='col-12'>
-            {ctx.currentStep === StepNames.endInteraction
-              ? (<DemoResultView accepted={ctx.acceptanceDecision} accesses={ctx.accesses} />)
-              : (<DemoInitialView interactId={ctx.interactId} nonce={ctx.nonce} setInteractId={(interactId) => {
-                setCtx({
-                  ...ctx,
-                  interactId: interactId
-                })
-              }} setNonce={(nonce) => {
-                setCtx({
-                  ...ctx,
-                  nonce: nonce
-                })
-              }} begin={begin} />)}
+            {ctx.currentStep === StepNames.endInteraction ? (
+              <DemoResultView
+                accepted={ctx.acceptanceDecision}
+                accesses={ctx.accesses}
+              />
+            ) : (
+              <DemoInitialView
+                interactId={ctx.interactId}
+                nonce={ctx.nonce}
+                setInteractId={(interactId) => {
+                  setCtx({
+                    ...ctx,
+                    interactId: interactId
+                  })
+                }}
+                setNonce={(nonce) => {
+                  setCtx({
+                    ...ctx,
+                    nonce: nonce
+                  })
+                }}
+                begin={begin}
+              />
+            )}
           </div>
         </div>
         <div className='row mt-4'>

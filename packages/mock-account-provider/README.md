@@ -72,21 +72,32 @@ different config file, set the `SEED_FILE_LOCATION` environment variable, e.g.
 
 ## "Shoe Shop" Demo
 
-The mock identity provider can be used to test the grant authorization flow using an example "Shoe Shop" site which requests the user's consent to make a purchase and renders a simple screen showing the result.
+The mock identity provider can be used to test the grant authorization flow
+using an example "Shoe Shop" site which requests the user's consent to make a
+purchase and renders a simple screen showing the result.
 
-**NOTE**: The mock identity provider currently only supports the `outgoing-payment` case
+**NOTE**: The mock identity provider currently only supports the
+`outgoing-payment` case
 
 The demo works as follows:
 
-1. Run `docker compose -f ./infrastructure/local/database_docker-compose.yml "up" "-d"` in the project root
-2. Create the grant using the necessary `auth` APIs, or use the pre-seeded `demo` grant:
-    - in the `auth` directory, run `pnpm knex "seed:run" "--env=development"`
-    - `interactid`: `demo-interact-id`
-    - `nonce`: `demo-interact-nonce`
-    - `returnUrl`: `http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F`
-3. In a browser, navigate to the mock consent screen page at `http://localhost:3300/consent-screen?interactid=<interactid>&nonce=<nonce>&returnUrl=<returnUrl>
-    - for the `demo` grant, the URL would be
-        - http://localhost:3300/consent-screen?interactid=demo-interact-id&nonce=demo-interact-nonce&returnUrl=http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F
-    - if you omit the query parameters, you will first be directed to a page allowing you to input the `interactId`, `nonce`, and `returnUrl`
-4. The consent screen will present the send amount, receive amount, and receiver name, and ask the user for consent to complete the transaction
-5. After making a consent choice, the user will be redirected to a page at the Shoe Shop which displays the choice that was made, as well as the Grant ID and Interaction Reference
+1. Run
+   `docker compose -f ./infrastructure/local/database_docker-compose.yml "up" "-d"`
+   in the project root
+2. Create the grant using the necessary `auth` APIs, or use the pre-seeded
+   `demo` grant:
+   - in the `auth` directory, run `pnpm knex "seed:run" "--env=development"`
+   - `interactid`: `demo-interact-id`
+   - `nonce`: `demo-interact-nonce`
+   - `returnUrl`: `http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F`
+3. In a browser, navigate to the mock consent screen page at
+   `http://localhost:3300/consent-screen?interactid=<interactid>&nonce=<nonce>&returnUrl=<returnUrl>
+   - for the `demo` grant, the URL would be
+     - http://localhost:3300/consent-screen?interactid=demo-interact-id&nonce=demo-interact-nonce&returnUrl=http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F
+   - if you omit the query parameters, you will first be directed to a page
+     allowing you to input the `interactId`, `nonce`, and `returnUrl`
+4. The consent screen will present the send amount, receive amount, and receiver
+   name, and ask the user for consent to complete the transaction
+5. After making a consent choice, the user will be redirected to a page at the
+   Shoe Shop which displays the choice that was made, as well as the Grant ID
+   and Interaction Reference

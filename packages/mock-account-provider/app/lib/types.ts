@@ -1,6 +1,10 @@
 export type AccessAction = 'create' | 'read' | 'list' | 'complete'
 
-export type AccessType = 'account' | 'incoming-payment' | 'outgoing-payment' | 'quote'
+export type AccessType =
+  | 'account'
+  | 'incoming-payment'
+  | 'outgoing-payment'
+  | 'quote'
 
 export interface PaymentAmount {
   value: string

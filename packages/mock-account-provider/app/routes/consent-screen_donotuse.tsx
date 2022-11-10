@@ -23,12 +23,18 @@ interface Access {
   limits?: AccessLimit
 }
 
-const currencySymbols: { [ assetCode: string ]: string } = {
-  'USD': '$',
-  'EUR': '€'
+const currencySymbols: { [assetCode: string]: string } = {
+  USD: '$',
+  EUR: '€'
 }
 
-function formatCurrencyAmount({ value, assetScale }: { value: string, assetScale: number }): string {
+function formatCurrencyAmount({
+  value,
+  assetScale
+}: {
+  value: string
+  assetScale: number
+}): string {
   return (Number(value) / assetScale).toFixed(2)
 }
 
@@ -49,11 +55,15 @@ function AccessTypeOverview({
   const canRead = actions.includes('read')
   const unitNamePlural = `${accessType.replace('-', ' ')}s`
   const limitText = limits
-    ? (accessType === 'outgoing-payment' && limits.sendAmount
-    ? `send up to ${currencySymbols[limits.sendAmount.assetCode] || ''}${formatCurrencyAmount(limits.sendAmount)} to ${limits.receiver}`
-    : accessType === 'incoming-payment' && limits.receiveAmount
-    ? `receive up to ${currencySymbols[limits.receiveAmount.assetCode] || ''}${formatCurrencyAmount(limits.receiveAmount)}`
-    : '')
+    ? accessType === 'outgoing-payment' && limits.sendAmount
+      ? `send up to ${
+          currencySymbols[limits.sendAmount.assetCode] || ''
+        }${formatCurrencyAmount(limits.sendAmount)} to ${limits.receiver}`
+      : accessType === 'incoming-payment' && limits.receiveAmount
+      ? `receive up to ${
+          currencySymbols[limits.receiveAmount.assetCode] || ''
+        }${formatCurrencyAmount(limits.receiveAmount)}`
+      : ''
     : ''
 
   return (
@@ -62,7 +72,9 @@ function AccessTypeOverview({
         <h5 className='card-title'>{unitNamePlural}</h5>
         <div className='row'>
           <div className='col-3'>
-            <h1 className='display-1'><i className={'bi bi-' + icon}></i></h1>
+            <h1 className='display-1'>
+              <i className={'bi bi-' + icon}></i>
+            </h1>
           </div>
           <div className='col-9'>
             <ul>
@@ -85,20 +97,25 @@ function AccessOverviewRow({
   limits
 }: {
   accessType: AccessType
-  actions: Array<AccessAction>,
+  actions: Array<AccessAction>
   limits?: AccessLimit
 }) {
-
-  const icon = accessType === 'account'
-    ? 'wallet2'
-    : accessType === 'incoming-payment'
-    ? 'piggy-bank'
-    : accessType === 'outgoing-payment'
-    ? 'cash'
-    : 'tag'
+  const icon =
+    accessType === 'account'
+      ? 'wallet2'
+      : accessType === 'incoming-payment'
+      ? 'piggy-bank'
+      : accessType === 'outgoing-payment'
+      ? 'cash'
+      : 'tag'
 
   return (
-    <AccessTypeOverview icon={icon} accessType={accessType} actions={actions} limits={limits} />
+    <AccessTypeOverview
+      icon={icon}
+      accessType={accessType}
+      actions={actions}
+      limits={limits}
+    />
   )
 }
 
@@ -110,24 +127,29 @@ interface ConsentScreenParams {
 }
 
 function isAccessType(accessType: string): accessType is AccessType {
-  return accessType === 'account' || accessType === 'incoming-payment' || accessType === 'outgoing-payment' || accessType === 'quote'
+  return (
+    accessType === 'account' ||
+    accessType === 'incoming-payment' ||
+    accessType === 'outgoing-payment' ||
+    accessType === 'quote'
+  )
 }
 
 function parseQueryString(query: string) {
   const dictionary = parse(query)
-  const pairs = Object.keys(dictionary).map(k => {
-    return [
-      k.toLowerCase().replace(/^\?/, ''),
-      dictionary[k]!
-    ]
+  const pairs = Object.keys(dictionary).map((k) => {
+    return [k.toLowerCase().replace(/^\?/, ''), dictionary[k]!]
   })
 
   return {
     get: (key: string): string | Array<string> => {
-      return (pairs.find(p => p[0] === key.toLowerCase()) || ['', ''])[1]
+      return (pairs.find((p) => p[0] === key.toLowerCase()) || ['', ''])[1]
     },
     getAsArray: (key: string): Array<string> => {
-      const value = (pairs.find(p => p[0] === key.toLowerCase()) || ['', ''])[1]
+      const value = (pairs.find((p) => p[0] === key.toLowerCase()) || [
+        '',
+        ''
+      ])[1]
       if (Array.isArray(value)) {
         return value
       } else {
@@ -135,7 +157,10 @@ function parseQueryString(query: string) {
       }
     },
     getAsString: (key: string): string => {
-      const value = (pairs.find(p => p[0] === key.toLowerCase()) || ['', ''])[1]
+      const value = (pairs.find((p) => p[0] === key.toLowerCase()) || [
+        '',
+        ''
+      ])[1]
       if (Array.isArray(value)) {
         return value[value.length - 1]
       } else {
@@ -143,7 +168,7 @@ function parseQueryString(query: string) {
       }
     },
     has: (key: string) => {
-      return pairs.some(p => p[0] === key.toLowerCase())
+      return pairs.some((p) => p[0] === key.toLowerCase())
     }
   }
 }
@@ -166,41 +191,77 @@ function parseConsentScreenParams(query: string): ConsentScreenParams {
       const o = JSON.parse(ap)
 
       if (!o.type) {
-        errors.push(new Error(`missing property 'type' for access param ${apIndex}`))
+        errors.push(
+          new Error(`missing property 'type' for access param ${apIndex}`)
+        )
       } else if (!isAccessType(o.type)) {
-        errors.push(new Error(`invalid property 'type' for access param ${apIndex}`))
+        errors.push(
+          new Error(`invalid property 'type' for access param ${apIndex}`)
+        )
       }
 
       if (!o.actions || !Array.isArray(o.actions) || o.actions.length < 1) {
-        errors.push(new Error(`missing or empty property 'actions' for access param ${apIndex}`))
+        errors.push(
+          new Error(
+            `missing or empty property 'actions' for access param ${apIndex}`
+          )
+        )
       }
 
       if (o.limits) {
         if (!o.limits.receiver) {
-          errors.push(new Error(`missing property 'limits.receiver' for access param ${apIndex}`))
+          errors.push(
+            new Error(
+              `missing property 'limits.receiver' for access param ${apIndex}`
+            )
+          )
         }
 
         if (o.limits.sendAmount) {
           if (!o.limits.sendAmount.value) {
-            errors.push(new Error(`missing property 'limits.sendAmount.value' for access param ${apIndex}`))
+            errors.push(
+              new Error(
+                `missing property 'limits.sendAmount.value' for access param ${apIndex}`
+              )
+            )
           }
           if (!o.limits.sendAmount.assetCode) {
-            errors.push(new Error(`missing property 'limits.sendAmount.assetCode' for access param ${apIndex}`))
+            errors.push(
+              new Error(
+                `missing property 'limits.sendAmount.assetCode' for access param ${apIndex}`
+              )
+            )
           }
           if (!o.limits.sendAmount.assetScale) {
-            errors.push(new Error(`missing property 'limits.sendAmount.assetScale' for access param ${apIndex}`))
+            errors.push(
+              new Error(
+                `missing property 'limits.sendAmount.assetScale' for access param ${apIndex}`
+              )
+            )
           }
         }
 
         if (o.limits.receiveAmount) {
           if (!o.limits.receiveAmount.value) {
-            errors.push(new Error(`missing property 'limits.receiveAmount.value' for access param ${apIndex}`))
+            errors.push(
+              new Error(
+                `missing property 'limits.receiveAmount.value' for access param ${apIndex}`
+              )
+            )
           }
           if (!o.limits.receiveAmount.assetCode) {
-            errors.push(new Error(`missing property 'limits.receiveAmount.assetCode' for access param ${apIndex}`))
+            errors.push(
+              new Error(
+                `missing property 'limits.receiveAmount.assetCode' for access param ${apIndex}`
+              )
+            )
           }
           if (!o.limits.receiveAmount.assetScale) {
-            errors.push(new Error(`missing property 'limits.receiveAmount.assetScale' for access param ${apIndex}`))
+            errors.push(
+              new Error(
+                `missing property 'limits.receiveAmount.assetScale' for access param ${apIndex}`
+              )
+            )
           }
         }
       }
@@ -226,11 +287,11 @@ function parseConsentScreenParams(query: string): ConsentScreenParams {
   }
 
   if (!parsedParams.requestorName) {
-    parsedParams.errors.push(new Error('missing property \'requestorName\''))
+    parsedParams.errors.push(new Error("missing property 'requestorName'"))
   }
-  
+
   if (!parsedParams.returnUrl) {
-    parsedParams.errors.push(new Error('missing property \'returnUrl\''))
+    parsedParams.errors.push(new Error("missing property 'returnUrl'"))
   }
 
   if (parsedParams.accesses.length < 1) {
@@ -240,56 +301,114 @@ function parseConsentScreenParams(query: string): ConsentScreenParams {
   return parsedParams
 }
 
-function ConsentScreenBody({ accesses, requestorName, returnUrl }: { accesses: Array<Access>, requestorName: string, returnUrl: string }) {
+function ConsentScreenBody({
+  accesses,
+  requestorName,
+  returnUrl
+}: {
+  accesses: Array<Access>
+  requestorName: string
+  returnUrl: string
+}) {
   const acceptRequest = () => {
-    window.location.href = returnUrl + (returnUrl.includes('?') ? '&decision=accept' : '?decision=accept')
+    window.location.href =
+      returnUrl +
+      (returnUrl.includes('?') ? '&decision=accept' : '?decision=accept')
   }
 
   const rejectRequest = () => {
-    window.location.href = returnUrl + (returnUrl.includes('?') ? '&decision=reject' : '?decision=reject')
+    window.location.href =
+      returnUrl +
+      (returnUrl.includes('?') ? '&decision=reject' : '?decision=reject')
   }
 
   return (
     <>
-      <h2 className='display-6 fw-bold'>{requestorName} wants to use your account</h2>
+      <h2 className='display-6 fw-bold'>
+        {requestorName} wants to use your account
+      </h2>
       <div className='col-10 px-1'>
-
         <div className='row'>
           <div className='col-12'>
-            <p className='lead mb-4'>{requestorName} has requested access to your account with the following permissions:</p>
+            <p className='lead mb-4'>
+              {requestorName} has requested access to your account with the
+              following permissions:
+            </p>
           </div>
         </div>
 
         <div className='row' hidden={accesses.length < 1}>
-          { accesses.length > 0 ?
-            (<div className='col-6'><AccessOverviewRow accessType={accesses[0].type} actions={accesses[0].actions} limits={accesses[0].limits} /></div>)
-            : (<></>)
-          }
-          { accesses.length > 1 ?
-            (<div className='col-6'><AccessOverviewRow accessType={accesses[1].type} actions={accesses[1].actions} limits={accesses[1].limits} /></div>)
-            : (<></>)
-          }
+          {accesses.length > 0 ? (
+            <div className='col-6'>
+              <AccessOverviewRow
+                accessType={accesses[0].type}
+                actions={accesses[0].actions}
+                limits={accesses[0].limits}
+              />
+            </div>
+          ) : (
+            <></>
+          )}
+          {accesses.length > 1 ? (
+            <div className='col-6'>
+              <AccessOverviewRow
+                accessType={accesses[1].type}
+                actions={accesses[1].actions}
+                limits={accesses[1].limits}
+              />
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
         <div className='row' hidden={accesses.length < 3}>
-          { accesses.length > 2 ?
-            (<div className='col-6'><AccessOverviewRow accessType={accesses[2].type} actions={accesses[2].actions} limits={accesses[2].limits} /></div>)
-            : (<></>)
-          }
-          { accesses.length > 3 ?
-            (<div className='col-6'><AccessOverviewRow accessType={accesses[3].type} actions={accesses[3].actions} limits={accesses[3].limits} /></div>)
-            : (<></>)
-          }
+          {accesses.length > 2 ? (
+            <div className='col-6'>
+              <AccessOverviewRow
+                accessType={accesses[2].type}
+                actions={accesses[2].actions}
+                limits={accesses[2].limits}
+              />
+            </div>
+          ) : (
+            <></>
+          )}
+          {accesses.length > 3 ? (
+            <div className='col-6'>
+              <AccessOverviewRow
+                accessType={accesses[3].type}
+                actions={accesses[3].actions}
+                limits={accesses[3].limits}
+              />
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
 
         <div className='row'>
           <div className='col-12'>
-            <p className='lead mt-3 mb-4'>If granted, you may revoke access at any time.</p>
+            <p className='lead mt-3 mb-4'>
+              If granted, you may revoke access at any time.
+            </p>
           </div>
         </div>
 
         <div className='d-grid gap-2 d-sm-flex'>
-          <a role='button' className='btn btn-primary btn-lg px-4 gap-3' onClick={() => acceptRequest()}>Accept</a>
-          <a role='button' className='btn btn-outline-secondary btn-lg px-4' onClick={() => rejectRequest()}>Reject</a>
+          <a
+            role='button'
+            className='btn btn-primary btn-lg px-4 gap-3'
+            onClick={() => acceptRequest()}
+          >
+            Accept
+          </a>
+          <a
+            role='button'
+            className='btn btn-outline-secondary btn-lg px-4'
+            onClick={() => rejectRequest()}
+          >
+            Reject
+          </a>
         </div>
       </div>
     </>
@@ -298,7 +417,8 @@ function ConsentScreenBody({ accesses, requestorName, returnUrl }: { accesses: A
 
 export default function ConsentScreen() {
   const location = useLocation()
-  const { accesses, requestorName, returnUrl, errors } = parseConsentScreenParams(location.search)
+  const { accesses, requestorName, returnUrl, errors } =
+    parseConsentScreenParams(location.search)
 
   return (
     <>
@@ -306,9 +426,24 @@ export default function ConsentScreen() {
         <div className='row'>
           <div className='col-12'>
             <div className='px-4 py-2'>
-              {errors.length > 0
-                ? (<><h2 className='display-6'>Invalid request</h2><ul>{errors.map((e, ei) => <li className='text-danger' key={ei}>{e.message}</li>)}</ul></>)
-                : <ConsentScreenBody accesses={accesses} requestorName={requestorName} returnUrl={returnUrl} />}
+              {errors.length > 0 ? (
+                <>
+                  <h2 className='display-6'>Invalid request</h2>
+                  <ul>
+                    {errors.map((e, ei) => (
+                      <li className='text-danger' key={ei}>
+                        {e.message}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <ConsentScreenBody
+                  accesses={accesses}
+                  requestorName={requestorName}
+                  returnUrl={returnUrl}
+                />
+              )}
             </div>
           </div>
         </div>
