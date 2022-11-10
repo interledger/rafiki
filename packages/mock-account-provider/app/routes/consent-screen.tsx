@@ -50,7 +50,11 @@ function ConsentScreenBody({
     <>
       <div className='row'>
         <div className='col-12'>
-          <img src='/wallet-shoeshop-icon.png' style={{ scale: '0.75' }}></img>
+          <img
+            src='/wallet-shoeshop-icon.png'
+            style={{ scale: '0.75' }}
+            alt=''
+          ></img>
         </div>
       </div>
       <div className='row mt-2'>
@@ -82,20 +86,18 @@ function ConsentScreenBody({
       </div>
       <div className='row mt-2'>
         <div className='col-12 px-4 mr-3'>
-          <a
-            role='button'
+          <button
             className='btn btn-success btn-lg me-2'
             onClick={() => chooseConsent(true)}
           >
             Yes
-          </a>
-          <a
-            role='button'
+          </button>
+          <button
             className='btn btn-outline-danger btn-lg me-2'
             onClick={() => chooseConsent(false)}
           >
             No
-          </a>
+          </button>
         </div>
       </div>
     </>

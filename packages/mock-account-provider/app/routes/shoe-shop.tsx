@@ -134,6 +134,7 @@ export default function ShoeShop() {
               <div className='row'>
                 <div className='col-12'>
                   <img
+                    alt=''
                     src='wallet-shoeshop-icon.png'
                     style={{ scale: '0.7' }}
                   ></img>

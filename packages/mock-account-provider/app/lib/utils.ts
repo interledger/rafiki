@@ -3,7 +3,7 @@ import { parse } from 'querystring'
 export function parseQueryString(query: string) {
   const dictionary = parse(query)
   const pairs = Object.keys(dictionary).map((k) => {
-    return [k.toLowerCase().replace(/^\?/, ''), dictionary[k]!]
+    return [k.toLowerCase().replace(/^\?/, ''), dictionary[k] ?? '']
   })
 
   return {
