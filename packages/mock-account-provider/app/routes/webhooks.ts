@@ -84,9 +84,15 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
 
   const toVoid = amtSend.value - amtSent.value
 
-  await mockAccounts.debit(acc.id, amtSent.value, true)
-  if (toVoid > 0) {
-    await mockAccounts.voidPendingDebit(acc.id, toVoid)
+  try {
+    await mockAccounts.debit(acc.id, amtSent.value, true)
+    if (toVoid > 0) {
+      await mockAccounts.voidPendingDebit(acc.id, toVoid)
+    }
+  } catch (e) {
+    const errorInfo = parseError(e)
+    console.log(errorInfo)
+    return
   }
 
   // TODO: withdraw remaining liquidity
@@ -168,7 +174,14 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   }
 
   const amt = parseAmount(payment['receivedAmount'])
-  await mockAccounts.credit(acc.id, amt.value, false)
+
+  try {
+    await mockAccounts.credit(acc.id, amt.value, false)
+  } catch (e) {
+    const errorInfo = parseError(e)
+    console.log(errorInfo)
+    return
+  }
 
   await apolloClient
     .mutate({
