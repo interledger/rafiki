@@ -408,7 +408,7 @@ function createGrantBody({
       access_token: {
         value: grant.continueToken
       },
-      uri: domain + `continue/${grant.continueId}`
+      uri: domain + `/continue/${grant.continueId}`
     }
   }
 }
