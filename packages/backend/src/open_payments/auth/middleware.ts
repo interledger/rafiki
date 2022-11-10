@@ -27,7 +27,7 @@ export function createAuthMiddleware({
       const token = parts[1]
       if (
         process.env.NODE_ENV !== 'production' &&
-        token === config.devAccessToken
+        (token === config.devAccessToken || config.bypassSignatureValidation)
       ) {
         await next()
         return
