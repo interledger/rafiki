@@ -334,11 +334,11 @@ export default function ConsentScreen() {
         setCtx({
           ...ctx,
           price: {
-            amount: Number(receiveAmount.value) / receiveAmount.assetScale,
+            amount: Number(receiveAmount.value) / Math.pow(10, receiveAmount.assetScale),
             currencyDisplayCode: receiveAmount.assetCode
           },
           costToUser: {
-            amount: Number(sendAmount.value) / sendAmount.assetScale,
+            amount: Number(sendAmount.value) / Math.pow(10, sendAmount.assetScale),
             currencyDisplayCode: sendAmount.assetCode
           }
         })
