@@ -19,7 +19,7 @@ function envFloat(name: string, value: number): number {
 
 function envBool(name: string, value: boolean): boolean {
   const envValue = process.env[name]
-  return envValue == null ? value : Boolean(envValue)
+  return envValue == null ? value : envValue === 'true'
 }
 
 export type IAppConfig = typeof Config
