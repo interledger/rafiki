@@ -118,6 +118,10 @@ async function introspect(
       keyId: grant.clientKeyId
     })
 
+    if (!jwk) {
+      return { active: false }
+    }
+
     const clientId = crypto
       .createHash('sha256')
       .update(grant.client)

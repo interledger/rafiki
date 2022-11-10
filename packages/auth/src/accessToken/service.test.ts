@@ -180,6 +180,12 @@ describe('Access Token Service', (): void => {
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
     })
+
+    test('Cannot introspect with non-existing key', async (): Promise<void> => {
+      await expect(accessTokenService.introspect(token.value)).resolves.toEqual(
+        { active: false }
+      )
+    })
   })
 
   describe('Revoke', (): void => {
