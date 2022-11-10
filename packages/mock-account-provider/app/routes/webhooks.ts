@@ -55,7 +55,7 @@ export async function action({ request }: ActionArgs) {
       handleIncomingPaymentCompletedExpired(wh)
       break
     default:
-      console.log(`unknown event type: ${wh.type}`)
+      return json(`unknown event type: ${wh.type}`, { status: 400 })
   }
 
   return json(undefined, { status: 200 })
