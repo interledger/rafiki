@@ -83,18 +83,19 @@ describe('Balance Middleware', function () {
   })
 
   test.each`
-    amount   | unfulfillable | error                         | createTransfer | description
-    ${'100'} | ${false}      | ${undefined}                  | ${true}        | ${'reject response does not adjust the account balances'}
-    ${'0'}   | ${false}      | ${undefined}                  | ${false}       | ${'ignores 0 amount packets'}
-    ${'200'} | ${false}      | ${InsufficientLiquidityError} | ${true}        | ${'insufficient liquidity throws T04'}
-    ${'100'} | ${true}       | ${undefined}                  | ${false}       | ${'does not adjust account balances for unfulfillable packets'}
+    amount   | state                            | error                         | createTransfer | description
+    ${'100'} | ${{}}                            | ${undefined}                  | ${true}        | ${'reject response does not adjust the account balances'}
+    ${'0'}   | ${{}}                            | ${undefined}                  | ${false}       | ${'ignores 0 amount packets'}
+    ${'200'} | ${{}}                            | ${InsufficientLiquidityError} | ${true}        | ${'insufficient liquidity throws T04'}
+    ${'100'} | ${{ unfulfillable: true }}       | ${undefined}                  | ${false}       | ${'does not adjust account balances for unfulfillable outgoing packets'}
+    ${'100'} | ${{ streamDestination: 'here' }} | ${undefined}                  | ${false}       | ${'does not adjust account balances for unfulfillable incoming packets'}
   `(
     '$description',
-    async ({ amount, unfulfillable, error, createTransfer }): Promise<void> => {
+    async ({ amount, state, error, createTransfer }): Promise<void> => {
       const prepare = IlpPrepareFactory.build({ amount })
       const reject = IlpRejectFactory.build()
       ctx.request.prepare = new ZeroCopyIlpPrepare(prepare)
-      ctx.state.unfulfillable = unfulfillable
+      ctx.state = state
       const next = jest.fn().mockImplementation(() => {
         ctx.response.reject = reject
       })
