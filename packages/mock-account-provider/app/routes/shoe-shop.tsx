@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import { parseQueryString } from '~/lib/utils'
 
-function AuthorizedView({ thirdPartyName, currencyDisplayCode, amount }
-  : { thirdPartyName: string, currencyDisplayCode: string, amount: number }) {
+function AuthorizedView({ thirdPartyName, currencyDisplayCode, amount, interactId, nonce }
+  : { thirdPartyName: string, currencyDisplayCode: string, amount: number, interactId: string, nonce: string }) {
   return (<>
     <div className='row'>
       <div className='col-12'>
@@ -17,6 +17,9 @@ function AuthorizedView({ thirdPartyName, currencyDisplayCode, amount }
           You gave {thirdPartyName} permission to send {currencyDisplayCode} {amount.toFixed(2)} out of your account.
         </p>
       </div>
+    </div>
+    <div className='row'>
+      <button className='btn btn-primary' onClick={() => { ApiClient.endInteraction(interactId, nonce) }}>Continue</button>
     </div>
   </>)
 }
@@ -47,11 +50,10 @@ export default function ShoeShop() {
     authorized: false,
     interactId: '',
     nonce: '',
-    grantId: '',
-    interactionRef: '',
-    thirdPartyName: '',
-    currencyDisplayCode: '',
-    amount: 0
+    grantId: queryParams.getAsString('grantId'),
+    thirdPartyName: queryParams.getAsString('thirdPartyName'),
+    currencyDisplayCode: queryParams.getAsString('currencyDisplayCode'),
+    amount: Number(queryParams.getAsString('sendAmountValue')) / Number(queryParams.getAsString('sendAmountScale'))
   })
 
   useEffect(() => {
@@ -63,52 +65,13 @@ export default function ShoeShop() {
       if (interactId && nonce) {
         const acceptanceDecision = !!decision && decision.toLowerCase() === 'accept'
         ApiClient.chooseConsent(interactId, nonce, acceptanceDecision).then((consentResponse) => {
-          ApiClient.endInteraction(interactId, nonce)
-            .then((finishResponse) => {
-              let updated = false
-              if (!consentResponse.isFailure && consentResponse.payload && !finishResponse.isFailure && finishResponse.payload) {
-                const outgoingPaymentAccess = consentResponse.payload.find(p => p.type === 'outgoing-payment')
-                if (outgoingPaymentAccess && outgoingPaymentAccess.limits && outgoingPaymentAccess.limits.sendAmount) {
-                  updated = true
-                  setCtx({
-                    ...ctx,
-                    done: true,
-                    authorized: acceptanceDecision,
-                    interactId,
-                    nonce,
-                    grantId: outgoingPaymentAccess.grantId,
-                    interactionRef: finishResponse.payload.interact_ref,
-                    thirdPartyName: outgoingPaymentAccess.limits.receiver,
-                    currencyDisplayCode: outgoingPaymentAccess.limits.sendAmount.assetCode,
-                    amount: Number(outgoingPaymentAccess.limits.sendAmount.value) / outgoingPaymentAccess.limits.sendAmount.assetScale
-                  })
-                }
-
-                if (!updated) {
-                  setCtx({
-                    ...ctx,
-                    done: true,
-                    interactId,
-                    nonce
-                  })
-                }
-              } else {
-                setCtx({
-                  ...ctx,
-                  done: true,
-                  interactId,
-                  nonce
-                })
-              }
-            })
-            .catch((err) => {
-              setCtx({
-                ...ctx,
-                done: true,
-                interactId,
-                nonce
-              })
-            })
+          setCtx({
+            ...ctx,
+            done: true,
+            authorized: acceptanceDecision,
+            interactId,
+            nonce
+          })          
         }).catch((err) => {
           setCtx({
             ...ctx,
@@ -144,8 +107,8 @@ export default function ShoeShop() {
                 </div>
               </div>
               {ctx.authorized
-                ? (<AuthorizedView thirdPartyName={ctx.thirdPartyName} currencyDisplayCode={ctx.currencyDisplayCode} amount={ctx.amount} />)
-                : (<RejectedView thirdPartyName={ctx.thirdPartyName} />)
+                ? (<AuthorizedView thirdPartyName={ctx.thirdPartyName || ''} currencyDisplayCode={ctx.currencyDisplayCode || ''} amount={ctx.amount} interactId={ctx.interactId} nonce={ctx.nonce} />)
+                : (<RejectedView thirdPartyName={ctx.thirdPartyName || ''} />)
               }
             </div>
           </div>
@@ -154,11 +117,6 @@ export default function ShoeShop() {
               <div className='row'>
                 <div className='col-12'>
                   Grant ID: {ctx.grantId}
-                </div>
-              </div>
-              <div className='row'>
-                <div className='col-12'>
-                  Interaction Reference: {ctx.interactionRef}
                 </div>
               </div>
             </div>

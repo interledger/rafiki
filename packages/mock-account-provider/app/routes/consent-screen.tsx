@@ -27,7 +27,7 @@ function ConsentScreenBody({ thirdPartyName, price, costToUser, interactId, nonc
 
   const chooseConsent = (accept: boolean) => {
     const href = new URL(returnUrl)
-    href.searchParams.append('interactid', interactId)
+    href.searchParams.append('interactId', interactId)
     href.searchParams.append('nonce', nonce)
     href.searchParams.append('decision', accept ? 'accept' : 'reject')
     window.location.href = href.toString()
@@ -36,7 +36,7 @@ function ConsentScreenBody({ thirdPartyName, price, costToUser, interactId, nonc
   return (<>
     <div className='row'>
       <div className='col-12'>
-        <img src='wallet-shoeshop-icon.png' style={{ scale: '0.75' }}></img>
+        <img src='/wallet-shoeshop-icon.png' style={{ scale: '0.75' }}></img>
       </div>
     </div>
     <div className='row mt-2'>
@@ -219,11 +219,18 @@ export default function ConsentScreen() {
             })
           } else {
             const outgoingPaymentAccess = response.payload.find(p => p.type === 'outgoing-payment') || null
+            const returnUrlObject = new URL(ctx.returnUrl)
+            returnUrlObject.searchParams.append('grantId', outgoingPaymentAccess.grantId)
+            returnUrlObject.searchParams.append('thirdPartyName', outgoingPaymentAccess && outgoingPaymentAccess.limits ? outgoingPaymentAccess.limits.receiver : ctx.thirdPartyName)
+            returnUrlObject.searchParams.append('currencyDisplayCode', outgoingPaymentAccess && outgoingPaymentAccess.limits ? outgoingPaymentAccess.limits.sendAmount.assetCode : null)
+            returnUrlObject.searchParams.append('sendAmountValue', outgoingPaymentAccess && outgoingPaymentAccess.limits ? outgoingPaymentAccess.limits.sendAmount.value : null)
+            returnUrlObject.searchParams.append('sendAmountScale', outgoingPaymentAccess && outgoingPaymentAccess.limits ? outgoingPaymentAccess.limits.sendAmount.assetScale : null)
             setCtx({
               ...ctx,
               accesses: response.payload,
               outgoingPaymentAccess: outgoingPaymentAccess,
-              thirdPartyName: outgoingPaymentAccess && outgoingPaymentAccess.limits ? outgoingPaymentAccess.limits.receiver : ctx.thirdPartyName
+              thirdPartyName: outgoingPaymentAccess && outgoingPaymentAccess.limits ? outgoingPaymentAccess.limits.receiver : ctx.thirdPartyName,
+              returnUrl: returnUrlObject.toString()
             })
           }
         })
