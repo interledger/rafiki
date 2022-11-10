@@ -9,12 +9,13 @@ services:
     networks:
       rafiki:
     ports:
-      - "4006:3006"
+      - "4006:4006"
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
       INTROSPECTION_HTTPSIG: "false"
       BYPASS_SIGNATURE_VALIDATION: "true"
+      PORT: 4006
   peer-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
