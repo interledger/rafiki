@@ -1,5 +1,5 @@
-import MockIdpFrontend from '~/mock-idp-frontend'
+import ConsentScreen from '~/routes/consent-screen'
 
 export default function Index() {
-  return <MockIdpFrontend />
+  return <ConsentScreen />
 }
