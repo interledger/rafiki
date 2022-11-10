@@ -9,13 +9,13 @@ services:
     networks:
       rafiki:
     ports:
-      - "4006:4006"
+      - "4006:3006"
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
       INTROSPECTION_HTTPSIG: "false"
       BYPASS_SIGNATURE_VALIDATION: "true"
-      PORT: 4006
+      AUTH_SERVER_DOMAIN: "http://localhost:4006"
   peer-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
@@ -39,8 +39,8 @@ services:
       # Tigerbeetle will support DNS in future
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
       NONCE_REDIS_KEY: test
-      AUTH_SERVER_GRANT_URL: http://peer-auth:4006
-      AUTH_SERVER_INTROSPECTION_URL: http://peer-auth:4006/introspect
+      AUTH_SERVER_GRANT_URL: http://peer-auth:3006
+      AUTH_SERVER_INTROSPECTION_URL: http://peer-auth:3006/introspect
       ILP_ADDRESS: test.peer
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
