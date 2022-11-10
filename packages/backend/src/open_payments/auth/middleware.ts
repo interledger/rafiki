@@ -27,7 +27,7 @@ export function createAuthMiddleware({
       const token = parts[1]
       if (
         process.env.NODE_ENV !== 'production' &&
-        (token === config.devAccessToken || config.bypassSignatureValidation)
+        token === config.devAccessToken
       ) {
         await next()
         return
@@ -45,13 +45,15 @@ export function createAuthMiddleware({
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      try {
-        if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
-          ctx.throw(401, 'Invalid signature')
+      if (config.bypassSignatureValidation) {
+        try {
+          if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
+            ctx.throw(401, 'Invalid signature')
+          }
+        } catch (e) {
+          ctx.status = 401
+          ctx.throw(401, `Invalid signature`)
         }
-      } catch (e) {
-        ctx.status = 401
-        ctx.throw(401, `Invalid signature`)
       }
       await GrantReference.transaction(async (trx: Transaction) => {
         const grantRef = await grantReferenceService.get(grant.grant, trx)
