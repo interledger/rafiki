@@ -19,15 +19,15 @@ export async function action({ request }: ActionArgs) {
   try {
     switch (wh.type) {
       case EventType.OutgoingPaymentCreated:
-        handleOutgoingPaymentCreated(wh)
+        await handleOutgoingPaymentCreated(wh)
         break
       case EventType.OutgoingPaymentCompleted:
       case EventType.OutgoingPaymentFailed:
-        handleOutgoingPaymentCompletedFailed(wh)
+        await handleOutgoingPaymentCompletedFailed(wh)
         break
       case EventType.IncomingPaymentCompleted:
       case EventType.IncomingPaymentExpired:
-        handleIncomingPaymentCompletedExpired(wh)
+        await handleIncomingPaymentCompletedExpired(wh)
         break
       default:
         console.log(`unknown event type: ${wh.type}`)
