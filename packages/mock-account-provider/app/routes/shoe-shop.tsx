@@ -73,9 +73,7 @@ export default function ShoeShop() {
     grantId: queryParams.getAsString('grantId'),
     thirdPartyName: queryParams.getAsString('thirdPartyName'),
     currencyDisplayCode: queryParams.getAsString('currencyDisplayCode'),
-    amount:
-      Number(queryParams.getAsString('sendAmountValue')) /
-      Number(queryParams.getAsString('sendAmountScale'))
+    amount:Number(queryParams.getAsString('sendAmountValue')) / Math.pow(10, Number(queryParams.getAsString('sendAmountScale')))
   })
 
   useEffect(() => {
@@ -153,13 +151,13 @@ export default function ShoeShop() {
               )}
             </div>
           </div>
-          <div className='row mt-3'>
+          {/* <div className='row mt-3'>
             <div className='col-12'>
               <div className='row'>
                 <div className='col-12'>Grant ID: {ctx.grantId}</div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
