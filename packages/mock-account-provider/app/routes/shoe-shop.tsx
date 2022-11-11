@@ -72,6 +72,7 @@ export default function ShoeShop() {
     nonce: '',
     grantId: queryParams.getAsString('grantId'),
     thirdPartyName: queryParams.getAsString('thirdPartyName'),
+    thirdPartyUri: queryParams.getAsString('thirdPartyUri'),
     currencyDisplayCode: queryParams.getAsString('currencyDisplayCode'),
     amount:
       Number(queryParams.getAsString('sendAmountValue')) /
@@ -109,6 +110,9 @@ export default function ShoeShop() {
     }
   }, [ctx, queryParams])
 
+  const thirdPartyUrl = new URL(ctx.thirdPartyUri ?? '')
+  const thirdPartyOrigin = thirdPartyUrl.origin
+
   return (
     <>
       <div
@@ -135,7 +139,12 @@ export default function ShoeShop() {
                 <div className='col-12'>
                   <img
                     alt=''
-                    src='wallet-shoeshop-icon.png'
+                    src={`${thirdPartyOrigin}/favicon.ico`}
+                    style={{ width: '335px' }}
+                  ></img>
+                  <img
+                    alt=''
+                    src='/shoe-shop-logo.png'
                     style={{ scale: '0.7' }}
                   ></img>
                 </div>

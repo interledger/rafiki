@@ -8,6 +8,7 @@ import { parseQueryString } from '~/lib/utils'
 interface ConsentScreenContext {
   ready: boolean
   thirdPartyName: string
+  thirdPartyUri: string
   interactId: string
   nonce: string
   returnUrl: string
@@ -24,6 +25,7 @@ interface GrantAmount {
 }
 
 function ConsentScreenBody({
+  thirdPartyUri,
   thirdPartyName,
   price,
   costToUser,
@@ -31,6 +33,7 @@ function ConsentScreenBody({
   nonce,
   returnUrl
 }: {
+  thirdPartyUri: string
   thirdPartyName: string
   price: GrantAmount
   costToUser: GrantAmount
@@ -46,15 +49,19 @@ function ConsentScreenBody({
     window.location.href = href.toString()
   }
 
+  const thirdPartyUrl = new URL(thirdPartyUri)
+  const thirdPartyOrigin = thirdPartyUrl.origin
+
   return (
     <>
       <div className='row'>
         <div className='col-12'>
           <img
-            src='/wallet-shoeshop-icon.png'
-            style={{ scale: '0.75' }}
+            src={`${thirdPartyOrigin}/favicon.ico`}
+            style={{ width: '335px' }}
             alt=''
           ></img>
+          <img src='/shoe-shop-logo.png' style={{ scale: '0.75' }} alt=''></img>
         </div>
       </div>
       <div className='row mt-2'>
@@ -211,6 +218,7 @@ export default function ConsentScreen() {
   const [ctx, setCtx] = useState({
     ready: false,
     thirdPartyName: '',
+    thirdPartyUri: '',
     interactId: 'demo-interact-id',
     nonce: 'demo-interact-nonce',
     returnUrl: 'http://localhost:3030/shoe-shop?',
@@ -233,13 +241,17 @@ export default function ConsentScreen() {
       const interactId = queryParams.getAsString('interactId')
       const nonce = queryParams.getAsString('nonce')
       const returnUrl = queryParams.getAsString('returnUrl')
+      const clientName = queryParams.getAsString('clientName') as string
+      const clientUri = queryParams.getAsString('clientUri') as string
       if (interactId && nonce) {
         setCtx({
           ...ctx,
           ready: true,
           interactId,
           nonce,
-          returnUrl: returnUrl || ctx.returnUrl
+          returnUrl: returnUrl || ctx.returnUrl,
+          thirdPartyName: clientName,
+          thirdPartyUri: clientUri
         })
       }
     }
@@ -275,9 +287,11 @@ export default function ConsentScreen() {
             )
             returnUrlObject.searchParams.append(
               'thirdPartyName',
-              outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.receiver
-                : ctx.thirdPartyName
+              ctx.thirdPartyName
+            )
+            returnUrlObject.searchParams.append(
+              'thirdPartyUri',
+              ctx.thirdPartyUri
             )
             returnUrlObject.searchParams.append(
               'currencyDisplayCode',
@@ -301,10 +315,8 @@ export default function ConsentScreen() {
               ...ctx,
               accesses: response.payload,
               outgoingPaymentAccess: outgoingPaymentAccess,
-              thirdPartyName:
-                outgoingPaymentAccess && outgoingPaymentAccess.limits
-                  ? outgoingPaymentAccess.limits.receiver
-                  : ctx.thirdPartyName,
+              thirdPartyName: ctx.thirdPartyName,
+              thirdPartyUri: ctx.thirdPartyUri,
               returnUrl: returnUrlObject.toString()
             })
           }
@@ -390,6 +402,7 @@ export default function ConsentScreen() {
                   </>
                 ) : (
                   <ConsentScreenBody
+                    thirdPartyUri={ctx.thirdPartyUri}
                     thirdPartyName={ctx.thirdPartyName}
                     price={ctx.price}
                     costToUser={ctx.costToUser}
