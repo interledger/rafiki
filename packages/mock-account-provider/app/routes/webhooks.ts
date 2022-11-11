@@ -1,8 +1,6 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import type {
-  WebHook
-} from '~/lib/webhooks.server';
+import type { WebHook } from '~/lib/webhooks.server'
 import {
   handleOutgoingPaymentCreated,
   handleOutgoingPaymentCompletedFailed,
