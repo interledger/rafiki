@@ -73,7 +73,9 @@ export default function ShoeShop() {
     grantId: queryParams.getAsString('grantId'),
     thirdPartyName: queryParams.getAsString('thirdPartyName'),
     currencyDisplayCode: queryParams.getAsString('currencyDisplayCode'),
-    amount:Number(queryParams.getAsString('sendAmountValue')) / Math.pow(10, Number(queryParams.getAsString('sendAmountScale')))
+    amount:
+      Number(queryParams.getAsString('sendAmountValue')) /
+      Math.pow(10, Number(queryParams.getAsString('sendAmountScale')))
   })
 
   useEffect(() => {
