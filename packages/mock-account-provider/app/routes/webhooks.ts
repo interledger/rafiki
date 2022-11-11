@@ -16,20 +16,26 @@ export async function action({ request }: ActionArgs) {
   const wh: WebHook = await request.json()
   console.log('received webhook: ', JSON.stringify(wh))
 
-  switch (wh.type) {
-    case EventType.OutgoingPaymentCreated:
-      handleOutgoingPaymentCreated(wh)
-      break
-    case EventType.OutgoingPaymentCompleted:
-    case EventType.OutgoingPaymentFailed:
-      handleOutgoingPaymentCompletedFailed(wh)
-      break
-    case EventType.IncomingPaymentCompleted:
-    case EventType.IncomingPaymentExpired:
-      handleIncomingPaymentCompletedExpired(wh)
-      break
-    default:
-      return json(`unknown event type: ${wh.type}`, { status: 400 })
+  try {
+    switch (wh.type) {
+      case EventType.OutgoingPaymentCreated:
+        handleOutgoingPaymentCreated(wh)
+        break
+      case EventType.OutgoingPaymentCompleted:
+      case EventType.OutgoingPaymentFailed:
+        handleOutgoingPaymentCompletedFailed(wh)
+        break
+      case EventType.IncomingPaymentCompleted:
+      case EventType.IncomingPaymentExpired:
+        handleIncomingPaymentCompletedExpired(wh)
+        break
+      default:
+        console.log(`unknown event type: ${wh.type}`)
+        return json(undefined, { status: 400 })
+    }
+  } catch (e) {
+    const errorInfo = parseError(e)
+    console.log(errorInfo)
   }
 
   return json(undefined, { status: 200 })
