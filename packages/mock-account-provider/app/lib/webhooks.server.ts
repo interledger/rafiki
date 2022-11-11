@@ -38,17 +38,14 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     wh.type !== EventType.OutgoingPaymentCompleted &&
     wh.type !== EventType.OutgoingPaymentFailed
   ) {
-    throw json('Invalid event type when handling outgoing payment webhook', {
-      status: 500
-    })
+    throw new Error('Invalid event type when handling outgoing payment webhook')
   }
   const payment = wh.data['payment']
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    console.log('No account found for payment pointer')
-    return
+    throw new Error('No account found for payment pointer')
   }
 
   const amtSend = parseAmount(payment['sendAmount'])
@@ -63,14 +60,12 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
 
   // TODO: withdraw remaining liquidity
 
-  return json(undefined, { status: 200 })
+  return
 }
 
 export async function handleOutgoingPaymentCreated(wh: WebHook) {
   if (wh.type !== EventType.OutgoingPaymentCreated) {
-    throw json('Invalid event type when handling outgoing payment webhook', {
-      status: 500
-    })
+    throw new Error('Invalid event type when handling outgoing payment webhook')
   }
 
   const payment = wh.data['payment']
@@ -78,8 +73,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    console.log('No account found for payment pointer')
-    return
+    throw new Error('No account found for payment pointer')
   }
 
   const amt = parseAmount(payment['sendAmount'])
@@ -111,7 +105,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
       }
     })
 
-  return json(undefined, { status: 200 })
+  return
 }
 
 export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
@@ -119,9 +113,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     wh.type !== EventType.IncomingPaymentCompleted &&
     wh.type !== EventType.IncomingPaymentExpired
   ) {
-    throw json('Invalid event type when handling incoming payment webhook', {
-      status: 500
-    })
+    throw new Error('Invalid event type when handling incoming payment webhook')
   }
 
   const payment = wh.data['incomingPayment']
@@ -129,8 +121,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   const acc = await mockAccounts.getByPaymentPointer(pp)
 
   if (!acc) {
-    console.log('No account found for payment pointer')
-    return
+    throw new Error('No account found for payment pointer')
   }
 
   const amt = parseAmount(payment['receivedAmount'])
@@ -161,5 +152,5 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
       }
     })
 
-  return json(undefined, { status: 200 })
+  return
 }
