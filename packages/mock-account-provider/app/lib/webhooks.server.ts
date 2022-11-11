@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client'
-import { LiquidityMutationResponse } from 'generated/graphql'
+import type { LiquidityMutationResponse } from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
