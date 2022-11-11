@@ -329,13 +329,13 @@ export class App {
           router[method](
             PAYMENT_POINTER_PATH + toRouterPath(path),
             createPaymentPointerMiddleware(),
-            createAuthMiddleware({
-              type,
-              action
-            }),
             createValidatorMiddleware<ContextType<typeof route>>(openApi, {
               path,
               method
+            }),
+            createAuthMiddleware({
+              type,
+              action
             }),
             route
           )

@@ -9,6 +9,5 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../src/openapi" >/dev/null 2>&1 && pwd )
 
-# TODO: revert to using main once https://github.com/interledger/rafiki/issues/630 is resolved
-curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/schemas.yaml
-curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/62c4b4a9875e3adaa21f89f597e88db43016fe0b/openapi/auth-server.yaml
+curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/347ff2ba3c61e299d95c1edbf4398e6d72bf3a35/openapi/schemas.yaml
+curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/347ff2ba3c61e299d95c1edbf4398e6d72bf3a35/openapi/auth-server.yaml
