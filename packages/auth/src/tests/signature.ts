@@ -1,11 +1,11 @@
 import crypto from 'crypto'
 import { v4 } from 'uuid'
 import { importJWK, exportJWK } from 'jose'
-import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 import { JWKWithRequired } from '../client/service'
 
 export const SIGNATURE_METHOD = 'GET'
 export const SIGNATURE_TARGET_URI = '/test'
+export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 
 export const TEST_CLIENT = {
   id: v4(),
