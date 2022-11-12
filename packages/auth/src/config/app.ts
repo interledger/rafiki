@@ -29,7 +29,7 @@ export const Config = {
         ),
   identityServerDomain: envString(
     'IDENTITY_SERVER_DOMAIN',
-    'http://localhost:3300'
+    'http://localhost:3030/mock-idp/'
   ),
   identityServerSecret: envString('IDENTITY_SERVER_SECRET', 'replace-me'),
   authServerDomain: envString(
