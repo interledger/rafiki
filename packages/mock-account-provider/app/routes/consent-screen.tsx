@@ -58,10 +58,10 @@ function ConsentScreenBody({
         <div className='col-12'>
           <img
             src={`${thirdPartyOrigin}/favicon.ico`}
-            style={{ width: '335px' }}
+            style={{ width: '167px' }}
             alt=''
           ></img>
-          <img src='/shoe-shop-logo.png' style={{ scale: '0.75' }} alt=''></img>
+          <img src='/wallet-logo.png' style={{ width: '167px' }} alt=''></img>
         </div>
       </div>
       <div className='row mt-2'>

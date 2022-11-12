@@ -140,12 +140,12 @@ export default function ShoeShop() {
                   <img
                     alt=''
                     src={`${thirdPartyOrigin}/favicon.ico`}
-                    style={{ width: '335px' }}
+                    style={{ width: '167px' }}
                   ></img>
                   <img
                     alt=''
-                    src='/shoe-shop-logo.png'
-                    style={{ scale: '0.7' }}
+                    src='/wallet-logo.png'
+                    style={{ width: '167px' }}
                   ></img>
                 </div>
               </div>
