@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -380,7 +379,11 @@ export async function createTransfer(
           deps,
           destinationAccount.id
         )
-        assert.ok(totalReceived !== undefined)
+        
+        if(totalReceived === undefined) {
+          throw new Error()
+        }
+
         await destinationAccount.onCredit({
           totalReceived,
           withdrawalThrottleDelay: deps.withdrawalThrottleDelay

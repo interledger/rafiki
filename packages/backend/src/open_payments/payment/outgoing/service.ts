@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../../../shared/baseService'
@@ -275,7 +274,9 @@ async function validateGrant(
         const totalSent = await deps.accountingService.getTotalSent(
           grantPayment.id
         )
-        assert.ok(totalSent !== undefined)
+        if(totalSent === undefined) {
+          throw new Error()
+        }
         if (totalSent === BigInt(0)) {
           continue
         }
@@ -366,11 +367,11 @@ async function getPaymentPointerPage(
   )
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
-    try {
-      assert.ok(
-        amounts[i] !== undefined ||
-          payment.state === OutgoingPaymentState.Funding
-      )
+    try { 
+      if(amounts[i] === undefined &&
+        payment.state !== OutgoingPaymentState.Funding) {
+        throw new Error()
+      }
       payment.sentAmount = {
         value: amounts[i] ?? BigInt(0),
         assetCode: payment.asset.code,
