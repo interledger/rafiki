@@ -144,8 +144,18 @@ async function createGrantInitiation(
     config.authServerDomain +
       `/interact/${grant.interactId}/${grant.interactNonce}`
   )
-  redirectUri.searchParams.set('clientName', body.client.display.name)
-  redirectUri.searchParams.set('clientUri', body.client.display.uri)
+
+  const client = await deps.clientService.get(body.client)
+  if (!client) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_client'
+    }
+    return
+  }
+
+  redirectUri.searchParams.set('clientName', client.name)
+  redirectUri.searchParams.set('clientUri', client.uri)
   ctx.body = {
     interact: {
       redirect: redirectUri.toString(),
@@ -226,9 +236,6 @@ async function startInteraction(
   interactionUrl.searchParams.set('nonce', grant.interactNonce)
   interactionUrl.searchParams.set('clientName', clientName as string)
   interactionUrl.searchParams.set('clientUri', clientUri as string)
-
-  // TODO: https://github.com/interledger/rafiki/issues/738
-  // const client = await clientService.get(grant.client)
 
   ctx.redirect(interactionUrl.toString())
 }

@@ -199,6 +199,14 @@ describe('Grant Routes', (): void => {
     })
 
     test('Can initiate a grant request', async (): Promise<void> => {
+      const scope = nock(CLIENT).get('/').reply(200, {
+        id: CLIENT,
+        publicName: TEST_CLIENT_DISPLAY.name,
+        assetCode: 'USD',
+        assetScale: 2,
+        authServer: Config.authServerDomain
+      })
+
       const ctx = createContext(
         {
           headers: {
@@ -229,6 +237,8 @@ describe('Grant Routes', (): void => {
           wait: Config.waitTimeSeconds
         }
       })
+
+      scope.done()
     })
 
     test('Can get a software-only authorization grant', async (): Promise<void> => {
