@@ -6,6 +6,7 @@ import { Knex } from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
+import cors from '@koa/cors'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -103,6 +104,7 @@ export class App {
       }
     }
 
+    this.koa.use(cors())
     this.koa.keys = [this.config.cookieKey]
     this.koa.use(
       session(

@@ -139,11 +139,16 @@ async function createGrantInitiation(
     clientKeyId
   })
   ctx.status = 200
+
+  const redirectUri = new URL(
+    config.authServerDomain +
+      `/interact/${grant.interactId}/${grant.interactNonce}`
+  )
+  redirectUri.searchParams.set('clientName', body.client.display.name)
+  redirectUri.searchParams.set('clientUri', body.client.display.uri)
   ctx.body = {
     interact: {
-      redirect:
-        config.authServerDomain +
-        `/interact/${grant.interactId}/${grant.interactNonce}`,
+      redirect: redirectUri.toString(),
       finish: grant.interactNonce
     },
     continue: {
@@ -192,7 +197,15 @@ async function startInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
+  deps.logger.info(
+    {
+      params: ctx.params,
+      query: ctx.query
+    },
+    'start interact params'
+  )
   const { id: interactId, nonce } = ctx.params
+  const { clientName, clientUri } = ctx.query
   const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
@@ -211,6 +224,8 @@ async function startInteraction(
   const interactionUrl = new URL(config.identityServerDomain)
   interactionUrl.searchParams.set('interactId', grant.interactId)
   interactionUrl.searchParams.set('nonce', grant.interactNonce)
+  interactionUrl.searchParams.set('clientName', clientName as string)
+  interactionUrl.searchParams.set('clientUri', clientUri as string)
 
   // TODO: https://github.com/interledger/rafiki/issues/738
   // const client = await clientService.get(grant.client)
@@ -411,7 +426,7 @@ function createGrantBody({
       access_token: {
         value: grant.continueToken
       },
-      uri: domain + `continue/${grant.continueId}`
+      uri: domain + `/continue/${grant.continueId}`
     }
   }
 }
