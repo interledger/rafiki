@@ -79,8 +79,7 @@ export const createAxiosInstance = (args: {
         request: {
           method: config.method.toUpperCase(),
           url: config.url,
-          // https://github.com/axios/axios/issues/5089#issuecomment-1297761617
-          headers: JSON.parse(JSON.stringify(config.headers)),
+          headers: config.headers,
           body: config.data
         },
         privateKey: args.privateKey,
