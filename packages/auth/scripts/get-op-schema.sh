@@ -7,7 +7,7 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
   SOURCE=$(readlink "$SOURCE")
   [[ $SOURCE != /* ]] && SOURCE=$DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
-OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../openapi" >/dev/null 2>&1 && pwd )
+OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../src/openapi" >/dev/null 2>&1 && pwd )
 
-curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/main/openapi/schemas.yaml
-
+curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/fafd06ad0a3f205d25eec6ad5f388320e64abcd2/openapi/schemas.yaml
+curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/fafd06ad0a3f205d25eec6ad5f388320e64abcd2/openapi/auth-server.yaml

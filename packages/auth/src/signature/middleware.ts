@@ -6,6 +6,7 @@ import { importJWK } from 'jose'
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
 import { JWKWithRequired } from '../client/service'
+import { Context } from 'koa'
 
 export async function verifySig(
   sig: string,
@@ -17,16 +18,10 @@ export async function verifySig(
   return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
 }
 
-async function verifySigAndChallenge(
+export async function verifySigAndChallenge(
   clientKey: JWKWithRequired,
   ctx: HttpSigContext
 ): Promise<boolean> {
-  const config = await ctx.container.use('config')
-  if (config.bypassSignatureValidation) {
-    // bypass
-    return true
-  }
-
   const sig = ctx.headers['signature'] as string
   const sigInput = ctx.headers['signature-input'] as string
   const challenge = sigInputToChallenge(sigInput, ctx)
@@ -74,7 +69,7 @@ function getSigInputComponents(sigInput: string): string[] | null {
 
 function validateSigInputComponents(
   sigInputComponents: string[],
-  ctx: AppContext
+  ctx: Context
 ): boolean {
   // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-7.3.1
 
@@ -96,7 +91,7 @@ function validateSigInputComponents(
 
 export function sigInputToChallenge(
   sigInput: string,
-  ctx: AppContext
+  ctx: Context
 ): string | null {
   const sigInputComponents = getSigInputComponents(sigInput)
 
@@ -124,15 +119,18 @@ export function sigInputToChallenge(
   return signatureBase
 }
 
-type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
-  headers: Record<'signature' | 'signature-input', string>
+type HttpSigHeaders = Record<'signature' | 'signature-input', string>
+
+type HttpSigRequest = Omit<Context['request'], 'headers'> & {
+  headers: HttpSigHeaders
 }
 
-type HttpSigContext = AppContext & {
+export type HttpSigContext = Context & {
   request: HttpSigRequest
+  headers: HttpSigHeaders
 }
 
-function validateHttpSigHeaders(ctx: AppContext): ctx is HttpSigContext {
+function validateHttpSigHeaders(ctx: Context): ctx is HttpSigContext {
   const sig = ctx.headers['signature']
   const sigInput = ctx.headers['signature-input'] as string
 

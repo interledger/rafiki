@@ -51,8 +51,11 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         })
         if (incomingPayment) {
           if (
-            incomingPayment.state === IncomingPaymentState.Completed ||
-            incomingPayment.state === IncomingPaymentState.Expired
+            ctx.request.prepare.amount !== '0' &&
+            [
+              IncomingPaymentState.Completed,
+              IncomingPaymentState.Expired
+            ].includes(incomingPayment.state)
           ) {
             throw new Errors.UnreachableError('destination account is disabled')
           }

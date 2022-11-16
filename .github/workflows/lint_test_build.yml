@@ -48,6 +48,7 @@ jobs:
       - uses: actions/setup-node@v2
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter openapi build
+      - run: pnpm --filter auth fetch-schemas
       - run: pnpm --filter auth test
       - run: pnpm --filter auth run fetch-schemas
       - name: AsyncAPI extension

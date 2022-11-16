@@ -17,10 +17,10 @@ function envFloat(name: string, value: number): number {
   return envValue == null ? value : +envValue
 }
 
-// function envBool(name: string, value: boolean): boolean {
-//   const envValue = process.env[name]
-//   return envValue == null ? value : Boolean(envValue)
-// }
+function envBool(name: string, value: boolean): boolean {
+  const envValue = process.env[name]
+  return envValue == null ? value : envValue === 'true'
+}
 
 export type IAppConfig = typeof Config
 
@@ -103,6 +103,7 @@ export const Config = {
 
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
+  bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false),
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
