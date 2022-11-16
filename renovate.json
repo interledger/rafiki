@@ -6,7 +6,7 @@
   "branchConcurrentLimit": 0,
   "branchPrefix": "renovate-",
   "prHourlyLimit": 1,
-  "rebaseWhen": "never",
+  "rebaseWhen": "conflicted",
   "rangeStrategy": "bump",
   "prCreation": "not-pending",
   "docker": {
