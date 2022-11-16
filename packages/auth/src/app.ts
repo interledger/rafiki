@@ -6,6 +6,7 @@ import { Knex } from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
+import cors from '@koa/cors'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -13,7 +14,13 @@ import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
 import { AccessTokenRoutes } from './accessToken/routes'
-import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
+import { createValidatorMiddleware, HttpMethod } from 'openapi'
+
+import {
+  grantInitiationHttpsigMiddleware,
+  grantContinueHttpsigMiddleware,
+  tokenHttpsigMiddleware
+} from './signature/middleware'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -44,13 +51,6 @@ export interface DatabaseCleanupRule {
    */
   defaultExpirationOffsetDays: number
 }
-
-type ContextType<T> = T extends (
-  ctx: infer Context
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-) => any
-  ? Context
-  : never
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -102,11 +102,13 @@ export class App {
       }
     }
 
+    this.koa.use(cors())
     this.koa.keys = [this.config.cookieKey]
     this.koa.use(
       session(
         {
           key: 'sessionId',
+          // TODO: make this time shorter?
           maxAge: 60 * 1000,
           signed: true
         },
@@ -185,96 +187,114 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
-    const signatureService = await this.container.use('signatureService')
 
     const openApi = await this.container.use('openApi')
-    const toRouterPath = (path: string): string =>
-      path.replace(/{/g, ':').replace(/}/g, '')
-    const grantMethodToRoute = {
-      [HttpMethod.POST]: 'continue',
-      [HttpMethod.PATCH]: 'update',
-      [HttpMethod.DELETE]: 'cancel'
-    }
-    const tokenMethodToRoute = {
-      [HttpMethod.POST]: 'rotate',
-      [HttpMethod.DELETE]: 'revoke'
-    }
+    /* Back-channel GNAP Routes */
+    // Grant Initiation
+    this.publicRouter.post(
+      '/',
+      createValidatorMiddleware(openApi.authServerSpec, {
+        path: '/',
+        method: HttpMethod.POST
+      }),
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : grantInitiationHttpsigMiddleware,
+      grantRoutes.create
+    )
 
-    for (const path in openApi.paths) {
-      for (const method in openApi.paths[path]) {
-        if (isHttpMethod(method)) {
-          let route: (ctx: AppContext) => Promise<void>
-          if (path.includes('continue')) {
-            route = grantRoutes[grantMethodToRoute[method]]
-          } else if (path.includes('token')) {
-            route = accessTokenRoutes[tokenMethodToRoute[method]]
-          } else if (path.includes('introspect')) {
-            route = accessTokenRoutes.introspect
-          } else if (path.includes('interact')) {
-            if (path.endsWith('/finish')) {
-              route = grantRoutes.interaction.finish
-            } else {
-              route = grantRoutes.interaction.start
-            }
-          } else if (path.includes('grant')) {
-            if (path.endsWith('/accept')) {
-              // TODO: replace with call to implementation function
-              route = async (ctx) => {
-                ctx.status = 500
-                ctx.body = {
-                  error: 'not_implemented'
-                }
-              }
-            } else if (path.endsWith('/reject')) {
-              // TODO: replace with call to implementation function
-              route = async (ctx) => {
-                ctx.status = 500
-                ctx.body = {
-                  error: 'not_implemented'
-                }
-              }
-            } else {
-              // TODO: replace with call to implementation function
-              route = async (ctx) => {
-                ctx.status = 500
-                ctx.body = {
-                  error: 'not_implemented'
-                }
-              }
-            }
-          } else {
-            if (path === '/' && method === HttpMethod.POST) {
-              route = grantRoutes.create
-            } else {
-              this.logger.warn({ path, method }, 'unexpected path/method')
-              continue
-            }
-          }
-          if (route) {
-            this.publicRouter[method](
-              toRouterPath(path),
-              createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-                path,
-                method
-              }),
-              signatureService.tokenHttpsigMiddleware,
-              route
-            )
-            // TODO: remove once all endpoints are implemented
-          } else {
-            this.publicRouter[method](
-              toRouterPath(path),
-              (ctx: AppContext): void => {
-                ctx.status = 200
-              }
-            )
-          }
-        }
-      }
-    }
+    // Grant Continue
+    this.publicRouter.post(
+      '/continue/:id',
+      createValidatorMiddleware(openApi.authServerSpec, {
+        path: '/continue/{id}',
+        method: HttpMethod.POST
+      }),
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : grantContinueHttpsigMiddleware,
+      grantRoutes.continue
+    )
 
-    // Token management
-    this.publicRouter.post('/auth/introspect', accessTokenRoutes.introspect)
+    // Token Rotation
+    this.publicRouter.post(
+      '/token/:id',
+      createValidatorMiddleware(openApi.authServerSpec, {
+        path: '/token/{id}',
+        method: HttpMethod.POST
+      }),
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : tokenHttpsigMiddleware,
+      accessTokenRoutes.rotate
+    )
+
+    // Token Revocation
+    this.publicRouter.delete(
+      '/token/:id',
+      createValidatorMiddleware(openApi.authServerSpec, {
+        path: '/token/{id}',
+        method: HttpMethod.DELETE
+      }),
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : tokenHttpsigMiddleware,
+      accessTokenRoutes.revoke
+    )
+
+    /* AS <-> RS Routes */
+    // Token Introspection
+    this.publicRouter.post(
+      '/introspect',
+      createValidatorMiddleware(openApi.resourceServerSpec, {
+        path: '/introspect',
+        method: HttpMethod.POST
+      }),
+      accessTokenRoutes.introspect
+    )
+
+    /* Front Channel Routes */
+    // TODO: update front-channel routes to have /frontend prefix here and in openapi spec
+
+    // Interaction start
+    this.publicRouter.get(
+      '/interact/:id/:nonce',
+      createValidatorMiddleware(openApi.idpSpec, {
+        path: '/interact/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.start
+    )
+
+    // Interaction finish
+    this.publicRouter.get(
+      '/interact/:id/:nonce/finish',
+      createValidatorMiddleware(openApi.idpSpec, {
+        path: '/interact/{id}/{nonce}/finish',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.finish
+    )
+
+    // Grant lookup
+    this.publicRouter.get(
+      '/grant/:id/:nonce',
+      createValidatorMiddleware(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.details
+    )
+
+    // Grant accept/reject
+    this.publicRouter.post(
+      '/grant/:id/:nonce/:choice',
+      createValidatorMiddleware(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
+      grantRoutes.interaction.acceptOrReject
+    )
 
     this.koa.use(this.publicRouter.middleware())
   }
@@ -303,8 +323,6 @@ export class App {
             .del()
         } catch (err) {
           this.logger.warn(
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
             { error: err.message, tableName },
             'processDatabaseCleanup error'
           )

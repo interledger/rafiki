@@ -22,6 +22,8 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
+import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
+import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
 import { createAuthMiddleware } from './open_payments/auth/middleware'
@@ -29,7 +31,7 @@ import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { ClientKeysRoutes } from './clientKeys/routes'
+import { PaymentPointerKeyRoutes } from './paymentPointerKey/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -45,8 +47,9 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
-import { ClientKeysService } from './clientKeys/service'
-import { ClientService } from './clients/service'
+import { PaymentPointerKeyService } from './paymentPointerKey/service'
+import { GrantReferenceService } from './open_payments/grantReference/service'
+import { OpenPaymentsClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -54,7 +57,7 @@ export interface AppContextData {
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
-  grant?: Grant
+  paymentPointer?: PaymentPointer
 }
 
 export interface ApolloContext {
@@ -65,41 +68,47 @@ export interface ApolloContext {
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
-export type AppRequest<
-  ParamsT extends string = string,
-  BodyT = never,
-  QueryT = ParsedUrlQuery
-> = Omit<AppContext['request'], 'params' | 'body'> & {
+export type AppRequest<ParamsT extends string = string> = Omit<
+  AppContext['request'],
+  'params'
+> & {
   params: Record<ParamsT, string>
-  query: ParsedUrlQuery & QueryT
-  body: BodyT
 }
 
-type Context<T> = Omit<AppContext, 'request'> & {
-  request: T
+export interface PaymentPointerContext extends AppContext {
+  paymentPointer: PaymentPointer
+  grant?: Grant
+  clientId?: string
 }
-
-export type ClientKeysContext = Context<AppRequest<'keyId'>>
-
-export type PaymentPointerContext = Context<AppRequest<'id'>>
 
 // Payment pointer subresources
-export type CreateContext<BodyT> = Context<AppRequest<'accountId', BodyT>>
-export type ReadContext = Context<
-  AppRequest<
-    | 'accountId'
-    | 'incomingPaymentId'
-    | 'outgoingPaymentId'
-    | 'quoteId'
-    | 'connectionId'
-  >
->
-export type CompleteContext = Context<
-  AppRequest<'accountId' | 'incomingPaymentId'>
->
-export type ListContext = Context<
-  AppRequest<'accountId', never, PageQueryParams>
->
+type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  PaymentPointerContext['request'],
+  'body'
+> & {
+  body: BodyT
+  query: ParsedUrlQuery & QueryT
+}
+
+type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  PaymentPointerContext,
+  'request'
+> & {
+  request: CollectionRequest<BodyT, QueryT>
+}
+
+type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
+  params: Record<'id', string>
+}
+
+type SubresourceContext = Omit<PaymentPointerContext, 'request'> & {
+  request: SubresourceRequest
+}
+
+export type CreateContext<BodyT> = CollectionContext<BodyT>
+export type ReadContext = SubresourceContext
+export type CompleteContext = SubresourceContext
+export type ListContext = CollectionContext<never, PageQueryParams>
 
 type ContextType<T> = T extends (
   ctx: infer Context
@@ -107,6 +116,8 @@ type ContextType<T> = T extends (
 ) => any
   ? Context
   : never
+
+const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
@@ -123,7 +134,7 @@ export interface AppServices {
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
-  clientKeysRoutes: Promise<ClientKeysRoutes>
+  paymentPointerKeyRoutes: Promise<PaymentPointerKeyRoutes>
   paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   streamServer: Promise<StreamServer>
@@ -134,8 +145,9 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
-  clientService: Promise<ClientService>
-  clientKeysService: Promise<ClientKeysService>
+  paymentPointerKeyService: Promise<PaymentPointerKeyService>
+  grantReferenceService: Promise<GrantReferenceService>
+  openPaymentsClient: Promise<OpenPaymentsClient>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -232,7 +244,9 @@ export class App {
     })
 
     const spspRoutes = await this.container.use('spspRoutes')
-    const clientKeysRoutes = await this.container.use('clientKeysRoutes')
+    const paymentPointerKeyRoutes = await this.container.use(
+      'paymentPointerKeyRoutes'
+    )
     const paymentPointerRoutes = await this.container.use(
       'paymentPointerRoutes'
     )
@@ -257,7 +271,7 @@ export class App {
     }): AccessAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('Id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
             ? AccessAction.Complete
@@ -272,8 +286,10 @@ export class App {
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
+      [AccessAction.ReadAll]: 'get',
       [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list'
+      [AccessAction.List]: 'list',
+      [AccessAction.ListAll]: 'list'
     }
 
     for (const path in openApi.paths) {
@@ -304,48 +320,61 @@ export class App {
                 }),
                 route
               )
-            } else if (path === '/{accountId}' && method === HttpMethod.GET) {
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              router.get(
-                toRouterPath(path),
-                createValidatorMiddleware<PaymentPointerContext>(openApi, {
-                  path,
-                  method
-                }),
-                async (ctx: PaymentPointerContext): Promise<void> => {
-                  // Fall back to legacy protocols if client doesn't support Open Payments.
-                  if (ctx.accepts('application/json'))
-                    await paymentPointerRoutes.get(ctx)
-                  //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
-                  else if (ctx.accepts('application/spsp4+json'))
-                    await spspRoutes.get(ctx)
-                  else ctx.throw(406, 'no accepted Content-Type available')
-                }
-              )
-            } else {
+            } else if (path !== '/' || method !== HttpMethod.GET) {
+              // The payment pointer query route is added last below
               this.logger.warn({ path, method }, 'unexpected path/method')
             }
             continue
           }
           router[method](
-            toRouterPath(path),
-            createAuthMiddleware({
-              type,
-              action
-            }),
+            PAYMENT_POINTER_PATH + toRouterPath(path),
+            createPaymentPointerMiddleware(),
             createValidatorMiddleware<ContextType<typeof route>>(openApi, {
               path,
               method
+            }),
+            createAuthMiddleware({
+              type,
+              action
             }),
             route
           )
         }
       }
     }
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     router.get(
-      '/keys/{keyId}',
-      (ctx: ClientKeysContext): Promise<void> => clientKeysRoutes.get(ctx)
+      PAYMENT_POINTER_PATH + '/jwks.json',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+        path: '/jwks.json',
+        method: HttpMethod.GET
+      }),
+      async (ctx: PaymentPointerContext): Promise<void> =>
+        await paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+    )
+
+    // Add the payment pointer query route last.
+    // Otherwise it will be matched instead of other Open Payments endpoints.
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    router.get(
+      PAYMENT_POINTER_PATH,
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+        path: '/',
+        method: HttpMethod.GET
+      }),
+      async (ctx: PaymentPointerContext): Promise<void> => {
+        // Fall back to legacy protocols if client doesn't support Open Payments.
+        if (ctx.accepts('application/json')) await paymentPointerRoutes.get(ctx)
+        //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
+        else if (ctx.accepts('application/spsp4+json'))
+          await spspRoutes.get(ctx)
+        else ctx.throw(406, 'no accepted Content-Type available')
+      }
     )
 
     koa.use(router.routes())

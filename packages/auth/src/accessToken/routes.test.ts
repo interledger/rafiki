@@ -16,11 +16,9 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import {
-  KID_PATH,
-  KEY_REGISTRY_ORIGIN,
-  TEST_CLIENT_KEY
-} from '../grant/routes.test'
+import { KID_PATH, KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
+import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
+import { ClientKey, JWKWithRequired } from '../client/service'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -28,13 +26,20 @@ describe('Access Token Routes', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
+  let testJwk: JWKWithRequired
+  let keyId: string
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     accessTokenRoutes = await deps.use('accessTokenRoutes')
-    jestOpenAPI(await deps.use('openApi'))
+    const openApi = await deps.use('openApi')
+    jestOpenAPI(openApi.authServerSpec)
+
+    const keys = await generateTestKeys()
+    testJwk = keys.publicKey
+    keyId = keys.keyId
   })
 
   afterEach(async (): Promise<void> => {
@@ -63,9 +68,11 @@ describe('Access Token Routes', (): void => {
 
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
-    actions: [Action.Read, Action.Create],
+    actions: [Action.Read, Action.Create, Action.List],
+    identifier: `https://example.com/${v4()}`,
     limits: {
-      receivingAccount: 'https://wallet.com/alice',
+      receiver:
+        'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
       sendAmount: {
         value: '400',
         assetCode: 'USD',
@@ -90,7 +97,8 @@ describe('Access Token Routes', (): void => {
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT
+        ...BASE_GRANT,
+        clientKeyId: testJwk.kid
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -100,6 +108,9 @@ describe('Access Token Routes', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN
       })
+
+      const openApi = await deps.use('openApi')
+      jestOpenAPI(openApi.resourceServerSpec)
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
@@ -127,11 +138,20 @@ describe('Access Token Routes', (): void => {
     test('Successfully introspects valid token', async (): Promise<void> => {
       const clientId = crypto
         .createHash('sha256')
-        .update(TEST_CLIENT_KEY.jwk.client.id)
+        .update(TEST_CLIENT.id)
         .digest('hex')
+
       const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .get('/' + keyId)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: {
+            ...testJwk,
+            exp: Math.floor(Date.now() / 1000) + 3600,
+            nbf: Math.floor(Date.now() / 1000) - 3600,
+            revoked: false
+          }
+        } as ClientKey)
 
       const ctx = createContext(
         {
@@ -155,8 +175,6 @@ describe('Access Token Routes', (): void => {
         'application/json; charset=utf-8'
       )
 
-      const testKeyWithoutClient = TEST_CLIENT_KEY.jwk
-      delete testKeyWithoutClient.client
       expect(ctx.body).toEqual({
         active: true,
         grant: grant.id,
@@ -164,13 +182,14 @@ describe('Access Token Routes', (): void => {
           {
             type: access.type,
             actions: access.actions,
-            limits: access.limits
+            limits: access.limits,
+            identifier: access.identifier
           }
         ],
         key: {
           proof: 'httpsig',
           jwk: {
-            ...testKeyWithoutClient,
+            ...testJwk,
             exp: expect.any(Number),
             nbf: expect.any(Number),
             revoked: false
@@ -184,10 +203,15 @@ describe('Access Token Routes', (): void => {
     test('Successfully introspects expired token', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
-      const now = new Date(new Date().getTime() + 4000)
-      jest.useFakeTimers()
-      jest.setSystemTime(now)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
+      const tokenCreatedDate = new Date(token.createdAt)
+      const now = new Date(
+        tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
+      )
+      jest.useFakeTimers({ now })
 
       const ctx = createContext(
         {
@@ -258,7 +282,10 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
 
       const ctx = createContext(
         {
@@ -285,7 +312,10 @@ describe('Access Token Routes', (): void => {
     test('Returns status 204 if token has expired', async (): Promise<void> => {
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(KID_PATH)
-        .reply(200, TEST_CLIENT_KEY.jwk)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
 
       const ctx = createContext(
         {
@@ -329,6 +359,9 @@ describe('Access Token Routes', (): void => {
         ...BASE_TOKEN
       })
       managementId = BASE_TOKEN.managementId
+
+      const openApi = await deps.use('openApi')
+      jestOpenAPI(openApi.authServerSpec)
     })
 
     test('Cannot rotate nonexistent token', async (): Promise<void> => {

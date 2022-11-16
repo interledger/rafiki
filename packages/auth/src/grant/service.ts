@@ -10,15 +10,19 @@ import { AccessService } from '../access/service'
 
 export interface GrantService {
   get(grantId: string): Promise<Grant>
-  initiateGrant(grantRequest: GrantRequest): Promise<Grant>
+  create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteraction(interactId: string): Promise<Grant>
+  getByInteractionSession(
+    interactId: string,
+    interactNonce: string
+  ): Promise<Grant>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
     continueToken: string,
     interactRef: string
   ): Promise<Grant | null>
-  denyGrant(grantId: string): Promise<Grant | null>
+  rejectGrant(grantId: string): Promise<Grant | null>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -32,7 +36,7 @@ export interface GrantRequest {
     access: AccessRequest[]
   }
   client: ClientInfo
-  interact: {
+  interact?: {
     start: StartMethod[]
     finish?: {
       method: FinishMethod
@@ -71,16 +75,18 @@ export async function createGrantService({
   }
   return {
     get: (grantId: string) => get(grantId),
-    initiateGrant: (grantRequest: GrantRequest, trx?: Transaction) =>
-      initiateGrant(deps, grantRequest, trx),
+    create: (grantRequest: GrantRequest, trx?: Transaction) =>
+      create(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
+    getByInteractionSession: (interactId: string, interactNonce: string) =>
+      getByInteractionSession(interactId, interactNonce),
     issueGrant: (grantId: string) => issueGrant(deps, grantId),
     getByContinue: (
       continueId: string,
       continueToken: string,
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
-    denyGrant: (grantId: string) => denyGrant(deps, grantId)
+    rejectGrant: (grantId: string) => rejectGrant(deps, grantId)
   }
 }
 
@@ -97,16 +103,16 @@ async function issueGrant(
   })
 }
 
-async function denyGrant(
+async function rejectGrant(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<Grant | null> {
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
-    state: GrantState.Denied
+    state: GrantState.Rejected
   })
 }
 
-async function initiateGrant(
+async function create(
   deps: ServiceDependencies,
   grantRequest: GrantRequest,
   trx?: Transaction
@@ -115,7 +121,7 @@ async function initiateGrant(
 
   const {
     access_token: { access },
-    interact: { start, finish },
+    interact,
     client: {
       key: {
         jwk: { kid }
@@ -126,15 +132,17 @@ async function initiateGrant(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grant = await Grant.query(grantTrx).insert({
-      state: GrantState.Pending,
-      startMethod: start,
-      finishMethod: finish?.method,
-      finishUri: finish?.uri,
-      clientNonce: finish?.nonce,
+      state: interact ? GrantState.Pending : GrantState.Granted,
+      startMethod: interact?.start,
+      finishMethod: interact?.finish?.method,
+      finishUri: interact?.finish?.uri,
+      clientNonce: interact?.finish?.nonce,
       clientKeyId: kid,
-      interactId: v4(),
-      interactRef: v4(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(), // TODO: factor out nonce generation
+      interactId: interact ? v4() : undefined,
+      interactRef: interact ? v4() : undefined,
+      interactNonce: interact
+        ? crypto.randomBytes(8).toString('hex').toUpperCase()
+        : undefined, // TODO: factor out nonce generation
       continueId: v4(),
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
     })
@@ -158,6 +166,15 @@ async function initiateGrant(
 
 async function getByInteraction(interactId: string): Promise<Grant> {
   return Grant.query().findOne({ interactId })
+}
+
+async function getByInteractionSession(
+  interactId: string,
+  interactNonce: string
+): Promise<Grant> {
+  return Grant.query()
+    .findOne({ interactId, interactNonce })
+    .withGraphFetched('access')
 }
 
 async function getByContinue(

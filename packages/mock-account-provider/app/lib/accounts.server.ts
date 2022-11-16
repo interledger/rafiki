@@ -9,6 +9,8 @@ export interface Account {
   debitsPosted: bigint
   creditsPending: bigint
   creditsPosted: bigint
+  assetCode: string
+  assetScale: number
 }
 
 export interface AccountsServer {
@@ -18,7 +20,12 @@ export interface AccountsServer {
     pointerID: string,
     paymentPointer: string
   ): Promise<void>
-  create(id: string, name: string): Promise<void>
+  create(
+    id: string,
+    name: string,
+    assetCode: string,
+    assetScale: number
+  ): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
   getByPaymentPointer(paymentPointer: string): Promise<Account | undefined>
@@ -53,8 +60,13 @@ export class AccountProvider implements AccountsServer {
     acc.paymentPointerID = pointerID
   }
 
-  async create(id: string, name: string): Promise<void> {
-    if (!this.accounts.has(id)) {
+  async create(
+    id: string,
+    name: string,
+    assetCode: string,
+    assetScale: number
+  ): Promise<void> {
+    if (this.accounts.has(id)) {
       throw new Error('account already exists')
     }
     this.accounts.set(id, {
@@ -65,7 +77,9 @@ export class AccountProvider implements AccountsServer {
       creditsPending: BigInt(0),
       creditsPosted: BigInt(0),
       debitsPending: BigInt(0),
-      debitsPosted: BigInt(0)
+      debitsPosted: BigInt(0),
+      assetCode,
+      assetScale
     })
   }
 
@@ -78,10 +92,10 @@ export class AccountProvider implements AccountsServer {
   }
 
   async getByPaymentPointer(
-    paymentPointer: string
+    paymentPointerId: string
   ): Promise<Account | undefined> {
     for (const acc of this.accounts.values()) {
-      if (acc.paymentPointer == paymentPointer) {
+      if (acc.paymentPointerID == paymentPointerId) {
         return acc
       }
     }
@@ -102,7 +116,7 @@ export class AccountProvider implements AccountsServer {
     const acc = this.accounts.get(id)
     assert.ok(acc)
 
-    if (acc.creditsPending - amount < 0 || acc.creditsPosted + amount < 0) {
+    if (clearPending && acc.creditsPending - amount < 0) {
       throw new Error('invalid amount, credits pending cannot be less than 0')
     }
 
@@ -134,6 +148,12 @@ export class AccountProvider implements AccountsServer {
       throw new Error('invalid amount, debits pending cannot be less than 0')
     }
 
+    if (
+      !clearPending &&
+      acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount
+    ) {
+      throw new Error('invalid debit, insufficient funds')
+    }
     acc.debitsPosted += amount
     if (clearPending) {
       acc.debitsPending -= amount
@@ -163,6 +183,11 @@ export class AccountProvider implements AccountsServer {
 
     const acc = this.accounts.get(id)
     assert.ok(acc)
+
+    if (acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount) {
+      throw new Error('invalid pending debit amount, insufficient funds')
+    }
+
     acc.debitsPending += amount
   }
 
@@ -203,13 +228,4 @@ export class AccountProvider implements AccountsServer {
   }
 }
 
-declare global {
-  let __mockAccounts: AccountsServer | undefined
-}
-
-if (!global.__mockAccounts) {
-  global.__mockAccounts = new AccountProvider()
-}
-const mockAccounts = global.__mockAccounts
-
-export { mockAccounts }
+export const mockAccounts = new AccountProvider()

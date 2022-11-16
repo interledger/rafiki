@@ -54,7 +54,7 @@ describe('Session Key Service', (): void => {
     test('Session expires', async (): Promise<void> => {
       const session = await sessionService.create()
       const ttl = await redis.pttl(session.key)
-      expect(ttl).toBeGreaterThan(0)
+      expect(Number(ttl)).toBeGreaterThan(0)
     })
   })
 

@@ -1,7 +1,7 @@
 version: '3'
 services:
   database:
-    image: "postgres" # use latest official postgres version
+    image: "postgres:15" # use latest official postgres version
     restart: unless-stopped
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
@@ -10,8 +10,9 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: password
+      BYPASS_SIGNATURE_VALIDATION: false
   redis:
-    image: "redis:5" # use latest official postgres version
+    image: "redis:7"
     restart: unless-stopped
     ports:
       - "6379:6379"

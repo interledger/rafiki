@@ -16,9 +16,10 @@ export async function createQuote(
   deps: IocContract<AppServices>,
   {
     paymentPointerId,
-    receiver,
+    receiver: receiverUrl,
     sendAmount,
     receiveAmount,
+    grantId,
     validDestination = true
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
@@ -34,29 +35,23 @@ export async function createQuote(
   const config = await deps.use('config')
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
-    assert.ok(receiver.startsWith(config.openPaymentsUrl))
-    const path = receiver.slice(config.openPaymentsUrl.length + 1).split('/')
-    assert.ok(path.length === 3)
-    const incomingPaymentService = await deps.use('incomingPaymentService')
-    const incomingPayment = await incomingPaymentService.get(path[2])
-    assert.ok(incomingPayment)
-    assert.ok(incomingPayment.incomingAmount || receiveAmount || sendAmount)
+    const receiverService = await deps.use('receiverService')
+    const receiver = await receiverService.get(receiverUrl)
+    assert.ok(receiver)
+    assert.ok(receiver.incomingAmount || receiveAmount || sendAmount)
     if (receiveAmount) {
       assert.ok(
-        incomingPayment.asset.code === receiveAmount.assetCode &&
-          incomingPayment.asset.scale === receiveAmount.assetScale
+        receiver.assetCode === receiveAmount.assetCode &&
+          receiver.assetScale === receiveAmount.assetScale
       )
       assert.ok(
-        !incomingPayment.incomingAmount ||
-          receiveAmount.value <= incomingPayment.incomingAmount.value
+        !receiver.incomingAmount ||
+          receiveAmount.value <= receiver.incomingAmount.value
       )
     } else {
-      receiveAsset = {
-        code: incomingPayment.asset.code,
-        scale: incomingPayment.asset.scale
-      }
+      receiveAsset = receiver.asset
       if (!sendAmount) {
-        receiveAmount = incomingPayment.incomingAmount
+        receiveAmount = receiver.incomingAmount
       }
     }
   } else {
@@ -94,7 +89,7 @@ export async function createQuote(
     .insertAndFetch({
       paymentPointerId,
       assetId: paymentPointer.assetId,
-      receiver,
+      receiver: receiverUrl,
       sendAmount,
       receiveAmount,
       maxPacketAmount: BigInt('9223372036854775807'),
@@ -110,7 +105,8 @@ export async function createQuote(
         Pay.Int.from(495n) as Pay.PositiveInt,
         Pay.Int.from(1000n) as Pay.PositiveInt
       ),
-      expiresAt: new Date(Date.now() + config.quoteLifespan)
+      expiresAt: new Date(Date.now() + config.quoteLifespan),
+      grantId
     })
     .withGraphFetched('asset')
 }

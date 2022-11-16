@@ -10,7 +10,10 @@ import {
   createAsset,
   updateAssetWithdrawalThreshold
 } from './asset'
-import { getPaymentPointerIncomingPayments } from './incoming_payment'
+import {
+  getPaymentPointerIncomingPayments,
+  createIncomingPayment
+} from './incoming_payment'
 import { getQuote, createQuote, getPaymentPointerQuotes } from './quote'
 import {
   getOutgoingPayment,
@@ -32,7 +35,10 @@ import {
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
 import { refreshSession, revokeSession } from './session'
-import { addKeyToClient, createClient, getClient } from './clientKeys'
+import {
+  createPaymentPointerKey,
+  revokePaymentPointerKey
+} from './paymentPointerKey'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -43,8 +49,7 @@ export const resolvers: Resolvers = {
     outgoingPayment: getOutgoingPayment,
     peer: getPeer,
     peers: getPeers,
-    quote: getQuote,
-    client: getClient
+    quote: getQuote
   },
   PaymentPointer: {
     incomingPayments: getPaymentPointerIncomingPayments,
@@ -52,14 +57,15 @@ export const resolvers: Resolvers = {
     quotes: getPaymentPointerQuotes
   },
   Mutation: {
-    createClient,
-    addKeyToClient,
+    createPaymentPointerKey,
+    revokePaymentPointerKey,
     createPaymentPointer,
     triggerPaymentPointerEvents,
     createAsset,
     updateAssetWithdrawalThreshold,
     createQuote,
     createOutgoingPayment,
+    createIncomingPayment,
     createApiKey: createApiKey,
     redeemApiKey: redeemApiKey,
     deleteAllApiKeys: deleteAllApiKeys,

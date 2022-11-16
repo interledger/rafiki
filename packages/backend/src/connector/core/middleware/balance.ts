@@ -1,6 +1,7 @@
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 import { isTransferError, TransferError } from '../../../accounting/errors'
+import { Transaction } from '../../../accounting/service'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {
@@ -44,30 +45,45 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     // Update balances on prepare
-    const trxOrError = await services.accounting.createTransfer({
-      sourceAccount: accounts.incoming,
-      destinationAccount: accounts.outgoing,
-      sourceAmount,
-      destinationAmount: destinationAmountOrError,
-      timeout: BigInt(5e9) // 5 seconds
-    })
+    const createPendingTransfer = async (): Promise<Transaction> => {
+      const trxOrError = await services.accounting.createTransfer({
+        sourceAccount: accounts.incoming,
+        destinationAccount: accounts.outgoing,
+        sourceAmount,
+        destinationAmount: destinationAmountOrError,
+        timeout: BigInt(5e9) // 5 seconds
+      })
 
-    if (isTransferError(trxOrError)) {
-      switch (trxOrError) {
-        case TransferError.InsufficientBalance:
-        case TransferError.InsufficientLiquidity:
-          throw new InsufficientLiquidityError(trxOrError)
-        default:
-          // TODO: map transfer errors to ILP errors
-          ctxThrow(500, destinationAmountOrError.toString())
+      if (isTransferError(trxOrError)) {
+        switch (trxOrError) {
+          case TransferError.InsufficientBalance:
+          case TransferError.InsufficientLiquidity:
+            throw new InsufficientLiquidityError(trxOrError)
+          default:
+            // TODO: map transfer errors to ILP errors
+            ctxThrow(500, destinationAmountOrError.toString())
+        }
+      } else {
+        return trxOrError
       }
-    } else {
+    }
+
+    if (state.streamDestination) {
       await next()
+    }
+
+    if (!state.streamDestination || response.fulfill) {
+      // TODO: make this single-phase if streamDestination === true
+      const trx = await createPendingTransfer()
+
+      if (!state.streamDestination) {
+        await next()
+      }
 
       if (response.fulfill) {
-        await trxOrError.commit()
+        await trx.commit()
       } else {
-        await trxOrError.rollback()
+        await trx.rollback()
       }
     }
   }

@@ -15,13 +15,14 @@ import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
-import { Pagination } from '../../../shared/baseModel'
-import { getPageTests } from '../../../shared/baseModel.test'
 import { randomAsset } from '../../../tests/asset'
+import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
+import { GrantReferenceService } from '../../grantReference/service'
+import { getTests } from '../../payment_pointer/model.test'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -30,6 +31,7 @@ describe('Incoming Payment Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountingService: AccountingService
+  let grantReferenceService: GrantReferenceService
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
@@ -37,6 +39,7 @@ describe('Incoming Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = await deps.use('knex')
+    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -53,8 +56,8 @@ describe('Incoming Payment Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create/Get IncomingPayment', (): void => {
-    test('An incoming payment can be created and fetched', async (): Promise<void> => {
+  describe('Create IncomingPayment', (): void => {
+    test('An incoming payment can be created', async (): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
         incomingAmount: {
@@ -72,12 +75,31 @@ describe('Incoming Payment Service', (): void => {
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
-      const retrievedIncomingPayment = await incomingPaymentService.get(
-        incomingPayment.id
-      )
-      if (!retrievedIncomingPayment)
-        throw new Error('incoming payment not found')
-      expect(retrievedIncomingPayment).toEqual(incomingPayment)
+    })
+
+    test('An incoming payment with corresponding grant can be created', async (): Promise<void> => {
+      const grant = await grantReferenceService.create({
+        id: uuid(),
+        clientId: uuid()
+      })
+      const incomingPayment = await incomingPaymentService.create({
+        paymentPointerId,
+        grantId: grant.id,
+        incomingAmount: {
+          value: BigInt(123),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        },
+        expiresAt: new Date(Date.now() + 30_000),
+        description: 'Test incoming payment',
+        externalRef: '#123'
+      })
+      assert.ok(!isIncomingPaymentError(incomingPayment))
+      expect(incomingPayment).toMatchObject({
+        id: incomingPayment.id,
+        asset,
+        processAt: new Date(incomingPayment.expiresAt.getTime())
+      })
     })
 
     test('Cannot create incoming payment for nonexistent payment pointer', async (): Promise<void> => {
@@ -169,9 +191,26 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
+  })
 
-    test('Cannot fetch a bogus incoming payment', async (): Promise<void> => {
-      await expect(incomingPaymentService.get(uuid())).resolves.toBeUndefined()
+  describe('get/getPaymentPointerPage', (): void => {
+    getTests({
+      createGrant: async (options) => createGrant(deps, options),
+      createModel: ({ grant }) =>
+        createIncomingPayment(deps, {
+          paymentPointerId,
+          grantId: grant?.grant,
+          incomingAmount: {
+            value: BigInt(123),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        }),
+      get: (options) => incomingPaymentService.get(options),
+      list: (options) => incomingPaymentService.getPaymentPointerPage(options)
     })
   })
 
@@ -205,7 +244,9 @@ describe('Incoming Payment Service', (): void => {
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Processing,
         processAt: new Date(incomingPayment.expiresAt.getTime())
@@ -224,13 +265,17 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
     })
   })
@@ -254,7 +299,9 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.processNext()
       ).resolves.toBeUndefined()
       await expect(
-        incomingPaymentService.get(incomingPaymentId)
+        incomingPaymentService.get({
+          id: incomingPaymentId
+        })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Pending
       })
@@ -288,10 +335,13 @@ describe('Incoming Payment Service', (): void => {
           incomingPayment.id
         )
         await expect(
-          incomingPaymentService.get(incomingPayment.id)
+          incomingPaymentService.get({
+            id: incomingPayment.id
+          })
         ).resolves.toMatchObject({
           state: IncomingPaymentState.Expired,
-          processAt: new Date(now.getTime() + 30_000)
+          processAt: new Date(now.getTime() + 30_000),
+          connectionId: null
         })
       })
 
@@ -313,7 +363,9 @@ describe('Incoming Payment Service', (): void => {
           incomingPayment.id
         )
         expect(
-          await incomingPaymentService.get(incomingPayment.id)
+          await incomingPaymentService.get({
+            id: incomingPayment.id
+          })
         ).toBeUndefined()
       })
     })
@@ -358,15 +410,17 @@ describe('Incoming Payment Service', (): void => {
               totalReceived: incomingPayment.incomingAmount!.value
             })
           }
-          incomingPayment = (await incomingPaymentService.get(
-            incomingPayment.id
-          )) as IncomingPayment
-          expect(incomingPayment.processAt).not.toBeNull()
-          if (eventType === IncomingPaymentEventType.IncomingPaymentExpired) {
-            expect(incomingPayment.state).toBe(IncomingPaymentState.Expired)
-          } else {
-            expect(incomingPayment.state).toBe(IncomingPaymentState.Completed)
-          }
+          incomingPayment = (await incomingPaymentService.get({
+            id: incomingPayment.id
+          })) as IncomingPayment
+          expect(incomingPayment).toMatchObject({
+            state:
+              eventType === IncomingPaymentEventType.IncomingPaymentExpired
+                ? IncomingPaymentState.Expired
+                : IncomingPaymentState.Completed,
+            processAt: expect.any(Date),
+            connectionId: null
+          })
           await expect(
             accountingService.getTotalReceived(incomingPayment.id)
           ).resolves.toEqual(amountReceived)
@@ -395,58 +449,15 @@ describe('Incoming Payment Service', (): void => {
             })
           ).resolves.toHaveLength(1)
           await expect(
-            incomingPaymentService.get(incomingPayment.id)
+            incomingPaymentService.get({
+              id: incomingPayment.id
+            })
           ).resolves.toMatchObject({
             processAt: null
           })
         })
       }
     )
-  })
-
-  describe('Incoming payment pagination', (): void => {
-    getPageTests({
-      createModel: () =>
-        createIncomingPayment(deps, {
-          paymentPointerId,
-          incomingAmount: {
-            value: BigInt(123),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          expiresAt: new Date(Date.now() + 30_000),
-          description: 'IncomingPayment',
-          externalRef: '#123'
-        }),
-      getPage: (pagination: Pagination) =>
-        incomingPaymentService.getPaymentPointerPage(
-          paymentPointerId,
-          pagination
-        )
-    })
-
-    it('throws if no TB account found', async (): Promise<void> => {
-      const payment = await createIncomingPayment(deps, {
-        paymentPointerId,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        description: 'IncomingPayment',
-        externalRef: '#123'
-      })
-
-      jest
-        .spyOn(accountingService, 'getAccountsTotalReceived')
-        .mockResolvedValueOnce([undefined])
-      await expect(
-        incomingPaymentService.getPaymentPointerPage(paymentPointerId, {})
-      ).rejects.toThrowError(
-        `Underlying TB account not found, incoming payment id: ${payment.id}`
-      )
-    })
   })
 
   describe('complete', (): void => {
@@ -473,13 +484,17 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000)
+        processAt: new Date(now.getTime() + 30_000),
+        connectionId: null
       })
     })
 
@@ -494,7 +509,9 @@ describe('Incoming Payment Service', (): void => {
         totalReceived: BigInt(100)
       })
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Processing
       })
@@ -503,13 +520,17 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime()),
+        connectionId: null
       })
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime()),
+        connectionId: null
       })
     })
 
@@ -528,17 +549,23 @@ describe('Incoming Payment Service', (): void => {
         incomingPayment.id
       )
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Expired
+        state: IncomingPaymentState.Expired,
+        connectionId: null
       })
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Expired
+        state: IncomingPaymentState.Expired,
+        connectionId: null
       })
     })
 
@@ -547,17 +574,23 @@ describe('Incoming Payment Service', (): void => {
         totalReceived: BigInt(123)
       })
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Completed
+        state: IncomingPaymentState.Completed,
+        connectionId: null
       })
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
       ).resolves.toBe(IncomingPaymentError.WrongState)
       await expect(
-        incomingPaymentService.get(incomingPayment.id)
+        incomingPaymentService.get({
+          id: incomingPayment.id
+        })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Completed
+        state: IncomingPaymentState.Completed,
+        connectionId: null
       })
     })
   })

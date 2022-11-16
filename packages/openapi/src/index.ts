@@ -43,13 +43,29 @@ export interface RequestOptions {
   method: HttpMethod
 }
 
+export interface Response {
+  status: number
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  body: any
+}
+
+interface ValidatedResponse<BodyT> {
+  status: number
+  body: BodyT
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ValidateFunction<T> = (data: any) => data is T
+export type RequestValidator<T> = (request: any) => request is T
+export type ResponseValidator<BodyT> = (
+  response: Response
+) => response is ValidatedResponse<BodyT>
 
 export interface OpenAPI {
   paths: Paths
-  createRequestValidator<T>(options: RequestOptions): ValidateFunction<T>
-  createResponseValidator<T>(options: RequestOptions): ValidateFunction<T>
+  createRequestValidator<T>(options: RequestOptions): RequestValidator<T>
+  createResponseValidator<BodyT>(
+    options: RequestOptions
+  ): ResponseValidator<BodyT>
 }
 
 class OpenAPIImpl implements OpenAPI {
@@ -86,16 +102,7 @@ class OpenAPIImpl implements OpenAPI {
       // OpenAPIRequestValidator hasn't been updated with OpenAPIV3_1 types
       requestBody: operation.requestBody as OpenAPIV3.RequestBodyObject,
       errorTransformer,
-      customFormats: {
-        uint64: function (input) {
-          try {
-            const value = BigInt(input)
-            return value >= BigInt(0)
-          } catch (e) {
-            return false
-          }
-        }
-      }
+      customFormats
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,13 +129,14 @@ class OpenAPIImpl implements OpenAPI {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore: OpenAPIResponseValidator supports v3 responses but its types aren't updated
       responses,
-      errorTransformer
+      errorTransformer,
+      customFormats
     })
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (response: any): response is T => {
+    return (response: Response): response is ValidatedResponse<T> => {
       const errors = responseValidator.validateResponse(
-        response.status,
+        response.status.toString(),
         response.body
       )
       if (errors) {
@@ -152,5 +160,16 @@ const errorTransformer = (
       : ''
   return {
     message: message + additionalProperty
+  }
+}
+
+const customFormats = {
+  uint64: function (input) {
+    try {
+      const value = BigInt(input)
+      return value >= BigInt(0)
+    } catch (e) {
+      return false
+    }
   }
 }

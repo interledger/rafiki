@@ -1,16 +1,20 @@
 import * as crypto from 'crypto'
 import { URL } from 'url'
 import { AppContext } from '../app'
-import { GrantService, GrantRequest } from './service'
-import { GrantState } from './model'
+import { GrantService } from './service'
+import { Grant, GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
-import { isAccessRequest } from '../access/types'
+import {
+  IncomingPaymentRequest,
+  isIncomingPaymentAccessRequest
+} from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { accessToBody } from '../shared/utils'
+import { AccessToken } from '../accessToken/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -22,10 +26,12 @@ interface ServiceDependencies extends BaseService {
 
 export interface GrantRoutes {
   create(ctx: AppContext): Promise<void>
+  // TODO: factor this out into separate routes service
   interaction: {
     start(ctx: AppContext): Promise<void>
     finish(ctx: AppContext): Promise<void>
-    deny(ctx: AppContext): Promise<void>
+    acceptOrReject(ctx: AppContext): Promise<void>
+    details(ctx: AppContext): Promise<void>
   }
   continue(ctx: AppContext): Promise<void>
 }
@@ -55,23 +61,11 @@ export function createGrantRoutes({
     interaction: {
       start: (ctx: AppContext) => startInteraction(deps, ctx),
       finish: (ctx: AppContext) => finishInteraction(deps, ctx),
-      deny: (ctx: AppContext) => denyInteraction(deps, ctx)
+      acceptOrReject: (ctx: AppContext) => handleGrantChoice(deps, ctx),
+      details: (ctx: AppContext) => getGrantDetails(deps, ctx)
     },
     continue: (ctx: AppContext) => continueGrant(deps, ctx)
   }
-}
-
-function validateGrantRequest(
-  grantRequest: GrantRequest
-): grantRequest is GrantRequest {
-  if (typeof grantRequest.access_token !== 'object') return false
-  const { access_token } = grantRequest
-  if (typeof access_token.access !== 'object') return false
-  for (const access of access_token.access) {
-    if (!isAccessRequest(access)) return false
-  }
-
-  return grantRequest.interact?.start !== undefined
 }
 
 async function createGrantInitiation(
@@ -91,17 +85,60 @@ async function createGrantInitiation(
 
   const { body } = ctx.request
   const { grantService, config } = deps
-  if (!validateGrantRequest(body)) {
-    ctx.status = 400
-    ctx.body = { error: 'invalid_request' }
+
+  if (
+    !deps.config.incomingPaymentInteraction &&
+    body.access_token.access
+      .map((acc) => {
+        return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
+      })
+      .every((el) => el === true)
+  ) {
+    const trx = await Grant.startTransaction()
+    let grant: Grant
+    let accessToken: AccessToken
+    try {
+      grant = await grantService.create(body, trx)
+      accessToken = await deps.accessTokenService.create(grant.id, {
+        trx
+      })
+      await trx.commit()
+    } catch (err) {
+      await trx.rollback()
+      ctx.status = 500
+      return
+    }
+    const access = await deps.accessService.getByGrant(grant.id)
+    ctx.status = 200
+    ctx.body = createGrantBody({
+      domain: deps.config.authServerDomain,
+      grant,
+      access,
+      accessToken
+    })
     return
   }
 
-  const grant = await grantService.initiateGrant(body)
-  ctx.status = 201
+  if (!body.interact) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'interaction_required'
+    }
+    return
+  }
+
+  const grant = await grantService.create(body)
+  ctx.status = 200
+
+  const redirectUri = new URL(
+    config.authServerDomain +
+      `/interact/${grant.interactId}/${grant.interactNonce}`
+  )
+  redirectUri.searchParams.set('clientName', body.client.display.name)
+  redirectUri.searchParams.set('clientUri', body.client.display.uri)
   ctx.body = {
     interact: {
-      redirect: config.identityServerDomain + `/interact/${grant.interactId}`,
+      redirect: redirectUri.toString(),
       finish: grant.interactNonce
     },
     continue: {
@@ -114,13 +151,53 @@ async function createGrantInitiation(
   }
 }
 
+async function getGrantDetails(
+  deps: ServiceDependencies,
+  ctx: AppContext
+): Promise<void> {
+  const secret = ctx.headers?.['x-idp-secret']
+  const { config, grantService } = deps
+  if (
+    !ctx.headers['x-idp-secret'] ||
+    !crypto.timingSafeEqual(
+      Buffer.from(secret as string),
+      Buffer.from(config.identityServerSecret)
+    )
+  ) {
+    ctx.status = 401
+    return
+  }
+  const { id: interactId, nonce } = ctx.params
+  const grant = await grantService.getByInteractionSession(interactId, nonce)
+  if (!grant) {
+    ctx.status = 404
+    return
+  }
+
+  for (const access of grant.access) {
+    delete access.id
+    delete access.createdAt
+    delete access.updatedAt
+  }
+
+  ctx.body = { access: grant.access }
+}
+
 async function startInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { id: interactId } = ctx.params
+  deps.logger.info(
+    {
+      params: ctx.params,
+      query: ctx.query
+    },
+    'start interact params'
+  )
+  const { id: interactId, nonce } = ctx.params
+  const { clientName, clientUri } = ctx.query
   const { config, grantService, clientService } = deps
-  const grant = await grantService.getByInteraction(interactId)
+  const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
     ctx.status = 401
@@ -130,8 +207,6 @@ async function startInteraction(
 
     return
   }
-
-  ctx.session.interactId = grant.interactId
 
   const key = await clientService.getKeyByKid(grant.clientKeyId)
 
@@ -143,30 +218,47 @@ async function startInteraction(
     return
   }
 
+  // TODO: also establish session in redis with short expiry
+  ctx.session.nonce = grant.interactNonce
+
   const interactionUrl = new URL(config.identityServerDomain)
-  interactionUrl.searchParams.set('clientName', key.client.name)
-  interactionUrl.searchParams.set('clientUri', key.client.uri)
+  interactionUrl.searchParams.set('interactId', grant.interactId)
+  interactionUrl.searchParams.set('nonce', grant.interactNonce)
+  interactionUrl.searchParams.set('clientName', clientName as string)
+  interactionUrl.searchParams.set('clientUri', clientUri as string)
 
   ctx.redirect(interactionUrl.toString())
 }
 
-async function finishInteraction(
+export enum GrantChoices {
+  Accept = 'accept',
+  Reject = 'reject'
+}
+
+// TODO: allow idp to specify the reason for rejection
+async function handleGrantChoice(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { id: interactId } = ctx.params
-  const interactSession = ctx.session.interactId
+  // TODO: check redis for a session
+  const { id: interactId, nonce, choice } = ctx.params
+  const { config, grantService } = deps
 
-  if (!interactSession || !interactId || interactSession !== interactId) {
+  if (
+    !ctx.headers['x-idp-secret'] ||
+    !crypto.timingSafeEqual(
+      Buffer.from(ctx.headers['x-idp-secret'] as string),
+      Buffer.from(config.identityServerSecret)
+    )
+  ) {
     ctx.status = 401
     ctx.body = {
-      error: 'invalid_request'
+      error: 'invalid_interaction'
     }
     return
   }
 
-  const { grantService, config } = deps
-  const grant = await grantService.getByInteraction(interactId)
+  const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
     ctx.status = 404
@@ -176,7 +268,10 @@ async function finishInteraction(
     return
   }
 
-  if (grant.state === GrantState.Revoked || grant.state === GrantState.Denied) {
+  if (
+    grant.state === GrantState.Revoked ||
+    grant.state === GrantState.Rejected
+  ) {
     ctx.status = 401
     ctx.body = {
       error: 'user_denied'
@@ -189,31 +284,30 @@ async function finishInteraction(
     ctx.body = {
       error: 'request_denied'
     }
+    return
   }
 
-  await grantService.issueGrant(grant.id)
+  if (choice === GrantChoices.Accept) {
+    await grantService.issueGrant(grant.id)
+  } else if (choice === GrantChoices.Reject) {
+    await grantService.rejectGrant(grant.id)
+  } else {
+    ctx.status = 404
+    return
+  }
 
-  const clientRedirectUri = new URL(grant.finishUri)
-  const { clientNonce, interactNonce, interactRef } = grant
-  const interactUrl = config.identityServerDomain + `/interact/${interactId}`
-
-  // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
-  const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
-
-  const hash = crypto.createHash('sha3-512').update(data).digest('base64')
-  clientRedirectUri.searchParams.set('hash', hash)
-  clientRedirectUri.searchParams.set('interact_ref', interactRef)
-  ctx.redirect(clientRedirectUri.toString())
+  ctx.status = 202
 }
 
-async function denyInteraction(
+async function finishInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  const { interactId } = ctx.params
-  const interactSession = ctx.session.interactId
+  const { id: interactId, nonce } = ctx.params
+  const sessionNonce = ctx.session.nonce
 
-  if (!interactSession || !interactId || interactSession !== interactId) {
+  // TODO: redirect with this error in query string
+  if (sessionNonce !== nonce) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_request'
@@ -221,9 +315,10 @@ async function denyInteraction(
     return
   }
 
-  const { grantService } = deps
-  const grant = await grantService.getByInteraction(interactId)
+  const { grantService, config } = deps
+  const grant = await grantService.getByInteractionSession(interactId, nonce)
 
+  // TODO: redirect with this error in query string
   if (!grant) {
     ctx.status = 404
     ctx.body = {
@@ -232,16 +327,32 @@ async function denyInteraction(
     return
   }
 
-  await deps.grantService.denyGrant(grant.id)
+  const clientRedirectUri = new URL(grant.finishUri)
+  if (grant.state === GrantState.Granted) {
+    const { clientNonce, interactNonce, interactRef } = grant
+    const interactUrl = config.identityServerDomain + `/interact/${interactId}`
 
-  ctx.status = 200
+    // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
+    const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
+
+    const hash = crypto.createHash('sha3-512').update(data).digest('base64')
+    clientRedirectUri.searchParams.set('hash', hash)
+    clientRedirectUri.searchParams.set('interact_ref', interactRef)
+    ctx.redirect(clientRedirectUri.toString())
+  } else if (grant.state === GrantState.Rejected) {
+    clientRedirectUri.searchParams.set('result', 'grant_rejected')
+    ctx.redirect(clientRedirectUri.toString())
+  } else {
+    // Grant is not in either an accepted or rejected state
+    clientRedirectUri.searchParams.set('result', 'grant_invalid')
+    ctx.redirect(clientRedirectUri.toString())
+  }
 }
 
 async function continueGrant(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  // TODO: httpsig validation
   const { id: continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
     'GNAP '
@@ -282,12 +393,37 @@ async function continueGrant(
   const access = await accessService.getByGrant(grant.id)
 
   // TODO: add "continue" to response if additional grant request steps are added
-  ctx.body = {
+  ctx.body = createGrantBody({
+    domain: config.authServerDomain,
+    grant,
+    access,
+    accessToken
+  })
+}
+
+function createGrantBody({
+  domain,
+  grant,
+  access,
+  accessToken
+}: {
+  domain: string
+  grant: Grant
+  access: Access[]
+  accessToken: AccessToken
+}) {
+  return {
     access_token: {
       value: accessToken.value,
-      manage: config.authServerDomain + `/token/${accessToken.managementId}`,
+      manage: domain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
       expiresIn: accessToken.expiresIn
+    },
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: domain + `/continue/${grant.continueId}`
     }
   }
 }

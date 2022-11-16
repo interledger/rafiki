@@ -7,7 +7,7 @@ import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '..'
+import { initIocContainer, JWKWithRequired } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
@@ -15,27 +15,11 @@ import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
+import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
+import { ClientKey } from '../client/service'
 
 const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 const TEST_KID_PATH = '/keys/test-key'
-const TEST_JWK = {
-  kid: KEY_REGISTRY_ORIGIN + TEST_KID_PATH,
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  use: 'sig'
-}
-const TEST_CLIENT_KEY = {
-  client: {
-    id: v4(),
-    name: 'Bob',
-    email: 'bob@bob.com',
-    image: 'a link to an image',
-    uri: 'https://bob.com'
-  },
-  ...TEST_JWK
-}
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -43,12 +27,16 @@ describe('Access Token Service', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
+  let testJwk: JWKWithRequired
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     accessTokenService = await deps.use('accessTokenService')
+
+    const keys = await generateTestKeys()
+    testJwk = keys.publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -73,8 +61,9 @@ describe('Access Token Service', (): void => {
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
     actions: [Action.Read, Action.Create],
+    identifier: `https://example.com/${v4()}`,
     limits: {
-      receivingAccount: 'https://wallet.com/alice',
+      receiver: 'https://wallet.com/alice',
       sendAmount: {
         value: '400',
         assetCode: 'USD',
@@ -154,27 +143,34 @@ describe('Access Token Service', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
       const clientId = crypto
         .createHash('sha256')
-        .update(TEST_CLIENT_KEY.client.id)
+        .update(TEST_CLIENT.id)
         .digest('hex')
+
       const scope = nock(KEY_REGISTRY_ORIGIN)
         .get(TEST_KID_PATH)
-        .reply(200, TEST_CLIENT_KEY)
+        .reply(200, {
+          client: TEST_CLIENT,
+          jwk: testJwk
+        } as ClientKey)
+
       const introspection = await accessTokenService.introspect(token.value)
       assert.ok(introspection)
       expect(introspection.active).toEqual(true)
       expect(introspection).toMatchObject({
         ...grant,
         access: [access],
-        key: { proof: 'httpsig', jwk: TEST_JWK },
+        key: { proof: 'httpsig', jwk: testJwk },
         clientId
       })
       scope.isDone()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
-      const now = new Date(new Date().getTime() + 4000)
-      jest.useFakeTimers()
-      jest.setSystemTime(now)
+      const tokenCreatedDate = new Date(token.createdAt)
+      const now = new Date(
+        tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
+      )
+      jest.useFakeTimers({ now })
       const introspection = await accessTokenService.introspect(token.value)
       expect(introspection).toEqual({ active: false })
     })
@@ -213,22 +209,25 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
       const result = await accessTokenService.revoke(token.managementId)
       expect(result).toBeUndefined()
-      token = await AccessToken.query(trx).findById(token.id)
-      expect(token).toBeUndefined()
+      await expect(
+        AccessToken.query(trx).findById(token.id)
+      ).resolves.toBeUndefined()
     })
     test('Can revoke even if token has already expired', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.revoke(token.managementId)
       expect(result).toBeUndefined()
-      token = await AccessToken.query(trx).findById(token.id)
-      expect(token).toBeUndefined()
+      await expect(
+        AccessToken.query(trx).findById(token.id)
+      ).resolves.toBeUndefined()
     })
     test('Can revoke even if token has already been revoked', async (): Promise<void> => {
       await token.$query(trx).delete()
       const result = await accessTokenService.revoke(token.id)
       expect(result).toBeUndefined()
-      token = await AccessToken.query(trx).findById(token.id)
-      expect(token).toBeUndefined()
+      await expect(
+        AccessToken.query(trx).findById(token.id)
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -240,6 +239,7 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueId: v4(),
         interactId: v4(),
         interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
         interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -267,10 +267,11 @@ describe('Access Token Service', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       const result = await accessTokenService.rotate(token.managementId)
       expect(result.success).toBe(true)
-      token = await AccessToken.query(trx).findOne({
+      const rotatedToken = await AccessToken.query(trx).findOne({
         managementId: result.success && result.managementId
       })
-      expect(token.value).not.toBe(originalTokenValue)
+      expect(rotatedToken).toBeDefined()
+      expect(rotatedToken?.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate nonexistent token', async (): Promise<void> => {
       const result = await accessTokenService.rotate(v4())

@@ -1,11 +1,13 @@
 import { Grant, AccessType, AccessAction, getInterval } from './grant'
 import { Interval } from 'luxon'
+import { v4 as uuid } from 'uuid'
 
 describe('Grant', (): void => {
-  describe('includesAccess', (): void => {
+  describe('findAccess', (): void => {
     let grant: Grant
     const type = AccessType.IncomingPayment
     const action = AccessAction.Create
+    const clientId = uuid()
 
     describe.each`
       identifier                        | description
@@ -16,6 +18,7 @@ describe('Grant', (): void => {
         grant = new Grant({
           active: true,
           grant: 'PRY5NM33OM4TB8N6BW7',
+          clientId,
           access: [
             {
               type: AccessType.OutgoingPayment,
@@ -33,13 +36,41 @@ describe('Grant', (): void => {
 
       test('Returns true for included access', async (): Promise<void> => {
         expect(
-          grant.includesAccess({
+          grant.findAccess({
             type,
             action,
             identifier
           })
-        ).toBe(true)
+        ).toEqual(grant.access[1])
       })
+      test.each`
+        superAction             | subAction            | description
+        ${AccessAction.ReadAll} | ${AccessAction.Read} | ${'read'}
+        ${AccessAction.ListAll} | ${AccessAction.List} | ${'list'}
+      `(
+        'Returns true for $description super access',
+        async ({ superAction, subAction }): Promise<void> => {
+          const grant = new Grant({
+            active: true,
+            grant: 'PRY5NM33OM4TB8N6BW7',
+            clientId,
+            access: [
+              {
+                type,
+                actions: [superAction],
+                identifier
+              }
+            ]
+          })
+          expect(
+            grant.findAccess({
+              type,
+              action: subAction,
+              identifier
+            })
+          ).toEqual(grant.access[0])
+        }
+      )
 
       test.each`
         type                          | action                   | identifier    | description
@@ -49,34 +80,34 @@ describe('Grant', (): void => {
         'Returns false for missing $description',
         async ({ type, action, identifier }): Promise<void> => {
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action,
               identifier
             })
-          ).toBe(false)
+          ).toBeUndefined()
         }
       )
 
       if (identifier) {
         test('Returns false for missing identifier', async (): Promise<void> => {
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action,
               identifier: 'https://wallet.example/bob'
             })
-          ).toBe(false)
+          ).toBeUndefined()
         })
       } else {
         test('Returns true for unrestricted identifier', async (): Promise<void> => {
           expect(
-            grant.includesAccess({
+            grant.findAccess({
               type,
               action,
               identifier: 'https://wallet.example/bob'
             })
-          ).toBe(true)
+          ).toEqual(grant.access[1])
         })
       }
     })

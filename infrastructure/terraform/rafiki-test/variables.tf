@@ -27,7 +27,7 @@ locals {
         machine_type = "n2-standard-2"
         # the "node count" is actually "nodes per node location" count
         node_count = 1
-        min_node_count = 0
+        min_node_count = 1
         max_node_count = 8
         max_surge = 4
         max_unavailable = 0

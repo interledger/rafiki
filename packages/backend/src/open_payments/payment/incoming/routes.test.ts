@@ -1,18 +1,16 @@
-import * as httpMocks from 'node-mocks-http'
 import jestOpenAPI from 'jest-openapi'
-import base64url from 'base64url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { createContext } from '../../../tests/context'
+import { Amount, serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
+import { getRouteTests, setup } from '../../payment_pointer/model.test'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import {
   AppServices,
-  ReadContext,
   CreateContext,
   CompleteContext,
   ListContext
@@ -20,11 +18,11 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
-import { AppContext } from '../../../app'
+import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { Amount } from '@interledger/pay/dist/src/open-payments'
-import { listTests } from '../../../shared/routes.test'
+import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { GrantReference as GrantModel } from '../../grantReference/model'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -33,30 +31,8 @@ describe('Incoming Payment Routes', (): void => {
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
 
-  const setup = <T extends AppContext>(
-    reqOpts: httpMocks.RequestOptions,
-    params: Record<string, string>
-  ): T => {
-    const ctx = createContext<T>(
-      {
-        ...reqOpts,
-        headers: Object.assign(
-          { Accept: 'application/json', 'Content-Type': 'application/json' },
-          reqOpts.headers
-        )
-      },
-      params
-    )
-    if (reqOpts.body !== undefined) {
-      ctx.request.body = reqOpts.body
-    }
-
-    return ctx
-  }
-
   beforeAll(async (): Promise<void> => {
     config = Config
-    config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -68,19 +44,20 @@ describe('Incoming Payment Routes', (): void => {
     scale: 2
   }
   let paymentPointer: PaymentPointer
-  let paymentPointerId: string
   let expiresAt: Date
   let incomingAmount: Amount
   let description: string
   let externalRef: string
+  let grantRef: GrantModel
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
     expiresAt = new Date(Date.now() + 30_000)
-    paymentPointer = await createPaymentPointer(deps, { asset })
-    paymentPointerId = `https://wallet.example/${paymentPointer.id}`
+    paymentPointer = await createPaymentPointer(deps, {
+      asset
+    })
     incomingAmount = {
       value: BigInt('123'),
       assetScale: asset.scale,
@@ -88,6 +65,10 @@ describe('Incoming Payment Routes', (): void => {
     }
     description = 'hello world'
     externalRef = '#123'
+    grantRef = await GrantModel.query().insert({
+      id: uuid(),
+      clientId: uuid()
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -98,94 +79,75 @@ describe('Incoming Payment Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
-    let incomingPayment: IncomingPayment
-    beforeEach(async (): Promise<void> => {
-      incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
-        description,
-        expiresAt,
-        incomingAmount,
-        externalRef
-      })
-    })
-
-    test('returns 404 on unknown incoming payment', async (): Promise<void> => {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        {
-          incomingPaymentId: uuid(),
-          accountId: paymentPointer.id
-        }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).rejects.toMatchObject({
-        status: 404,
-        message: 'Not Found'
-      })
-    })
-
-    test('returns 200 with an open payments incoming payment', async (): Promise<void> => {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' },
-          method: 'GET',
-          url: `/${paymentPointer.id}/incoming-payments/${incomingPayment.id}`
-        },
-        {
-          incomingPaymentId: incomingPayment.id,
-          accountId: paymentPointer.id
-        }
-      )
-      await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.response).toSatisfyApiSpec()
-
-      const sharedSecret = (
-        (ctx.response.body as Record<string, unknown>)[
-          'ilpStreamConnection'
-        ] as Record<string, unknown>
-      )['sharedSecret']
-
-      expect(ctx.body).toEqual({
-        id: `${paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-        // paymentPointer: paymentPointerId,
-        accountId: paymentPointerId,
+  describe('get/list', (): void => {
+    getRouteTests({
+      createGrant: async (options) => createGrant(deps, options),
+      getPaymentPointer: async () => paymentPointer,
+      createModel: async ({ grant }) =>
+        createIncomingPayment(deps, {
+          paymentPointerId: paymentPointer.id,
+          grantId: grant?.grant,
+          description,
+          expiresAt,
+          incomingAmount,
+          externalRef
+        }),
+      get: (ctx) => incomingPaymentRoutes.get(ctx),
+      getBody: (incomingPayment, list) => ({
+        id: incomingPayment.url,
+        paymentPointer: paymentPointer.url,
         completed: false,
-        incomingAmount: {
-          value: '123',
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
+        incomingAmount: serializeAmount(incomingPayment.incomingAmount),
         description: incomingPayment.description,
-        expiresAt: expiresAt.toISOString(),
+        expiresAt: incomingPayment.expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
         updatedAt: incomingPayment.updatedAt.toISOString(),
-        receivedAmount: {
-          value: '0',
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
+        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         externalRef: '#123',
-        ilpStreamConnection: {
-          id: `${config.publicHost}/connections/${incomingPayment.connectionId}`,
-          ilpAddress: expect.stringMatching(
-            /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-          ),
-          sharedSecret
-        }
+        ilpStreamConnection: list
+          ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
+          : {
+              id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
+              ilpAddress: expect.stringMatching(
+                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+              ),
+              sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
+              assetCode: incomingPayment.incomingAmount.assetCode,
+              assetScale: incomingPayment.incomingAmount.assetScale
+            }
+      }),
+      list: (ctx) => incomingPaymentRoutes.list(ctx),
+      urlPath: IncomingPayment.urlPath
+    })
+
+    test('returns 500 for unexpected error', async (): Promise<void> => {
+      const incomingPaymentService = await deps.use('incomingPaymentService')
+      jest
+        .spyOn(incomingPaymentService, 'getPaymentPointerPage')
+        .mockRejectedValueOnce(new Error('unexpected'))
+      const ctx = setup<ListContext>({
+        reqOpts: {
+          headers: { Accept: 'application/json' }
+        },
+        paymentPointer
       })
-      const sharedSecretBuffer = Buffer.from(sharedSecret as string, 'base64')
-      expect(sharedSecretBuffer).toHaveLength(32)
-      expect(sharedSecret).toEqual(base64url(sharedSecretBuffer))
+      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
+        status: 500,
+        message: `Error trying to list incoming payments`
+      })
     })
   })
-  describe('create', (): void => {
+
+  describe.each`
+    withGrant | description
+    ${false}  | ${'without grant'}
+    ${true}   | ${'with grant'}
+  `('create - $description', ({ withGrant }): void => {
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
-      const ctx = setup<CreateContext<CreateBody>>(
-        { body: {} },
-        { accountId: paymentPointer.id }
-      )
+      const ctx = setup<CreateContext<CreateBody>>({
+        reqOpts: { body: {} },
+        paymentPointer
+      })
       ctx.request.body['expiresAt'] = new Date(
         Date.now() + MAX_EXPIRY + 1000
       ).toISOString()
@@ -207,8 +169,21 @@ describe('Incoming Payment Routes', (): void => {
         externalRef,
         expiresAt
       }): Promise<void> => {
-        const ctx = setup<CreateContext<CreateBody>>(
-          {
+        const grant = withGrant
+          ? new Grant({
+              active: true,
+              grant: grantRef.id,
+              clientId: grantRef.clientId,
+              access: [
+                {
+                  type: AccessType.IncomingPayment,
+                  actions: [AccessAction.Create]
+                }
+              ]
+            })
+          : undefined
+        const ctx = setup<CreateContext<CreateBody>>({
+          reqOpts: {
             body: {
               incomingAmount,
               description,
@@ -216,10 +191,11 @@ describe('Incoming Payment Routes', (): void => {
               expiresAt
             },
             method: 'POST',
-            url: `/${paymentPointer.id}/incoming-payments`
+            url: `/incoming-payments`
           },
-          { accountId: paymentPointer.id }
-        )
+          paymentPointer,
+          grant
+        })
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
@@ -237,9 +213,8 @@ describe('Incoming Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${paymentPointerId}/incoming-payments/${incomingPaymentId}`,
-          // paymentPointer: paymentPointerId,
-          accountId: paymentPointerId,
+          id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
+          paymentPointer: paymentPointer.url,
           incomingAmount,
           description,
           expiresAt: expiresAt || expect.any(String),
@@ -253,11 +228,13 @@ describe('Incoming Payment Routes', (): void => {
           externalRef,
           completed: false,
           ilpStreamConnection: {
-            id: `${config.publicHost}/connections/${connectionId}`,
+            id: `${config.openPaymentsUrl}/connections/${connectionId}`,
             ilpAddress: expect.stringMatching(
               /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
             ),
-            sharedSecret: expect.any(String)
+            sharedSecret: expect.any(String),
+            assetCode: asset.code,
+            assetScale: asset.scale
           }
         })
       }
@@ -276,23 +253,23 @@ describe('Incoming Payment Routes', (): void => {
       })
     })
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
-      const ctx = setup<CompleteContext>(
-        {
+      const ctx = setup<CompleteContext>({
+        reqOpts: {
           headers: { Accept: 'application/json' },
           method: 'POST',
-          url: `/${paymentPointer.id}/incoming-payments/${incomingPayment.id}/complete`
+          url: `/incoming-payments/${incomingPayment.id}/complete`
         },
-        {
-          incomingPaymentId: incomingPayment.id,
-          accountId: paymentPointer.id
-        }
-      )
+        params: {
+          id: incomingPayment.id
+        },
+        paymentPointer
+      })
+      ctx.paymentPointer = paymentPointer
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: `${paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-        // paymentPointer: paymentPointerId,
-        accountId: paymentPointerId,
+        id: incomingPayment.url,
+        paymentPointer: paymentPointer.url,
         incomingAmount: {
           value: '123',
           assetCode: asset.code,
@@ -308,56 +285,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
-        completed: true,
-        ilpStreamConnection: `${config.publicHost}/connections/${incomingPayment.connectionId}`
-      })
-    })
-  })
-
-  describe('list', (): void => {
-    listTests({
-      getPaymentPointerId: () => paymentPointer.id,
-      getUrl: () => `/${paymentPointer.id}/incoming-payments`,
-      createItem: async (index: number) => {
-        const payment = await createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id,
-          description: `p${index}`,
-          expiresAt
-        })
-        return {
-          id: `${paymentPointerId}/incoming-payments/${payment.id}`,
-          // paymentPointer: paymentPointerId,
-          accountId: paymentPointerId,
-          receivedAmount: {
-            value: '0',
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          description: payment.description,
-          completed: false,
-          expiresAt: expiresAt.toISOString(),
-          createdAt: payment.createdAt.toISOString(),
-          updatedAt: payment.updatedAt.toISOString(),
-          ilpStreamConnection: `${config.publicHost}/connections/${payment.connectionId}`
-        }
-      },
-      list: (ctx: ListContext) => incomingPaymentRoutes.list(ctx)
-    })
-
-    test('returns 500 for unexpected error', async (): Promise<void> => {
-      const incomingPaymentService = await deps.use('incomingPaymentService')
-      jest
-        .spyOn(incomingPaymentService, 'getPaymentPointerPage')
-        .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = createContext<ListContext>(
-        {
-          headers: { Accept: 'application/json' }
-        },
-        { accountId: paymentPointerId }
-      )
-      await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
-        status: 500,
-        message: `Error trying to list incoming payments`
+        completed: true
       })
     })
   })

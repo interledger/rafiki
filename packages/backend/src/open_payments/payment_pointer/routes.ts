@@ -1,10 +1,14 @@
-import { PaymentPointerContext } from '../../app'
+import { PaymentPointerSubresource } from './model'
+import { PaymentPointerSubresourceService } from './service'
+import { PaymentPointerContext, ListContext } from '../../app'
 import { IAppConfig } from '../../config/app'
-import { PaymentPointerService } from './service'
+import {
+  getPageInfo,
+  parsePaginationQueryParameters
+} from '../../shared/pagination'
 
 interface ServiceDependencies {
   config: IAppConfig
-  paymentPointerService: PaymentPointerService
 }
 
 export interface PaymentPointerRoutes {
@@ -24,19 +28,51 @@ export async function getPaymentPointer(
   deps: ServiceDependencies,
   ctx: PaymentPointerContext
 ): Promise<void> {
-  const { accountId: paymentPointerId } = ctx.params
-  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
-    ctx.throw(404)
-    return // unreachable, but satisfies typescript
+  if (!ctx.paymentPointer) {
+    return ctx.throw(404)
   }
 
-  const config = await deps.config
   ctx.body = {
-    id: `${config.publicHost}/${encodeURIComponent(paymentPointer.id)}`,
-    publicName: paymentPointer.publicName ?? undefined,
-    assetCode: paymentPointer.asset.code,
-    assetScale: paymentPointer.asset.scale,
-    authServer: config.authServerGrantUrl
+    id: ctx.paymentPointer.url,
+    publicName: ctx.paymentPointer.publicName ?? undefined,
+    assetCode: ctx.paymentPointer.asset.code,
+    assetScale: ctx.paymentPointer.asset.scale,
+    authServer: deps.config.authServerGrantUrl
   }
+}
+
+interface ListSubresourceOptions<M extends PaymentPointerSubresource> {
+  ctx: ListContext
+  getPaymentPointerPage?: PaymentPointerSubresourceService<M>['getPaymentPointerPage']
+  toBody: (model: M) => Record<string, unknown>
+}
+
+export const listSubresource = async <M extends PaymentPointerSubresource>({
+  ctx,
+  getPaymentPointerPage,
+  toBody
+}: ListSubresourceOptions<M>) => {
+  const pagination = parsePaginationQueryParameters(ctx.request.query)
+  const page = await getPaymentPointerPage({
+    paymentPointerId: ctx.paymentPointer.id,
+    pagination,
+    clientId: ctx.clientId
+  })
+  const pageInfo = await getPageInfo(
+    (pagination) =>
+      getPaymentPointerPage({
+        paymentPointerId: ctx.paymentPointer.id,
+        pagination,
+        clientId: ctx.clientId
+      }),
+    page
+  )
+  const result = {
+    pagination: pageInfo,
+    result: page.map((item: M) => {
+      item.paymentPointer = ctx.paymentPointer
+      return toBody(item)
+    })
+  }
+  ctx.body = result
 }

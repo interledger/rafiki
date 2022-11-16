@@ -1,8 +1,8 @@
-import { BaseModel, Pagination } from '../shared/baseModel'
+import { BaseModel, Pagination } from './baseModel'
 
 interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
-  getPage: (pagination: Pagination) => Promise<Type[]>
+  getPage: (pagination?: Pagination) => Promise<Type[]>
 }
 
 export const getPageTests = <Type extends BaseModel>({
@@ -14,25 +14,25 @@ export const getPageTests = <Type extends BaseModel>({
 
     beforeEach(async (): Promise<void> => {
       modelsCreated = []
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 22; i++) {
         modelsCreated.push(await createModel())
       }
     })
 
     test.each`
-      pagination                   | expected                               | description
-      ${undefined}                 | ${{ length: 20, first: 0, last: 19 }}  | ${'Defaults to fetching first 20 items'}
-      ${{ first: 10 }}             | ${{ length: 10, first: 0, last: 9 }}   | ${'Can change forward pagination limit'}
-      ${{ after: 19 }}             | ${{ length: 20, first: 20, last: 39 }} | ${'Can paginate forwards from a cursor'}
-      ${{ first: 10, after: 9 }}   | ${{ length: 10, first: 10, last: 19 }} | ${'Can paginate forwards from a cursor with a limit'}
-      ${{ before: 20 }}            | ${{ length: 20, first: 0, last: 19 }}  | ${'Can paginate backwards from a cursor'}
-      ${{ last: 5, before: 10 }}   | ${{ length: 5, first: 5, last: 9 }}    | ${'Can paginate backwards from a cursor with a limit'}
-      ${{ after: 19, before: 19 }} | ${{ length: 20, first: 20, last: 39 }} | ${'Providing before and after results in forward pagination'}
+      pagination                  | expected                               | description
+      ${undefined}                | ${{ length: 20, first: 0, last: 19 }}  | ${'Defaults to fetching first 20 items'}
+      ${{ first: 10 }}            | ${{ length: 10, first: 0, last: 9 }}   | ${'Can change forward pagination limit'}
+      ${{ after: 0 }}             | ${{ length: 20, first: 1, last: 20 }}  | ${'Can paginate forwards from a cursor'}
+      ${{ first: 10, after: 9 }}  | ${{ length: 10, first: 10, last: 19 }} | ${'Can paginate forwards from a cursor with a limit'}
+      ${{ before: 20 }}           | ${{ length: 20, first: 0, last: 19 }}  | ${'Can paginate backwards from a cursor'}
+      ${{ last: 5, before: 10 }}  | ${{ length: 5, first: 5, last: 9 }}    | ${'Can paginate backwards from a cursor with a limit'}
+      ${{ after: 0, before: 19 }} | ${{ length: 20, first: 1, last: 20 }}  | ${'Providing before and after results in forward pagination'}
     `('$description', async ({ pagination, expected }): Promise<void> => {
-      if (pagination?.after) {
+      if (pagination?.after !== undefined) {
         pagination.after = modelsCreated[pagination.after].id
       }
-      if (pagination?.before) {
+      if (pagination?.before !== undefined) {
         pagination.before = modelsCreated[pagination.before].id
       }
       const models = await getPage(pagination)

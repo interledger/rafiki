@@ -3,6 +3,7 @@ import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
+import { Amount } from '../open_payments/amount'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { Config, IAppConfig } from '../config/app'
@@ -15,7 +16,6 @@ import { createIncomingPayment } from '../tests/incomingPayment'
 import { createQuote } from '../tests/quote'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { createPaymentPointer } from '../tests/paymentPointer'
-import { Amount } from '@interledger/pay/dist/src/open-payments'
 import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
@@ -115,16 +115,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
-            const page = await incomingPaymentService.getPaymentPointerPage(
-              defaultPaymentPointer.id,
+            const page = await incomingPaymentService.getPaymentPointerPage({
+              paymentPointerId: defaultPaymentPointer.id,
               pagination
-            )
+            })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                incomingPaymentService.getPaymentPointerPage(
-                  defaultPaymentPointer.id,
+                incomingPaymentService.getPaymentPointerPage({
+                  paymentPointerId: defaultPaymentPointer.id,
                   pagination
-                ),
+                }),
               page
             )
             expect(pageInfo).toEqual({
@@ -169,16 +169,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
-            const page = await outgoingPaymentService.getPaymentPointerPage(
-              defaultPaymentPointer.id,
+            const page = await outgoingPaymentService.getPaymentPointerPage({
+              paymentPointerId: defaultPaymentPointer.id,
               pagination
-            )
+            })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                outgoingPaymentService.getPaymentPointerPage(
-                  defaultPaymentPointer.id,
+                outgoingPaymentService.getPaymentPointerPage({
+                  paymentPointerId: defaultPaymentPointer.id,
                   pagination
-                ),
+                }),
               page
             )
             expect(pageInfo).toEqual({
@@ -223,16 +223,16 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = quoteIds[cursor]
               else pagination.after = quoteIds[cursor]
             }
-            const page = await quoteService.getPaymentPointerPage(
-              defaultPaymentPointer.id,
+            const page = await quoteService.getPaymentPointerPage({
+              paymentPointerId: defaultPaymentPointer.id,
               pagination
-            )
+            })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                quoteService.getPaymentPointerPage(
-                  defaultPaymentPointer.id,
+                quoteService.getPaymentPointerPage({
+                  paymentPointerId: defaultPaymentPointer.id,
                   pagination
-                ),
+                }),
               page
             )
             expect(pageInfo).toEqual({

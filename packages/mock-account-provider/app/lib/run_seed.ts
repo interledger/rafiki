@@ -25,12 +25,13 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
       const liquidity = await addPeerLiquidity(
         config.self.graphqlUrl,
         peerResponse.id,
-        peer.initialLiquidity.toString(),
+        peer.initialLiquidity,
         transferUid
       )
       return [peerResponse, liquidity]
     })
   )
+
   console.log(JSON.stringify(peerResponses, null, 2))
 
   // Clear the accounts before seeding.
@@ -38,14 +39,23 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
 
   const accountResponses = await Promise.all(
     _.map(config.accounts, async (account: Account) => {
-      await mockAccounts.create(account.id, account.name)
+      await mockAccounts.create(
+        account.id,
+        account.name,
+        account.asset,
+        account.scale
+      )
       if (account.initialBalance) {
-        await mockAccounts.debit(account.id, account.initialBalance, false)
+        await mockAccounts.credit(
+          account.id,
+          BigInt(account.initialBalance),
+          false
+        )
       }
       const pp = await createPaymentPointer(
         config.self.graphqlUrl,
         account.name,
-        account.url,
+        `https://${CONFIG.self.hostname}/${account.path}`,
         account.asset,
         account.scale
       )
@@ -60,8 +70,13 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
+  const envVarStrings = _.map(config.accounts, (account) => {
+    return `${account.postmanEnvVar}: http://localhost:${CONFIG.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.self.hostname}`
+  })
+  console.log(envVarStrings.join('\n'))
 }
 
 export async function runSeed(): Promise<void> {
+  console.log('calling run_seed')
   return setupFromSeed(CONFIG)
 }

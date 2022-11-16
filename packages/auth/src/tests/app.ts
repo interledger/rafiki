@@ -11,6 +11,7 @@ export interface TestContainer {
   knex: Knex
   connectionUrl: string
   shutdown: () => Promise<void>
+  container: IocContract<AppServices>
 }
 
 export const createTestApp = async (
@@ -45,6 +46,7 @@ export const createTestApp = async (
     connectionUrl: config.databaseUrl,
     shutdown: async () => {
       await gracefulShutdown(container, app)
-    }
+    },
+    container
   }
 }

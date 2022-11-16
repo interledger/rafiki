@@ -1,0 +1,31 @@
+{
+  "name": "open-payments",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build:deps": "pnpm --filter openapi build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -fr dist/",
+    "generate:types": "npx ts-node scripts/generate-types.ts",
+    "prepack": "pnpm build",
+    "test": "jest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.12",
+    "base64url": "^3.0.1",
+    "nock": "^13.2.9",
+    "openapi-typescript": "^4.5.0",
+    "ts-node": "^10.7.0",
+    "typescript": "^4.3.0",
+    "uuid": "^8.3.2"
+  },
+  "dependencies": {
+    "axios": "^1.1.2",
+    "openapi": "workspace:../openapi",
+    "pino": "^8.4.2"
+  }
+}

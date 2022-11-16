@@ -1,3 +1,4 @@
+import path from 'path'
 import { EventEmitter } from 'events'
 import createLogger from 'pino'
 import { knex } from 'knex'
@@ -13,9 +14,9 @@ import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
-import { createSignatureService } from './signature/service'
 
-export { JWKWithRequired } from './client/service'
+export { JWKWithRequired, KeyInfo } from './client/service'
+export { HttpSigContext, verifySigAndChallenge } from './signature/middleware'
 const container = initIocContainer(Config)
 const app = new App(container)
 
@@ -103,9 +104,21 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('openApi', async (deps) => {
-    const config = await deps.use('config')
-    return await createOpenAPI(config.authServerSpec)
+  container.singleton('openApi', async () => {
+    const authServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/auth-server.yaml')
+    )
+    const resourceServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/resource-server.yaml')
+    )
+    const idpSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/id-provider.yaml')
+    )
+    return {
+      authServerSpec,
+      resourceServerSpec,
+      idpSpec
+    }
   })
 
   container.singleton(
@@ -127,19 +140,6 @@ export function initIocContainer(
         logger: await deps.use('logger'),
         accessTokenService: await deps.use('accessTokenService'),
         clientService: await deps.use('clientService')
-      })
-    }
-  )
-
-  container.singleton(
-    'signatureService',
-    async (deps: IocContract<AppServices>) => {
-      return createSignatureService({
-        config: await deps.use('config'),
-        logger: await deps.use('logger'),
-        clientService: await deps.use('clientService'),
-        grantService: await deps.use('grantService'),
-        accessTokenService: await deps.use('accessTokenService')
       })
     }
   )

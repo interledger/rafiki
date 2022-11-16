@@ -19,6 +19,8 @@ export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
     try {
       if (validateRequest(ctx.request)) {
         await next()
+        console.log('request=', ctx.request)
+        console.log('response=', ctx.response)
         if (validateResponse && !validateResponse(ctx.response)) {
           throw new Error('unreachable')
         }

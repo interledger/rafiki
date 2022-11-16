@@ -31,7 +31,6 @@ type Query {
 
   quote(id: String!): Quote
   outgoingPayment(id: String!): OutgoingPayment
-  client(id: String!): Client
 }
 
 type Mutation {
@@ -99,17 +98,22 @@ type Mutation {
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
+  createIncomingPayment(
+    input: CreateIncomingPaymentInput!
+  ): IncomingPaymentResponse!
+
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
 
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
-  "Create Client"
-  createClient(input: CreateClientInput!): CreateClientMutationResponse
+  "Create payment pointer key"
+  createPaymentPointerKey(
+    input: CreatePaymentPointerKeyInput!
+  ): CreatePaymentPointerKeyMutationResponse
 
-  "Add Key to Client"
-  addKeyToClient(input: AddKeyToClientInput!): AddKeyToClientMutationResponse
+  revokePaymentPointerKey(id: String!): RevokePaymentPointerKeyMutationResponse
 
   "Create API Key"
   createApiKey(input: CreateApiKeyInput!): CreateApiKeyMutationResponse
@@ -247,16 +251,8 @@ input CreatePaymentPointerWithdrawalInput {
   id: String!
 }
 
-input CreateClientInput {
-  name: String!
-  uri: String!
-  image: String!
-  email: String!
-}
-
-input AddKeyToClientInput {
-  id: String!
-  clientId: String!
+input CreatePaymentPointerKeyInput {
+  paymentPointerId: String!
   jwk: String!
 }
 
@@ -493,11 +489,26 @@ input CreateOutgoingPaymentInput {
   externalRef: String
 }
 
+input CreateIncomingPaymentInput {
+  paymentPointerId: String!
+  expiresAt: String
+  description: String
+  incomingAmount: AmountInput
+  externalRef: String
+}
+
 type OutgoingPaymentResponse {
   code: String!
   success: Boolean!
   message: String
   payment: OutgoingPayment
+}
+
+type IncomingPaymentResponse {
+  code: String!
+  success: Boolean!
+  message: String
+  payment: IncomingPayment
 }
 
 input CreatePaymentPointerInput {
@@ -506,19 +517,9 @@ input CreatePaymentPointerInput {
   publicName: String
 }
 
-type Client implements Model {
+type PaymentPointerKey implements Model {
   id: ID!
-  name: String!
-  uri: String!
-  image: String!
-  email: String!
-  keys: [ClientKeys!]!
-  createdAt: String!
-}
-
-type ClientKeys implements Model {
-  id: ID!
-  clientId: String!
+  paymentPointerId: ID!
   jwk: String!
   createdAt: String!
 }
@@ -609,18 +610,18 @@ type PaymentPointerWithdrawalMutationResponse implements MutationResponse {
   withdrawal: PaymentPointerWithdrawal
 }
 
-type CreateClientMutationResponse implements MutationResponse {
+type CreatePaymentPointerKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  client: Client
+  paymentPointerKey: PaymentPointerKey
 }
 
-type AddKeyToClientMutationResponse implements MutationResponse {
+type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  client: Client
+  paymentPointerKey: PaymentPointerKey
 }
 
 type CreateApiKeyMutationResponse implements MutationResponse {

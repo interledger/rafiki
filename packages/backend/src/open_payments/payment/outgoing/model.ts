@@ -3,26 +3,17 @@ import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { PaymentPointerSubresource } from '../../payment_pointer/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON } from '../../amount'
-import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
-import { DbErrors } from 'objection-db-errors'
-
-export class Grant extends DbErrors(Model) {
-  public static get modelPaths(): string[] {
-    return [__dirname]
-  }
-  public static readonly tableName = 'grants'
-  public id!: string
-}
 
 export class OutgoingPayment
-  extends BaseModel
+  extends PaymentPointerSubresource
   implements ConnectorAccount, LiquidityAccount
 {
   public static readonly tableName = 'outgoingPayments'
+  public static readonly urlPath = '/outgoing-payments'
 
   static get virtualAttributes(): string[] {
     return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
@@ -32,7 +23,6 @@ export class OutgoingPayment
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
-  public grantId?: string
 
   public get receiver(): string {
     return this.quote.receiver
@@ -61,10 +51,6 @@ export class OutgoingPayment
   public description?: string
   public externalRef?: string
 
-  // Open payments payment pointer id of the sender
-  public paymentPointerId!: string
-  public paymentPointer?: PaymentPointer
-
   public quote!: Quote
 
   public get assetId(): string {
@@ -78,21 +64,16 @@ export class OutgoingPayment
   // Outgoing peer
   public peerId?: string
 
-  static relationMappings = {
-    paymentPointer: {
-      relation: Model.HasOneRelation,
-      modelClass: PaymentPointer,
-      join: {
-        from: 'outgoingPayments.paymentPointerId',
-        to: 'paymentPointers.id'
-      }
-    },
-    quote: {
-      relation: Model.HasOneRelation,
-      modelClass: Quote,
-      join: {
-        from: 'outgoingPayments.id',
-        to: 'quotes.id'
+  static get relationMappings() {
+    return {
+      ...super.relationMappings,
+      quote: {
+        relation: Model.HasOneRelation,
+        modelClass: Quote,
+        join: {
+          from: 'outgoingPayments.id',
+          to: 'quotes.id'
+        }
       }
     }
   }
@@ -156,7 +137,6 @@ export class OutgoingPayment
     json = super.$formatJson(json)
     return {
       id: json.id,
-      // paymentPointer: json.paymentPointer,
       state: json.state,
       receiver: json.receiver,
       sendAmount: {

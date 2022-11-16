@@ -1,5 +1,3 @@
-import base64url from 'base64url'
-import { StreamCredentials } from '@interledger/stream-receiver'
 import { Logger } from 'pino'
 import {
   ReadContext,
@@ -9,7 +7,7 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment, IncomingPaymentState } from './model'
+import { IncomingPayment, IncomingPaymentJSON } from './model'
 import {
   errorToCode,
   errorToMessage,
@@ -17,11 +15,8 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
-import {
-  getPageInfo,
-  parsePaginationQueryParameters
-} from '../../../shared/pagination'
-import { Pagination } from '../../../shared/baseModel'
+import { listSubresource } from '../../payment_pointer/routes'
+import { ConnectionJSON } from '../../connection/model'
 import { ConnectionService } from '../../connection/service'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
@@ -64,16 +59,17 @@ async function getIncomingPayment(
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
   try {
-    incomingPayment = await deps.incomingPaymentService.get(
-      ctx.params.incomingPaymentId
-    )
+    incomingPayment = await deps.incomingPaymentService.get({
+      id: ctx.params.id,
+      clientId: ctx.clientId,
+      paymentPointerId: ctx.paymentPointer.id
+    })
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
   }
   if (!incomingPayment) return ctx.throw(404)
-
-  const streamCredentials = deps.connectionService.get(incomingPayment)
-  ctx.body = incomingPaymentToBody(deps, incomingPayment, streamCredentials)
+  const connection = deps.connectionService.get(incomingPayment)
+  ctx.body = incomingPaymentToBody(deps, incomingPayment, connection?.toJSON())
 }
 
 export type CreateBody = {
@@ -97,7 +93,8 @@ async function createIncomingPayment(
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    paymentPointerId: ctx.params.accountId,
+    paymentPointerId: ctx.paymentPointer.id,
+    grantId: ctx.grant ? ctx.grant.grant : undefined,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt,
@@ -112,11 +109,11 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const streamCredentials = deps.connectionService.get(incomingPaymentOrError)
+  const connection = deps.connectionService.get(incomingPaymentOrError)
   ctx.body = incomingPaymentToBody(
     deps,
     incomingPaymentOrError,
-    streamCredentials
+    connection?.toJSON()
   )
 }
 
@@ -127,7 +124,7 @@ async function completeIncomingPayment(
   let incomingPaymentOrError: IncomingPayment | IncomingPaymentError
   try {
     incomingPaymentOrError = await deps.incomingPaymentService.complete(
-      ctx.params.incomingPaymentId
+      ctx.params.id
     )
   } catch (err) {
     ctx.throw(500, 'Error trying to complete incoming payment')
@@ -139,7 +136,6 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-
   ctx.body = incomingPaymentToBody(deps, incomingPaymentOrError)
 }
 
@@ -147,28 +143,17 @@ async function listIncomingPayments(
   deps: ServiceDependencies,
   ctx: ListContext
 ): Promise<void> {
-  const { accountId: paymentPointerId } = ctx.params
-  const pagination = parsePaginationQueryParameters(ctx.request.query)
   try {
-    const page = await deps.incomingPaymentService.getPaymentPointerPage(
-      paymentPointerId,
-      pagination
-    )
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
-        deps.incomingPaymentService.getPaymentPointerPage(
-          paymentPointerId,
-          pagination
-        ),
-      page
-    )
-    const result = {
-      pagination: pageInfo,
-      result: page.map((item: IncomingPayment) =>
-        incomingPaymentToBody(deps, item)
-      )
-    }
-    ctx.body = result
+    await listSubresource({
+      ctx,
+      getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
+      toBody: (payment) =>
+        incomingPaymentToBody(
+          deps,
+          payment,
+          deps.connectionService.getUrl(payment)
+        )
+    })
   } catch (_) {
     ctx.throw(500, 'Error trying to list incoming payments')
   }
@@ -177,23 +162,15 @@ async function listIncomingPayments(
 function incomingPaymentToBody(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment,
-  streamCredentials?: StreamCredentials
-) {
-  return Object.fromEntries(
-    Object.entries({
-      ...incomingPayment.toJSON(),
-      // paymentPointer: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}`,
-      accountId: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}`,
-      id: `${deps.config.publicHost}/${incomingPayment.paymentPointerId}/incoming-payments/${incomingPayment.id}`,
-      ilpStreamConnection: streamCredentials
-        ? {
-            id: `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
-            ilpAddress: streamCredentials.ilpAddress,
-            sharedSecret: base64url(streamCredentials.sharedSecret)
-          }
-        : `${deps.config.publicHost}/connections/${incomingPayment.connectionId}`,
-      state: null,
-      completed: incomingPayment.state === IncomingPaymentState.Completed
-    }).filter(([_, v]) => v != null)
-  )
+  ilpStreamConnection?: ConnectionJSON | string
+): IncomingPaymentJSON {
+  const body = {
+    ...incomingPayment.toJSON(),
+    id: incomingPayment.url,
+    paymentPointer: incomingPayment.paymentPointer.url
+  } as unknown as IncomingPaymentJSON
+  if (ilpStreamConnection) {
+    body.ilpStreamConnection = ilpStreamConnection
+  }
+  return body
 }

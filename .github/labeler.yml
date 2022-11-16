@@ -4,6 +4,8 @@
 'pkg: frontend': packages/frontend/**/*
 'pkg: auth': packages/auth/**/*
 'pkg: openapi': packages/openapi/**/*
+'pkg: map': packages/mock-account-provider/**/*
+'pkg: open-payments': packages/open-payments/**/*
 
 # Add 'type: documentation' label to any change to *.md files
 'type: ci':
@@ -21,7 +23,9 @@
   - packages/frontend/src/**/*
   - packages/auth/src/**/*
   - packages/openapi/src/**/*
+  - packages/open-payments/src/**/*
 
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts
 
+'type: localenv': infrastructure/local/*

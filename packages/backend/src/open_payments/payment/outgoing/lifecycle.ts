@@ -8,6 +8,7 @@ import {
   PaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
+import { Receiver } from '../../receiver/model'
 import { IlpPlugin } from '../../../shared/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
@@ -18,16 +19,7 @@ export async function handleSending(
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
 
-  const destination = await Pay.setupPayment({
-    plugin,
-    destinationPayment: payment.receiver
-  })
-
-  if (!destination.destinationPaymentDetails) {
-    throw LifecycleError.MissingIncomingPayment
-  }
-
-  validateAssets(deps, payment, destination)
+  const receiver = await deps.receiverService.get(payment.receiver)
 
   // TODO: Query Tigerbeetle transfers by code to distinguish sending debits from withdrawals
   const amountSent = await deps.accountingService.getTotalSent(payment.id)
@@ -35,33 +27,46 @@ export async function handleSending(
     throw LifecycleError.MissingBalance
   }
 
+  if (!receiver) {
+    // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
+    deps.logger.warn(
+      {
+        amountSent
+      },
+      'handleSending missing or completed/expired receiver'
+    )
+    await handleCompleted(deps, payment)
+    return
+  }
+
+  validateAssets(deps, payment, receiver)
+
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
   const newMaxSourceAmount = payment.sendAmount.value - amountSent
 
-  let newMinDeliveryAmount
-  if (destination.destinationPaymentDetails.incomingAmount) {
-    newMinDeliveryAmount =
-      destination.destinationPaymentDetails.incomingAmount.value -
-      destination.destinationPaymentDetails.receivedAmount.value
-  } else {
-    // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
-    // eslint-disable-next-line no-case-declarations
-    const amountDelivered = BigInt(
-      Math.ceil(
-        +amountSent.toString() * payment.quote.minExchangeRate.valueOf()
-      )
-    )
-    newMinDeliveryAmount = payment.receiveAmount.value - amountDelivered
+  // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
+  // eslint-disable-next-line no-case-declarations
+  const amountDelivered = BigInt(
+    Math.ceil(+amountSent.toString() * payment.quote.minExchangeRate.valueOf())
+  )
+  let newAmountToDeliver = payment.receiveAmount.value - amountDelivered
+
+  if (receiver.incomingAmount) {
+    const maxAmountToDeliver =
+      receiver.incomingAmount.value - receiver.receivedAmount.value
+    if (maxAmountToDeliver < newAmountToDeliver) {
+      newAmountToDeliver = maxAmountToDeliver
+    }
   }
 
-  if (newMinDeliveryAmount <= BigInt(0)) {
-    // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the invoice could have been paid by a totally different payment in the time since the quote.
+  if (newAmountToDeliver <= BigInt(0)) {
+    // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
         newMaxSourceAmount,
-        newMinDeliveryAmount,
+        newAmountToDeliver,
         amountSent,
-        incomingPayment: destination.destinationPaymentDetails
+        receiver
       },
       'handleSending payment was already paid'
     )
@@ -69,14 +74,14 @@ export async function handleSending(
     return
   } else if (
     newMaxSourceAmount <= BigInt(0) ||
-    newMinDeliveryAmount <= BigInt(0)
+    newAmountToDeliver <= BigInt(0)
   ) {
     // Similar to the above, but not recoverable (at least not without a re-quote).
     // I'm not sure whether this case is actually reachable, but handling it here is clearer than passing ilp-pay bad parameters.
     deps.logger.error(
       {
         newMaxSourceAmount,
-        newMinDeliveryAmount
+        newAmountToDeliver
       },
       'handleSending bad retry state'
     )
@@ -91,12 +96,13 @@ export async function handleSending(
     paymentType: Pay.PaymentType.FixedDelivery,
     // Adjust quoted amounts to paymentPointer for prior partial payment.
     maxSourceAmount: newMaxSourceAmount,
-    minDeliveryAmount: newMinDeliveryAmount,
+    minDeliveryAmount: newAmountToDeliver,
     lowEstimatedExchangeRate,
     highEstimatedExchangeRate,
     minExchangeRate
   }
 
+  const destination = receiver.toResolvedPayment()
   const receipt = await Pay.pay({ plugin, destination, quote }).finally(() => {
     return Pay.closeConnection(plugin, destination).catch((err) => {
       // Ignore connection close failures, all of the money was delivered.
@@ -115,7 +121,7 @@ export async function handleSending(
       destination: destination.destinationAddress,
       error: receipt.error,
       newMaxSourceAmount,
-      newMinDeliveryAmount,
+      newAmountToDeliver,
       receiptAmountSent: receipt.amountSent,
       receiptAmountDelivered: receipt.amountDelivered
     },
@@ -186,24 +192,22 @@ export const sendWebhookEvent = async (
 const validateAssets = (
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  destination: Pay.ResolvedPayment
+  receiver: Receiver
 ): void => {
   if (payment.assetId !== payment.paymentPointer?.assetId) {
     throw LifecycleError.SourceAssetConflict
   }
-  if (payment.receiveAmount) {
-    if (
-      payment.receiveAmount.assetScale !== destination.destinationAsset.scale ||
-      payment.receiveAmount.assetCode !== destination.destinationAsset.code
-    ) {
-      deps.logger.warn(
-        {
-          oldAsset: payment.receiveAmount,
-          newAsset: destination.destinationAsset
-        },
-        'destination asset changed'
-      )
-      throw Pay.PaymentError.DestinationAssetConflict
-    }
+  if (
+    payment.receiveAmount.assetScale !== receiver.assetScale ||
+    payment.receiveAmount.assetCode !== receiver.assetCode
+  ) {
+    deps.logger.warn(
+      {
+        oldAsset: payment.receiveAmount,
+        newAsset: receiver.asset
+      },
+      'receiver asset changed'
+    )
+    throw Pay.PaymentError.DestinationAssetConflict
   }
 }

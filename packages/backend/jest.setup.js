@@ -21,7 +21,7 @@ module.exports = async (globalConfig) => {
 
   const setupDatabase = async () => {
     if (!process.env.DATABASE_URL) {
-      const postgresContainer = await new GenericContainer('postgres')
+      const postgresContainer = await new GenericContainer('postgres:15')
         .withExposedPorts(POSTGRES_PORT)
         .withBindMount(
           __dirname + '/scripts/init.sh',
@@ -78,7 +78,7 @@ module.exports = async (globalConfig) => {
       )
         .withExposedPorts(TIGERBEETLE_PORT)
         .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
-        .withPrivilegedMode()
+        .withAddedCapabilities('IPC_LOCK')
         .withCmd([
           'init',
           '--cluster=' + TIGERBEETLE_CLUSTER_ID,
@@ -103,7 +103,7 @@ module.exports = async (globalConfig) => {
         'ghcr.io/coilhq/tigerbeetle:dj-request-dirty-prepare@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
       )
         .withExposedPorts(TIGERBEETLE_PORT)
-        .withPrivilegedMode()
+        .withAddedCapabilities('IPC_LOCK')
         .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
         .withCmd([
           'start',
@@ -133,7 +133,7 @@ module.exports = async (globalConfig) => {
 
   const setupRedis = async () => {
     if (!process.env.REDIS_URL) {
-      const redisContainer = await new GenericContainer('redis')
+      const redisContainer = await new GenericContainer('redis:7')
         .withExposedPorts(REDIS_PORT)
         .start()
 

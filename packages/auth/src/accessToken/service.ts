@@ -79,7 +79,7 @@ export async function createAccessTokenService({
 
 function isTokenExpired(token: AccessToken): boolean {
   const now = new Date(Date.now())
-  const expiresAt = token.createdAt.getTime() + token.expiresIn
+  const expiresAt = token.createdAt.getTime() + token.expiresIn * 1000
   return expiresAt < now.getTime()
 }
 
@@ -96,6 +96,7 @@ async function introspect(
   value: string
 ): Promise<Introspection | undefined> {
   const token = await AccessToken.query(deps.knex).findOne({ value })
+
   if (!token) return
   if (isTokenExpired(token)) {
     return { active: false }
@@ -106,16 +107,18 @@ async function introspect(
     if (grant.state === GrantState.Revoked) {
       return { active: false }
     }
-    const key = await deps.clientService.getKeyByKid(grant.clientKeyId)
+
+    const clientKey = await deps.clientService.getKeyByKid(grant.clientKeyId)
+
     const clientId = crypto
       .createHash('sha256')
-      .update(key.client.id)
+      .update(clientKey.client.id)
       .digest('hex')
-    delete key.client
+
     return {
       active: true,
       ...grant,
-      key: { proof: 'httpsig', jwk: key },
+      key: { proof: 'httpsig', jwk: clientKey.jwk },
       clientId
     }
   }
@@ -133,7 +136,7 @@ async function createAccessToken(
   grantId: string,
   opts?: AccessTokenOpts
 ): Promise<AccessToken> {
-  return AccessToken.query(deps.knex).insert({
+  return AccessToken.query(opts?.trx || deps.knex).insert({
     value: crypto.randomBytes(8).toString('hex').toUpperCase(),
     managementId: v4(),
     grantId,

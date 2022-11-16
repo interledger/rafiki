@@ -73,6 +73,24 @@ describe('Open Payments Payment Pointer Service', (): void => {
       }
     )
 
+    test.each`
+      url                      | description
+      ${'not a url'}           | ${'without a valid url'}
+      ${'http://alice.me/pay'} | ${'with a non-https url'}
+      ${'https://alice.me'}    | ${'with a url without a path'}
+      ${'https://alice.me/'}   | ${'with a url without a path'}
+    `(
+      'Payment pointer cannot be created %description (%url)',
+      async ({ url }): Promise<void> => {
+        await expect(
+          paymentPointerService.create({
+            ...options,
+            url
+          })
+        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+      }
+    )
+
     test.each(FORBIDDEN_PATHS.map((path) => [path]))(
       'Payment pointer cannot be created with forbidden url path (%s)',
       async (path): Promise<void> => {
@@ -92,14 +110,35 @@ describe('Open Payments Payment Pointer Service', (): void => {
       }
     )
 
-    test('Creating a payment pointer creates an SPSP fallback account', async (): Promise<void> => {
+    test('Creating a payment pointer does not create an SPSP fallback account', async (): Promise<void> => {
       const paymentPointer = await paymentPointerService.create(options)
       assert.ok(!isPaymentPointerError(paymentPointer))
-
-      const accountingService = await deps.use('accountingService')
       await expect(
         accountingService.getBalance(paymentPointer.id)
-      ).resolves.toEqual(BigInt(0))
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Get Payment Pointer By Url', (): void => {
+    test('Can retrieve payment pointer by url', async (): Promise<void> => {
+      const paymentPointer = await createPaymentPointer(deps)
+      await expect(
+        paymentPointerService.getByUrl(paymentPointer.url)
+      ).resolves.toEqual(paymentPointer)
+
+      await expect(
+        paymentPointerService.getByUrl(paymentPointer.url + '/path')
+      ).resolves.toBeUndefined()
+
+      await expect(
+        paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
+      ).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined if no payment pointer exists with url', async (): Promise<void> => {
+      await expect(
+        paymentPointerService.getByUrl('test.nope')
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -227,7 +266,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
     let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await createPaymentPointer(deps)
+      paymentPointer = await createPaymentPointer(deps, {
+        createLiquidityAccount: true
+      })
     })
 
     test.each`
@@ -297,7 +338,12 @@ describe('Open Payments Payment Pointer Service', (): void => {
     beforeEach(async (): Promise<void> => {
       paymentPointers = []
       for (let i = 0; i < 5; i++) {
-        paymentPointers.push(await createPaymentPointer(deps, { asset }))
+        paymentPointers.push(
+          await createPaymentPointer(deps, {
+            asset,
+            createLiquidityAccount: true
+          })
+        )
       }
     })
 

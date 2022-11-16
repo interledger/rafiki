@@ -125,6 +125,33 @@ describe('Account Middleware', () => {
     )
   })
 
+  test('sets disabled destination account if amount is 0', async () => {
+    const outgoingAccount = IncomingPaymentAccountFactory.build({
+      id: 'deactivatedIncomingPayment',
+      state: 'COMPLETED'
+    })
+    await rafikiServices.accounting.create(outgoingAccount)
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount,
+        streamDestination: outgoingAccount.id
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ amount: '0', destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.accounts.incoming).toEqual(incomingAccount)
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+  })
+
   test.each`
     name                                                              | createThrows                                                               | error
     ${'create TB account for PENDING incoming payment success'}       | ${undefined}                                                               | ${''}
@@ -141,7 +168,47 @@ describe('Account Middleware', () => {
     const ctx = createILPContext({
       state: {
         incomingAccount,
-        streamDestination: 'tbIncomingPayment'
+        streamDestination: outgoingAccount.id
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+
+    const spy = jest.spyOn(rafikiServices.accounting, 'createLiquidityAccount')
+    if (createThrows) {
+      spy.mockRejectedValueOnce(createThrows)
+    }
+    if (error) {
+      await expect(middleware(ctx, next)).rejects.toThrowError(error)
+    } else {
+      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+      expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+      expect(ctx.accounts.incoming).toEqual(incomingAccount)
+    }
+    expect(spy).toHaveBeenCalledWith(outgoingAccount)
+  })
+
+  test.each`
+    name                                                     | createThrows                                                               | error
+    ${'create TB account for payment pointer success'}       | ${undefined}                                                               | ${''}
+    ${'create TB account for payment pointer throws exists'} | ${new CreateAccountError(CreateAccountErrorCode.exists)}                   | ${''}
+    ${'create TB account for payment pointer throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=8'}
+  `('$name', async ({ createThrows, error }): Promise<void> => {
+    const outgoingAccount = AccountFactory.build({
+      id: 'spspFallback'
+    })
+    await rafikiServices.accounting.create(outgoingAccount)
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount,
+        streamDestination: outgoingAccount.id
       },
       services: rafikiServices,
       request: {

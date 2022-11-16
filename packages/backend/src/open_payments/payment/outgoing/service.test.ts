@@ -12,11 +12,15 @@ import {
 } from './errors'
 import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { IAppConfig, Config } from '../../../config/app'
+import { Config } from '../../../config/app'
 import { CreateQuoteOptions } from '../../quote/service'
+import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import {
+  createPaymentPointer,
+  MockPaymentPointer
+} from '../../../tests/paymentPointer'
 import { PeerFactory } from '../../../tests/peerFactory'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
@@ -31,28 +35,33 @@ import {
   PaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
-import { isTransferError } from '../../../accounting/errors'
+import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
+import { isTransferError, TransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
-import { Pagination } from '../../../shared/baseModel'
-import { getPageTests } from '../../../shared/baseModel.test'
+import { ConnectionService } from '../../connection/service'
+import { getTests } from '../../payment_pointer/model.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { GrantReference } from '../../grantReference/model'
 import { Quote } from '../../quote/model'
+import { GrantReferenceService } from '../../grantReference/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
+  let connectionService: ConnectionService
   let knex: Knex
   let paymentPointerId: string
-  let receivingPaymentPointer: string
+  let incomingPayment: IncomingPayment
+  let receiverPaymentPointer: MockPaymentPointer
   let receiver: string
-  let receiverPaymentPointerId: string
   let amtDelivered: bigint
-  let config: IAppConfig
   let trx: Knex.Transaction
+  let grantReferenceService: GrantReferenceService
+  let grantRef: GrantReference
 
   const asset: AssetOptions = {
     scale: 9,
@@ -85,7 +94,9 @@ describe('OutgoingPaymentService', (): void => {
     expectedError?: string
   ): Promise<OutgoingPayment> {
     await expect(outgoingPaymentService.processNext()).resolves.toBe(paymentId)
-    const payment = await outgoingPaymentService.get(paymentId)
+    const payment = await outgoingPaymentService.get({
+      id: paymentId
+    })
     if (!payment) throw 'no payment'
     if (expectState) expect(payment.state).toBe(expectState)
     expect(payment.error).toEqual(expectedError || null)
@@ -126,24 +137,7 @@ describe('OutgoingPaymentService', (): void => {
       )
   }
 
-  function getIncomingPaymentId(receiver: string): string {
-    return receiver.slice(
-      `${receivingPaymentPointer}/incoming-payments/`.length
-    )
-  }
-
-  async function payIncomingPayment({
-    receiver,
-    amount
-  }: {
-    receiver: string
-    amount: bigint
-  }): Promise<void> {
-    const incomingPaymentService = await deps.use('incomingPaymentService')
-    const incomingPayment = await incomingPaymentService.get(
-      getIncomingPaymentId(receiver)
-    )
-    assert.ok(incomingPayment)
+  async function payIncomingPayment(amount: bigint): Promise<void> {
     await expect(
       accountingService.createDeposit({
         id: uuid(),
@@ -151,6 +145,11 @@ describe('OutgoingPaymentService', (): void => {
         amount
       })
     ).resolves.toBeUndefined()
+    await incomingPayment.onCredit({
+      totalReceived: await accountingService.getTotalReceived(
+        incomingPayment.id
+      )
+    })
   }
 
   function trackAmountDelivered(sourcePaymentPointerId: string): void {
@@ -163,7 +162,17 @@ describe('OutgoingPaymentService', (): void => {
           !isTransferError(trxOrError) &&
           options.sourceAccount.id === sourcePaymentPointerId
         ) {
-          amtDelivered += options.destinationAmount || options.sourceAmount
+          return {
+            commit: async (): Promise<void | TransferError> => {
+              const err = await trxOrError.commit()
+              if (!err) {
+                amtDelivered +=
+                  options.destinationAmount || options.sourceAmount
+              }
+              return err
+            },
+            rollback: trxOrError.rollback
+          }
         }
         return trxOrError
       })
@@ -202,9 +211,7 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (incomingPaymentReceived !== undefined) {
       await expect(
-        accountingService.getTotalReceived(
-          getIncomingPaymentId(payment.receiver)
-        )
+        accountingService.getTotalReceived(incomingPayment.id)
       ).resolves.toEqual(incomingPaymentReceived)
     }
     if (withdrawAmount !== undefined) {
@@ -228,14 +235,14 @@ describe('OutgoingPaymentService', (): void => {
       .persist()
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
-
+    connectionService = await deps.use('connectionService')
+    grantReferenceService = await deps.use('grantReferenceService')
     knex = await deps.use('knex')
-    config = await deps.use('config')
   })
 
   beforeEach(async (): Promise<void> => {
-    outgoingPaymentService = await deps.use('outgoingPaymentService')
     paymentPointerId = (
       await createPaymentPointer(deps, {
         asset: {
@@ -244,28 +251,34 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
     ).id
-    const destinationPaymentPointer = await createPaymentPointer(deps, {
-      asset: destinationAsset
+    receiverPaymentPointer = await createPaymentPointer(deps, {
+      asset: destinationAsset,
+      mockServerPort: appContainer.openPaymentsPort
     })
-    receiverPaymentPointerId = destinationPaymentPointer.id
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: destinationPaymentPointer.asset,
+        account: receiverPaymentPointer.asset,
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
-    receivingPaymentPointer = `${config.openPaymentsUrl}/${destinationPaymentPointer.id}`
-    const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: receiverPaymentPointerId
+
+    grantRef = await grantReferenceService.create({
+      id: uuid(),
+      clientId: appContainer.clientId
     })
-    receiver = `${receivingPaymentPointer}/incoming-payments/${incomingPayment.id}`
+    incomingPayment = await createIncomingPayment(deps, {
+      paymentPointerId: receiverPaymentPointer.id,
+      grantId: grantRef.id
+    })
+    receiver = incomingPayment.url
 
     amtDelivered = BigInt(0)
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
+    receiverPaymentPointer.scope?.persist(false)
     await truncateTables(knex)
   })
 
@@ -273,78 +286,108 @@ describe('OutgoingPaymentService', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
-    it('returns undefined when no payment exists', async () => {
-      await expect(outgoingPaymentService.get(uuid())).resolves.toBeUndefined()
+  describe('get/getPaymentPointerPage', (): void => {
+    getTests({
+      createGrant: async ({ clientId }) =>
+        createGrant(deps, {
+          clientId,
+          access: [
+            {
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read]
+            }
+          ]
+        }),
+      createModel: ({ grant }: { grant?: Grant }) =>
+        createOutgoingPayment(deps, {
+          paymentPointerId,
+          grant,
+          receiver,
+          sendAmount,
+          validDestination: false
+        }),
+      get: (options) => outgoingPaymentService.get(options),
+      list: (options) => outgoingPaymentService.getPaymentPointerPage(options)
     })
   })
 
   describe('create', (): void => {
-    it.each`
-      outgoingPeer | description
-      ${false}     | ${''}
-      ${true}      | ${'with an outgoing peer'}
-    `(
-      'creates an OutgoingPayment from a quote $description',
-      async ({ outgoingPeer }): Promise<void> => {
-        const peerService = await deps.use('peerService')
-        const peerFactory = new PeerFactory(peerService)
-        const peer = await peerFactory.build()
-        const quote = await createQuote(deps, {
-          paymentPointerId,
-          receiver,
-          sendAmount
-        })
-        const options = {
-          paymentPointerId,
-          quoteId: quote.id,
-          description: 'rent',
-          externalRef: '202201'
-        }
-        if (outgoingPeer) {
-          jest
-            .spyOn(peerService, 'getByDestinationAddress')
-            .mockResolvedValueOnce(peer)
-        }
-        const payment = await outgoingPaymentService.create(options)
-        assert.ok(!isOutgoingPaymentError(payment))
-        expect(payment).toMatchObject({
-          id: quote.id,
-          paymentPointerId,
-          receiver: quote.receiver,
-          sendAmount: quote.sendAmount,
-          receiveAmount: quote.receiveAmount,
-          description: options.description,
-          externalRef: options.externalRef,
-          state: OutgoingPaymentState.Funding,
-          asset,
-          quote,
-          peerId: outgoingPeer ? peer.id : null
-        })
-
-        await expect(outgoingPaymentService.get(payment.id)).resolves.toEqual(
-          payment
-        )
-
-        const expectedPaymentData: Partial<PaymentData['payment']> = {
-          id: payment.id
-        }
-        if (outgoingPeer) {
-          expectedPaymentData.peerId = peer.id
-        }
-        await expect(
-          PaymentEvent.query(knex).where({
-            type: PaymentEventType.PaymentCreated
-          })
-        ).resolves.toMatchObject([
-          {
-            data: {
-              payment: expectedPaymentData
-            }
+    describe.each`
+      toConnection | description
+      ${true}      | ${'connection receiver'}
+      ${false}     | ${'incoming payment receiver'}
+    `('$description', ({ toConnection }): void => {
+      it.each`
+        outgoingPeer | description
+        ${false}     | ${''}
+        ${true}      | ${'with an outgoing peer'}
+      `(
+        'creates an OutgoingPayment from a quote $description',
+        async ({ outgoingPeer }): Promise<void> => {
+          const peerService = await deps.use('peerService')
+          const peerFactory = new PeerFactory(peerService)
+          const peer = await peerFactory.build()
+          if (toConnection) {
+            receiver = connectionService.getUrl(incomingPayment)
           }
-        ])
-      }
-    )
+          const quote = await createQuote(deps, {
+            paymentPointerId,
+            receiver,
+            sendAmount
+          })
+          const options = {
+            paymentPointerId,
+            quoteId: quote.id,
+            description: 'rent',
+            externalRef: '202201'
+          }
+          if (outgoingPeer) {
+            jest
+              .spyOn(peerService, 'getByDestinationAddress')
+              .mockResolvedValueOnce(peer)
+          }
+          const payment = await outgoingPaymentService.create(options)
+          assert.ok(!isOutgoingPaymentError(payment))
+          expect(payment).toMatchObject({
+            id: quote.id,
+            paymentPointerId,
+            receiver: quote.receiver,
+            sendAmount: quote.sendAmount,
+            receiveAmount: quote.receiveAmount,
+            description: options.description,
+            externalRef: options.externalRef,
+            state: OutgoingPaymentState.Funding,
+            asset,
+            quote,
+            peerId: outgoingPeer ? peer.id : null
+          })
+
+          await expect(
+            outgoingPaymentService.get({
+              id: payment.id
+            })
+          ).resolves.toEqual(payment)
+
+          const expectedPaymentData: Partial<PaymentData['payment']> = {
+            id: payment.id
+          }
+          if (outgoingPeer) {
+            expectedPaymentData.peerId = peer.id
+          }
+          await expect(
+            PaymentEvent.query(knex).where({
+              type: PaymentEventType.PaymentCreated
+            })
+          ).resolves.toMatchObject([
+            {
+              data: {
+                payment: expectedPaymentData
+              }
+            }
+          ])
+        }
+      )
+    })
 
     it('fails to create on unknown payment pointer', async () => {
       const { id: quoteId } = await createQuote(deps, {
@@ -379,7 +422,7 @@ describe('OutgoingPaymentService', (): void => {
       })
       await expect(
         outgoingPaymentService.create({
-          paymentPointerId: receiverPaymentPointerId,
+          paymentPointerId: receiverPaymentPointer.id,
           quoteId: quote.id
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -402,14 +445,44 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
     })
+    it.each`
+      state
+      ${IncomingPaymentState.Completed}
+      ${IncomingPaymentState.Expired}
+    `(
+      `fails to create on $state quote receiver`,
+      async ({ state }): Promise<void> => {
+        const quote = await createQuote(deps, {
+          paymentPointerId,
+          receiver,
+          sendAmount
+        })
+        await incomingPayment.$query(knex).patch({
+          state,
+          expiresAt:
+            state === IncomingPaymentState.Expired ? new Date() : undefined
+        })
+        await expect(
+          outgoingPaymentService.create({
+            paymentPointerId,
+            quoteId: quote.id
+          })
+        ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
+      }
+    )
     test('fails to create if grant is locked', async () => {
       const grant = new Grant({
         active: true,
-        grant: uuid(),
+        clientId: grantRef.clientId,
+        grant: grantRef.id,
         access: [
           {
             type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create, AccessAction.Read]
+            actions: [AccessAction.Create, AccessAction.Read],
+            limits: {
+              receiver,
+              sendAmount
+            }
           }
         ]
       })
@@ -448,7 +521,7 @@ describe('OutgoingPaymentService', (): void => {
     })
     describe('validateGrant', (): void => {
       let quote: Quote
-      let options: CreateOutgoingPaymentOptions
+      let options: Omit<CreateOutgoingPaymentOptions, 'grant'>
       let interval: string
       beforeEach(async (): Promise<void> => {
         quote = await createQuote(deps, {
@@ -469,7 +542,8 @@ describe('OutgoingPaymentService', (): void => {
         const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
         const grant = new Grant({
           active: true,
-          grant: uuid(),
+          clientId: grantRef.clientId,
+          grant: grantRef.id,
           access: [
             {
               type: AccessType.OutgoingPayment,
@@ -496,7 +570,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -529,7 +604,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -556,8 +632,8 @@ describe('OutgoingPaymentService', (): void => {
         sendAmount | failed   | description
         ${true}    | ${false} | ${'sendAmount'}
         ${false}   | ${false} | ${'receiveAmount'}
-        ${true}    | ${true}  | ${'sendAmount'}
-        ${false}   | ${true}  | ${'receiveAmount'}
+        ${true}    | ${true}  | ${'sendAmount, failed first payment'}
+        ${false}   | ${true}  | ${'receiveAmount, failed first payment'}
       `(
         'fails if limit was already used up - $description',
         async ({ sendAmount, failed }): Promise<void> => {
@@ -572,7 +648,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -625,7 +702,8 @@ describe('OutgoingPaymentService', (): void => {
         async ({ limits }): Promise<void> => {
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -670,7 +748,8 @@ describe('OutgoingPaymentService', (): void => {
           }
           const grant = new Grant({
             active: true,
-            grant: uuid(),
+            clientId: grantRef.clientId,
+            grant: grantRef.id,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -724,25 +803,28 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('processNext', (): void => {
-    describe('SENDING→', (): void => {
+    describe.each`
+      toConnection | description
+      ${true}      | ${'connection'}
+      ${false}     | ${'incoming payment'}
+    `('SENDING (to $description) → ', ({ toConnection }): void => {
       const receiveAmount = {
         value: BigInt(123),
         assetCode: destinationAsset.code,
         assetScale: destinationAsset.scale
       }
 
+      beforeEach((): void => {
+        if (toConnection) {
+          receiver = connectionService.getUrl(incomingPayment)
+        }
+      })
+
       async function setup(
         opts: Omit<CreateQuoteOptions, 'paymentPointerId'>,
         incomingAmount?: Amount
       ): Promise<string> {
         if (incomingAmount) {
-          const incomingPaymentService = await deps.use(
-            'incomingPaymentService'
-          )
-          const incomingPayment = await incomingPaymentService.get(
-            getIncomingPaymentId(receiver)
-          )
-          assert.ok(incomingPayment)
           await incomingPayment.$query(knex).patch({ incomingAmount })
         }
         const payment = await createOutgoingPayment(deps, {
@@ -776,13 +858,41 @@ describe('OutgoingPaymentService', (): void => {
           receiveAmount
         })
 
-        let scope: nock.Scope | undefined
         const payment = await processNext(
           paymentId,
           OutgoingPaymentState.Completed
         )
-        scope?.isDone()
-        if (!payment.sendAmount) throw 'no sendAmount'
+        const amountSent = payment.receiveAmount.value * BigInt(2)
+        await expectOutcome(payment, {
+          accountBalance: payment.sendAmount.value - amountSent,
+          amountSent,
+          amountDelivered: payment.receiveAmount.value,
+          incomingPaymentReceived: payment.receiveAmount.value,
+          withdrawAmount: payment.sendAmount.value - amountSent
+        })
+      })
+
+      it('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+        incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: receiverPaymentPointer.id,
+          grantId: grantRef.id,
+          incomingAmount: {
+            value: receiveAmount.value * 2n,
+            assetCode: receiverPaymentPointer.asset.code,
+            assetScale: receiverPaymentPointer.asset.scale
+          }
+        })
+        const paymentId = await setup({
+          receiver: toConnection
+            ? connectionService.getUrl(incomingPayment)
+            : incomingPayment.url,
+          receiveAmount
+        })
+
+        const payment = await processNext(
+          paymentId,
+          OutgoingPaymentState.Completed
+        )
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value - amountSent,
@@ -796,29 +906,40 @@ describe('OutgoingPaymentService', (): void => {
       it('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
-            receiver
+            receiver,
+            receiveAmount: toConnection && receiveAmount
           },
           receiveAmount
         )
 
         const amountAlreadyDelivered = BigInt(34)
-        await payIncomingPayment({
-          receiver,
-          amount: amountAlreadyDelivered
-        })
-
+        await payIncomingPayment(amountAlreadyDelivered)
         const payment = await processNext(
           paymentId,
           OutgoingPaymentState.Completed
         )
-        if (!payment.sendAmount) throw 'no sendAmount'
-        const amountSent =
-          (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
+        // The amountAlreadyDelivered is unknown to the sender when sending to
+        // the connection (instead of the incoming payment), so the entire
+        // receive amount is delivered by the outgoing payment ("overpaying"
+        // the incoming payment).
+        // Incoming payments allow overpayment (above the incomingAmount) for
+        // one packet. In this case, the full payment amount was completed in a
+        // single packet. With a different combination of amounts and
+        // maxPacketAmount limits, an outgoing payment to a connection could
+        // overpay the corresponding incoming payment's incomingAmount without
+        // the full outgoing payment receive amount being delivered.
+        const amountSent = toConnection
+          ? payment.receiveAmount.value * BigInt(2)
+          : (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value - amountSent,
           amountSent,
-          amountDelivered: payment.receiveAmount.value - amountAlreadyDelivered,
-          incomingPaymentReceived: payment.receiveAmount.value,
+          amountDelivered: toConnection
+            ? payment.receiveAmount.value
+            : payment.receiveAmount.value - amountAlreadyDelivered,
+          incomingPaymentReceived: toConnection
+            ? payment.receiveAmount.value + amountAlreadyDelivered
+            : payment.receiveAmount.value,
           withdrawAmount: payment.sendAmount.value - amountSent
         })
       })
@@ -931,7 +1052,7 @@ describe('OutgoingPaymentService', (): void => {
       })
 
       // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it('COMPLETED (FixedSend, already fully paid)', async (): Promise<void> => {
+      it('COMPLETED (already fully paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
             receiver,
@@ -957,7 +1078,6 @@ describe('OutgoingPaymentService', (): void => {
         })
       })
 
-      // Caused by retry after failed SENDING→COMPLETED transition commit.
       it('COMPLETED (already fully paid)', async (): Promise<void> => {
         const paymentId = await setup(
           {
@@ -967,16 +1087,12 @@ describe('OutgoingPaymentService', (): void => {
           receiveAmount
         )
         // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
-        await payIncomingPayment({
-          receiver,
-          amount: receiveAmount.value
-        })
+        await payIncomingPayment(receiveAmount.value)
 
         const payment = await processNext(
           paymentId,
           OutgoingPaymentState.Completed
         )
-        if (!payment.sendAmount) throw 'no sendAmount'
         await expectOutcome(payment, {
           accountBalance: payment.sendAmount.value,
           amountSent: BigInt(0),
@@ -1069,7 +1185,9 @@ describe('OutgoingPaymentService', (): void => {
         state: OutgoingPaymentState.Sending
       })
 
-      const after = await outgoingPaymentService.get(payment.id)
+      const after = await outgoingPaymentService.get({
+        id: payment.id
+      })
       expect(after?.state).toBe(OutgoingPaymentState.Sending)
       await expectOutcome(payment, { accountBalance: quoteAmount })
     })
@@ -1083,7 +1201,9 @@ describe('OutgoingPaymentService', (): void => {
         })
       ).resolves.toEqual(FundingError.InvalidAmount)
 
-      const after = await outgoingPaymentService.get(payment.id)
+      const after = await outgoingPaymentService.get({
+        id: payment.id
+      })
       expect(after?.state).toBe(OutgoingPaymentState.Funding)
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     })
@@ -1100,26 +1220,11 @@ describe('OutgoingPaymentService', (): void => {
           })
         ).resolves.toEqual(FundingError.WrongState)
 
-        const after = await outgoingPaymentService.get(payment.id)
+        const after = await outgoingPaymentService.get({
+          id: payment.id
+        })
         expect(after?.state).toBe(startState)
       })
-    })
-  })
-
-  describe('getPaymentPointerPage', (): void => {
-    getPageTests({
-      createModel: () =>
-        createOutgoingPayment(deps, {
-          paymentPointerId,
-          receiver,
-          sendAmount,
-          validDestination: false
-        }),
-      getPage: (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage(
-          paymentPointerId,
-          pagination
-        )
     })
   })
 })

@@ -1,0 +1,160 @@
+# Default values for tigerbeetle.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+service:
+  type: NodePort
+  port: 80
+
+statefulset:
+  clusterId: "0"
+
+  image:
+    repository: ghcr.io/coilhq/tigerbeetle@sha256
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "56e24aa5d64e66e95fc8b42c8cfe740f2b2b4045804c828e60af4dea8557fbc7"
+
+  proxyImage:
+    repository: nginx
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "1.23.1" 
+
+  replicas: 6
+  updateStrategy:
+    type: RollingUpdate
+  podManagementPolicy: Parallel
+  budget:
+    maxUnavailable: 1
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # fsGroup: 2000
+    # runAsUser: 1000
+
+  # List of additional command-line arguments
+  args: []
+
+  # List of extra environment variables to pass into container
+  env: []
+
+  # Additional labels to apply to this StatefulSet and all its Pods.
+  labels:
+    app.kubernetes.io/component: tigerbeetle
+
+  # Additional annotations to apply to the Pods of this StatefulSet.
+  annotations: {}
+
+  # Affinity rules for scheduling Pods of this StatefulSet on Nodes.
+  # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity
+  nodeAffinity: {}
+  # Inter-Pod Affinity rules for scheduling Pods of this StatefulSet.
+  # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  podAffinity: {}
+  # Anti-affinity rules for scheduling Pods of this StatefulSet.
+  # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#inter-pod-affinity-and-anti-affinity
+  # You may either toggle options below for default anti-affinity rules,
+  # or specify the whole set of anti-affinity rules instead of them.
+  podAntiAffinity:
+    # The topologyKey to be used.
+    # Can be used to spread across different nodes, AZs, regions etc.
+    topologyKey: kubernetes.io/hostname
+    # Type of anti-affinity rules: either `soft`, `hard` or empty value (which
+    # disables anti-affinity rules).
+    type: soft
+    # Weight for `soft` anti-affinity rules.
+    # Does not apply for other anti-affinity types.
+    weight: 100
+
+  # Node selection constraints for scheduling Pods of this StatefulSet.
+  # https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+  nodeSelector: {}
+
+  # PriorityClassName given to Pods of this StatefulSet
+  # https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#priorityclass
+  priorityClassName: ""
+
+  # Taints to be tolerated by Pods of this StatefulSet.
+  # https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  tolerations: []
+
+  # https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/
+  topologySpreadConstraints:
+    maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+
+  # Uncomment the following resources definitions or pass them from
+  # command line to control the CPU and memory resources allocated
+  # by Pods of this StatefulSet.
+  resources: {}
+    # limits:
+    #   cpu: 100m
+    #   memory: 512Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 512Mi
+
+  # Custom Liveness probe
+  # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request
+  customLivenessProbe: {}
+    # httpGet:
+    #   path: /health
+    #   port: http
+    #   scheme: HTTPS
+    # initialDelaySeconds: 30
+    # periodSeconds: 5
+
+  # Custom Rediness probe
+  # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes
+  customReadinessProbe: {}
+    # httpGet:
+    #   path: /health
+    #   port: http
+    #   scheme: HTTPS
+    # initialDelaySeconds: 30
+    # periodSeconds: 5
+storage:
+  # Absolute path on host to store CockroachDB's data.
+  # If not specified, then `emptyDir` will be used instead.
+  # If specified, but `persistentVolume.enabled` is `true`, then has no effect.
+  hostPath: ""
+
+  # If `enabled` is `true` then a PersistentVolumeClaim will be created and
+  # used to store CockroachDB's data, otherwise `hostPath` is used.
+  persistentVolume:
+    enabled: true
+
+    size: 15Gi
+
+    # If defined, then `storageClassName: <storageClass>`.
+    # If set to "-", then `storageClassName: ""`, which disables dynamic
+    # provisioning.
+    # If undefined or empty (default), then no `storageClassName` spec is set,
+    # so the default provisioner will be chosen (gp2 on AWS, standard on
+    # GKE, AWS & OpenStack).
+    storageClass: ""
+
+    # Additional labels to apply to the created PersistentVolumeClaims.
+    labels: {}
+    # Additional annotations to apply to the created PersistentVolumeClaims.
+    annotations: {}
+

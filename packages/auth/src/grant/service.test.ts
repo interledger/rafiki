@@ -1,3 +1,4 @@
+import assert from 'assert'
 import crypto from 'crypto'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -63,7 +64,7 @@ describe('Grant Service', (): void => {
   const BASE_GRANT_ACCESS = {
     actions: [Action.Create, Action.Read, Action.List],
     locations: ['https://example.com'],
-    identifier: 'test-identifier'
+    identifier: `https://example.com/${v4()}`
   }
 
   const BASE_GRANT_REQUEST = {
@@ -75,13 +76,6 @@ describe('Grant Service', (): void => {
       key: {
         proof: 'httpsig',
         jwk: {
-          client: {
-            id: v4(),
-            name: 'Bob',
-            email: 'bob@bob.com',
-            image: 'a link to an image',
-            uri: 'https://bob.com'
-          },
           kid: KEY_REGISTRY_URL,
           x: 'test-public-key',
           kty: 'OKP',
@@ -102,33 +96,21 @@ describe('Grant Service', (): void => {
     }
   }
 
-  const INCOMING_PAYMENT_LIMIT = {
-    incomingAmount: {
-      value: '1000000000',
-      assetCode: 'usd',
-      assetScale: 9
-    },
-    expiresAt: new Date().toISOString(),
-    description: 'this is a test',
-    externalRef: v4()
-  }
-
   describe('create', (): void => {
-    test('Can create a grant', async (): Promise<void> => {
+    test('Can initiate a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
         access_token: {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment,
-              limits: INCOMING_PAYMENT_LIMIT
+              type: AccessType.IncomingPayment
             }
           ]
         }
       }
 
-      const grant = await grantService.initiateGrant(grantRequest)
+      const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
         state: GrantState.Pending,
@@ -144,14 +126,48 @@ describe('Grant Service', (): void => {
         startMethod: expect.arrayContaining([StartMethod.Redirect])
       })
 
-      const dbAccessGrant = await Access.query(trx)
-        .where({
-          grantId: grant.id
-        })
-        .first()
+      await expect(
+        Access.query(trx)
+          .where({
+            grantId: grant.id
+          })
+          .first()
+      ).resolves.toMatchObject({
+        type: AccessType.IncomingPayment
+      })
+    })
+    test('Can issue a grant without interaction', async (): Promise<void> => {
+      const grantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment
+            }
+          ]
+        },
+        interact: undefined
+      }
 
-      expect(dbAccessGrant.type).toEqual(AccessType.IncomingPayment)
-      expect(dbAccessGrant.limits).toEqual(INCOMING_PAYMENT_LIMIT)
+      const grant = await grantService.create(grantRequest)
+
+      expect(grant).toMatchObject({
+        state: GrantState.Granted,
+        continueId: expect.any(String),
+        continueToken: expect.any(String),
+        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid
+      })
+
+      await expect(
+        Access.query(trx)
+          .where({
+            grantId: grant.id
+          })
+          .first()
+      ).resolves.toMatchObject({
+        type: AccessType.IncomingPayment
+      })
     })
   })
 
@@ -165,6 +181,7 @@ describe('Grant Service', (): void => {
   describe('continue', (): void => {
     test('Can fetch a grant by its continuation information', async (): Promise<void> => {
       const { continueId, continueToken, interactRef } = grant
+      assert.ok(interactRef)
 
       const fetchedGrant = await grantService.getByContinue(
         continueId,
@@ -184,22 +201,23 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant?.id).toEqual(grant.id)
     })
     test('Can fetch a grant by its interaction information', async (): Promise<void> => {
+      assert.ok(grant.interactId)
       const fetchedGrant = await grantService.getByInteraction(grant.interactId)
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.interactId).toEqual(grant.interactId)
     })
   })
 
-  describe('deny', (): void => {
-    test('Can deny a grant', async (): Promise<void> => {
-      const deniedGrant = await grantService.denyGrant(grant.id)
-      expect(deniedGrant?.id).toEqual(grant.id)
-      expect(deniedGrant?.state).toEqual(GrantState.Denied)
+  describe('reject', (): void => {
+    test('Can reject a grant', async (): Promise<void> => {
+      const rejectedGrant = await grantService.rejectGrant(grant.id)
+      expect(rejectedGrant?.id).toEqual(grant.id)
+      expect(rejectedGrant?.state).toEqual(GrantState.Rejected)
     })
 
-    test("Cannot deny a grant that doesn't exist", async (): Promise<void> => {
-      const deniedGrant = await grantService.denyGrant(v4())
-      expect(deniedGrant).toBeUndefined()
+    test("Cannot reject a grant that doesn't exist", async (): Promise<void> => {
+      const rejectedGrant = await grantService.rejectGrant(v4())
+      expect(rejectedGrant).toBeUndefined()
     })
   })
 })

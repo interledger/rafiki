@@ -15,7 +15,7 @@ export enum GrantState {
   Pending = 'pending',
   Granted = 'granted',
   Revoked = 'revoked',
-  Denied = 'denied'
+  Rejected = 'rejected'
 }
 
 export class Grant extends BaseModel {
@@ -45,17 +45,18 @@ export class Grant extends BaseModel {
   public access!: Access[]
   public state!: GrantState
   public startMethod!: StartMethod[]
+  public identifier!: string
 
   public continueToken!: string
   public continueId!: string
   public wait?: number
 
-  public finishMethod!: FinishMethod
-  public finishUri!: string
-  public clientNonce!: string // nonce for hash
+  public finishMethod?: FinishMethod
+  public finishUri?: string
+  public clientNonce?: string // client-generated nonce for post-interaction hash
   public clientKeyId!: string
 
-  public interactId!: string
-  public interactRef!: string
-  public interactNonce!: string
+  public interactId?: string
+  public interactRef?: string
+  public interactNonce?: string // AS-generated nonce for post-interaction hash
 }

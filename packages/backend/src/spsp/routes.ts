@@ -1,24 +1,20 @@
 import { BaseService } from '../shared/baseService'
-import { AppContext } from '../app'
-import { validateId } from '../shared/utils'
+import { PaymentPointerContext } from '../app'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
 export interface SPSPRoutes {
-  get(ctx: AppContext): Promise<void>
+  get(ctx: PaymentPointerContext): Promise<void>
 }
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
-  paymentPointerService: PaymentPointerService
   streamServer: StreamServer
 }
 
 export async function createSPSPRoutes({
   logger,
-  paymentPointerService,
   streamServer
 }: ServiceDependencies): Promise<SPSPRoutes> {
   const log = logger.child({
@@ -27,7 +23,6 @@ export async function createSPSPRoutes({
 
   const deps: ServiceDependencies = {
     logger: log,
-    paymentPointerService,
     streamServer
   }
   return {
@@ -37,15 +32,8 @@ export async function createSPSPRoutes({
 
 async function getPay(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: PaymentPointerContext
 ): Promise<void> {
-  const { accountId: paymentPointerId } = ctx.params
-
-  ctx.assert(
-    validateId(paymentPointerId),
-    400,
-    'Failed to generate credentials: invalid payment pointer id'
-  )
   ctx.assert(ctx.accepts(CONTENT_TYPE_V4), 406)
 
   const nonce = ctx.request.headers['receipt-nonce']
@@ -56,20 +44,9 @@ async function getPay(
     'Failed to generate credentials: receipt nonce and secret must accompany each other'
   )
 
-  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
-    ctx.status = 404
-    ctx.set('Content-Type', CONTENT_TYPE_V4)
-    ctx.body = JSON.stringify({
-      id: 'InvalidReceiverError',
-      message: 'Invalid receiver ID'
-    })
-    return
-  }
-
   try {
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: paymentPointerId,
+      paymentTag: ctx.paymentPointer.id,
       receiptSetup:
         nonce && secret
           ? {
@@ -78,8 +55,8 @@ async function getPay(
             }
           : undefined,
       asset: {
-        code: paymentPointer.asset.code,
-        scale: paymentPointer.asset.scale
+        code: ctx.paymentPointer.asset.code,
+        scale: ctx.paymentPointer.asset.scale
       }
     })
 
