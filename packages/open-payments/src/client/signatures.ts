@@ -34,6 +34,7 @@ export const createSignatureHeaders = async ({
   }
   if (request.body) {
     // TODO: 'content-digest'
+    // https://github.com/interledger/rafiki/issues/655
     components.push('content-length', 'content-type')
   }
   const { headers } = await httpsig.sign(request, {
