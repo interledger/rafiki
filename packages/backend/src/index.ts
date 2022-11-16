@@ -90,7 +90,10 @@ export function initIocContainer(
   container.singleton('closeEmitter', async () => new EventEmitter())
   container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
-    return new Redis(config.redisUrl, { tls: config.redisTls })
+    return new Redis(config.redisUrl, {
+      tls: config.redisTls,
+      stringNumbers: true
+    })
   })
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')
