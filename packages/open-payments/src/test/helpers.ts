@@ -1,3 +1,4 @@
+import { generateKeyPairSync } from 'crypto'
 import createLogger from 'pino'
 import { createAxiosInstance } from '../client/requests'
 import { ILPStreamConnection, IncomingPayment } from '../types'
@@ -9,7 +10,13 @@ export const silentLogger = createLogger({
   level: 'silent'
 })
 
-export const defaultAxiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
+export const keyId = 'default-key-id'
+
+export const defaultAxiosInstance = createAxiosInstance({
+  requestTimeoutMs: 0,
+  keyId,
+  privateKey: generateKeyPairSync('ed25519').privateKey
+})
 
 export const mockOpenApiResponseValidators = () => ({
   successfulValidator: ((data: unknown): data is unknown =>

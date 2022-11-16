@@ -1,5 +1,5 @@
 import { HttpMethod } from 'openapi'
-import { ClientDeps } from '.'
+import { RouteDeps } from '.'
 import { PaymentPointer, getRSPath } from '../types'
 import { get } from './requests'
 
@@ -12,9 +12,9 @@ export interface PaymentPointerRoutes {
 }
 
 export const createPaymentPointerRoutes = (
-  clientDeps: ClientDeps
+  deps: RouteDeps
 ): PaymentPointerRoutes => {
-  const { axiosInstance, openApi, logger } = clientDeps
+  const { axiosInstance, openApi, logger } = deps
 
   const getPaymentPaymentValidator =
     openApi.createResponseValidator<PaymentPointer>({

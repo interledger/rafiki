@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
+import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { ClientDeps } from '.'
+import { createSignatureHeaders } from './signatures'
 
 interface GetArgs {
   url: string
@@ -30,9 +32,7 @@ export const get = async <T>(
     const { data, status } = await axiosInstance.get(url, {
       headers: accessToken
         ? {
-            Authorization: `GNAP ${accessToken}`,
-            Signature: 'TODO',
-            'Signature-Input': 'TODO'
+            Authorization: `GNAP ${accessToken}`
           }
         : {}
     })
@@ -117,12 +117,35 @@ export const post = async <TRequest, TResponse>(
 
 export const createAxiosInstance = (args: {
   requestTimeoutMs: number
+  privateKey: KeyLike
+  keyId: string
 }): AxiosInstance => {
   const axiosInstance = axios.create({
     timeout: args.requestTimeoutMs
   })
-
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
+
+  axiosInstance.interceptors.request.use(
+    async (config) => {
+      const sigHeaders = await createSignatureHeaders({
+        request: {
+          method: config.method.toUpperCase(),
+          url: config.url,
+          headers: config.headers,
+          body: config.data
+        },
+        privateKey: args.privateKey,
+        keyId: args.keyId
+      })
+      config.headers['Signature'] = sigHeaders['Signature']
+      config.headers['Signature-Input'] = sigHeaders['Signature-Input']
+      return config
+    },
+    null,
+    {
+      runWhen: (config) => !!config.headers['Authorization']
+    }
+  )
 
   return axiosInstance
 }

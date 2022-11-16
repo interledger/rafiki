@@ -1,5 +1,5 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
-import { ClientDeps } from '.'
+import { RouteDeps } from '.'
 import { IncomingPayment, getRSPath } from '../types'
 import { get } from './requests'
 
@@ -13,9 +13,9 @@ export interface IncomingPaymentRoutes {
 }
 
 export const createIncomingPaymentRoutes = (
-  clientDeps: ClientDeps
+  deps: RouteDeps
 ): IncomingPaymentRoutes => {
-  const { axiosInstance, openApi, logger } = clientDeps
+  const { axiosInstance, openApi, logger } = deps
 
   const getIncomingPaymentOpenApiValidator =
     openApi.createResponseValidator<IncomingPayment>({
@@ -34,11 +34,11 @@ export const createIncomingPaymentRoutes = (
 }
 
 export const getIncomingPayment = async (
-  clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
+  deps: Pick<RouteDeps, 'axiosInstance' | 'logger'>,
   args: GetArgs,
   validateOpenApiResponse: ResponseValidator<IncomingPayment>
 ) => {
-  const { axiosInstance, logger } = clientDeps
+  const { axiosInstance, logger } = deps
   const { url } = args
 
   const incomingPayment = await get(
