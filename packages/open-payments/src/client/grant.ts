@@ -1,5 +1,5 @@
 import { HttpMethod } from 'openapi'
-import { ClientDeps } from '.'
+import { RouteDeps } from '.'
 import {
   getASPath,
   InteractiveGrant,
@@ -23,8 +23,8 @@ export interface GrantRoutes {
   ): Promise<NonInteractiveGrant>
 }
 
-export const createGrantRoutes = (clientDeps: ClientDeps): GrantRoutes => {
-  const { axiosInstance, openApi, logger } = clientDeps
+export const createGrantRoutes = (deps: RouteDeps): GrantRoutes => {
+  const { axiosInstance, openApi, logger } = deps
 
   const createInteractiveGrantValidator =
     openApi.createResponseValidator<InteractiveGrant>({

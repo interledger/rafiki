@@ -157,7 +157,11 @@ describe('requests', (): void => {
   })
 
   describe('post', (): void => {
-    const axiosInstance = createAxiosInstance({ requestTimeoutMs: 0 })
+    const axiosInstance = createAxiosInstance({
+      requestTimeoutMs: 0,
+      privateKey,
+      keyId
+    })
     const baseUrl = 'http://localhost:1000'
     const responseValidators = mockOpenApiResponseValidators()
 

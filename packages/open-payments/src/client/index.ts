@@ -18,14 +18,17 @@ import { createAxiosInstance } from './requests'
 import { AxiosInstance } from 'axios'
 import { createGrantRoutes, GrantRoutes } from './grant'
 
-interface ClientDeps {
+export interface BaseDeps {
   axiosInstance: AxiosInstance
-  resourceServerOpenApi: OpenAPI
-  authorizationServerOpenApi: OpenAPI
   logger: Logger
 }
 
-export interface RouteDeps {
+interface ClientDeps extends BaseDeps {
+  resourceServerOpenApi: OpenAPI
+  authorizationServerOpenApi: OpenAPI
+}
+
+export interface RouteDeps extends BaseDeps {
   axiosInstance: AxiosInstance
   openApi: OpenAPI
   logger: Logger

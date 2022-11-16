@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
-import { ClientDeps } from '.'
+import { BaseDeps } from '.'
 import { createSignatureHeaders } from './signatures'
 
 interface GetArgs {
@@ -14,11 +14,11 @@ interface PostArgs<T> {
 }
 
 export const get = async <T>(
-  clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
+  deps: BaseDeps,
   args: GetArgs,
   openApiResponseValidator: ResponseValidator<T>
 ): Promise<T> => {
-  const { axiosInstance, logger } = clientDeps
+  const { axiosInstance, logger } = deps
   const { accessToken } = args
 
   const requestUrl = new URL(args.url)
@@ -68,11 +68,11 @@ export const get = async <T>(
 }
 
 export const post = async <TRequest, TResponse>(
-  clientDeps: Pick<ClientDeps, 'axiosInstance' | 'logger'>,
+  deps: BaseDeps,
   args: PostArgs<TRequest>,
   openApiResponseValidator: ResponseValidator<TResponse>
 ): Promise<TResponse> => {
-  const { axiosInstance, logger } = clientDeps
+  const { axiosInstance, logger } = deps
   const { body } = args
 
   const requestUrl = new URL(args.url)
