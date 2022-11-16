@@ -24,7 +24,7 @@ export interface ClientDeps {
 }
 
 const createDeps = async (
-  args: Partial<CreateOpenPaymentClientArgs>
+  args: Partial<CreateAuthenticatedClientArgs>
 ): Promise<ClientDeps> => {
   const axiosInstance = createAxiosInstance({
     privateKey: args.privateKey,
@@ -48,7 +48,7 @@ export interface UnauthenticatedClient {
 }
 
 export const createUnauthenticatedClient = async (
-  args: CreateOpenPaymentClientArgs
+  args: CreateUnauthenticatedClientArgs
 ): Promise<UnauthenticatedClient> => {
   const deps = await createDeps(args)
 
@@ -58,19 +58,19 @@ export const createUnauthenticatedClient = async (
   }
 }
 
-export interface CreateOpenPaymentClientArgs
+export interface CreateAuthenticatedClientArgs
   extends CreateUnauthenticatedClientArgs {
   privateKey: KeyLike
   keyId: string
 }
 
-export interface OpenPaymentsClient extends UnauthenticatedClient {
+export interface AuthenticatedClient extends UnauthenticatedClient {
   incomingPayment: IncomingPaymentRoutes
 }
 
-export const createClient = async (
-  args: CreateOpenPaymentClientArgs
-): Promise<OpenPaymentsClient> => {
+export const createAuthenticatedClient = async (
+  args: CreateAuthenticatedClientArgs
+): Promise<AuthenticatedClient> => {
   const deps = await createDeps(args)
 
   return {
