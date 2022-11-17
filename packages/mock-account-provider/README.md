@@ -110,4 +110,4 @@ http://localhost:3006/interact/demo-interact-id/demo-interact-nonce
 
 # TODOs:
 - Add signature headers to example request in step 2 of "Shoe Shop" Demo once they are working
-- 
+- Replace client display info uri with shoe shop site that was used in the demo
