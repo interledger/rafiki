@@ -118,8 +118,8 @@ export interface components {
       id: string;
       /** @description A public name for the account. This should be set by the account holder with their provider to provide a hint to counterparties as to the identity of the account holder. */
       publicName?: string;
-      assetCode: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
-      assetScale: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
+      assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+      assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
       /**
        * Format: uri
        * @description The URL of the authorization server endpoint for getting grants and access tokens for this payment pointer.
@@ -147,8 +147,8 @@ export interface components {
       ilpAddress: string;
       /** @description The base64 url-encoded shared secret to use when establishing a STREAM connection. */
       sharedSecret: string;
-      assetCode: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
-      assetScale: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
+      assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+      assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
     };
     /**
      * Incoming Payment
@@ -168,9 +168,9 @@ export interface components {
       /** @description Describes whether the incoming payment has completed receiving fund. */
       completed: boolean;
       /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
-      incomingAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      incomingAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that has been paid into the payment pointer under this incoming payment. */
-      receivedAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      receivedAmount: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /**
        * Format: date-time
        * @description The date and time when payments under this incoming payment will no longer be accepted.
@@ -232,13 +232,13 @@ export interface components {
       /** @description Describes whether the payment failed to send its full amount. */
       failed?: boolean;
       /** @description The URL of the incoming payment or ILP STREAM Connection that is being paid. */
-      receiver: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+      receiver: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
       /** @description The total amount that should be received by the receiver when this outgoing payment has been paid. */
-      receiveAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      receiveAmount: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that should be sent when this outgoing payment has been paid. */
-      sendAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      sendAmount: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The total amount that has been sent under this outgoing payment. */
-      sentAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      sentAmount: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description Human readable description of the outgoing payment that will be visible to the account holder and shared with the receiver. */
       description?: string;
       /** @description A reference that can be used by external systems to reconcile this payment with their systems. E.g. An invoice number. (Optional) */
@@ -269,9 +269,9 @@ export interface components {
        * @description The URL of the payment pointer from which this quote's payment would be sent.
        */
       paymentPointer: string;
-      receiver: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
-      receiveAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-      sendAmount: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      receiver: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+      receiveAmount: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+      sendAmount: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
       /** @description The date and time when the calculated `sendAmount` is no longer valid. */
       expiresAt?: string;
       /**
@@ -334,7 +334,7 @@ export interface components {
     id: string;
     /** @description The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
     signature: string;
-    /** @description The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+    /** @description The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
     "signature-input": string;
   };
 }
@@ -407,7 +407,7 @@ export interface operations {
         pagination?: components["schemas"]["pagination"];
       };
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -435,7 +435,7 @@ export interface operations {
   "create-incoming-payment": {
     parameters: {
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -460,7 +460,7 @@ export interface operations {
       content: {
         "application/json": {
           /** @description The maximum amount that should be paid into the payment pointer under this incoming payment. */
-          incomingAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          incomingAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
           /**
            * Format: date-time
            * @description The date and time when payments into the incoming payment must no longer be accepted.
@@ -482,7 +482,7 @@ export interface operations {
         pagination?: components["schemas"]["pagination"];
       };
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -506,7 +506,7 @@ export interface operations {
   "create-outgoing-payment": {
     parameters: {
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -547,7 +547,7 @@ export interface operations {
   "create-quote": {
     parameters: {
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -573,9 +573,9 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": {
-          receiver: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
-          receiveAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          sendAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiver: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
         };
       };
     };
@@ -588,7 +588,7 @@ export interface operations {
         id: components["parameters"]["id"];
       };
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -619,7 +619,7 @@ export interface operations {
         id: components["parameters"]["id"];
       };
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -646,7 +646,7 @@ export interface operations {
         id: components["parameters"]["id"];
       };
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -673,7 +673,7 @@ export interface operations {
         id: components["parameters"]["id"];
       };
       header: {
-        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization" When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
+        /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
         "Signature-Input": components["parameters"]["signature-input"];
         /** The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
         Signature: components["parameters"]["signature"];
@@ -695,17 +695,17 @@ export interface operations {
 }
 
 export interface external {
-  "https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml": {
+  "https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml": {
     paths: {};
     components: {
       schemas: {
         /** @description A description of the rights associated with this access token. */
-        access: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
+        access: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
         "access-item":
-          | external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
-          | external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
-          | external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
+          | external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
         "access-incoming": {
           /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
@@ -736,7 +736,7 @@ export interface external {
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier: string;
-          limits?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
+          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
         };
         /** access-quote */
         "access-quote": {
@@ -755,8 +755,8 @@ export interface external {
            * @description The value is an unsigned 64-bit integer amount, represented as a string.
            */
           value: string;
-          assetCode: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
-          assetScale: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
+          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
         };
         /**
          * Asset code
@@ -778,10 +778,10 @@ export interface external {
          * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
          */
         "limits-outgoing": Partial<unknown> & {
-          receiver?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
-          sendAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          receiveAmount?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          interval?: external["https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
+          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
         };
         "list-actions": "list" | "list-all";
         "read-actions": "read" | "read-all";

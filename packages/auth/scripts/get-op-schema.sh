@@ -9,6 +9,5 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../src/openapi" >/dev/null 2>&1 && pwd )
 
-# TODO: revert to using main once https://github.com/interledger/open-payments/pull/211 is merged
-curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/schemas.yaml
-curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/wilsonianb/open-payments/b61bc0c84948386cac20d0e953a7e16de1e94471/openapi/auth-server.yaml
+curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml
+curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/auth-server.yaml
