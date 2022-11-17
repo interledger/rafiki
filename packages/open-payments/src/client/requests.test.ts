@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { createAxiosInstance, get, post } from './requests'
+import { verifySignatureHeaders } from './signatures'
 import { generateKeyPairSync } from 'crypto'
 import nock from 'nock'
 import { mockOpenApiResponseValidators, silentLogger } from '../test/helpers'
@@ -7,6 +8,7 @@ import { mockOpenApiResponseValidators, silentLogger } from '../test/helpers'
 describe('requests', (): void => {
   const logger = silentLogger
   const privateKey = generateKeyPairSync('ed25519').privateKey
+  const jwk = privateKey.export({ format: 'jwk' })
   const keyId = 'myId'
 
   describe('createAxiosInstance', (): void => {
@@ -57,6 +59,7 @@ describe('requests', (): void => {
         })
         .setSystemTime(new Date())
 
+      const url = `${baseUrl}/incoming-payment`
       const scope = nock(baseUrl)
         .matchHeader('Signature', /sig1=:([a-zA-Z0-9+/]){86}==:/)
         .matchHeader(
@@ -66,13 +69,29 @@ describe('requests', (): void => {
           )};keyid="${keyId}"`
         )
         .get('/incoming-payment')
-        // TODO: verify signature
-        .reply(200)
+        .reply(200, function () {
+          expect(
+            verifySignatureHeaders({
+              request: {
+                headers: this.req.headers,
+                method: this.req.method,
+                url
+              },
+              jwks: [
+                {
+                  ...jwk,
+                  kid: keyId,
+                  alg: 'ed25519'
+                }
+              ]
+            })
+          ).resolves.toBe(true)
+        })
 
       await get(
         { axiosInstance, logger },
         {
-          url: `${baseUrl}/incoming-payment`,
+          url,
           accessToken: 'accessToken'
         },
         responseValidators.successfulValidator
@@ -80,14 +99,11 @@ describe('requests', (): void => {
 
       scope.done()
 
-      expect(axiosInstance.get).toHaveBeenCalledWith(
-        `${baseUrl}/incoming-payment`,
-        {
-          headers: {
-            Authorization: 'GNAP accessToken'
-          }
+      expect(axiosInstance.get).toHaveBeenCalledWith(url, {
+        headers: {
+          Authorization: 'GNAP accessToken'
         }
-      )
+      })
     })
 
     test('sets headers properly if accessToken is not provided', async (): Promise<void> => {

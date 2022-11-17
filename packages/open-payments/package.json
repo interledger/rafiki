@@ -26,6 +26,7 @@
   "dependencies": {
     "axios": "^1.1.2",
     "http-message-signatures": "github:dhensby/node-http-message-signatures#pulls/refactor",
+    "jose": "^4.9.0",
     "openapi": "workspace:../openapi",
     "pino": "^8.4.2"
   }
