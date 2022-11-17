@@ -1,5 +1,5 @@
 import {
-  OpenPaymentsClient,
+  AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   ILPStreamConnection as OpenPaymentsConnection
 } from 'open-payments'
@@ -22,7 +22,7 @@ interface ServiceDependencies extends BaseService {
   incomingPaymentService: IncomingPaymentService
   openPaymentsUrl: string
   paymentPointerService: PaymentPointerService
-  openPaymentsClient: OpenPaymentsClient
+  openPaymentsClient: AuthenticatedClient
 }
 
 const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
