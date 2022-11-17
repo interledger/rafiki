@@ -14,7 +14,7 @@ interface RequestGrantArgs {
 }
 
 export interface GrantRoutes {
-  requestGrant(
+  request(
     args: RequestGrantArgs
   ): Promise<InteractiveGrant | NonInteractiveGrant>
 }
@@ -27,7 +27,7 @@ export const createGrantRoutes = (deps: RouteDeps): GrantRoutes => {
     method: HttpMethod.POST
   })
   return {
-    requestGrant: (args: RequestGrantArgs) =>
+    request: (args: RequestGrantArgs) =>
       post(deps, { url: args.url, body: args.request }, requestGrantValidator)
   }
 }

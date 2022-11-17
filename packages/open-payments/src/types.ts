@@ -29,7 +29,7 @@ export type NonInteractiveGrant = {
 export type GrantRequest = {
   access_token: ASOperations['post-request']['requestBody']['content']['application/json']['access_token']
   client: ASOperations['post-request']['requestBody']['content']['application/json']['client']
-  interact?: ASOperations['post-request']['requestBody']['content']['application/json']['interact']
+  interact: ASOperations['post-request']['requestBody']['content']['application/json']['interact']
 }
 export type InteractiveGrant = {
   interact: ASComponents['schemas']['interact-response']
