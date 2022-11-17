@@ -1,13 +1,10 @@
-import { sign, KeyLike } from 'crypto'
-import {
-  httpis as httpsig,
-  Algorithm,
-  RequestLike,
-  Signer
-} from 'http-message-signatures'
+import { KeyLike } from 'crypto'
+import { createSigner, httpbis, Request } from 'http-message-signatures'
 
-interface SignOptions {
-  request: RequestLike
+export interface SignOptions {
+  request: Request & {
+    body?: string
+  }
   privateKey: KeyLike
   keyId: string
 }
@@ -17,35 +14,29 @@ interface SignatureHeaders {
   'Signature-Input': string
 }
 
-const createSigner = (privateKey: KeyLike): Signer => {
-  const signer = async (data: Buffer) => sign(null, data, privateKey)
-  signer.alg = 'ed25519' as Algorithm
-  return signer
-}
-
 export const createSignatureHeaders = async ({
   request,
   privateKey,
   keyId
 }: SignOptions): Promise<SignatureHeaders> => {
-  const components = ['@method', '@target-uri']
+  const fields = ['@method', '@target-uri']
   if (request.headers['Authorization']) {
-    components.push('authorization')
+    fields.push('authorization')
   }
   if (request.body) {
     // TODO: 'content-digest'
     // https://github.com/interledger/rafiki/issues/655
-    components.push('content-length', 'content-type')
+    fields.push('content-length', 'content-type')
   }
-  const { headers } = await httpsig.sign(request, {
-    components,
-    parameters: {
-      created: Math.floor(Date.now() / 1000)
+  const { headers } = await httpbis.signMessage(
+    {
+      fields,
+      name: 'sig1',
+      params: ['created', 'keyid'],
+      key: createSigner(privateKey, 'ed25519', keyId)
     },
-    keyId,
-    signer: createSigner(privateKey),
-    format: 'httpbis'
-  })
+    request
+  )
   return {
     Signature: headers['Signature'] as string,
     'Signature-Input': headers['Signature-Input'] as string

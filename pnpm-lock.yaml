@@ -316,7 +316,7 @@ importers:
       '@types/node': ^18.7.12
       axios: ^1.1.2
       base64url: ^3.0.1
-      http-message-signatures: ^0.1.2
+      http-message-signatures: github:dhensby/node-http-message-signatures#pulls/refactor
       nock: ^13.2.9
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
@@ -326,7 +326,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       axios: 1.1.2
-      http-message-signatures: 0.1.2
+      http-message-signatures: github.com/dhensby/node-http-message-signatures/cd4ec886458406866cf959ae31c3b49db7438b19
       openapi: link:../openapi
       pino: 8.4.2
     devDependencies:
@@ -8062,10 +8062,6 @@ packages:
       statuses: 2.0.1
       toidentifier: 1.0.1
 
-  /http-message-signatures/0.1.2:
-    resolution: {integrity: sha512-gjJYDgFBy+xnlAs2G0gIWpiorCv9Xi7pIlOnnd91zHAK7BtkLxonmm/JAtd5e6CakOuW03IwEuJzj2YMy8lfWQ==}
-    dev: false
-
   /http-proxy-agent/5.0.0:
     resolution: {integrity: sha512-n2hY8YdoRE1i7r6M0w9DIw5GgZN0G25P8zLCRQ8rjXtTU3vsNFBI/vWK/UIeE6g5MUUz6avwAPXmL6Fy9D/90w==}
     engines: {node: '>= 6'}
@@ -12426,6 +12422,10 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
+  /structured-headers/0.5.0:
+    resolution: {integrity: sha512-oLnmXSsjhud+LxRJpvokwP8ImEB2wTg8sg30buwfVViKMuluTv3BlOJHUX9VW9pJ2nQOxmx87Z0kB86O4cphag==}
+    dev: false
+
   /style-to-object/0.3.0:
     resolution: {integrity: sha512-CzFnRRXhzWIdItT3OmF8SQfWyahHhjq3HwcMNCNLn+N7klOOqPjMeG/4JSu77D7ypZdGvSzvkrbyeTMizz2VrA==}
     dependencies:
@@ -13587,3 +13587,13 @@ packages:
   /zwitch/2.0.2:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
     dev: true
+
+  github.com/dhensby/node-http-message-signatures/cd4ec886458406866cf959ae31c3b49db7438b19:
+    resolution: {tarball: https://codeload.github.com/dhensby/node-http-message-signatures/tar.gz/cd4ec886458406866cf959ae31c3b49db7438b19}
+    name: http-message-signatures
+    version: 0.1.2
+    prepare: true
+    requiresBuild: true
+    dependencies:
+      structured-headers: 0.5.0
+    dev: false

@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
-import { createSignatureHeaders } from './signatures'
+import { createSignatureHeaders, SignOptions } from './signatures'
 
 interface GetArgs {
   url: string
@@ -131,7 +131,7 @@ export const createAxiosInstance = (args: {
         request: {
           method: config.method.toUpperCase(),
           url: config.url,
-          headers: config.headers,
+          headers: config.headers as SignOptions['request']['headers'],
           body: config.data
         },
         privateKey: args.privateKey,

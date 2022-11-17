@@ -63,7 +63,7 @@ describe('requests', (): void => {
           'Signature-Input',
           `sig1=("@method" "@target-uri" "authorization");created=${Math.floor(
             Date.now() / 1000
-          )};keyid="${keyId}";alg="ed25519"`
+          )};keyid="${keyId}"`
         )
         .get('/incoming-payment')
         // TODO: verify signature
