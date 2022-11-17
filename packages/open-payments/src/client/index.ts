@@ -25,7 +25,7 @@ export interface BaseDeps {
 
 interface ClientDeps extends BaseDeps {
   resourceServerOpenApi: OpenAPI
-  authorizationServerOpenApi: OpenAPI
+  authServerOpenApi: OpenAPI
 }
 
 export interface RouteDeps extends BaseDeps {
@@ -46,14 +46,14 @@ const createDeps = async (
   const resourceServerOpenApi = await createOpenAPI(
     config.OPEN_PAYMENTS_RS_OPEN_API_URL
   )
-  const authorizationServerOpenApi = await createOpenAPI(
+  const authServerOpenApi = await createOpenAPI(
     config.OPEN_PAYMENTS_AS_OPEN_API_URL
   )
   const logger = args?.logger ?? createLogger()
   return {
     axiosInstance,
     resourceServerOpenApi,
-    authorizationServerOpenApi,
+    authServerOpenApi,
     logger
   }
 }
@@ -103,12 +103,8 @@ export interface AuthenticatedClient extends UnauthenticatedClient {
 export const createAuthenticatedClient = async (
   args: CreateAuthenticatedClientArgs
 ): Promise<AuthenticatedClient> => {
-  const {
-    axiosInstance,
-    resourceServerOpenApi,
-    authorizationServerOpenApi,
-    logger
-  } = await createDeps(args)
+  const { axiosInstance, resourceServerOpenApi, authServerOpenApi, logger } =
+    await createDeps(args)
 
   return {
     incomingPayment: createIncomingPaymentRoutes({
@@ -128,7 +124,7 @@ export const createAuthenticatedClient = async (
     }),
     grant: createGrantRoutes({
       axiosInstance,
-      openApi: authorizationServerOpenApi,
+      openApi: authServerOpenApi,
       logger
     })
   }
