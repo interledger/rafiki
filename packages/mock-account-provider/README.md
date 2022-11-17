@@ -76,28 +76,38 @@ The mock identity provider can be used to test the grant authorization flow
 using an example "Shoe Shop" site which requests the user's consent to make a
 purchase and renders a simple screen showing the result.
 
-**NOTE**: The mock identity provider currently only supports the
-`outgoing-payment` case
+**NOTE**: The auth server only uses the mock identity provider for `outgoing-payments` grants.
 
 The demo works as follows:
 
 1. Run
-   `docker compose -f ./infrastructure/local/database_docker-compose.yml "up" "-d"`
+   `pnpm localenv up`
    in the project root
-2. Create the grant using the necessary `auth` APIs, or use the pre-seeded
-   `demo` grant:
-   - in the `auth` directory, run `pnpm knex "seed:run" "--env=development"`
-   - `interactid`: `demo-interact-id`
-   - `nonce`: `demo-interact-nonce`
-   - `returnUrl`: `http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F`
-3. In a browser, navigate to the mock consent screen page at
-   `http://localhost:3300/consent-screen?interactid=<interactid>&nonce=<nonce>&returnUrl=<returnUrl>
-   - for the `demo` grant, the URL would be
-     - http://localhost:3300/consent-screen?interactid=demo-interact-id&nonce=demo-interact-nonce&returnUrl=http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F
-   - if you omit the query parameters, you will first be directed to a page
-     allowing you to input the `interactId`, `nonce`, and `returnUrl`
+2. Initiate a grant at the auth server instance using its `POST /` route. An example of such a request might look like the following:
+```
+curl -X POST http://localhost:3006/ -H 'Content-Type: application/json' -d '{"access_token":{"access":[{"type":"outgoing-payment","actions":["create","read","read-all","list"],"identifier":"https://example.com","limits":{"receiver":"https://openpayments.guide/alice/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c","sendAmount":{"value":"500","assetScale":2,"assetCode":"USD"},"receiveAmount":{"value":"500","assetScale":2,"assetCode":"USD"},"interval":"R11/2022-08-24T14:15:22Z/P1M"}}]},"client":{"display":{"name":"Test Client","uri":"https://google.com"},"key":{"jwk":{"kty":"OKP","alg":"EdDSA","crv":"Ed25519","key_ops":["sign","verify"],"use":"sig","kid":"http://fynbos/keys/1234","x":"mbD1mlEyBABhYfUQbhuqNwOwcb4cLcdRoAWIoUWgsL4"},"proof":"httpsig"}},"interact":{"start":["redirect"],"finish":{"method":"redirect","uri":"http://localhost:3030/mock-idp/fake-client","nonce":"1234"}}}'
+```
+3. In a browser, navigate to the `redirectUrl` provided in the response from the auth server for the above request.
 4. The consent screen will present the send amount, receive amount, and receiver
    name, and ask the user for consent to complete the transaction
 5. After making a consent choice, the user will be redirected to a page at the
    Shoe Shop which displays the choice that was made, as well as the Grant ID
    and Interaction Reference
+
+## Using a pre-seeded grant
+If you wish to use the mock account provider without using the auth server to generate a grant first, follow these steps to use a seeded one instead:
+1. In the `auth` directory, run `pnpm knex "seed:run" "--env=development"`
+   - The seeded grant has the following properties:
+     - `interactid`: `demo-interact-id`
+     - `nonce`: `demo-interact-nonce`
+     - `returnUrl`: `http%3A%2F%2Flocalhost%3A3300%2Fshoe-shop%3F`
+  - if you omit the query parameters, you will first be directed to a page
+   allowing you to input the `interactId`, `nonce`, and `returnUrl`
+2. Use the following URI to initiate the grant interaction using the seed grant:
+```
+http://localhost:3006/interact/demo-interact-id/demo-interact-nonce
+```
+
+# TODOs:
+- Add signature headers to example request in step 2 of "Shoe Shop" Demo once they are working
+- 
