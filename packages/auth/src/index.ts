@@ -14,7 +14,7 @@ import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
-import { createClient as createOpenPaymentsClient } from 'open-payments'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 
 export { KeyInfo } from './accessToken/service'
 export { JWKWithRequired } from './client/service'

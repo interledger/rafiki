@@ -1,5 +1,5 @@
 import { JWK as JoseWk } from 'jose'
-import { JWK, OpenPaymentsClient } from 'open-payments'
+import { JWK, UnauthenticatedClient } from 'open-payments'
 
 import { BaseService } from '../shared/baseService'
 
@@ -28,7 +28,7 @@ interface ClientDetails {
 }
 
 interface ServiceDependencies extends BaseService {
-  openPaymentsClient: OpenPaymentsClient
+  openPaymentsClient: UnauthenticatedClient
 }
 
 export interface KeyOptions {
