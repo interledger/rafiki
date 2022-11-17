@@ -16,8 +16,19 @@ import {
 } from './payment-pointer'
 import { createAxiosInstance } from './requests'
 import { AxiosInstance } from 'axios'
+import { createGrantRoutes, GrantRoutes } from './grant'
 
-export interface ClientDeps {
+export interface BaseDeps {
+  axiosInstance: AxiosInstance
+  logger: Logger
+}
+
+interface ClientDeps extends BaseDeps {
+  resourceServerOpenApi: OpenAPI
+  authServerOpenApi: OpenAPI
+}
+
+export interface RouteDeps extends BaseDeps {
   axiosInstance: AxiosInstance
   openApi: OpenAPI
   logger: Logger
@@ -32,9 +43,19 @@ const createDeps = async (
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
-  const openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
+  const resourceServerOpenApi = await createOpenAPI(
+    config.OPEN_PAYMENTS_RS_OPEN_API_URL
+  )
+  const authServerOpenApi = await createOpenAPI(
+    config.OPEN_PAYMENTS_AS_OPEN_API_URL
+  )
   const logger = args?.logger ?? createLogger()
-  return { axiosInstance, openApi, logger }
+  return {
+    axiosInstance,
+    resourceServerOpenApi,
+    authServerOpenApi,
+    logger
+  }
 }
 
 export interface CreateUnauthenticatedClientArgs {
@@ -50,11 +71,21 @@ export interface UnauthenticatedClient {
 export const createUnauthenticatedClient = async (
   args: CreateUnauthenticatedClientArgs
 ): Promise<UnauthenticatedClient> => {
-  const deps = await createDeps(args)
+  const { axiosInstance, resourceServerOpenApi, logger } = await createDeps(
+    args
+  )
 
   return {
-    ilpStreamConnection: createILPStreamConnectionRoutes(deps),
-    paymentPointer: createPaymentPointerRoutes(deps)
+    ilpStreamConnection: createILPStreamConnectionRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    paymentPointer: createPaymentPointerRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    })
   }
 }
 
@@ -66,16 +97,35 @@ export interface CreateAuthenticatedClientArgs
 
 export interface AuthenticatedClient extends UnauthenticatedClient {
   incomingPayment: IncomingPaymentRoutes
+  grant: GrantRoutes
 }
 
 export const createAuthenticatedClient = async (
   args: CreateAuthenticatedClientArgs
 ): Promise<AuthenticatedClient> => {
-  const deps = await createDeps(args)
+  const { axiosInstance, resourceServerOpenApi, authServerOpenApi, logger } =
+    await createDeps(args)
 
   return {
-    incomingPayment: createIncomingPaymentRoutes(deps),
-    ilpStreamConnection: createILPStreamConnectionRoutes(deps),
-    paymentPointer: createPaymentPointerRoutes(deps)
+    incomingPayment: createIncomingPaymentRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    ilpStreamConnection: createILPStreamConnectionRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    paymentPointer: createPaymentPointerRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    grant: createGrantRoutes({
+      axiosInstance,
+      openApi: authServerOpenApi,
+      logger
+    })
   }
 }

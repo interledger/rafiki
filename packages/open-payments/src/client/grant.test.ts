@@ -1,30 +1,27 @@
-import { createPaymentPointerRoutes } from './payment-pointer'
+import { createGrantRoutes } from './grant'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import config from '../config'
 import { defaultAxiosInstance, silentLogger } from '../test/helpers'
 
-describe('payment-pointer', (): void => {
+describe('grant', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
-    openApi = await createOpenAPI(config.OPEN_PAYMENTS_RS_OPEN_API_URL)
+    openApi = await createOpenAPI(config.OPEN_PAYMENTS_AS_OPEN_API_URL)
   })
 
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
 
-  describe('createPaymentPointerRoutes', (): void => {
-    test('calls createResponseValidator properly', async (): Promise<void> => {
+  describe('createGrantRoutes', (): void => {
+    test('creates response validator for grant requests', async (): Promise<void> => {
       jest.spyOn(openApi, 'createResponseValidator')
 
-      createPaymentPointerRoutes({
-        axiosInstance,
-        openApi,
-        logger
-      })
+      createGrantRoutes({ axiosInstance, openApi, logger })
+      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(1)
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/',
-        method: HttpMethod.GET
+        method: HttpMethod.POST
       })
     })
   })
