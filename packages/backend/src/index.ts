@@ -37,7 +37,7 @@ import { createConnectorService } from './connector'
 import { createSessionService } from './session/service'
 import { createApiKeyService } from './apiKey/service'
 import { createOpenAPI } from 'openapi'
-import { createClient as createOpenPaymentsClient } from 'open-payments'
+import { createAuthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './paymentPointerKey/service'
@@ -90,7 +90,10 @@ export function initIocContainer(
   container.singleton('closeEmitter', async () => new EventEmitter())
   container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
-    return new Redis(config.redisUrl, { tls: config.redisTls })
+    return new Redis(config.redisUrl, {
+      tls: config.redisTls,
+      stringNumbers: true
+    })
   })
   container.singleton('streamServer', async (deps) => {
     const config = await deps.use('config')
@@ -115,8 +118,13 @@ export function initIocContainer(
     return await createOpenAPI(config.authServerSpec)
   })
   container.singleton('openPaymentsClient', async (deps) => {
+    const config = await deps.use('config')
     const logger = await deps.use('logger')
-    return createOpenPaymentsClient({ logger })
+    return createOpenPaymentsClient({
+      logger,
+      keyId: config.keyId,
+      privateKey: config.privateKey
+    })
   })
 
   /**

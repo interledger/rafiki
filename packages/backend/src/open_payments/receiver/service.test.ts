@@ -12,14 +12,14 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
-import { OpenPaymentsClient } from 'open-payments'
+import { AuthenticatedClient } from 'open-payments'
 import { PaymentPointerService } from '../payment_pointer/service'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let receiverService: ReceiverService
-  let openPaymentsClient: OpenPaymentsClient
+  let openPaymentsClient: AuthenticatedClient
   let knex: Knex
   let connectionService: ConnectionService
   let paymentPointerService: PaymentPointerService

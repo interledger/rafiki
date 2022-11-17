@@ -316,6 +316,7 @@ importers:
       '@types/node': ^18.7.12
       axios: ^1.1.2
       base64url: ^3.0.1
+      http-message-signatures: ^0.1.2
       nock: ^13.2.9
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
@@ -325,6 +326,7 @@ importers:
       uuid: ^8.3.2
     dependencies:
       axios: 1.1.2
+      http-message-signatures: 0.1.2
       openapi: link:../openapi
       pino: 8.4.2
     devDependencies:
@@ -8059,6 +8061,10 @@ packages:
       setprototypeof: 1.2.0
       statuses: 2.0.1
       toidentifier: 1.0.1
+
+  /http-message-signatures/0.1.2:
+    resolution: {integrity: sha512-gjJYDgFBy+xnlAs2G0gIWpiorCv9Xi7pIlOnnd91zHAK7BtkLxonmm/JAtd5e6CakOuW03IwEuJzj2YMy8lfWQ==}
+    dev: false
 
   /http-proxy-agent/5.0.0:
     resolution: {integrity: sha512-n2hY8YdoRE1i7r6M0w9DIw5GgZN0G25P8zLCRQ8rjXtTU3vsNFBI/vWK/UIeE6g5MUUz6avwAPXmL6Fy9D/90w==}

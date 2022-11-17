@@ -5,4 +5,9 @@ export {
   JWKS,
   PaymentPointer
 } from './types'
-export { createClient, OpenPaymentsClient } from './client'
+export {
+  createAuthenticatedClient,
+  createUnauthenticatedClient,
+  AuthenticatedClient,
+  UnauthenticatedClient
+} from './client'
