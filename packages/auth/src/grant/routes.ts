@@ -134,6 +134,15 @@ async function createGrantInitiation(
     return
   }
 
+  const client = await deps.clientService.get(body.client)
+  if (!client) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_client'
+    }
+    return
+  }
+
   const grant = await grantService.create({
     ...body,
     clientKeyId
@@ -144,15 +153,6 @@ async function createGrantInitiation(
     config.authServerDomain +
       `/interact/${grant.interactId}/${grant.interactNonce}`
   )
-
-  const client = await deps.clientService.get(body.client)
-  if (!client) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_client'
-    }
-    return
-  }
 
   redirectUri.searchParams.set('clientName', client.name)
   redirectUri.searchParams.set('clientUri', client.uri)
