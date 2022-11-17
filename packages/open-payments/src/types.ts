@@ -35,3 +35,10 @@ export type InteractiveGrant = {
   interact: ASComponents['schemas']['interact-response']
   continue: ASComponents['schemas']['continue']
 }
+export const isInteractiveGrant = (
+  grant: InteractiveGrant | NonInteractiveGrant
+): grant is InteractiveGrant => !!(grant as InteractiveGrant).interact
+
+export const isNonInteractiveGrant = (
+  grant: InteractiveGrant | NonInteractiveGrant
+): grant is NonInteractiveGrant => !!(grant as NonInteractiveGrant).access_token

@@ -2,7 +2,9 @@ export {
   IncomingPayment,
   ILPStreamConnection,
   InteractiveGrant,
-  NonInteractiveGrant
+  NonInteractiveGrant,
+  isInteractiveGrant,
+  isNonInteractiveGrant
 } from './types'
 
 export {
