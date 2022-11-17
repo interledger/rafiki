@@ -31,11 +31,3 @@ export const createGrantRoutes = (deps: RouteDeps): GrantRoutes => {
       post(deps, { url: args.url, body: args.request }, requestGrantValidator)
   }
 }
-
-export const isInteractiveGrant = (
-  grant: InteractiveGrant | NonInteractiveGrant
-): grant is InteractiveGrant => !!(grant as InteractiveGrant).interact
-
-export const isNonInteractiveGrant = (
-  grant: InteractiveGrant | NonInteractiveGrant
-): grant is NonInteractiveGrant => !!(grant as NonInteractiveGrant).access_token
