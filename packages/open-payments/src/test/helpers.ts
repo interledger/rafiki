@@ -5,9 +5,8 @@ import {
   ILPStreamConnection,
   IncomingPayment,
   InteractiveGrant,
-  InteractiveGrantRequest,
-  NonInteractiveGrant,
-  NonInteractiveGrantRequest
+  GrantRequest,
+  NonInteractiveGrant
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -85,9 +84,32 @@ export const mockInteractiveGrant = (
   ...overrides
 })
 
-export const mockInteractiveGrantRequest = (
-  overrides?: Partial<InteractiveGrantRequest>
-): InteractiveGrantRequest => ({
+export const mockNonInteractiveGrant = (
+  overrides?: Partial<NonInteractiveGrant>
+): NonInteractiveGrant => ({
+  access_token: {
+    value: '99C36C2A4DB5BEBC',
+    manage: 'http://example.com/token/',
+    access: [
+      {
+        type: 'incoming-payment',
+        actions: ['create', 'read', 'list', 'complete']
+      }
+    ],
+    expires_in: 600
+  },
+  continue: {
+    access_token: {
+      value: 'DECCCF3D2229DB48'
+    },
+    uri: 'http://example.com/continue/'
+  },
+  ...overrides
+})
+
+export const mockGrantRequest = (
+  overrides?: Partial<GrantRequest>
+): GrantRequest => ({
   access_token: {
     access: [
       {
@@ -119,60 +141,6 @@ export const mockInteractiveGrantRequest = (
       method: 'redirect',
       uri: 'http://localhost:3030/mock-idp/fake-client',
       nonce: '456'
-    }
-  },
-  ...overrides
-})
-
-export const mockNonInteractiveGrant = (
-  overrides?: Partial<NonInteractiveGrant>
-): NonInteractiveGrant => ({
-  access_token: {
-    value: '99C36C2A4DB5BEBC',
-    manage: 'http://example.com/token/',
-    access: [
-      {
-        type: 'incoming-payment',
-        actions: ['create', 'read', 'list', 'complete']
-      }
-    ],
-    expires_in: 600
-  },
-  continue: {
-    access_token: {
-      value: 'DECCCF3D2229DB48'
-    },
-    uri: 'http://example.com/continue/'
-  },
-  ...overrides
-})
-
-export const mockNonInteractiveGrantRequest = (
-  overrides?: Partial<NonInteractiveGrantRequest>
-): NonInteractiveGrantRequest => ({
-  access_token: {
-    access: [
-      {
-        type: 'quote',
-        actions: ['create', 'read']
-      }
-    ]
-  },
-  client: {
-    display: {
-      name: 'Shoe Shop',
-      uri: 'https://shoe-shop.com/'
-    },
-    key: {
-      proof: 'httpsig',
-      jwk: {
-        alg: 'EdDSA',
-        kty: 'OKP',
-        use: 'sig',
-        crv: 'Ed25519',
-        kid: 'http://fynbos/keys/12345',
-        x: 'jfiusdhvherui4vueurygygb8'
-      }
     }
   },
   ...overrides
