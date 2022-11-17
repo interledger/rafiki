@@ -1,7 +1,14 @@
 import { generateKeyPairSync } from 'crypto'
 import createLogger from 'pino'
 import { createAxiosInstance } from '../client/requests'
-import { ILPStreamConnection, IncomingPayment } from '../types'
+import {
+  ILPStreamConnection,
+  IncomingPayment,
+  InteractiveGrant,
+  InteractiveGrantRequest,
+  NonInteractiveGrant,
+  NonInteractiveGrantRequest
+} from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
 import { ResponseValidator } from 'openapi'
@@ -58,5 +65,115 @@ export const mockIncomingPayment = (
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ilpStreamConnection: mockILPStreamConnection(),
+  ...overrides
+})
+
+export const mockInteractiveGrant = (
+  overrides?: Partial<InteractiveGrant>
+): InteractiveGrant => ({
+  interact: {
+    redirect: 'http://example.com/redirect',
+    finish: 'EF5C2D8DF0663FD5'
+  },
+  continue: {
+    access_token: {
+      value: 'BBBDD7BDD6CB8659'
+    },
+    uri: 'http://example.com/continue',
+    wait: 5
+  },
+  ...overrides
+})
+
+export const mockInteractiveGrantRequest = (
+  overrides?: Partial<InteractiveGrantRequest>
+): InteractiveGrantRequest => ({
+  access_token: {
+    access: [
+      {
+        type: 'quote',
+        actions: ['create', 'read']
+      }
+    ]
+  },
+  client: {
+    display: {
+      name: 'Shoe Shop',
+      uri: 'https://shoe-shop.com/'
+    },
+    key: {
+      proof: 'httpsig',
+      jwk: {
+        alg: 'EdDSA',
+        kty: 'OKP',
+        use: 'sig',
+        crv: 'Ed25519',
+        kid: 'http://fynbos/keys/12345',
+        x: 'jfiusdhvherui4vueurygygb8'
+      }
+    }
+  },
+  interact: {
+    start: ['redirect'],
+    finish: {
+      method: 'redirect',
+      uri: 'http://localhost:3030/mock-idp/fake-client',
+      nonce: '456'
+    }
+  },
+  ...overrides
+})
+
+export const mockNonInteractiveGrant = (
+  overrides?: Partial<NonInteractiveGrant>
+): NonInteractiveGrant => ({
+  access_token: {
+    value: '99C36C2A4DB5BEBC',
+    manage: 'http://example.com/token/',
+    access: [
+      {
+        type: 'incoming-payment',
+        actions: ['create', 'read', 'list', 'complete']
+      }
+    ],
+    expires_in: 600
+  },
+  continue: {
+    access_token: {
+      value: 'DECCCF3D2229DB48'
+    },
+    uri: 'http://example.com/continue/'
+  },
+  ...overrides
+})
+
+export const mockNonInteractiveGrantRequest = (
+  overrides?: Partial<NonInteractiveGrantRequest>
+): NonInteractiveGrantRequest => ({
+  access_token: {
+    access: [
+      {
+        type: 'quote',
+        actions: ['create', 'read']
+      }
+    ]
+  },
+  client: {
+    display: {
+      name: 'Shoe Shop',
+      uri: 'https://shoe-shop.com/'
+    },
+    key: {
+      proof: 'httpsig',
+      jwk: {
+        alg: 'EdDSA',
+        kty: 'OKP',
+        use: 'sig',
+        crv: 'Ed25519',
+        kid: 'http://fynbos/keys/12345',
+        x: 'jfiusdhvherui4vueurygygb8'
+      }
+    }
+  },
   ...overrides
 })
