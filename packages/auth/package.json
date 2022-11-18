@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "knex": "knex",
-    "build:deps": "pnpm --filter openapi build",
+    "build:deps": "pnpm --filter open-payments build",
     "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "fetch-schemas": "./scripts/get-op-schema.sh",
@@ -29,6 +29,7 @@
     "node-mocks-http": "^1.11.0",
     "objection": "^3.0.1",
     "objection-db-errors": "^1.1.2",
+    "open-payments": "workspace:*",
     "openapi": "workspace:../openapi",
     "pg": "^8.6.0",
     "pino": "^8.4.2",

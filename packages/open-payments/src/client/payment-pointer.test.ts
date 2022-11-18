@@ -26,6 +26,10 @@ describe('payment-pointer', (): void => {
         path: '/',
         method: HttpMethod.GET
       })
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/jwks.json',
+        method: HttpMethod.GET
+      })
     })
   })
 })

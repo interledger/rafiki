@@ -78,15 +78,16 @@ describe('Auth Middleware', (): void => {
   }
 
   async function prepareTest(includeBody: boolean) {
-    requestSignatureHeaders = await generateSigHeaders(
-      generatedKeyPair.privateKey,
-      requestUrl,
-      requestMethod,
-      {
+    requestSignatureHeaders = await generateSigHeaders({
+      privateKey: generatedKeyPair.privateKey,
+      keyId: generatedKeyPair.keyId,
+      url: requestUrl,
+      method: requestMethod,
+      optionalComponents: {
         body: includeBody ? requestBody : undefined,
         authorization: requestAuthorization
       }
-    )
+    })
     requestJwk = generatedKeyPair.publicKey
 
     ctx = setupHttpSigContext({

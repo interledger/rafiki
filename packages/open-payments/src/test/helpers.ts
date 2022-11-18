@@ -118,23 +118,7 @@ export const mockGrantRequest = (
       }
     ]
   },
-  client: {
-    display: {
-      name: 'Shoe Shop',
-      uri: 'https://shoe-shop.com/'
-    },
-    key: {
-      proof: 'httpsig',
-      jwk: {
-        alg: 'EdDSA',
-        kty: 'OKP',
-        use: 'sig',
-        crv: 'Ed25519',
-        kid: 'http://fynbos/keys/12345',
-        x: 'jfiusdhvherui4vueurygygb8'
-      }
-    }
-  },
+  client: 'https://shoe-shop/.well-known/pay',
   interact: {
     start: ['redirect'],
     finish: {

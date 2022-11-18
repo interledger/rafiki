@@ -85,6 +85,7 @@ async function createGrantInitiation(
 
   const { body } = ctx.request
   const { grantService, config } = deps
+  const clientKeyId = ctx.clientKeyId
 
   if (
     !deps.config.incomingPaymentInteraction &&
@@ -98,7 +99,13 @@ async function createGrantInitiation(
     let grant: Grant
     let accessToken: AccessToken
     try {
-      grant = await grantService.create(body, trx)
+      grant = await grantService.create(
+        {
+          ...body,
+          clientKeyId
+        },
+        trx
+      )
       accessToken = await deps.accessTokenService.create(grant.id, {
         trx
       })
@@ -127,15 +134,28 @@ async function createGrantInitiation(
     return
   }
 
-  const grant = await grantService.create(body)
+  const client = await deps.clientService.get(body.client)
+  if (!client) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_client'
+    }
+    return
+  }
+
+  const grant = await grantService.create({
+    ...body,
+    clientKeyId
+  })
   ctx.status = 200
 
   const redirectUri = new URL(
     config.authServerDomain +
       `/interact/${grant.interactId}/${grant.interactNonce}`
   )
-  redirectUri.searchParams.set('clientName', body.client.display.name)
-  redirectUri.searchParams.set('clientUri', body.client.display.uri)
+
+  redirectUri.searchParams.set('clientName', client.name)
+  redirectUri.searchParams.set('clientUri', client.uri)
   ctx.body = {
     interact: {
       redirect: redirectUri.toString(),
@@ -196,7 +216,7 @@ async function startInteraction(
   )
   const { id: interactId, nonce } = ctx.params
   const { clientName, clientUri } = ctx.query
-  const { config, grantService, clientService } = deps
+  const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
@@ -205,16 +225,6 @@ async function startInteraction(
       error: 'unknown_request'
     }
 
-    return
-  }
-
-  const key = await clientService.getKeyByKid(grant.clientKeyId)
-
-  if (!key) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_client'
-    }
     return
   }
 

@@ -4,7 +4,10 @@ export {
   InteractiveGrant,
   NonInteractiveGrant,
   isInteractiveGrant,
-  isNonInteractiveGrant
+  isNonInteractiveGrant,
+  JWK,
+  JWKS,
+  PaymentPointer
 } from './types'
 
 export {

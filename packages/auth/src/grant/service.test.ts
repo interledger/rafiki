@@ -1,5 +1,6 @@
 import assert from 'assert'
 import crypto from 'crypto'
+import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -12,6 +13,8 @@ import { GrantService, GrantRequest } from '../grant/service'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
+import { JWKWithRequired } from '../client/service'
+import { generateTestKeys } from '../tests/signature'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -19,6 +22,7 @@ describe('Grant Service', (): void => {
   let grantService: GrantService
   let knex: Knex
   let trx: Knex.Transaction
+  let testJwk: JWKWithRequired
 
   let grant: Grant
 
@@ -27,9 +31,12 @@ describe('Grant Service', (): void => {
     grantService = await deps.use('grantService')
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
+
+    const { publicKey } = await generateTestKeys()
+    testJwk = publicKey
   })
 
-  const KEY_REGISTRY_URL = 'https://openpayments.network/keys/test-key'
+  const CLIENT = faker.internet.url()
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert({
@@ -40,7 +47,8 @@ describe('Grant Service', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com',
       clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      clientKeyId: KEY_REGISTRY_URL,
+      client: CLIENT,
+      clientKeyId: testJwk.kid,
       interactId: v4(),
       interactRef: v4(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -68,24 +76,7 @@ describe('Grant Service', (): void => {
   }
 
   const BASE_GRANT_REQUEST = {
-    client: {
-      display: {
-        name: 'Test Client',
-        uri: 'https://example.com'
-      },
-      key: {
-        proof: 'httpsig',
-        jwk: {
-          kid: KEY_REGISTRY_URL,
-          x: 'test-public-key',
-          kty: 'OKP',
-          alg: 'EdDSA',
-          crv: 'Ed25519',
-          key_ops: ['sign', 'verify'],
-          use: 'sig'
-        }
-      }
-    },
+    client: CLIENT,
     interact: {
       start: [StartMethod.Redirect],
       finish: {
@@ -100,6 +91,7 @@ describe('Grant Service', (): void => {
     test('Can initiate a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
+        clientKeyId: testJwk.kid,
         access_token: {
           access: [
             {
@@ -122,7 +114,8 @@ describe('Grant Service', (): void => {
         finishMethod: FinishMethod.Redirect,
         finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
         clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
-        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid,
+        client: CLIENT,
+        clientKeyId: testJwk.kid,
         startMethod: expect.arrayContaining([StartMethod.Redirect])
       })
 
@@ -139,6 +132,7 @@ describe('Grant Service', (): void => {
     test('Can issue a grant without interaction', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
+        clientKeyId: testJwk.kid,
         access_token: {
           access: [
             {
@@ -156,7 +150,7 @@ describe('Grant Service', (): void => {
         state: GrantState.Granted,
         continueId: expect.any(String),
         continueToken: expect.any(String),
-        clientKeyId: BASE_GRANT_REQUEST.client.key.jwk.kid
+        clientKeyId: testJwk.kid
       })
 
       await expect(

@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import nock from 'nock'
+import { faker } from '@faker-js/faker'
 import { importJWK } from 'jose'
 import { v4 } from 'uuid'
 import { Knex } from 'knex'
@@ -10,18 +11,13 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { ClientKey, JWKWithRequired } from '../client/service'
+import { JWKWithRequired } from '../client/service'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
-import {
-  TEST_CLIENT_DISPLAY,
-  generateTestKeys,
-  TEST_CLIENT
-} from '../tests/signature'
+import { generateTestKeys } from '../tests/signature'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessType, Action } from '../access/types'
-import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
 import {
   verifySig,
   sigInputToChallenge,
@@ -33,27 +29,18 @@ import {
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
+  const CLIENT = faker.internet.url()
 
-  let keyPath: string
-  let publicKey: JWKWithRequired
   let privateKey: JWKWithRequired
-  let testClientKey: {
-    proof: string
-    jwk: JWKWithRequired
-  }
+  let testClientKey: JWKWithRequired
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
     const keys = await generateTestKeys()
-    keyPath = '/' + keys.keyId
-    publicKey = keys.publicKey
     privateKey = keys.privateKey
-    testClientKey = {
-      proof: 'httpsig',
-      jwk: publicKey
-    }
+    testClientKey = keys.publicKey
   })
 
   afterAll(async (): Promise<void> => {
@@ -67,7 +54,7 @@ describe('Signature Service', (): void => {
       const privateJwk = (await importJWK(privateKey)) as crypto.KeyLike
       const signature = crypto.sign(null, Buffer.from(challenge), privateJwk)
       await expect(
-        verifySig(signature.toString('base64'), publicKey, challenge)
+        verifySig(signature.toString('base64'), testClientKey, challenge)
       ).resolves.toBe(true)
     })
 
@@ -178,6 +165,7 @@ describe('Signature Service', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com/finish',
       clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      client: CLIENT,
       interactId: v4(),
       interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -210,7 +198,7 @@ describe('Signature Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: KEY_REGISTRY_ORIGIN + keyPath
+        clientKeyId: testClientKey.kid
       })
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -235,12 +223,11 @@ describe('Signature Service', (): void => {
     })
 
     test('Validate grant initiation request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
+      const scope = nock(CLIENT)
+        .get('/jwks.json')
         .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
+          keys: [testClientKey]
+        })
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -252,15 +239,10 @@ describe('Signature Service', (): void => {
         },
         {},
         {
-          client: {
-            display: TEST_CLIENT_DISPLAY,
-            key: {
-              proof: 'httpsig',
-              jwk: testClientKey.jwk
-            }
-          }
+          client: CLIENT
         },
         privateKey,
+        testClientKey.kid,
         deps
       )
 
@@ -269,16 +251,15 @@ describe('Signature Service', (): void => {
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
 
-      scope.isDone()
+      scope.done()
     })
 
     test('Validate grant continuation request with middleware', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
+      const scope = nock(CLIENT)
+        .get('/jwks.json')
         .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
+          keys: [testClientKey]
+        })
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -292,6 +273,7 @@ describe('Signature Service', (): void => {
         { id: grant.continueId },
         { interact_ref: grant.interactRef },
         privateKey,
+        testClientKey.kid,
         deps
       )
 
@@ -299,16 +281,15 @@ describe('Signature Service', (): void => {
       expect(ctx.response.status).toEqual(200)
       expect(next).toHaveBeenCalled()
 
-      scope.isDone()
+      scope.done()
     })
 
     test('Validate token management request with middleware', async () => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
+      const scope = nock(CLIENT)
+        .get('/jwks.json')
         .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
+          keys: [testClientKey]
+        })
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -325,6 +306,7 @@ describe('Signature Service', (): void => {
           resource_server: 'test'
         },
         privateKey,
+        testClientKey.kid,
         deps
       )
 
@@ -333,16 +315,10 @@ describe('Signature Service', (): void => {
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
 
-      scope.isDone()
+      scope.done()
     })
 
     test('httpsig middleware fails if headers are invalid', async () => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
-        .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
       const method = 'DELETE'
 
       const ctx = createContext(
@@ -366,17 +342,14 @@ describe('Signature Service', (): void => {
       expect(ctx.response.status).toEqual(400)
       expect(ctx.response.body.error).toEqual('invalid_request')
       expect(ctx.response.body.message).toEqual('invalid signature headers')
-
-      scope.isDone()
     })
 
     test('middleware fails if signature is invalid', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(keyPath)
+      const scope = nock(CLIENT)
+        .get('/jwks.json')
         .reply(200, {
-          jwk: testClientKey.jwk,
-          client: TEST_CLIENT
-        } as ClientKey)
+          keys: [testClientKey]
+        })
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -390,6 +363,7 @@ describe('Signature Service', (): void => {
         { id: grant.continueId },
         { interact_ref: grant.interactRef },
         privateKey,
+        testClientKey.kid,
         deps
       )
 
@@ -399,7 +373,7 @@ describe('Signature Service', (): void => {
         grantContinueHttpsigMiddleware(ctx, next)
       ).rejects.toHaveProperty('status', 401)
 
-      scope.isDone()
+      scope.done()
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {
@@ -413,24 +387,19 @@ describe('Signature Service', (): void => {
         },
         {},
         {
-          client: {
-            display: TEST_CLIENT_DISPLAY,
-            key: {
-              proof: 'httpsig',
-              jwk: {
-                ...testClientKey.jwk,
-                kid: KEY_REGISTRY_ORIGIN + '/wrong-kid'
-              }
-            }
-          }
+          client: CLIENT
         },
         privateKey,
+        testClientKey.kid,
         deps
       )
 
-      await grantInitiationHttpsigMiddleware(ctx, next)
-      expect(ctx.response.status).toEqual(401)
-      expect(ctx.body).toMatchObject({ error: 'invalid_client' })
+      await expect(
+        grantInitiationHttpsigMiddleware(ctx, next)
+      ).rejects.toMatchObject({
+        status: 400,
+        message: 'invalid client'
+      })
     })
   })
 })

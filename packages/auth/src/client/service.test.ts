@@ -1,318 +1,155 @@
+import { faker } from '@faker-js/faker'
 import nock from 'nock'
+import { JWK } from 'open-payments'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { ClientKey, ClientService, JWKWithRequired } from './service'
-import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
-import { KEY_REGISTRY_ORIGIN } from '../grant/routes.test'
+import { ClientService } from './service'
+import { generateTestKeys } from '../tests/signature'
 
 const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
 }
 
-const TEST_KID_PATH = '/keys/test-key'
-
 describe('Client Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let clientService: ClientService
-  let keyPath: string
-  let publicKey: JWKWithRequired
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     clientService = await deps.use('clientService')
     appContainer = await createTestApp(deps)
-
-    const keys = await generateTestKeys()
-    keyPath = '/' + keys.keyId
-    publicKey = keys.publicKey
   })
 
   afterAll(async (): Promise<void> => {
-    nock.restore()
     await appContainer.shutdown()
   })
 
-  describe('Registry Validation', (): void => {
-    const expDate = new Date()
-    expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
+  describe('get', (): void => {
+    test('can retrieve client display info', async (): Promise<void> => {
+      const scope = nock(TEST_CLIENT_DISPLAY.uri).get('/').reply(200, {
+        id: TEST_CLIENT_DISPLAY.uri,
+        publicName: TEST_CLIENT_DISPLAY.name,
+        assetCode: 'USD',
+        assetScale: 9,
+        authServer: faker.internet.url()
+      })
 
-    const nbfDate = new Date()
-    nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-    describe('Client Properties', (): void => {
-      test('Can validate client properties with registry', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(keyPath)
-          .reply(200, {
-            jwk: {
-              ...publicKey,
-              kid: KEY_REGISTRY_ORIGIN + '/keys/correct',
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            },
-            client: TEST_CLIENT
-          } as ClientKey)
+      await expect(clientService.get(TEST_CLIENT_DISPLAY.uri)).resolves.toEqual(
+        TEST_CLIENT_DISPLAY
+      )
 
-        const validClient = await clientService.validateClient({
-          display: TEST_CLIENT_DISPLAY,
-          key: {
-            proof: 'httpsig',
-            jwk: {
-              ...publicKey,
-              kid: KEY_REGISTRY_ORIGIN + keyPath
-            }
-          }
+      scope.done()
+    })
+
+    test.each([400, 500])(
+      'cannot retrieve display info from unsuccessful request',
+      async (status: number): Promise<void> => {
+        const scope = nock(TEST_CLIENT_DISPLAY.uri).get('/').reply(status)
+
+        await expect(
+          clientService.get(TEST_CLIENT_DISPLAY.uri)
+        ).resolves.toBeUndefined()
+
+        scope.done()
+      }
+    )
+
+    test('cannot retrieve display info from invalid client', async (): Promise<void> => {
+      const scope = nock(TEST_CLIENT_DISPLAY.uri).get('/').reply(200, {
+        'bad news': 'not a client'
+      })
+
+      await expect(
+        clientService.get(TEST_CLIENT_DISPLAY.uri)
+      ).resolves.toBeUndefined()
+
+      scope.done()
+    })
+  })
+
+  describe('getKeys', (): void => {
+    const keys: JWK[] = []
+
+    beforeAll(async (): Promise<void> => {
+      for (let i = 0; i < 3; i++) {
+        const { publicKey } = await generateTestKeys()
+        keys.push(publicKey)
+      }
+    })
+
+    test.each([0, 1, 2])(
+      'can retrieve key from client jwks (%i)',
+      async (i: number): Promise<void> => {
+        const client = faker.internet.url()
+        const key = keys[i]
+        const scope = nock(client).get('/jwks.json').reply(200, {
+          keys
         })
 
-        expect(validClient).toEqual(true)
-        scope.isDone()
+        await expect(
+          clientService.getKey({
+            client,
+            keyId: key.kid
+          })
+        ).resolves.toEqual(key)
+
+        scope.done()
+      }
+    )
+
+    test('cannot retrieve unknown key id', async (): Promise<void> => {
+      const client = faker.internet.url()
+      const scope = nock(client).get('/jwks.json').reply(200, {
+        keys
       })
 
-      test('Cannot validate client with incorrect display name', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(TEST_KID_PATH)
-          .reply(200, {
-            jwk: {
-              ...publicKey,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            },
-            client: TEST_CLIENT
-          } as ClientKey)
-
-        const validClient = await clientService.validateClient({
-          display: { name: 'Bob', uri: TEST_CLIENT_DISPLAY.uri },
-          key: {
-            proof: 'httpsig',
-            jwk: publicKey
-          }
+      await expect(
+        clientService.getKey({
+          client,
+          keyId: 'unknown'
         })
+      ).resolves.toBeUndefined()
 
-        expect(validClient).toEqual(false)
-        scope.isDone()
+      scope.done()
+    })
+
+    test.each([400, 500])(
+      'cannot retrieve key from unsuccessful request',
+      async (status: number): Promise<void> => {
+        const client = faker.internet.url()
+        const scope = nock(client).get('/jwks.json').reply(status)
+
+        await expect(
+          clientService.getKey({
+            client,
+            keyId: 'no chance'
+          })
+        ).resolves.toBeUndefined()
+
+        scope.done()
+      }
+    )
+
+    test('cannot retrieve key from invalid client jwks', async (): Promise<void> => {
+      const client = faker.internet.url()
+      const scope = nock(client).get('/jwks.json').reply(200, {
+        'bad news': 'no keys here'
       })
 
-      test('Cannot validate client with incorrect uri', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(TEST_KID_PATH)
-          .reply(200, {
-            jwk: {
-              ...publicKey,
-              exp: Math.round(expDate.getTime() / 1000),
-              nbf: Math.round(nbfDate.getTime() / 1000),
-              revoked: false
-            },
-            client: TEST_CLIENT
-          } as ClientKey)
-
-        const validClient = await clientService.validateClient({
-          display: { name: TEST_CLIENT_DISPLAY.name, uri: 'Bob' },
-          key: {
-            proof: 'httpsig',
-            jwk: publicKey
-          }
+      await expect(
+        clientService.getKey({
+          client,
+          keyId: 'no chance'
         })
+      ).resolves.toBeUndefined()
 
-        expect(validClient).toEqual(false)
-        scope.isDone()
-      })
-    })
-
-    test('Cannot validate client with kid that doesnt resolve', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN).get('/wrong').reply(200)
-
-      const validClientKid = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            kid: 'https://openpayments.network/wrong'
-          }
-        }
-      })
-
-      expect(validClientKid).toEqual(false)
-      scope.isDone()
-    })
-
-    test('Cannot validate client with jwk that doesnt have a public key', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
-        .reply(200, {
-          jwk: {
-            ...publicKey,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          },
-          client: TEST_CLIENT
-        } as ClientKey)
-
-      const validClientX = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            x: 'wrong public key'
-          }
-        }
-      })
-
-      expect(validClientX).toEqual(false)
-      scope.isDone()
-    })
-
-    test('Cannot validate client with key that has invalid properties', async (): Promise<void> => {
-      // Validate "kty"
-      const validClientKty = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            kty: 'EC'
-          }
-        }
-      })
-
-      expect(validClientKty).toEqual(false)
-
-      // Validate "key_ops"
-      const validClientKeyOps = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            key_ops: ['wrapKey']
-          }
-        }
-      })
-
-      expect(validClientKeyOps).toEqual(false)
-
-      // Validate "alg"
-      const validClientAlg = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            alg: 'RS256'
-          }
-        }
-      })
-
-      expect(validClientAlg).toEqual(false)
-
-      // Validate "crv"
-      const validClientCrv = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            crv: 'P-256'
-          }
-        }
-      })
-
-      expect(validClientCrv).toEqual(false)
-    })
-
-    test('Cannot validate client with key that is not ready', async (): Promise<void> => {
-      const futureDate = new Date()
-      futureDate.setTime(futureDate.getTime() + 1000 * 60 * 60)
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get('/keys/notready')
-        .reply(200, {
-          jwk: {
-            ...publicKey,
-            exp: Math.round(futureDate.getTime() / 1000),
-            nbf: Math.round(futureDate.getTime() / 1000),
-            revoked: false
-          },
-          client: TEST_CLIENT
-        })
-
-      const validKeyKid = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/notready'
-          }
-        }
-      })
-
-      expect(validKeyKid).toEqual(false)
-      scope.isDone()
-    })
-
-    test('Cannot validate client with expired key', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get('/keys/invalidclient')
-        .reply(200, {
-          jwk: {
-            ...publicKey,
-            exp: Math.round(nbfDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: false
-          },
-          client: TEST_CLIENT
-        } as ClientKey)
-
-      const validClient = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/invalidclient'
-          }
-        }
-      })
-
-      expect(validClient).toEqual(false)
-      scope.isDone()
-    })
-
-    test('Cannot validate client with revoked key', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get('/keys/revoked')
-        .reply(200, {
-          jwk: {
-            ...publicKey,
-            exp: Math.round(expDate.getTime() / 1000),
-            nbf: Math.round(nbfDate.getTime() / 1000),
-            revoked: true
-          },
-          client: TEST_CLIENT
-        } as ClientKey)
-
-      const validClient = await clientService.validateClient({
-        display: TEST_CLIENT_DISPLAY,
-        key: {
-          proof: 'httpsig',
-          jwk: {
-            ...publicKey,
-            kid: KEY_REGISTRY_ORIGIN + '/keys/revoked'
-          }
-        }
-      })
-
-      expect(validClient).toEqual(false)
-      scope.isDone()
+      scope.done()
     })
   })
 })

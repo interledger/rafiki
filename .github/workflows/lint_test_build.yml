@@ -25,9 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter openapi build
-      - run: pnpm --filter auth build
-      - run: pnpm --filter open-payments build
+      - run: pnpm --filter backend build:deps
       - run: pnpm --filter backend test
 
   frontend:
@@ -47,10 +45,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter openapi build
+      - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth fetch-schemas
       - run: pnpm --filter auth test
-      - run: pnpm --filter auth run fetch-schemas
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json

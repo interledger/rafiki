@@ -2,15 +2,15 @@
 
 import * as crypto from 'crypto'
 import { importJWK } from 'jose'
+import { JWK } from 'open-payments'
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
-import { JWKWithRequired } from '../client/service'
 import { Context } from 'koa'
 
 export async function verifySig(
   sig: string,
-  jwk: JWKWithRequired,
+  jwk: JWK,
   challenge: string
 ): Promise<boolean> {
   const publicKey = (await importJWK(jwk)) as crypto.KeyLike
@@ -19,7 +19,7 @@ export async function verifySig(
 }
 
 export async function verifySigAndChallenge(
-  clientKey: JWKWithRequired,
+  clientKey: JWK,
   ctx: HttpSigContext
 ): Promise<boolean> {
   const sig = ctx.headers['signature'] as string
@@ -42,17 +42,35 @@ export async function verifySigAndChallenge(
   }
 }
 
+async function verifySigFromClient(
+  client: string,
+  keyId: string,
+  ctx: HttpSigContext
+): Promise<boolean> {
+  const clientService = await ctx.container.use('clientService')
+  const clientKey = await clientService.getKey({
+    client,
+    keyId
+  })
+
+  if (!clientKey) {
+    ctx.throw(400, 'invalid client', { error: 'invalid_client' })
+  }
+
+  return verifySigAndChallenge(clientKey, ctx)
+}
+
 async function verifySigFromBoundKey(
   grant: Grant,
   ctx: HttpSigContext
 ): Promise<boolean> {
-  const clientService = await ctx.container.use('clientService')
-  const { jwk } = await clientService.getKeyByKid(grant.clientKeyId)
-  if (!jwk) {
-    ctx.throw(401, 'invalid client', { error: 'invalid_client' })
+  const sigInput = ctx.headers['signature-input'] as string
+  const keyId = getSigInputKeyId(sigInput)
+  if (keyId !== grant.clientKeyId) {
+    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  return verifySigAndChallenge(jwk, ctx)
+  return verifySigFromClient(grant.client, keyId, ctx)
 }
 
 // TODO: Replace with public httpsig library
@@ -65,6 +83,16 @@ function getSigInputComponents(sigInput: string): string[] | null {
   return messageComponents
     ? messageComponents.map((component) => component.replace(/[()"]/g, ''))
     : null
+}
+
+const KEY_ID_PREFIX = 'keyid="'
+
+function getSigInputKeyId(sigInput: string): string | undefined {
+  const keyIdParam = sigInput
+    .split(';')
+    .find((param) => param.startsWith(KEY_ID_PREFIX))
+  // Trim prefix and quotes
+  return keyIdParam?.slice(KEY_ID_PREFIX.length, -1)
 }
 
 function validateSigInputComponents(
@@ -209,14 +237,13 @@ export async function grantInitiationHttpsigMiddleware(
 
   const { body } = ctx.request
 
-  const clientService = await ctx.container.use('clientService')
-  if (!(await clientService.validateClient(body.client))) {
-    ctx.status = 401
-    ctx.body = { error: 'invalid_client' }
-    return
+  const sigInput = ctx.headers['signature-input'] as string
+  const keyId = getSigInputKeyId(sigInput)
+  if (!keyId) {
+    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  await verifySigAndChallenge(body.client.key.jwk, ctx)
+  await verifySigFromClient(body.client, keyId, ctx)
   await next()
 }
 

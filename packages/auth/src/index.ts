@@ -14,8 +14,10 @@ import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 
-export { JWKWithRequired, KeyInfo } from './client/service'
+export { KeyInfo } from './accessToken/service'
+export { JWKWithRequired } from './client/service'
 export { HttpSigContext, verifySigAndChallenge } from './signature/middleware'
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -62,6 +64,11 @@ export function initIocContainer(
   container.singleton('closeEmitter', async () => new EventEmitter())
   // TODO: add redis
 
+  container.singleton('openPaymentsClient', async (deps) => {
+    const logger = await deps.use('logger')
+    return createOpenPaymentsClient({ logger })
+  })
+
   container.singleton(
     'accessService',
     async (deps: IocContract<AppServices>) => {
@@ -76,8 +83,8 @@ export function initIocContainer(
     'clientService',
     async (deps: IocContract<AppServices>) => {
       return createClientService({
-        config: await deps.use('config'),
-        logger: await deps.use('logger')
+        logger: await deps.use('logger'),
+        openPaymentsClient: await deps.use('openPaymentsClient')
       })
     }
   )

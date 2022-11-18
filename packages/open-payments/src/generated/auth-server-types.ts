@@ -37,24 +37,15 @@ export interface components {
   schemas: {
     /**
      * client
-     * @description Describes the client instance that is making this request, including the key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions.
+     * @description Payment pointer of the client instance that is making this request.
      *
      * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
+     *
+     * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the payment pointer + `/jwks.json` url.
+     *
+     * If sending a grant initiation request that requires RO interaction, the payment pointer MUST serve necessary client display information.
      */
-    client: {
-      /** @description An object containing additional information that the AS MAY display to the RO during interaction, authorization, and management. */
-      display?: {
-        name?: string;
-        /** Format: uri */
-        uri?: string;
-      };
-      /** @description An identifier string that the AS can use to identify the client software comprising this client instance. */
-      client_id?: string;
-      /** @description The public key of the client instance to be used in this request or a reference to a key. */
-      key?:
-        | external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["key"]
-        | string;
-    };
+    client: string;
     /**
      * interact
      * @description The client instance declares the parameters for interaction methods that it can support using the interact field.
@@ -116,7 +107,7 @@ export interface components {
       manage: string;
       /** @description The number of seconds in which the access will expire.  The client instance MUST NOT use the access token past this time.  An RS MUST NOT accept an access token past this time. */
       expires_in?: number;
-      access: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["access"];
+      access: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access"];
     };
   };
 }
@@ -147,7 +138,7 @@ export interface operations {
       content: {
         "application/json": {
           access_token: {
-            access: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["access"];
+            access: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access"];
           };
           client: components["schemas"]["client"];
           interact?: components["schemas"]["interact-request"];
@@ -244,17 +235,17 @@ export interface operations {
 }
 
 export interface external {
-  "https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml": {
+  "https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml": {
     paths: {};
     components: {
       schemas: {
         /** @description A description of the rights associated with this access token. */
-        access: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
+        access: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-item"][];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
         "access-item":
-          | external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
-          | external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
-          | external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
+          | external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-incoming"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-outgoing"]
+          | external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
         "access-incoming": {
           /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
@@ -285,7 +276,7 @@ export interface external {
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier: string;
-          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
+          limits?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
         };
         /** access-quote */
         "access-quote": {
@@ -304,8 +295,8 @@ export interface external {
            * @description The value is an unsigned 64-bit integer amount, represented as a string.
            */
           value: string;
-          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
-          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
+          assetCode: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetCode"];
+          assetScale: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["assetScale"];
         };
         /**
          * Asset code
@@ -323,45 +314,14 @@ export interface external {
          */
         interval: string;
         /**
-         * key
-         * @description A key presented by value MUST be a public key.
-         */
-        key: {
-          /** @description The form of proof that the client instance will use when presenting the key. */
-          proof: "httpsig";
-          /** @description The public key and its properties represented as a JSON Web Key [[RFC7517](https://datatracker.ietf.org/doc/html/rfc7517)]. */
-          jwk: {
-            /** @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
-            alg: "EdDSA";
-            /** @description A Key ID can be used to match a specific key. */
-            kid: string;
-            /** @description The Key Type. The only allowed value is `OKP`. */
-            kty: "OKP";
-            /** @description The intended use of the key. */
-            use?: "sig";
-            /** @description The cryptographic curve used with the key. The only allowed value is `Ed25519`. */
-            crv: "Ed25519";
-            /** @description Public key encoded using the `base64url` encoding. */
-            x: string;
-            /** @description Array of allowed operations this key may be used for. */
-            key_ops?: ("sign" | "verify")[];
-            /** @description UNIX timestamp indicating the earliest this key may be used. */
-            nbf?: number;
-            /** @description UNIX timestamp indicating the latest this key may be used. */
-            exp?: number;
-            /** @description The revocation status of the key. */
-            revoked?: boolean;
-          };
-        };
-        /**
          * limits-outgoing
          * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
          */
         "limits-outgoing": Partial<unknown> & {
-          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
-          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
-          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/0523804eeb21d9b8cd2eb65e4119738a0512a095/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
+          receiver?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["receiver"];
+          sendAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          receiveAmount?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["amount"];
+          interval?: external["https://raw.githubusercontent.com/interledger/open-payments/56d441fe7f1d44f9111ae1a37de536e72407038d/openapi/schemas.yaml"]["components"]["schemas"]["interval"];
         };
         "list-actions": "list" | "list-all";
         "read-actions": "read" | "read-all";
