@@ -123,7 +123,8 @@ export function initIocContainer(
     return createOpenPaymentsClient({
       logger,
       keyId: config.keyId,
-      privateKey: config.privateKey
+      privateKey: config.privateKey,
+      client: config.paymentPointerUrl
     })
   })
 
