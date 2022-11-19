@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices, PaymentPointerContext } from '../app'
@@ -28,15 +28,13 @@ describe('Payment Pointer Keys Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let paymentPointerKeyService: PaymentPointerKeyService
-  let config: IAppConfig
   let paymentPointerKeyRoutes: PaymentPointerKeyRoutes
   const mockMessageProducer = {
     send: jest.fn()
   }
 
   beforeAll(async (): Promise<void> => {
-    config = Config
-    deps = await initIocContainer(config)
+    deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
@@ -95,6 +93,32 @@ describe('Payment Pointer Keys Routes', (): void => {
       ).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         keys: []
+      })
+    })
+
+    test('returns 200 with backend key', async (): Promise<void> => {
+      const config = await deps.use('config')
+      const jwk = {
+        ...config.privateKey.export({ format: 'jwk' }),
+        kid: config.keyId,
+        alg: 'EdDSA'
+      }
+
+      const paymentPointerUrl = new URL(config.paymentPointerUrl)
+      const ctx = createContext<PaymentPointerContext>({
+        headers: {
+          Accept: 'application/json',
+          Host: paymentPointerUrl.hostname
+        },
+        url: `${paymentPointerUrl.pathname}/jwks.json`
+      })
+      ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+
+      await expect(
+        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.body).toEqual({
+        keys: [jwk]
       })
     })
 
