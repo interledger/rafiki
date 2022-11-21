@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
@@ -120,7 +119,9 @@ export class Quote extends PaymentPointerSubresource {
       Pay.Int.from(this.highEstimatedExchangeRateNumerator) as Pay.PositiveInt,
       Pay.Int.from(this.highEstimatedExchangeRateDenominator) as Pay.PositiveInt
     )
-    assert.ok(highEstimatedExchangeRate.isPositive())
+    if(!highEstimatedExchangeRate.isPositive()) {
+      throw new Error()
+    }
     return highEstimatedExchangeRate
   }
 

@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { NotFoundError, raw, Transaction } from 'objection'
 import { isValidIlpAddress } from 'ilp-packet'
 
@@ -156,7 +155,10 @@ async function updatePeer(
     return PeerError.InvalidStaticIlpAddress
   }
 
-  assert.ok(deps.knex, 'Knex undefined')
+  if(!deps.knex) {
+    throw new Error('Knex undefined')
+  }
+
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
       if (options.http?.incoming) {

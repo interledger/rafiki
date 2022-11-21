@@ -6,7 +6,6 @@ import {
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
-import assert from 'assert'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
@@ -213,7 +212,9 @@ async function handleDeactivated(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ): Promise<void> {
-  assert.ok(incomingPayment.processAt)
+  if(!incomingPayment.processAt) {
+    throw new Error()
+  }
   try {
     const amountReceived = await deps.accountingService.getTotalReceived(
       incomingPayment.id

@@ -1,4 +1,3 @@
-import assert from 'assert'
 import axios from 'axios'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
@@ -46,7 +45,9 @@ async function getWebhookEvent(
 async function processNextWebhookEvent(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
-  assert.ok(deps_.knex, 'Knex undefined')
+  if(!deps_.knex) {
+    throw new Error('Knex undefined')
+  }
   return deps_.knex.transaction(async (trx) => {
     const now = Date.now()
     const events = await WebhookEvent.query(trx)
