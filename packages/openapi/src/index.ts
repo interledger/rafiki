@@ -164,7 +164,7 @@ const errorTransformer = (
 }
 
 const customFormats = {
-  uint64: function (input) {
+  uint64: function (input: string | number) {
     try {
       const value = BigInt(input)
       return value >= BigInt(0)
@@ -173,3 +173,12 @@ const customFormats = {
     }
   }
 }
+
+interface ValidationError {
+  status?: number
+  errors: string[]
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const isValidationError = (err: any): err is ValidationError =>
+  Array.isArray(err.errors)
