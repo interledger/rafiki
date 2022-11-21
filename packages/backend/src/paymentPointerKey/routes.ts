@@ -46,10 +46,7 @@ export async function getKeysByPaymentPointerId(
     ctx.body = {
       keys: keys.map((key) => key.jwk)
     }
-  } else if (
-    deps.config.paymentPointerUrl ===
-    `https://${ctx.request.host}/${ctx.params.paymentPointerPath}`
-  ) {
+  } else if (deps.config.paymentPointerUrl === ctx.paymentPointerUrl) {
     ctx.body = {
       keys: [deps.jwk]
     }

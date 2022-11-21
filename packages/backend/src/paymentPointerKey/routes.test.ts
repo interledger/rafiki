@@ -69,6 +69,7 @@ describe('Payment Pointer Keys Routes', (): void => {
         url: `/jwks.json`
       })
       ctx.paymentPointer = paymentPointer
+      ctx.paymentPointerUrl = paymentPointer.url
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
@@ -87,6 +88,7 @@ describe('Payment Pointer Keys Routes', (): void => {
         url: `/jwks.json`
       })
       ctx.paymentPointer = paymentPointer
+      ctx.paymentPointerUrl = paymentPointer.url
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
@@ -104,15 +106,11 @@ describe('Payment Pointer Keys Routes', (): void => {
         alg: 'EdDSA'
       }
 
-      const paymentPointerUrl = new URL(config.paymentPointerUrl)
       const ctx = createContext<PaymentPointerContext>({
-        headers: {
-          Accept: 'application/json',
-          Host: paymentPointerUrl.hostname
-        },
-        url: `${paymentPointerUrl.pathname}/jwks.json`
+        headers: { Accept: 'application/json' },
+        url: '/jwks.json'
       })
-      ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+      ctx.paymentPointerUrl = config.paymentPointerUrl
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)

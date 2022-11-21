@@ -5,13 +5,15 @@ export function createPaymentPointerMiddleware() {
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    const url = `https://${ctx.request.host}/${ctx.params.paymentPointerPath}`
+    ctx.paymentPointerUrl = `https://${ctx.request.host}/${ctx.params.paymentPointerPath}`
     const config = await ctx.container.use('config')
-    if (url !== config.paymentPointerUrl) {
+    if (ctx.paymentPointerUrl !== config.paymentPointerUrl) {
       const paymentPointerService = await ctx.container.use(
         'paymentPointerService'
       )
-      const paymentPointer = await paymentPointerService.getByUrl(url)
+      const paymentPointer = await paymentPointerService.getByUrl(
+        ctx.paymentPointerUrl
+      )
       if (!paymentPointer) {
         ctx.throw(404)
       }
