@@ -124,7 +124,7 @@ export function initIocContainer(
       logger,
       keyId: config.keyId,
       privateKey: config.privateKey,
-      client: config.paymentPointerUrl
+      paymentPointerUrl: config.paymentPointerUrl
     })
   })
 

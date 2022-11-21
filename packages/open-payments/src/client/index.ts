@@ -93,7 +93,7 @@ export interface CreateAuthenticatedClientArgs
   extends CreateUnauthenticatedClientArgs {
   privateKey: KeyLike
   keyId: string
-  client: string
+  paymentPointerUrl: string
 }
 
 export interface AuthenticatedClient extends UnauthenticatedClient {
@@ -127,7 +127,7 @@ export const createAuthenticatedClient = async (
       axiosInstance,
       openApi: authServerOpenApi,
       logger,
-      client: args.client
+      client: args.paymentPointerUrl
     })
   }
 }
