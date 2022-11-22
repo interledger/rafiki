@@ -8,9 +8,13 @@ import {
 } from '../types'
 import { post } from './requests'
 
+export interface GrantRouteDeps extends RouteDeps {
+  client: string
+}
+
 interface RequestGrantArgs {
   url: string
-  request: GrantRequest
+  request: Omit<GrantRequest, 'client'>
 }
 
 export interface GrantRoutes {
@@ -19,7 +23,7 @@ export interface GrantRoutes {
   ): Promise<InteractiveGrant | NonInteractiveGrant>
 }
 
-export const createGrantRoutes = (deps: RouteDeps): GrantRoutes => {
+export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
   const requestGrantValidator = deps.openApi.createResponseValidator<
     InteractiveGrant | NonInteractiveGrant
   >({
@@ -28,6 +32,16 @@ export const createGrantRoutes = (deps: RouteDeps): GrantRoutes => {
   })
   return {
     request: (args: RequestGrantArgs) =>
-      post(deps, { url: args.url, body: args.request }, requestGrantValidator)
+      post(
+        deps,
+        {
+          url: args.url,
+          body: {
+            ...args,
+            client: deps.client
+          }
+        },
+        requestGrantValidator
+      )
   }
 }

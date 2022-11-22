@@ -58,6 +58,7 @@ export interface AppContextData {
   // Set by @koa/router.
   params: { [key: string]: string }
   paymentPointer?: PaymentPointer
+  paymentPointerUrl?: string
 }
 
 export interface ApolloContext {

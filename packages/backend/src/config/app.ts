@@ -42,6 +42,10 @@ export const Config = {
           'DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/development'
         ),
+  paymentPointerUrl: envString(
+    'PAYMENT_POINTER_URL',
+    'http://127.0.0.1:3001/.well-known/pay'
+  ),
   env: envString('NODE_ENV', 'development'),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(

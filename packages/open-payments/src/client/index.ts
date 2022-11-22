@@ -93,6 +93,7 @@ export interface CreateAuthenticatedClientArgs
   extends CreateUnauthenticatedClientArgs {
   privateKey: KeyLike
   keyId: string
+  paymentPointerUrl: string
 }
 
 export interface AuthenticatedClient extends UnauthenticatedClient {
@@ -125,7 +126,8 @@ export const createAuthenticatedClient = async (
     grant: createGrantRoutes({
       axiosInstance,
       openApi: authServerOpenApi,
-      logger
+      logger,
+      client: args.paymentPointerUrl
     })
   }
 }

@@ -123,7 +123,8 @@ export function initIocContainer(
     return createOpenPaymentsClient({
       logger,
       keyId: config.keyId,
-      privateKey: config.privateKey
+      privateKey: config.privateKey,
+      paymentPointerUrl: config.paymentPointerUrl
     })
   })
 
@@ -223,6 +224,7 @@ export function initIocContainer(
   })
   container.singleton('paymentPointerKeyRoutes', async (deps) => {
     return createPaymentPointerKeyRoutes({
+      config: await deps.use('config'),
       paymentPointerKeyService: await deps.use('paymentPointerKeyService'),
       paymentPointerService: await deps.use('paymentPointerService')
     })
