@@ -71,6 +71,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       QUOTE_URL: http://fynbos/quotes
       BYPASS_SIGNATURE_VALIDATION: "true"
+      PAYMENT_POINTER_URL: https://backend/.well-known/pay
     depends_on:
       - tigerbeetle
       - database
