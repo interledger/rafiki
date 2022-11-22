@@ -44,13 +44,12 @@ export async function verifySigAndChallenge(
 
 async function verifySigFromClient(
   client: string,
-  keyId: string,
   ctx: HttpSigContext
 ): Promise<boolean> {
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
     client,
-    keyId
+    keyId: ctx.clientKeyId
   })
 
   if (!clientKey) {
@@ -65,12 +64,12 @@ async function verifySigFromBoundKey(
   ctx: HttpSigContext
 ): Promise<boolean> {
   const sigInput = ctx.headers['signature-input'] as string
-  const keyId = getSigInputKeyId(sigInput)
-  if (keyId !== grant.clientKeyId) {
+  ctx.clientKeyId = getSigInputKeyId(sigInput)
+  if (ctx.clientKeyId !== grant.clientKeyId) {
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  return verifySigFromClient(grant.client, keyId, ctx)
+  return verifySigFromClient(grant.client, ctx)
 }
 
 // TODO: Replace with public httpsig library
@@ -238,12 +237,12 @@ export async function grantInitiationHttpsigMiddleware(
   const { body } = ctx.request
 
   const sigInput = ctx.headers['signature-input'] as string
-  const keyId = getSigInputKeyId(sigInput)
-  if (!keyId) {
+  ctx.clientKeyId = getSigInputKeyId(sigInput)
+  if (!ctx.clientKeyId) {
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  await verifySigFromClient(body.client, keyId, ctx)
+  await verifySigFromClient(body.client, ctx)
   await next()
 }
 
