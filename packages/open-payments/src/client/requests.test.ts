@@ -175,7 +175,17 @@ describe('requests', (): void => {
         id: 'id'
       }
 
-      nock(baseUrl).post('/grant', body).reply(status, body)
+      const scope = nock(baseUrl)
+        .matchHeader('Signature', /sig1=:([a-zA-Z0-9+/]){86}==:/)
+        .matchHeader(
+          'Signature-Input',
+          `sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=${Math.floor(
+            Date.now() / 1000
+          )};keyid="${keyId}";alg="ed25519"`
+        )
+        .post('/grant', body)
+        // TODO: verify signature
+        .reply(status, body)
 
       await post(
         { axiosInstance, logger },
@@ -185,6 +195,7 @@ describe('requests', (): void => {
         },
         responseValidators.successfulValidator
       )
+      scope.done()
 
       expect(axiosInstance.post).toHaveBeenCalledWith(`${baseUrl}/grant`, body)
     })

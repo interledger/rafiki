@@ -3,6 +3,7 @@
 import * as crypto from 'crypto'
 import { importJWK } from 'jose'
 import { JWK } from 'open-payments'
+import { verifyContentDigest } from 'httpbis-digest-headers'
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
@@ -110,7 +111,11 @@ function validateSigInputComponents(
     !sigInputComponents.includes('@target-uri') ||
     (ctx.request.body &&
       Object.keys(ctx.request.body).length > 0 &&
-      !sigInputComponents.includes('content-digest')) ||
+      (!sigInputComponents.includes('content-digest') ||
+        !verifyContentDigest(
+          JSON.stringify(ctx.request.body),
+          ctx.headers['content-digest'] as string
+        ))) ||
     (ctx.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )
@@ -178,12 +183,7 @@ export async function grantContinueHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateHttpSigHeaders(ctx)) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
+    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const continueToken = ctx.headers['authorization'].replace(
@@ -226,12 +226,7 @@ export async function grantInitiationHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateHttpSigHeaders(ctx)) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
+    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const { body } = ctx.request
@@ -251,12 +246,7 @@ export async function tokenHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateHttpSigHeaders(ctx)) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
+    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const accessTokenService = await ctx.container.use('accessTokenService')
