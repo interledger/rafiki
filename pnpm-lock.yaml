@@ -4059,11 +4059,6 @@ packages:
       '@types/node': 18.7.13
     dev: true
 
-  /@types/koa-bodyparser/4.3.10:
-    resolution: {integrity: sha512-6ae05pjhmrmGhUR8GYD5qr5p9LTEMEGfGXCsK8VaSL+totwigm8+H/7MHW7K4854CMeuwRAubT8qcc/EagaeIA==}
-    dependencies:
-      '@types/koa': 2.13.5
-
   /@types/koa-bodyparser/4.3.7:
     resolution: {integrity: sha512-21NhEp7LjZm4zbNV5alHHmrNY4J+S7B8lYTO6CzRL8ShTMnl20Gd14dRgVhAxraLaW5iZMofox+BycbuiDvj2Q==}
     dependencies:
