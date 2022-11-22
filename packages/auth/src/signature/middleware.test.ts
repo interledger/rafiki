@@ -249,6 +249,7 @@ describe('Signature Service', (): void => {
       await grantInitiationHttpsigMiddleware(ctx, next)
 
       expect(ctx.response.status).toEqual(200)
+      expect(ctx.clientKeyId).toEqual(testClientKey.kid)
       expect(next).toHaveBeenCalled()
 
       scope.done()
@@ -279,6 +280,7 @@ describe('Signature Service', (): void => {
 
       await grantContinueHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(200)
+      expect(ctx.clientKeyId).toEqual(testClientKey.kid)
       expect(next).toHaveBeenCalled()
 
       scope.done()
@@ -314,6 +316,7 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
+      expect(ctx.clientKeyId).toEqual(testClientKey.kid)
 
       scope.done()
     })
