@@ -275,7 +275,7 @@ describe('Grant Routes', (): void => {
           value: expect.any(String),
           manage: expect.any(String),
           access: body.access_token.access,
-          expiresIn: 600
+          expires_in: 600
         },
         continue: {
           access_token: {
@@ -865,7 +865,7 @@ describe('Grant Routes', (): void => {
               type: 'incoming-payment'
             }
           ]),
-          expiresIn: 600
+          expires_in: 600
         },
         continue: {
           access_token: {
