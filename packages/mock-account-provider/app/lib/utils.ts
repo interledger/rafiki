@@ -1,5 +1,5 @@
 import { parse } from 'querystring'
-import { createPublicKey, generateKeyPairSync, JsonWebKey } from 'crypto'
+import { createPublicKey, generateKeyPairSync, type JsonWebKey } from 'crypto'
 
 export function parseQueryString(query: string) {
   const dictionary = parse(query)
