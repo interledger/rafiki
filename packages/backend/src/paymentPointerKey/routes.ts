@@ -1,3 +1,4 @@
+import { createPublicKey } from 'crypto'
 import { JWK } from 'open-payments'
 
 import { PaymentPointerContext } from '../app'
@@ -22,7 +23,7 @@ export function createPaymentPointerKeyRoutes(
   const deps = {
     ...deps_,
     jwk: {
-      ...deps_.config.privateKey.export({ format: 'jwk' }),
+      ...createPublicKey(deps_.config.privateKey).export({ format: 'jwk' }),
       kid: deps_.config.keyId,
       alg: 'EdDSA'
     } as JWK
