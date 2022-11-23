@@ -3,7 +3,9 @@ import type {
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
   CreatePaymentPointerMutationResponse,
-  PaymentPointer
+  PaymentPointer,
+  CreatePaymentPointerKeyMutationResponse,
+  CreatePaymentPointerKeyInput
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 
@@ -149,6 +151,43 @@ export async function createPaymentPointer(
         throw new Error('Data was empty')
       }
       return data.createPaymentPointer
+    })
+}
+
+export async function createPaymentPointerKey({
+  paymentPointerId,
+  jwk
+}: {
+  paymentPointerId: string
+  jwk: string
+}): Promise<CreatePaymentPointerKeyMutationResponse> {
+  const createPaymentPointerKeyMutation = gql`
+    mutation CreatePaymentPointerKey($input: CreatePaymentPointerKeyInput!) {
+      createPaymentPointerKey(input: $input) {
+        code
+        success
+        message
+      }
+    }
+  `
+  const createPaymentPointerKeyInput: CreatePaymentPointerKeyInput = {
+    paymentPointerId,
+    jwk
+  }
+
+  return apolloClient
+    .mutate({
+      mutation: createPaymentPointerKeyMutation,
+      variables: {
+        input: createPaymentPointerKeyInput
+      }
+    })
+    .then(({ data }): CreatePaymentPointerKeyMutationResponse => {
+      console.log(data)
+      if (!data.createPaymentPointerKey.success) {
+        throw new Error('Data was empty')
+      }
+      return data.createPaymentPointerKey
     })
 }
 

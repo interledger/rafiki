@@ -4,10 +4,12 @@ import type { SeedInstance, Account, Peering } from './parse_config'
 import {
   createPeer,
   addPeerLiquidity,
-  createPaymentPointer
+  createPaymentPointer,
+  createPaymentPointerKey
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
+import { generateJwk } from './utils'
 
 export async function setupFromSeed(config: SeedInstance): Promise<void> {
   const peerResponses = await Promise.all(
@@ -60,11 +62,20 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
         account.scale
       )
 
+      if (!pp.paymentPointer) {
+        throw new Error('Could not create payment pointer')
+      }
+
       await mockAccounts.setPaymentPointer(
         account.id,
-        pp.paymentPointer?.id,
-        pp.paymentPointer?.url
+        pp.paymentPointer.id,
+        pp.paymentPointer.url
       )
+
+      await createPaymentPointerKey({
+        paymentPointerId: pp.paymentPointer.id,
+        jwk: JSON.stringify(generateJwk({ keyId: `keyid-${account.id}` }))
+      })
 
       return pp
     })
