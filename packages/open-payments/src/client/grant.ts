@@ -37,7 +37,7 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
         {
           url: args.url,
           body: {
-            ...args,
+            ...args.request,
             client: deps.client
           }
         },
