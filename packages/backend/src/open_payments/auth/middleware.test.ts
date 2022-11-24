@@ -681,4 +681,40 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
     scope.done()
   })
+
+  test('if getOrCreateGrantReference throws, return 500', async (): Promise<void> => {
+    const getOrCreateGrantReferenceSpy = jest
+      .spyOn(grantReferenceService, 'getOrCreate')
+      .mockImplementationOnce(async () => {
+        throw new Error('unexpected')
+      })
+
+    const grant = new TokenInfo(
+      {
+        active: true,
+        clientId: uuid(),
+        grant: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read],
+            identifier: ctx.paymentPointer.url
+          }
+        ]
+      },
+      mockKeyInfo
+    )
+
+    await grantReferenceService.create({
+      id: grant.grant,
+      clientId: uuid()
+    })
+
+    const scope = mockAuthServer(grant.toJSON())
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 500
+    })
+    expect(getOrCreateGrantReferenceSpy).toHaveBeenCalled()
+    scope.done()
+  })
 })
