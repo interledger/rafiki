@@ -54,7 +54,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
           false
         )
       }
-      const pp = await createPaymentPointer(
+      const paymentPointer = await createPaymentPointer(
         config.self.graphqlUrl,
         account.name,
         `https://${CONFIG.self.hostname}/${account.path}`,
@@ -62,22 +62,18 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
         account.scale
       )
 
-      if (!pp.paymentPointer) {
-        throw new Error('Could not create payment pointer')
-      }
-
       await mockAccounts.setPaymentPointer(
         account.id,
-        pp.paymentPointer.id,
-        pp.paymentPointer.url
+        paymentPointer.id,
+        paymentPointer.url
       )
 
       await createPaymentPointerKey({
-        paymentPointerId: pp.paymentPointer.id,
+        paymentPointerId: paymentPointer.id,
         jwk: JSON.stringify(generateJwk({ keyId: `keyid-${account.id}` }))
       })
 
-      return pp
+      return paymentPointer
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
