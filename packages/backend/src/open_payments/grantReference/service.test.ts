@@ -9,6 +9,7 @@ import { Config } from '../../config/app'
 import { GrantReferenceService } from './service'
 import { truncateTables } from '../../tests/tableManager'
 import { GrantReference } from './model'
+import { AccessAction } from '../auth/grant'
 
 describe('Grant Reference Service', (): void => {
   let deps: IocContract<AppServices>
@@ -77,6 +78,62 @@ describe('Grant Reference Service', (): void => {
       await expect(Promise.all([lock(), lock()])).rejects.toThrowError(
         'Defined query timeout of 5000ms exceeded when running query.'
       )
+    })
+  })
+
+  describe('Get or Create Grant Reference', (): void => {
+    test('cannot fetch a non-existing grant reference', async (): Promise<void> => {
+      expect(
+        await grantReferenceService.getOrCreate(
+          { id: uuid(), clientId: uuid() },
+          AccessAction.List
+        )
+      ).toBeUndefined()
+    })
+
+    test('throws an error when clientId does not match', async (): Promise<void> => {
+      const id = uuid()
+
+      await grantReferenceService.create({
+        id,
+        clientId: uuid()
+      })
+
+      await expect(
+        async () =>
+          await grantReferenceService.getOrCreate(
+            { id, clientId: uuid() },
+            AccessAction.List
+          )
+      ).rejects.toThrowError('does not match internal reference clientId')
+    })
+
+    test('fetch an existing grant reference', async (): Promise<void> => {
+      const existingRef = await grantReferenceService.create({
+        id: uuid(),
+        clientId: uuid()
+      })
+
+      const retrievedRef = await grantReferenceService.getOrCreate(
+        existingRef,
+        AccessAction.List
+      )
+
+      expect(retrievedRef).toEqual(existingRef)
+    })
+
+    test('create a grant reference', async (): Promise<void> => {
+      const receivedRef = {
+        id: uuid(),
+        clientId: uuid()
+      }
+
+      const grantRef = await grantReferenceService.getOrCreate(
+        receivedRef,
+        AccessAction.Create
+      )
+
+      expect(grantRef).toEqual(receivedRef)
     })
   })
 })
