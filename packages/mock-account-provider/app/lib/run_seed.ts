@@ -11,6 +11,8 @@ import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
 import { generateJwk } from './crypto.server'
 
+failing failing
+
 export async function setupFromSeed(config: SeedInstance): Promise<void> {
   const peerResponses = await Promise.all(
     _.map(config.peers, async (peer: Peering) => {
