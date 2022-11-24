@@ -12,7 +12,7 @@ export interface GrantReferenceService {
   getOrCreate(
     options: CreateGrantReferenceOptions,
     action: AccessAction
-  ): Promise<GrantReference | void>
+  ): Promise<GrantReference | undefined>
 }
 
 export async function createGrantReferenceService(): Promise<GrantReferenceService> {
@@ -61,11 +61,13 @@ async function getOrCreateGrantReference(
           `clientID ${options.clientId} for grant ${options.id} does not match internal reference clientId ${grantRef.clientId}.`
         )
       }
+
+      return grantRef
     } else if (action === AccessAction.Create) {
       // Grant and client ID's are only stored for create routes
-      await createGrantReference(options, trx)
+      return await createGrantReference(options, trx)
     }
   })
 
-  return
+  return undefined
 }
