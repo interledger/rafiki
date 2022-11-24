@@ -74,6 +74,15 @@ jobs:
       - run: pnpm --filter openapi build
       - run: pnpm --filter open-payments test
 
+  mock-account-provider:
+    runs-on: ubuntu-latest
+    needs: checkout
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter mock-account-provider build
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
