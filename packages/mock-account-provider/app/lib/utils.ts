@@ -1,4 +1,7 @@
+import { createPublicKey } from 'crypto'
 import { parse } from 'querystring'
+
+createPublicKey('')
 
 export function parseQueryString(query: string) {
   const dictionary = parse(query)
