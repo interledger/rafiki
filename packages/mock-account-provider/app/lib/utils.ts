@@ -1,5 +1,4 @@
 import { parse } from 'querystring'
-import { createPublicKey, generateKeyPairSync, type JsonWebKey } from 'crypto'
 
 export function parseQueryString(query: string) {
   const dictionary = parse(query)
@@ -36,26 +35,5 @@ export function parseQueryString(query: string) {
     has: (...keys: Array<string>) => {
       return keys.every((k) => pairs.some((p) => p[0] === k.toLowerCase()))
     }
-  }
-}
-
-type OpenPaymentsJWK = JsonWebKey & {
-  alg: 'EdDSA'
-  kid: string
-}
-
-export const generateJwk = ({ keyId }: { keyId: string }): OpenPaymentsJWK => {
-  const jwk = createPublicKey(generateKeyPairSync('ed25519').privateKey).export(
-    {
-      format: 'jwk'
-    }
-  )
-
-  return {
-    alg: 'EdDSA',
-    kid: keyId,
-    kty: jwk.kty,
-    crv: jwk.crv,
-    x: jwk.x
   }
 }
