@@ -12,7 +12,7 @@ export interface GrantReferenceService {
   getOrCreate(
     options: CreateGrantReferenceOptions,
     action: AccessAction
-  ): Promise<GrantReference | undefined>
+  ): Promise<GrantReference>
 }
 
 export async function createGrantReferenceService(): Promise<GrantReferenceService> {
@@ -53,7 +53,7 @@ async function getOrCreateGrantReference(
   options: CreateGrantReferenceOptions,
   action: AccessAction
 ) {
-  await GrantReference.transaction(async (trx: Transaction) => {
+  const grant = await GrantReference.transaction(async (trx: Transaction) => {
     const grantRef = await getGrantReference(options.id, trx)
     if (grantRef) {
       if (grantRef.clientId !== options.clientId) {
@@ -69,5 +69,5 @@ async function getOrCreateGrantReference(
     }
   })
 
-  return undefined
+  return grant
 }
