@@ -2,11 +2,9 @@ import { gql } from '@apollo/client'
 import type {
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
-  CreatePaymentPointerMutationResponse,
   PaymentPointer,
   CreatePaymentPointerKeyMutationResponse,
   CreatePaymentPointerKeyInput,
-  CreatePaymentPointerMutationResponseResolvers,
   CreatePaymentPointerInput
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
