@@ -1,6 +1,4 @@
 import { AccessType, AccessAction } from './grant'
-import { Transaction } from 'objection'
-import { GrantReference } from '../grantReference/model'
 import { HttpSigContext, verifySigAndChallenge } from 'auth'
 
 export function createAuthMiddleware({
