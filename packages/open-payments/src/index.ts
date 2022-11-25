@@ -16,3 +16,5 @@ export {
   AuthenticatedClient,
   UnauthenticatedClient
 } from './client'
+
+export { generateJwk } from './jwk'
