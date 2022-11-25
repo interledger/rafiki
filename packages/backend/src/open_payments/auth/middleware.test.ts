@@ -286,11 +286,6 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
 
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: uuid()
-    })
-
     const scope = mockAuthServer(grant.toJSON())
     await expect(middleware(ctx, next)).rejects.toMatchObject({
       status: 500
