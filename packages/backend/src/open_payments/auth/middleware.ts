@@ -59,9 +59,10 @@ export function createAuthMiddleware({
           { id: grant.grant, clientId: grant.clientId },
           action
         )
-      } catch (e) {
-        const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
-        logger.debug(errInfo)
+      } catch (error) {
+        const errorMessage =
+          error?.message ?? 'Failed to get or create grant reference'
+        logger.error({ error }, errorMessage)
         ctx.throw(500)
       }
 
