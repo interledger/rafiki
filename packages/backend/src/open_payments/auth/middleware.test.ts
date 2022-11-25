@@ -263,7 +263,7 @@ describe('Auth Middleware', (): void => {
     scope.done()
   })
 
-  test('if getOrCreateGrantReference throws, return 500', async (): Promise<void> => {
+  test('returns 500 if getOrCreateGrantReference throws', async (): Promise<void> => {
     const getOrCreateGrantReferenceSpy = jest
       .spyOn(grantReferenceService, 'getOrCreate')
       .mockImplementationOnce(async () => {

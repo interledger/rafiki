@@ -82,7 +82,7 @@ describe('Grant Reference Service', (): void => {
   })
 
   describe('Get or Create Grant Reference', (): void => {
-    test('cannot fetch a non-existing grant reference', async (): Promise<void> => {
+    test('returns undefined for a non-existing grant reference', async (): Promise<void> => {
       expect(
         await grantReferenceService.getOrCreate(
           { id: uuid(), clientId: uuid() },
@@ -122,7 +122,7 @@ describe('Grant Reference Service', (): void => {
       expect(retrievedRef).toEqual(existingRef)
     })
 
-    test('create a grant reference', async (): Promise<void> => {
+    test('creates a grant reference', async (): Promise<void> => {
       const receivedRef = {
         id: uuid(),
         clientId: uuid()
