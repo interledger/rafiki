@@ -82,7 +82,7 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter openapi build
       - run: pnpm --filter open-payments test
-      
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 5
