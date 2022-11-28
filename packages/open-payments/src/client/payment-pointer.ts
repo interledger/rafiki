@@ -1,6 +1,6 @@
 import { HttpMethod } from 'openapi'
-import { ClientDeps } from '.'
-import { PaymentPointer, getPath } from '../types'
+import { RouteDeps } from '.'
+import { JWKS, PaymentPointer, getRSPath } from '../types'
 import { get } from './requests'
 
 interface GetArgs {
@@ -9,21 +9,35 @@ interface GetArgs {
 
 export interface PaymentPointerRoutes {
   get(args: GetArgs): Promise<PaymentPointer>
+  getKeys(args: GetArgs): Promise<JWKS>
 }
 
 export const createPaymentPointerRoutes = (
-  clientDeps: ClientDeps
+  deps: RouteDeps
 ): PaymentPointerRoutes => {
-  const { axiosInstance, openApi, logger } = clientDeps
+  const { axiosInstance, openApi, logger } = deps
 
   const getPaymentPaymentValidator =
     openApi.createResponseValidator<PaymentPointer>({
-      path: getPath('/'),
+      path: getRSPath('/'),
       method: HttpMethod.GET
     })
 
+  const getPaymentPaymentKeysValidator = openApi.createResponseValidator<JWKS>({
+    path: getRSPath('/jwks.json'),
+    method: HttpMethod.GET
+  })
+
   return {
     get: (args: GetArgs) =>
-      get({ axiosInstance, logger }, args, getPaymentPaymentValidator)
+      get({ axiosInstance, logger }, args, getPaymentPaymentValidator),
+    getKeys: (args: GetArgs) =>
+      get(
+        { axiosInstance, logger },
+        {
+          url: `${args.url}/jwks.json`
+        },
+        getPaymentPaymentKeysValidator
+      )
   }
 }

@@ -48,7 +48,7 @@ import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './paymentPointerKey/service'
 import { GrantReferenceService } from './open_payments/grantReference/service'
-import { OpenPaymentsClient } from 'open-payments'
+import { AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -57,6 +57,7 @@ export interface AppContextData {
   // Set by @koa/router.
   params: { [key: string]: string }
   paymentPointer?: PaymentPointer
+  paymentPointerUrl?: string
 }
 
 export interface ApolloContext {
@@ -146,7 +147,7 @@ export interface AppServices {
   sessionService: Promise<SessionService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   grantReferenceService: Promise<GrantReferenceService>
-  openPaymentsClient: Promise<OpenPaymentsClient>
+  openPaymentsClient: Promise<AuthenticatedClient>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -330,13 +331,13 @@ export class App {
           router[method](
             PAYMENT_POINTER_PATH + toRouterPath(path),
             createPaymentPointerMiddleware(),
-            createAuthMiddleware({
-              type,
-              action
-            }),
             createValidatorMiddleware<ContextType<typeof route>>(openApi, {
               path,
               method
+            }),
+            createAuthMiddleware({
+              type,
+              action
             }),
             route
           )

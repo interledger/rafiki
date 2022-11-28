@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -43,7 +44,8 @@ describe('Access Service', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    clientKeyId: 'https://openpayments.network/keys/test-key',
+    client: faker.internet.url(),
+    clientKeyId: 'test-key',
     interactId: v4(),
     interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()

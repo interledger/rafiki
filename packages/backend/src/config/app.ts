@@ -17,10 +17,10 @@ function envFloat(name: string, value: number): number {
   return envValue == null ? value : +envValue
 }
 
-// function envBool(name: string, value: boolean): boolean {
-//   const envValue = process.env[name]
-//   return envValue == null ? value : Boolean(envValue)
-// }
+function envBool(name: string, value: boolean): boolean {
+  const envValue = process.env[name]
+  return envValue == null ? value : envValue === 'true'
+}
 
 export type IAppConfig = typeof Config
 
@@ -42,6 +42,10 @@ export const Config = {
           'DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/development'
         ),
+  paymentPointerUrl: envString(
+    'PAYMENT_POINTER_URL',
+    'http://127.0.0.1:3001/.well-known/pay'
+  ),
   env: envString('NODE_ENV', 'development'),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
@@ -103,6 +107,7 @@ export const Config = {
 
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
+  bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false),
 
   openPaymentsSpec: envString(
     'OPEN_PAYMENTS_SPEC',
@@ -112,6 +117,7 @@ export const Config = {
     'AUTH_SERVER_SPEC',
     'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
   ),
+  keyId: envString('KEY_ID', 'rafiki'),
   privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', undefined)),
 
   /** Frontend **/

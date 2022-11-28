@@ -6,8 +6,8 @@ module.exports = {
     connection: {
       // The database, user and password here match those in the infrastructure/local/docker-compose.yml file
       database: 'auth',
-      user: 'auth',
-      password: 'auth'
+      user: 'postgres',
+      password: 'password'
     },
     pool: {
       min: 2,
@@ -26,8 +26,8 @@ module.exports = {
     connection: {
       // The database, user and password here match those in the infrastructure/local/peer-docker-compose.yml file
       database: 'peerauth',
-      user: 'peerauth',
-      password: 'peerauth'
+      user: 'postgres',
+      password: 'password'
     },
     pool: {
       min: 2,

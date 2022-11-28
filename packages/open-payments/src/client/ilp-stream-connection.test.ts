@@ -7,7 +7,7 @@ describe('ilp-stream-connection', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
-    openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
+    openApi = await createOpenAPI(config.OPEN_PAYMENTS_RS_OPEN_API_URL)
   })
 
   const axiosInstance = defaultAxiosInstance

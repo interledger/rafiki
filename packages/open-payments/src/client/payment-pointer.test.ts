@@ -7,7 +7,7 @@ describe('payment-pointer', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
-    openApi = await createOpenAPI(config.OPEN_PAYMENTS_OPEN_API_URL)
+    openApi = await createOpenAPI(config.OPEN_PAYMENTS_RS_OPEN_API_URL)
   })
 
   const axiosInstance = defaultAxiosInstance
@@ -24,6 +24,10 @@ describe('payment-pointer', (): void => {
       })
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/',
+        method: HttpMethod.GET
+      })
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/jwks.json',
         method: HttpMethod.GET
       })
     })

@@ -85,6 +85,7 @@ async function createGrantInitiation(
 
   const { body } = ctx.request
   const { grantService, config } = deps
+  const clientKeyId = ctx.clientKeyId
 
   if (
     !deps.config.incomingPaymentInteraction &&
@@ -98,7 +99,13 @@ async function createGrantInitiation(
     let grant: Grant
     let accessToken: AccessToken
     try {
-      grant = await grantService.create(body, trx)
+      grant = await grantService.create(
+        {
+          ...body,
+          clientKeyId
+        },
+        trx
+      )
       accessToken = await deps.accessTokenService.create(grant.id, {
         trx
       })
@@ -127,13 +134,31 @@ async function createGrantInitiation(
     return
   }
 
-  const grant = await grantService.create(body)
+  const client = await deps.clientService.get(body.client)
+  if (!client) {
+    ctx.status = 400
+    ctx.body = {
+      error: 'invalid_client'
+    }
+    return
+  }
+
+  const grant = await grantService.create({
+    ...body,
+    clientKeyId
+  })
   ctx.status = 200
+
+  const redirectUri = new URL(
+    config.authServerDomain +
+      `/interact/${grant.interactId}/${grant.interactNonce}`
+  )
+
+  redirectUri.searchParams.set('clientName', client.name)
+  redirectUri.searchParams.set('clientUri', client.uri)
   ctx.body = {
     interact: {
-      redirect:
-        config.authServerDomain +
-        `/interact/${grant.interactId}/${grant.interactNonce}`,
+      redirect: redirectUri.toString(),
       finish: grant.interactNonce
     },
     continue: {
@@ -182,8 +207,16 @@ async function startInteraction(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
+  deps.logger.info(
+    {
+      params: ctx.params,
+      query: ctx.query
+    },
+    'start interact params'
+  )
   const { id: interactId, nonce } = ctx.params
-  const { config, grantService, clientService } = deps
+  const { clientName, clientUri } = ctx.query
+  const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
@@ -195,22 +228,14 @@ async function startInteraction(
     return
   }
 
-  const key = await clientService.getKeyByKid(grant.clientKeyId)
-
-  if (!key) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_client'
-    }
-    return
-  }
-
   // TODO: also establish session in redis with short expiry
   ctx.session.nonce = grant.interactNonce
 
   const interactionUrl = new URL(config.identityServerDomain)
   interactionUrl.searchParams.set('interactId', grant.interactId)
   interactionUrl.searchParams.set('nonce', grant.interactNonce)
+  interactionUrl.searchParams.set('clientName', clientName as string)
+  interactionUrl.searchParams.set('clientUri', clientUri as string)
 
   ctx.redirect(interactionUrl.toString())
 }
@@ -402,13 +427,13 @@ function createGrantBody({
       value: accessToken.value,
       manage: domain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
-      expiresIn: accessToken.expiresIn
+      expires_in: accessToken.expiresIn
     },
     continue: {
       access_token: {
         value: grant.continueToken
       },
-      uri: domain + `continue/${grant.continueId}`
+      uri: domain + `/continue/${grant.continueId}`
     }
   }
 }

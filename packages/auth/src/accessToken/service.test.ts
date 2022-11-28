@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import assert from 'assert'
 import { Knex } from 'knex'
@@ -15,11 +16,7 @@ import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import { generateTestKeys, TEST_CLIENT } from '../tests/signature'
-import { ClientKey } from '../client/service'
-
-const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
-const TEST_KID_PATH = '/keys/test-key'
+import { generateTestKeys } from '../tests/signature'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -49,13 +46,15 @@ describe('Access Token Service', (): void => {
     await appContainer.shutdown()
   })
 
+  const CLIENT = faker.internet.url()
+
   const BASE_GRANT = {
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    clientKeyId: KEY_REGISTRY_ORIGIN + TEST_KID_PATH
+    client: CLIENT
   }
 
   const BASE_ACCESS = {
@@ -82,6 +81,7 @@ describe('Access Token Service', (): void => {
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
+      clientKeyId: testJwk.kid,
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
       continueId: v4(),
       interactId: v4(),
@@ -141,17 +141,13 @@ describe('Access Token Service', (): void => {
 
   describe('Introspect', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
-      const clientId = crypto
-        .createHash('sha256')
-        .update(TEST_CLIENT.id)
-        .digest('hex')
+      const clientId = crypto.createHash('sha256').update(CLIENT).digest('hex')
 
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(TEST_KID_PATH)
+      const scope = nock(CLIENT)
+        .get('/jwks.json')
         .reply(200, {
-          client: TEST_CLIENT,
-          jwk: testJwk
-        } as ClientKey)
+          keys: [testJwk]
+        })
 
       const introspection = await accessTokenService.introspect(token.value)
       assert.ok(introspection)
@@ -184,6 +180,12 @@ describe('Access Token Service', (): void => {
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
     })
+
+    test('Cannot introspect with non-existing key', async (): Promise<void> => {
+      await expect(accessTokenService.introspect(token.value)).resolves.toEqual(
+        { active: false }
+      )
+    })
   })
 
   describe('Revoke', (): void => {
@@ -192,6 +194,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
+        clientKeyId: testJwk.kid,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
         continueId: v4(),
         interactId: v4(),
@@ -238,6 +241,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
+        clientKeyId: testJwk.kid,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
         continueId: v4(),
         interactId: v4(),

@@ -413,6 +413,20 @@ describe('OutgoingPaymentService', (): void => {
       ).resolves.toEqual(OutgoingPaymentError.UnknownQuote)
     })
 
+    it('fails to create on "consumed" quote', async () => {
+      const { quote } = await createOutgoingPayment(deps, {
+        paymentPointerId,
+        receiver,
+        validDestination: false
+      })
+      await expect(
+        outgoingPaymentService.create({
+          paymentPointerId,
+          quoteId: quote.id
+        })
+      ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
+    })
+
     it('fails to create on invalid quote payment pointer', async () => {
       const quote = await createQuote(deps, {
         paymentPointerId,
