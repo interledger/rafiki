@@ -1,6 +1,6 @@
-import { createPublicKey } from 'crypto'
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
+import { generateJwk } from 'open-payments'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../tests/context'
@@ -101,11 +101,10 @@ describe('Payment Pointer Keys Routes', (): void => {
 
     test('returns 200 with backend key', async (): Promise<void> => {
       const config = await deps.use('config')
-      const jwk = {
-        ...createPublicKey(config.privateKey).export({ format: 'jwk' }),
-        kid: config.keyId,
-        alg: 'EdDSA'
-      }
+      const jwk = generateJwk({
+        privateKey: config.privateKey,
+        keyId: config.keyId
+      })
 
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },
