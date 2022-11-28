@@ -66,7 +66,7 @@ export const validateOutgoingPayment = (
     sendAmount.assetScale !== sentAmount.assetScale
   ) {
     throw new Error(
-      'Asset code or asset scale of sending amount does not match up sent amount'
+      'Asset code or asset scale of sending amount does not match sent amount'
     )
   }
   if (BigInt(sendAmount.value) < BigInt(sentAmount.value)) {

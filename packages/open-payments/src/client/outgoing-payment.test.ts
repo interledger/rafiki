@@ -95,15 +95,18 @@ describe('outgoing-payment', (): void => {
 
   describe('validateOutgoingPayment', (): void => {
     test('returns outgoing payment if passes validation', async (): Promise<void> => {
+      const outgoingPayment = mockOutgoingPayment()
+
+      expect(validateOutgoingPayment(outgoingPayment)).toStrictEqual(
+        outgoingPayment
+      )
+    })
+
+    test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment({
-        receiveAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: '5'
-        },
         sendAmount: {
           assetCode: 'USD',
-          assetScale: 2,
+          assetScale: 3,
           value: '5'
         },
         sentAmount: {
@@ -113,9 +116,21 @@ describe('outgoing-payment', (): void => {
         }
       })
 
-      expect(validateOutgoingPayment(outgoingPayment)).toStrictEqual(
-        outgoingPayment
-      )
+      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+
+      await expect(() =>
+        getOutgoingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/outgoing-payment`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
     })
 
     test('throws if send amount and sent amount asset scales are different', async (): Promise<void> => {
@@ -133,7 +148,7 @@ describe('outgoing-payment', (): void => {
       })
 
       expect(() => validateOutgoingPayment(outgoingPayment)).toThrow(
-        'Asset code or asset scale of sending amount does not match up sent amount'
+        'Asset code or asset scale of sending amount does not match sent amount'
       )
     })
 
@@ -152,7 +167,7 @@ describe('outgoing-payment', (): void => {
       })
 
       expect(() => validateOutgoingPayment(outgoingPayment)).toThrow(
-        'Asset code or asset scale of sending amount does not match up sent amount'
+        'Asset code or asset scale of sending amount does not match sent amount'
       )
     })
 
