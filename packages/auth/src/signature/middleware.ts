@@ -107,11 +107,12 @@ function validateSigInputComponents(
   }
 
   const isValidContentDigest =
-    ctx.request.body &&
-    Object.keys(ctx.request.body).length > 0 &&
-    !!ctx.headers['content-digest'] &&
-    (!sigInputComponents.includes('content-digest') ||
-      !verifyContentDigest(
+    !sigInputComponents.includes('content-digest') ||
+    (!!ctx.headers['content-digest'] &&
+      ctx.request.body &&
+      Object.keys(ctx.request.body).length > 0 &&
+      sigInputComponents.includes('content-digest') &&
+      verifyContentDigest(
         JSON.stringify(ctx.request.body),
         ctx.headers['content-digest'] as string
       ))
