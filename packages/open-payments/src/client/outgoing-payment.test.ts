@@ -91,16 +91,6 @@ describe('outgoing-payment', (): void => {
         )
       ).rejects.toThrowError()
     })
-  })
-
-  describe('validateOutgoingPayment', (): void => {
-    test('returns outgoing payment if passes validation', async (): Promise<void> => {
-      const outgoingPayment = mockOutgoingPayment()
-
-      expect(validateOutgoingPayment(outgoingPayment)).toStrictEqual(
-        outgoingPayment
-      )
-    })
 
     test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment({
@@ -131,6 +121,16 @@ describe('outgoing-payment', (): void => {
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
+    })
+  })
+
+  describe('validateOutgoingPayment', (): void => {
+    test('returns outgoing payment if passes validation', async (): Promise<void> => {
+      const outgoingPayment = mockOutgoingPayment()
+
+      expect(validateOutgoingPayment(outgoingPayment)).toStrictEqual(
+        outgoingPayment
+      )
     })
 
     test('throws if send amount and sent amount asset scales are different', async (): Promise<void> => {
