@@ -1,6 +1,7 @@
 import {
   components as RSComponents,
-  paths as RSPaths
+  paths as RSPaths,
+  operations as RSOperations
 } from './generated/resource-server-types'
 import {
   components as ASComponents,
@@ -44,3 +45,6 @@ export const isInteractiveGrant = (
 export const isNonInteractiveGrant = (
   grant: InteractiveGrant | NonInteractiveGrant
 ): grant is NonInteractiveGrant => !!(grant as NonInteractiveGrant).access_token
+
+export type CreateIncomingPaymentArgs =
+  RSOperations['create-incoming-payment']['requestBody']['content']['application/json']
