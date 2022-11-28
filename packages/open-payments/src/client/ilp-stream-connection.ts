@@ -1,6 +1,6 @@
 import { HttpMethod } from 'openapi'
-import { ClientDeps } from '.'
-import { getPath, ILPStreamConnection } from '../types'
+import { RouteDeps } from '.'
+import { getRSPath, ILPStreamConnection } from '../types'
 import { get } from './requests'
 
 interface GetArgs {
@@ -12,13 +12,13 @@ export interface ILPStreamConnectionRoutes {
 }
 
 export const createILPStreamConnectionRoutes = (
-  clientDeps: ClientDeps
+  deps: RouteDeps
 ): ILPStreamConnectionRoutes => {
-  const { axiosInstance, openApi, logger } = clientDeps
+  const { axiosInstance, openApi, logger } = deps
 
   const getILPStreamConnectionValidator =
     openApi.createResponseValidator<ILPStreamConnection>({
-      path: getPath('/connections/{id}'),
+      path: getRSPath('/connections/{id}'),
       method: HttpMethod.GET
     })
 

@@ -6,6 +6,7 @@ import { Knex } from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
+import cors from '@koa/cors'
 import { Logger } from 'pino'
 import Router from '@koa/router'
 
@@ -29,6 +30,8 @@ export interface AppContextData extends DefaultContext {
   params: { [key: string]: string }
   // Set by koa-generic-session
   session: { [key: string]: string }
+  // TODO: define separate Context used in routes that include httpsig
+  clientKeyId?: string
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
@@ -101,6 +104,7 @@ export class App {
       }
     }
 
+    this.koa.use(cors())
     this.koa.keys = [this.config.cookieKey]
     this.koa.use(
       session(
@@ -191,44 +195,52 @@ export class App {
     // Grant Initiation
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/',
         method: HttpMethod.POST
       }),
-      grantInitiationHttpsigMiddleware,
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : grantInitiationHttpsigMiddleware,
       grantRoutes.create
     )
 
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
-      grantContinueHttpsigMiddleware,
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : grantContinueHttpsigMiddleware,
       grantRoutes.continue
     )
 
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
-      tokenHttpsigMiddleware,
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : tokenHttpsigMiddleware,
       accessTokenRoutes.rotate
     )
 
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
-      tokenHttpsigMiddleware,
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : tokenHttpsigMiddleware,
       accessTokenRoutes.revoke
     )
 
@@ -236,7 +248,7 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.resourceServerSpec, {
         path: '/introspect',
         method: HttpMethod.POST
       }),
@@ -249,7 +261,7 @@ export class App {
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -259,7 +271,7 @@ export class App {
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}/finish',
         method: HttpMethod.GET
       }),
@@ -269,7 +281,7 @@ export class App {
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -279,7 +291,7 @@ export class App {
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware(openApi, {
+      createValidatorMiddleware(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),

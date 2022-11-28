@@ -1,7 +1,7 @@
 version: '3'
 services:
   database:
-    image: "postgres" # use latest official postgres version
+    image: "postgres:15" # use latest official postgres version
     restart: unless-stopped
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down

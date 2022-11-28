@@ -1,2 +1,18 @@
-export { IncomingPayment, ILPStreamConnection } from './types'
-export { createClient, OpenPaymentsClient } from './client'
+export {
+  IncomingPayment,
+  ILPStreamConnection,
+  InteractiveGrant,
+  NonInteractiveGrant,
+  isInteractiveGrant,
+  isNonInteractiveGrant,
+  JWK,
+  JWKS,
+  PaymentPointer
+} from './types'
+
+export {
+  createAuthenticatedClient,
+  createUnauthenticatedClient,
+  AuthenticatedClient,
+  UnauthenticatedClient
+} from './client'

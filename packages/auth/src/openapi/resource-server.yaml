@@ -35,7 +35,7 @@ paths:
                   access:
                     $ref: ./schemas.yaml#/components/schemas/access
                   key:
-                    $ref: ./schemas.yaml#/components/schemas/key
+                    $ref: '#/components/schemas/key'
                   client_id:
                     type: string
                     description: Opaque client identifier.
@@ -86,7 +86,7 @@ paths:
                   description: The proofing method used by the client instance to bind the token to the RS request.
                 resource_server:
                   oneOf:
-                    - $ref: ./schemas.yaml#/components/schemas/key
+                    - $ref: '#/components/schemas/key'
                     - type: string
                   description: 'The identification used to authenticate the resource server making this call, either by value or by reference.'
                 access:
@@ -103,7 +103,74 @@ paths:
       tags:
         - introspection
 components:
-  schemas: {}
+  schemas:
+    key:
+      title: key
+      type: object
+      description: A key presented by value MUST be a public key.
+      properties:
+        proof:
+          type: string
+          enum:
+            - httpsig
+          description: The form of proof that the client instance will use when presenting the key.
+        jwk:
+          type: object
+          description: 'The public key and its properties represented as a JSON Web Key [[RFC7517](https://datatracker.ietf.org/doc/html/rfc7517)].'
+          additionalProperties: false
+          required:
+            - alg
+            - kid
+            - kty
+            - crv
+            - x
+          properties:
+            alg:
+              type: string
+              description: 'The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. '
+              enum:
+                - EdDSA
+            kid:
+              type: string
+              description: A Key ID can be used to match a specific key.
+            kty:
+              type: string
+              enum:
+                - OKP
+              description: 'The Key Type. The only allowed value is `OKP`. '
+            use:
+              type: string
+              enum:
+                - sig
+              description: The intended use of the key.
+            crv:
+              type: string
+              enum:
+                - Ed25519
+              description: 'The cryptographic curve used with the key. The only allowed value is `Ed25519`. '
+            x:
+              type: string
+              description: Public key encoded using the `base64url` encoding.
+            key_ops:
+              type: array
+              description: Array of allowed operations this key may be used for.
+              items:
+                type: string
+                enum:
+                  - sign
+                  - verify
+            nbf:
+              type: integer
+              description: UNIX timestamp indicating the earliest this key may be used.
+            exp:
+              type: integer
+              description: UNIX timestamp indicating the latest this key may be used.
+            revoked:
+              type: boolean
+              description: The revocation status of the key.
+      required:
+        - proof
+        - jwk
   securitySchemes:
     GNAP:
       name: Authorization

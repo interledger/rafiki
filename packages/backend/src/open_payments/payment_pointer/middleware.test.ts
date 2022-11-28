@@ -79,4 +79,16 @@ describe('Payment Pointer Middleware', (): void => {
     expect(next).toHaveBeenCalled()
     expect(ctx.paymentPointer).toEqual(paymentPointer)
   })
+
+  test('calls next for paymentPointerUrl', async (): Promise<void> => {
+    const config = await deps.use('config')
+    const paymentPointerUrl = new URL(config.paymentPointerUrl)
+    ctx.request.headers.host = paymentPointerUrl.host
+    ctx.request.url = paymentPointerUrl.pathname
+    // Strip preceding forward slash
+    ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(next).toHaveBeenCalled()
+    expect(ctx.paymentPointer).toBeUndefined()
+  })
 })

@@ -125,6 +125,33 @@ describe('Account Middleware', () => {
     )
   })
 
+  test('sets disabled destination account if amount is 0', async () => {
+    const outgoingAccount = IncomingPaymentAccountFactory.build({
+      id: 'deactivatedIncomingPayment',
+      state: 'COMPLETED'
+    })
+    await rafikiServices.accounting.create(outgoingAccount)
+    const middleware = createAccountMiddleware(ADDRESS)
+    const next = jest.fn()
+    const ctx = createILPContext({
+      state: {
+        incomingAccount,
+        streamDestination: outgoingAccount.id
+      },
+      services: rafikiServices,
+      request: {
+        prepare: new ZeroCopyIlpPrepare(
+          IlpPrepareFactory.build({ amount: '0', destination: 'test.123' })
+        ),
+        rawPrepare: Buffer.alloc(0) // ignored
+      }
+    })
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.accounts.incoming).toEqual(incomingAccount)
+    expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
+  })
+
   test.each`
     name                                                              | createThrows                                                               | error
     ${'create TB account for PENDING incoming payment success'}       | ${undefined}                                                               | ${''}

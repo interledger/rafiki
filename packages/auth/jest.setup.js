@@ -9,7 +9,7 @@ module.exports = async (globalConfig) => {
   const workers = globalConfig.maxWorkers
 
   if (!process.env.AUTH_DATABASE_URL) {
-    const postgresContainer = await new GenericContainer('postgres')
+    const postgresContainer = await new GenericContainer('postgres:15')
       .withExposedPorts(POSTGRES_PORT)
       .withBindMount(
         __dirname + '/scripts/init.sh',

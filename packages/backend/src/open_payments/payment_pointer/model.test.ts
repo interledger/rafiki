@@ -12,7 +12,7 @@ import { PaymentPointerContext, ReadContext, ListContext } from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
 import { createContext } from '../../tests/context'
 
-interface SetupOptions {
+export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
   params?: Record<string, string>
   paymentPointer: PaymentPointer

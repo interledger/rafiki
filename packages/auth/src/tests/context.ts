@@ -42,18 +42,20 @@ export async function createContextWithSigHeaders(
   params: Record<string, unknown>,
   requestBody: Record<string, unknown>,
   privateKey: JWKWithRequired,
+  keyId: string,
   container?: IocContract<AppServices>
 ): Promise<AppContext> {
   const { headers, url, method } = reqOpts
-  const { signature, sigInput, contentDigest } = await generateSigHeaders(
+  const { signature, sigInput, contentDigest } = await generateSigHeaders({
     privateKey,
-    url as string,
-    method as string,
-    {
+    keyId,
+    url,
+    method,
+    optionalComponents: {
       body: requestBody,
       authorization: headers.Authorization as string
     }
-  )
+  })
 
   const ctx = createContext(
     {

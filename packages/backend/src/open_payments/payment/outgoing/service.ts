@@ -1,4 +1,10 @@
-import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import assert from 'assert'
+import {
+  ForeignKeyViolationError,
+  TransactionOrKnex,
+  UniqueViolationError
+} from 'objection'
+
 
 import { BaseService } from '../../../shared/baseService'
 import {
@@ -147,7 +153,11 @@ async function createOutgoingPayment(
       return await addSentAmount(deps, payment, BigInt(0))
     })
   } catch (err) {
-    if (err instanceof ForeignKeyViolationError) {
+    if (err instanceof UniqueViolationError) {
+      if (err.constraint === 'outgoingPayments_pkey') {
+        return OutgoingPaymentError.InvalidQuote
+      }
+    } else if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'outgoingpayments_id_foreign') {
         return OutgoingPaymentError.UnknownQuote
       } else if (

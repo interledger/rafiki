@@ -1,9 +1,7 @@
 import jestOpenAPI from 'jest-openapi'
-import * as httpMocks from 'node-mocks-http'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { createContext } from '../../../tests/context'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -11,12 +9,16 @@ import { initIocContainer } from '../../..'
 import { AppServices, CreateContext, ListContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
-import { CreateOutgoingPaymentOptions } from './service'
+import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
-import { getRouteTests } from '../../payment_pointer/model.test'
+import {
+  getRouteTests,
+  setup as setupContext
+} from '../../payment_pointer/model.test'
 import { createGrant } from '../../../tests/grant'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
@@ -28,6 +30,7 @@ describe('Outgoing Payment Routes', (): void => {
   let knex: Knex
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
+  let outgoingPaymentService: OutgoingPaymentService
   let paymentPointer: PaymentPointer
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
@@ -58,6 +61,7 @@ describe('Outgoing Payment Routes', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
+    outgoingPaymentService = await deps.use('outgoingPaymentService')
     jestOpenAPI(await deps.use('openApi'))
   })
 
@@ -123,14 +127,13 @@ describe('Outgoing Payment Routes', (): void => {
     })
 
     test('returns 500 for unexpected error', async (): Promise<void> => {
-      const outgoingPaymentService = await deps.use('outgoingPaymentService')
       jest
         .spyOn(outgoingPaymentService, 'getPaymentPointerPage')
         .mockRejectedValueOnce(new Error('unexpected'))
-      const ctx = createContext<ListContext>({
-        headers: { Accept: 'application/json' }
+      const ctx = setupContext<ListContext>({
+        reqOpts: {},
+        paymentPointer
       })
-      ctx.paymentPointer = paymentPointer
       await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
         status: 500,
         message: `Error trying to list outgoing payments`
@@ -138,108 +141,127 @@ describe('Outgoing Payment Routes', (): void => {
     })
   })
 
-  describe.each`
-    withGrant | description
-    ${true}   | ${'grant'}
-    ${false}  | ${'no grant'}
-  `('create ($description)', ({ withGrant }): void => {
-    let options: Omit<CreateOutgoingPaymentOptions, 'paymentPointerId'>
-    let grant: Grant | undefined
+  describe('create', (): void => {
+    const setup = (
+      options: Omit<CreateOutgoingPaymentOptions, 'paymentPointerId'>
+    ): CreateContext<CreateBody> =>
+      setupContext<CreateContext<CreateBody>>({
+        reqOpts: {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json'
+          },
+          method: 'POST',
+          url: `/outgoing-payments`,
+          body: options
+        },
+        paymentPointer,
+        grant: options.grant
+      })
 
-    beforeEach(async (): Promise<void> => {
-      options = {
-        quoteId: `${paymentPointer.url}/quotes/${uuid()}`
-      }
+    describe.each`
+      withGrant | description
+      ${true}   | ${'grant'}
+      ${false}  | ${'no grant'}
+    `('create ($description)', ({ withGrant }): void => {
+      let grant: Grant | undefined
 
-      grant = withGrant
-        ? await createGrant(deps, {
-            access: [
-              {
-                type: AccessType.OutgoingPayment,
-                actions: [AccessAction.Create, AccessAction.Read]
-              }
-            ]
+      beforeEach(async (): Promise<void> => {
+        grant = withGrant
+          ? await createGrant(deps, {
+              access: [
+                {
+                  type: AccessType.OutgoingPayment,
+                  actions: [AccessAction.Create, AccessAction.Read]
+                }
+              ]
+            })
+          : undefined
+      })
+
+      test.each`
+        description  | externalRef  | desc
+        ${'rent'}    | ${undefined} | ${'description'}
+        ${undefined} | ${'202201'}  | ${'externalRef'}
+      `(
+        'returns the outgoing payment on success ($desc)',
+        async ({ description, externalRef }): Promise<void> => {
+          const payment = await createPayment({
+            paymentPointerId: paymentPointer.id,
+            grant,
+            description,
+            externalRef
           })
-        : undefined
+          const options = {
+            quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
+            grant,
+            description,
+            externalRef
+          }
+          const ctx = setup(options)
+          const createSpy = jest
+            .spyOn(outgoingPaymentService, 'create')
+            .mockResolvedValueOnce(payment)
+          await expect(
+            outgoingPaymentRoutes.create(ctx)
+          ).resolves.toBeUndefined()
+          expect(createSpy).toHaveBeenCalledWith({
+            paymentPointerId: paymentPointer.id,
+            quoteId: payment.quote.id,
+            description,
+            externalRef,
+            grant
+          })
+          expect(ctx.response).toSatisfyApiSpec()
+          const outgoingPaymentId = (
+            (ctx.response.body as Record<string, unknown>)['id'] as string
+          )
+            .split('/')
+            .pop()
+          expect(ctx.response.body).toEqual({
+            id: `${paymentPointer.url}/outgoing-payments/${outgoingPaymentId}`,
+            paymentPointer: paymentPointer.url,
+            receiver: payment.receiver,
+            sendAmount: {
+              ...payment.sendAmount,
+              value: payment.sendAmount.value.toString()
+            },
+            receiveAmount: {
+              ...payment.receiveAmount,
+              value: payment.receiveAmount.value.toString()
+            },
+            description: options.description,
+            externalRef: options.externalRef,
+            sentAmount: {
+              value: '0',
+              assetCode: asset.code,
+              assetScale: asset.scale
+            },
+            failed: false,
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String)
+          })
+        }
+      )
     })
 
-    function setup(
-      reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
-    ): CreateContext<CreateBody> {
-      const ctx = createContext<CreateContext<CreateBody>>({
-        headers: Object.assign(
-          { Accept: 'application/json', 'Content-Type': 'application/json' },
-          reqOpts.headers
-        ),
-        method: 'POST',
-        url: `/outgoing-payments`
-      })
-      ctx.paymentPointer = paymentPointer
-      ctx.request.body = options
-      ctx.grant = grant
-      return ctx
-    }
-
-    test.each`
-      description  | externalRef  | desc
-      ${'rent'}    | ${undefined} | ${'description'}
-      ${undefined} | ${'202201'}  | ${'externalRef'}
-    `(
-      'returns the outgoing payment on success ($desc)',
-      async ({ description, externalRef }): Promise<void> => {
-        const payment = await createPayment({
-          paymentPointerId: paymentPointer.id,
-          grant,
-          description,
-          externalRef
+    test.each(Object.values(OutgoingPaymentError).map((err) => [err]))(
+      'returns error on %s',
+      async (error): Promise<void> => {
+        const quoteId = uuid()
+        const ctx = setup({
+          quoteId: `${paymentPointer.url}/quotes/${quoteId}`
         })
-        options = {
-          quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
-          grant,
-          description,
-          externalRef
-        }
-        const ctx = setup({})
-        const outgoingPaymentService = await deps.use('outgoingPaymentService')
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
-          .mockResolvedValueOnce(payment)
-        await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+          .mockResolvedValueOnce(error)
+        await expect(outgoingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          message: errorToMessage[error],
+          status: errorToCode[error]
+        })
         expect(createSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
-          quoteId: payment.quote.id,
-          description,
-          externalRef,
-          grant
-        })
-        expect(ctx.response).toSatisfyApiSpec()
-        const outgoingPaymentId = (
-          (ctx.response.body as Record<string, unknown>)['id'] as string
-        )
-          .split('/')
-          .pop()
-        expect(ctx.response.body).toEqual({
-          id: `${paymentPointer.url}/outgoing-payments/${outgoingPaymentId}`,
-          paymentPointer: paymentPointer.url,
-          receiver: payment.receiver,
-          sendAmount: {
-            ...payment.sendAmount,
-            value: payment.sendAmount.value.toString()
-          },
-          receiveAmount: {
-            ...payment.receiveAmount,
-            value: payment.receiveAmount.value.toString()
-          },
-          description: options.description,
-          externalRef: options.externalRef,
-          sentAmount: {
-            value: '0',
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
-          failed: false,
-          createdAt: expect.any(String),
-          updatedAt: expect.any(String)
+          quoteId
         })
       }
     )
