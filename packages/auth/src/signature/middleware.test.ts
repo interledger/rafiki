@@ -77,7 +77,7 @@ describe('Signature Service', (): void => {
         let expectedChallenge = `"@method": GET\n"@target-uri": http://example.com/test\n"content-type": application/json\n`
         const contentDigest = createContentDigestHeader(
           JSON.stringify(testRequestBody),
-          ['sha-256']
+          ['sha-512']
         )
 
         if (withRequestBody) {
@@ -134,7 +134,7 @@ describe('Signature Service', (): void => {
               'Content-Type': 'application/json',
               'Content-Digest': createContentDigestHeader(
                 JSON.stringify(testRequestBody),
-                ['sha-256']
+                ['sha-512']
               ),
               'Content-Length': '1234',
               'Signature-Input': sigInputHeader,

@@ -117,9 +117,9 @@ function validateSigInputComponents(
       ))
 
   return !(
+    !isValidContentDigest ||
     !sigInputComponents.includes('@method') ||
     !sigInputComponents.includes('@target-uri') ||
-    isValidContentDigest ||
     (ctx.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )

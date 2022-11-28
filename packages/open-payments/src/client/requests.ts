@@ -127,37 +127,37 @@ export const createAxiosInstance = (args: {
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
 
   if (args.privateKey && args.keyId) {
-    const interceptor = async (config) => {
-      if (config.data) {
-        const data = JSON.stringify(config.data)
-        config.headers['Content-Digest'] = createContentDigestHeader(data, [
-          'sha-512'
-        ])
-        config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
-        config.headers['Content-Type'] = 'application/json'
+    axiosInstance.interceptors.request.use(
+      async (config) => {
+        if (config.data) {
+          const data = JSON.stringify(config.data)
+          config.headers['Content-Digest'] = createContentDigestHeader(data, [
+            'sha-512'
+          ])
+          config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
+          config.headers['Content-Type'] = 'application/json'
+        }
+        const sigHeaders = await createSignatureHeaders({
+          request: {
+            method: config.method.toUpperCase(),
+            url: config.url,
+            headers: config.headers,
+            body: config.data
+          },
+          privateKey: args.privateKey,
+          keyId: args.keyId
+        })
+        config.headers['Signature'] = sigHeaders['Signature']
+        config.headers['Signature-Input'] = sigHeaders['Signature-Input']
+        return config
+      },
+      null,
+      {
+        runWhen: (config) =>
+          config.method.toLowerCase() === 'post' ||
+          !!config.headers['Authorization']
       }
-      const sigHeaders = await createSignatureHeaders({
-        request: {
-          method: config.method.toUpperCase(),
-          url: config.url,
-          headers: config.headers,
-          body: config.data
-        },
-        privateKey: args.privateKey,
-        keyId: args.keyId
-      })
-      config.headers['Signature'] = sigHeaders['Signature']
-      config.headers['Signature-Input'] = sigHeaders['Signature-Input']
-      return config
-    }
-    axiosInstance.interceptors.request.use(interceptor, null, {
-      runWhen: (config) =>
-        config.method.toLowerCase() === 'post' ||
-        !!config.headers['Authorization']
-    })
-    axiosInstance.interceptors.request.use(interceptor, null, {
-      runWhen: (config) => !!config.headers['Authorization']
-    })
+    )
   }
 
   return axiosInstance
