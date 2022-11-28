@@ -74,7 +74,7 @@ describe('Signature Service', (): void => {
         const headers = {
           'Content-Type': 'application/json'
         }
-        let expectedChallenge = `"@method": GET\n"@target-uri": /test\n"content-type": application/json\n`
+        let expectedChallenge = `"@method": GET\n"@target-uri": http://example.com/test\n"content-type": application/json\n`
         const contentDigest = createContentDigestHeader(
           JSON.stringify(testRequestBody),
           ['sha-256']
@@ -104,7 +104,7 @@ describe('Signature Service', (): void => {
           {
             headers,
             method: 'GET',
-            url: '/test'
+            url: 'example.com/test'
           },
           {},
           deps
@@ -243,7 +243,7 @@ describe('Signature Service', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: '/',
+          url: 'http://example.com/',
           method: 'POST'
         },
         {},
@@ -277,7 +277,7 @@ describe('Signature Service', (): void => {
             Accept: 'application/json',
             Authorization: `GNAP ${grant.continueToken}`
           },
-          url: '/continue',
+          url: 'http://example.com/continue',
           method: 'POST'
         },
         { id: grant.continueId },
@@ -307,7 +307,7 @@ describe('Signature Service', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: tokenManagementUrl,
+          url: 'http://example.com' + tokenManagementUrl,
           method: 'DELETE'
         },
         { id: managementId },
@@ -338,7 +338,7 @@ describe('Signature Service', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: tokenManagementUrl,
+          url: 'http://example.com' + tokenManagementUrl,
           method
         },
         { id: managementId },

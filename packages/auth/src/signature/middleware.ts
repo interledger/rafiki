@@ -106,16 +106,20 @@ function validateSigInputComponents(
     if (component !== component.toLowerCase()) return false
   }
 
+  const isValidContentDigest =
+    ctx.request.body &&
+    Object.keys(ctx.request.body).length > 0 &&
+    !!ctx.headers['content-digest'] &&
+    (!sigInputComponents.includes('content-digest') ||
+      !verifyContentDigest(
+        JSON.stringify(ctx.request.body),
+        ctx.headers['content-digest'] as string
+      ))
+
   return !(
     !sigInputComponents.includes('@method') ||
     !sigInputComponents.includes('@target-uri') ||
-    (ctx.request.body &&
-      Object.keys(ctx.request.body).length > 0 &&
-      (!sigInputComponents.includes('content-digest') ||
-        !verifyContentDigest(
-          JSON.stringify(ctx.request.body),
-          ctx.headers['content-digest'] as string
-        ))) ||
+    isValidContentDigest ||
     (ctx.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )
@@ -139,7 +143,7 @@ export function sigInputToChallenge(
     if (component === '@method') {
       signatureBase += `"@method": ${ctx.request.method}\n`
     } else if (component === '@target-uri') {
-      signatureBase += `"@target-uri": ${ctx.request.url}\n`
+      signatureBase += `"@target-uri": ${ctx.request.href}\n`
     } else {
       signatureBase += `"${component}": ${ctx.headers[component]}\n`
     }

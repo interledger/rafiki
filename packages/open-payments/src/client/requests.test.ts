@@ -175,6 +175,21 @@ describe('requests', (): void => {
         id: 'id'
       }
 
+      // https://github.com/nock/nock/issues/2200#issuecomment-1280957462
+      jest
+        .useFakeTimers({
+          doNotFake: [
+            'nextTick',
+            'setImmediate',
+            'clearImmediate',
+            'setInterval',
+            'clearInterval',
+            'setTimeout',
+            'clearTimeout'
+          ]
+        })
+        .setSystemTime(new Date())
+
       const scope = nock(baseUrl)
         .matchHeader('Signature', /sig1=:([a-zA-Z0-9+/]){86}==:/)
         .matchHeader(
@@ -183,6 +198,9 @@ describe('requests', (): void => {
             Date.now() / 1000
           )};keyid="${keyId}";alg="ed25519"`
         )
+        .matchHeader('Content-Digest', /sha-512=:([a-zA-Z0-9+/]){86}==:/)
+        .matchHeader('Content-Length', 11)
+        .matchHeader('Content-Type', 'application/json')
         .post('/grant', body)
         // TODO: verify signature
         .reply(status, body)

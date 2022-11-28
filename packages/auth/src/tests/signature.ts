@@ -79,7 +79,7 @@ export async function generateSigHeaders({
   let challenge = `"@method": ${method}\n"@target-uri": ${url}\n`
   let contentDigest
   if (body) {
-    contentDigest = createContentDigestHeader(JSON.stringify(body), ['sha-256'])
+    contentDigest = createContentDigestHeader(JSON.stringify(body), ['sha-512'])
     challenge += `"content-digest": ${contentDigest}\n`
   }
 
