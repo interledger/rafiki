@@ -332,7 +332,31 @@ describe('Receiver Service', (): void => {
           })
         })
 
-        if (!existingGrant) {
+        if (existingGrant) {
+          test('returns undefined for expired grant', async (): Promise<void> => {
+            const grant = await grantService.get({
+              ...grantOptions,
+              authServer
+            })
+            await grant.$query(knex).patch({ expiresAt: new Date() })
+            jest
+              .spyOn(openPaymentsClient.paymentPointer, 'get')
+              .mockResolvedValueOnce(
+                paymentPointer.toOpenPaymentsType({
+                  authServer
+                })
+              )
+            const clientRequestGrantSpy = jest.spyOn(
+              openPaymentsClient.grant,
+              'request'
+            )
+
+            await expect(
+              receiverService.get(incomingPayment.url)
+            ).resolves.toBeUndefined()
+            expect(clientRequestGrantSpy).not.toHaveBeenCalled()
+          })
+        } else {
           test('returns undefined for invalid grant', async (): Promise<void> => {
             jest
               .spyOn(openPaymentsClient.paymentPointer, 'get')

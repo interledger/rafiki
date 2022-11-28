@@ -9,6 +9,10 @@ export class Grant extends BaseModel {
     return 'grants'
   }
 
+  static get virtualAttributes(): string[] {
+    return ['expired']
+  }
+
   static relationMappings = {
     authServer: {
       relation: Model.BelongsToOneRelation,
@@ -26,6 +30,11 @@ export class Grant extends BaseModel {
   public accessToken?: string
   public accessType!: AccessType
   public accessActions!: AccessAction[]
+  public expiresAt?: Date
+
+  public get expired(): boolean {
+    return !!this.expiresAt && this.expiresAt <= new Date()
+  }
 
   $afterFind(queryContext: QueryContext): void {
     super.$afterFind(queryContext)

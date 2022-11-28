@@ -207,6 +207,12 @@ async function getIncomingPaymentGrant(
 
   const existingGrant = await deps.grantService.get(grantOptions)
   if (existingGrant) {
+    if (existingGrant.expired) {
+      // TODO
+      // https://github.com/interledger/rafiki/issues/795
+      deps.logger.warn({ grantOptions }, 'Grant access token expired')
+      return undefined
+    }
     return existingGrant
   }
 
@@ -229,8 +235,10 @@ async function getIncomingPaymentGrant(
   if (isNonInteractiveGrant(grant)) {
     return await deps.grantService.create({
       ...grantOptions,
-      accessToken: grant.access_token.value
+      accessToken: grant.access_token.value,
+      expiresIn: grant.access_token.expires_in
     })
   }
+  deps.logger.warn({ grantOptions }, 'Grant request required interaction')
   return undefined
 }

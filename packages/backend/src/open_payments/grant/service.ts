@@ -36,6 +36,7 @@ export interface GrantOptions {
 
 export interface CreateOptions extends GrantOptions {
   accessToken?: string
+  expiresIn?: number
 }
 
 async function createGrant(deps: ServiceDependencies, options: CreateOptions) {
@@ -46,7 +47,10 @@ async function createGrant(deps: ServiceDependencies, options: CreateOptions) {
     accessType: options.accessType,
     accessActions: options.accessActions,
     accessToken: options.accessToken,
-    authServerId
+    authServerId,
+    expiresAt: options.expiresIn
+      ? new Date(Date.now() + options.expiresIn * 1000)
+      : undefined
   })
 }
 

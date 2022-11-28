@@ -2,6 +2,7 @@ import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 
+import { Grant } from './model'
 import { GrantOptions, GrantService } from './service'
 import { AccessType, AccessAction } from '../auth/grant'
 import { AuthServer } from '../authServer/model'
@@ -36,36 +37,36 @@ describe('Grant Service', (): void => {
   })
 
   describe('Create and Get Grant', (): void => {
-    test.each`
-      newAuthServer
-      ${false}
-      ${true}
-    `(
-      'Grant can be created and fetched (new auth server: $newAuthServer)',
-      async ({ newAuthServer }): Promise<void> => {
-        const authServerService = await deps.use('authServerService')
-        let authServerId: string | undefined
-        const authServerUrl = faker.internet.url()
-        if (newAuthServer) {
+    describe.each`
+      existingAuthServer | description
+      ${false}           | ${'new auth server'}
+      ${true}            | ${'existing auth server'}
+    `('$description', ({ existingAuthServer }): void => {
+      let authServerId: string | undefined
+      let grant: Grant | undefined
+      const authServerUrl = faker.internet.url()
+
+      beforeEach(async (): Promise<void> => {
+        if (existingAuthServer) {
+          const authServerService = await deps.use('authServerService')
+          authServerId = (await authServerService.getOrCreate(authServerUrl)).id
+        } else {
           await expect(
             AuthServer.query(knex).findOne({
               url: authServerUrl
             })
           ).resolves.toBeUndefined()
+          authServerId = undefined
+        }
+        jest.useFakeTimers()
+        jest.setSystemTime(Date.now())
+      })
+
+      afterEach(async (): Promise<void> => {
+        jest.useRealTimers()
+        if (existingAuthServer) {
+          expect(grant.authServerId).toEqual(authServerId)
         } else {
-          authServerId = (await authServerService.getOrCreate(authServerUrl)).id
-        }
-        const options: GrantOptions = {
-          authServer: authServerUrl,
-          accessType: AccessType.IncomingPayment,
-          accessActions: [AccessAction.ReadAll]
-        }
-        const grant = await grantService.create(options)
-        expect(grant).toMatchObject({
-          accessType: options.accessType,
-          accessActions: options.accessActions
-        })
-        if (newAuthServer) {
           await expect(
             AuthServer.query(knex).findOne({
               url: authServerUrl
@@ -73,12 +74,37 @@ describe('Grant Service', (): void => {
           ).resolves.toMatchObject({
             id: grant.authServerId
           })
-        } else {
-          expect(grant.authServerId).toEqual(authServerId)
         }
-        await expect(grantService.get(options)).resolves.toEqual(grant)
-      }
-    )
+      })
+
+      test.each`
+        expiresIn    | description
+        ${undefined} | ${'without expiresIn'}
+        ${600}       | ${'with expiresIn'}
+      `(
+        'Grant can be created and fetched ($description)',
+        async ({ expiresIn }): Promise<void> => {
+          const options: GrantOptions = {
+            authServer: authServerUrl,
+            accessType: AccessType.IncomingPayment,
+            accessActions: [AccessAction.ReadAll]
+          }
+          grant = await grantService.create({
+            ...options,
+            expiresIn
+          })
+          expect(grant).toMatchObject({
+            accessType: options.accessType,
+            accessActions: options.accessActions,
+            expiresAt: expiresIn
+              ? new Date(Date.now() + expiresIn * 1000)
+              : null
+          })
+          expect(grant.expired).toBe(false)
+          await expect(grantService.get(options)).resolves.toEqual(grant)
+        }
+      )
+    })
 
     test('cannot fetch non-existing grant', async (): Promise<void> => {
       const options: GrantOptions = {
