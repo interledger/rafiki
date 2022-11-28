@@ -19,7 +19,8 @@ import { createValidatorMiddleware, HttpMethod } from 'openapi'
 import {
   grantInitiationHttpsigMiddleware,
   grantContinueHttpsigMiddleware,
-  tokenHttpsigMiddleware
+  tokenHttpsigMiddleware,
+  bypassOrCallHttpsigMiddleware
 } from './signature/middleware'
 
 export interface AppContextData extends DefaultContext {
@@ -199,9 +200,10 @@ export class App {
         path: '/',
         method: HttpMethod.POST
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : grantInitiationHttpsigMiddleware,
+      bypassOrCallHttpsigMiddleware(
+        this.config.bypassSignatureValidation,
+        grantInitiationHttpsigMiddleware
+      ),
       grantRoutes.create
     )
 

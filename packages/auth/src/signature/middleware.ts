@@ -7,6 +7,7 @@ import { JWK } from 'open-payments'
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
 import { Context } from 'koa'
+import { Logger } from 'pino'
 
 export async function verifySig(
   sig: string,
@@ -276,4 +277,25 @@ export async function tokenHttpsigMiddleware(
   const grant = await grantService.get(accessToken.grantId)
   await verifySigFromBoundKey(grant, ctx)
   await next()
+}
+
+type Middleware = (ctx: AppContext, next: () => Promise<any>) => Promise<void>
+
+export function bypassOrCallHttpsigMiddleware(
+  bypassSignatureValidation: boolean,
+  middleware: Middleware
+): Middleware {
+  if (bypassSignatureValidation) {
+    return async (ctx: AppContext, next) => {
+      ctx.logger.info('Skipping httpsig validation')
+
+      ctx.clientKeyId = getSigInputKeyId(
+        ctx.headers['signature-input'] as string
+      ) //TODO: remove once workaround is found for clientKeyId definition
+
+      await next()
+    }
+  }
+
+  return middleware
 }
