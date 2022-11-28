@@ -1,4 +1,5 @@
 import {
+  createIncomingPayment,
   createIncomingPaymentRoutes,
   getIncomingPayment,
   validateIncomingPayment
@@ -13,6 +14,8 @@ import {
   silentLogger
 } from '../test/helpers'
 import nock from 'nock'
+import { CreateIncomingPaymentArgs } from '../types'
+import { PostArgs } from './requests'
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
@@ -38,6 +41,21 @@ describe('incoming-payment', (): void => {
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/incoming-payments/{id}',
         method: HttpMethod.GET
+      })
+    })
+
+    test('creates createIncomingPaymentOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/incoming-payments',
+        method: HttpMethod.POST
       })
     })
   })
@@ -89,6 +107,95 @@ describe('incoming-payment', (): void => {
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError()
+    })
+  })
+
+  describe('createIncomingPayment', (): void => {
+    test.each`
+      incomingAmount                                      | expiresAt                                      | description  | externalRef
+      ${undefined}                                        | ${undefined}                                   | ${undefined} | ${undefined}
+      ${{ assetCode: 'USD', assetScale: 2, value: '10' }} | ${new Date(Date.now() + 60_000).toISOString()} | ${'Invoice'} | ${'#INV-1'}
+    `(
+      'returns the incoming payment on success',
+      async ({
+        incomingAmount,
+        expiresAt,
+        description,
+        externalRef
+      }): Promise<void> => {
+        const incomingPayment = mockIncomingPayment({
+          incomingAmount,
+          expiresAt,
+          description,
+          externalRef
+        })
+
+        nock(baseUrl).post('/incoming-payment').reply(200, incomingPayment)
+
+        const result = await createIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/incoming-payment`,
+            body: {
+              incomingAmount,
+              expiresAt,
+              description,
+              externalRef
+            }
+          },
+          openApiValidators.successfulValidator
+        )
+
+        expect(result).toEqual(incomingPayment)
+      }
+    )
+
+    test('throws if the created incoming payment does not pass validation', async (): Promise<void> => {
+      const receivedAmount = {
+        assetCode: 'USD',
+        assetScale: 2,
+        value: '10'
+      }
+
+      const incomingPayment = mockIncomingPayment({
+        receivedAmount
+      })
+
+      nock(baseUrl).post('/incoming-payment').reply(200, incomingPayment)
+
+      await expect(() =>
+        createIncomingPayment(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payment`,
+            body: {}
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError()
+    })
+
+    test('throws if the created incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment()
+
+      nock(baseUrl).post('/incoming-payment').reply(200, incomingPayment)
+
+      await expect(() =>
+        createIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/incoming-payment`,
+            body: {}
+          },
+          openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
     })
