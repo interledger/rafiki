@@ -93,18 +93,7 @@ describe('outgoing-payment', (): void => {
     })
 
     test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
-      const outgoingPayment = mockOutgoingPayment({
-        sendAmount: {
-          assetCode: 'USD',
-          assetScale: 3,
-          value: '5'
-        },
-        sentAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: '0'
-        }
-      })
+      const outgoingPayment = mockOutgoingPayment()
 
       nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
 
