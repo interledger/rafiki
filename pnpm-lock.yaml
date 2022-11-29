@@ -352,7 +352,7 @@ importers:
       axios: ^1.1.2
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
-      http-signature-utils: link:../http-signature-utils
+      http-signature-utils: workspace:../http-signature-utils
       nock: ^13.2.9
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
