@@ -4,10 +4,12 @@ import type { SeedInstance, Account, Peering } from './parse_config'
 import {
   createPeer,
   addPeerLiquidity,
-  createPaymentPointer
+  createPaymentPointer,
+  createPaymentPointerKey
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
+import { generateJwk } from './crypto.server'
 
 export async function setupFromSeed(config: SeedInstance): Promise<void> {
   const peerResponses = await Promise.all(
@@ -52,7 +54,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
           false
         )
       }
-      const pp = await createPaymentPointer(
+      const paymentPointer = await createPaymentPointer(
         config.self.graphqlUrl,
         account.name,
         `https://${CONFIG.self.hostname}/${account.path}`,
@@ -62,11 +64,16 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
 
       await mockAccounts.setPaymentPointer(
         account.id,
-        pp.paymentPointer?.id,
-        pp.paymentPointer?.url
+        paymentPointer.id,
+        paymentPointer.url
       )
 
-      return pp
+      await createPaymentPointerKey({
+        paymentPointerId: paymentPointer.id,
+        jwk: JSON.stringify(generateJwk({ keyId: `keyid-${account.id}` }))
+      })
+
+      return paymentPointer
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
