@@ -1,6 +1,7 @@
 import {
   components as RSComponents,
-  paths as RSPaths
+  paths as RSPaths,
+  operations as RSOperations
 } from './generated/resource-server-types'
 import {
   components as ASComponents,
@@ -14,6 +15,9 @@ export type IncomingPayment =
   RSComponents['schemas']['incoming-payment-with-connection']
 export type ILPStreamConnection =
   RSComponents['schemas']['ilp-stream-connection']
+export type OutgoingPayment = RSComponents['schemas']['outgoing-payment']
+export type CreateOutgoingPaymentArgs =
+  RSOperations['create-outgoing-payment']['requestBody']['content']['application/json']
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
 export type JWKS = RSComponents['schemas']['json-web-key-set']
