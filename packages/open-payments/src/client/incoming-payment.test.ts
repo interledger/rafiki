@@ -14,8 +14,6 @@ import {
   silentLogger
 } from '../test/helpers'
 import nock from 'nock'
-import { CreateIncomingPaymentArgs } from '../types'
-import { PostArgs } from './requests'
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
