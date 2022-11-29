@@ -318,7 +318,6 @@ export function initIocContainer(
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
       receiverService: await deps.use('receiverService'),
-      grantReferenceService: await deps.use('grantReferenceService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       peerService: await deps.use('peerService')
     })

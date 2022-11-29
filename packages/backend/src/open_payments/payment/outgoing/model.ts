@@ -1,4 +1,5 @@
 import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
+import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
@@ -7,6 +8,14 @@ import { PaymentPointerSubresource } from '../../payment_pointer/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
+
+export class OutgoingPaymentGrant extends DbErrors(Model) {
+  public static get modelPaths(): string[] {
+    return [__dirname]
+  }
+  public static readonly tableName = 'outgoingPaymentGrants'
+  public id!: string
+}
 
 export class OutgoingPayment
   extends PaymentPointerSubresource
@@ -23,6 +32,8 @@ export class OutgoingPayment
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the error. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public error?: string | null
   public stateAttempts!: number
+
+  public grantLimitsId?: string
 
   public get receiver(): string {
     return this.quote.receiver
