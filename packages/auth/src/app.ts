@@ -202,7 +202,8 @@ export class App {
       }),
       bypassOrCallHttpsigMiddleware(
         this.config.bypassSignatureValidation,
-        grantInitiationHttpsigMiddleware
+        grantInitiationHttpsigMiddleware,
+        { injectClientKeyId: true }
       ),
       grantRoutes.create
     )
@@ -214,9 +215,10 @@ export class App {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : grantContinueHttpsigMiddleware,
+      bypassOrCallHttpsigMiddleware(
+        this.config.bypassSignatureValidation,
+        grantContinueHttpsigMiddleware
+      ),
       grantRoutes.continue
     )
 
@@ -227,9 +229,10 @@ export class App {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : tokenHttpsigMiddleware,
+      bypassOrCallHttpsigMiddleware(
+        this.config.bypassSignatureValidation,
+        tokenHttpsigMiddleware
+      ),
       accessTokenRoutes.rotate
     )
 
@@ -240,9 +243,10 @@ export class App {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : tokenHttpsigMiddleware,
+      bypassOrCallHttpsigMiddleware(
+        this.config.bypassSignatureValidation,
+        tokenHttpsigMiddleware
+      ),
       accessTokenRoutes.revoke
     )
 

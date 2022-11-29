@@ -47,15 +47,10 @@ async function verifySigFromClient(
   client: string,
   ctx: HttpSigContext
 ): Promise<boolean> {
-  const clientService = await ctx.container.use('clientService')
-  const clientKey = await clientService.getKey({
+  const clientKey = await getClientKeyOrThrow(ctx, {
     client,
-    keyId: ctx.clientKeyId
+    clientKeyId: ctx.clientKeyId
   })
-
-  if (!clientKey) {
-    ctx.throw(400, 'invalid client', { error: 'invalid_client' })
-  }
 
   return verifySigAndChallenge(clientKey, ctx)
 }
@@ -281,21 +276,52 @@ export async function tokenHttpsigMiddleware(
 
 type Middleware = (ctx: AppContext, next: () => Promise<any>) => Promise<void>
 
-export function bypassOrCallHttpsigMiddleware(
-  bypassSignatureValidation: boolean,
-  middleware: Middleware
-): Middleware {
-  if (bypassSignatureValidation) {
-    return async (ctx: AppContext, next) => {
-      ctx.logger.info('Skipping httpsig validation')
+export async function getClientKeyOrThrow(
+  ctx: AppContext | HttpSigContext,
+  { client, clientKeyId }: { client: string; clientKeyId: string }
+): Promise<JWK> {
+  const clientService = await ctx.container.use('clientService')
+  const clientKey = await clientService.getKey({
+    client,
+    keyId: clientKeyId
+  })
 
-      ctx.clientKeyId = getSigInputKeyId(
-        ctx.headers['signature-input'] as string
-      ) //TODO: remove once workaround is found for clientKeyId definition
-
-      await next()
-    }
+  if (!clientKey) {
+    ctx.throw(400, 'invalid client', { error: 'invalid_client' })
   }
 
-  return middleware
+  return clientKey
+}
+
+export function bypassOrCallHttpsigMiddleware(
+  bypassSignatureValidation: boolean,
+  middleware: Middleware,
+  args?: { injectClientKeyId: boolean }
+): Middleware {
+  if (!bypassSignatureValidation) {
+    return middleware
+  }
+
+  return async (ctx: AppContext, next) => {
+    ctx.logger.info('Skipping httpsig validation')
+
+    if (args?.injectClientKeyId) {
+      const clientKeyId = ctx.headers['client-key'] as string
+
+      if (!clientKeyId) {
+        ctx.throw(400, 'invalid client', { error: 'invalid_client' })
+      }
+
+      const clientPaymentPointer = ctx.request.body?.client as string
+
+      await getClientKeyOrThrow(ctx, {
+        client: clientPaymentPointer,
+        clientKeyId
+      })
+
+      ctx.clientKeyId = clientKeyId
+    }
+
+    await next()
+  }
 }
