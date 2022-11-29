@@ -7,7 +7,6 @@ import { JWK } from 'open-payments'
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
 import { Context } from 'koa'
-import { Logger } from 'pino'
 
 export async function verifySig(
   sig: string,
@@ -306,7 +305,9 @@ export function bypassOrCallHttpsigMiddleware(
     ctx.logger.info('Skipping httpsig validation')
 
     if (args?.injectClientKeyId) {
-      const clientKeyId = ctx.headers['client-key'] as string
+      const clientKeyId = getSigInputKeyId(
+        ctx.headers['signature-input'] as string
+      )
 
       if (!clientKeyId) {
         ctx.throw(400, 'invalid client', { error: 'invalid_client' })
