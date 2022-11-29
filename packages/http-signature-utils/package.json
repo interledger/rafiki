@@ -1,0 +1,24 @@
+{
+  "name": "http-signature-utils",
+  "scripts": {
+    "build": "tsc --build tsconfig.json"
+  },
+  "dependencies": {
+    "http-message-signatures": "^0.1.2",
+    "koa": "^2.13.4",
+    "koa-bodyparser": "^4.3.0",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^12.0.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/koa": "2.13.5",
+    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-json": "^2.0.20",
+    "@types/koa-logger": "^3.1.2",
+    "@types/koa-router": "^7.4.4",
+    "@types/node": "^18.7.12",
+    "@types/uuid": "^8.3.4"
+  }
+}

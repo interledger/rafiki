@@ -1,5 +1,13 @@
 import { createPublicKey, generateKeyPairSync, KeyObject } from 'crypto'
-import { JWK } from './types'
+
+type JWK = {
+  kid: string
+  alg: 'EdDSA'
+  use?: 'sig'
+  kty: 'OKP'
+  crv: 'Ed25519'
+  x: string
+}
 
 export const generateJwk = ({
   privateKey: providedPrivateKey,

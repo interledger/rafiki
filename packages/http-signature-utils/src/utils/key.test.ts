@@ -1,7 +1,7 @@
 import * as assert from 'assert'
 import * as crypto from 'crypto'
 import * as fs from 'fs'
-import { parseOrProvisionKey } from './app'
+import { parseOrProvisionKey } from './key'
 
 describe('Config', (): void => {
   describe('parseOrProvisionKey', (): void => {

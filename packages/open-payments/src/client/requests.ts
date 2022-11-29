@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
-import { createSignatureHeaders } from './signatures'
+import { createSignatureHeaders } from 'http-signature-utils'
 
 interface GetArgs {
   url: string
