@@ -13,6 +13,8 @@ export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
   path as string
 export type IncomingPayment =
   RSComponents['schemas']['incoming-payment-with-connection']
+export type CreateIncomingPaymentArgs =
+  RSOperations['create-incoming-payment']['requestBody']['content']['application/json']
 export type ILPStreamConnection =
   RSComponents['schemas']['ilp-stream-connection']
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
@@ -45,6 +47,3 @@ export const isInteractiveGrant = (
 export const isNonInteractiveGrant = (
   grant: InteractiveGrant | NonInteractiveGrant
 ): grant is NonInteractiveGrant => !!(grant as NonInteractiveGrant).access_token
-
-export type CreateIncomingPaymentArgs =
-  RSOperations['create-incoming-payment']['requestBody']['content']['application/json']

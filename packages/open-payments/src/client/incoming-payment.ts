@@ -1,7 +1,17 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
 import { BaseDeps, RouteDeps } from '.'
 import { IncomingPayment, getRSPath, CreateIncomingPaymentArgs } from '../types'
-import { get, post, GetArgs, PostArgs } from './requests'
+import { get, post } from './requests'
+
+interface GetArgs {
+  url: string
+  accessToken?: string
+}
+
+interface PostArgs<T> {
+  url: string
+  body: T
+}
 
 export interface IncomingPaymentRoutes {
   get(args: GetArgs): Promise<IncomingPayment>

@@ -4,12 +4,12 @@ import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
 import { createSignatureHeaders } from './signatures'
 
-export interface GetArgs {
+interface GetArgs {
   url: string
   accessToken?: string
 }
 
-export interface PostArgs<T> {
+interface PostArgs<T> {
   url: string
   body: T
 }
