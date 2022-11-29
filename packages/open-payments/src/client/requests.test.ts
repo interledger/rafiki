@@ -175,7 +175,35 @@ describe('requests', (): void => {
         id: 'id'
       }
 
-      nock(baseUrl).post('/grant', body).reply(status, body)
+      // https://github.com/nock/nock/issues/2200#issuecomment-1280957462
+      jest
+        .useFakeTimers({
+          doNotFake: [
+            'nextTick',
+            'setImmediate',
+            'clearImmediate',
+            'setInterval',
+            'clearInterval',
+            'setTimeout',
+            'clearTimeout'
+          ]
+        })
+        .setSystemTime(new Date())
+
+      const scope = nock(baseUrl)
+        .matchHeader('Signature', /sig1=:([a-zA-Z0-9+/]){86}==:/)
+        .matchHeader(
+          'Signature-Input',
+          `sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=${Math.floor(
+            Date.now() / 1000
+          )};keyid="${keyId}";alg="ed25519"`
+        )
+        .matchHeader('Content-Digest', /sha-512=:([a-zA-Z0-9+/]){86}==:/)
+        .matchHeader('Content-Length', 11)
+        .matchHeader('Content-Type', 'application/json')
+        .post('/grant', body)
+        // TODO: verify signature
+        .reply(status, body)
 
       await post(
         { axiosInstance, logger },
@@ -185,6 +213,7 @@ describe('requests', (): void => {
         },
         responseValidators.successfulValidator
       )
+      scope.done()
 
       expect(axiosInstance.post).toHaveBeenCalledWith(`${baseUrl}/grant`, body)
     })
