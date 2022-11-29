@@ -1,5 +1,10 @@
 {
   "name": "http-signature-utils",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "tsc --build tsconfig.json"
   },
