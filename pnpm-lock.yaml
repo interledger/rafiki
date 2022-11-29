@@ -283,6 +283,7 @@ importers:
       koa-json: ^2.0.2
       koa-logger: ^3.2.1
       koa-router: ^12.0.0
+      typescript: ^4.9.3
       uuid: ^8.3.2
     dependencies:
       http-message-signatures: 0.1.2
@@ -300,6 +301,7 @@ importers:
       '@types/koa-router': 7.4.4
       '@types/node': 18.11.9
       '@types/uuid': 8.3.4
+      typescript: 4.9.3
 
   packages/mock-account-provider:
     specifiers:
@@ -13154,6 +13156,12 @@ packages:
 
   /typescript/4.8.4:
     resolution: {integrity: sha512-QCh+85mCy+h0IGff8r5XWzOVSbBO+KfeYrMQh7NJ58QujwcE22u+NUSmUxqF+un70P9GXKxa2HCNiTTMJknyjQ==}
+    engines: {node: '>=4.2.0'}
+    hasBin: true
+    dev: true
+
+  /typescript/4.9.3:
+    resolution: {integrity: sha512-CIfGzTelbKNEnLpLdGFgdyKhG23CKdKgQPOBc+OUNrkJ2vr+KSzsSV5kq5iWhEQbok+quxgGzrAtGWCyU7tHnA==}
     engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
