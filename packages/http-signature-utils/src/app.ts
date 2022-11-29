@@ -7,15 +7,12 @@ import bodyParser from 'koa-bodyparser'
 
 import { createSignatureHeaders } from './utils/signatures'
 import { parseOrProvisionKey } from './utils/key'
-import { v4 as uuid } from 'uuid'
-import { RequestLike } from 'http-message-signatures'
 
 const app = new Koa()
 const router = new Router()
 
 // Load key
 const privateKey = parseOrProvisionKey(process.env.KEY_FILE)
-const keyId = process.env.KEY_ID || uuid()
 
 // Router
 router.get('/', async (ctx): Promise<void> => {
@@ -23,8 +20,8 @@ router.get('/', async (ctx): Promise<void> => {
 })
 
 router.post('/', async (ctx): Promise<void> => {
-  const request = ctx.request.body as RequestLike
-  if (!request.headers || !request.method || !request.url) {
+  const { request, keyId } = ctx.request.body
+  if (!keyId || !request.headers || !request.method || !request.url) {
     ctx.status = 400
     return
   }

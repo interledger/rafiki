@@ -284,7 +284,6 @@ importers:
       koa-logger: ^3.2.1
       koa-router: ^12.0.0
       typescript: ^4.9.3
-      uuid: ^8.3.2
     dependencies:
       http-message-signatures: 0.1.2
       koa: 2.13.4
@@ -292,7 +291,6 @@ importers:
       koa-json: 2.0.2
       koa-logger: 3.2.1
       koa-router: 12.0.0
-      uuid: 8.3.2
     devDependencies:
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.7
@@ -4102,7 +4100,6 @@ packages:
     resolution: {integrity: sha512-21NhEp7LjZm4zbNV5alHHmrNY4J+S7B8lYTO6CzRL8ShTMnl20Gd14dRgVhAxraLaW5iZMofox+BycbuiDvj2Q==}
     dependencies:
       '@types/koa': 2.13.5
-    dev: true
 
   /@types/koa-compose/3.2.5:
     resolution: {integrity: sha512-B8nG/OoE1ORZqCkBVsup/AKcvjdgoHnfi4pZMn5UwAPCbhk/96xyv284eBYW8JlQbQ7zDmnpFr68I/40mFoIBQ==}
