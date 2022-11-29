@@ -103,6 +103,7 @@ export type OutgoingPaymentLimit = {
   receiver: string
   sendAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
+  interval?: string
 }
 
 export type LimitData = OutgoingPaymentLimit
