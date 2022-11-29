@@ -37,7 +37,8 @@ describe('Connection Routes', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     grantReferenceService = await deps.use('grantReferenceService')
-    jestOpenAPI(await deps.use('openApi'))
+    const { resourceServerSpec } = await deps.use('openApi')
+    jestOpenAPI(resourceServerSpec)
   })
 
   const asset = {

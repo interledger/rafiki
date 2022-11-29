@@ -38,7 +38,7 @@ export interface AuthService {
 
 interface ServiceDependencies {
   authServerIntrospectionUrl: string
-  authOpenApi: OpenAPI
+  authServerSpec: OpenAPI
   logger: Logger
   validateResponse: ResponseValidator<TokenInfoJSON>
 }
@@ -50,7 +50,7 @@ export async function createAuthService(
     service: 'AuthService'
   })
   const validateResponse =
-    deps_.authOpenApi.createResponseValidator<TokenInfoJSON>({
+    deps_.authServerSpec.createResponseValidator<TokenInfoJSON>({
       path: '/introspect',
       method: HttpMethod.POST
     })

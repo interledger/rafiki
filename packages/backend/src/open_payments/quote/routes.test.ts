@@ -68,7 +68,8 @@ describe('Quote Routes', (): void => {
     config = await deps.use('config')
     quoteRoutes = await deps.use('quoteRoutes')
     quoteService = await deps.use('quoteService')
-    jestOpenAPI(await deps.use('openApi'))
+    const { resourceServerSpec } = await deps.use('openApi')
+    jestOpenAPI(resourceServerSpec)
   })
 
   beforeEach(async (): Promise<void> => {
