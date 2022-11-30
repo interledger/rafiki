@@ -65,8 +65,10 @@ services:
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.peer.yml
+      KEY_FILE: /workspace/private-key-1669714408916.pem
     volumes:
       - ./seed.peer.yml:/workspace/seed.peer.yml
+      - ./keys/private-key-1669714408916.pem:/workspace/private-key-1669714408916.pem
     depends_on:
       - peer-backend
   peer-signatures:
