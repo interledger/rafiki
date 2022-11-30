@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { v4 } from 'uuid'
+import { createContentDigestHeader } from 'httpbis-digest-headers'
 import { importJWK, exportJWK } from 'jose'
 import { JWKWithRequired } from '../client/service'
 
@@ -78,10 +79,7 @@ export async function generateSigHeaders({
   let challenge = `"@method": ${method}\n"@target-uri": ${url}\n`
   let contentDigest
   if (body) {
-    const hash = crypto.createHash('sha256')
-    hash.update(Buffer.from(JSON.stringify(body)))
-    const bodyDigest = hash.digest()
-    contentDigest = `sha-256:${bodyDigest.toString('base64')}:`
+    contentDigest = createContentDigestHeader(JSON.stringify(body), ['sha-512'])
     challenge += `"content-digest": ${contentDigest}\n`
   }
 

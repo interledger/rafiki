@@ -92,6 +92,26 @@ describe('incoming-payment', (): void => {
         )
       ).rejects.toThrowError()
     })
+
+    test('throws if incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment()
+
+      nock(baseUrl).get('/incoming-payment').reply(200, incomingPayment)
+
+      await expect(() =>
+        getIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/incoming-payment`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+    })
   })
 
   describe('validateIncomingPayment', (): void => {

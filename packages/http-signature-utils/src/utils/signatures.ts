@@ -33,9 +33,7 @@ export const createSignatureHeaders = async ({
     components.push('authorization')
   }
   if (request.body) {
-    // TODO: 'content-digest'
-    // https://github.com/interledger/rafiki/issues/655
-    components.push('content-length', 'content-type')
+    components.push('content-digest', 'content-length', 'content-type')
   }
   const { headers } = await httpsig.sign(request, {
     components,

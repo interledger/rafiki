@@ -1,6 +1,7 @@
 export {
   IncomingPayment,
   ILPStreamConnection,
+  OutgoingPayment,
   InteractiveGrant,
   NonInteractiveGrant,
   isInteractiveGrant,
