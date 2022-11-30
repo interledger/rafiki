@@ -69,18 +69,33 @@ export async function generateSigHeaders({
     body?: unknown
     authorization?: string
   }
-}): Promise<{ sigInput: string; signature: string; contentDigest?: string }> {
+}): Promise<{
+  sigInput: string
+  signature: string
+  contentDigest?: string
+  contentLength?: string
+  contentType?: string
+}> {
   let sigInputComponents = 'sig1=("@method" "@target-uri"'
   const { body, authorization } = optionalComponents ?? {}
-  if (body) sigInputComponents += ' "content-digest"'
+  if (body)
+    sigInputComponents += ' "content-digest" "content-length" "content-type"'
+
   if (authorization) sigInputComponents += ' "authorization"'
 
   const sigInput = sigInputComponents + `);created=1618884473;keyid="${keyId}"`
   let challenge = `"@method": ${method}\n"@target-uri": ${url}\n`
   let contentDigest
+  let contentLength
+  let contentType
   if (body) {
     contentDigest = createContentDigestHeader(JSON.stringify(body), ['sha-512'])
     challenge += `"content-digest": ${contentDigest}\n`
+
+    contentLength = Buffer.from(JSON.stringify(body), 'utf-8').length
+    challenge += `"content-length": ${contentLength}\n`
+    contentType = 'application/json'
+    challenge += `"content-type": ${contentType}\n`
   }
 
   if (authorization) {
@@ -92,5 +107,11 @@ export async function generateSigHeaders({
   const privateJwk = (await importJWK(privateKey)) as crypto.KeyLike
   const signature = crypto.sign(null, Buffer.from(challenge), privateJwk)
 
-  return { signature: signature.toString('base64'), sigInput, contentDigest }
+  return {
+    signature: signature.toString('base64'),
+    sigInput,
+    contentDigest,
+    contentLength,
+    contentType
+  }
 }
