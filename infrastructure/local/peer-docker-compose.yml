@@ -7,7 +7,7 @@ services:
       dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
-      local_rafiki:
+      - local_rafiki
     ports:
       - "4006:3006"
     environment:
@@ -27,7 +27,7 @@ services:
       - "4000:80"
       - "4001:3001"
     networks:
-      local_rafiki:
+      - local_rafiki
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -58,7 +58,7 @@ services:
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
-      local_rafiki:
+      - local_rafiki
     ports:
       - '3031:80'
     environment:

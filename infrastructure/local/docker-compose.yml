@@ -7,7 +7,7 @@ services:
       dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
-      rafiki:
+      - rafiki
     ports:
       - '3006:3006'
     environment:
@@ -24,7 +24,7 @@ services:
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
-      rafiki:
+      - rafiki
     ports:
       - '3030:80'
     environment:
@@ -47,7 +47,7 @@ services:
       - '3000:80'
       - '3001:3001'
     networks:
-      rafiki:
+      - rafiki
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -80,7 +80,7 @@ services:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
     networks:
-      rafiki:
+      - rafiki
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
@@ -120,7 +120,7 @@ services:
     image: 'redis:7'
     restart: unless-stopped
     networks:
-      rafiki:
+      - rafiki
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
   tigerbeetle-data: # named volumes can be managed easier using docker-compose
