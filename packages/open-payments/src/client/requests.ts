@@ -1,11 +1,9 @@
 import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
+import { createContentDigestHeader } from 'httpbis-digest-headers'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
-import {
-  createContentHeaders,
-  createSignatureHeaders
-} from 'http-signature-utils'
+import { createSignatureHeaders } from 'http-signature-utils'
 
 interface GetArgs {
   url: string
@@ -132,8 +130,12 @@ export const createAxiosInstance = (args: {
     axiosInstance.interceptors.request.use(
       async (config) => {
         if (config.data) {
-          const contentHeaders = createContentHeaders(config.data)
-          config.headers = Object.assign(config.headers, contentHeaders)
+          const data = JSON.stringify(config.data)
+          config.headers['Content-Digest'] = createContentDigestHeader(data, [
+            'sha-512'
+          ])
+          config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
+          config.headers['Content-Type'] = 'application/json'
         }
         const sigHeaders = await createSignatureHeaders({
           request: {
@@ -145,7 +147,8 @@ export const createAxiosInstance = (args: {
           privateKey: args.privateKey,
           keyId: args.keyId
         })
-        config.headers = Object.assign(config.headers, sigHeaders)
+        config.headers['Signature'] = sigHeaders['Signature']
+        config.headers['Signature-Input'] = sigHeaders['Signature-Input']
         return config
       },
       null,
