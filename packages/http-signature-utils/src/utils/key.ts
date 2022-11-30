@@ -12,6 +12,7 @@ export function parseOrProvisionKey(
       const key = crypto.createPrivateKey(fs.readFileSync(keyFile))
       const jwk = key.export({ format: 'jwk' })
       if (jwk.crv === 'Ed25519') {
+        console.log(`Key ${keyFile} loaded.`)
         return key
       } else {
         console.log('Private key is not EdDSA-Ed25519 key. Generating new key.')

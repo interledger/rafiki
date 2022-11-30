@@ -120,6 +120,17 @@ services:
     restart: unless-stopped
     networks:
       rafiki:
+  signatures:
+    build:
+      context: ../..
+      dockerfile: ./packages/http-signature-utils/Dockerfile
+    restart: always
+    ports:
+      - '3040:3000'
+    environment:
+      KEY_FILE: /workspace/private-key-1669713338825.pem
+    volumes:
+      - ./keys/private-key-1669713338825.pem:/workspace/private-key-1669713338825.pem
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
   tigerbeetle-data: # named volumes can be managed easier using docker-compose

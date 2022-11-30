@@ -69,3 +69,14 @@ services:
       - ./seed.peer.yml:/workspace/seed.peer.yml
     depends_on:
       - peer-backend
+  peer-signatures:
+    build:
+      context: ../..
+      dockerfile: ./packages/http-signature-utils/Dockerfile
+    restart: always
+    ports:
+      - '3041:3000'
+    environment:
+      KEY_FILE: /workspace/private-key-1669714408916.pem
+    volumes:
+      - ./keys/private-key-1669714408916.pem:/workspace/private-key-1669714408916.pem
