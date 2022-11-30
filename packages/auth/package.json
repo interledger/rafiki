@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "knex": "knex",
-    "build:deps": "pnpm --filter open-payments build && pnpm --filter http-signature-utils build",
+    "build:deps": "pnpm --filter open-payments build",
     "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "fetch-schemas": "./scripts/get-op-schema.sh",
