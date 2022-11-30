@@ -19,7 +19,7 @@ export async function createQuote(
     receiver: receiverUrl,
     sendAmount,
     receiveAmount,
-    grantId,
+    clientId,
     validDestination = true
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
@@ -106,7 +106,7 @@ export async function createQuote(
         Pay.Int.from(1000n) as Pay.PositiveInt
       ),
       expiresAt: new Date(Date.now() + config.quoteLifespan),
-      grantId
+      clientId
     })
     .withGraphFetched('asset')
 }

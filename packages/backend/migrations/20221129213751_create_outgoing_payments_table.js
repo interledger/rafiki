@@ -9,11 +9,10 @@ exports.up = function (knex) {
     table.string('description').nullable()
     table.string('externalRef').nullable()
 
-    table.string('grantId').nullable()
-    table.foreign('grantId').references('grantReferences.id')
+    table.string('clientId').nullable()
 
-    table.string('grantLimitsId').nullable()
-    table.foreign('grantLimitsId').references('outgoingPaymentGrants.id')
+    table.string('grantId').nullable()
+    table.foreign('grantId').references('outgoingPaymentGrants.id')
 
     // Open payments payment pointer corresponding to wallet account
     // from which to request funds for payment

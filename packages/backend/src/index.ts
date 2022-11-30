@@ -41,7 +41,6 @@ import { createAuthenticatedClient as createOpenPaymentsClient } from 'open-paym
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './paymentPointerKey/service'
-import { createGrantReferenceService } from './open_payments/grantReference/service'
 import { createReceiverService } from './open_payments/receiver/service'
 
 BigInt.prototype.toJSON = function () {
@@ -308,9 +307,6 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       quoteService: await deps.use('quoteService')
     })
-  })
-  container.singleton('grantReferenceService', async () => {
-    return createGrantReferenceService()
   })
   container.singleton('outgoingPaymentService', async (deps) => {
     return await createOutgoingPaymentService({

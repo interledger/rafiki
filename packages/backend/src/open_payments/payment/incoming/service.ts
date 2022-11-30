@@ -29,7 +29,7 @@ export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
   paymentPointerId: string
-  grantId?: string
+  clientId?: string
   description?: string
   expiresAt?: Date
   incomingAmount?: Amount
@@ -100,7 +100,7 @@ async function createIncomingPayment(
   deps: ServiceDependencies,
   {
     paymentPointerId,
-    grantId,
+    clientId,
     description,
     expiresAt,
     incomingAmount,
@@ -131,7 +131,7 @@ async function createIncomingPayment(
   const incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       paymentPointerId,
-      grantId,
+      clientId,
       assetId: paymentPointer.asset.id,
       description,
       expiresAt,

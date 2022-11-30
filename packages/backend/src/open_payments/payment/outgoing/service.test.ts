@@ -14,7 +14,6 @@ import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { CreateQuoteOptions } from '../../quote/service'
-import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import {
@@ -44,9 +43,7 @@ import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
 import { getTests } from '../../payment_pointer/model.test'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
-import { GrantReference } from '../../grantReference/model'
 import { Quote } from '../../quote/model'
-import { GrantReferenceService } from '../../grantReference/service'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -61,8 +58,8 @@ describe('OutgoingPaymentService', (): void => {
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
-  let grantReferenceService: GrantReferenceService
-  let grantRef: GrantReference
+  let grantId: string
+  let clientId: string
 
   const asset: AssetOptions = {
     scale: 9,
@@ -239,7 +236,6 @@ describe('OutgoingPaymentService', (): void => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     connectionService = await deps.use('connectionService')
-    grantReferenceService = await deps.use('grantReferenceService')
     knex = await deps.use('knex')
   })
 
@@ -264,13 +260,10 @@ describe('OutgoingPaymentService', (): void => {
       })
     ).resolves.toBeUndefined()
 
-    grantRef = await grantReferenceService.create({
-      id: uuid(),
-      clientId: appContainer.clientId
-    })
+    grantId = uuid()
+    clientId = appContainer.clientId
     incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: receiverPaymentPointer.id,
-      grantId: grantRef.id
+      paymentPointerId: receiverPaymentPointer.id
     })
     receiver = incomingPayment.url
 
@@ -289,20 +282,22 @@ describe('OutgoingPaymentService', (): void => {
 
   describe('get/getPaymentPointerPage', (): void => {
     getTests({
-      createGrant: async ({ clientId }) =>
-        createGrant(deps, {
-          clientId,
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read]
-            }
-          ]
-        }),
-      createModel: ({ grant }: { grant?: Grant }) =>
+      createModel: ({ clientId }) =>
         createOutgoingPayment(deps, {
           paymentPointerId,
-          grant,
+          grant: clientId
+            ? new Grant({
+                active: true,
+                clientId,
+                grant: uuid(),
+                access: [
+                  {
+                    type: AccessType.OutgoingPayment,
+                    actions: [AccessAction.Create, AccessAction.Read]
+                  }
+                ]
+              })
+            : undefined,
           receiver,
           sendAmount,
           validDestination: false
@@ -321,7 +316,7 @@ describe('OutgoingPaymentService', (): void => {
       beforeEach(async (): Promise<void> => {
         if (existingGrant) {
           await OutgoingPaymentGrant.query(knex).insertAndFetch({
-            id: grantRef.id
+            id: grantId
           })
         }
       })
@@ -502,8 +497,8 @@ describe('OutgoingPaymentService', (): void => {
       test('fails to create if grant is locked', async () => {
         const grant = new Grant({
           active: true,
-          clientId: grantRef.clientId,
-          grant: grantRef.id,
+          clientId,
+          grant: grantId,
           access: [
             {
               type: AccessType.OutgoingPayment,
@@ -580,8 +575,8 @@ describe('OutgoingPaymentService', (): void => {
           const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
           const grant = new Grant({
             active: true,
-            clientId: grantRef.clientId,
-            grant: grantRef.id,
+            clientId,
+            grant: grantId,
             access: [
               {
                 type: AccessType.OutgoingPayment,
@@ -608,8 +603,8 @@ describe('OutgoingPaymentService', (): void => {
           async ({ limits }): Promise<void> => {
             const grant = new Grant({
               active: true,
-              clientId: grantRef.clientId,
-              grant: grantRef.id,
+              clientId,
+              grant: grantId,
               access: [
                 {
                   type: AccessType.OutgoingPayment,
@@ -642,8 +637,8 @@ describe('OutgoingPaymentService', (): void => {
             }
             const grant = new Grant({
               active: true,
-              clientId: grantRef.clientId,
-              grant: grantRef.id,
+              clientId,
+              grant: grantId,
               access: [
                 {
                   type: AccessType.OutgoingPayment,
@@ -686,8 +681,8 @@ describe('OutgoingPaymentService', (): void => {
             }
             const grant = new Grant({
               active: true,
-              clientId: grantRef.clientId,
-              grant: grantRef.id,
+              clientId,
+              grant: grantId,
               access: [
                 {
                   type: AccessType.OutgoingPayment,
@@ -742,8 +737,8 @@ describe('OutgoingPaymentService', (): void => {
           async ({ limits }): Promise<void> => {
             const grant = new Grant({
               active: true,
-              clientId: grantRef.clientId,
-              grant: grantRef.id,
+              clientId,
+              grant: grantId,
               access: [
                 {
                   type: AccessType.OutgoingPayment,
@@ -788,8 +783,8 @@ describe('OutgoingPaymentService', (): void => {
             }
             const grant = new Grant({
               active: true,
-              clientId: grantRef.clientId,
-              grant: grantRef.id,
+              clientId,
+              grant: grantId,
               access: [
                 {
                   type: AccessType.OutgoingPayment,
@@ -916,7 +911,6 @@ describe('OutgoingPaymentService', (): void => {
       it('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
         incomingPayment = await createIncomingPayment(deps, {
           paymentPointerId: receiverPaymentPointer.id,
-          grantId: grantRef.id,
           incomingAmount: {
             value: receiveAmount.value * 2n,
             assetCode: receiverPaymentPointer.asset.code,

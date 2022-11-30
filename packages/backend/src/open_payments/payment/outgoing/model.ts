@@ -33,7 +33,7 @@ export class OutgoingPayment
   public error?: string | null
   public stateAttempts!: number
 
-  public grantLimitsId?: string
+  public grantId?: string
 
   public get receiver(): string {
     return this.quote.receiver
