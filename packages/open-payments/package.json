@@ -27,7 +27,6 @@
     "axios": "^1.1.2",
     "http-message-signatures": "^0.1.2",
     "http-signature-utils": "workspace:../http-signature-utils",
-    "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
     "openapi": "workspace:../openapi",
     "pino": "^8.4.2"
   }
