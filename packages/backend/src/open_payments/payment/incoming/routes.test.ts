@@ -18,11 +18,9 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
-import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
-import { GrantReference as GrantModel } from '../../grantReference/model'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -48,7 +46,6 @@ describe('Incoming Payment Routes', (): void => {
   let incomingAmount: Amount
   let description: string
   let externalRef: string
-  let grantRef: GrantModel
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
@@ -65,10 +62,6 @@ describe('Incoming Payment Routes', (): void => {
     }
     description = 'hello world'
     externalRef = '#123'
-    grantRef = await GrantModel.query().insert({
-      id: uuid(),
-      clientId: uuid()
-    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -81,12 +74,11 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('get/list', (): void => {
     getRouteTests({
-      createGrant: async (options) => createGrant(deps, options),
       getPaymentPointer: async () => paymentPointer,
-      createModel: async ({ grant }) =>
+      createModel: async ({ clientId }) =>
         createIncomingPayment(deps, {
           paymentPointerId: paymentPointer.id,
-          grantId: grant?.grant,
+          clientId,
           description,
           expiresAt,
           incomingAmount,
@@ -172,8 +164,8 @@ describe('Incoming Payment Routes', (): void => {
         const grant = withGrant
           ? new Grant({
               active: true,
-              grant: grantRef.id,
-              clientId: grantRef.clientId,
+              grant: uuid(),
+              clientId: uuid(),
               access: [
                 {
                   type: AccessType.IncomingPayment,
