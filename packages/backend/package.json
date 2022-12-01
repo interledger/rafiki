@@ -20,7 +20,7 @@
     "@types/koa-bodyparser": "^4.3.7",
     "@types/koa__cors": "^3.0.2",
     "@types/koa__router": "^8.0.11",
-    "@types/lodash": "^4.14.189",
+    "@types/lodash": "^4.14.191",
     "@types/luxon": "^3.0.0",
     "@types/react": "^18.0.25",
     "@types/rosie": "^0.0.40",

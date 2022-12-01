@@ -136,7 +136,7 @@ importers:
       '@types/koa-bodyparser': ^4.3.7
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
-      '@types/lodash': ^4.14.189
+      '@types/lodash': ^4.14.191
       '@types/luxon': ^3.0.0
       '@types/react': ^18.0.25
       '@types/rosie': ^0.0.40
@@ -245,7 +245,7 @@ importers:
       '@types/koa-bodyparser': 4.3.7
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
-      '@types/lodash': 4.14.189
+      '@types/lodash': 4.14.191
       '@types/luxon': 3.0.0
       '@types/react': 18.0.25
       '@types/rosie': 0.0.40
@@ -276,7 +276,7 @@ importers:
       '@remix-run/node': ^1.6.8
       '@remix-run/react': ^1.6.8
       '@remix-run/serve': ^1.6.8
-      '@types/lodash': ^4.14.184
+      '@types/lodash': ^4.14.191
       '@types/node': ^18.7.12
       '@types/react': ^18.0.25
       '@types/react-dom': ^18.0.9
@@ -307,7 +307,7 @@ importers:
     devDependencies:
       '@remix-run/dev': 1.6.8_cgxlqhaetfbjollwaaytbbpdmu
       '@remix-run/eslint-config': 1.6.8_o3mauctgtumsl5j4kwehbgms54
-      '@types/lodash': 4.14.184
+      '@types/lodash': 4.14.191
       '@types/react': 18.0.25
       '@types/react-dom': 18.0.9
       eslint: 8.22.0
@@ -4115,12 +4115,8 @@ packages:
       '@types/koa': 2.13.4
     dev: true
 
-  /@types/lodash/4.14.184:
-    resolution: {integrity: sha512-RoZphVtHbxPZizt4IcILciSWiC6dcn+eZ8oX9IWEYfDMcocdd42f7NPI6fQj+6zI8y4E0L7gu2pcZKLGTRaV9Q==}
-    dev: true
-
-  /@types/lodash/4.14.189:
-    resolution: {integrity: sha512-kb9/98N6X8gyME9Cf7YaqIMvYGnBSWqEci6tiettE6iJWH1XdJz/PO8LB0GtLCG7x8dU3KWhZT+lA1a35127tA==}
+  /@types/lodash/4.14.191:
+    resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
     dev: true
 
   /@types/long/4.0.1:
