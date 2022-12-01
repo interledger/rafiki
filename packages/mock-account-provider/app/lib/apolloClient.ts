@@ -10,7 +10,7 @@ import { CONFIG } from './parse_config'
 import { onError } from '@apollo/client/link/error'
 
 const httpLink = createHttpLink({
-  uri: CONFIG.self.graphqlUrl
+  uri: CONFIG.seed.self.graphqlUrl
 })
 
 const errorLink = onError(({ graphQLErrors }) => {
