@@ -46,16 +46,17 @@ export async function createContextWithSigHeaders(
   container?: IocContract<AppServices>
 ): Promise<AppContext> {
   const { headers, url, method } = reqOpts
-  const { signature, sigInput, contentDigest } = await generateSigHeaders({
-    privateKey,
-    keyId,
-    url,
-    method,
-    optionalComponents: {
-      body: requestBody,
-      authorization: headers.Authorization as string
-    }
-  })
+  const { signature, sigInput, contentDigest, contentLength, contentType } =
+    await generateSigHeaders({
+      privateKey,
+      keyId,
+      url,
+      method,
+      optionalComponents: {
+        body: requestBody,
+        authorization: headers.Authorization as string
+      }
+    })
 
   const ctx = createContext(
     {
@@ -64,7 +65,9 @@ export async function createContextWithSigHeaders(
         ...headers,
         'Content-Digest': contentDigest,
         Signature: signature,
-        'Signature-Input': sigInput
+        'Signature-Input': sigInput,
+        'Content-Type': contentType,
+        'Content-Length': contentLength
       }
     },
     params,

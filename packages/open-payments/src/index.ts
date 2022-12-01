@@ -2,6 +2,7 @@ export {
   GrantRequest,
   IncomingPayment,
   ILPStreamConnection,
+  OutgoingPayment,
   InteractiveGrant,
   NonInteractiveGrant,
   isInteractiveGrant,

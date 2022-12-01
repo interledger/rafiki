@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
+import { createContentDigestHeader } from 'httpbis-digest-headers'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
 import { createSignatureHeaders } from './signatures'
@@ -128,6 +129,14 @@ export const createAxiosInstance = (args: {
   if (args.privateKey && args.keyId) {
     axiosInstance.interceptors.request.use(
       async (config) => {
+        if (config.data) {
+          const data = JSON.stringify(config.data)
+          config.headers['Content-Digest'] = createContentDigestHeader(data, [
+            'sha-512'
+          ])
+          config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
+          config.headers['Content-Type'] = 'application/json'
+        }
         const sigHeaders = await createSignatureHeaders({
           request: {
             method: config.method.toUpperCase(),
@@ -144,7 +153,9 @@ export const createAxiosInstance = (args: {
       },
       null,
       {
-        runWhen: (config) => !!config.headers['Authorization']
+        runWhen: (config) =>
+          config.method.toLowerCase() === 'post' ||
+          !!config.headers['Authorization']
       }
     )
   }
