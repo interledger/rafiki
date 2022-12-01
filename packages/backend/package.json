@@ -56,7 +56,7 @@
     "@poppinss/file-generator": "^1.0.2",
     "@types/bcrypt": "^5.0.0",
     "add": "^2.0.6",
-    "ajv": "^8.11.0",
+    "ajv": "^8.11.2",
     "apollo-server-koa": "^3.10.1",
     "axios": "0.26.1",
     "base64url": "^3.0.1",
