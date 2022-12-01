@@ -1,15 +1,22 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
 import { BaseDeps, RouteDeps } from '.'
-import { getRSPath, OutgoingPayment } from '../types'
-import { get } from './requests'
+import { CreateOutgoingPaymentArgs, getRSPath, OutgoingPayment } from '../types'
+import { get, post } from './requests'
 
 interface GetArgs {
   url: string
   accessToken: string
 }
 
+interface PostArgs<T> {
+  url: string
+  body: T
+  accessToken: string
+}
+
 export interface OutgoingPaymentRoutes {
   get(args: GetArgs): Promise<OutgoingPayment>
+  create(args: PostArgs<CreateOutgoingPaymentArgs>): Promise<OutgoingPayment>
 }
 
 export const createOutgoingPaymentRoutes = (
@@ -23,12 +30,24 @@ export const createOutgoingPaymentRoutes = (
       method: HttpMethod.GET
     })
 
+  const createOutgoingPaymentOpenApiValidator =
+    openApi.createResponseValidator<OutgoingPayment>({
+      path: getRSPath('/outgoing-payments'),
+      method: HttpMethod.POST
+    })
+
   return {
     get: (args: GetArgs) =>
       getOutgoingPayment(
         { axiosInstance, logger },
         args,
         getOutgoingPaymentOpenApiValidator
+      ),
+    create: (args: PostArgs<CreateOutgoingPaymentArgs>) =>
+      createOutgoingPayment(
+        { axiosInstance, logger },
+        args,
+        createOutgoingPaymentOpenApiValidator
       )
   }
 }
@@ -39,11 +58,35 @@ export const getOutgoingPayment = async (
   validateOpenApiResponse: ResponseValidator<OutgoingPayment>
 ) => {
   const { axiosInstance, logger } = deps
-  const { url } = args
+  const { url, accessToken } = args
 
   const outgoingPayment = await get(
     { axiosInstance, logger },
-    args,
+    { url, accessToken },
+    validateOpenApiResponse
+  )
+
+  try {
+    return validateOutgoingPayment(outgoingPayment)
+  } catch (error) {
+    const errorMessage = 'Could not validate outgoing payment'
+    logger.error({ url, validateError: error?.message }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+}
+
+export const createOutgoingPayment = async (
+  deps: BaseDeps,
+  args: PostArgs<CreateOutgoingPaymentArgs>,
+  validateOpenApiResponse: ResponseValidator<OutgoingPayment>
+) => {
+  const { axiosInstance, logger } = deps
+  const { url, body, accessToken } = args
+
+  const outgoingPayment = await post(
+    { axiosInstance, logger },
+    { url, body, accessToken },
     validateOpenApiResponse
   )
 
