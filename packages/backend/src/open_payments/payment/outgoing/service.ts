@@ -13,6 +13,7 @@ import {
 } from './errors'
 import {
   OutgoingPayment,
+  OutgoingPaymentGrant,
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
@@ -31,7 +32,6 @@ import {
 } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
-import { GrantReferenceService } from '../../grantReference/service'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -49,7 +49,6 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
-  grantReferenceService: GrantReferenceService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
@@ -97,6 +96,14 @@ async function createOutgoingPayment(
   const grantId = options.grant ? options.grant.grant : undefined
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      if (grantId) {
+        await OutgoingPaymentGrant.query(trx)
+          .insert({
+            id: grantId
+          })
+          .onConflict('id')
+          .ignore()
+      }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
@@ -104,6 +111,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
+          clientId: options.grant?.clientId,
           grantId
         })
         .withGraphFetched('[quote.asset]')
@@ -252,8 +260,14 @@ async function validateGrant(
     return false
   }
 
-  //lock grant
-  await deps.grantReferenceService.lock(grant.grant, deps.knex)
+  // Lock grant
+  // TODO: update to use objection once it supports forNoKeyUpdate
+  await deps
+    .knex<OutgoingPaymentGrant>('outgoingPaymentGrants')
+    .select()
+    .where('id', grant.grant)
+    .forNoKeyUpdate()
+    .timeout(5000)
 
   if (callback) await new Promise(callback)
 

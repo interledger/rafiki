@@ -14,8 +14,6 @@ import { HttpMethod, RequestValidator } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { GrantReference } from '../grantReference/model'
-import { GrantReferenceService } from '../grantReference/service'
 import { setup, SetupOptions } from '../payment_pointer/model.test'
 import { HttpSigContext, JWKWithRequired, KeyInfo } from 'auth'
 import { generateTestKeys, generateSigHeaders } from 'auth/src/tests/signature'
@@ -39,7 +37,6 @@ describe('Auth Middleware', (): void => {
   let ctx: HttpSigContext
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: RequestValidator<IntrospectionBody>
-  let grantReferenceService: GrantReferenceService
   let mockKeyInfo: KeyInfo
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
   let generatedKeyPair: {
@@ -132,7 +129,6 @@ describe('Auth Middleware', (): void => {
       path: requestPath,
       method: HttpMethod.POST
     })
-    grantReferenceService = await deps.use('grantReferenceService')
     generatedKeyPair = await generateTestKeys()
     requestMethod = HttpMethod.POST.toUpperCase() as RequestMethod
     requestBody = {
@@ -235,33 +231,6 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
     scope.done()
   })
-  test('returns 500 for not matching clientId', async (): Promise<void> => {
-    const grant = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.Read],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      mockKeyInfo
-    )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: uuid()
-    })
-    const scope = mockAuthServer(grant.toJSON())
-    await expect(middleware(ctx, next)).rejects.toMatchObject({
-      status: 500
-    })
-    expect(next).not.toHaveBeenCalled()
-    scope.done()
-  })
 
   test.each`
     limitAccount
@@ -306,80 +275,13 @@ describe('Auth Middleware', (): void => {
         mockKeyInfo
       )
       const scope = mockAuthServer(grant.toJSON())
-      const next = jest.fn().mockImplementation(async () => {
-        await expect(
-          GrantReference.query().findById(grant.grant)
-        ).resolves.toBeUndefined()
-      })
+      const next = jest.fn()
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
       scope.done()
     }
   )
-  const types = {
-    [AccessType.IncomingPayment]: Object.values(AccessAction),
-    [AccessType.OutgoingPayment]: Object.values(AccessAction).filter(
-      (action) => action !== AccessAction.Complete
-    ),
-    [AccessType.Quote]: [
-      AccessAction.Create,
-      AccessAction.Read
-      // TODO
-      // AccessAction.ReadAll
-    ]
-  }
-  Object.values(AccessType).forEach((type) => {
-    for (const action of types[type]) {
-      const description =
-        action === AccessAction.Create
-          ? 'stores grant details'
-          : 'does not store grant details'
-      test(`${description} for ${type} on the ${action} path`, async (): Promise<void> => {
-        const actionPathMiddleware: AppMiddleware = createAuthMiddleware({
-          type: type,
-          action: action
-        })
-        const grant = new TokenInfo(
-          {
-            active: true,
-            clientId: uuid(),
-            grant: uuid(),
-            access: [
-              {
-                type: type,
-                actions: [action],
-                identifier: ctx.paymentPointer.url
-              }
-            ]
-          },
-          mockKeyInfo
-        )
-        const scope = mockAuthServer(grant.toJSON())
-        let next
-        if (action === AccessAction.Create) {
-          next = jest.fn().mockImplementation(async () => {
-            await expect(
-              GrantReference.query().findById(grant.grant)
-            ).resolves.toEqual({
-              id: grant.grant,
-              clientId: grant.clientId
-            })
-          })
-        } else {
-          next = jest.fn().mockImplementation(async () => {
-            await expect(
-              GrantReference.query().findById(grant.grant)
-            ).resolves.toBeUndefined()
-          })
-        }
-        await expect(actionPathMiddleware(ctx, next)).resolves.toBeUndefined()
-        expect(next).toHaveBeenCalled()
-        expect(ctx.grant).toEqual(grant)
-        scope.isDone()
-      })
-    }
-  })
 
   test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
     ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
@@ -388,33 +290,6 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(introspectSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
-  })
-
-  test('sets the context and calls next if grant has been seen before', async (): Promise<void> => {
-    const grant = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.Read],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      mockKeyInfo
-    )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
-    const scope = mockAuthServer(grant.toJSON())
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(next).toHaveBeenCalled()
-    expect(ctx.grant).toEqual(grant)
-    scope.done()
   })
 
   test('returns 200 with valid http signature without body', async (): Promise<void> => {

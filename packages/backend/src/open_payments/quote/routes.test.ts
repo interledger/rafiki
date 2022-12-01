@@ -19,7 +19,6 @@ import { AccessAction, AccessType, Grant } from '../auth/grant'
 import { PaymentPointer } from '../payment_pointer/model'
 import { getRouteTests } from '../payment_pointer/model.test'
 import { randomAsset } from '../../tests/asset'
-import { createGrant } from '../../tests/grant'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 
@@ -42,10 +41,10 @@ describe('Quote Routes', (): void => {
 
   const createPaymentPointerQuote = async ({
     paymentPointerId,
-    grantId
+    clientId
   }: {
     paymentPointerId: string
-    grantId: string
+    clientId: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
       paymentPointerId,
@@ -55,7 +54,7 @@ describe('Quote Routes', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale
       },
-      grantId,
+      clientId,
       validDestination: false
     })
   }
@@ -91,12 +90,11 @@ describe('Quote Routes', (): void => {
 
   describe('get', (): void => {
     getRouteTests({
-      createGrant: async (options) => createGrant(deps, options),
       getPaymentPointer: async () => paymentPointer,
-      createModel: async ({ grant }) =>
+      createModel: async ({ clientId }) =>
         createPaymentPointerQuote({
           paymentPointerId: paymentPointer.id,
-          grantId: grant?.grant
+          clientId
         }),
       get: (ctx) => quoteRoutes.get(ctx),
       getBody: (quote) => ({
@@ -163,13 +161,16 @@ describe('Quote Routes', (): void => {
     })
 
     describe.each`
-      withGrant | description
-      ${true}   | ${'grant'}
-      ${false}  | ${'no grant'}
-    `('returns the quote on success ($description)', ({ withGrant }): void => {
+      clientId     | description
+      ${uuid()}    | ${'clientId'}
+      ${undefined} | ${'no clientId'}
+    `('returns the quote on success ($description)', ({ clientId }): void => {
       beforeEach(async (): Promise<void> => {
-        grant = withGrant
-          ? await createGrant(deps, {
+        grant = clientId
+          ? new Grant({
+              active: true,
+              clientId,
+              grant: uuid(),
               access: [
                 {
                   type: AccessType.Quote,
@@ -212,7 +213,7 @@ describe('Quote Routes', (): void => {
               quote = await createQuote(deps, {
                 ...opts,
                 validDestination: false,
-                grantId: grant?.grant
+                clientId
               })
               return quote
             })
@@ -228,7 +229,7 @@ describe('Quote Routes', (): void => {
               ...options.receiveAmount,
               value: BigInt(options.receiveAmount.value)
             },
-            grantId: grant?.grant
+            clientId
           })
           expect(ctx.response).toSatisfyApiSpec()
           const quoteId = (
@@ -267,7 +268,7 @@ describe('Quote Routes', (): void => {
             quote = await createQuote(deps, {
               ...opts,
               validDestination: false,
-              grantId: grant?.grant
+              clientId
             })
             return quote
           })
@@ -275,7 +276,7 @@ describe('Quote Routes', (): void => {
         expect(quoteSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
           receiver,
-          grantId: grant?.grant
+          clientId
         })
         expect(ctx.response).toSatisfyApiSpec()
         const quoteId = (

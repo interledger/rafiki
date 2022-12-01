@@ -4,6 +4,7 @@ import { faker } from '@faker-js/faker'
 import { importJWK } from 'jose'
 import { v4 } from 'uuid'
 import { Knex } from 'knex'
+import { createContentDigestHeader } from 'httpbis-digest-headers'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -58,6 +59,8 @@ describe('Signature Service', (): void => {
       ).resolves.toBe(true)
     })
 
+    const testRequestBody = { foo: 'bar' }
+
     test.each`
       title                                 | withAuthorization | withRequestBody
       ${''}                                 | ${true}           | ${true}
@@ -71,14 +74,17 @@ describe('Signature Service', (): void => {
         const headers = {
           'Content-Type': 'application/json'
         }
-        let expectedChallenge = `"@method": GET\n"@target-uri": /test\n"content-type": application/json\n`
+        let expectedChallenge = `"@method": GET\n"@target-uri": http://example.com/test\n"content-type": application/json\n`
+        const contentDigest = createContentDigestHeader(
+          JSON.stringify(testRequestBody),
+          ['sha-512']
+        )
 
         if (withRequestBody) {
           sigInputHeader += ' "content-digest" "content-length"'
-          headers['Content-Digest'] = 'sha-256=:test-hash:'
+          headers['Content-Digest'] = contentDigest
           headers['Content-Length'] = '1234'
-          expectedChallenge +=
-            '"content-digest": sha-256=:test-hash:\n"content-length": 1234\n'
+          expectedChallenge += `"content-digest": ${contentDigest}\n"content-length": 1234\n`
         }
 
         if (withAuthorization) {
@@ -98,13 +104,13 @@ describe('Signature Service', (): void => {
           {
             headers,
             method: 'GET',
-            url: '/test'
+            url: 'example.com/test'
           },
           {},
           deps
         )
 
-        ctx.request.body = withRequestBody ? { foo: 'bar' } : {}
+        ctx.request.body = withRequestBody ? testRequestBody : {}
 
         const challenge = sigInputToChallenge(sigInputHeader, ctx)
 
@@ -126,7 +132,10 @@ describe('Signature Service', (): void => {
           {
             headers: {
               'Content-Type': 'application/json',
-              'Content-Digest': 'sha-256=:test-hash:',
+              'Content-Digest': createContentDigestHeader(
+                JSON.stringify(testRequestBody),
+                ['sha-512']
+              ),
               'Content-Length': '1234',
               'Signature-Input': sigInputHeader,
               Authorization: 'GNAP test-access-token'
@@ -138,7 +147,7 @@ describe('Signature Service', (): void => {
           deps
         )
 
-        ctx.request.body = { foo: 'bar' }
+        ctx.request.body = testRequestBody
         ctx.method = 'GET'
         ctx.request.url = '/test'
 
@@ -234,7 +243,7 @@ describe('Signature Service', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: '/',
+          url: 'http://example.com/',
           method: 'POST'
         },
         {},
@@ -268,7 +277,7 @@ describe('Signature Service', (): void => {
             Accept: 'application/json',
             Authorization: `GNAP ${grant.continueToken}`
           },
-          url: '/continue',
+          url: 'http://example.com/continue',
           method: 'POST'
         },
         { id: grant.continueId },
@@ -298,7 +307,7 @@ describe('Signature Service', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: tokenManagementUrl,
+          url: 'http://example.com' + tokenManagementUrl,
           method: 'DELETE'
         },
         { id: managementId },
@@ -329,7 +338,7 @@ describe('Signature Service', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: tokenManagementUrl,
+          url: 'http://example.com' + tokenManagementUrl,
           method
         },
         { id: managementId },
@@ -341,10 +350,11 @@ describe('Signature Service', (): void => {
         proof: 'httpsig',
         resource_server: 'test'
       }
-      await tokenHttpsigMiddleware(ctx, next)
-      expect(ctx.response.status).toEqual(400)
-      expect(ctx.response.body.error).toEqual('invalid_request')
-      expect(ctx.response.body.message).toEqual('invalid signature headers')
+      await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
+        status: 400,
+        error: 'invalid_request',
+        message: 'invalid signature headers'
+      })
     })
 
     test('middleware fails if signature is invalid', async (): Promise<void> => {
@@ -402,6 +412,34 @@ describe('Signature Service', (): void => {
       ).rejects.toMatchObject({
         status: 400,
         message: 'invalid client'
+      })
+    })
+
+    test('middleware fails if content-digest is invalid', async (): Promise<void> => {
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: '/',
+          method: 'POST'
+        },
+        {},
+        {
+          client: CLIENT
+        },
+        privateKey,
+        testClientKey.kid,
+        deps
+      )
+
+      ctx.request.body = { test: 'this is wrong' }
+
+      await expect(
+        grantInitiationHttpsigMiddleware(ctx, next)
+      ).rejects.toMatchObject({
+        status: 400,
+        message: 'invalid signature headers'
       })
     })
   })
