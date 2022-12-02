@@ -6,13 +6,13 @@ import {
   Signer
 } from 'http-message-signatures'
 
-interface SignOptions {
+export interface SignOptions {
   request: RequestLike
   privateKey: KeyLike
   keyId: string
 }
 
-interface SignatureHeaders {
+export interface SignatureHeaders {
   Signature: string
   'Signature-Input': string
 }

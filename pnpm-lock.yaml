@@ -280,6 +280,7 @@ importers:
       '@types/node': ^18.7.12
       '@types/uuid': ^8.3.4
       http-message-signatures: ^0.1.2
+      httpbis-digest-headers: github:interledger/httpbis-digest-headers
       koa: ^2.13.4
       koa-bodyparser: ^4.3.0
       koa-json: ^2.0.2
@@ -288,6 +289,7 @@ importers:
       typescript: ^4.9.3
     dependencies:
       http-message-signatures: 0.1.2
+      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       koa: 2.13.4
       koa-bodyparser: 4.3.0
       koa-json: 2.0.2

@@ -5,8 +5,8 @@ import logger from 'koa-logger'
 import json from 'koa-json'
 import bodyParser from 'koa-bodyparser'
 
-import { createSignatureHeaders } from './utils/signatures'
 import { parseOrProvisionKey } from './utils/key'
+import { createHeaders } from './utils/headers'
 
 const app = new Koa()
 const router = new Router()
@@ -21,11 +21,12 @@ router.get('/', async (ctx): Promise<void> => {
 
 router.post('/', async (ctx): Promise<void> => {
   const { request, keyId } = ctx.request.body
+  console.log(ctx.request.body)
   if (!keyId || !request.headers || !request.method || !request.url) {
     ctx.status = 400
     return
   }
-  const headers = await createSignatureHeaders({ request, privateKey, keyId })
+  const headers = await createHeaders({ request, privateKey, keyId })
   ctx.body = headers
 })
 
