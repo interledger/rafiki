@@ -1,6 +1,5 @@
 import {
   AuthenticatedClient,
-  GrantRequest,
   IncomingPayment as OpenPaymentsIncomingPayment,
   ILPStreamConnection as OpenPaymentsConnection,
   isNonInteractiveGrant
@@ -222,7 +221,7 @@ async function getIncomingPaymentGrant(
       access_token: {
         access: [
           {
-            type: grantOptions.accessType,
+            type: grantOptions.accessType as 'incoming-payment',
             actions: grantOptions.accessActions
           }
         ]
@@ -230,7 +229,7 @@ async function getIncomingPaymentGrant(
       interact: {
         start: ['redirect']
       }
-    } as GrantRequest
+    }
   })
   if (isNonInteractiveGrant(grant)) {
     return await deps.grantService.create({
