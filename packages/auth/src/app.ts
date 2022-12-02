@@ -1,5 +1,6 @@
 import { Server } from 'http'
 import { EventEmitter } from 'events'
+import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
@@ -35,6 +36,55 @@ export interface AppContextData extends DefaultContext {
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+
+interface ClientKeyContext extends AppContext {
+  clientKeyId: string
+}
+
+type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  ClientKeyContext['request'],
+  'body'
+> & {
+  body: BodyT
+  query: ParsedUrlQuery & QueryT
+}
+
+type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  ClientKeyContext,
+  'request'
+> & {
+  request: GrantRequest<BodyT, QueryT>
+}
+
+type InteractionRequest<
+  BodyT = never,
+  QueryT = ParsedUrlQuery,
+  ParamsT = { [key: string]: string }
+> = Omit<AppContext['request'], 'request'> & {
+  body: BodyT
+  query: ParsedUrlQuery & QueryT
+  params: ParamsT
+}
+
+type InteractionContext<
+  BodyT = never,
+  QueryT = ParsedUrlQuery,
+  ParamsT = { [key: string]: string }
+> = Omit<AppContext, 'request'> & {
+  request: InteractionRequest<BodyT, QueryT, ParamsT>
+}
+
+export type CreateContext<BodyT> = GrantContext<BodyT>
+export type ContinueContext<BodyT, QueryT> = GrantContext<BodyT, QueryT>
+
+export type StartContext<QueryT, ParamsT> = InteractionContext<
+  never,
+  QueryT,
+  ParamsT
+>
+export type GetContext<ParamsT> = InteractionContext<never, never, ParamsT>
+export type ChooseContext<ParamsT> = InteractionContext<never, never, ParamsT>
+export type FinishContext<ParamsT> = InteractionContext<never, never, ParamsT>
 
 export interface DatabaseCleanupRule {
   /**

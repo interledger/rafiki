@@ -1,7 +1,14 @@
 import * as crypto from 'crypto'
 import { URL } from 'url'
-import { AppContext } from '../app'
-import { GrantService } from './service'
+import {
+  CreateContext,
+  ContinueContext,
+  StartContext,
+  GetContext,
+  ChooseContext,
+  FinishContext
+} from '../app'
+import { GrantService, GrantRequest as GrantRequestBody } from './service'
 import { Grant, GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
@@ -25,15 +32,17 @@ interface ServiceDependencies extends BaseService {
 }
 
 export interface GrantRoutes {
-  create(ctx: AppContext): Promise<void>
+  create(ctx: CreateContext<GrantRequestBody>): Promise<void>
   // TODO: factor this out into separate routes service
   interaction: {
-    start(ctx: AppContext): Promise<void>
-    finish(ctx: AppContext): Promise<void>
-    acceptOrReject(ctx: AppContext): Promise<void>
-    details(ctx: AppContext): Promise<void>
+    start(ctx: StartContext<StartQuery, StartParams>): Promise<void>
+    finish(ctx: FinishContext<FinishParams>): Promise<void>
+    acceptOrReject(ctx: ChooseContext<ChooseParams>): Promise<void>
+    details(ctx: GetContext<GetParams>): Promise<void>
   }
-  continue(ctx: AppContext): Promise<void>
+  continue(
+    ctx: ContinueContext<GrantContinueBody, GrantContinueParams>
+  ): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -57,20 +66,25 @@ export function createGrantRoutes({
     config
   }
   return {
-    create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
+    create: (ctx: CreateContext<GrantRequestBody>) =>
+      createGrantInitiation(deps, ctx),
     interaction: {
-      start: (ctx: AppContext) => startInteraction(deps, ctx),
-      finish: (ctx: AppContext) => finishInteraction(deps, ctx),
-      acceptOrReject: (ctx: AppContext) => handleGrantChoice(deps, ctx),
-      details: (ctx: AppContext) => getGrantDetails(deps, ctx)
+      start: (ctx: StartContext<StartQuery, StartParams>) =>
+        startInteraction(deps, ctx),
+      finish: (ctx: FinishContext<FinishParams>) =>
+        finishInteraction(deps, ctx),
+      acceptOrReject: (ctx: ChooseContext<ChooseParams>) =>
+        handleGrantChoice(deps, ctx),
+      details: (ctx: GetContext<GetParams>) => getGrantDetails(deps, ctx)
     },
-    continue: (ctx: AppContext) => continueGrant(deps, ctx)
+    continue: (ctx: ContinueContext<GrantContinueBody, GrantContinueParams>) =>
+      continueGrant(deps, ctx)
   }
 }
 
 async function createGrantInitiation(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: CreateContext<GrantRequestBody>
 ): Promise<void> {
   if (
     !ctx.accepts('application/json') ||
@@ -171,9 +185,14 @@ async function createGrantInitiation(
   }
 }
 
+interface GetParams {
+  id: string
+  nonce: string
+}
+
 async function getGrantDetails(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: GetContext<GetParams>
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
   const { config, grantService } = deps
@@ -203,9 +222,19 @@ async function getGrantDetails(
   ctx.body = { access: grant.access }
 }
 
+interface StartQuery {
+  clientName: string
+  clientUri: string
+}
+
+interface StartParams {
+  id: string
+  nonce: string
+}
+
 async function startInteraction(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: StartContext<StartQuery, StartParams>
 ): Promise<void> {
   deps.logger.info(
     {
@@ -245,10 +274,16 @@ export enum GrantChoices {
   Reject = 'reject'
 }
 
+interface ChooseParams {
+  id: string
+  nonce: string
+  choice: string
+}
+
 // TODO: allow idp to specify the reason for rejection
 async function handleGrantChoice(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: ChooseContext<ChooseParams>
 ): Promise<void> {
   // TODO: check redis for a session
   const { id: interactId, nonce, choice } = ctx.params
@@ -309,9 +344,14 @@ async function handleGrantChoice(
   ctx.status = 202
 }
 
+interface FinishParams {
+  id: string
+  nonce: string
+}
+
 async function finishInteraction(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: FinishContext<FinishParams>
 ): Promise<void> {
   const { id: interactId, nonce } = ctx.params
   const sessionNonce = ctx.session.nonce
@@ -359,9 +399,17 @@ async function finishInteraction(
   }
 }
 
+interface GrantContinueBody {
+  interact_ref: string
+}
+
+interface GrantContinueParams {
+  id: string
+}
+
 async function continueGrant(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: ContinueContext<GrantContinueBody, GrantContinueParams>
 ): Promise<void> {
   const { id: continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
