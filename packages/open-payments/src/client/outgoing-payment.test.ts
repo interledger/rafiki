@@ -61,7 +61,7 @@ describe('outgoing-payment', (): void => {
     test('returns outgoing payment if passes validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
 
       const result = await getOutgoingPayment(
         {
@@ -69,7 +69,7 @@ describe('outgoing-payment', (): void => {
           logger
         },
         {
-          url: `${baseUrl}/outgoing-payment`,
+          url: `${baseUrl}/outgoing-payments`,
           accessToken: 'accessToken'
         },
         openApiValidators.successfulValidator
@@ -100,7 +100,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
@@ -108,7 +108,7 @@ describe('outgoing-payment', (): void => {
       ).rejects.toThrowError()
     })
 
-    test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
+    test('throws if outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
       nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
@@ -120,7 +120,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.failedValidator
@@ -133,12 +133,12 @@ describe('outgoing-payment', (): void => {
     const quoteId = `${baseUrl}/quotes/${uuid()}`
 
     test.each`
-      quoteId    | description           | externalRef
-      ${quoteId} | ${'Some description'} | ${'#INV-1'}
-      ${quoteId} | ${undefined}          | ${undefined}
+      description           | externalRef
+      ${'Some description'} | ${'#INV-1'}
+      ${undefined}          | ${undefined}
     `(
       'creates outgoing payment',
-      async ({ quoteId, description, externalRef }): Promise<void> => {
+      async ({ description, externalRef }): Promise<void> => {
         const outgoingPayment = mockOutgoingPayment({
           quoteId,
           description,
@@ -146,7 +146,7 @@ describe('outgoing-payment', (): void => {
         })
 
         const scope = nock(baseUrl)
-          .post('/outgoing-payment')
+          .post('/outgoing-payments')
           .reply(200, outgoingPayment)
 
         const result = await createOutgoingPayment(
@@ -155,7 +155,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken',
             body: {
               quoteId,
@@ -185,7 +185,7 @@ describe('outgoing-payment', (): void => {
       })
 
       const scope = nock(baseUrl)
-        .post('/outgoing-payment')
+        .post('/outgoing-payments')
         .reply(200, outgoingPayment)
 
       await expect(() =>
@@ -195,7 +195,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken',
             body: {
               quoteId: uuid()
@@ -207,11 +207,11 @@ describe('outgoing-payment', (): void => {
       scope.done()
     })
 
-    test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
+    test('throws if outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
       const scope = nock(baseUrl)
-        .post('/outgoing-payment')
+        .post('/outgoing-payments')
         .reply(200, outgoingPayment)
 
       await expect(() =>
@@ -221,7 +221,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken',
             body: {
               quoteId: uuid()

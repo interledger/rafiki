@@ -46,7 +46,7 @@ describe('incoming-payment', (): void => {
     test('returns incoming payment if passes validation', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment()
 
-      nock(baseUrl).get('/incoming-payment').reply(200, incomingPayment)
+      nock(baseUrl).get('/incoming-payments').reply(200, incomingPayment)
 
       const result = await getIncomingPayment(
         {
@@ -54,7 +54,7 @@ describe('incoming-payment', (): void => {
           logger
         },
         {
-          url: `${baseUrl}/incoming-payment`,
+          url: `${baseUrl}/incoming-payments`,
           accessToken: 'accessToken'
         },
         openApiValidators.successfulValidator
@@ -76,7 +76,7 @@ describe('incoming-payment', (): void => {
         }
       })
 
-      nock(baseUrl).get('/incoming-payment').reply(200, incomingPayment)
+      nock(baseUrl).get('/incoming-payments').reply(200, incomingPayment)
 
       await expect(() =>
         getIncomingPayment(
@@ -85,7 +85,7 @@ describe('incoming-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/incoming-payment`,
+            url: `${baseUrl}/incoming-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
@@ -96,7 +96,7 @@ describe('incoming-payment', (): void => {
     test('throws if incoming payment does not pass open api validation', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment()
 
-      nock(baseUrl).get('/incoming-payment').reply(200, incomingPayment)
+      nock(baseUrl).get('/incoming-payments').reply(200, incomingPayment)
 
       await expect(() =>
         getIncomingPayment(
@@ -105,7 +105,7 @@ describe('incoming-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/incoming-payment`,
+            url: `${baseUrl}/incoming-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.failedValidator

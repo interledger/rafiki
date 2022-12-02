@@ -65,14 +65,14 @@ describe('requests', (): void => {
             Date.now() / 1000
           )};keyid="${keyId}";alg="ed25519"`
         )
-        .get('/incoming-payment')
+        .get('/incoming-payments')
         // TODO: verify signature
         .reply(200)
 
       await get(
         { axiosInstance, logger },
         {
-          url: `${baseUrl}/incoming-payment`,
+          url: `${baseUrl}/incoming-payments`,
           accessToken: 'accessToken'
         },
         responseValidators.successfulValidator
@@ -81,7 +81,7 @@ describe('requests', (): void => {
       scope.done()
 
       expect(axiosInstance.get).toHaveBeenCalledWith(
-        `${baseUrl}/incoming-payment`,
+        `${baseUrl}/incoming-payments`,
         {
           headers: {
             Authorization: 'GNAP accessToken'
@@ -94,7 +94,7 @@ describe('requests', (): void => {
       const scope = nock(baseUrl)
         .matchHeader('Signature', (sig) => sig === undefined)
         .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
-        .get('/incoming-payment')
+        .get('/incoming-payments')
         .reply(200)
 
       await get(
@@ -107,7 +107,34 @@ describe('requests', (): void => {
       scope.done()
 
       expect(axiosInstance.get).toHaveBeenCalledWith(
-        `${baseUrl}/incoming-payment`,
+        `${baseUrl}/incoming-payments`,
+        {
+          headers: {}
+        }
+      )
+    })
+
+    test('sets queryParams correctly', async (): Promise<void> => {
+      const scope = nock(baseUrl)
+        .matchHeader('Signature', (sig) => sig === undefined)
+        .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
+        .get('/incoming-payments')
+        .reply(200)
+
+      await get(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/incoming-payments`,
+          queryParams: {
+            id: 'someId'
+          }
+        },
+        responseValidators.successfulValidator
+      )
+      scope.done()
+
+      expect(axiosInstance.get).toHaveBeenCalledWith(
+        `${baseUrl}/incoming-payments`,
         {
           headers: {}
         }
@@ -120,7 +147,7 @@ describe('requests', (): void => {
         id: 'id'
       }
 
-      nock(baseUrl).get('/incoming-payment').reply(status, body)
+      nock(baseUrl).get('/incoming-payments').reply(status, body)
 
       const responseValidatorSpy = jest.spyOn(
         responseValidators,
@@ -142,7 +169,7 @@ describe('requests', (): void => {
     })
 
     test('throws if response validator function fails', async (): Promise<void> => {
-      nock(baseUrl).get('/incoming-payment').reply(200)
+      nock(baseUrl).get('/incoming-payments').reply(200)
 
       await expect(
         get(
