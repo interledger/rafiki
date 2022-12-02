@@ -7,6 +7,7 @@ import { createSignatureHeaders } from './signatures'
 
 interface GetArgs {
   url: string
+  queryParams?: Record<string, unknown>
   accessToken?: string
 }
 interface PostArgs<T> {
@@ -20,7 +21,8 @@ export const get = async <T>(
   openApiResponseValidator: ResponseValidator<T>
 ): Promise<T> => {
   const { axiosInstance, logger } = deps
-  const { accessToken } = args
+  const { accessToken, queryParams } = args
+
 
   const requestUrl = new URL(args.url)
   if (process.env.NODE_ENV === 'development') {
@@ -35,7 +37,11 @@ export const get = async <T>(
         ? {
             Authorization: `GNAP ${accessToken}`
           }
-        : {}
+        : {},
+      params:
+        queryParams && Object.keys(queryParams).length > 0
+          ? args.queryParams
+          : {}
     })
 
     try {

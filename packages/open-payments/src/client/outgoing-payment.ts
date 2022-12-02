@@ -1,6 +1,11 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
 import { BaseDeps, RouteDeps } from '.'
-import { getRSPath, OutgoingPayment } from '../types'
+import {
+  getRSPath,
+  OutgoingPayment,
+  OutgoingPaymentPaginationResult,
+  PaginationArgs
+} from '../types'
 import { get } from './requests'
 
 interface GetArgs {
@@ -8,8 +13,15 @@ interface GetArgs {
   accessToken: string
 }
 
+interface ListArgs {
+  url: string
+  accessToken: string
+  pagination?: PaginationArgs
+}
+
 export interface OutgoingPaymentRoutes {
   get(args: GetArgs): Promise<OutgoingPayment>
+  list(args: ListArgs): Promise<OutgoingPaymentPaginationResult>
 }
 
 export const createOutgoingPaymentRoutes = (
@@ -23,12 +35,24 @@ export const createOutgoingPaymentRoutes = (
       method: HttpMethod.GET
     })
 
+  const listOutgoingPaymentOpenApiValidator =
+    openApi.createResponseValidator<OutgoingPaymentPaginationResult>({
+      path: getRSPath('/outgoing-payments'),
+      method: HttpMethod.GET
+    })
+
   return {
     get: (args: GetArgs) =>
       getOutgoingPayment(
         { axiosInstance, logger },
         args,
         getOutgoingPaymentOpenApiValidator
+      ),
+    list: (args: ListArgs) =>
+      listOutgoingPayments(
+        { axiosInstance, logger },
+        args,
+        listOutgoingPaymentOpenApiValidator
       )
   }
 }
@@ -55,6 +79,47 @@ export const getOutgoingPayment = async (
 
     throw new Error(errorMessage)
   }
+}
+
+export const listOutgoingPayments = async (
+  deps: BaseDeps,
+  args: ListArgs,
+  validateOpenApiResponse: ResponseValidator<OutgoingPaymentPaginationResult>
+) => {
+  const { axiosInstance, logger } = deps
+  const { url, accessToken } = args
+
+  const outgoingPayments = await get(
+    { axiosInstance, logger },
+    {
+      url,
+      accessToken,
+      ...(args.pagination
+        ? { queryParams: { pagination: args.pagination } }
+        : {})
+    },
+    validateOpenApiResponse
+  )
+
+  for (const outgoingPayment of outgoingPayments.result) {
+    try {
+      validateOutgoingPayment(outgoingPayment)
+    } catch (error) {
+      const errorMessage = 'Could not validate outgoing payment'
+      logger.error(
+        {
+          url,
+          validateError: error?.message,
+          outgoingPaymentId: outgoingPayment.id
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    }
+  }
+
+  return outgoingPayments
 }
 
 export const validateOutgoingPayment = (

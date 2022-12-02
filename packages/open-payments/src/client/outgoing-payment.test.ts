@@ -1,6 +1,7 @@
 import {
   createOutgoingPaymentRoutes,
   getOutgoingPayment,
+  listOutgoingPayments,
   validateOutgoingPayment
 } from './outgoing-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
@@ -9,7 +10,8 @@ import {
   defaultAxiosInstance,
   mockOutgoingPayment,
   mockOpenApiResponseValidators,
-  silentLogger
+  silentLogger,
+  mockOutgoingPaymentPaginationResult
 } from '../test/helpers'
 import nock from 'nock'
 
@@ -39,13 +41,27 @@ describe('outgoing-payment', (): void => {
         method: HttpMethod.GET
       })
     })
+
+    test('creates listOutgoingPaymentOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createOutgoingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/outgoing-payments/',
+        method: HttpMethod.GET
+      })
+    })
   })
 
   describe('getOutgoingPayment', (): void => {
     test('returns outgoing payment if passes validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
 
       const result = await getOutgoingPayment(
         {
@@ -53,7 +69,7 @@ describe('outgoing-payment', (): void => {
           logger
         },
         {
-          url: `${baseUrl}/outgoing-payment`,
+          url: `${baseUrl}/outgoing-payments`,
           accessToken: 'accessToken'
         },
         openApiValidators.successfulValidator
@@ -75,7 +91,7 @@ describe('outgoing-payment', (): void => {
         }
       })
 
-      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
 
       await expect(() =>
         getOutgoingPayment(
@@ -84,7 +100,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
@@ -95,7 +111,7 @@ describe('outgoing-payment', (): void => {
     test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
 
       await expect(() =>
         getOutgoingPayment(
@@ -104,7 +120,114 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payment`,
+            url: `${baseUrl}/outgoing-payments`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+    })
+  })
+
+  describe('listOutgoingPayments', (): void => {
+    test('returns outgoing payments without pagination args', async (): Promise<void> => {
+      const outgoingPayments = mockOutgoingPaymentPaginationResult()
+
+      const scope = nock(baseUrl)
+        .get('/outgoing-payments')
+        .reply(200, outgoingPayments)
+
+      const result = await listOutgoingPayments(
+        {
+          axiosInstance,
+          logger
+        },
+        {
+          url: `${baseUrl}/outgoing-payments`,
+          accessToken: 'accessToken'
+        },
+        openApiValidators.successfulValidator
+      )
+      expect(result).toStrictEqual(outgoingPayments)
+      scope.done()
+    })
+
+    test('returns outgoing payments with forwards pagination', async (): Promise<void> => {
+      const outgoingPayments = mockOutgoingPaymentPaginationResult({
+        result: [
+          mockOutgoingPayment(),
+          mockOutgoingPayment(),
+          mockOutgoingPayment()
+        ]
+      })
+
+      const scope = nock(baseUrl)
+        .get('/outgoing-payments')
+        .query({ pagination: { first: 3 } })
+        .reply(200, outgoingPayments)
+
+      const result = await listOutgoingPayments(
+        {
+          axiosInstance,
+          logger
+        },
+        {
+          url: `${baseUrl}/outgoing-payments`,
+          accessToken: 'accessToken',
+          pagination: {
+            first: 31
+          }
+        },
+        openApiValidators.successfulValidator
+      )
+      expect(result).toStrictEqual(outgoingPayments)
+      scope.done()
+    })
+
+    test('throws if outgoing payment does not pass validation', async (): Promise<void> => {
+      const outgoingPayment = mockOutgoingPayment({
+        sendAmount: {
+          assetCode: 'USD',
+          assetScale: 3,
+          value: '5'
+        },
+        sentAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '0'
+        }
+      })
+
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
+
+      await expect(() =>
+        getOutgoingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/outgoing-payments`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError()
+    })
+
+    test('throws is outgoing payment does not pass open api validation', async (): Promise<void> => {
+      const outgoingPayment = mockOutgoingPayment()
+
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
+
+      await expect(() =>
+        getOutgoingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/outgoing-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.failedValidator

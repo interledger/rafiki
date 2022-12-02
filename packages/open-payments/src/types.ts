@@ -18,6 +18,20 @@ export type ILPStreamConnection =
 export type OutgoingPayment = RSComponents['schemas']['outgoing-payment']
 export type CreateOutgoingPaymentArgs =
   RSOperations['create-outgoing-payment']['requestBody']['content']['application/json']
+type PaginationResult<T> = {
+  pagination: RSComponents['schemas']['page-info']
+  result: T[]
+}
+export type OutgoingPaymentPaginationResult = PaginationResult<OutgoingPayment>
+export type ForwardPagination =
+  RSComponents['schemas']['forward-pagination'] & {
+    last?: never
+  }
+export type BackwardPagination =
+  RSComponents['schemas']['backward-pagination'] & {
+    first?: never
+  }
+export type PaginationArgs = ForwardPagination | BackwardPagination
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
 export type JWKS = RSComponents['schemas']['json-web-key-set']
