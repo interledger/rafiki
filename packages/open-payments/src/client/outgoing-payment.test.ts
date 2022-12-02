@@ -130,10 +130,12 @@ describe('outgoing-payment', (): void => {
   })
 
   describe('createOutgoingPayment', (): void => {
+    const quoteId = `${baseUrl}/quotes/${uuid()}`
+
     test.each`
       quoteId   | description           | externalRef
-      ${uuid()} | ${'Some description'} | ${'#INV-1'}
-      ${uuid()} | ${undefined}          | ${undefined}
+      ${quoteId} | ${'Some description'} | ${'#INV-1'}
+      ${quoteId} | ${undefined}          | ${undefined}
     `(
       'creates outgoing payment',
       async ({ quoteId, description, externalRef }): Promise<void> => {
