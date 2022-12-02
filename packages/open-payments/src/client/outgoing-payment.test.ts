@@ -163,7 +163,6 @@ describe('outgoing-payment', (): void => {
           },
           openApiValidators.successfulValidator
         )
-        console.log({ result, outgoingPayment })
         expect(result).toEqual(outgoingPayment)
         scope.done()
       }
