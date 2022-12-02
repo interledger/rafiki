@@ -5,8 +5,24 @@ import {
   SignOptions
 } from './signatures'
 
+interface ContentHeaders {
+  'Content-Digest': string
+  'Content-Length': number
+  'Content-Type': string
+}
+
 interface Headers extends SignatureHeaders {
   'Content-Digest'?: string
+}
+
+const createContentHeaders = (body: string): ContentHeaders => {
+  return {
+    'Content-Digest': createContentDigestHeader(body.replace(/[\s\r]/g, ''), [
+      'sha-512'
+    ]),
+    'Content-Length': Buffer.from(body as string, 'utf-8').length,
+    'Content-Type': 'application/json'
+  }
 }
 
 export const createHeaders = async ({
@@ -14,16 +30,22 @@ export const createHeaders = async ({
   privateKey,
   keyId
 }: SignOptions): Promise<Headers> => {
-  const headers = {}
+  let contentHeaders: ContentHeaders
   if (request.body) {
-    const data = JSON.stringify(request.body)
-    headers['Content-Digest'] = createContentDigestHeader(data, ['sha-512'])
-    request.headers = { ...request.headers, ...headers }
+    contentHeaders = createContentHeaders(request.body as string)
+    request.headers = { ...request.headers, ...contentHeaders }
   }
   const signatureHeaders = await createSignatureHeaders({
     request,
     privateKey,
     keyId
   })
-  return { ...headers, ...signatureHeaders }
+  if (contentHeaders) {
+    return {
+      'Content-Digest': contentHeaders['Content-Digest'],
+      ...signatureHeaders
+    }
+  } else {
+    return signatureHeaders
+  }
 }

@@ -21,7 +21,6 @@ router.get('/', async (ctx): Promise<void> => {
 
 router.post('/', async (ctx): Promise<void> => {
   const { request, keyId } = ctx.request.body
-  console.log(ctx.request.body)
   if (!keyId || !request.headers || !request.method || !request.url) {
     ctx.status = 400
     return
