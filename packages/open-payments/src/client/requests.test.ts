@@ -100,34 +100,7 @@ describe('requests', (): void => {
       await get(
         { axiosInstance, logger },
         {
-          url: `${baseUrl}/incoming-payment`
-        },
-        responseValidators.successfulValidator
-      )
-      scope.done()
-
-      expect(axiosInstance.get).toHaveBeenCalledWith(
-        `${baseUrl}/incoming-payments`,
-        {
-          headers: {}
-        }
-      )
-    })
-
-    test('sets queryParams correctly', async (): Promise<void> => {
-      const scope = nock(baseUrl)
-        .matchHeader('Signature', (sig) => sig === undefined)
-        .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
-        .get('/incoming-payments')
-        .reply(200)
-
-      await get(
-        { axiosInstance, logger },
-        {
-          url: `${baseUrl}/incoming-payments`,
-          queryParams: {
-            id: 'someId'
-          }
+          url: `${baseUrl}/incoming-payments`
         },
         responseValidators.successfulValidator
       )
@@ -157,7 +130,7 @@ describe('requests', (): void => {
       await get(
         { axiosInstance, logger },
         {
-          url: `${baseUrl}/incoming-payment`
+          url: `${baseUrl}/incoming-payments`
         },
         responseValidators.successfulValidator
       )
@@ -175,7 +148,7 @@ describe('requests', (): void => {
         get(
           { axiosInstance, logger },
           {
-            url: `${baseUrl}/incoming-payment`
+            url: `${baseUrl}/incoming-payments`
           },
           responseValidators.failedValidator
         )
