@@ -133,7 +133,7 @@ describe('outgoing-payment', (): void => {
     const quoteId = `${baseUrl}/quotes/${uuid()}`
 
     test.each`
-      quoteId   | description           | externalRef
+      quoteId    | description           | externalRef
       ${quoteId} | ${'Some description'} | ${'#INV-1'}
       ${quoteId} | ${undefined}          | ${undefined}
     `(
