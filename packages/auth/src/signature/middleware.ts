@@ -1,13 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
-  verifySigFromClient,
+  verifySigAndChallenge,
   validateHttpSigHeaders,
   HttpSigContext
 } from 'http-signature-utils'
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
+
+async function verifySigFromClient(
+  client: string,
+  ctx: HttpSigContext
+): Promise<boolean> {
+  const clientService = await ctx.container.use('clientService')
+  const clientKey = await clientService.getKey({
+    client,
+    keyId: ctx.clientKeyId
+  })
+
+  if (!clientKey) {
+    ctx.throw(400, 'invalid client', { error: 'invalid_client' })
+  }
+
+  return verifySigAndChallenge(clientKey, ctx)
+}
 
 async function verifySigFromBoundKey(
   grant: Grant,

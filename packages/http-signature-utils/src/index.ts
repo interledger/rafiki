@@ -3,6 +3,6 @@ export { parseOrProvisionKey } from './utils/key'
 export { createSignatureHeaders } from './utils/signatures'
 export {
   validateHttpSigHeaders,
-  verifySigFromClient,
+  verifySigAndChallenge,
   HttpSigContext
 } from './utils/verification'

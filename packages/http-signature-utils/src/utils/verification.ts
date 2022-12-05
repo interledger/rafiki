@@ -31,34 +31,7 @@ export function validateHttpSigHeaders(ctx: Context): ctx is HttpSigContext {
   )
 }
 
-export async function verifySigFromClient(
-  client: string,
-  ctx: HttpSigContext
-): Promise<boolean> {
-  const clientService = await ctx.container.use('clientService')
-  const clientKey = await clientService.getKey({
-    client,
-    keyId: ctx.clientKeyId
-  })
-
-  if (!clientKey) {
-    ctx.throw(400, 'invalid client', { error: 'invalid_client' })
-  }
-
-  return verifySigAndChallenge(clientKey, ctx)
-}
-
-async function verifySig(
-  sig: string,
-  jwk: JWK,
-  challenge: string
-): Promise<boolean> {
-  const publicKey = (await importJWK(jwk)) as crypto.KeyLike
-  const data = Buffer.from(challenge)
-  return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
-}
-
-async function verifySigAndChallenge(
+export async function verifySigAndChallenge(
   clientKey: JWK,
   ctx: HttpSigContext
 ): Promise<boolean> {
@@ -80,6 +53,16 @@ async function verifySigAndChallenge(
   } else {
     ctx.throw(401, 'invalid signature')
   }
+}
+
+async function verifySig(
+  sig: string,
+  jwk: JWK,
+  challenge: string
+): Promise<boolean> {
+  const publicKey = (await importJWK(jwk)) as crypto.KeyLike
+  const data = Buffer.from(challenge)
+  return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
 }
 
 function sigInputToChallenge(sigInput: string, ctx: Context): string | null {
