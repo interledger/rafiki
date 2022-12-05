@@ -29,7 +29,7 @@ export const createSignatureHeaders = async ({
   keyId
 }: SignOptions): Promise<SignatureHeaders> => {
   const components = ['@method', '@target-uri']
-  if (request.headers['Authorization']) {
+  if (request.headers['Authorization'] || request.headers['authorization']) {
     components.push('authorization')
   }
   if (request.body) {
