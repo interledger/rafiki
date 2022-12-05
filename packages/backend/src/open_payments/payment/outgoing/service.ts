@@ -1,9 +1,9 @@
-import assert from 'assert'
 import {
   ForeignKeyViolationError,
   TransactionOrKnex,
   UniqueViolationError
 } from 'objection'
+
 
 import { BaseService } from '../../../shared/baseService'
 import {

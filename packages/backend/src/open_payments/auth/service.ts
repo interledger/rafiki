@@ -91,12 +91,10 @@ async function introspectToken(
       }
     )
 
-    if(!deps.validateResponse({
+    deps.validateResponse({
       status,
       body: data
-    })) {
-      throw new Error()
-    }
+    })
 
     const options: GrantOptions = {
       active: data.active,
