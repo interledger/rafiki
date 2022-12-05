@@ -43,14 +43,12 @@ export const setup = <T extends PaymentPointerContext>(
 }
 
 interface BaseTestsOptions<M> {
-  createGrant: (options: { clientId: string }) => Promise<Grant>
-  createModel: (options: { grant?: Grant }) => Promise<M>
+  createModel: (options: { clientId?: string }) => Promise<M>
   testGet: (options: GetOptions, expectedMatch?: M) => void
   testList?: (options: ListOptions, expectedMatch?: M) => void
 }
 
 const baseGetTests = <M extends PaymentPointerSubresource>({
-  createGrant,
   createModel,
   testGet,
   testList
@@ -62,33 +60,29 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
   }
 
   describe.each`
-    withGrant | description
-    ${true}   | ${'with grant'}
-    ${false}  | ${'without grant'}
+    withClientId | description
+    ${true}      | ${'with clientId'}
+    ${false}     | ${'without clientId'}
   `(
     'Common PaymentPointerSubresource get/getPaymentPointerPage ($description)',
-    ({ withGrant }): void => {
-      const grantClientId = uuid()
+    ({ withClientId }): void => {
+      const resourceClientId = uuid()
 
       describe.each`
-        clientId         | match    | description
-        ${grantClientId} | ${true}  | ${GetOption.Matching}
-        ${uuid()}        | ${false} | ${GetOption.Conflicting}
-        ${undefined}     | ${true}  | ${GetOption.Unspecified}
+        clientId            | match    | description
+        ${resourceClientId} | ${true}  | ${GetOption.Matching}
+        ${uuid()}           | ${false} | ${GetOption.Conflicting}
+        ${undefined}        | ${true}  | ${GetOption.Unspecified}
       `('$description clientId', ({ clientId, match, description }): void => {
-        // Do not test matching clientId if model has no grant
-        if (withGrant || description !== GetOption.Matching) {
+        // Do not test matching clientId if model has no clientId
+        if (withClientId || description !== GetOption.Matching) {
           let model: M
 
           // This beforeEach needs to be inside the above if statement to avoid:
           // Invalid: beforeEach() may not be used in a describe block containing no tests.
           beforeEach(async (): Promise<void> => {
             model = await createModel({
-              grant: withGrant
-                ? await createGrant({
-                    clientId: grantClientId
-                  })
-                : undefined
+              clientId: withClientId ? resourceClientId : undefined
             })
           })
           describe.each`
@@ -160,13 +154,11 @@ type TestsOptions<M> = Omit<BaseTestsOptions<M>, 'testGet' | 'testList'> & {
 }
 
 export const getTests = <M extends PaymentPointerSubresource>({
-  createGrant,
   createModel,
   get,
   list
 }: TestsOptions<M>): void => {
   baseGetTests({
-    createGrant,
     createModel,
     testGet: (options, expectedMatch) =>
       expect(get(options)).resolves.toEqual(expectedMatch),
@@ -203,7 +195,6 @@ type RouteTestsOptions<M> = Omit<
 }
 
 export const getRouteTests = <M extends PaymentPointerSubresource>({
-  createGrant,
   getPaymentPointer,
   createModel,
   get,
@@ -240,7 +231,6 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   }
 
   baseGetTests({
-    createGrant,
     createModel,
     testGet: async ({ id, paymentPointerId, clientId }, expectedMatch) => {
       const paymentPointer = await getPaymentPointer()
