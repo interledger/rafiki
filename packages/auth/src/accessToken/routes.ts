@@ -1,6 +1,6 @@
 import { Logger } from 'pino'
 import { Access } from '../access/model'
-import { AppContext } from '../app'
+import { IntrospectContext, RevokeContext, RotateContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
@@ -14,9 +14,9 @@ interface ServiceDependencies {
 }
 
 export interface AccessTokenRoutes {
-  introspect(ctx: AppContext): Promise<void>
-  revoke(ctx: AppContext): Promise<void>
-  rotate(ctx: AppContext): Promise<void>
+  introspect(ctx: IntrospectContext<IntrospectBody>): Promise<void>
+  revoke(ctx: RevokeContext<ManageParams>): Promise<void>
+  rotate(ctx: RotateContext<ManageParams>): Promise<void>
 }
 
 export function createAccessTokenRoutes(
@@ -27,15 +27,20 @@ export function createAccessTokenRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    introspect: (ctx: AppContext) => introspectToken(deps, ctx),
-    revoke: (ctx: AppContext) => revokeToken(deps, ctx),
-    rotate: (ctx: AppContext) => rotateToken(deps, ctx)
+    introspect: (ctx: IntrospectContext<IntrospectBody>) =>
+      introspectToken(deps, ctx),
+    revoke: (ctx: RevokeContext<ManageParams>) => revokeToken(deps, ctx),
+    rotate: (ctx: RotateContext<ManageParams>) => rotateToken(deps, ctx)
   }
+}
+
+interface IntrospectBody {
+  access_token: string
 }
 
 async function introspectToken(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: IntrospectContext<IntrospectBody>
 ): Promise<void> {
   const { body } = ctx.request
   const introspectionResult = await deps.accessTokenService.introspect(
@@ -66,9 +71,13 @@ function introspectionToBody(result: Introspection) {
   }
 }
 
+interface ManageParams {
+  id: string
+}
+
 async function revokeToken(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: RevokeContext<ManageParams>
 ): Promise<void> {
   const { id: managementId } = ctx.params
   await deps.accessTokenService.revoke(managementId)
@@ -77,7 +86,7 @@ async function revokeToken(
 
 async function rotateToken(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: RotateContext<ManageParams>
 ): Promise<void> {
   // TODO: verify Authorization: GNAP ${accessToken} contains correct token value
   const { id: managementId } = ctx.params

@@ -60,7 +60,7 @@ type InteractionRequest<
   BodyT = never,
   QueryT = ParsedUrlQuery,
   ParamsT = { [key: string]: string }
-> = Omit<AppContext['request'], 'request'> & {
+> = Omit<AppContext['request'], 'body'> & {
   body: BodyT
   query: ParsedUrlQuery & QueryT
   params: ParamsT
@@ -74,6 +74,28 @@ type InteractionContext<
   request: InteractionRequest<BodyT, QueryT, ParamsT>
 }
 
+type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
+  body?: BodyT
+}
+
+type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
+  request: TokenRequest<BodyT>
+}
+
+type ManagementRequest<ParamsT = { [key: string]: string }> = Omit<
+  AppContext['request'],
+  'body'
+> & {
+  params?: ParamsT
+}
+
+type ManagementContext<ParamsT = { [key: string]: string }> = Omit<
+  AppContext,
+  'request'
+> & {
+  request: ManagementRequest<ParamsT>
+}
+
 export type CreateContext<BodyT> = GrantContext<BodyT>
 export type ContinueContext<BodyT, QueryT> = GrantContext<BodyT, QueryT>
 
@@ -85,6 +107,10 @@ export type StartContext<QueryT, ParamsT> = InteractionContext<
 export type GetContext<ParamsT> = InteractionContext<never, never, ParamsT>
 export type ChooseContext<ParamsT> = InteractionContext<never, never, ParamsT>
 export type FinishContext<ParamsT> = InteractionContext<never, never, ParamsT>
+
+export type IntrospectContext<BodyT> = TokenContext<BodyT>
+export type RevokeContext<ParamsT> = ManagementContext<ParamsT>
+export type RotateContext<ParamsT> = ManagementContext<ParamsT>
 
 export interface DatabaseCleanupRule {
   /**
