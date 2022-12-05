@@ -57,6 +57,7 @@ importers:
       '@types/uuid': ^8.3.4
       ajv: ^8.11.0
       axios: ^0.27.2
+      http-signature-utils: workspace:../http-signature-utils
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
       jose: ^4.9.0
@@ -83,6 +84,7 @@ importers:
       '@koa/router': 12.0.0
       ajv: 8.11.0
       axios: 0.27.2
+      http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       jose: 4.9.0
       knex: 0.95.15_pg@8.7.3
@@ -281,6 +283,7 @@ importers:
       '@types/uuid': ^8.3.4
       http-message-signatures: ^0.1.2
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
+      jose: ^4.9.0
       koa: ^2.13.4
       koa-bodyparser: ^4.3.0
       koa-json: ^2.0.2
@@ -290,6 +293,7 @@ importers:
     dependencies:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
+      jose: 4.9.0
       koa: 2.13.4
       koa-bodyparser: 4.3.0
       koa-json: 2.0.2

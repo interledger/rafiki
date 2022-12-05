@@ -1,6 +1,6 @@
 import { createPublicKey, generateKeyPairSync, KeyObject } from 'crypto'
 
-type JWK = {
+export type JWK = {
   kid: string
   alg: 'EdDSA'
   use?: 'sig'
