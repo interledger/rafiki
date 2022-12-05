@@ -66,7 +66,7 @@ export interface GrantJSON {
 
 export class Grant {
   constructor(options: GrantOptions) {
-    if(!options.access && options.active) {
+    if (!options.access && options.active) {
       throw new Error()
     }
     this.active = options.active
@@ -132,7 +132,7 @@ export function getInterval(
   target: Date
 ): Interval | undefined {
   const parts = repeatingInterval.split('/')
-  if(parts.length !== 3) {
+  if (parts.length !== 3) {
     throw new Error()
   }
 

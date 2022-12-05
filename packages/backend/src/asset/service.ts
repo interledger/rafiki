@@ -94,7 +94,7 @@ async function updateAsset(
   deps: ServiceDependencies,
   { id, withdrawalThreshold }: UpdateOptions
 ): Promise<Asset | AssetError> {
-  if(!deps.knex) {
+  if (!deps.knex) {
     throw new Error('Knex undefined')
   }
   try {
@@ -126,7 +126,7 @@ async function getOrCreateAsset(
     return asset
   } else {
     const asset = await createAsset(deps, options)
-    if(isAssetError(asset)) {
+    if (isAssetError(asset)) {
       throw new Error()
     }
     return asset

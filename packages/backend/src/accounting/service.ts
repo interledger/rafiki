@@ -379,8 +379,8 @@ export async function createTransfer(
           deps,
           destinationAccount.id
         )
-        
-        if(totalReceived === undefined) {
+
+        if (totalReceived === undefined) {
           throw new Error()
         }
 

@@ -24,12 +24,14 @@ export async function createQuote(
 ): Promise<Quote> {
   const paymentPointerService = await deps.use('paymentPointerService')
   const paymentPointer = await paymentPointerService.get(paymentPointerId)
-  if(!paymentPointer) {
+  if (!paymentPointer) {
     throw new Error()
   }
-  if(sendAmount &&
+  if (
+    sendAmount &&
     (paymentPointer.asset.code !== sendAmount.assetCode ||
-      paymentPointer.asset.scale !== sendAmount.assetScale)) {
+      paymentPointer.asset.scale !== sendAmount.assetScale)
+  ) {
     throw new Error()
   }
 
@@ -38,19 +40,23 @@ export async function createQuote(
   if (validDestination) {
     const receiverService = await deps.use('receiverService')
     const receiver = await receiverService.get(receiverUrl)
-    if(!receiver) {
+    if (!receiver) {
       throw new Error()
     }
-    if(!receiver.incomingAmount && !receiveAmount && !sendAmount) {
+    if (!receiver.incomingAmount && !receiveAmount && !sendAmount) {
       throw new Error()
     }
     if (receiveAmount) {
-      if(receiver.assetCode !== receiveAmount.assetCode ||
-        receiver.assetScale !== receiveAmount.assetScale) {
+      if (
+        receiver.assetCode !== receiveAmount.assetCode ||
+        receiver.assetScale !== receiveAmount.assetScale
+      ) {
         throw new Error()
       }
-      if(receiver.incomingAmount &&
-        receiveAmount.value > receiver.incomingAmount.value) {
+      if (
+        receiver.incomingAmount &&
+        receiveAmount.value > receiver.incomingAmount.value
+      ) {
         throw new Error()
       }
     } else {
@@ -71,7 +77,7 @@ export async function createQuote(
   }
 
   if (sendAmount) {
-    if(!receiveAsset) {
+    if (!receiveAsset) {
       throw new Error()
     }
     receiveAmount = {
@@ -82,7 +88,7 @@ export async function createQuote(
       assetScale: receiveAsset.scale
     }
   } else {
-    if(!receiveAmount) {
+    if (!receiveAmount) {
       throw new Error()
     }
     sendAmount = {

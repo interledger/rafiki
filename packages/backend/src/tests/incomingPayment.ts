@@ -11,7 +11,7 @@ export async function createIncomingPayment(
 ): Promise<IncomingPayment> {
   const incomingPaymentService = await deps.use('incomingPaymentService')
   const incomingPaymentOrError = await incomingPaymentService.create(options)
-  if(isIncomingPaymentError(incomingPaymentOrError)) {
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
     throw new Error()
   }
 

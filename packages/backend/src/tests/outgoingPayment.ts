@@ -35,7 +35,7 @@ export async function createOutgoingPayment(
     ...options,
     quoteId: quote.id
   })
-  if(isOutgoingPaymentError(outgoingPaymentOrError)) {
+  if (isOutgoingPaymentError(outgoingPaymentOrError)) {
     throw new Error()
   }
 

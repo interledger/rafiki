@@ -212,7 +212,7 @@ async function handleDeactivated(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ): Promise<void> {
-  if(!incomingPayment.processAt) {
+  if (!incomingPayment.processAt) {
     throw new Error()
   }
   try {

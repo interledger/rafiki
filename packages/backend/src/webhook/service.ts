@@ -45,7 +45,7 @@ async function getWebhookEvent(
 async function processNextWebhookEvent(
   deps_: ServiceDependencies
 ): Promise<string | undefined> {
-  if(!deps_.knex) {
+  if (!deps_.knex) {
     throw new Error('Knex undefined')
   }
   return deps_.knex.transaction(async (trx) => {

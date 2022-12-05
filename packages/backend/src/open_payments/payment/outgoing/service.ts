@@ -4,7 +4,6 @@ import {
   UniqueViolationError
 } from 'objection'
 
-
 import { BaseService } from '../../../shared/baseService'
 import {
   FundingError,
@@ -283,7 +282,7 @@ async function validateGrant(
         const totalSent = await deps.accountingService.getTotalSent(
           grantPayment.id
         )
-        if(totalSent === undefined) {
+        if (totalSent === undefined) {
           throw new Error()
         }
         if (totalSent === BigInt(0)) {
@@ -376,9 +375,11 @@ async function getPaymentPointerPage(
   )
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
-    try { 
-      if(amounts[i] === undefined &&
-        payment.state !== OutgoingPaymentState.Funding) {
+    try {
+      if (
+        amounts[i] === undefined &&
+        payment.state !== OutgoingPaymentState.Funding
+      ) {
         throw new Error()
       }
       payment.sentAmount = {

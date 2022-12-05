@@ -69,7 +69,7 @@ export interface OpenAPI {
 
 class OpenAPIImpl implements OpenAPI {
   constructor(spec: OpenAPIV3_1.Document) {
-    if(!spec.paths) {
+    if (!spec.paths) {
       throw new Error()
     }
     this.paths = spec.paths as Paths
@@ -78,7 +78,7 @@ class OpenAPIImpl implements OpenAPI {
 
   public createRequestValidator<T>({ path, method }: RequestOptions) {
     const operation = this.paths[path]?.[method]
-    if(!operation) {
+    if (!operation) {
       throw new Error()
     }
 
@@ -126,7 +126,7 @@ class OpenAPIImpl implements OpenAPI {
 
   public createResponseValidator<T>({ path, method }: RequestOptions) {
     const responses = this.paths[path]?.[method]?.responses
-    if(!responses) {
+    if (!responses) {
       throw new Error()
     }
 

@@ -31,7 +31,7 @@ export async function createPaymentPointer(
       options.url || `https://${faker.internet.domainName()}/.well-known/pay`,
     asset: options.asset || randomAsset()
   })) as MockPaymentPointer
-  if(isPaymentPointerError(paymentPointerOrError)) {
+  if (isPaymentPointerError(paymentPointerOrError)) {
     throw new Error()
   }
   if (options.createLiquidityAccount) {

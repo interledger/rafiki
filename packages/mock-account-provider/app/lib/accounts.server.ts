@@ -53,7 +53,7 @@ export class AccountProvider implements AccountsServer {
 
     const acc = this.accounts.get(id)
 
-    if(!acc) {
+    if (!acc) {
       throw new Error()
     }
 
@@ -116,7 +116,7 @@ export class AccountProvider implements AccountsServer {
 
     const acc = this.accounts.get(id)
 
-    if(!acc) {
+    if (!acc) {
       throw new Error()
     }
 
@@ -143,8 +143,8 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    
-    if(!acc) {
+
+    if (!acc) {
       throw new Error()
     }
 
@@ -176,8 +176,8 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    
-    if(!acc) {
+
+    if (!acc) {
       throw new Error()
     }
 
@@ -193,8 +193,8 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    
-    if(!acc) {
+
+    if (!acc) {
       throw new Error()
     }
 
@@ -214,8 +214,8 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    
-    if(!acc) {
+
+    if (!acc) {
       throw new Error()
     }
 
@@ -235,8 +235,8 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    
-    if(!acc) {
+
+    if (!acc) {
       throw new Error()
     }
 

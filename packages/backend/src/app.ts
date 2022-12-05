@@ -296,7 +296,7 @@ export class App {
       for (const method in openApi.paths[path]) {
         if (isHttpMethod(method)) {
           const action = toAction({ path, method })
-          if(!action) {
+          if (!action) {
             throw new Error()
           }
 

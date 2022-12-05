@@ -251,11 +251,11 @@ export async function startQuote(
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
     // Outgoing payments' sendAmount or receiveAmount should never be
     // zero or negative.
-    if(quote.maxSourceAmount <= BigInt(0)) {
+    if (quote.maxSourceAmount <= BigInt(0)) {
       throw new Error()
     }
 
-    if(quote.minDeliveryAmount <= BigInt(0)) {
+    if (quote.minDeliveryAmount <= BigInt(0)) {
       throw new Error()
     }
 

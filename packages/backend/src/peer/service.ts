@@ -155,7 +155,7 @@ async function updatePeer(
     return PeerError.InvalidStaticIlpAddress
   }
 
-  if(!deps.knex) {
+  if (!deps.knex) {
     throw new Error('Knex undefined')
   }
 

@@ -319,7 +319,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
       if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
         return responses[LiquidityError.InvalidId]
       }
-      if(!event.data.payment?.sendAmount) {
+      if (!event.data.payment?.sendAmount) {
         throw new Error()
       }
       const outgoingPaymentService = await ctx.container.use(
@@ -368,7 +368,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
       }
       const assetService = await ctx.container.use('assetService')
       const asset = await assetService.getById(event.withdrawal.assetId)
-      if(!asset) {
+      if (!asset) {
         throw new Error()
       }
       const accountingService = await ctx.container.use('accountingService')

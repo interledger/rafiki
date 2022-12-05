@@ -9,10 +9,10 @@ export function toTigerbeetleId(id: AccountId): bigint {
   if (typeof id === 'bigint') {
     return id
   }
-  if(!validateId(id)) {
+  if (!validateId(id)) {
     throw new Error()
   }
-  
+
   return uuidToBigInt(id)
 }
 
