@@ -130,7 +130,9 @@ describe('incoming-payment', (): void => {
           externalRef
         })
 
-        nock(baseUrl).post('/incoming-payment').reply(200, incomingPayment)
+        const scope = nock(baseUrl)
+          .post('/incoming-payment')
+          .reply(200, incomingPayment)
 
         const result = await createIncomingPayment(
           {
@@ -144,38 +146,46 @@ describe('incoming-payment', (): void => {
               expiresAt,
               description,
               externalRef
-            }
+            },
+            accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
         )
 
+        scope.done()
         expect(result).toEqual(incomingPayment)
       }
     )
 
     test('throws if the created incoming payment does not pass validation', async (): Promise<void> => {
-      const receivedAmount = {
+      const amount = {
         assetCode: 'USD',
         assetScale: 2,
         value: '10'
       }
 
       const incomingPayment = mockIncomingPayment({
-        receivedAmount
+        incomingAmount: amount,
+        receivedAmount: amount,
+        completed: false
       })
 
-      nock(baseUrl).post('/incoming-payment').reply(200, incomingPayment)
+      const scope = nock(baseUrl)
+        .post('/incoming-payment')
+        .reply(200, incomingPayment)
 
       await expect(() =>
         createIncomingPayment(
           { axiosInstance, logger },
           {
             url: `${baseUrl}/incoming-payment`,
-            body: {}
+            body: {},
+            accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
         )
       ).rejects.toThrowError()
+      scope.done()
     })
 
     test('throws if the created incoming payment does not pass open api validation', async (): Promise<void> => {
@@ -191,7 +201,8 @@ describe('incoming-payment', (): void => {
           },
           {
             url: `${baseUrl}/incoming-payment`,
-            body: {}
+            body: {},
+            accessToken: 'accessToken'
           },
           openApiValidators.failedValidator
         )

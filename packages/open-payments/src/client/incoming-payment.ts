@@ -5,12 +5,13 @@ import { get, post } from './requests'
 
 interface GetArgs {
   url: string
-  accessToken?: string
+  accessToken: string
 }
 
 interface PostArgs<T> {
   url: string
   body: T
+  accessToken: string
 }
 
 export interface IncomingPaymentRoutes {
