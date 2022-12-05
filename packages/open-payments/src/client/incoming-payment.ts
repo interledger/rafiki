@@ -91,7 +91,7 @@ export const createIncomingPayment = async (
   )
 
   try {
-    return validateIncomingPayment(incomingPayment)
+    return validateCreatedIncomingPayment(incomingPayment)
   } catch (error) {
     const errorMessage = 'Could not validate incoming Payment'
     logger.error({ url, validateError: error?.message }, errorMessage)
@@ -134,4 +134,16 @@ export const validateIncomingPayment = (
   }
 
   return payment
+}
+
+export const validateCreatedIncomingPayment = (
+  payment: IncomingPayment
+): IncomingPayment => {
+  const { receivedAmount } = payment
+
+  if (BigInt(receivedAmount.value) !== BigInt(0)) {
+    throw new Error('Received amount is a non-zero value.')
+  }
+
+  return validateIncomingPayment(payment)
 }

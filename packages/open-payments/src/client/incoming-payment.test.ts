@@ -2,6 +2,7 @@ import {
   createIncomingPayment,
   createIncomingPaymentRoutes,
   getIncomingPayment,
+  validateCreatedIncomingPayment,
   validateIncomingPayment
 } from './incoming-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
@@ -354,6 +355,46 @@ describe('incoming-payment', (): void => {
 
       expect(() => validateIncomingPayment(incomingPayment)).toThrow(
         'Stream connection asset information does not match incoming payment asset information'
+      )
+    })
+  })
+
+  describe('validateCreatedIncomingPayment', (): void => {
+    test('returns the created incoming payment if it passes validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        incomingAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '5'
+        },
+        receivedAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '0'
+        }
+      })
+
+      expect(validateCreatedIncomingPayment(incomingPayment)).toStrictEqual(
+        incomingPayment
+      )
+    })
+
+    test('throws if received amount is a non-zero value for a newly created incoming payment', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        incomingAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '5'
+        },
+        receivedAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '1'
+        }
+      })
+
+      expect(() => validateCreatedIncomingPayment(incomingPayment)).toThrow(
+        'Received amount is a non-zero value.'
       )
     })
   })
