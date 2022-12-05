@@ -8,7 +8,9 @@ export enum AccessType {
 export enum Action {
   Create = 'create',
   Read = 'read',
+  ReadAll = 'read-all',
   List = 'list',
+  ListAll = 'list-all',
   Complete = 'complete'
 }
 
