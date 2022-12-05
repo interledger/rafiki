@@ -139,10 +139,14 @@ export const validateIncomingPayment = (
 export const validateCreatedIncomingPayment = (
   payment: IncomingPayment
 ): IncomingPayment => {
-  const { receivedAmount } = payment
+  const { receivedAmount, completed } = payment
 
   if (BigInt(receivedAmount.value) !== BigInt(0)) {
     throw new Error('Received amount is a non-zero value.')
+  }
+
+  if (completed === true) {
+    throw new Error('Can not create a completed incoming payment.')
   }
 
   return validateIncomingPayment(payment)

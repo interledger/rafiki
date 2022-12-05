@@ -397,5 +397,20 @@ describe('incoming-payment', (): void => {
         'Received amount is a non-zero value.'
       )
     })
+
+    test('throws if the created incoming payment is completed', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        incomingAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '5'
+        },
+        completed: true
+      })
+
+      expect(() => validateCreatedIncomingPayment(incomingPayment)).toThrow(
+        'Can not create a completed incoming payment.'
+      )
+    })
   })
 })
