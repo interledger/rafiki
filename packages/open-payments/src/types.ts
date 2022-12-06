@@ -17,6 +17,9 @@ export type CreateIncomingPaymentArgs =
   RSOperations['create-incoming-payment']['requestBody']['content']['application/json']
 export type ILPStreamConnection =
   RSComponents['schemas']['ilp-stream-connection']
+export type OutgoingPayment = RSComponents['schemas']['outgoing-payment']
+export type CreateOutgoingPaymentArgs =
+  RSOperations['create-outgoing-payment']['requestBody']['content']['application/json']
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
 export type JWKS = RSComponents['schemas']['json-web-key-set']

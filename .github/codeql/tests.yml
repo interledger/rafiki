@@ -1,0 +1,7 @@
+name: "CodeQL test files config"
+
+query-filters:
+  - exclude:
+      id: js/hardcoded-credentials
+paths:
+  - '**/*.test.ts'

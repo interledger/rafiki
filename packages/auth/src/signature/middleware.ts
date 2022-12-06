@@ -3,6 +3,7 @@
 import * as crypto from 'crypto'
 import { importJWK } from 'jose'
 import { JWK } from 'open-payments'
+import { verifyContentDigest } from 'httpbis-digest-headers'
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
@@ -105,12 +106,21 @@ function validateSigInputComponents(
     if (component !== component.toLowerCase()) return false
   }
 
+  const isValidContentDigest =
+    !sigInputComponents.includes('content-digest') ||
+    (!!ctx.headers['content-digest'] &&
+      ctx.request.body &&
+      Object.keys(ctx.request.body).length > 0 &&
+      sigInputComponents.includes('content-digest') &&
+      verifyContentDigest(
+        JSON.stringify(ctx.request.body),
+        ctx.headers['content-digest'] as string
+      ))
+
   return !(
+    !isValidContentDigest ||
     !sigInputComponents.includes('@method') ||
     !sigInputComponents.includes('@target-uri') ||
-    (ctx.request.body &&
-      Object.keys(ctx.request.body).length > 0 &&
-      !sigInputComponents.includes('content-digest')) ||
     (ctx.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )
@@ -134,7 +144,7 @@ export function sigInputToChallenge(
     if (component === '@method') {
       signatureBase += `"@method": ${ctx.request.method}\n`
     } else if (component === '@target-uri') {
-      signatureBase += `"@target-uri": ${ctx.request.url}\n`
+      signatureBase += `"@target-uri": ${ctx.request.href}\n`
     } else {
       signatureBase += `"${component}": ${ctx.headers[component]}\n`
     }
@@ -178,12 +188,7 @@ export async function grantContinueHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateHttpSigHeaders(ctx)) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
+    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const continueToken = ctx.headers['authorization'].replace(
@@ -226,12 +231,7 @@ export async function grantInitiationHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateHttpSigHeaders(ctx)) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
+    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const { body } = ctx.request
@@ -251,12 +251,7 @@ export async function tokenHttpsigMiddleware(
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateHttpSigHeaders(ctx)) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_request',
-      message: 'invalid signature headers'
-    }
-    return
+    ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const accessTokenService = await ctx.container.use('accessTokenService')

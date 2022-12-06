@@ -1,5 +1,4 @@
 import { Model, Page } from 'objection'
-import { GrantReference } from '../grantReference/model'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
@@ -125,18 +124,6 @@ class SubresourceQueryBuilder<
   NumberQueryBuilderType!: SubresourceQueryBuilder<M, number>
   PageQueryBuilderType!: SubresourceQueryBuilder<M, Page<M>>
 
-  private byClientId(clientId: string) {
-    // SubresourceQueryBuilder seemingly cannot access
-    // PaymentPointerSubresource relationMappings, so
-    // this.withGraphJoined('grantRef') results in:
-    // missing FROM-clause entry for table "grantRef"
-    return this.join(
-      'grantReferences as grantRef',
-      `${this.modelClass().tableName}.grantId`,
-      'grantRef.id'
-    ).where('grantRef.clientId', clientId)
-  }
-
   get({ id, paymentPointerId, clientId }: GetOptions) {
     if (paymentPointerId) {
       this.where(
@@ -145,13 +132,13 @@ class SubresourceQueryBuilder<
       )
     }
     if (clientId) {
-      this.byClientId(clientId)
+      this.where({ clientId })
     }
     return this.findById(id)
   }
   list({ paymentPointerId, clientId, pagination }: ListOptions) {
     if (clientId) {
-      this.byClientId(clientId)
+      this.where({ clientId })
     }
     return this.getPage(pagination).where(
       `${this.modelClass().tableName}.paymentPointerId`,
@@ -169,8 +156,7 @@ export abstract class PaymentPointerSubresource extends BaseModel {
   public abstract readonly assetId: string
   public abstract asset: Asset
 
-  public readonly grantId?: string
-  public grantRef?: GrantReference
+  public readonly clientId?: string
 
   static get relationMappings() {
     return {
@@ -180,14 +166,6 @@ export abstract class PaymentPointerSubresource extends BaseModel {
         join: {
           from: `${this.tableName}.paymentPointerId`,
           to: 'paymentPointers.id'
-        }
-      },
-      grantRef: {
-        relation: Model.HasOneRelation,
-        modelClass: GrantReference,
-        join: {
-          from: `${this.tableName}.grantId`,
-          to: 'grantReferences.id'
         }
       }
     }

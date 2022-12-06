@@ -48,7 +48,6 @@ import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './paymentPointerKey/service'
-import { GrantReferenceService } from './open_payments/grantReference/service'
 import { AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
@@ -147,7 +146,6 @@ export interface AppServices {
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
-  grantReferenceService: Promise<GrantReferenceService>
   openPaymentsClient: Promise<AuthenticatedClient>
 }
 

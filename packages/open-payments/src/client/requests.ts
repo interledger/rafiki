@@ -1,5 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
+import { createContentDigestHeader } from 'httpbis-digest-headers'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
 import { createSignatureHeaders } from './signatures'
@@ -12,6 +13,7 @@ interface GetArgs {
 interface PostArgs<T> {
   url: string
   body: T
+  accessToken?: string
 }
 
 export const get = async <T>(
@@ -74,7 +76,7 @@ export const post = async <TRequest, TResponse>(
   openApiResponseValidator: ResponseValidator<TResponse>
 ): Promise<TResponse> => {
   const { axiosInstance, logger } = deps
-  const { body } = args
+  const { body, accessToken } = args
 
   const requestUrl = new URL(args.url)
   if (process.env.NODE_ENV === 'development') {
@@ -84,7 +86,13 @@ export const post = async <TRequest, TResponse>(
   const url = requestUrl.href
 
   try {
-    const { data, status } = await axiosInstance.post<TResponse>(url, body)
+    const { data, status } = await axiosInstance.post<TResponse>(url, body, {
+      headers: accessToken
+        ? {
+            Authorization: `GNAP ${accessToken}`
+          }
+        : {}
+    })
 
     try {
       openApiResponseValidator({
@@ -129,6 +137,14 @@ export const createAxiosInstance = (args: {
   if (args.privateKey && args.keyId) {
     axiosInstance.interceptors.request.use(
       async (config) => {
+        if (config.data) {
+          const data = JSON.stringify(config.data)
+          config.headers['Content-Digest'] = createContentDigestHeader(data, [
+            'sha-512'
+          ])
+          config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
+          config.headers['Content-Type'] = 'application/json'
+        }
         const sigHeaders = await createSignatureHeaders({
           request: {
             method: config.method.toUpperCase(),
@@ -145,7 +161,9 @@ export const createAxiosInstance = (args: {
       },
       null,
       {
-        runWhen: (config) => !!config.headers['Authorization']
+        runWhen: (config) =>
+          config.method.toLowerCase() === 'post' ||
+          !!config.headers['Authorization']
       }
     )
   }

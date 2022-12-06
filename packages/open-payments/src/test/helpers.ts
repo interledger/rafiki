@@ -6,7 +6,8 @@ import {
   IncomingPayment,
   InteractiveGrant,
   GrantRequest,
-  NonInteractiveGrant
+  NonInteractiveGrant,
+  OutgoingPayment
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -64,6 +65,36 @@ export const mockIncomingPayment = (
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ilpStreamConnection: mockILPStreamConnection(),
+  ...overrides
+})
+
+export const mockOutgoingPayment = (
+  overrides?: Partial<OutgoingPayment>
+): OutgoingPayment => ({
+  id: uuid(),
+  paymentPointer: 'paymentPointer',
+  failed: false,
+  sendAmount: {
+    assetCode: 'USD',
+    assetScale: 2,
+    value: '10'
+  },
+  sentAmount: {
+    assetCode: 'USD',
+    assetScale: 2,
+    value: '0'
+  },
+  receiveAmount: {
+    assetCode: 'USD',
+    assetScale: 2,
+    value: '10'
+  },
+  quoteId: uuid(),
+  receiver: uuid(),
+  description: 'some description',
+  externalRef: 'INV #1',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   ...overrides
 })
 
