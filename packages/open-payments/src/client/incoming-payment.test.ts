@@ -152,7 +152,7 @@ describe('incoming-payment', (): void => {
         })
 
         const scope = nock(baseUrl)
-          .post('/incoming-payment')
+          .post('/incoming-payments')
           .reply(200, incomingPayment)
 
         const result = await createIncomingPayment(
@@ -161,7 +161,7 @@ describe('incoming-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/incoming-payment`,
+            url: `${baseUrl}/incoming-payments`,
             body: {
               incomingAmount,
               expiresAt,
@@ -192,14 +192,14 @@ describe('incoming-payment', (): void => {
       })
 
       const scope = nock(baseUrl)
-        .post('/incoming-payment')
+        .post('/incoming-payments')
         .reply(200, incomingPayment)
 
       await expect(() =>
         createIncomingPayment(
           { axiosInstance, logger },
           {
-            url: `${baseUrl}/incoming-payment`,
+            url: `${baseUrl}/incoming-payments`,
             body: {},
             accessToken: 'accessToken'
           },
@@ -213,7 +213,7 @@ describe('incoming-payment', (): void => {
       const incomingPayment = mockIncomingPayment()
 
       const scope = nock(baseUrl)
-        .post('/incoming-payment')
+        .post('/incoming-payments')
         .reply(200, incomingPayment)
 
       await expect(() =>
@@ -223,7 +223,7 @@ describe('incoming-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/incoming-payment`,
+            url: `${baseUrl}/incoming-payments`,
             body: {},
             accessToken: 'accessToken'
           },
