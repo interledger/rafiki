@@ -2,8 +2,7 @@
 
 import {
   verifySigAndChallenge,
-  validateHttpSigHeaders,
-  HttpSigContext
+  validateHttpSigHeaders
 } from 'http-signature-utils'
 
 import { AppContext } from '../app'
@@ -11,7 +10,7 @@ import { Grant } from '../grant/model'
 
 async function verifySigFromClient(
   client: string,
-  ctx: HttpSigContext
+  ctx: AppContext
 ): Promise<boolean> {
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
@@ -23,12 +22,12 @@ async function verifySigFromClient(
     ctx.throw(400, 'invalid client', { error: 'invalid_client' })
   }
 
-  return verifySigAndChallenge(clientKey, ctx)
+  return verifySigAndChallenge(clientKey, ctx.request)
 }
 
 async function verifySigFromBoundKey(
   grant: Grant,
-  ctx: HttpSigContext
+  ctx: AppContext
 ): Promise<boolean> {
   const sigInput = ctx.headers['signature-input'] as string
   ctx.clientKeyId = getSigInputKeyId(sigInput)
@@ -53,7 +52,7 @@ export async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(ctx)) {
+  if (!validateHttpSigHeaders(ctx.request)) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -88,7 +87,10 @@ export async function grantContinueHttpsigMiddleware(
     return
   }
 
-  await verifySigFromBoundKey(grant, ctx)
+  const sigVerified = await verifySigFromBoundKey(grant, ctx)
+  if (!sigVerified) {
+    ctx.throw(401, 'invalid signature')
+  }
   await next()
 }
 
@@ -96,7 +98,7 @@ export async function grantInitiationHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(ctx)) {
+  if (!validateHttpSigHeaders(ctx.request)) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -108,7 +110,10 @@ export async function grantInitiationHttpsigMiddleware(
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  await verifySigFromClient(body.client, ctx)
+  const sigVerified = await verifySigFromClient(body.client, ctx)
+  if (!sigVerified) {
+    ctx.throw(401, 'invalid signature')
+  }
   await next()
 }
 
@@ -116,7 +121,7 @@ export async function tokenHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(ctx)) {
+  if (!validateHttpSigHeaders(ctx.request)) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -135,6 +140,10 @@ export async function tokenHttpsigMiddleware(
 
   const grantService = await ctx.container.use('grantService')
   const grant = await grantService.get(accessToken.grantId)
-  await verifySigFromBoundKey(grant, ctx)
+
+  const sigVerified = await verifySigFromBoundKey(grant, ctx)
+  if (!sigVerified) {
+    ctx.throw(401, 'invalid signature')
+  }
   await next()
 }

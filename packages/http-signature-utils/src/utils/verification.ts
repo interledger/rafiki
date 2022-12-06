@@ -1,28 +1,17 @@
 import * as crypto from 'crypto'
+import { RequestLike } from 'http-message-signatures'
 import { verifyContentDigest } from 'httpbis-digest-headers'
 import { importJWK } from 'jose'
-import { Context } from 'koa'
 import { JWK } from './jwk'
 
-type HttpSigHeaders = Record<'signature' | 'signature-input', string>
-
-type HttpSigRequest = Omit<Context['request'], 'headers'> & {
-  headers: HttpSigHeaders
-}
-
-export type HttpSigContext = Context & {
-  request: HttpSigRequest
-  headers: HttpSigHeaders
-}
-
-export function validateHttpSigHeaders(ctx: Context): ctx is HttpSigContext {
-  const sig = ctx.headers['signature']
-  const sigInput = ctx.headers['signature-input'] as string
+export function validateHttpSigHeaders(request: RequestLike): boolean {
+  const sig = request.headers['signature']
+  const sigInput = request.headers['signature-input'] as string
 
   const sigInputComponents = getSigInputComponents(sigInput ?? '')
   if (
     !sigInputComponents ||
-    !validateSigInputComponents(sigInputComponents, ctx)
+    !validateSigInputComponents(sigInputComponents, request)
   )
     return false
 
@@ -33,26 +22,16 @@ export function validateHttpSigHeaders(ctx: Context): ctx is HttpSigContext {
 
 export async function verifySigAndChallenge(
   clientKey: JWK,
-  ctx: HttpSigContext
+  request: RequestLike
 ): Promise<boolean> {
-  const sig = ctx.headers['signature'] as string
-  const sigInput = ctx.headers['signature-input'] as string
-  const challenge = sigInputToChallenge(sigInput, ctx)
+  const sig = request.headers['signature'] as string
+  const sigInput = request.headers['signature-input'] as string
+  const challenge = sigInputToChallenge(sigInput, request)
   if (!challenge) {
-    ctx.throw(400, 'invalid signature input', { error: 'invalid_request' })
+    return false
   }
 
-  const verified = await verifySig(
-    sig.replace('sig1=', ''),
-    clientKey,
-    challenge
-  )
-
-  if (verified) {
-    return true
-  } else {
-    ctx.throw(401, 'invalid signature')
-  }
+  return await verifySig(sig.replace('sig1=', ''), clientKey, challenge)
 }
 
 //exported for tests
@@ -69,13 +48,13 @@ export async function verifySig(
 //exported for tests
 export function sigInputToChallenge(
   sigInput: string,
-  ctx: Context
+  request: RequestLike
 ): string | null {
   const sigInputComponents = getSigInputComponents(sigInput)
 
   if (
     !sigInputComponents ||
-    !validateSigInputComponents(sigInputComponents, ctx)
+    !validateSigInputComponents(sigInputComponents, request)
   )
     return null
 
@@ -83,16 +62,16 @@ export function sigInputToChallenge(
   let signatureBase = ''
   for (const component of sigInputComponents) {
     if (component === '@method') {
-      signatureBase += `"@method": ${ctx.request.method}\n`
+      signatureBase += `"@method": ${request.method}\n`
     } else if (component === '@target-uri') {
-      signatureBase += `"@target-uri": ${ctx.request.href}\n`
+      signatureBase += `"@target-uri": ${request.url}\n`
     } else {
-      signatureBase += `"${component}": ${ctx.headers[component]}\n`
+      signatureBase += `"${component}": ${request.headers[component]}\n`
     }
   }
 
   signatureBase += `"@signature-params": ${(
-    ctx.headers['signature-input'] as string
+    request.headers['signature-input'] as string
   )?.replace('sig1=', '')}`
   return signatureBase
 }
@@ -111,7 +90,7 @@ function getSigInputComponents(sigInput: string): string[] | null {
 
 function validateSigInputComponents(
   sigInputComponents: string[],
-  ctx: Context
+  request: RequestLike
 ): boolean {
   // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-7.3.1
 
@@ -122,20 +101,20 @@ function validateSigInputComponents(
 
   const isValidContentDigest =
     !sigInputComponents.includes('content-digest') ||
-    (!!ctx.headers['content-digest'] &&
-      ctx.request.body &&
-      Object.keys(ctx.request.body).length > 0 &&
+    (!!request.headers['content-digest'] &&
+      request.body &&
+      Object.keys(request.body).length > 0 &&
       sigInputComponents.includes('content-digest') &&
       verifyContentDigest(
-        JSON.stringify(ctx.request.body),
-        ctx.headers['content-digest'] as string
+        JSON.stringify(request.body),
+        request.headers['content-digest'] as string
       ))
 
   return !(
     !isValidContentDigest ||
     !sigInputComponents.includes('@method') ||
     !sigInputComponents.includes('@target-uri') ||
-    (ctx.headers['authorization'] &&
+    (request.headers['authorization'] &&
       !sigInputComponents.includes('authorization'))
   )
 }
