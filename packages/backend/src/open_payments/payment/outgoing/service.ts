@@ -419,10 +419,10 @@ async function addSentAmount(
 ): Promise<OutgoingPayment> {
   const fundingZeroOrUndefined =
     payment.state === OutgoingPaymentState.Funding ? BigInt(0) : undefined
-  let sent = value || (await deps.accountingService.getTotalSent(payment.id))
-  if (sent === undefined) {
-    sent = fundingZeroOrUndefined
-  }
+  const sent =
+    value ??
+    (await deps.accountingService.getTotalSent(payment.id)) ??
+    fundingZeroOrUndefined
 
   if (sent !== undefined) {
     payment.sentAmount = {

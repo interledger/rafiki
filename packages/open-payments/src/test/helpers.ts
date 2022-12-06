@@ -92,6 +92,8 @@ export const mockOutgoingPayment = (
   },
   quoteId: uuid(),
   receiver: uuid(),
+  description: 'some description',
+  externalRef: 'INV #1',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
   ...overrides

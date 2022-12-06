@@ -13,6 +13,7 @@ interface GetArgs {
 interface PostArgs<T> {
   url: string
   body: T
+  accessToken?: string
 }
 
 export const get = async <T>(
@@ -80,7 +81,7 @@ export const post = async <TRequest, TResponse>(
   openApiResponseValidator: ResponseValidator<TResponse>
 ): Promise<TResponse> => {
   const { axiosInstance, logger } = deps
-  const { body } = args
+  const { body, accessToken } = args
 
   const requestUrl = new URL(args.url)
   if (process.env.NODE_ENV === 'development') {
@@ -90,7 +91,13 @@ export const post = async <TRequest, TResponse>(
   const url = requestUrl.href
 
   try {
-    const { data, status } = await axiosInstance.post<TResponse>(url, body)
+    const { data, status } = await axiosInstance.post<TResponse>(url, body, {
+      headers: accessToken
+        ? {
+            Authorization: `GNAP ${accessToken}`
+          }
+        : {}
+    })
 
     try {
       openApiResponseValidator({

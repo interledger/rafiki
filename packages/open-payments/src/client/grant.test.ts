@@ -12,12 +12,13 @@ describe('grant', (): void => {
 
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
+  const client = 'https://example.com/.well-known/pay'
 
   describe('createGrantRoutes', (): void => {
     test('creates response validator for grant requests', async (): Promise<void> => {
       jest.spyOn(openApi, 'createResponseValidator')
 
-      createGrantRoutes({ axiosInstance, openApi, logger })
+      createGrantRoutes({ axiosInstance, openApi, logger, client })
       expect(openApi.createResponseValidator).toHaveBeenCalledTimes(1)
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/',
