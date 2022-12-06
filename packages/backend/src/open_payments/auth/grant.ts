@@ -67,16 +67,14 @@ export interface GrantJSON {
 
 export class Grant {
   constructor(options: GrantOptions) {
-    if (!options.access && options.active) {
+    if (!options.active || !options.access) {
       throw new Error()
     }
-    this.active = options.active
     this.grant = options.grant
     this.access = options.access || []
     this.clientId = options.clientId
   }
 
-  public readonly active: boolean
   public readonly grant: string
   public readonly access: GrantAccess[]
   public readonly clientId: string
@@ -104,7 +102,7 @@ export class Grant {
 
   public toJSON(): GrantJSON {
     return {
-      active: this.active,
+      active: true,
       grant: this.grant,
       client_id: this.clientId,
       access: this.access?.map((access) => {

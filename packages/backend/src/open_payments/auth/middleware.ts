@@ -37,7 +37,7 @@ export function createAuthMiddleware({
       }
       const authService = await ctx.container.use('authService')
       const grant = await authService.introspect(token)
-      if (!grant || !grant.active) {
+      if (!grant) {
         ctx.throw(401, 'Invalid Token')
       }
       const access = grant.findAccess({
