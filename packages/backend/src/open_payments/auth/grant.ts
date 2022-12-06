@@ -10,6 +10,7 @@ interface AmountJSON {
   assetScale: number
 }
 
+// TODO: replace with open-payments generated types
 export enum AccessType {
   IncomingPayment = 'incoming-payment',
   OutgoingPayment = 'outgoing-payment',

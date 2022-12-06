@@ -24,7 +24,8 @@ import { createAssetService } from './asset/service'
 import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
 import { createAuthService } from './open_payments/auth/service'
-
+import { createAuthServerService } from './open_payments/authServer/service'
+import { createGrantService } from './open_payments/grant/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
 import { createPaymentPointerKeyRoutes } from './paymentPointerKey/routes'
@@ -175,6 +176,19 @@ export function initIocContainer(
       authOpenApi: await deps.use('authOpenApi')
     })
   })
+  container.singleton('authServerService', async (deps) => {
+    return await createAuthServerService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
+  container.singleton('grantService', async (deps) => {
+    return await createGrantService({
+      authServerService: await deps.use('authServerService'),
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex')
+    })
+  })
   container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
     const assetService = await deps.use('assetService')
@@ -217,8 +231,9 @@ export function initIocContainer(
     })
   })
   container.singleton('paymentPointerRoutes', async (deps) => {
+    const config = await deps.use('config')
     return createPaymentPointerRoutes({
-      config: await deps.use('config')
+      authServer: config.authServerGrantUrl
     })
   })
   container.singleton('paymentPointerKeyRoutes', async (deps) => {
@@ -247,9 +262,8 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createReceiverService({
       logger: await deps.use('logger'),
-      // TODO: https://github.com/interledger/rafiki/issues/583
-      accessToken: config.devAccessToken,
       connectionService: await deps.use('connectionService'),
+      grantService: await deps.use('grantService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       openPaymentsUrl: config.openPaymentsUrl,
       paymentPointerService: await deps.use('paymentPointerService'),

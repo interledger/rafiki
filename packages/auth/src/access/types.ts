@@ -1,5 +1,4 @@
 export enum AccessType {
-  Account = 'account',
   IncomingPayment = 'incoming-payment',
   OutgoingPayment = 'outgoing-payment',
   Quote = 'quote'
@@ -16,9 +15,7 @@ export enum Action {
 
 interface BaseAccessRequest {
   actions: Action[]
-  locations?: string[]
   identifier?: string
-  interval?: string
 }
 
 export interface IncomingPaymentRequest extends BaseAccessRequest {
@@ -31,11 +28,6 @@ interface OutgoingPaymentRequest extends BaseAccessRequest {
   limits?: OutgoingPaymentLimit
 }
 
-interface AccountRequest extends BaseAccessRequest {
-  type: AccessType.Account
-  limits?: never
-}
-
 interface QuoteRequest extends BaseAccessRequest {
   type: AccessType.Quote
   limits?: never
@@ -44,7 +36,6 @@ interface QuoteRequest extends BaseAccessRequest {
 export type AccessRequest =
   | IncomingPaymentRequest
   | OutgoingPaymentRequest
-  | AccountRequest
   | QuoteRequest
 
 export function isAccessType(accessType: AccessType): accessType is AccessType {
@@ -80,16 +71,6 @@ function isOutgoingPaymentAccessRequest(
   )
 }
 
-function isAccountAccessRequest(
-  accessRequest: AccountRequest
-): accessRequest is AccountRequest {
-  return (
-    accessRequest.type === AccessType.Account &&
-    isAction(accessRequest.actions) &&
-    !accessRequest.limits
-  )
-}
-
 function isQuoteAccessRequest(
   accessRequest: QuoteRequest
 ): accessRequest is QuoteRequest {
@@ -106,7 +87,6 @@ export function isAccessRequest(
   return (
     isIncomingPaymentAccessRequest(accessRequest as IncomingPaymentRequest) ||
     isOutgoingPaymentAccessRequest(accessRequest as OutgoingPaymentRequest) ||
-    isAccountAccessRequest(accessRequest as AccountRequest) ||
     isQuoteAccessRequest(accessRequest as QuoteRequest)
   )
 }
@@ -123,6 +103,7 @@ export type OutgoingPaymentLimit = {
   receiver: string
   sendAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
+  interval?: string
 }
 
 export type LimitData = OutgoingPaymentLimit
