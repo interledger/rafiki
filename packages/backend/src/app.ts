@@ -25,8 +25,11 @@ import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
-import { createAuthMiddleware } from './open_payments/auth/middleware'
-import { AuthService } from './open_payments/auth/service'
+import {
+  createAuthMiddleware,
+  httpsigMiddleware
+} from './open_payments/auth/middleware'
+import { AuthService, TokenInfo } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
@@ -77,6 +80,19 @@ export type AppRequest<ParamsT extends string = string> = Omit<
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
+  clientId?: string
+}
+
+type HttpSigHeaders = Record<'signature' | 'signature-input', string>
+
+type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
+  headers: HttpSigHeaders
+}
+
+export type HttpSigContext = AppContext & {
+  request: HttpSigRequest
+  headers: HttpSigHeaders
+  grant: TokenInfo
   clientId?: string
 }
 
@@ -343,6 +359,9 @@ export class App {
               type,
               action
             }),
+            this.config.bypassSignatureValidation
+              ? (ctx, next) => next()
+              : httpsigMiddleware,
             route
           )
         }
