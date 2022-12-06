@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
@@ -295,7 +294,9 @@ export class App {
       for (const method in openApi.paths[path]) {
         if (isHttpMethod(method)) {
           const action = toAction({ path, method })
-          assert.ok(action)
+          if (!action) {
+            throw new Error()
+          }
 
           let type: AccessType
           let route: (ctx: AppContext) => Promise<void>

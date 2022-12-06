@@ -1,7 +1,6 @@
 import $RefParser from '@apidevtools/json-schema-ref-parser'
 import Ajv2020, { ErrorObject } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
-import assert from 'assert'
 import OpenAPIDefaultSetter from 'openapi-default-setter'
 import OpenapiRequestCoercer from 'openapi-request-coercer'
 import OpenAPIRequestValidator from 'openapi-request-validator'
@@ -70,14 +69,18 @@ export interface OpenAPI {
 
 class OpenAPIImpl implements OpenAPI {
   constructor(spec: OpenAPIV3_1.Document) {
-    assert.ok(spec.paths)
+    if (!spec.paths) {
+      throw new Error()
+    }
     this.paths = spec.paths as Paths
   }
   public paths: Paths
 
   public createRequestValidator<T>({ path, method }: RequestOptions) {
     const operation = this.paths[path]?.[method]
-    assert.ok(operation)
+    if (!operation) {
+      throw new Error()
+    }
 
     const queryParams = operation.parameters as OpenAPIV3_1.ParameterObject[]
     const coercer =
@@ -123,7 +126,9 @@ class OpenAPIImpl implements OpenAPI {
 
   public createResponseValidator<T>({ path, method }: RequestOptions) {
     const responses = this.paths[path]?.[method]?.responses
-    assert.ok(responses)
+    if (!responses) {
+      throw new Error()
+    }
 
     const responseValidator = new OpenAPIResponseValidator({
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment

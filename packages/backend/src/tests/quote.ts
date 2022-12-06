@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
 import * as Pay from '@interledger/pay'
 
@@ -25,29 +24,41 @@ export async function createQuote(
 ): Promise<Quote> {
   const paymentPointerService = await deps.use('paymentPointerService')
   const paymentPointer = await paymentPointerService.get(paymentPointerId)
-  assert.ok(paymentPointer)
-  assert.ok(
-    !sendAmount ||
-      (paymentPointer.asset.code === sendAmount.assetCode &&
-        paymentPointer.asset.scale === sendAmount.assetScale)
-  )
+  if (!paymentPointer) {
+    throw new Error()
+  }
+  if (
+    sendAmount &&
+    (paymentPointer.asset.code !== sendAmount.assetCode ||
+      paymentPointer.asset.scale !== sendAmount.assetScale)
+  ) {
+    throw new Error()
+  }
 
   const config = await deps.use('config')
   let receiveAsset: AssetOptions | undefined
   if (validDestination) {
     const receiverService = await deps.use('receiverService')
     const receiver = await receiverService.get(receiverUrl)
-    assert.ok(receiver)
-    assert.ok(receiver.incomingAmount || receiveAmount || sendAmount)
+    if (!receiver) {
+      throw new Error()
+    }
+    if (!receiver.incomingAmount && !receiveAmount && !sendAmount) {
+      throw new Error()
+    }
     if (receiveAmount) {
-      assert.ok(
-        receiver.assetCode === receiveAmount.assetCode &&
-          receiver.assetScale === receiveAmount.assetScale
-      )
-      assert.ok(
-        !receiver.incomingAmount ||
-          receiveAmount.value <= receiver.incomingAmount.value
-      )
+      if (
+        receiver.assetCode !== receiveAmount.assetCode ||
+        receiver.assetScale !== receiveAmount.assetScale
+      ) {
+        throw new Error()
+      }
+      if (
+        receiver.incomingAmount &&
+        receiveAmount.value > receiver.incomingAmount.value
+      ) {
+        throw new Error()
+      }
     } else {
       receiveAsset = receiver.asset
       if (!sendAmount) {
@@ -66,7 +77,9 @@ export async function createQuote(
   }
 
   if (sendAmount) {
-    assert.ok(receiveAsset)
+    if (!receiveAsset) {
+      throw new Error()
+    }
     receiveAmount = {
       value: BigInt(
         Math.ceil(Number(sendAmount.value) / (2 * (1 + config.slippage)))
@@ -75,7 +88,9 @@ export async function createQuote(
       assetScale: receiveAsset.scale
     }
   } else {
-    assert.ok(receiveAmount)
+    if (!receiveAmount) {
+      throw new Error()
+    }
     sendAmount = {
       value: BigInt(
         Math.ceil(Number(receiveAmount.value) * 2 * (1 + config.slippage))

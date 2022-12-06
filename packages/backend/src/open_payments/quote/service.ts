@@ -1,4 +1,3 @@
-import assert from 'assert'
 import axios from 'axios'
 import { createHmac } from 'crypto'
 import { ModelObject, TransactionOrKnex } from 'objection'
@@ -252,8 +251,13 @@ export async function startQuote(
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
     // Outgoing payments' sendAmount or receiveAmount should never be
     // zero or negative.
-    assert.ok(quote.maxSourceAmount > BigInt(0))
-    assert.ok(quote.minDeliveryAmount > BigInt(0))
+    if (quote.maxSourceAmount <= BigInt(0)) {
+      throw new Error()
+    }
+
+    if (quote.minDeliveryAmount <= BigInt(0)) {
+      throw new Error()
+    }
 
     return quote
   } finally {

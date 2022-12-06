@@ -1,4 +1,3 @@
-import assert from 'assert'
 import axios from 'axios'
 import { KeyInfo } from 'auth'
 import { Logger } from 'pino'
@@ -92,12 +91,11 @@ async function introspectToken(
       }
     )
 
-    assert.ok(
-      deps.validateResponse({
-        status,
-        body: data
-      })
-    )
+    deps.validateResponse({
+      status,
+      body: data
+    })
+
     const options: GrantOptions = {
       active: data.active,
       clientId: data.client_id,
