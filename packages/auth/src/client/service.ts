@@ -1,18 +1,7 @@
-import { JWK as JoseWk } from 'jose'
-import { JWK, UnauthenticatedClient } from 'open-payments'
+import { UnauthenticatedClient } from 'open-payments'
+import { JWK, JWKWithRequired } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
-
-export interface JWKWithRequired extends JoseWk {
-  kid: string
-  x: string
-  alg: string
-  kty: string
-  crv: string
-  exp?: number
-  nbf?: number
-  revoked?: boolean
-}
 
 export interface ClientKey {
   jwk: JWKWithRequired

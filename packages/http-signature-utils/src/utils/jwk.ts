@@ -1,4 +1,5 @@
 import { createPublicKey, generateKeyPairSync, KeyObject } from 'crypto'
+import { JWK as JoseWk } from 'jose'
 
 export type JWK = {
   kid: string
@@ -7,6 +8,17 @@ export type JWK = {
   kty: 'OKP'
   crv: 'Ed25519'
   x: string
+}
+
+export interface JWKWithRequired extends JoseWk {
+  kid: string
+  x: string
+  alg: string
+  kty: string
+  crv: string
+  exp?: number
+  nbf?: number
+  revoked?: boolean
 }
 
 export const generateJwk = ({

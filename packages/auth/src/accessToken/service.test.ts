@@ -8,7 +8,7 @@ import { v4 } from 'uuid'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer, JWKWithRequired } from '..'
+import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
@@ -16,7 +16,12 @@ import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import { generateTestKeys } from '../tests/signature'
+import {
+  generateJwk,
+  generateTestKeys,
+  JWKWithRequired,
+  TestKeys
+} from 'http-signature-utils'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -24,7 +29,8 @@ describe('Access Token Service', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
-  let testJwk: JWKWithRequired
+  let testKeys: TestKeys
+  let testClientKey: JWKWithRequired
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -32,8 +38,11 @@ describe('Access Token Service', (): void => {
     knex = await deps.use('knex')
     accessTokenService = await deps.use('accessTokenService')
 
-    const keys = await generateTestKeys()
-    testJwk = keys.publicKey
+    testKeys = await generateTestKeys()
+    testClientKey = generateJwk({
+      privateKey: testKeys.privateKey,
+      keyId: testKeys.keyId
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -81,7 +90,7 @@ describe('Access Token Service', (): void => {
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
-      clientKeyId: testJwk.kid,
+      clientKeyId: testKeys.keyId,
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
       continueId: v4(),
       interactId: v4(),
@@ -146,7 +155,7 @@ describe('Access Token Service', (): void => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
-          keys: [testJwk]
+          keys: [testClientKey]
         })
 
       const introspection = await accessTokenService.introspect(token.value)
@@ -155,7 +164,7 @@ describe('Access Token Service', (): void => {
       expect(introspection).toMatchObject({
         ...grant,
         access: [access],
-        key: { proof: 'httpsig', jwk: testJwk },
+        key: { proof: 'httpsig', jwk: testClientKey },
         clientId
       })
       scope.isDone()
@@ -194,7 +203,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testJwk.kid,
+        clientKeyId: testKeys.keyId,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
         continueId: v4(),
         interactId: v4(),
@@ -241,7 +250,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testJwk.kid,
+        clientKeyId: testKeys.keyId,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
         continueId: v4(),
         interactId: v4(),

@@ -7,20 +7,18 @@ import {
 
 interface ContentHeaders {
   'Content-Digest': string
-  'Content-Length': number
+  'Content-Length': string
   'Content-Type': string
 }
 
-interface Headers extends SignatureHeaders {
-  'Content-Digest'?: string
-}
+export interface Headers extends SignatureHeaders, Partial<ContentHeaders> {}
 
 const createContentHeaders = (body: string): ContentHeaders => {
   return {
     'Content-Digest': createContentDigestHeader(body.replace(/[\s\r]/g, ''), [
       'sha-512'
     ]),
-    'Content-Length': Buffer.from(body as string, 'utf-8').length,
+    'Content-Length': Buffer.from(body as string, 'utf-8').length.toString(),
     'Content-Type': 'application/json'
   }
 }
@@ -42,7 +40,7 @@ export const createHeaders = async ({
   })
   if (contentHeaders) {
     return {
-      'Content-Digest': contentHeaders['Content-Digest'],
+      ...contentHeaders,
       ...signatureHeaders
     }
   } else {

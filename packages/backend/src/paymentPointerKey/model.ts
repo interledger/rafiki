@@ -1,6 +1,6 @@
 import { BaseModel } from '../shared/baseModel'
 
-import { JWKWithRequired } from 'auth'
+import { JWKWithRequired } from 'http-signature-utils'
 
 export class PaymentPointerKey extends BaseModel {
   public static get tableName(): string {

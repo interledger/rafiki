@@ -1,10 +1,11 @@
 import * as crypto from 'crypto'
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
+import { JWKWithRequired } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
-import { ClientService, JWKWithRequired } from '../client/service'
+import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 import { IAppConfig } from '../config/app'
 import { Access } from '../access/model'

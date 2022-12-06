@@ -55,7 +55,8 @@ export async function verifySigAndChallenge(
   }
 }
 
-async function verifySig(
+//exported for tests
+export async function verifySig(
   sig: string,
   jwk: JWK,
   challenge: string
@@ -65,7 +66,11 @@ async function verifySig(
   return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
 }
 
-function sigInputToChallenge(sigInput: string, ctx: Context): string | null {
+//exported for tests
+export function sigInputToChallenge(
+  sigInput: string,
+  ctx: Context
+): string | null {
   const sigInputComponents = getSigInputComponents(sigInput)
 
   if (
