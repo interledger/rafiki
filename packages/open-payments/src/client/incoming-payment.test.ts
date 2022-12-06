@@ -212,7 +212,9 @@ describe('incoming-payment', (): void => {
     test('throws if the created incoming payment does not pass open api validation', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment()
 
-      nock(baseUrl).post('/incoming-payment').reply(200, incomingPayment)
+      const scope = nock(baseUrl)
+        .post('/incoming-payment')
+        .reply(200, incomingPayment)
 
       await expect(() =>
         createIncomingPayment(
@@ -228,6 +230,7 @@ describe('incoming-payment', (): void => {
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
+      scope.done()
     })
   })
 
@@ -401,11 +404,6 @@ describe('incoming-payment', (): void => {
 
     test('throws if received amount is a non-zero value for a newly created incoming payment', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment({
-        incomingAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: '5'
-        },
         receivedAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -420,11 +418,6 @@ describe('incoming-payment', (): void => {
 
     test('throws if the created incoming payment is completed', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment({
-        incomingAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: '5'
-        },
         completed: true
       })
 
