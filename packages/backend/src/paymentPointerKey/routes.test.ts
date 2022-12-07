@@ -1,6 +1,6 @@
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
-import { generateJwk } from 'open-payments'
+import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../tests/context'
