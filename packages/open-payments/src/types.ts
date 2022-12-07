@@ -37,7 +37,7 @@ export type GrantRequest = {
   client: ASOperations['post-request']['requestBody']['content']['application/json']['client']
   interact: ASOperations['post-request']['requestBody']['content']['application/json']['interact']
 }
-export type ContinuationRequest = {
+export type GrantContinuationRequest = {
   interact_ref: ASOperations['post-continue']['requestBody']['content']['application/json']['interact_ref']
 }
 export type InteractiveGrant = {
