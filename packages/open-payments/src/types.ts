@@ -21,6 +21,7 @@ export type CreateOutgoingPaymentArgs =
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
 export type JWKS = RSComponents['schemas']['json-web-key-set']
+export type Quote = RSComponents['schemas']['quote']
 
 export const getASPath = <P extends keyof ASPaths>(path: P): string =>
   path as string
