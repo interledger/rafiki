@@ -38,8 +38,10 @@ export function createAuthMiddleware({
         ctx.throw(403, 'Insufficient Grant')
       }
       if (!config.bypassSignatureValidation) {
+        const request = ctx.request
+        request.url = ctx.href
         try {
-          if (!(await verifySigAndChallenge(grant.key.jwk, ctx.request))) {
+          if (!(await verifySigAndChallenge(grant.key.jwk, request))) {
             ctx.throw(401, 'Invalid signature')
           }
         } catch (e) {

@@ -21,8 +21,9 @@ async function verifySigFromClient(
   if (!clientKey) {
     ctx.throw(400, 'invalid client', { error: 'invalid_client' })
   }
-
-  return verifySigAndChallenge(clientKey, ctx.request)
+  const request = ctx.request
+  request.url = ctx.href
+  return verifySigAndChallenge(clientKey, request)
 }
 
 async function verifySigFromBoundKey(
