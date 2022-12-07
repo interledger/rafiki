@@ -2,8 +2,8 @@ import assert from 'assert'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
+import { Context } from 'koa'
 import {
-  HttpSigContext,
   generateTestKeys,
   JWKWithRequired,
   createHeaders,
@@ -26,10 +26,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { setup, SetupOptions } from '../payment_pointer/model.test'
 import { KeyInfo, TokenInfo, TokenInfoJSON } from './service'
 
-type AppMiddleware = (
-  ctx: HttpSigContext,
-  next: () => Promise<void>
-) => Promise<void>
+type AppMiddleware = (ctx: Context, next: () => Promise<void>) => Promise<void>
 
 type IntrospectionBody = {
   access_token: string
@@ -41,7 +38,7 @@ describe('Auth Middleware', (): void => {
   let appContainer: TestContainer
   let authServerIntrospectionUrl: URL
   let middleware: AppMiddleware
-  let ctx: HttpSigContext
+  let ctx: Context
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: RequestValidator<IntrospectionBody>
   let mockKeyInfo: KeyInfo
@@ -55,7 +52,7 @@ describe('Auth Middleware', (): void => {
   let requestSignatureHeaders: Headers
   let requestJwk: JWKWithRequired
 
-  function setupHttpSigContext(options: SetupOptions): HttpSigContext {
+  function setupHttpSigContext(options: SetupOptions): Context {
     const context = setup(options)
     if (
       !context.headers['signature'] ||
@@ -478,9 +475,12 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    ctx.request.headers['signature-input'] = ctx.request.headers[
-      'signature-input'
-    ].replace('keyid', 'mismatched-key')
+    let sigInput = ctx.request.headers['signature-input'] as string
+    sigInput = sigInput.replace(
+      /(keyid=")[0-9a-z-]{36}/g,
+      '$1' + 'mismatched-key'
+    )
+    ctx.request.headers['signature-input'] = sigInput
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
@@ -504,9 +504,12 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    ctx.request.headers['signature-input'] = ctx.request.headers[
-      'signature-input'
-    ].replace('keyid', 'mismatched-key')
+    let sigInput = ctx.request.headers['signature-input'] as string
+    sigInput = sigInput.replace(
+      /(keyid=")[0-9a-z-]{36}/g,
+      '$1' + 'mismatched-key'
+    )
+    ctx.request.headers['signature-input'] = sigInput
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()

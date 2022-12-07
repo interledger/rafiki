@@ -1,5 +1,6 @@
+import { Context } from 'koa'
+import { verifySigAndChallenge } from 'http-signature-utils'
 import { AccessType, AccessAction } from './grant'
-import { HttpSigContext, verifySigAndChallenge } from 'http-signature-utils'
 
 export function createAuthMiddleware({
   type,
@@ -8,10 +9,7 @@ export function createAuthMiddleware({
   type: AccessType
   action: AccessAction
 }) {
-  return async (
-    ctx: HttpSigContext,
-    next: () => Promise<unknown>
-  ): Promise<void> => {
+  return async (ctx: Context, next: () => Promise<unknown>): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
@@ -41,7 +39,7 @@ export function createAuthMiddleware({
       }
       if (!config.bypassSignatureValidation) {
         try {
-          if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
+          if (!(await verifySigAndChallenge(grant.key.jwk, ctx.request))) {
             ctx.throw(401, 'Invalid signature')
           }
         } catch (e) {
