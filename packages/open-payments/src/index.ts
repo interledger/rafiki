@@ -1,4 +1,5 @@
 export {
+  GrantRequest,
   IncomingPayment,
   ILPStreamConnection,
   OutgoingPayment,

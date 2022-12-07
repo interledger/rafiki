@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { Knex } from 'knex'
 import { NotFoundError, UniqueViolationError } from 'objection'
 
@@ -95,7 +94,9 @@ async function updateAsset(
   deps: ServiceDependencies,
   { id, withdrawalThreshold }: UpdateOptions
 ): Promise<Asset | AssetError> {
-  assert.ok(deps.knex, 'Knex undefined')
+  if (!deps.knex) {
+    throw new Error('Knex undefined')
+  }
   try {
     return await Asset.query(deps.knex)
       .patchAndFetchById(id, { withdrawalThreshold })
@@ -125,7 +126,9 @@ async function getOrCreateAsset(
     return asset
   } else {
     const asset = await createAsset(deps, options)
-    assert.ok(!isAssetError(asset))
+    if (isAssetError(asset)) {
+      throw new Error()
+    }
     return asset
   }
 }

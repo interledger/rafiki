@@ -7,7 +7,7 @@ services:
       dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
-      rafiki:
+      - local_rafiki
     ports:
       - "4006:3006"
     environment:
@@ -27,7 +27,7 @@ services:
       - "4000:80"
       - "4001:3001"
     networks:
-      rafiki:
+      - local_rafiki
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -51,13 +51,14 @@ services:
       REDIS_URL: redis://redis:6379/1
       QUOTE_URL: http://local-bank/quote
       BYPASS_SIGNATURE_VALIDATION: "true"
+      PAYMENT_POINTER_URL: https://peer-backend/.well-known/pay
   local-bank:
     build:
       context: ../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
-      rafiki:
+      - local_rafiki
     ports:
       - '3031:80'
     environment:
@@ -82,3 +83,6 @@ services:
       KEY_FILE: /workspace/private-key-1669714408916.pem
     volumes:
       - ./keys/private-key-1669714408916.pem:/workspace/private-key-1669714408916.pem
+networks:
+  local_rafiki:
+    external: true

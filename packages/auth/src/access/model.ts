@@ -25,7 +25,5 @@ export class Access extends BaseModel {
   public type!: AccessType
   public actions!: Action[]
   public identifier?: string
-  public locations?: string[]
-  public interval?: string
   public limits?: LimitData
 }
