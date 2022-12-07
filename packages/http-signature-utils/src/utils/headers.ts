@@ -15,9 +15,10 @@ export interface Headers extends SignatureHeaders, Partial<ContentHeaders> {}
 
 const createContentHeaders = (body: string): ContentHeaders => {
   return {
-    'Content-Digest': createContentDigestHeader(body.replace(/[\s\r]/g, ''), [
-      'sha-512'
-    ]),
+    'Content-Digest': createContentDigestHeader(
+      JSON.stringify(JSON.parse(body)),
+      ['sha-512']
+    ),
     'Content-Length': Buffer.from(body as string, 'utf-8').length.toString(),
     'Content-Type': 'application/json'
   }
