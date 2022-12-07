@@ -72,17 +72,6 @@ async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: AppContext
 ): Promise<void> {
-  if (
-    !ctx.accepts('application/json') ||
-    ctx.get('Content-Type') !== 'application/json'
-  ) {
-    ctx.status = 406
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
-  }
-
   const { body } = ctx.request
   const { grantService, config } = deps
   const clientKeyId = ctx.clientKeyId
@@ -112,7 +101,7 @@ async function createGrantInitiation(
       await trx.commit()
     } catch (err) {
       await trx.rollback()
-      ctx.status = 500
+      ctx.throw(500)
       return
     }
     const access = await deps.accessService.getByGrant(grant.id)
@@ -127,20 +116,12 @@ async function createGrantInitiation(
   }
 
   if (!body.interact) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'interaction_required'
-    }
-    return
+    ctx.throw(400, { error: 'interaction_required' })
   }
 
   const client = await deps.clientService.get(body.client)
   if (!client) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_client'
-    }
-    return
+    ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
   }
 
   const grant = await grantService.create({
@@ -184,13 +165,12 @@ async function getGrantDetails(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.status = 401
-    return
+    ctx.throw(401)
   }
   const { id: interactId, nonce } = ctx.params
   const grant = await grantService.getByInteractionSession(interactId, nonce)
   if (!grant) {
-    ctx.status = 404
+    ctx.throw(404)
     return
   }
 
@@ -220,12 +200,7 @@ async function startInteraction(
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'unknown_request'
-    }
-
-    return
+    ctx.throw(401, { error: 'unknown_request' })
   }
 
   // TODO: also establish session in redis with short expiry
@@ -261,40 +236,24 @@ async function handleGrantChoice(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_interaction'
-    }
-    return
+    ctx.throw(401, { error: 'invalid_interaction' })
   }
 
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
+    ctx.throw(404, { error: 'unknown_request' })
   }
 
   if (
     grant.state === GrantState.Revoked ||
     grant.state === GrantState.Rejected
   ) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'user_denied'
-    }
-    return
+    ctx.throw(401, { error: 'user_denied' })
   }
 
   if (grant.state === GrantState.Granted) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'request_denied'
-    }
-    return
+    ctx.throw(400, { error: 'request_denied' })
   }
 
   if (choice === GrantChoices.Accept) {
@@ -302,8 +261,7 @@ async function handleGrantChoice(
   } else if (choice === GrantChoices.Reject) {
     await grantService.rejectGrant(grant.id)
   } else {
-    ctx.status = 404
-    return
+    ctx.throw(404)
   }
 
   ctx.status = 202
@@ -318,11 +276,7 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
+    ctx.throw(401, { error: 'invalid_request' })
   }
 
   const { grantService, config } = deps
@@ -330,11 +284,7 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
+    ctx.throw(404, { error: 'unknown_request' })
   }
 
   const clientRedirectUri = new URL(grant.finishUri)
@@ -370,11 +320,7 @@ async function continueGrant(
   const { interact_ref: interactRef } = ctx.request.body
 
   if (!continueId || !continueToken || !interactRef) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
+    ctx.throw(401, { error: 'invalid_request' })
   }
 
   const { config, accessTokenService, grantService, accessService } = deps
@@ -384,19 +330,11 @@ async function continueGrant(
     interactRef
   )
   if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
+    ctx.throw(404, { error: 'unknown_request' })
   }
 
   if (grant.state !== GrantState.Granted) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'request_denied'
-    }
-    return
+    ctx.throw(401, { error: 'request_denied' })
   }
 
   const accessToken = await accessTokenService.create(grant.id)

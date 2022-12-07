@@ -44,12 +44,10 @@ async function introspectToken(
   if (introspectionResult) {
     ctx.body = introspectionToBody(introspectionResult)
   } else {
-    ctx.status = 404
-    ctx.body = {
+    ctx.throw(404, {
       error: 'invalid_request',
       message: 'token not found'
-    }
-    return
+    })
   }
 }
 
@@ -93,7 +91,6 @@ async function rotateToken(
       }
     }
   } else {
-    ctx.status = 404
-    return ctx.throw(ctx.status, result.error.message)
+    ctx.throw(404, { message: result.error.message })
   }
 }
