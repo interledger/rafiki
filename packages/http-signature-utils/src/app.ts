@@ -15,10 +15,6 @@ const router = new Router()
 const privateKey = parseOrProvisionKey(process.env.KEY_FILE)
 
 // Router
-router.get('/', async (ctx): Promise<void> => {
-  ctx.body = { msg: "I don't exist." }
-})
-
 router.post('/', async (ctx): Promise<void> => {
   const { request, keyId } = ctx.request.body
   if (!keyId || !request.headers || !request.method || !request.url) {
@@ -26,6 +22,8 @@ router.post('/', async (ctx): Promise<void> => {
     return
   }
   const headers = await createHeaders({ request, privateKey, keyId })
+  delete headers['Content-Length']
+  delete headers['Content-Type']
   ctx.body = headers
 })
 
