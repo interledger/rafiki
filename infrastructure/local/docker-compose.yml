@@ -121,6 +121,8 @@ services:
   redis:
     image: 'redis:7'
     restart: unless-stopped
+    networks:
+      - rafiki
   signatures:
     build:
       context: ../..
