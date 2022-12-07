@@ -29,7 +29,7 @@ export interface GrantRoutes {
   ): Promise<InteractiveGrant | NonInteractiveGrant>
   continue(
     args: ContinuationRequestArgs
-  ): Promise<InteractiveGrant | NonInteractiveGrant>
+  ): Promise<NonInteractiveGrant>
 }
 
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
