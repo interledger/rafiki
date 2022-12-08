@@ -7,3 +7,4 @@ export {
   verifySigAndChallenge
 } from './utils/verification'
 export { generateTestKeys, TestKeys } from './test-utils/keys'
+export { RequestLike } from 'http-message-signatures'

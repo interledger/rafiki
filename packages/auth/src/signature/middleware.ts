@@ -2,11 +2,21 @@
 
 import {
   verifySigAndChallenge,
-  validateHttpSigHeaders
+  validateHttpSigHeaders,
+  RequestLike
 } from 'http-signature-utils'
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
+
+function contextToRequestLike(ctx: AppContext): RequestLike {
+  return {
+    url: ctx.href,
+    method: ctx.method,
+    headers: ctx.headers,
+    body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
+  }
+}
 
 async function verifySigFromClient(
   client: string,
@@ -21,9 +31,7 @@ async function verifySigFromClient(
   if (!clientKey) {
     ctx.throw(400, 'invalid client', { error: 'invalid_client' })
   }
-  const request = ctx.request
-  request.url = ctx.href
-  return verifySigAndChallenge(clientKey, request)
+  return verifySigAndChallenge(clientKey, contextToRequestLike(ctx))
 }
 
 async function verifySigFromBoundKey(
@@ -53,7 +61,7 @@ export async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(ctx.request)) {
+  if (!validateHttpSigHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -99,11 +107,12 @@ export async function grantInitiationHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(ctx.request)) {
+  if (!validateHttpSigHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
   const { body } = ctx.request
+  console.log(body)
 
   const sigInput = ctx.headers['signature-input'] as string
   ctx.clientKeyId = getSigInputKeyId(sigInput)
@@ -122,7 +131,7 @@ export async function tokenHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(ctx.request)) {
+  if (!validateHttpSigHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 

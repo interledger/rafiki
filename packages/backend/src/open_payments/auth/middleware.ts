@@ -1,7 +1,15 @@
-import { Context } from 'koa'
-import { verifySigAndChallenge } from 'http-signature-utils'
+import { JWK, RequestLike, verifySigAndChallenge } from 'http-signature-utils'
 import { AccessType, AccessAction } from './grant'
+import { PaymentPointerContext } from '../../app'
 
+function contextToRequestLike(ctx: PaymentPointerContext): RequestLike {
+  return {
+    url: ctx.href,
+    method: ctx.method,
+    headers: ctx.headers,
+    body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
+  }
+}
 export function createAuthMiddleware({
   type,
   action
@@ -9,7 +17,10 @@ export function createAuthMiddleware({
   type: AccessType
   action: AccessAction
 }) {
-  return async (ctx: Context, next: () => Promise<unknown>): Promise<void> => {
+  return async (
+    ctx: PaymentPointerContext,
+    next: () => Promise<unknown>
+  ): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
@@ -38,10 +49,13 @@ export function createAuthMiddleware({
         ctx.throw(403, 'Insufficient Grant')
       }
       if (!config.bypassSignatureValidation) {
-        const request = ctx.request
-        request.url = ctx.href
         try {
-          if (!(await verifySigAndChallenge(grant.key.jwk, request))) {
+          if (
+            !(await verifySigAndChallenge(
+              grant.key.jwk as JWK,
+              contextToRequestLike(ctx)
+            ))
+          ) {
             ctx.throw(401, 'Invalid signature')
           }
         } catch (e) {
