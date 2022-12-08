@@ -8,9 +8,9 @@ interface GetArgs {
   accessToken: string
 }
 
-interface PostArgs<T> {
+interface PostArgs<T = undefined> {
   url: string
-  body: T
+  body?: T
   accessToken: string
 }
 
