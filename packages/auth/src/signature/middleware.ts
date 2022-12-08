@@ -112,7 +112,6 @@ export async function grantInitiationHttpsigMiddleware(
   }
 
   const { body } = ctx.request
-  console.log(body)
 
   const sigInput = ctx.headers['signature-input'] as string
   ctx.clientKeyId = getSigInputKeyId(sigInput)
