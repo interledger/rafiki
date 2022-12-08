@@ -19,9 +19,13 @@ describe('grant', (): void => {
       jest.spyOn(openApi, 'createResponseValidator')
 
       createGrantRoutes({ axiosInstance, openApi, logger, client })
-      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(1)
+      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(2)
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/',
+        method: HttpMethod.POST
+      })
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/continue/{id}',
         method: HttpMethod.POST
       })
     })

@@ -4,7 +4,8 @@ import {
   getASPath,
   InteractiveGrant,
   NonInteractiveGrant,
-  GrantRequest
+  GrantRequest,
+  GrantContinuationRequest
 } from '../types'
 import { post } from './requests'
 
@@ -17,10 +18,16 @@ interface RequestGrantArgs {
   request: Omit<GrantRequest, 'client'>
 }
 
+interface ContinuationRequestArgs {
+  url: string
+  request: GrantContinuationRequest
+}
+
 export interface GrantRoutes {
   request(
     args: RequestGrantArgs
   ): Promise<InteractiveGrant | NonInteractiveGrant>
+  continue(args: ContinuationRequestArgs): Promise<NonInteractiveGrant>
 }
 
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
@@ -30,6 +37,11 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
     path: getASPath('/'),
     method: HttpMethod.POST
   })
+  const continueGrantValidator =
+    deps.openApi.createResponseValidator<NonInteractiveGrant>({
+      path: getASPath('/continue/{id}'),
+      method: HttpMethod.POST
+    })
   return {
     request: (args: RequestGrantArgs) =>
       post(
@@ -42,6 +54,17 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
           }
         },
         requestGrantValidator
+      ),
+    continue: (args: ContinuationRequestArgs) =>
+      post(
+        deps,
+        {
+          url: args.url,
+          body: {
+            ...args.request
+          }
+        },
+        continueGrantValidator
       )
   }
 }
