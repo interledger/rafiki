@@ -4,11 +4,11 @@ description: "Sets node version, init pnpm, restore cache"
 runs:
   using: "composite"
   steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
         node-version: '16'
-    - uses: pnpm/action-setup@v2.0.1
+    - uses: pnpm/action-setup@v2
       name: Install pnpm
       id: pnpm-install
       with:
