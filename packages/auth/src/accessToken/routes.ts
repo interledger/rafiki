@@ -15,8 +15,8 @@ interface ServiceDependencies {
 
 export interface AccessTokenRoutes {
   introspect(ctx: IntrospectContext<IntrospectBody>): Promise<void>
-  revoke(ctx: RevokeContext<ManageParams>): Promise<void>
-  rotate(ctx: RotateContext<ManageParams>): Promise<void>
+  revoke(ctx: RevokeContext): Promise<void>
+  rotate(ctx: RotateContext): Promise<void>
 }
 
 export function createAccessTokenRoutes(
@@ -29,8 +29,8 @@ export function createAccessTokenRoutes(
   return {
     introspect: (ctx: IntrospectContext<IntrospectBody>) =>
       introspectToken(deps, ctx),
-    revoke: (ctx: RevokeContext<ManageParams>) => revokeToken(deps, ctx),
-    rotate: (ctx: RotateContext<ManageParams>) => rotateToken(deps, ctx)
+    revoke: (ctx: RevokeContext) => revokeToken(deps, ctx),
+    rotate: (ctx: RotateContext) => rotateToken(deps, ctx)
   }
 }
 
@@ -71,13 +71,9 @@ function introspectionToBody(result: Introspection) {
   }
 }
 
-interface ManageParams {
-  id: string
-}
-
 async function revokeToken(
   deps: ServiceDependencies,
-  ctx: RevokeContext<ManageParams>
+  ctx: RevokeContext
 ): Promise<void> {
   const { id: managementId } = ctx.params
   await deps.accessTokenService.revoke(managementId)
@@ -86,7 +82,7 @@ async function revokeToken(
 
 async function rotateToken(
   deps: ServiceDependencies,
-  ctx: RotateContext<ManageParams>
+  ctx: RotateContext
 ): Promise<void> {
   // TODO: verify Authorization: GNAP ${accessToken} contains correct token value
   const { id: managementId } = ctx.params
