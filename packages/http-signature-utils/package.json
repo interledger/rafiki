@@ -6,7 +6,8 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.json"
+    "build": "tsc --build tsconfig.json",
+    "test": "jest --passWithNoTests --maxWorkers=50%"
   },
   "dependencies": {
     "http-message-signatures": "^0.1.2",

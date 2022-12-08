@@ -106,7 +106,7 @@ function validateSigInputComponents(
       Object.keys(request.body).length > 0 &&
       sigInputComponents.includes('content-digest') &&
       verifyContentDigest(
-        JSON.stringify(request.body),
+        request.body,
         request.headers['content-digest'] as string
       ))
 
