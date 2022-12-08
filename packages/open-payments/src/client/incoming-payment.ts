@@ -17,6 +17,7 @@ interface PostArgs<T = undefined> {
 export interface IncomingPaymentRoutes {
   get(args: GetArgs): Promise<IncomingPayment>
   create(args: PostArgs<CreateIncomingPaymentArgs>): Promise<IncomingPayment>
+  complete(args: PostArgs): Promise<IncomingPayment>
 }
 
 export const createIncomingPaymentRoutes = (
@@ -36,6 +37,12 @@ export const createIncomingPaymentRoutes = (
       method: HttpMethod.POST
     })
 
+  const completeIncomingPaymentOpenApiValidator =
+    openApi.createResponseValidator<IncomingPayment>({
+      path: getRSPath('/incoming-payments/{id}/complete'),
+      method: HttpMethod.POST
+    })
+
   return {
     get: (args: GetArgs) =>
       getIncomingPayment(
@@ -48,6 +55,12 @@ export const createIncomingPaymentRoutes = (
         { axiosInstance, logger },
         args,
         createIncomingPaymentOpenApiValidator
+      ),
+    complete: (args: PostArgs) =>
+      completeIncomingPayment(
+        { axiosInstance, logger },
+        args,
+        completeIncomingPaymentOpenApiValidator
       )
   }
 }
@@ -94,6 +107,30 @@ export const createIncomingPayment = async (
     return validateCreatedIncomingPayment(incomingPayment)
   } catch (error) {
     const errorMessage = 'Could not validate incoming Payment'
+    logger.error({ url, validateError: error?.message }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+}
+
+export const completeIncomingPayment = async (
+  deps: BaseDeps,
+  args: PostArgs,
+  validateOpenApiResponse: ResponseValidator<IncomingPayment>
+) => {
+  const { axiosInstance, logger } = deps
+  const { url } = args
+
+  const incomingPayment = await post(
+    { axiosInstance, logger },
+    args,
+    validateOpenApiResponse
+  )
+
+  try {
+    return validateIncomingPayment(incomingPayment)
+  } catch (error) {
+    const errorMessage = 'Could not validate incoming payment'
     logger.error({ url, validateError: error?.message }, errorMessage)
 
     throw new Error(errorMessage)
@@ -147,6 +184,22 @@ export const validateCreatedIncomingPayment = (
 
   if (completed === true) {
     throw new Error('Can not create a completed incoming payment.')
+  }
+
+  return validateIncomingPayment(payment)
+}
+
+export const validateCompletedIncomingPayment = (
+  payment: IncomingPayment
+): IncomingPayment => {
+  const { completed, expiresAt } = payment
+
+  if (completed === false) {
+    throw new Error('Incoming payment is not completed.')
+  }
+
+  if (new Date(expiresAt).getTime() <= Date.now()) {
+    throw new Error('Can not complete an expired incoming payment.')
   }
 
   return validateIncomingPayment(payment)
