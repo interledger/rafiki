@@ -20,7 +20,7 @@ interface RequestGrantArgs {
 
 interface ContinuationRequestArgs {
   url: string
-  request: Omit<GrantContinuationRequest, 'client'>
+  request: GrantContinuationRequest
 }
 
 export interface GrantRoutes {
