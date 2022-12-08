@@ -1,6 +1,6 @@
 export {
   GrantRequest,
-  ContinuationRequest,
+  GrantContinuationRequest,
   IncomingPayment,
   ILPStreamConnection,
   OutgoingPayment,

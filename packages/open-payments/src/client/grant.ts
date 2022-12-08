@@ -5,7 +5,7 @@ import {
   InteractiveGrant,
   NonInteractiveGrant,
   GrantRequest,
-  ContinuationRequest
+  GrantContinuationRequest
 } from '../types'
 import { post } from './requests'
 
@@ -20,16 +20,14 @@ interface RequestGrantArgs {
 
 interface ContinuationRequestArgs {
   url: string
-  request: Omit<ContinuationRequest, 'client'>
+  request: Omit<GrantContinuationRequest, 'client'>
 }
 
 export interface GrantRoutes {
   request(
     args: RequestGrantArgs
   ): Promise<InteractiveGrant | NonInteractiveGrant>
-  continue(
-    args: ContinuationRequestArgs
-  ): Promise<NonInteractiveGrant>
+  continue(args: ContinuationRequestArgs): Promise<NonInteractiveGrant>
 }
 
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
@@ -39,12 +37,11 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
     path: getASPath('/'),
     method: HttpMethod.POST
   })
-  const continueGrantValidator = deps.openApi.createResponseValidator<
-    InteractiveGrant | NonInteractiveGrant
-  >({
-    path: getASPath('/continue/{id}'),
-    method: HttpMethod.POST
-  })
+  const continueGrantValidator =
+    deps.openApi.createResponseValidator<NonInteractiveGrant>({
+      path: getASPath('/continue/{id}'),
+      method: HttpMethod.POST
+    })
   return {
     request: (args: RequestGrantArgs) =>
       post(
@@ -58,17 +55,16 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
         },
         requestGrantValidator
       ),
-      continue: (args: ContinuationRequestArgs) => 
-        post(
-          deps,
-          {
-            url: args.url,
-            body: {
-              ...args,
-              client: deps.client
-            }
-          },
-          continueGrantValidator
-        )
+    continue: (args: ContinuationRequestArgs) =>
+      post(
+        deps,
+        {
+          url: args.url,
+          body: {
+            ...args
+          }
+        },
+        continueGrantValidator
+      )
   }
 }
