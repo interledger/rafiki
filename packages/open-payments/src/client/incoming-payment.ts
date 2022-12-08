@@ -128,7 +128,7 @@ export const completeIncomingPayment = async (
   )
 
   try {
-    return validateIncomingPayment(incomingPayment)
+    return validateCompletedIncomingPayment(incomingPayment)
   } catch (error) {
     const errorMessage = 'Could not validate incoming payment'
     logger.error({ url, validateError: error?.message }, errorMessage)
@@ -194,12 +194,12 @@ export const validateCompletedIncomingPayment = (
 ): IncomingPayment => {
   const { completed, expiresAt } = payment
 
-  if (completed === false) {
-    throw new Error('Incoming payment is not completed.')
-  }
-
   if (new Date(expiresAt).getTime() <= Date.now()) {
     throw new Error('Can not complete an expired incoming payment.')
+  }
+
+  if (completed === false) {
+    throw new Error('Incoming payment could not be completed.')
   }
 
   return validateIncomingPayment(payment)
