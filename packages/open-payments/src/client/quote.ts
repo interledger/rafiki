@@ -11,16 +11,13 @@ export interface QuoteRoutes {
   get(args: GetArgs): Promise<Quote>
 }
 
-export const createQuoteRoutes = (
-  deps: RouteDeps
-): QuoteRoutes => {
+export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   const { axiosInstance, openApi, logger } = deps
 
-  const getQuoteValidator =
-    openApi.createResponseValidator<Quote>({
-      path: getRSPath('/quotes/{id}'),
-      method: HttpMethod.GET
-    })
+  const getQuoteValidator = openApi.createResponseValidator<Quote>({
+    path: getRSPath('/quotes/{id}'),
+    method: HttpMethod.GET
+  })
 
   return {
     get: (args: GetArgs) =>
