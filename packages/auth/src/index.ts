@@ -116,16 +116,16 @@ export function initIocContainer(
       const authServerSpec = await createOpenAPI(
         path.resolve(__dirname, './openapi/auth-server.yaml')
       )
-      const resourceServerSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/resource-server.yaml')
-      )
       const idpSpec = await createOpenAPI(
         path.resolve(__dirname, './openapi/id-provider.yaml')
       )
+      const tokenIntrospectionSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/token-introspection.yaml')
+      )
       return {
         authServerSpec,
-        resourceServerSpec,
-        idpSpec
+        idpSpec,
+        tokenIntrospectionSpec
       }
     } catch (err) {
       const logger = await deps.use('logger')

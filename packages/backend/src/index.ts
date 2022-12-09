@@ -111,15 +111,15 @@ export function initIocContainer(
   })
   container.singleton('openApi', async (deps: IocContract<AppServices>) => {
     try {
-      const authServerSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/auth-server.yaml')
+      const tokenIntrospectionSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/token-introspection.yaml')
       )
       const resourceServerSpec = await createOpenAPI(
         path.resolve(__dirname, './openapi/resource-server.yaml')
       )
       return {
-        authServerSpec,
-        resourceServerSpec
+        resourceServerSpec,
+        tokenIntrospectionSpec
       }
     } catch (err) {
       const logger = await deps.use('logger')
@@ -182,11 +182,11 @@ export function initIocContainer(
   })
   container.singleton('authService', async (deps) => {
     const config = await deps.use('config')
-    const { authServerSpec } = await deps.use('openApi')
+    const { tokenIntrospectionSpec } = await deps.use('openApi')
     return await createAuthService({
       logger: await deps.use('logger'),
       authServerIntrospectionUrl: config.authServerIntrospectionUrl,
-      authServerSpec
+      tokenIntrospectionSpec
     })
   })
   container.singleton('paymentPointerService', async (deps) => {
