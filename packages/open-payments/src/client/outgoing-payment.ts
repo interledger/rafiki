@@ -14,12 +14,6 @@ interface GetArgs {
   accessToken: string
 }
 
-interface ListArgs {
-  url: string
-  accessToken: string
-  pagination?: PaginationArgs
-}
-
 interface PostArgs<T> {
   url: string
   body: T
@@ -28,7 +22,10 @@ interface PostArgs<T> {
 
 export interface OutgoingPaymentRoutes {
   get(args: GetArgs): Promise<OutgoingPayment>
-  list(args: ListArgs): Promise<OutgoingPaymentPaginationResult>
+  list(
+    args: GetArgs,
+    pagination?: PaginationArgs
+  ): Promise<OutgoingPaymentPaginationResult>
   create(args: PostArgs<CreateOutgoingPaymentArgs>): Promise<OutgoingPayment>
 }
 
@@ -62,11 +59,12 @@ export const createOutgoingPaymentRoutes = (
         args,
         getOutgoingPaymentOpenApiValidator
       ),
-    list: (args: ListArgs) =>
+    list: (getArgs: GetArgs, pagination?: PaginationArgs) =>
       listOutgoingPayments(
         { axiosInstance, logger },
-        args,
-        listOutgoingPaymentOpenApiValidator
+        getArgs,
+        listOutgoingPaymentOpenApiValidator,
+        pagination
       ),
     create: (args: PostArgs<CreateOutgoingPaymentArgs>) =>
       createOutgoingPayment(
@@ -127,20 +125,19 @@ export const createOutgoingPayment = async (
 
 export const listOutgoingPayments = async (
   deps: BaseDeps,
-  args: ListArgs,
-  validateOpenApiResponse: ResponseValidator<OutgoingPaymentPaginationResult>
+  getArgs: GetArgs,
+  validateOpenApiResponse: ResponseValidator<OutgoingPaymentPaginationResult>,
+  pagination?: PaginationArgs
 ) => {
   const { axiosInstance, logger } = deps
-  const { url, accessToken } = args
+  const { url, accessToken } = getArgs
 
   const outgoingPayments = await get(
     { axiosInstance, logger },
     {
       url,
       accessToken,
-      ...(args.pagination
-        ? { queryParams: { pagination: args.pagination } }
-        : {})
+      ...(pagination ? { queryParams: { ...pagination } } : {})
     },
     validateOpenApiResponse
   )
