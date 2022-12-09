@@ -145,6 +145,153 @@ describe('outgoing-payment', (): void => {
     })
   })
 
+  describe('listOutgoingPayment', (): void => {
+    describe('forward pagination', (): void => {
+      test.each`
+        first        | cursor
+        ${undefined} | ${undefined}
+        ${1}         | ${undefined}
+        ${5}         | ${uuid()}
+      `(
+        'returns outgoing payment list',
+        async ({ first, cursor }): Promise<void> => {
+          const outgoingPaymentPaginationResult =
+            mockOutgoingPaymentPaginationResult({
+              result: Array(first).fill(mockOutgoingPayment())
+            })
+
+          const scope = nock(baseUrl)
+            .get('/outgoing-payments')
+            .query({
+              ...(first ? { first } : {}),
+              ...(cursor ? { cursor } : {})
+            })
+            .reply(200, outgoingPaymentPaginationResult)
+
+          const result = await listOutgoingPayments(
+            {
+              axiosInstance,
+              logger
+            },
+            {
+              url: `${baseUrl}/outgoing-payments`,
+              accessToken: 'accessToken'
+            },
+            openApiValidators.successfulValidator,
+            {
+              first,
+              cursor
+            }
+          )
+          expect(result).toStrictEqual(outgoingPaymentPaginationResult)
+          scope.done()
+        }
+      )
+    })
+
+    describe('backward pagination', (): void => {
+      test.each`
+        last         | cursor
+        ${undefined} | ${uuid()}
+        ${5}         | ${uuid()}
+      `(
+        'returns outgoing payment list',
+        async ({ last, cursor }): Promise<void> => {
+          const outgoingPaymentPaginationResult =
+            mockOutgoingPaymentPaginationResult({
+              result: Array(last).fill(mockOutgoingPayment())
+            })
+
+          const scope = nock(baseUrl)
+            .get('/outgoing-payments')
+            .query({ ...(last ? { last } : {}), cursor })
+            .reply(200, outgoingPaymentPaginationResult)
+
+          const result = await listOutgoingPayments(
+            {
+              axiosInstance,
+              logger
+            },
+            {
+              url: `${baseUrl}/outgoing-payments`,
+              accessToken: 'accessToken'
+            },
+            openApiValidators.successfulValidator,
+            {
+              last,
+              cursor
+            }
+          )
+          expect(result).toStrictEqual(outgoingPaymentPaginationResult)
+          scope.done()
+        }
+      )
+    })
+
+    test('throws if an outgoing payment does not pass validation', async (): Promise<void> => {
+      const invalidOutgoingPayment = mockOutgoingPayment({
+        sendAmount: {
+          assetCode: 'CAD',
+          assetScale: 2,
+          value: '5'
+        },
+        sentAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '0'
+        }
+      })
+
+      const outgoingPaymentPaginationResult =
+        mockOutgoingPaymentPaginationResult({
+          result: [invalidOutgoingPayment]
+        })
+
+      const scope = nock(baseUrl)
+        .get('/outgoing-payments')
+        .reply(200, outgoingPaymentPaginationResult)
+
+      await expect(() =>
+        listOutgoingPayments(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/outgoing-payments`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError(/Could not validate outgoing payment/)
+      scope.done()
+    })
+
+    test('throws if an outgoing payment does not pass open api validation', async (): Promise<void> => {
+      const outgoingPaymentPaginationResult =
+        mockOutgoingPaymentPaginationResult()
+
+      const scope = nock(baseUrl)
+        .get('/outgoing-payments')
+        .reply(200, outgoingPaymentPaginationResult)
+
+      await expect(() =>
+        listOutgoingPayments(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/outgoing-payments`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+      scope.done()
+    })
+  })
+
   describe('createOutgoingPayment', (): void => {
     const quoteId = `${baseUrl}/quotes/${uuid()}`
 
