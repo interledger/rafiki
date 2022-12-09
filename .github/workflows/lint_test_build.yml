@@ -14,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm checks
 
@@ -23,7 +22,6 @@ jobs:
     needs: checkout
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: pnpm --filter backend test
@@ -33,7 +31,6 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter frontend test
 
@@ -42,8 +39,6 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth fetch-schemas
@@ -60,7 +55,6 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter openapi test
 
@@ -69,7 +63,6 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter mock-account-provider build
 
@@ -78,7 +71,6 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter openapi build
       - run: pnpm --filter open-payments test
@@ -94,7 +86,6 @@ jobs:
       - mock-account-provider
       - open-payments
     steps:
-      - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm build
 
