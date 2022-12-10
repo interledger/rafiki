@@ -1,6 +1,5 @@
 import { Server } from 'http'
 import { EventEmitter } from 'events'
-import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
@@ -37,66 +36,12 @@ export interface AppContextData extends DefaultContext {
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
-interface ClientKeyContext extends AppContext {
-  clientKeyId: string
-}
-
-type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
-  ClientKeyContext['request'],
-  'body'
-> & {
-  body: BodyT
-  query: ParsedUrlQuery & QueryT
-}
-
-type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
-  ClientKeyContext,
-  'request'
-> & {
-  request: GrantRequest<BodyT, QueryT>
-}
-
-type InteractionRequest<
-  BodyT = never,
-  QueryT = ParsedUrlQuery,
-  ParamsT = { [key: string]: string }
-> = Omit<AppContext['request'], 'body'> & {
-  body: BodyT
-  query: ParsedUrlQuery & QueryT
-  params: ParamsT
-}
-
-type InteractionContext<QueryT, ParamsT> = Omit<AppContext, 'request'> & {
-  request: InteractionRequest<QueryT, ParamsT>
-}
-
-type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body?: BodyT
-}
-
-type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
-  request: TokenRequest<BodyT>
-}
-
-type ManagementRequest = Omit<AppContext['request'], 'params'> & {
-  params?: Record<'id', string>
-}
-
-type ManagementContext = Omit<AppContext, 'request'> & {
-  request: ManagementRequest
-}
-
-export type CreateContext<BodyT> = GrantContext<BodyT>
-export type ContinueContext<BodyT, QueryT> = GrantContext<BodyT, QueryT>
-
-export type StartContext<QueryT, ParamsT> = InteractionContext<QueryT, ParamsT>
-export type GetContext<ParamsT> = InteractionContext<never, ParamsT>
-export type ChooseContext<ParamsT> = InteractionContext<never, ParamsT>
-export type FinishContext<ParamsT> = InteractionContext<never, ParamsT>
-
-export type IntrospectContext<BodyT> = TokenContext<BodyT>
-export type RevokeContext = ManagementContext
-export type RotateContext = ManagementContext
+type ContextType<T> = T extends (
+  ctx: infer Context
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+) => any
+  ? Context
+  : never
 
 export interface DatabaseCleanupRule {
   /**
@@ -255,109 +200,164 @@ export class App {
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
     // Grant Initiation
+    const {
+      create: grantCreate,
+      continue: grantContinue
+    }: {
+      create: (ctx: AppContext) => Promise<void>
+      continue: (ctx: AppContext) => Promise<void>
+    } = grantRoutes
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware(openApi.authServerSpec, {
-        path: '/',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware<ContextType<typeof grantCreate>>(
+        openApi.authServerSpec,
+        {
+          path: '/',
+          method: HttpMethod.POST
+        }
+      ),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : grantInitiationHttpsigMiddleware,
-      grantRoutes.create
+      grantCreate
     )
 
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware(openApi.authServerSpec, {
-        path: '/continue/{id}',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware<ContextType<typeof grantContinue>>(
+        openApi.authServerSpec,
+        {
+          path: '/continue/{id}',
+          method: HttpMethod.POST
+        }
+      ),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : grantContinueHttpsigMiddleware,
-      grantRoutes.continue
+      grantContinue
     )
 
     // Token Rotation
+    const {
+      rotate: tokenRotate,
+      revoke: tokenRevoke,
+      introspect: tokenIntrospect
+    }: {
+      rotate: (ctx: AppContext) => Promise<void>
+      revoke: (ctx: AppContext) => Promise<void>
+      introspect: (ctx: AppContext) => Promise<void>
+    } = accessTokenRoutes
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware(openApi.authServerSpec, {
-        path: '/token/{id}',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware<ContextType<typeof tokenRotate>>(
+        openApi.authServerSpec,
+        {
+          path: '/token/{id}',
+          method: HttpMethod.POST
+        }
+      ),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : tokenHttpsigMiddleware,
-      accessTokenRoutes.rotate
+      tokenRotate
     )
 
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware(openApi.authServerSpec, {
-        path: '/token/{id}',
-        method: HttpMethod.DELETE
-      }),
+      createValidatorMiddleware<ContextType<typeof tokenRevoke>>(
+        openApi.authServerSpec,
+        {
+          path: '/token/{id}',
+          method: HttpMethod.DELETE
+        }
+      ),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : tokenHttpsigMiddleware,
-      accessTokenRoutes.revoke
+      tokenRevoke
     )
 
     /* AS <-> RS Routes */
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware(openApi.tokenIntrospectionSpec, {
-        path: '/introspect',
-        method: HttpMethod.POST
-      }),
-      accessTokenRoutes.introspect
+      createValidatorMiddleware<ContextType<typeof tokenIntrospect>>(
+        openApi.tokenIntrospectionSpec,
+        {
+          path: '/introspect',
+          method: HttpMethod.POST
+        }
+      ),
+      tokenIntrospect
     )
 
     /* Front Channel Routes */
     // TODO: update front-channel routes to have /frontend prefix here and in openapi spec
 
+    const {
+      start: interactionStart,
+      finish: interactionFinish,
+      details: interactionDetails,
+      acceptOrReject: interactionAcceptOrReject
+    }: {
+      start: (ctx: AppContext) => Promise<void>
+      finish: (ctx: AppContext) => Promise<void>
+      details: (ctx: AppContext) => Promise<void>
+      acceptOrReject: (ctx: AppContext) => Promise<void>
+    } = grantRoutes.interaction
+
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware(openApi.idpSpec, {
-        path: '/interact/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
-      grantRoutes.interaction.start
+      createValidatorMiddleware<ContextType<typeof interactionStart>>(
+        openApi.idpSpec,
+        {
+          path: '/interact/{id}/{nonce}',
+          method: HttpMethod.GET
+        }
+      ),
+      interactionStart
     )
 
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware(openApi.idpSpec, {
-        path: '/interact/{id}/{nonce}/finish',
-        method: HttpMethod.GET
-      }),
-      grantRoutes.interaction.finish
+      createValidatorMiddleware<ContextType<typeof interactionFinish>>(
+        openApi.idpSpec,
+        {
+          path: '/interact/{id}/{nonce}/finish',
+          method: HttpMethod.GET
+        }
+      ),
+      interactionFinish
     )
 
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
-      grantRoutes.interaction.details
+      createValidatorMiddleware<ContextType<typeof interactionDetails>>(
+        openApi.idpSpec,
+        {
+          path: '/grant/{id}/{nonce}',
+          method: HttpMethod.GET
+        }
+      ),
+      interactionDetails
     )
 
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}/{choice}',
-        method: HttpMethod.POST
-      }),
-      grantRoutes.interaction.acceptOrReject
+      createValidatorMiddleware<ContextType<typeof interactionAcceptOrReject>>(
+        openApi.idpSpec,
+        {
+          path: '/grant/{id}/{nonce}/{choice}',
+          method: HttpMethod.POST
+        }
+      ),
+      interactionAcceptOrReject
     )
 
     this.koa.use(this.publicRouter.middleware())

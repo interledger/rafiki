@@ -31,6 +31,7 @@ export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
       } else if (isValidationError(err)) {
         ctx.throw(err.status ?? 500, err.errors[0])
       } else {
+        console.log('err=', err)
         ctx.throw(500)
       }
     }
