@@ -2,7 +2,7 @@ import { OpenAPI, RequestOptions, isValidationError } from './'
 
 import Koa from 'koa'
 
-export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
+export function createValidatorMiddleware<T extends Koa.DefaultContext>(
   spec: OpenAPI,
   options: RequestOptions
 ): (ctx: Koa.Context, next: () => Promise<unknown>) => Promise<void> {

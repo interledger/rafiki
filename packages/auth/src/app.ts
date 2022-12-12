@@ -13,7 +13,20 @@ import Router from '@koa/router'
 import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
-import { AccessTokenRoutes } from './accessToken/routes'
+import {
+  CreateContext,
+  ContinueContext,
+  StartContext,
+  GetContext,
+  ChooseContext,
+  FinishContext
+} from './grant/routes'
+import {
+  AccessTokenRoutes,
+  IntrospectContext,
+  RevokeContext,
+  RotateContext
+} from './accessToken/routes'
 import { createValidatorMiddleware, HttpMethod } from 'openapi'
 
 import {
@@ -35,13 +48,6 @@ export interface AppContextData extends DefaultContext {
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
-
-type ContextType<T> = T extends (
-  ctx: infer Context
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-) => any
-  ? Context
-  : never
 
 export interface DatabaseCleanupRule {
   /**
@@ -209,13 +215,10 @@ export class App {
     } = grantRoutes
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware<ContextType<typeof grantCreate>>(
-        openApi.authServerSpec,
-        {
-          path: '/',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
+        path: '/',
+        method: HttpMethod.POST
+      }),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : grantInitiationHttpsigMiddleware,
@@ -225,13 +228,10 @@ export class App {
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware<ContextType<typeof grantContinue>>(
-        openApi.authServerSpec,
-        {
-          path: '/continue/{id}',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
+        path: '/continue/{id}',
+        method: HttpMethod.POST
+      }),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : grantContinueHttpsigMiddleware,
@@ -250,13 +250,10 @@ export class App {
     } = accessTokenRoutes
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware<ContextType<typeof tokenRotate>>(
-        openApi.authServerSpec,
-        {
-          path: '/token/{id}',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<RotateContext>(openApi.authServerSpec, {
+        path: '/token/{id}',
+        method: HttpMethod.POST
+      }),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : tokenHttpsigMiddleware,
@@ -266,13 +263,10 @@ export class App {
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware<ContextType<typeof tokenRevoke>>(
-        openApi.authServerSpec,
-        {
-          path: '/token/{id}',
-          method: HttpMethod.DELETE
-        }
-      ),
+      createValidatorMiddleware<RevokeContext>(openApi.authServerSpec, {
+        path: '/token/{id}',
+        method: HttpMethod.DELETE
+      }),
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : tokenHttpsigMiddleware,
@@ -283,13 +277,10 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware<ContextType<typeof tokenIntrospect>>(
-        openApi.tokenIntrospectionSpec,
-        {
-          path: '/introspect',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<IntrospectContext>(openApi.tokenIntrospectionSpec, {
+        path: '/introspect',
+        method: HttpMethod.POST
+      }),
       tokenIntrospect
     )
 
@@ -311,52 +302,40 @@ export class App {
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware<ContextType<typeof interactionStart>>(
-        openApi.idpSpec,
-        {
-          path: '/interact/{id}/{nonce}',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<StartContext>(openApi.idpSpec, {
+        path: '/interact/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
       interactionStart
     )
 
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware<ContextType<typeof interactionFinish>>(
-        openApi.idpSpec,
-        {
-          path: '/interact/{id}/{nonce}/finish',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<FinishContext>(openApi.idpSpec, {
+        path: '/interact/{id}/{nonce}/finish',
+        method: HttpMethod.GET
+      }),
       interactionFinish
     )
 
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware<ContextType<typeof interactionDetails>>(
-        openApi.idpSpec,
-        {
-          path: '/grant/{id}/{nonce}',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
       interactionDetails
     )
 
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware<ContextType<typeof interactionAcceptOrReject>>(
-        openApi.idpSpec,
-        {
-          path: '/grant/{id}/{nonce}/{choice}',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
       interactionAcceptOrReject
     )
 
