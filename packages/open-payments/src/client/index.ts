@@ -143,7 +143,7 @@ export const createAuthenticatedClient = async (
     }),
     quote: createQuoteRoutes({
       axiosInstance,
-      openApi: authServerOpenApi,
+      openApi: resourceServerOpenApi,
       logger
     })
   }
