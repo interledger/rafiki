@@ -535,15 +535,5 @@ describe('incoming-payment', (): void => {
         'Incoming payment could not be completed.'
       )
     })
-
-    test('throws when trying to complete an expired incoming payment', async (): Promise<void> => {
-      const incomingPayment = mockIncomingPayment({
-        expiresAt: new Date(Date.now() - 60_000).toISOString()
-      })
-
-      expect(() => validateCompletedIncomingPayment(incomingPayment)).toThrow(
-        'Can not complete an expired incoming payment.'
-      )
-    })
   })
 })

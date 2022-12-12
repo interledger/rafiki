@@ -192,11 +192,7 @@ export const validateCreatedIncomingPayment = (
 export const validateCompletedIncomingPayment = (
   payment: IncomingPayment
 ): IncomingPayment => {
-  const { completed, expiresAt } = payment
-
-  if (new Date(expiresAt).getTime() <= Date.now()) {
-    throw new Error('Can not complete an expired incoming payment.')
-  }
+  const { completed } = payment
 
   if (completed === false) {
     throw new Error('Incoming payment could not be completed.')
