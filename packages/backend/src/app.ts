@@ -256,7 +256,7 @@ export class App {
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
     const connectionRoutes = await this.container.use('connectionRoutes')
-    const openApi = await this.container.use('openApi')
+    const { resourceServerSpec } = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
       path.replace(/{/g, ':').replace(/}/g, '')
 
@@ -290,8 +290,8 @@ export class App {
       [AccessAction.ListAll]: 'list'
     }
 
-    for (const path in openApi.paths) {
-      for (const method in openApi.paths[path]) {
+    for (const path in resourceServerSpec.paths) {
+      for (const method in resourceServerSpec.paths[path]) {
         if (isHttpMethod(method)) {
           const action = toAction({ path, method })
           if (!action) {
@@ -314,10 +314,13 @@ export class App {
               route = connectionRoutes.get
               router[method](
                 toRouterPath(path),
-                createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-                  path,
-                  method
-                }),
+                createValidatorMiddleware<ContextType<typeof route>>(
+                  resourceServerSpec,
+                  {
+                    path,
+                    method
+                  }
+                ),
                 route
               )
             } else if (path !== '/' || method !== HttpMethod.GET) {
@@ -329,10 +332,13 @@ export class App {
           router[method](
             PAYMENT_POINTER_PATH + toRouterPath(path),
             createPaymentPointerMiddleware(),
-            createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-              path,
-              method
-            }),
+            createValidatorMiddleware<ContextType<typeof route>>(
+              resourceServerSpec,
+              {
+                path,
+                method
+              }
+            ),
             createAuthMiddleware({
               type,
               action
@@ -348,7 +354,7 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/jwks.json',
         method: HttpMethod.GET
       }),
@@ -363,7 +369,7 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH,
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),

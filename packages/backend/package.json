@@ -8,6 +8,7 @@
     "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
+    "fetch-schemas": "./scripts/get-op-schema.sh",
     "prepack": "pnpm build"
   },
   "devDependencies": {

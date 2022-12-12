@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events'
 import { Server } from 'http'
+import path from 'path'
 import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
@@ -109,13 +110,25 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
-  container.singleton('openApi', async (deps) => {
-    const config = await deps.use('config')
-    return await createOpenAPI(config.openPaymentsSpec)
-  })
-  container.singleton('authOpenApi', async (deps) => {
-    const config = await deps.use('config')
-    return await createOpenAPI(config.authServerSpec)
+  container.singleton('openApi', async (deps: IocContract<AppServices>) => {
+    try {
+      const tokenIntrospectionSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/token-introspection.yaml')
+      )
+      const resourceServerSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/resource-server.yaml')
+      )
+      return {
+        resourceServerSpec,
+        tokenIntrospectionSpec
+      }
+    } catch (err) {
+      const logger = await deps.use('logger')
+      logger.error({ err }, 'error while loading OpenAPI files')
+      throw new Error(
+        'Could not load OpenAPI files. Did you run `pnpm fetch-schemas`?'
+      )
+    }
   })
   container.singleton('openPaymentsClient', async (deps) => {
     const config = await deps.use('config')
@@ -170,10 +183,11 @@ export function initIocContainer(
   })
   container.singleton('authService', async (deps) => {
     const config = await deps.use('config')
+    const { tokenIntrospectionSpec } = await deps.use('openApi')
     return await createAuthService({
       logger: await deps.use('logger'),
       authServerIntrospectionUrl: config.authServerIntrospectionUrl,
-      authOpenApi: await deps.use('authOpenApi')
+      tokenIntrospectionSpec
     })
   })
   container.singleton('authServerService', async (deps) => {

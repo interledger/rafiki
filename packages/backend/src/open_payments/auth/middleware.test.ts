@@ -123,9 +123,9 @@ describe('Auth Middleware', (): void => {
       type: AccessType.IncomingPayment,
       action: AccessAction.Read
     })
-    const authOpenApi = await deps.use('authOpenApi')
+    const { tokenIntrospectionSpec } = await deps.use('openApi')
     requestPath = '/introspect'
-    validateRequest = authOpenApi.createRequestValidator({
+    validateRequest = tokenIntrospectionSpec.createRequestValidator({
       path: requestPath,
       method: HttpMethod.POST
     })
