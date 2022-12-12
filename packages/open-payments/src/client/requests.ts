@@ -16,14 +16,16 @@ interface PostArgs<T> {
   accessToken?: string
 }
 
+const removeEmptyValues = (obj: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null))
+
 export const get = async <T>(
   deps: BaseDeps,
   args: GetArgs,
   openApiResponseValidator: ResponseValidator<T>
 ): Promise<T> => {
   const { axiosInstance, logger } = deps
-  const { accessToken, queryParams } = args
-
+  const { accessToken } = args
 
   const requestUrl = new URL(args.url)
   if (process.env.NODE_ENV === 'development') {
@@ -39,10 +41,7 @@ export const get = async <T>(
             Authorization: `GNAP ${accessToken}`
           }
         : {},
-      params:
-        queryParams && Object.keys(queryParams).length > 0
-          ? args.queryParams
-          : {}
+      params: args.queryParams ? removeEmptyValues(args.queryParams) : {}
     })
 
     try {

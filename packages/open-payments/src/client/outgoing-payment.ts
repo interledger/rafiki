@@ -14,6 +14,11 @@ interface GetArgs {
   accessToken: string
 }
 
+interface ListGetArgs {
+  paymentPointer: string
+  accessToken: string
+}
+
 interface PostArgs<T> {
   url: string
   body: T
@@ -23,7 +28,7 @@ interface PostArgs<T> {
 export interface OutgoingPaymentRoutes {
   get(args: GetArgs): Promise<OutgoingPayment>
   list(
-    args: GetArgs,
+    args: ListGetArgs,
     pagination?: PaginationArgs
   ): Promise<OutgoingPaymentPaginationResult>
   create(args: PostArgs<CreateOutgoingPaymentArgs>): Promise<OutgoingPayment>
@@ -59,7 +64,7 @@ export const createOutgoingPaymentRoutes = (
         args,
         getOutgoingPaymentOpenApiValidator
       ),
-    list: (getArgs: GetArgs, pagination?: PaginationArgs) =>
+    list: (getArgs: ListGetArgs, pagination?: PaginationArgs) =>
       listOutgoingPayments(
         { axiosInstance, logger },
         getArgs,
@@ -125,12 +130,13 @@ export const createOutgoingPayment = async (
 
 export const listOutgoingPayments = async (
   deps: BaseDeps,
-  getArgs: GetArgs,
+  getArgs: ListGetArgs,
   validateOpenApiResponse: ResponseValidator<OutgoingPaymentPaginationResult>,
   pagination?: PaginationArgs
 ) => {
   const { axiosInstance, logger } = deps
-  const { url, accessToken } = getArgs
+  const { accessToken, paymentPointer } = getArgs
+  const url = `${paymentPointer}${getRSPath('/outgoing-payments')}`
 
   const outgoingPayments = await get(
     { axiosInstance, logger },

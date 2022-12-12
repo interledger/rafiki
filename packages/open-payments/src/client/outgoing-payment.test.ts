@@ -146,6 +146,8 @@ describe('outgoing-payment', (): void => {
   })
 
   describe('listOutgoingPayment', (): void => {
+    const paymentPointer = 'http://localhost:1000/.well-known/pay'
+
     describe('forward pagination', (): void => {
       test.each`
         first        | cursor
@@ -160,7 +162,7 @@ describe('outgoing-payment', (): void => {
               result: Array(first).fill(mockOutgoingPayment())
             })
 
-          const scope = nock(baseUrl)
+          const scope = nock(paymentPointer)
             .get('/outgoing-payments')
             .query({
               ...(first ? { first } : {}),
@@ -174,7 +176,7 @@ describe('outgoing-payment', (): void => {
               logger
             },
             {
-              url: `${baseUrl}/outgoing-payments`,
+              paymentPointer,
               accessToken: 'accessToken'
             },
             openApiValidators.successfulValidator,
@@ -202,7 +204,7 @@ describe('outgoing-payment', (): void => {
               result: Array(last).fill(mockOutgoingPayment())
             })
 
-          const scope = nock(baseUrl)
+          const scope = nock(paymentPointer)
             .get('/outgoing-payments')
             .query({ ...(last ? { last } : {}), cursor })
             .reply(200, outgoingPaymentPaginationResult)
@@ -213,7 +215,7 @@ describe('outgoing-payment', (): void => {
               logger
             },
             {
-              url: `${baseUrl}/outgoing-payments`,
+              paymentPointer,
               accessToken: 'accessToken'
             },
             openApiValidators.successfulValidator,
@@ -247,7 +249,7 @@ describe('outgoing-payment', (): void => {
           result: [invalidOutgoingPayment]
         })
 
-      const scope = nock(baseUrl)
+      const scope = nock(paymentPointer)
         .get('/outgoing-payments')
         .reply(200, outgoingPaymentPaginationResult)
 
@@ -258,7 +260,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payments`,
+            paymentPointer,
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
@@ -271,7 +273,7 @@ describe('outgoing-payment', (): void => {
       const outgoingPaymentPaginationResult =
         mockOutgoingPaymentPaginationResult()
 
-      const scope = nock(baseUrl)
+      const scope = nock(paymentPointer)
         .get('/outgoing-payments')
         .reply(200, outgoingPaymentPaginationResult)
 
@@ -282,7 +284,7 @@ describe('outgoing-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payments`,
+            paymentPointer,
             accessToken: 'accessToken'
           },
           openApiValidators.failedValidator
