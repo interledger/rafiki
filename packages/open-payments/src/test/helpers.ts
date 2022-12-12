@@ -65,7 +65,6 @@ export const mockIncomingPayment = (
   },
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  expiresAt: new Date(Date.now() + 60_000).toISOString(),
   ilpStreamConnection: mockILPStreamConnection(),
   ...overrides
 })
