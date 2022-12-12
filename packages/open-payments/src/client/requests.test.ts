@@ -114,6 +114,42 @@ describe('requests', (): void => {
       )
     })
 
+    test('properly sets query parameters', async (): Promise<void> => {
+      const scope = nock(baseUrl)
+        .matchHeader('Signature', (sig) => sig === undefined)
+        .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
+        .get('/incoming-payments')
+        .query({
+          first: 1,
+          cursor: 'id'
+        })
+        .reply(200)
+
+      await get(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/incoming-payments`,
+          queryParams: {
+            first: 1,
+            cursor: 'id'
+          }
+        },
+        responseValidators.successfulValidator
+      )
+      scope.done()
+
+      expect(axiosInstance.get).toHaveBeenCalledWith(
+        `${baseUrl}/incoming-payments`,
+        {
+          headers: {},
+          params: {
+            first: 1,
+            cursor: 'id'
+          }
+        }
+      )
+    })
+
     test('calls validator function properly', async (): Promise<void> => {
       const status = 200
       const body = {
