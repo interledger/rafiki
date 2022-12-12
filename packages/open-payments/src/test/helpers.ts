@@ -6,6 +6,7 @@ import {
   IncomingPayment,
   InteractiveGrant,
   GrantRequest,
+  ContinuationRequest,
   NonInteractiveGrant,
   OutgoingPayment
 } from '../types'
@@ -158,5 +159,12 @@ export const mockGrantRequest = (
       nonce: '456'
     }
   },
+  ...overrides
+})
+
+export const mockContinuationRequest = (
+  overrides?: Partial<ContinuationRequest>
+): ContinuationRequest => ({
+  interact_ref: uuid(),
   ...overrides
 })

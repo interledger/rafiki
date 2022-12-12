@@ -9,6 +9,7 @@ interface GetArgs {
   url: string
   accessToken?: string
 }
+
 interface PostArgs<T> {
   url: string
   body: T
