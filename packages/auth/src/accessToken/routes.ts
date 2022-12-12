@@ -102,7 +102,8 @@ async function rotateToken(
 ): Promise<void> {
   // TODO: verify Authorization: GNAP ${accessToken} contains correct token value
   const { id: managementId } = ctx.params
-  const result = await deps.accessTokenService.rotate(managementId)
+  const token = ctx.headers['authorization'].replace('GNAP ', '')
+  const result = await deps.accessTokenService.rotate(managementId, token)
   if (result.success == true) {
     ctx.status = 200
     ctx.body = {

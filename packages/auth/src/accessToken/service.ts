@@ -16,7 +16,7 @@ export interface AccessTokenService {
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
-  rotate(managementId: string): Promise<Rotation>
+  rotate(managementId: string, tokenValue: string): Promise<Rotation>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -79,7 +79,7 @@ export async function createAccessTokenService({
     revoke: (id: string) => revoke(deps, id),
     create: (grantId: string, opts?: AccessTokenOpts) =>
       createAccessToken(deps, grantId, opts),
-    rotate: (managementId: string) => rotate(deps, managementId)
+    rotate: (managementId: string, tokenValue: string) => rotate(deps, managementId, tokenValue)
   }
 }
 
@@ -159,10 +159,11 @@ async function createAccessToken(
 
 async function rotate(
   deps: ServiceDependencies,
-  managementId: string
+  managementId: string,
+  tokenValue: string
 ): Promise<Rotation> {
   let token = await AccessToken.query(deps.knex).findOne({ managementId })
-  if (token) {
+  if (token && token.value === tokenValue) {
     await token.$query(deps.knex).delete()
     token = await AccessToken.query(deps.knex).insertAndFetch({
       value: crypto.randomBytes(8).toString('hex').toUpperCase(),
