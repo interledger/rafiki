@@ -114,41 +114,42 @@ describe('requests', (): void => {
       )
     })
 
-    test('properly sets query parameters', async (): Promise<void> => {
-      const scope = nock(baseUrl)
-        .matchHeader('Signature', (sig) => sig === undefined)
-        .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
-        .get('/incoming-payments')
-        .query({
-          first: 1,
-          cursor: 'id'
-        })
-        .reply(200)
+    test.each`
+      title                      | queryParams
+      ${'all defined values'}    | ${{ first: 5, cursor: 'id' }}
+      ${'some undefined values'} | ${{ first: 5, cursor: undefined }}
+    `(
+      'properly sets query params with $title',
+      async ({ queryParams }): Promise<void> => {
+        const cleanedQueryParams: any = Object.fromEntries(
+          Object.entries(queryParams).filter(([_, v]) => v != null)
+        )
+        const scope = nock(baseUrl)
+          .matchHeader('Signature', (sig) => sig === undefined)
+          .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
+          .get('/incoming-payments')
+          .query(cleanedQueryParams)
+          .reply(200)
 
-      await get(
-        { axiosInstance, logger },
-        {
-          url: `${baseUrl}/incoming-payments`,
-          queryParams: {
-            first: 1,
-            cursor: 'id'
-          }
-        },
-        responseValidators.successfulValidator
-      )
-      scope.done()
+        await get(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments`,
+            queryParams
+          },
+          responseValidators.successfulValidator
+        )
+        scope.done()
 
-      expect(axiosInstance.get).toHaveBeenCalledWith(
-        `${baseUrl}/incoming-payments`,
-        {
-          headers: {},
-          params: {
-            first: 1,
-            cursor: 'id'
+        expect(axiosInstance.get).toHaveBeenCalledWith(
+          `${baseUrl}/incoming-payments`,
+          {
+            headers: {},
+            params: queryParams
           }
-        }
-      )
-    })
+        )
+      }
+    )
 
     test('calls validator function properly', async (): Promise<void> => {
       const status = 200

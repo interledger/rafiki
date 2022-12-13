@@ -41,9 +41,7 @@ export const get = async <T>(
             Authorization: `GNAP ${accessToken}`
           }
         : {},
-      ...(args.queryParams
-        ? { params: removeEmptyValues(args.queryParams) }
-        : {})
+      params: args.queryParams ? removeEmptyValues(args.queryParams) : undefined
     })
 
     try {
