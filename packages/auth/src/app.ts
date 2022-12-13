@@ -206,13 +206,6 @@ export class App {
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
     // Grant Initiation
-    const {
-      create: grantCreate,
-      continue: grantContinue
-    }: {
-      create: (ctx: AppContext) => Promise<void>
-      continue: (ctx: AppContext) => Promise<void>
-    } = grantRoutes
     this.publicRouter.post(
       '/',
       createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
@@ -222,7 +215,7 @@ export class App {
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : grantInitiationHttpsigMiddleware,
-      grantCreate
+      grantRoutes.create
     )
 
     // Grant Continue
@@ -235,19 +228,10 @@ export class App {
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : grantContinueHttpsigMiddleware,
-      grantContinue
+      grantRoutes.continue
     )
 
     // Token Rotation
-    const {
-      rotate: tokenRotate,
-      revoke: tokenRevoke,
-      introspect: tokenIntrospect
-    }: {
-      rotate: (ctx: AppContext) => Promise<void>
-      revoke: (ctx: AppContext) => Promise<void>
-      introspect: (ctx: AppContext) => Promise<void>
-    } = accessTokenRoutes
     this.publicRouter.post(
       '/token/:id',
       createValidatorMiddleware<RotateContext>(openApi.authServerSpec, {
@@ -257,7 +241,7 @@ export class App {
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : tokenHttpsigMiddleware,
-      tokenRotate
+      accessTokenRoutes.rotate
     )
 
     // Token Revocation
@@ -270,34 +254,25 @@ export class App {
       this.config.bypassSignatureValidation
         ? (ctx, next) => next()
         : tokenHttpsigMiddleware,
-      tokenRevoke
+      accessTokenRoutes.revoke
     )
 
     /* AS <-> RS Routes */
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware<IntrospectContext>(openApi.tokenIntrospectionSpec, {
-        path: '/introspect',
-        method: HttpMethod.POST
-      }),
-      tokenIntrospect
+      createValidatorMiddleware<IntrospectContext>(
+        openApi.tokenIntrospectionSpec,
+        {
+          path: '/introspect',
+          method: HttpMethod.POST
+        }
+      ),
+      accessTokenRoutes.introspect
     )
 
     /* Front Channel Routes */
     // TODO: update front-channel routes to have /frontend prefix here and in openapi spec
-
-    const {
-      start: interactionStart,
-      finish: interactionFinish,
-      details: interactionDetails,
-      acceptOrReject: interactionAcceptOrReject
-    }: {
-      start: (ctx: AppContext) => Promise<void>
-      finish: (ctx: AppContext) => Promise<void>
-      details: (ctx: AppContext) => Promise<void>
-      acceptOrReject: (ctx: AppContext) => Promise<void>
-    } = grantRoutes.interaction
 
     // Interaction start
     this.publicRouter.get(
@@ -306,7 +281,7 @@ export class App {
         path: '/interact/{id}/{nonce}',
         method: HttpMethod.GET
       }),
-      interactionStart
+      grantRoutes.interaction.start
     )
 
     // Interaction finish
@@ -316,7 +291,7 @@ export class App {
         path: '/interact/{id}/{nonce}/finish',
         method: HttpMethod.GET
       }),
-      interactionFinish
+      grantRoutes.interaction.finish
     )
 
     // Grant lookup
@@ -326,7 +301,7 @@ export class App {
         path: '/grant/{id}/{nonce}',
         method: HttpMethod.GET
       }),
-      interactionDetails
+      grantRoutes.interaction.details
     )
 
     // Grant accept/reject
@@ -336,7 +311,7 @@ export class App {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),
-      interactionAcceptOrReject
+      grantRoutes.interaction.acceptOrReject
     )
 
     this.koa.use(this.publicRouter.middleware())
