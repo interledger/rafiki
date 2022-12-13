@@ -67,9 +67,6 @@ pnpm clean
 
 # install dependencies
 pnpm i
-
-# pull in latest openapi specs:
-pnpm fetch-schemas
 ```
 
 ### Local Development
