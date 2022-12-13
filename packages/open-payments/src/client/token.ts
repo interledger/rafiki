@@ -19,7 +19,7 @@ export interface TokenRoutes {
 
 export const createTokenRoutes = (deps: TokenRouteDeps): TokenRoutes => {
   const revokeTokenValidator = deps.openApi.createResponseValidator<
-    InteractiveGrant | NonInteractiveGrant
+    AccessToken
   >({
     path: getASPath('/token/{id}'),
     method: HttpMethod.POST
