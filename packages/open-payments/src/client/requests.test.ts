@@ -122,9 +122,11 @@ describe('requests', (): void => {
     `(
       'properly sets query params with $title',
       async ({ queryParams }): Promise<void> => {
-        const cleanedQueryParams: any = Object.fromEntries(
+        const cleanedQueryParams = Object.fromEntries(
           Object.entries(queryParams).filter(([_, v]) => v != null)
-        )
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ) as any
+
         const scope = nock(baseUrl)
           .matchHeader('Signature', (sig) => sig === undefined)
           .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
