@@ -8,11 +8,15 @@
   ],
   "scripts": {
     "build:deps": "pnpm --filter openapi build",
-    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "generate:types": "npx ts-node scripts/generate-types.ts",
+    "fetch-schemas": "./scripts/fetch-schemas.sh",
+    "generate:auth-server-types": "openapi-typescript src/openapi/auth-server.yaml --output src/openapi/generated/auth-server-types.ts -t",
+    "generate:resource-server-types": "openapi-typescript src/openapi/resource-server.yaml --output src/openapi/generated/resource-server-types.ts -t",
+    "generate:types": "pnpm generate:auth-server-types && pnpm generate:resource-server-types",
     "prepack": "pnpm build",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "copy-files": "cp ./src/openapi/*.yaml ./dist/openapi/"
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
