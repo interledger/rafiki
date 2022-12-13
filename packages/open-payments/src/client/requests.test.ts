@@ -118,6 +118,7 @@ describe('requests', (): void => {
       title                      | queryParams
       ${'all defined values'}    | ${{ first: 5, cursor: 'id' }}
       ${'some undefined values'} | ${{ first: 5, cursor: undefined }}
+      ${'all undefined values'}  | ${{ first: undefined, cursor: undefined }}
     `(
       'properly sets query params with $title',
       async ({ queryParams }): Promise<void> => {
@@ -145,7 +146,7 @@ describe('requests', (): void => {
           `${baseUrl}/incoming-payments`,
           {
             headers: {},
-            params: queryParams
+            params: cleanedQueryParams
           }
         )
       }
