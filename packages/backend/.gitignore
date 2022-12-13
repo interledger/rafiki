@@ -4,3 +4,5 @@ build
 .env
 src/coverage
 tmp
+/src/openapi/resource-server.yaml
+/src/openapi/schemas.yaml

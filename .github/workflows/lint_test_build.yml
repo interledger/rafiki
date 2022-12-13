@@ -26,6 +26,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
+      - run: pnpm --filter backend fetch-schemas
       - run: pnpm --filter backend test
 
   frontend:
@@ -53,7 +54,7 @@ jobs:
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
       - name: Validate Open API specs
         run: |
-          npx @stoplight/spectral-cli lint ./packages/auth/openapi/id-provider.yaml ./packages/auth/openapi/resource-server.yaml
+          npx @stoplight/spectral-cli lint ./packages/auth/openapi/*.yaml
 
   openapi:
     runs-on: ubuntu-latest
