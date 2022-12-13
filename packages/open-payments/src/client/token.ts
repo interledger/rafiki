@@ -1,6 +1,6 @@
 import { HttpMethod } from 'openapi'
 import { RouteDeps } from '.'
-import { getASPath, InteractiveGrant, NonInteractiveGrant } from '../types'
+import { getASPath, AccessToken } from '../types'
 import { post } from './requests'
 
 export interface TokenRouteDeps extends RouteDeps {
@@ -12,30 +12,24 @@ interface RotateRequestArgs {
 }
 
 export interface TokenRoutes {
-  rotate(
-    args: RotateRequestArgs
-  ): Promise<InteractiveGrant | NonInteractiveGrant>
+  rotate(args: RotateRequestArgs): Promise<AccessToken>
 }
 
 export const createTokenRoutes = (deps: TokenRouteDeps): TokenRoutes => {
-  const rotateTokenValidator = deps.openApi.createResponseValidator<
-    AccessToken
-  >({
-    path: getASPath('/token/{id}'),
-    method: HttpMethod.POST
-  })
+  const rotateTokenValidator =
+    deps.openApi.createResponseValidator<AccessToken>({
+      path: getASPath('/token/{id}'),
+      method: HttpMethod.POST
+    })
 
   return {
     rotate: (args: RotateRequestArgs) =>
       post(
         deps,
         {
-          url: args.url,
-          body: {
-            client: deps.client
-          }
+          url: args.url
         },
-        revokeTokenValidator
+        rotateTokenValidator
       )
   }
 }

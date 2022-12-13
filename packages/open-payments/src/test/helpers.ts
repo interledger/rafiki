@@ -6,7 +6,7 @@ import {
   IncomingPayment,
   InteractiveGrant,
   GrantRequest,
-  ContinuationRequest,
+  GrantContinuationRequest,
   NonInteractiveGrant,
   OutgoingPayment
 } from '../types'
@@ -163,8 +163,8 @@ export const mockGrantRequest = (
 })
 
 export const mockContinuationRequest = (
-  overrides?: Partial<ContinuationRequest>
-): ContinuationRequest => ({
+  overrides?: Partial<GrantContinuationRequest>
+): GrantContinuationRequest => ({
   interact_ref: uuid(),
   ...overrides
 })

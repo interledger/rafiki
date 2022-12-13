@@ -22,6 +22,7 @@ import {
   OutgoingPaymentRoutes
 } from './outgoing-payment'
 import { createTokenRoutes, TokenRoutes } from './token'
+import { createQuoteRoutes, QuoteRoutes } from './quote'
 
 export interface BaseDeps {
   axiosInstance: AxiosInstance
@@ -106,6 +107,7 @@ export interface AuthenticatedClient extends UnauthenticatedClient {
   outgoingPayment: OutgoingPaymentRoutes
   grant: GrantRoutes
   token: TokenRoutes
+  quote: QuoteRoutes
 }
 
 export const createAuthenticatedClient = async (
@@ -146,6 +148,11 @@ export const createAuthenticatedClient = async (
       openApi: authServerOpenApi,
       logger,
       client: args.paymentPointerUrl
+    }),
+    quote: createQuoteRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
     })
   }
 }

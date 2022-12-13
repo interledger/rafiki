@@ -1,7 +1,9 @@
 import {
+  completeIncomingPayment,
   createIncomingPayment,
   createIncomingPaymentRoutes,
   getIncomingPayment,
+  validateCompletedIncomingPayment,
   validateCreatedIncomingPayment,
   validateIncomingPayment
 } from './incoming-payment'
@@ -54,6 +56,21 @@ describe('incoming-payment', (): void => {
 
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/incoming-payments',
+        method: HttpMethod.POST
+      })
+    })
+
+    test('creates completeIncomingPaymentOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/incoming-payments/{id}/complete',
         method: HttpMethod.POST
       })
     })
@@ -230,6 +247,77 @@ describe('incoming-payment', (): void => {
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
+      scope.done()
+    })
+  })
+
+  describe('completeIncomingPayment', (): void => {
+    test('returns incoming payment if it is successfully completed', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      const scope = nock(baseUrl)
+        .post(`/incoming-payments/${incomingPayment.id}/complete`)
+        .reply(200, incomingPayment)
+
+      const result = await completeIncomingPayment(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/incoming-payments/${incomingPayment.id}/complete`,
+          accessToken: 'accessToken'
+        },
+        openApiValidators.successfulValidator
+      )
+
+      scope.done()
+
+      expect(result).toStrictEqual(incomingPayment)
+    })
+
+    test('throws if the incoming payment does not pass validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: false
+      })
+
+      const scope = nock(baseUrl)
+        .post(`/incoming-payments/${incomingPayment.id}/complete`)
+        .reply(200, incomingPayment)
+
+      await expect(() =>
+        completeIncomingPayment(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments/${incomingPayment.id}/complete`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError()
+
+      scope.done()
+    })
+
+    test('throws if the incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      const scope = nock(baseUrl)
+        .post(`/incoming-payments/${incomingPayment.id}/complete`)
+        .reply(200, incomingPayment)
+
+      await expect(() =>
+        completeIncomingPayment(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments/${incomingPayment.id}/complete`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+
       scope.done()
     })
   })
@@ -423,6 +511,28 @@ describe('incoming-payment', (): void => {
 
       expect(() => validateCreatedIncomingPayment(incomingPayment)).toThrow(
         'Can not create a completed incoming payment.'
+      )
+    })
+  })
+
+  describe('validateCompletedIncomingPayment', (): void => {
+    test('returns the completed incoming payment if it passes validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      expect(validateCompletedIncomingPayment(incomingPayment)).toStrictEqual(
+        incomingPayment
+      )
+    })
+
+    test('throws if the incoming payment is not completed', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: false
+      })
+
+      expect(() => validateCompletedIncomingPayment(incomingPayment)).toThrow(
+        'Incoming payment could not be completed.'
       )
     })
   })
