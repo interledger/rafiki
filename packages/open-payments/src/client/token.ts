@@ -1,10 +1,6 @@
 import { HttpMethod } from 'openapi'
 import { RouteDeps } from '.'
-import {
-  getASPath,
-  InteractiveGrant,
-  NonInteractiveGrant,
-} from '../types'
+import { getASPath, InteractiveGrant, NonInteractiveGrant } from '../types'
 import { post } from './requests'
 
 export interface TokenRouteDeps extends RouteDeps {
@@ -12,17 +8,17 @@ export interface TokenRouteDeps extends RouteDeps {
 }
 
 interface RotateRequestArgs {
-    url: string
+  url: string
 }
 
 export interface TokenRoutes {
-    rotate(
-      args: RotateRequestArgs
-    ): Promise<InteractiveGrant | NonInteractiveGrant>
+  rotate(
+    args: RotateRequestArgs
+  ): Promise<InteractiveGrant | NonInteractiveGrant>
 }
 
-export const createTokenRoutes = (deps: TokenRouteDeps) : TokenRoutes => {
-    const revokeTokenValidator = deps.openApi.createResponseValidator<
+export const createTokenRoutes = (deps: TokenRouteDeps): TokenRoutes => {
+  const revokeTokenValidator = deps.openApi.createResponseValidator<
     InteractiveGrant | NonInteractiveGrant
   >({
     path: getASPath('/token/{id}'),
@@ -40,7 +36,6 @@ export const createTokenRoutes = (deps: TokenRouteDeps) : TokenRoutes => {
           }
         },
         revokeTokenValidator
-      ),
+      )
   }
 }
-
