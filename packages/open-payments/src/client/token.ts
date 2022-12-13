@@ -18,7 +18,7 @@ export interface TokenRoutes {
 }
 
 export const createTokenRoutes = (deps: TokenRouteDeps): TokenRoutes => {
-  const revokeTokenValidator = deps.openApi.createResponseValidator<
+  const rotateTokenValidator = deps.openApi.createResponseValidator<
     AccessToken
   >({
     path: getASPath('/token/{id}'),
