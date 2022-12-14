@@ -1,4 +1,4 @@
-import { createTokenRoutes, rotateToken, TokenRoutes } from './token'
+import { createTokenRoutes, rotateToken } from './token'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import config from '../config'
 import {
