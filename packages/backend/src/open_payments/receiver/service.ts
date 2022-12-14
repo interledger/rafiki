@@ -215,9 +215,9 @@ async function getIncomingPaymentGrant(
     return existingGrant
   }
 
-  const grant = await deps.openPaymentsClient.grant.request({
-    url: paymentPointer.authServer,
-    request: {
+  const grant = await deps.openPaymentsClient.grant.request(
+    { url: paymentPointer.authServer },
+    {
       access_token: {
         access: [
           {
@@ -230,7 +230,8 @@ async function getIncomingPaymentGrant(
         start: ['redirect']
       }
     }
-  })
+  )
+
   if (isNonInteractiveGrant(grant)) {
     return await deps.grantService.create({
       ...grantOptions,
