@@ -32,10 +32,10 @@ services:
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.primary.yml
-      KEY_FILE: /workspace/private-key-1669713338825.pem
+      KEY_FILE: /workspace/private-key.pem
     volumes:
       - ./seed.primary.yml:/workspace/seed.primary.yml
-      - ./keys/private-key-1669713338825.pem:/workspace/private-key-1669713338825.pem
+      - ./private-key.pem:/workspace/private-key.pem
     depends_on:
       - backend
   backend:
@@ -131,9 +131,9 @@ services:
     ports:
       - '3040:3000'
     environment:
-      KEY_FILE: /workspace/private-key-1669713338825.pem
+      KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./keys/private-key-1669713338825.pem:/workspace/private-key-1669713338825.pem
+      - ./private-key.pem:/workspace/private-key.pem
     networks:
       - rafiki
 volumes:

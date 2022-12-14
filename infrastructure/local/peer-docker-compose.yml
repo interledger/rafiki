@@ -66,10 +66,10 @@ services:
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.peer.yml
-      KEY_FILE: /workspace/private-key-1669714408916.pem
+      KEY_FILE: /workspace/private-key.pem
     volumes:
       - ./seed.peer.yml:/workspace/seed.peer.yml
-      - ./keys/private-key-1669714408916.pem:/workspace/private-key-1669714408916.pem
+      - ./peer-private-key.pem:/workspace/private-key.pem
     depends_on:
       - peer-backend
   peer-signatures:
@@ -80,9 +80,9 @@ services:
     ports:
       - '3041:3000'
     environment:
-      KEY_FILE: /workspace/private-key-1669714408916.pem
+      KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./keys/private-key-1669714408916.pem:/workspace/private-key-1669714408916.pem
+      - ./peer-private-key.pem:/workspace/private-key.pem
 networks:
   local_rafiki:
     external: true
