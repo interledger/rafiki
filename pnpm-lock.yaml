@@ -365,7 +365,6 @@ importers:
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
       http-signature-utils: workspace:../http-signature-utils
-      httpbis-digest-headers: github:interledger/httpbis-digest-headers
       nock: ^13.2.9
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
@@ -377,7 +376,6 @@ importers:
       axios: 1.1.2
       http-message-signatures: 0.1.2
       http-signature-utils: link:../http-signature-utils
-      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       openapi: link:../openapi
       pino: 8.4.2
     devDependencies:
