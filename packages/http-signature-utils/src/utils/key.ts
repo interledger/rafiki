@@ -1,12 +1,10 @@
 import * as crypto from 'crypto'
 import * as fs from 'fs'
 
-const TMP_DIR = './tmp'
-const PRIVATE_KEY_FILE = `${TMP_DIR}/private-key-${new Date().getTime()}.pem`
-
 export function parseOrProvisionKey(
   keyFile: string | undefined
 ): crypto.KeyObject {
+  const TMP_DIR = './tmp'
   if (keyFile) {
     try {
       const key = crypto.createPrivateKey(fs.readFileSync(keyFile))
@@ -27,7 +25,7 @@ export function parseOrProvisionKey(
     fs.mkdirSync(TMP_DIR)
   }
   fs.writeFileSync(
-    PRIVATE_KEY_FILE,
+    `${TMP_DIR}/private-key-${new Date().getTime()}.pem`,
     keypair.privateKey.export({ format: 'pem', type: 'pkcs8' })
   )
   return keypair.privateKey
