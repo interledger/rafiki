@@ -306,10 +306,10 @@ describe('Receiver Service', (): void => {
             url: paymentPointer.url
           })
           if (!existingGrant) {
-            expect(clientRequestGrantSpy).toHaveBeenCalledWith({
-              url: authServer,
-              request: grantRequest
-            })
+            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
+              { url: authServer },
+              grantRequest
+            )
           }
           expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
             url: incomingPayment.url,
@@ -372,10 +372,10 @@ describe('Receiver Service', (): void => {
             await expect(
               receiverService.get(incomingPayment.url)
             ).resolves.toBeUndefined()
-            expect(clientRequestGrantSpy).toHaveBeenCalledWith({
-              url: authServer,
-              request: grantRequest
-            })
+            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
+              { url: authServer },
+              grantRequest
+            )
           })
 
           test('returns undefined for interactive grant', async (): Promise<void> => {
@@ -399,10 +399,10 @@ describe('Receiver Service', (): void => {
             await expect(
               receiverService.get(incomingPayment.url)
             ).resolves.toBeUndefined()
-            expect(clientRequestGrantSpy).toHaveBeenCalledWith({
-              url: authServer,
-              request: grantRequest
-            })
+            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
+              { url: authServer },
+              grantRequest
+            )
           })
         }
 
