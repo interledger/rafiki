@@ -12,7 +12,8 @@ import { v4 as uuid } from 'uuid'
 jest.mock('./requests', () => ({
   ...jest.requireActual('./requests.ts'),
   deleteRequest: jest.fn(),
-  post: jest.fn()
+  post: jest.fn(),
+  get: jest.fn()
 }))
 
 describe('grant', (): void => {
@@ -27,27 +28,6 @@ describe('grant', (): void => {
     logger: silentLogger,
     client: 'https://example.com/.well-known/pay'
   }
-
-  describe('createGrantRoutes', (): void => {
-    test('creates response validator for grant requests', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-
-      createGrantRoutes({ openApi, ...deps })
-      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(3)
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/',
-        method: HttpMethod.POST
-      })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/continue/{id}',
-        method: HttpMethod.POST
-      })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/continue/{id}',
-        method: HttpMethod.DELETE
-      })
-    })
-  })
 
   describe('routes', () => {
     const url = 'http://localhost:1000'
@@ -111,7 +91,7 @@ describe('grant', (): void => {
     })
 
     describe('continue', () => {
-      test('continue calls post method with correct validator', async (): Promise<void> => {
+      test('calls post method with correct validator', async (): Promise<void> => {
         const mockResponseValidator = ({ path, method }) =>
           path === '/continue/{id}' && method === HttpMethod.POST
 
