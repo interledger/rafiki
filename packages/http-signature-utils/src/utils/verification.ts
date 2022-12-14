@@ -31,22 +31,17 @@ export async function verifySigAndChallenge(
     return false
   }
 
-  return await verifySig(sig.replace('sig1=', ''), clientKey, challenge)
-}
-
-//exported for tests
-export async function verifySig(
-  sig: string,
-  jwk: JWK,
-  challenge: string
-): Promise<boolean> {
-  const publicKey = (await importJWK(jwk)) as crypto.KeyLike
+  const publicKey = (await importJWK(clientKey)) as crypto.KeyLike
   const data = Buffer.from(challenge)
-  return crypto.verify(null, data, publicKey, Buffer.from(sig, 'base64'))
+  return crypto.verify(
+    null,
+    data,
+    publicKey,
+    Buffer.from(sig.replace('sig1=', ''), 'base64')
+  )
 }
 
-//exported for tests
-export function sigInputToChallenge(
+function sigInputToChallenge(
   sigInput: string,
   request: RequestLike
 ): string | null {
@@ -76,7 +71,6 @@ export function sigInputToChallenge(
   return signatureBase
 }
 
-// TODO: Replace with public httpsig library
 function getSigInputComponents(sigInput: string): string[] | null {
   // https://datatracker.ietf.org/doc/html/rfc8941#section-4.1.1.1
   const messageComponents = sigInput
