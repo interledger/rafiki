@@ -22,7 +22,7 @@ describe('Signature Verification', (): void => {
     ${' without an authorization header'} | ${false}          | ${true}
     ${' without a request body'}          | ${true}           | ${false}
   `(
-    'can verify signature and challenge$title',
+    'can validate signature headers and signature',
     async ({ withAuthorization, withRequestBody }): Promise<void> => {
       const testRequestBody = JSON.stringify({ foo: 'bar' })
 
@@ -53,6 +53,7 @@ describe('Signature Verification', (): void => {
       )
       request.headers = { ...request.headers, ...lowerHeaders }
 
+      expect(validateSignatureHeaders(request)).toEqual(true)
       await expect(validateSignature(testClientKey, request)).resolves.toEqual(
         true
       )
