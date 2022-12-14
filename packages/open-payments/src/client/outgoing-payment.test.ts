@@ -2,6 +2,7 @@ import {
   createOutgoingPayment,
   createOutgoingPaymentRoutes,
   getOutgoingPayment,
+  listOutgoingPayments,
   validateOutgoingPayment
 } from './outgoing-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
@@ -10,7 +11,8 @@ import {
   defaultAxiosInstance,
   mockOutgoingPayment,
   mockOpenApiResponseValidators,
-  silentLogger
+  silentLogger,
+  mockOutgoingPaymentPaginationResult
 } from '../test/helpers'
 import nock from 'nock'
 import { v4 as uuid } from 'uuid'
@@ -38,6 +40,20 @@ describe('outgoing-payment', (): void => {
       })
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/outgoing-payments/{id}',
+        method: HttpMethod.GET
+      })
+    })
+
+    test('creates listOutgoingPaymentOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createOutgoingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/outgoing-payments',
         method: HttpMethod.GET
       })
     })
@@ -91,7 +107,7 @@ describe('outgoing-payment', (): void => {
         }
       })
 
-      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
 
       await expect(() =>
         getOutgoingPayment(
@@ -111,7 +127,7 @@ describe('outgoing-payment', (): void => {
     test('throws if outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      nock(baseUrl).get('/outgoing-payment').reply(200, outgoingPayment)
+      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
 
       await expect(() =>
         getOutgoingPayment(
@@ -126,6 +142,155 @@ describe('outgoing-payment', (): void => {
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
+    })
+  })
+
+  describe('listOutgoingPayment', (): void => {
+    const paymentPointer = 'http://localhost:1000/.well-known/pay'
+
+    describe('forward pagination', (): void => {
+      test.each`
+        first        | cursor
+        ${undefined} | ${undefined}
+        ${1}         | ${undefined}
+        ${5}         | ${uuid()}
+      `(
+        'returns outgoing payment list',
+        async ({ first, cursor }): Promise<void> => {
+          const outgoingPaymentPaginationResult =
+            mockOutgoingPaymentPaginationResult({
+              result: Array(first).fill(mockOutgoingPayment())
+            })
+
+          const scope = nock(paymentPointer)
+            .get('/outgoing-payments')
+            .query({
+              ...(first ? { first } : {}),
+              ...(cursor ? { cursor } : {})
+            })
+            .reply(200, outgoingPaymentPaginationResult)
+
+          const result = await listOutgoingPayments(
+            {
+              axiosInstance,
+              logger
+            },
+            {
+              paymentPointer,
+              accessToken: 'accessToken'
+            },
+            openApiValidators.successfulValidator,
+            {
+              first,
+              cursor
+            }
+          )
+          expect(result).toStrictEqual(outgoingPaymentPaginationResult)
+          scope.done()
+        }
+      )
+    })
+
+    describe('backward pagination', (): void => {
+      test.each`
+        last         | cursor
+        ${undefined} | ${uuid()}
+        ${5}         | ${uuid()}
+      `(
+        'returns outgoing payment list',
+        async ({ last, cursor }): Promise<void> => {
+          const outgoingPaymentPaginationResult =
+            mockOutgoingPaymentPaginationResult({
+              result: Array(last).fill(mockOutgoingPayment())
+            })
+
+          const scope = nock(paymentPointer)
+            .get('/outgoing-payments')
+            .query({ ...(last ? { last } : {}), cursor })
+            .reply(200, outgoingPaymentPaginationResult)
+
+          const result = await listOutgoingPayments(
+            {
+              axiosInstance,
+              logger
+            },
+            {
+              paymentPointer,
+              accessToken: 'accessToken'
+            },
+            openApiValidators.successfulValidator,
+            {
+              last,
+              cursor
+            }
+          )
+          expect(result).toStrictEqual(outgoingPaymentPaginationResult)
+          scope.done()
+        }
+      )
+    })
+
+    test('throws if an outgoing payment does not pass validation', async (): Promise<void> => {
+      const invalidOutgoingPayment = mockOutgoingPayment({
+        sendAmount: {
+          assetCode: 'CAD',
+          assetScale: 2,
+          value: '5'
+        },
+        sentAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '0'
+        }
+      })
+
+      const outgoingPaymentPaginationResult =
+        mockOutgoingPaymentPaginationResult({
+          result: [invalidOutgoingPayment]
+        })
+
+      const scope = nock(paymentPointer)
+        .get('/outgoing-payments')
+        .reply(200, outgoingPaymentPaginationResult)
+
+      await expect(() =>
+        listOutgoingPayments(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            paymentPointer,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError(/Could not validate outgoing payment/)
+      scope.done()
+    })
+
+    test('throws if an outgoing payment does not pass open api validation', async (): Promise<void> => {
+      const outgoingPaymentPaginationResult =
+        mockOutgoingPaymentPaginationResult()
+
+      const scope = nock(paymentPointer)
+        .get('/outgoing-payments')
+        .reply(200, outgoingPaymentPaginationResult)
+
+      await expect(() =>
+        listOutgoingPayments(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            paymentPointer,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+      scope.done()
     })
   })
 

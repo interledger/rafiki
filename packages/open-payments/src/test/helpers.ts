@@ -8,7 +8,8 @@ import {
   GrantRequest,
   GrantContinuationRequest,
   NonInteractiveGrant,
-  OutgoingPayment
+  OutgoingPayment,
+  OutgoingPaymentPaginationResult
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -98,6 +99,26 @@ export const mockOutgoingPayment = (
   updatedAt: new Date().toISOString(),
   ...overrides
 })
+
+export const mockOutgoingPaymentPaginationResult = (
+  overrides?: Partial<OutgoingPaymentPaginationResult>
+): OutgoingPaymentPaginationResult => {
+  const result = overrides?.result || [
+    mockOutgoingPayment(),
+    mockOutgoingPayment(),
+    mockOutgoingPayment()
+  ]
+
+  return {
+    result,
+    pagination: overrides?.pagination || {
+      startCursor: result[0].id,
+      hasNextPage: true,
+      hasPreviousPage: true,
+      endCursor: result[result.length - 1].id
+    }
+  }
+}
 
 export const mockInteractiveGrant = (
   overrides?: Partial<InteractiveGrant>

@@ -7,6 +7,7 @@ import { createSignatureHeaders } from './signatures'
 
 interface GetArgs {
   url: string
+  queryParams?: Record<string, unknown>
   accessToken?: string
 }
 
@@ -15,6 +16,9 @@ interface PostArgs<T = undefined> {
   body?: T
   accessToken?: string
 }
+
+const removeEmptyValues = (obj: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null))
 
 export const get = async <T>(
   deps: BaseDeps,
@@ -37,7 +41,8 @@ export const get = async <T>(
         ? {
             Authorization: `GNAP ${accessToken}`
           }
-        : {}
+        : {},
+      params: args.queryParams ? removeEmptyValues(args.queryParams) : undefined
     })
 
     try {
