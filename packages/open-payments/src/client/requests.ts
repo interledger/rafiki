@@ -17,6 +17,11 @@ interface PostArgs<T = undefined> {
   accessToken?: string
 }
 
+interface DeleteArgs {
+  url: string
+  accessToken?: string
+}
+
 const removeEmptyValues = (obj: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null))
 
@@ -121,6 +126,58 @@ export const post = async <TRequest, TResponse>(
     return data
   } catch (error) {
     const errorMessage = `Error when making Open Payments POST request: ${
+      error?.message ? error.message : 'Unknown error'
+    }`
+    logger.error({ url }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+}
+
+export const deleteRequest = async <TResponse>(
+  deps: BaseDeps,
+  args: DeleteArgs,
+  openApiResponseValidator: ResponseValidator<TResponse>
+): Promise<void> => {
+  const { axiosInstance, logger } = deps
+  const { accessToken } = args
+
+  const requestUrl = new URL(args.url)
+  if (process.env.NODE_ENV === 'development') {
+    requestUrl.protocol = 'http'
+  }
+
+  const url = requestUrl.href
+
+  try {
+    const { status } = await axiosInstance.delete<TResponse>(url, {
+      headers: accessToken
+        ? {
+            Authorization: `GNAP ${accessToken}`
+          }
+        : {}
+    })
+
+    try {
+      openApiResponseValidator({
+        status,
+        body: {}
+      })
+    } catch (error) {
+      const errorMessage = 'Failed to validate OpenApi response'
+      logger.error(
+        {
+          status,
+          url,
+          validationError: error?.message
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    }
+  } catch (error) {
+    const errorMessage = `Error when making Open Payments DELETE request: ${
       error?.message ? error.message : 'Unknown error'
     }`
     logger.error({ url }, errorMessage)
