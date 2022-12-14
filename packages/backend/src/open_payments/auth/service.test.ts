@@ -33,7 +33,7 @@ describe('Auth Service', (): void => {
     authService = await deps.use('authService')
     const { tokenIntrospectionSpec } = await deps.use('openApi')
     validateRequest = tokenIntrospectionSpec.createRequestValidator({
-      path: '/introspect',
+      path: '/',
       method: HttpMethod.POST
     })
   })

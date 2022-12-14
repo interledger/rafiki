@@ -89,7 +89,7 @@ describe('Access Token Routes', (): void => {
     let access: Access
     let token: AccessToken
 
-    const url = '/introspect'
+    const url = '/'
     const method = 'POST'
 
     beforeEach(async (): Promise<void> => {
@@ -145,7 +145,7 @@ describe('Access Token Routes', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: '/introspect',
+          url: '/',
           method: 'POST'
         },
         {}
@@ -194,7 +194,7 @@ describe('Access Token Routes', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: '/introspect',
+          url: '/',
           method: 'POST'
         },
         {}

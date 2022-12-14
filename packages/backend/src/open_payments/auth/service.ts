@@ -52,7 +52,7 @@ export async function createAuthService(
   })
   const validateResponse =
     deps_.tokenIntrospectionSpec.createResponseValidator<TokenInfo>({
-      path: '/introspect',
+      path: '/',
       method: HttpMethod.POST
     })
   const deps: ServiceDependencies = {

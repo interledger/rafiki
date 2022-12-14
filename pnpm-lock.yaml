@@ -353,7 +353,6 @@ importers:
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.8.0
-      ts-node: ^10.9.1
       typescript: ^4.9.4
       uuid: ^9.0.0
     dependencies:
@@ -367,7 +366,6 @@ importers:
       base64url: 3.0.1
       nock: 13.2.9
       openapi-typescript: 4.5.0
-      ts-node: 10.9.1_2ruir5wjsr7guwibcnwysex364
       typescript: 4.9.4
       uuid: 9.0.0
 
@@ -405,6 +403,27 @@ importers:
       node-mocks-http: 1.12.1
       typescript: 4.9.4
       uuid: 9.0.0
+
+  packages/token-introspection:
+    specifiers:
+      '@types/node': ^18.7.12
+      axios: ^1.1.2
+      nock: ^13.2.9
+      openapi: workspace:../openapi
+      openapi-typescript: ^4.5.0
+      pino: ^8.4.2
+      typescript: ^4.3.0
+      uuid: ^8.3.2
+    dependencies:
+      axios: 1.2.1
+      openapi: link:../openapi
+      pino: 8.8.0
+    devDependencies:
+      '@types/node': 18.11.9
+      nock: 13.2.9
+      openapi-typescript: 4.5.0
+      typescript: 4.9.4
+      uuid: 8.3.2
 
 packages:
 
@@ -3440,7 +3459,7 @@ packages:
       '@jest/schemas': 28.1.3
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.7.6
+      '@types/node': 18.11.9
       '@types/yargs': 17.0.11
       chalk: 4.1.2
     dev: true
@@ -4375,7 +4394,7 @@ packages:
       '@types/http-errors': 1.8.2
       '@types/keygrip': 1.0.2
       '@types/koa-compose': 3.2.5
-      '@types/node': 18.7.6
+      '@types/node': 18.11.9
     dev: true
 
   /@types/koa/2.13.5:
@@ -4447,10 +4466,6 @@ packages:
 
   /@types/node/18.7.13:
     resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
-    dev: true
-
-  /@types/node/18.7.6:
-    resolution: {integrity: sha512-EdxgKRXgYsNITy5mjjXjVE/CS8YENSdhiagGrLqjG0pvA2owgJ6i4l7wy/PFZGC0B1/H20lWKN7ONVDNYDZm7A==}
     dev: true
 
   /@types/normalize-package-data/2.4.1:
@@ -13268,37 +13283,6 @@ packages:
       - '@types/node'
     dev: true
 
-  /ts-node/10.9.1_2ruir5wjsr7guwibcnwysex364:
-    resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
-    hasBin: true
-    peerDependencies:
-      '@swc/core': '>=1.2.50'
-      '@swc/wasm': '>=1.2.50'
-      '@types/node': '*'
-      typescript: '>=2.7'
-    peerDependenciesMeta:
-      '@swc/core':
-        optional: true
-      '@swc/wasm':
-        optional: true
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      '@tsconfig/node10': 1.0.9
-      '@tsconfig/node12': 1.0.11
-      '@tsconfig/node14': 1.0.3
-      '@tsconfig/node16': 1.0.3
-      '@types/node': 18.7.13
-      acorn: 8.8.0
-      acorn-walk: 8.2.0
-      arg: 4.1.3
-      create-require: 1.1.1
-      diff: 4.0.2
-      make-error: 1.3.6
-      typescript: 4.9.4
-      v8-compile-cache-lib: 3.0.1
-      yn: 3.1.1
-    dev: true
-
   /ts-node/10.9.1_3v2cms72gsblw7jmali7btb3pu:
     resolution: {integrity: sha512-NtVysVPkxxrwFGUUxGYhfux8k78pQB3JqYBXlLRZgdGUqTO5wU/UyHop5p70iEbGhB7q5KmiZiU0Y3KlJrScEw==}
     hasBin: true
@@ -13707,7 +13691,6 @@ packages:
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
-    dev: false
 
   /uuid/9.0.0:
     resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
