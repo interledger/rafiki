@@ -114,6 +114,46 @@ describe('requests', (): void => {
       )
     })
 
+    test.each`
+      title                      | queryParams
+      ${'all defined values'}    | ${{ first: 5, cursor: 'id' }}
+      ${'some undefined values'} | ${{ first: 5, cursor: undefined }}
+      ${'all undefined values'}  | ${{ first: undefined, cursor: undefined }}
+    `(
+      'properly sets query params with $title',
+      async ({ queryParams }): Promise<void> => {
+        const cleanedQueryParams = Object.fromEntries(
+          Object.entries(queryParams).filter(([_, v]) => v != null)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ) as any
+
+        const scope = nock(baseUrl)
+          .matchHeader('Signature', (sig) => sig === undefined)
+          .matchHeader('Signature-Input', (sigInput) => sigInput === undefined)
+          .get('/incoming-payments')
+          .query(cleanedQueryParams)
+          .reply(200)
+
+        await get(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments`,
+            queryParams
+          },
+          responseValidators.successfulValidator
+        )
+        scope.done()
+
+        expect(axiosInstance.get).toHaveBeenCalledWith(
+          `${baseUrl}/incoming-payments`,
+          {
+            headers: {},
+            params: cleanedQueryParams
+          }
+        )
+      }
+    )
+
     test('calls validator function properly', async (): Promise<void> => {
       const status = 200
       const body = {
