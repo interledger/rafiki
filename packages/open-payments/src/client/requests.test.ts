@@ -480,33 +480,42 @@ describe('requests', (): void => {
       ).rejects.toThrow(/Error when making Open Payments DELETE request/)
     })
 
-    test('calls validator function properly', async (): Promise<void> => {
-      const status = 202
+    test.each`
+      title                              | response
+      ${'when response is defined'}      | ${{ some: 'value' }}
+      ${'when response is undefined'}    | ${undefined}
+      ${'when response is null'}         | ${null}
+      ${'when response is empty string'} | ${''}
+    `(
+      'calls validator function properly $title',
+      async ({ response }): Promise<void> => {
+        const status = 202
 
-      const scope = nock(baseUrl)
-        .delete(`/grant`)
-        // TODO: verify signature
-        .reply(status)
+        const scope = nock(baseUrl)
+          .delete(`/grant`)
+          // TODO: verify signature
+          .reply(status, response)
 
-      const responseValidatorSpy = jest.spyOn(
-        responseValidators,
-        'successfulValidator'
-      )
+        const responseValidatorSpy = jest.spyOn(
+          responseValidators,
+          'successfulValidator'
+        )
 
-      await deleteRequest(
-        { axiosInstance, logger },
-        {
-          url: `${baseUrl}/grant`
-        },
-        responseValidators.successfulValidator
-      )
+        await deleteRequest(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/grant`
+          },
+          responseValidators.successfulValidator
+        )
 
-      scope.done()
-      expect(responseValidatorSpy).toHaveBeenCalledWith({
-        body: {},
-        status
-      })
-    })
+        scope.done()
+        expect(responseValidatorSpy).toHaveBeenCalledWith({
+          body: response || undefined,
+          status
+        })
+      }
+    )
 
     test('throws if response validator function fails', async (): Promise<void> => {
       const status = 299

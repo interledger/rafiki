@@ -150,7 +150,7 @@ export const deleteRequest = async <TResponse>(
   const url = requestUrl.href
 
   try {
-    const { status } = await axiosInstance.delete<TResponse>(url, {
+    const { data, status } = await axiosInstance.delete<TResponse>(url, {
       headers: accessToken
         ? {
             Authorization: `GNAP ${accessToken}`
@@ -161,7 +161,7 @@ export const deleteRequest = async <TResponse>(
     try {
       openApiResponseValidator({
         status,
-        body: {}
+        body: data || undefined
       })
     } catch (error) {
       const errorMessage = 'Failed to validate OpenApi response'
