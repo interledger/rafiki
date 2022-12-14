@@ -1,4 +1,4 @@
-import { JWK, RequestLike, validateSignature } from 'http-signature-utils'
+import { RequestLike, validateSignature } from 'http-signature-utils'
 import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 
@@ -51,10 +51,7 @@ export function createAuthMiddleware({
       if (!config.bypassSignatureValidation) {
         try {
           if (
-            !(await validateSignature(
-              grant.key.jwk as JWK,
-              contextToRequestLike(ctx)
-            ))
+            !(await validateSignature(grant.key.jwk, contextToRequestLike(ctx)))
           ) {
             ctx.throw(401, 'Invalid signature')
           }
