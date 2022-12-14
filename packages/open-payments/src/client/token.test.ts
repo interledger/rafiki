@@ -1,7 +1,13 @@
-import { createTokenRoutes } from './token'
+import { createTokenRoutes, rotateToken, TokenRoutes } from './token'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import config from '../config'
-import { defaultAxiosInstance, silentLogger } from '../test/helpers'
+import {
+  defaultAxiosInstance,
+  mockAccessToken,
+  mockOpenApiResponseValidators,
+  silentLogger
+} from '../test/helpers'
+import nock from 'nock'
 
 describe('token', (): void => {
   let openApi: OpenAPI
@@ -12,18 +18,62 @@ describe('token', (): void => {
 
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
-  const client = 'https://example.com/.well-known/pay'
+  const baseUrl = 'http://localhost:1000'
+  const openApiValidators = mockOpenApiResponseValidators()
 
   describe('createTokenRoutes', (): void => {
     test('creates response validator for token requests', async (): Promise<void> => {
       jest.spyOn(openApi, 'createResponseValidator')
+      createTokenRoutes({ axiosInstance, openApi, logger })
 
-      createTokenRoutes({ axiosInstance, openApi, logger, client })
       expect(openApi.createResponseValidator).toHaveBeenCalledTimes(1)
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/token/{id}',
         method: HttpMethod.POST
       })
+    })
+  })
+
+  describe('rotateToken', (): void => {
+    test('returns accessToken if passes validation', async (): Promise<void> => {
+      const accessToken = mockAccessToken()
+      const token = 'accessToken'
+
+      nock(baseUrl).post(`/token/${token}`).reply(200, accessToken)
+
+      const result = await rotateToken(
+        {
+          axiosInstance,
+          openApi,
+          logger
+        },
+        {
+          url: `${baseUrl}/token/${token}`
+        },
+        openApiValidators.successfulValidator
+      )
+      expect(result).toStrictEqual(accessToken)
+    })
+
+    test('throws if rotate token does not pass open api validation', async (): Promise<void> => {
+      const accessToken = mockAccessToken()
+      const token = 'accessToken'
+
+      nock(baseUrl).post(`/token/${token}`).reply(200, accessToken)
+
+      await expect(() =>
+        rotateToken(
+          {
+            axiosInstance,
+            openApi,
+            logger
+          },
+          {
+            url: `${baseUrl}/token/${token}`
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
     })
   })
 })

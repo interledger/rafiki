@@ -146,8 +146,7 @@ export const createAuthenticatedClient = async (
     token: createTokenRoutes({
       axiosInstance,
       openApi: authServerOpenApi,
-      logger,
-      client: args.paymentPointerUrl
+      logger
     }),
     quote: createQuoteRoutes({
       axiosInstance,
