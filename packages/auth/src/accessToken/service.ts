@@ -79,7 +79,8 @@ export async function createAccessTokenService({
     revoke: (id: string) => revoke(deps, id),
     create: (grantId: string, opts?: AccessTokenOpts) =>
       createAccessToken(deps, grantId, opts),
-    rotate: (managementId: string, tokenValue: string) => rotate(deps, managementId, tokenValue)
+    rotate: (managementId: string, tokenValue: string) =>
+      rotate(deps, managementId, tokenValue)
   }
 }
 

@@ -262,13 +262,19 @@ describe('Access Token Service', (): void => {
 
     test('Can rotate un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
-      const result = await accessTokenService.rotate(token.managementId)
+      const result = await accessTokenService.rotate(
+        token.managementId,
+        token.value
+      )
       expect(result.success).toBe(true)
       expect(result.success && result.value).not.toBe(originalTokenValue)
     })
     test('Can rotate expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
-      const result = await accessTokenService.rotate(token.managementId)
+      const result = await accessTokenService.rotate(
+        token.managementId,
+        token.value
+      )
       expect(result.success).toBe(true)
       const rotatedToken = await AccessToken.query(trx).findOne({
         managementId: result.success && result.managementId
@@ -276,8 +282,12 @@ describe('Access Token Service', (): void => {
       expect(rotatedToken).toBeDefined()
       expect(rotatedToken?.value).not.toBe(originalTokenValue)
     })
-    test('Cannot rotate nonexistent token', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(v4())
+    test('Cannot rotate token with incorrect management id', async (): Promise<void> => {
+      const result = await accessTokenService.rotate(v4(), token.value)
+      expect(result.success).toBe(false)
+    })
+    test('Cannot rotate token with incorrect value', async (): Promise<void> => {
+      const result = await accessTokenService.rotate(token.managementId, v4())
       expect(result.success).toBe(false)
     })
   })
