@@ -19,7 +19,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateTestKeys, TestKeys } from 'http-signature-utils'
+import { generateTestKeys } from 'http-signature-utils'
 
 import { KEY_REGISTRY_ORIGIN } from '../tests/signature'
 export { KEY_REGISTRY_ORIGIN } from '../tests/signature'
@@ -86,7 +86,7 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
-  let clientKey: TestKeys
+  let clientKeyId: string
 
   let grant: Grant
 
@@ -99,7 +99,7 @@ describe('Grant Routes', (): void => {
     finishUri: 'https://example.com',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
     client: CLIENT,
-    clientKeyId: clientKey.keyId,
+    clientKeyId: clientKeyId,
     interactId: v4(),
     interactRef: v4(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -110,7 +110,7 @@ describe('Grant Routes', (): void => {
     params: Record<string, unknown>
   ) => {
     const ctx = createAppContext(reqOpts, params)
-    ctx.clientKeyId = clientKey.keyId
+    ctx.clientKeyId = clientKeyId
     return ctx
   }
 
@@ -133,7 +133,7 @@ describe('Grant Routes', (): void => {
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
 
-    clientKey = await generateTestKeys()
+    clientKeyId = (await generateTestKeys()).keyId
   })
 
   afterEach(async (): Promise<void> => {
