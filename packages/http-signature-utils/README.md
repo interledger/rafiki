@@ -81,7 +81,7 @@ const headers = await createHeaders({
 Validate Signature and Content Headers
 
 ```ts
-const isValidHeader = validateHttpSigHeaders(request: {
+const isValidHeader = validateSignatureHeaders(request: {
     method: 'POST',
     url: 'https://example.com',
     headers: {
@@ -99,7 +99,7 @@ const isValidHeader = validateHttpSigHeaders(request: {
 Verify signature
 
 ```ts
-const isValidSig = await verifySigAndChallenge(
+const isValidSig = await validateSignature(
   clientKey: jwk,
   request: {
     method: 'POST',

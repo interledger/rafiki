@@ -1,4 +1,4 @@
-import { validateHttpSigHeaders, verifySigAndChallenge } from './verification'
+import { validateSignatureHeaders, validateSignature } from './verification'
 import { createHeaders } from './headers'
 import { RequestLike } from 'http-message-signatures'
 import { TestKeys, generateTestKeys } from '../test-utils/keys'
@@ -53,9 +53,9 @@ describe('Signature Verification', (): void => {
       )
       request.headers = { ...request.headers, ...lowerHeaders }
 
-      await expect(
-        verifySigAndChallenge(testClientKey, request)
-      ).resolves.toEqual(true)
+      await expect(validateSignature(testClientKey, request)).resolves.toEqual(
+        true
+      )
     }
   )
 
@@ -84,7 +84,7 @@ describe('Signature Verification', (): void => {
         url: 'http://example.com/test',
         body: testRequestBody
       }
-      expect(validateHttpSigHeaders(request)).toBe(false)
+      expect(validateSignatureHeaders(request)).toBe(false)
     }
   )
 })

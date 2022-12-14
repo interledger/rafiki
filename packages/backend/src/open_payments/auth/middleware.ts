@@ -1,4 +1,4 @@
-import { JWK, RequestLike, verifySigAndChallenge } from 'http-signature-utils'
+import { JWK, RequestLike, validateSignature } from 'http-signature-utils'
 import { AccessType, AccessAction } from './grant'
 import { PaymentPointerContext } from '../../app'
 
@@ -51,7 +51,7 @@ export function createAuthMiddleware({
       if (!config.bypassSignatureValidation) {
         try {
           if (
-            !(await verifySigAndChallenge(
+            !(await validateSignature(
               grant.key.jwk as JWK,
               contextToRequestLike(ctx)
             ))

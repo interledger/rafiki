@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
-  verifySigAndChallenge,
-  validateHttpSigHeaders,
+  validateSignature,
+  validateSignatureHeaders,
   RequestLike
 } from 'http-signature-utils'
 
@@ -31,7 +31,7 @@ async function verifySigFromClient(
   if (!clientKey) {
     ctx.throw(400, 'invalid client', { error: 'invalid_client' })
   }
-  return verifySigAndChallenge(clientKey, contextToRequestLike(ctx))
+  return validateSignature(clientKey, contextToRequestLike(ctx))
 }
 
 async function verifySigFromBoundKey(
@@ -61,7 +61,7 @@ export async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(contextToRequestLike(ctx))) {
+  if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -107,7 +107,7 @@ export async function grantInitiationHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(contextToRequestLike(ctx))) {
+  if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -130,7 +130,7 @@ export async function tokenHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateHttpSigHeaders(contextToRequestLike(ctx))) {
+  if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 

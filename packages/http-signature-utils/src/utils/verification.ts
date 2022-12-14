@@ -4,7 +4,7 @@ import { verifyContentDigest } from 'httpbis-digest-headers'
 import { importJWK } from 'jose'
 import { JWK } from './jwk'
 
-export function validateHttpSigHeaders(request: RequestLike): boolean {
+export function validateSignatureHeaders(request: RequestLike): boolean {
   const sig = request.headers['signature']
   const sigInput = request.headers['signature-input'] as string
 
@@ -20,7 +20,7 @@ export function validateHttpSigHeaders(request: RequestLike): boolean {
   )
 }
 
-export async function verifySigAndChallenge(
+export async function validateSignature(
   clientKey: JWK,
   request: RequestLike
 ): Promise<boolean> {
