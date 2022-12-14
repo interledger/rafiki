@@ -38,7 +38,8 @@ describe('Payment Pointer Keys Routes', (): void => {
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    jestOpenAPI(await deps.use('openApi'))
+    const { resourceServerSpec } = await deps.use('openApi')
+    jestOpenAPI(resourceServerSpec)
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 

@@ -5,6 +5,7 @@ admin GraphQL.
 
 Prerequisites:
 
+- [Rafiki local environment setup](../../README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
 - [compose plugin](https://docs.docker.com/compose/install/compose-plugin/)
 - [postman](https://www.postman.com/downloads/)
@@ -21,7 +22,21 @@ pnpm localenv up -d --build
 
 // Seed auth tokens
 pnpm localenv:seed:auth
+
+// tear down
+pnpm localenv down
+
+// delete database volumes (containers must be removed first with e.g. pnpm localenv down)
+pnpm localenv:dbvolumes:remove
 ```
+
+The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
+its own docker compose files ([primary](./docker-compose.yml), [secondary](./peer-docker-compose.yml)).
+The primary `docker-compose.yml` includes the main Rafiki services `backend`, `auth`, and `rates`, as well
+as the required data stores tigerbeetle, redis, and postgres, so it can be run on its own.
+The `peer-docker-compose.yml` includes only the Rafiki services, not the data stores. It uses the
+data stores created by the primary Rafiki instance so it can't be run by itself.
+The `pnpm run localenv` command starts both the primary instance and the secondary.
 
 ## P2P payment
 

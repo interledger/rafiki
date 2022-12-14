@@ -248,7 +248,7 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware(openApi.resourceServerSpec, {
+      createValidatorMiddleware(openApi.tokenIntrospectionSpec, {
         path: '/introspect',
         method: HttpMethod.POST
       }),

@@ -118,7 +118,7 @@ describe('Access Token Routes', (): void => {
       })
 
       const openApi = await deps.use('openApi')
-      jestOpenAPI(openApi.resourceServerSpec)
+      jestOpenAPI(openApi.tokenIntrospectionSpec)
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(

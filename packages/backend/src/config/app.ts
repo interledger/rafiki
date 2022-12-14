@@ -107,14 +107,6 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
   bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false),
 
-  openPaymentsSpec: envString(
-    'OPEN_PAYMENTS_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/f365dbec4b9dec98b9f622bc49a92aea9ee01568/openapi/RS/openapi.yaml'
-  ),
-  authServerSpec: envString(
-    'AUTH_SERVER_SPEC',
-    'https://raw.githubusercontent.com/interledger/open-payments/77462cd0872be8d0fa487a4b233defe2897a7ee4/auth-server-open-api-spec.yaml'
-  ),
   keyId: envString('KEY_ID', 'rafiki'),
   privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', undefined)),
 

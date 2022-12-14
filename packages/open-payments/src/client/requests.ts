@@ -6,14 +6,18 @@ import { createHeaders } from 'http-signature-utils'
 
 interface GetArgs {
   url: string
+  queryParams?: Record<string, unknown>
   accessToken?: string
 }
 
-interface PostArgs<T> {
+interface PostArgs<T = undefined> {
   url: string
-  body: T
+  body?: T
   accessToken?: string
 }
+
+const removeEmptyValues = (obj: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null))
 
 export const get = async <T>(
   deps: BaseDeps,
@@ -36,7 +40,8 @@ export const get = async <T>(
         ? {
             Authorization: `GNAP ${accessToken}`
           }
-        : {}
+        : {},
+      params: args.queryParams ? removeEmptyValues(args.queryParams) : undefined
     })
 
     try {
