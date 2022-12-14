@@ -23,7 +23,6 @@
     "axios": "^0.27.2",
     "http-signature-utils": "workspace:../http-signature-utils",
     "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
-    "jose": "^4.9.0",
     "knex": "^0.95",
     "koa": "^2.13.4",
     "koa-bodyparser": "^4.3.0",
