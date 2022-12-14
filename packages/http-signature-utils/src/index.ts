@@ -1,5 +1,5 @@
 export { createHeaders, Headers } from './utils/headers'
-export { generateJwk, JWK, JWKWithRequired } from './utils/jwk'
+export { generateJwk, JWK } from './utils/jwk'
 export { parseOrProvisionKey } from './utils/key'
 export { createSignatureHeaders } from './utils/signatures'
 export {

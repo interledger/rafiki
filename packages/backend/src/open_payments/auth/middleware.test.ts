@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid'
 import { Context } from 'koa'
 import {
   generateTestKeys,
-  JWKWithRequired,
+  JWK,
   createHeaders,
   Headers,
   TestKeys,
@@ -50,7 +50,7 @@ describe('Auth Middleware', (): void => {
   let requestUrl: string
   let requestMethod: RequestMethod
   let requestSignatureHeaders: Headers
-  let requestJwk: JWKWithRequired
+  let requestJwk: JWK
 
   function setupHttpSigContext(options: SetupOptions): Context {
     const context = setup(options)

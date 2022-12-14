@@ -96,6 +96,8 @@ function validateSigInputComponents(
   const isValidContentDigest =
     !sigInputComponents.includes('content-digest') ||
     (!!request.headers['content-digest'] &&
+      !!request.headers['content-length'] &&
+      !!request.headers['content-type'] &&
       request.body &&
       Object.keys(request.body).length > 0 &&
       sigInputComponents.includes('content-digest') &&

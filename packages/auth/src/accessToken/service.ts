@@ -1,7 +1,7 @@
 import * as crypto from 'crypto'
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
-import { JWKWithRequired } from 'http-signature-utils'
+import { JWK } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
 import { Grant, GrantState } from '../grant/model'
@@ -27,7 +27,7 @@ interface ServiceDependencies extends BaseService {
 
 export interface KeyInfo {
   proof: string
-  jwk: JWKWithRequired
+  jwk: JWK
 }
 
 export interface Introspection extends Partial<Grant> {

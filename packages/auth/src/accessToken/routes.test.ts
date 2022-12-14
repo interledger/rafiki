@@ -20,7 +20,7 @@ import { createContext } from '../tests/context'
 import {
   generateJwk,
   generateTestKeys,
-  JWKWithRequired,
+  JWK,
   TestKeys
 } from 'http-signature-utils'
 
@@ -31,7 +31,7 @@ describe('Access Token Routes', (): void => {
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
   let testKeys: TestKeys
-  let testClientKey: JWKWithRequired
+  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)

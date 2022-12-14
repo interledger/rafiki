@@ -9,11 +9,11 @@ import {
   GrantAccessJSON
 } from './grant'
 import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
-import { JWKWithRequired } from 'http-signature-utils'
+import { JWK } from 'http-signature-utils'
 
 export interface KeyInfo {
   proof: string
-  jwk: JWKWithRequired
+  jwk: JWK
 }
 
 export interface TokenInfoJSON extends GrantJSON {

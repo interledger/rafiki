@@ -4,7 +4,7 @@ import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
 import { Knex } from 'knex'
 import {
-  JWKWithRequired,
+  JWK,
   generateTestKeys,
   TestKeys,
   generateJwk
@@ -33,7 +33,7 @@ describe('Signature Service', (): void => {
   const CLIENT = faker.internet.url()
 
   let testKeys: TestKeys
-  let testClientKey: JWKWithRequired
+  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)

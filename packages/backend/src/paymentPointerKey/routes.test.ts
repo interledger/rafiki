@@ -20,7 +20,6 @@ const TEST_KEY = {
   kty: 'OKP',
   alg: 'EdDSA',
   crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
   use: 'sig'
 }
 

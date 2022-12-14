@@ -1,10 +1,10 @@
 import { UnauthenticatedClient } from 'open-payments'
-import { JWK, JWKWithRequired } from 'http-signature-utils'
+import { JWK } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
 
 export interface ClientKey {
-  jwk: JWKWithRequired
+  jwk: JWK
   client: ClientDetails
 }
 

@@ -19,7 +19,7 @@ import { Access } from '../access/model'
 import {
   generateJwk,
   generateTestKeys,
-  JWKWithRequired,
+  JWK,
   TestKeys
 } from 'http-signature-utils'
 
@@ -30,7 +30,7 @@ describe('Access Token Service', (): void => {
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
   let testKeys: TestKeys
-  let testClientKey: JWKWithRequired
+  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
