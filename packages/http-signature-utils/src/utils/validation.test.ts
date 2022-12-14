@@ -1,4 +1,4 @@
-import { validateSignatureHeaders, validateSignature } from './verification'
+import { validateSignatureHeaders, validateSignature } from './validation'
 import { createHeaders } from './headers'
 import { RequestLike } from 'http-message-signatures'
 import { TestKeys, generateTestKeys } from '../test-utils/keys'
