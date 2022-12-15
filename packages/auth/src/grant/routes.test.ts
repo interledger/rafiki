@@ -19,7 +19,6 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateTestKeys } from 'http-signature-utils'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -27,6 +26,7 @@ export const TEST_CLIENT_DISPLAY = {
 }
 
 const CLIENT = faker.internet.url()
+const CLIENT_KEY_ID = v4()
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
@@ -62,7 +62,6 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
-  let clientKeyId: string
 
   let grant: Grant
 
@@ -75,7 +74,7 @@ describe('Grant Routes', (): void => {
     finishUri: 'https://example.com',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
     client: CLIENT,
-    clientKeyId: clientKeyId,
+    clientKeyId: CLIENT_KEY_ID,
     interactId: v4(),
     interactRef: v4(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -86,7 +85,7 @@ describe('Grant Routes', (): void => {
     params: Record<string, unknown>
   ) => {
     const ctx = createAppContext(reqOpts, params)
-    ctx.clientKeyId = clientKeyId
+    ctx.clientKeyId = CLIENT_KEY_ID
     return ctx
   }
 
@@ -108,8 +107,6 @@ describe('Grant Routes', (): void => {
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
-
-    clientKeyId = (await generateTestKeys()).keyId
   })
 
   afterEach(async (): Promise<void> => {
@@ -265,8 +262,6 @@ describe('Grant Routes', (): void => {
         status: 400,
         error: 'interaction_required'
       })
-
-      scope.isDone()
     })
   })
 
@@ -292,7 +287,6 @@ describe('Grant Routes', (): void => {
           status: 401,
           error: 'unknown_request'
         })
-        scope.isDone()
       })
 
       test('Can start an interaction', async (): Promise<void> => {

@@ -17,12 +17,7 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import {
-  generateJwk,
-  generateTestKeys,
-  JWK,
-  TestKeys
-} from 'http-signature-utils'
+import { generateTestKeys, JWK } from 'http-signature-utils'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -30,7 +25,6 @@ describe('Access Token Routes', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
-  let testKeys: TestKeys
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
@@ -41,11 +35,7 @@ describe('Access Token Routes', (): void => {
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
 
-    testKeys = await generateTestKeys()
-    testClientKey = generateJwk({
-      privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
-    })
+    testClientKey = generateTestKeys().publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -106,7 +96,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testClientKey.kid
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -245,7 +235,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testClientKey.kid
       })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -273,12 +263,6 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       const ctx = createContext(
         {
           headers: {
@@ -298,16 +282,9 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
-      scope.isDone()
     })
 
     test('Returns status 204 if token has expired', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       const ctx = createContext(
         {
           headers: {
@@ -327,7 +304,6 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
-      scope.isDone()
     })
   })
 
@@ -340,7 +316,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testClientKey.kid
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,

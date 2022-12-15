@@ -2,19 +2,13 @@ import { validateSignatureHeaders, validateSignature } from './validation'
 import { createHeaders } from './headers'
 import { RequestLike } from 'http-message-signatures'
 import { TestKeys, generateTestKeys } from '../test-utils/keys'
-import { generateJwk, JWK } from './jwk'
 import { createContentDigestHeader } from 'httpbis-digest-headers'
 
 describe('Signature Verification', (): void => {
   let testKeys: TestKeys
-  let testClientKey: JWK
 
-  beforeEach(async (): Promise<void> => {
-    testKeys = await generateTestKeys()
-    testClientKey = generateJwk({
-      privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
-    })
+  beforeEach((): void => {
+    testKeys = generateTestKeys()
   })
   test.each`
     title                                 | withAuthorization | withRequestBody
@@ -43,7 +37,7 @@ describe('Signature Verification', (): void => {
       const contentAndSigHeaders = await createHeaders({
         request,
         privateKey: testKeys.privateKey,
-        keyId: testKeys.keyId
+        keyId: testKeys.publicKey.kid
       })
       const lowerHeaders = Object.fromEntries(
         Object.entries(contentAndSigHeaders).map(([k, v]) => [
@@ -54,9 +48,9 @@ describe('Signature Verification', (): void => {
       request.headers = { ...request.headers, ...lowerHeaders }
 
       expect(validateSignatureHeaders(request)).toEqual(true)
-      await expect(validateSignature(testClientKey, request)).resolves.toEqual(
-        true
-      )
+      await expect(
+        validateSignature(testKeys.publicKey, request)
+      ).resolves.toEqual(true)
     }
   )
 
