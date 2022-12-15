@@ -7,27 +7,27 @@ import {
   GrantRequest,
   GrantContinuationRequest
 } from '../types'
-import { post } from './requests'
+import { post, deleteRequest } from './requests'
 
 export interface GrantRouteDeps extends RouteDeps {
   client: string
 }
 
-interface RequestGrantArgs {
+interface PostArgs {
   url: string
-  request: Omit<GrantRequest, 'client'>
-}
-
-interface ContinuationRequestArgs {
-  url: string
-  request: GrantContinuationRequest
+  accessToken: string
 }
 
 export interface GrantRoutes {
   request(
-    args: RequestGrantArgs
+    postArgs: Omit<PostArgs, 'accessToken'>,
+    args: Omit<GrantRequest, 'client'>
   ): Promise<InteractiveGrant | NonInteractiveGrant>
-  continue(args: ContinuationRequestArgs): Promise<NonInteractiveGrant>
+  continue(
+    postArgs: PostArgs,
+    args: GrantContinuationRequest
+  ): Promise<NonInteractiveGrant>
+  cancel(postArgs: PostArgs): Promise<void>
 }
 
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
@@ -42,29 +42,48 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
       path: getASPath('/continue/{id}'),
       method: HttpMethod.POST
     })
+  const cancelGrantValidator = deps.openApi.createResponseValidator({
+    path: getASPath('/continue/{id}'),
+    method: HttpMethod.DELETE
+  })
+
   return {
-    request: (args: RequestGrantArgs) =>
+    request: (
+      { url }: Omit<PostArgs, 'accessToken'>,
+      args: Omit<GrantRequest, 'client'>
+    ) =>
       post(
         deps,
         {
-          url: args.url,
+          url,
           body: {
-            ...args.request,
+            ...args,
             client: deps.client
           }
         },
         requestGrantValidator
       ),
-    continue: (args: ContinuationRequestArgs) =>
+    continue: (
+      { url, accessToken }: PostArgs,
+      args: GrantContinuationRequest
+    ) =>
       post(
         deps,
         {
-          url: args.url,
-          body: {
-            ...args.request
-          }
+          url,
+          accessToken,
+          body: args
         },
         continueGrantValidator
+      ),
+    cancel: ({ url, accessToken }: PostArgs) =>
+      deleteRequest(
+        deps,
+        {
+          url,
+          accessToken
+        },
+        cancelGrantValidator
       )
   }
 }
