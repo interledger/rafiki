@@ -51,7 +51,7 @@ importers:
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.8
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
+      '@types/koa-bodyparser': ^4.3.10
       '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.1.1
       '@types/koa__router': ^8.0.11
@@ -104,7 +104,7 @@ importers:
       '@faker-js/faker': 7.4.0
       '@types/jest': 28.1.8
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-bodyparser': 4.3.10
       '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
@@ -135,7 +135,7 @@ importers:
       '@types/bcrypt': ^5.0.0
       '@types/jest': ^28.1.8
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
+      '@types/koa-bodyparser': ^4.3.10
       '@types/koa__cors': ^3.0.2
       '@types/koa__router': ^8.0.11
       '@types/lodash': ^4.14.189
@@ -245,7 +245,7 @@ importers:
       '@graphql-codegen/typescript-resolvers': 2.7.3_graphql@16.6.0
       '@types/jest': 28.1.8
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-bodyparser': 4.3.10
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
       '@types/lodash': 4.14.189
@@ -273,7 +273,7 @@ importers:
   packages/http-signature-utils:
     specifiers:
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.7
+      '@types/koa-bodyparser': ^4.3.10
       '@types/koa-json': ^2.0.20
       '@types/koa-logger': ^3.1.2
       '@types/koa-router': ^7.4.4
@@ -302,7 +302,7 @@ importers:
       uuid: 8.3.2
     devDependencies:
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-bodyparser': 4.3.10
       '@types/koa-json': 2.0.20
       '@types/koa-logger': 3.1.2
       '@types/koa-router': 7.4.4
@@ -4107,8 +4107,8 @@ packages:
       '@types/node': 18.7.13
     dev: true
 
-  /@types/koa-bodyparser/4.3.7:
-    resolution: {integrity: sha512-21NhEp7LjZm4zbNV5alHHmrNY4J+S7B8lYTO6CzRL8ShTMnl20Gd14dRgVhAxraLaW5iZMofox+BycbuiDvj2Q==}
+  /@types/koa-bodyparser/4.3.10:
+    resolution: {integrity: sha512-6ae05pjhmrmGhUR8GYD5qr5p9LTEMEGfGXCsK8VaSL+totwigm8+H/7MHW7K4854CMeuwRAubT8qcc/EagaeIA==}
     dependencies:
       '@types/koa': 2.13.5
 
@@ -4807,7 +4807,7 @@ packages:
       '@koa/cors': 3.3.0
       '@types/accepts': 1.3.5
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.7
+      '@types/koa-bodyparser': 4.3.10
       '@types/koa-compose': 3.2.5
       '@types/koa__cors': 3.3.0
       accepts: 1.3.8

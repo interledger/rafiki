@@ -18,7 +18,7 @@
     "@graphql-codegen/typescript-resolvers": "2.7.3",
     "@types/jest": "^28.1.8",
     "@types/koa": "2.13.5",
-    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-bodyparser": "^4.3.10",
     "@types/koa__cors": "^3.0.2",
     "@types/koa__router": "^8.0.11",
     "@types/lodash": "^4.14.189",
