@@ -8,11 +8,11 @@ import { createHeaders } from 'http-signature-utils'
 
 import { AppContext, AppContextData, AppServices } from '../app'
 
-export function createContext(
+export function createContext<TRequest>(
   reqOpts: httpMocks.RequestOptions,
   params: Record<string, unknown>,
   container?: IocContract<AppServices>
-): AppContext {
+): AppContext<TRequest> {
   const req = httpMocks.createRequest(reqOpts)
   const res = httpMocks.createResponse()
   const koa = new Koa<unknown, AppContextData>()

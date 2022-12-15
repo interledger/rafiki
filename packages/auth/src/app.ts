@@ -35,7 +35,7 @@ import {
   tokenHttpsigMiddleware
 } from './signature/middleware'
 
-export interface AppContextData extends DefaultContext {
+export interface AppContextData<TRequest = never> extends DefaultContext {
   logger: Logger
   closeEmitter: EventEmitter
   container: AppContainer
@@ -45,9 +45,15 @@ export interface AppContextData extends DefaultContext {
   session: { [key: string]: string }
   // TODO: define separate Context used in routes that include httpsig
   clientKeyId?: string
+  request: {
+    body?: TRequest
+  }
 }
 
-export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
+export type AppContext<TRequest = never> = Koa.ParameterizedContext<
+  DefaultState,
+  AppContextData<TRequest>
+>
 
 export interface DatabaseCleanupRule {
   /**

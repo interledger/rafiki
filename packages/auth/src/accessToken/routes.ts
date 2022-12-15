@@ -6,14 +6,6 @@ import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
-type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body: BodyT
-}
-
-type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
-  request: TokenRequest<BodyT>
-}
-
 type ManagementRequest = Omit<AppContext['request'], 'params'> & {
   params?: Record<'id', string>
 }
@@ -25,7 +17,7 @@ type ManagementContext = Omit<AppContext, 'request'> & {
 interface IntrospectBody {
   access_token: string
 }
-export type IntrospectContext = TokenContext<IntrospectBody>
+export type IntrospectContext = AppContext<IntrospectBody>
 export type RevokeContext = ManagementContext
 export type RotateContext = ManagementContext
 
