@@ -91,8 +91,9 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
+  const token = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
   const { id: managementId } = ctx.params
-  await deps.accessTokenService.revoke(managementId)
+  await deps.accessTokenService.revoke(managementId, token)
   ctx.status = 204
 }
 
@@ -100,7 +101,6 @@ async function rotateToken(
   deps: ServiceDependencies,
   ctx: RotateContext
 ): Promise<void> {
-  // TODO: verify Authorization: GNAP ${accessToken} contains correct token value
   const { id: managementId } = ctx.params
   const token = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
   const result = await deps.accessTokenService.rotate(managementId, token)

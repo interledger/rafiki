@@ -209,7 +209,10 @@ describe('Access Token Service', (): void => {
     })
     test('Can revoke un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
-      const result = await accessTokenService.revoke(token.managementId)
+      const result = await accessTokenService.revoke(
+        token.managementId,
+        token.value
+      )
       expect(result).toBeUndefined()
       await expect(
         AccessToken.query(trx).findById(token.id)
@@ -217,7 +220,10 @@ describe('Access Token Service', (): void => {
     })
     test('Can revoke even if token has already expired', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
-      const result = await accessTokenService.revoke(token.managementId)
+      const result = await accessTokenService.revoke(
+        token.managementId,
+        token.value
+      )
       expect(result).toBeUndefined()
       await expect(
         AccessToken.query(trx).findById(token.id)
@@ -225,7 +231,7 @@ describe('Access Token Service', (): void => {
     })
     test('Can revoke even if token has already been revoked', async (): Promise<void> => {
       await token.$query(trx).delete()
-      const result = await accessTokenService.revoke(token.id)
+      const result = await accessTokenService.revoke(token.id, token.value)
       expect(result).toBeUndefined()
       await expect(
         AccessToken.query(trx).findById(token.id)

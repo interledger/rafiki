@@ -14,7 +14,7 @@ export interface AccessTokenService {
   get(token: string): Promise<AccessToken>
   getByManagementId(managementId: string): Promise<AccessToken>
   introspect(token: string): Promise<Introspection | undefined>
-  revoke(id: string): Promise<void>
+  revoke(id: string, tokenValue: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
   rotate(managementId: string, tokenValue: string): Promise<Rotation>
 }
@@ -76,7 +76,7 @@ export async function createAccessTokenService({
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
     introspect: (token: string) => introspect(deps, token),
-    revoke: (id: string) => revoke(deps, id),
+    revoke: (id: string, tokenValue: string) => revoke(deps, id, tokenValue),
     create: (grantId: string, opts?: AccessTokenOpts) =>
       createAccessToken(deps, grantId, opts),
     rotate: (managementId: string, tokenValue: string) =>
@@ -138,9 +138,13 @@ async function introspect(
   }
 }
 
-async function revoke(deps: ServiceDependencies, id: string): Promise<void> {
+async function revoke(
+  deps: ServiceDependencies,
+  id: string,
+  tokenValue: string
+): Promise<void> {
   const token = await AccessToken.query(deps.knex).findOne({ managementId: id })
-  if (token) {
+  if (token && token.value === tokenValue) {
     await token.$query(deps.knex).delete()
   }
 }
