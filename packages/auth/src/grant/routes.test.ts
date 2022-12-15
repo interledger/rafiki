@@ -313,10 +313,10 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = { ...BASE_GRANT_REQUEST, interact: undefined }
 
-      await expect(grantRoutes.create(ctx)).rejects.toHaveProperty(
-        'status',
-        400
-      )
+      await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+        status: 400,
+        error: 'interaction_required'
+      })
 
       scope.isDone()
     })
