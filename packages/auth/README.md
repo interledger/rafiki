@@ -8,13 +8,6 @@ Implements Open Payments authorization endpoints in accordance with the GNAP spe
 
 ## Local Development
 
-Be sure to import the latest Open API spec schemas from the Open Payments repo:
-
-```shell
-# from the root
-pnpm --filter auth run fetch-schemas
-```
-
 ### Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/) configured to [run as non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)

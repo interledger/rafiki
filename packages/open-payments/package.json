@@ -10,13 +10,13 @@
     "build:deps": "pnpm --filter openapi build && pnpm --filter http-signature-utils build",
     "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
+    "copy-files": "cp ./src/openapi/*.yaml ./dist/openapi/",
     "fetch-schemas": "./scripts/fetch-schemas.sh",
-    "generate:auth-server-types": "openapi-typescript src/openapi/auth-server.yaml --output src/openapi/generated/auth-server-types.ts -t",
-    "generate:resource-server-types": "openapi-typescript src/openapi/resource-server.yaml --output src/openapi/generated/resource-server-types.ts -t",
+    "generate:auth-server-types": "openapi-typescript src/openapi/auth-server.yaml --output src/openapi/generated/auth-server-types.ts",
+    "generate:resource-server-types": "openapi-typescript src/openapi/resource-server.yaml --output src/openapi/generated/resource-server-types.ts",
     "generate:types": "pnpm generate:auth-server-types && pnpm generate:resource-server-types",
     "prepack": "pnpm build",
-    "test": "jest --passWithNoTests",
-    "copy-files": "cp ./src/openapi/*.yaml ./dist/openapi/"
+    "test": "jest --passWithNoTests"
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
