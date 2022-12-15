@@ -38,7 +38,7 @@ describe('token', (): void => {
       const accessToken = mockAccessToken()
 
       const manageUrl = new URL(accessToken.access_token.manage)
-      nock(manageUrl.origin).post(manageUrl.pathname).reply(200, accessToken)
+      const scope = nock(manageUrl.origin).post(manageUrl.pathname).reply(200, accessToken)
 
       const result = await rotateToken(
         {
@@ -53,6 +53,7 @@ describe('token', (): void => {
         openApiValidators.successfulValidator
       )
       expect(result).toStrictEqual(accessToken)
+      scope.done()
     })
 
     test('throws if rotate token does not pass open api validation', async (): Promise<void> => {
