@@ -251,9 +251,17 @@ input CreatePaymentPointerWithdrawalInput {
   id: String!
 }
 
+input JwkInput {
+  kid: String!
+  x: String!
+  alg: Alg!
+  kty: Kty!
+  crv: Crv!
+}
+
 input CreatePaymentPointerKeyInput {
   paymentPointerId: String!
-  jwk: String!
+  jwk: JwkInput!
 }
 
 input CreateApiKeyInput {
@@ -517,10 +525,30 @@ input CreatePaymentPointerInput {
   publicName: String
 }
 
+enum Alg {
+  EdDSA
+}
+
+enum Kty {
+  OKP
+}
+
+enum Crv {
+  Ed25519
+}
+
+type Jwk {
+  kid: String!
+  x: String!
+  alg: Alg!
+  kty: Kty!
+  crv: Crv!
+}
+
 type PaymentPointerKey implements Model {
   id: ID!
   paymentPointerId: ID!
-  jwk: String!
+  jwk: Jwk!
   revoked: Boolean!
   createdAt: String!
 }

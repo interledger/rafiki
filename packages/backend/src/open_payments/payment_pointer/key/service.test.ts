@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { JWK } from 'open-payments'
+import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { PaymentPointerKeyService } from './service'
@@ -11,13 +11,7 @@ import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 
-const TEST_KEY: JWK = {
-  kid: uuid(),
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519'
-}
+const TEST_KEY = generateJwk({ keyId: uuid() })
 
 describe('Payment Pointer Key Service', (): void => {
   let deps: IocContract<AppServices>
