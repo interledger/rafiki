@@ -162,7 +162,7 @@ importers:
       ilp-protocol-ccp: ^1.2.3
       ilp-protocol-ildcp: ^2.2.3
       ilp-protocol-stream: ^2.7.1
-      ioredis: ^5.2.2
+      ioredis: ^5.2.4
       iso8601-duration: ^2.1.1
       jest-openapi: ^0.14.2
       json-canonicalize: ^1.0.4
@@ -219,7 +219,7 @@ importers:
       ilp-packet: 3.1.4-alpha.1
       ilp-protocol-ccp: 1.2.3
       ilp-protocol-ildcp: 2.2.3
-      ioredis: 5.2.2
+      ioredis: 5.2.4
       iso8601-duration: 2.1.1
       json-canonicalize: 1.0.4
       knex: 0.95.15_pg@8.7.3
@@ -8412,8 +8412,8 @@ packages:
       loose-envify: 1.4.0
     dev: true
 
-  /ioredis/5.2.2:
-    resolution: {integrity: sha512-wryKc1ur8PcCmNwfcGkw5evouzpbDXxxkMkzPK8wl4xQfQf7lHe11Jotell5ikMVAtikXJEu/OJVaoV51BggRQ==}
+  /ioredis/5.2.4:
+    resolution: {integrity: sha512-qIpuAEt32lZJQ0XyrloCRdlEdUUNGG9i0UOk6zgzK6igyudNWqEBxfH6OlbnOOoBBvr1WB02mm8fR55CnikRng==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@ioredis/commands': 1.2.0
