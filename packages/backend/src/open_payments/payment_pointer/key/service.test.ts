@@ -3,13 +3,13 @@ import { JWK } from 'open-payments'
 import { v4 as uuid } from 'uuid'
 
 import { PaymentPointerKeyService } from './service'
-import { createTestApp, TestContainer } from '../tests/app'
-import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { createTestApp, TestContainer } from '../../../tests/app'
+import { truncateTables } from '../../../tests/tableManager'
+import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '..'
-import { AppServices } from '../app'
-import { createPaymentPointer } from '../tests/paymentPointer'
+import { initIocContainer } from '../../..'
+import { AppServices } from '../../../app'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 
 const TEST_KEY: JWK = {
   kid: uuid(),

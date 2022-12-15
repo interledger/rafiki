@@ -15,7 +15,7 @@ import {
   CreatePaymentPointerKeyMutationResponse,
   RevokePaymentPointerKeyMutationResponse
 } from '../generated/graphql'
-import { PaymentPointerKeyService } from '../../paymentPointerKey/service'
+import { PaymentPointerKeyService } from '../../open_payments/payment_pointer/key/service'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 
 const TEST_KEY: JWK = {

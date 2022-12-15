@@ -5,7 +5,7 @@ import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel, Pagination } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
-import { PaymentPointerKey } from '../../paymentPointerKey/model'
+import { PaymentPointerKey } from '../../open_payments/payment_pointer/key/model'
 
 export class PaymentPointer
   extends BaseModel

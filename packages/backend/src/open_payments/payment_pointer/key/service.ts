@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 
 import { PaymentPointerKey } from './model'
-import { BaseService } from '../shared/baseService'
+import { BaseService } from '../../../shared/baseService'
 import { JWK } from 'http-signature-utils'
 
 export interface PaymentPointerKeyService {

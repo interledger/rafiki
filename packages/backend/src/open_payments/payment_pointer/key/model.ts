@@ -1,4 +1,4 @@
-import { BaseModel } from '../shared/baseModel'
+import { BaseModel } from '../../../shared/baseModel'
 
 import { JWK } from 'http-signature-utils'
 import { Pojo } from 'objection'

@@ -4,7 +4,7 @@ import {
   PaymentPointerKey as SchemaPaymentPointerKey
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import { PaymentPointerKey } from '../../paymentPointerKey/model'
+import { PaymentPointerKey } from '../../open_payments/payment_pointer/key/model'
 
 export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePaymentPointerKey'] =
   async (
