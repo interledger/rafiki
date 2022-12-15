@@ -31,7 +31,7 @@ export async function validateSignature(
     return false
   }
 
-  const publicKey = (await importJWK(clientKey)) as crypto.KeyLike
+  const publicKey = (await importJWK({ ...clientKey })) as crypto.KeyLike
   const data = Buffer.from(challenge)
   return crypto.verify(
     null,
