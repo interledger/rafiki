@@ -13,7 +13,7 @@
     "http-message-signatures": "^0.1.2",
     "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
     "jose": "^4.9.0",
-    "koa": "^2.13.4",
+    "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0",
     "koa-json": "^2.0.2",
     "koa-logger": "^3.2.1",
