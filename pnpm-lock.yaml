@@ -4139,20 +4139,8 @@ packages:
     resolution: {integrity: sha512-p4rgkeRmiJu8XGC3eH2duRCNgnLUl6sjadEXH/AsieH/9fqYfXSZoZNC9CAe+FQK+QmM76hVyvuJ5Jrl5xxNeA==}
     dependencies:
       '@types/cookies': 0.7.7
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
     dev: true
-
-  /@types/koa/2.13.4:
-    resolution: {integrity: sha512-dfHYMfU+z/vKtQB7NUrthdAEiSvnLebvBjwHtfFmpZmB7em2N3WVQdHgnFq+xvyVgxW5jKDmjWfLD3lw4g4uTw==}
-    dependencies:
-      '@types/accepts': 1.3.5
-      '@types/content-disposition': 0.5.5
-      '@types/cookies': 0.7.7
-      '@types/http-assert': 1.5.3
-      '@types/http-errors': 1.8.2
-      '@types/keygrip': 1.0.2
-      '@types/koa-compose': 3.2.5
-      '@types/node': 18.7.6
 
   /@types/koa/2.13.5:
     resolution: {integrity: sha512-HSUOdzKz3by4fnqagwthW/1w/yJspTgppyyalPVbgZf8jQWvdIXcVW5h2DGtw4zYntOaeRGx49r1hxoPWrD4aA==}
@@ -4169,7 +4157,7 @@ packages:
   /@types/koa__cors/3.3.0:
     resolution: {integrity: sha512-FUN8YxcBakIs+walVe3+HcNP+Bxd0SB8BJHBWkglZ5C1XQWljlKcEFDG/dPiCIqwVCUbc5X0nYDlH62uEhdHMA==}
     dependencies:
-      '@types/koa': 2.13.4
+      '@types/koa': 2.13.5
 
   /@types/koa__router/8.0.11:
     resolution: {integrity: sha512-WXgKWpBsbS14kzmzD9LeFapOIa678h7zvUHxDwXwSx4ETKXhXLVUAToX6jZ/U7EihM7qwyD9W/BZvB0MRu7MTQ==}

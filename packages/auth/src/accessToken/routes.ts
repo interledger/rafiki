@@ -7,7 +7,7 @@ import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
 type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body?: BodyT
+  body: BodyT
 }
 
 type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {

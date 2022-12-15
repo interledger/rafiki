@@ -69,7 +69,7 @@ export async function grantContinueHttpsigMiddleware(
     'GNAP ',
     ''
   ) as string
-  const { interact_ref: interactRef } = ctx.request.body
+  const interactRef = ctx.request.body['interact_ref']
 
   const logger = await ctx.container.use('logger')
   logger.info(
@@ -119,7 +119,7 @@ export async function grantInitiationHttpsigMiddleware(
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  const sigVerified = await verifySigFromClient(body.client, ctx)
+  const sigVerified = await verifySigFromClient(body['client'], ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }
