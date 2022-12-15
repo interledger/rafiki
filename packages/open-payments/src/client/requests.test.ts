@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { createAxiosInstance, get, post } from './requests'
+import { createAxiosInstance, deleteRequest, get, post } from './requests'
 import { generateKeyPairSync } from 'crypto'
 import nock from 'nock'
 import { mockOpenApiResponseValidators, silentLogger } from '../test/helpers'
@@ -239,7 +239,7 @@ describe('requests', (): void => {
           )};keyid="${keyId}";alg="ed25519"`
         )
         .matchHeader('Content-Digest', /sha-512=:([a-zA-Z0-9+/]){86}==:/)
-        .matchHeader('Content-Length', 11)
+        .matchHeader('Content-Length', '11')
         .matchHeader('Content-Type', 'application/json')
         .post('/grant', body)
         // TODO: verify signature
@@ -294,7 +294,7 @@ describe('requests', (): void => {
         )
         .matchHeader('Authorization', `GNAP ${accessToken}`)
         .matchHeader('Content-Digest', /sha-512=:([a-zA-Z0-9+/]){86}==:/)
-        .matchHeader('Content-Length', 11)
+        .matchHeader('Content-Length', '11')
         .matchHeader('Content-Type', 'application/json')
         .post('/grant', body)
         // TODO: verify signature
@@ -359,6 +359,143 @@ describe('requests', (): void => {
           {
             url: `${baseUrl}/grant`,
             body
+          },
+          responseValidators.failedValidator
+        )
+      ).rejects.toThrow(/Failed to validate OpenApi response/)
+    })
+  })
+
+  describe('delete', (): void => {
+    const axiosInstance = createAxiosInstance({
+      requestTimeoutMs: 0,
+      privateKey,
+      keyId
+    })
+    const baseUrl = 'http://localhost:1000'
+    const responseValidators = mockOpenApiResponseValidators()
+
+    beforeAll(() => {
+      jest.spyOn(axiosInstance, 'delete')
+    })
+
+    test('properly makes DELETE request', async (): Promise<void> => {
+      const status = 202
+
+      const scope = nock(baseUrl)
+        .delete(`/grant`)
+        // TODO: verify signature
+        .reply(status)
+
+      await deleteRequest(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/grant`
+        },
+        responseValidators.successfulValidator
+      )
+      scope.done()
+
+      expect(axiosInstance.delete).toHaveBeenCalledWith(`${baseUrl}/grant`, {
+        headers: {}
+      })
+    })
+
+    test('properly makes DELETE request with accessToken', async (): Promise<void> => {
+      const status = 202
+      const accessToken = 'someAccessToken'
+
+      const scope = nock(baseUrl)
+        .matchHeader('Signature', /sig1=:([a-zA-Z0-9+/]){86}==:/)
+        .matchHeader(
+          'Signature-Input',
+          `sig1=("@method" "@target-uri" "authorization");created=${Math.floor(
+            Date.now() / 1000
+          )};keyid="${keyId}";alg="ed25519"`
+        )
+        .matchHeader('Authorization', `GNAP ${accessToken}`)
+        .delete(`/grant/`)
+        // TODO: verify signature
+        .reply(status)
+
+      await deleteRequest(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/grant/`,
+          accessToken
+        },
+        responseValidators.successfulValidator
+      )
+      scope.done()
+
+      expect(axiosInstance.delete).toHaveBeenCalledWith(`${baseUrl}/grant/`, {
+        headers: {
+          Authorization: `GNAP ${accessToken}`
+        }
+      })
+    })
+
+    test('throws if non-successful status', async (): Promise<void> => {
+      const status = 404
+      nock(baseUrl).delete('/grant').reply(status)
+
+      await expect(
+        deleteRequest(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/grant`
+          },
+          responseValidators.failedValidator
+        )
+      ).rejects.toThrow(/Error when making Open Payments DELETE request/)
+    })
+
+    test.each`
+      title                              | response
+      ${'when response is defined'}      | ${{ some: 'value' }}
+      ${'when response is undefined'}    | ${undefined}
+      ${'when response is null'}         | ${null}
+      ${'when response is empty string'} | ${''}
+    `(
+      'calls validator function properly $title',
+      async ({ response }): Promise<void> => {
+        const status = 202
+
+        const scope = nock(baseUrl)
+          .delete(`/grant`)
+          // TODO: verify signature
+          .reply(status, response)
+
+        const responseValidatorSpy = jest.spyOn(
+          responseValidators,
+          'successfulValidator'
+        )
+
+        await deleteRequest(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/grant`
+          },
+          responseValidators.successfulValidator
+        )
+
+        scope.done()
+        expect(responseValidatorSpy).toHaveBeenCalledWith({
+          body: response || undefined,
+          status
+        })
+      }
+    )
+
+    test('throws if response validator function fails', async (): Promise<void> => {
+      const status = 299
+      nock(baseUrl).delete('/grant').reply(status)
+
+      await expect(
+        deleteRequest(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/grant`
           },
           responseValidators.failedValidator
         )
