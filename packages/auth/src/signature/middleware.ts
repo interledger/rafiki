@@ -9,7 +9,7 @@ import {
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
 
-function contextToRequestLike(ctx: AppContext): RequestLike {
+function contextToRequestLike(ctx: AppContext<unknown>): RequestLike {
   return {
     url: ctx.href,
     method: ctx.method,
@@ -20,7 +20,7 @@ function contextToRequestLike(ctx: AppContext): RequestLike {
 
 async function verifySigFromClient(
   client: string,
-  ctx: AppContext
+  ctx: AppContext<unknown>
 ): Promise<boolean> {
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
@@ -36,7 +36,7 @@ async function verifySigFromClient(
 
 async function verifySigFromBoundKey(
   grant: Grant,
-  ctx: AppContext
+  ctx: AppContext<unknown>
 ): Promise<boolean> {
   const sigInput = ctx.headers['signature-input'] as string
   ctx.clientKeyId = getSigInputKeyId(sigInput)
@@ -57,8 +57,12 @@ function getSigInputKeyId(sigInput: string): string | undefined {
   return keyIdParam?.slice(KEY_ID_PREFIX.length, -1)
 }
 
+interface GrantContinueRequestBody {
+  interact_ref: string
+}
+
 export async function grantContinueHttpsigMiddleware(
-  ctx: AppContext,
+  ctx: AppContext<GrantContinueRequestBody>,
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
@@ -103,8 +107,12 @@ export async function grantContinueHttpsigMiddleware(
   await next()
 }
 
+interface GrantInitiationRequestBody {
+  client: string
+}
+
 export async function grantInitiationHttpsigMiddleware(
-  ctx: AppContext,
+  ctx: AppContext<GrantInitiationRequestBody>,
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {

@@ -3,7 +3,7 @@ import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
-import Koa, { DefaultState, DefaultContext } from 'koa'
+import Koa, { DefaultState, DefaultContext, BaseRequest } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
 import cors from '@koa/cors'
@@ -35,7 +35,8 @@ import {
   tokenHttpsigMiddleware
 } from './signature/middleware'
 
-export interface AppContextData<TRequest = never> extends DefaultContext {
+export interface AppContextData<TRequestBody = undefined>
+  extends DefaultContext {
   logger: Logger
   closeEmitter: EventEmitter
   container: AppContainer
@@ -45,14 +46,14 @@ export interface AppContextData<TRequest = never> extends DefaultContext {
   session: { [key: string]: string }
   // TODO: define separate Context used in routes that include httpsig
   clientKeyId?: string
-  request: {
-    body?: TRequest
+  request: BaseRequest & {
+    body: TRequestBody
   }
 }
 
-export type AppContext<TRequest = never> = Koa.ParameterizedContext<
+export type AppContext<TRequestBody = undefined> = Koa.ParameterizedContext<
   DefaultState,
-  AppContextData<TRequest>
+  AppContextData<TRequestBody>
 >
 
 export interface DatabaseCleanupRule {

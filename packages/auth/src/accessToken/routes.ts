@@ -14,10 +14,11 @@ type ManagementContext = Omit<AppContext, 'request'> & {
   request: ManagementRequest
 }
 
-interface IntrospectBody {
+interface IntrospectionRequestBody {
   access_token: string
 }
-export type IntrospectContext = AppContext<IntrospectBody>
+
+export type IntrospectContext = AppContext<IntrospectionRequestBody>
 export type RevokeContext = ManagementContext
 export type RotateContext = ManagementContext
 
