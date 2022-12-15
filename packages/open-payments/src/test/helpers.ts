@@ -196,7 +196,7 @@ export const mockAccessToken = (
 ): AccessToken => ({
   access_token: {
     value: '99C36C2A4DB5BEBC',
-    manage: 'http://example.com/token/',
+    manage: `http://example.com/token/${uuid()}`,
     access: [
       {
         type: 'incoming-payment',

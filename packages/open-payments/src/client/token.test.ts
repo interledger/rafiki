@@ -18,7 +18,6 @@ describe('token', (): void => {
 
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
-  const baseUrl = 'http://localhost:1000'
   const openApiValidators = mockOpenApiResponseValidators()
 
   describe('createTokenRoutes', (): void => {
@@ -37,9 +36,9 @@ describe('token', (): void => {
   describe('rotateToken', (): void => {
     test('returns accessToken if passes validation', async (): Promise<void> => {
       const accessToken = mockAccessToken()
-      const tokenId = 'accessTokenId'
 
-      nock(baseUrl).post(`/token/${tokenId}`).reply(200, accessToken)
+      const manageUrl = new URL(accessToken.access_token.manage)
+      nock(manageUrl.origin).post(manageUrl.pathname).reply(200, accessToken)
 
       const result = await rotateToken(
         {
@@ -48,7 +47,7 @@ describe('token', (): void => {
           logger
         },
         {
-          url: `${baseUrl}/token/${token}`
+          url: accessToken.access_token.manage
         },
         openApiValidators.successfulValidator
       )
@@ -57,9 +56,9 @@ describe('token', (): void => {
 
     test('throws if rotate token does not pass open api validation', async (): Promise<void> => {
       const accessToken = mockAccessToken()
-      const token = 'accessToken'
 
-      nock(baseUrl).post(`/token/${token}`).reply(200, accessToken)
+      const manageUrl = new URL(accessToken.access_token.manage)
+      nock(manageUrl.origin).post(manageUrl.pathname).reply(200, accessToken)
 
       await expect(() =>
         rotateToken(
@@ -69,7 +68,7 @@ describe('token', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/token/${token}`
+            url: accessToken.access_token.manage
           },
           openApiValidators.failedValidator
         )
