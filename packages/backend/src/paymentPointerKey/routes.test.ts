@@ -1,5 +1,6 @@
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
+import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../tests/context'
@@ -19,7 +20,6 @@ const TEST_KEY = {
   kty: 'OKP',
   alg: 'EdDSA',
   crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
   use: 'sig'
 }
 
@@ -38,7 +38,8 @@ describe('Payment Pointer Keys Routes', (): void => {
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    jestOpenAPI(await deps.use('openApi'))
+    const { resourceServerSpec } = await deps.use('openApi')
+    jestOpenAPI(resourceServerSpec)
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
@@ -100,11 +101,10 @@ describe('Payment Pointer Keys Routes', (): void => {
 
     test('returns 200 with backend key', async (): Promise<void> => {
       const config = await deps.use('config')
-      const jwk = {
-        ...config.privateKey.export({ format: 'jwk' }),
-        kid: config.keyId,
-        alg: 'EdDSA'
-      }
+      const jwk = generateJwk({
+        privateKey: config.privateKey,
+        keyId: config.keyId
+      })
 
       const ctx = createContext<PaymentPointerContext>({
         headers: { Accept: 'application/json' },

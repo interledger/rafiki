@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
 
 import { AppServices } from '../app'
@@ -12,7 +11,9 @@ export async function createIncomingPayment(
 ): Promise<IncomingPayment> {
   const incomingPaymentService = await deps.use('incomingPaymentService')
   const incomingPaymentOrError = await incomingPaymentService.create(options)
-  assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    throw new Error()
+  }
 
   const accountingService = await deps.use('accountingService')
   await accountingService.createLiquidityAccount(incomingPaymentOrError)

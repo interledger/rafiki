@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { Interval, Duration, DateTime, Settings } from 'luxon'
 
 import { Amount } from '../amount'
@@ -11,6 +10,7 @@ interface AmountJSON {
   assetScale: number
 }
 
+// TODO: replace with open-payments generated types
 export enum AccessType {
   IncomingPayment = 'incoming-payment',
   OutgoingPayment = 'outgoing-payment',
@@ -67,7 +67,9 @@ export interface GrantJSON {
 
 export class Grant {
   constructor(options: GrantOptions) {
-    assert.ok(options.access || !options.active)
+    if (!options.access && options.active) {
+      throw new Error()
+    }
     this.active = options.active
     this.grant = options.grant
     this.access = options.access || []
@@ -131,7 +133,9 @@ export function getInterval(
   target: Date
 ): Interval | undefined {
   const parts = repeatingInterval.split('/')
-  assert.ok(parts.length === 3)
+  if (parts.length !== 3) {
+    throw new Error()
+  }
 
   let repetitions: number | undefined
   if (parts[0].length > 1 && parts[0][1] !== '-') {

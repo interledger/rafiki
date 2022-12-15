@@ -6,7 +6,10 @@ import {
   IncomingPayment,
   InteractiveGrant,
   GrantRequest,
-  NonInteractiveGrant
+  GrantContinuationRequest,
+  NonInteractiveGrant,
+  OutgoingPayment,
+  OutgoingPaymentPaginationResult
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -66,6 +69,56 @@ export const mockIncomingPayment = (
   ilpStreamConnection: mockILPStreamConnection(),
   ...overrides
 })
+
+export const mockOutgoingPayment = (
+  overrides?: Partial<OutgoingPayment>
+): OutgoingPayment => ({
+  id: uuid(),
+  paymentPointer: 'paymentPointer',
+  failed: false,
+  sendAmount: {
+    assetCode: 'USD',
+    assetScale: 2,
+    value: '10'
+  },
+  sentAmount: {
+    assetCode: 'USD',
+    assetScale: 2,
+    value: '0'
+  },
+  receiveAmount: {
+    assetCode: 'USD',
+    assetScale: 2,
+    value: '10'
+  },
+  quoteId: uuid(),
+  receiver: uuid(),
+  description: 'some description',
+  externalRef: 'INV #1',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  ...overrides
+})
+
+export const mockOutgoingPaymentPaginationResult = (
+  overrides?: Partial<OutgoingPaymentPaginationResult>
+): OutgoingPaymentPaginationResult => {
+  const result = overrides?.result || [
+    mockOutgoingPayment(),
+    mockOutgoingPayment(),
+    mockOutgoingPayment()
+  ]
+
+  return {
+    result,
+    pagination: overrides?.pagination || {
+      startCursor: result[0].id,
+      hasNextPage: true,
+      hasPreviousPage: true,
+      endCursor: result[result.length - 1].id
+    }
+  }
+}
 
 export const mockInteractiveGrant = (
   overrides?: Partial<InteractiveGrant>
@@ -127,5 +180,12 @@ export const mockGrantRequest = (
       nonce: '456'
     }
   },
+  ...overrides
+})
+
+export const mockContinuationRequest = (
+  overrides?: Partial<GrantContinuationRequest>
+): GrantContinuationRequest => ({
+  interact_ref: uuid(),
   ...overrides
 })

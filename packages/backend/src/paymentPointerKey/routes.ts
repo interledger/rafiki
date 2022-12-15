@@ -1,4 +1,4 @@
-import { JWK } from 'open-payments'
+import { generateJwk, JWK } from 'http-signature-utils'
 
 import { PaymentPointerContext } from '../app'
 import { IAppConfig } from '../config/app'
@@ -21,11 +21,10 @@ export function createPaymentPointerKeyRoutes(
 ): PaymentPointerKeyRoutes {
   const deps = {
     ...deps_,
-    jwk: {
-      ...deps_.config.privateKey.export({ format: 'jwk' }),
-      kid: deps_.config.keyId,
-      alg: 'EdDSA'
-    } as JWK
+    jwk: generateJwk({
+      privateKey: deps_.config.privateKey,
+      keyId: deps_.config.keyId
+    })
   }
 
   return {

@@ -17,8 +17,12 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import { generateTestKeys } from '../tests/signature'
-import { JWKWithRequired } from '../client/service'
+import {
+  generateJwk,
+  generateTestKeys,
+  JWK,
+  TestKeys
+} from 'http-signature-utils'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -26,7 +30,8 @@ describe('Access Token Routes', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
-  let testJwk: JWKWithRequired
+  let testKeys: TestKeys
+  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -36,8 +41,11 @@ describe('Access Token Routes', (): void => {
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
 
-    const keys = await generateTestKeys()
-    testJwk = keys.publicKey
+    testKeys = await generateTestKeys()
+    testClientKey = generateJwk({
+      privateKey: testKeys.privateKey,
+      keyId: testKeys.keyId
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -98,7 +106,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testJwk.kid
+        clientKeyId: testKeys.keyId
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -110,7 +118,7 @@ describe('Access Token Routes', (): void => {
       })
 
       const openApi = await deps.use('openApi')
-      jestOpenAPI(openApi.resourceServerSpec)
+      jestOpenAPI(openApi.tokenIntrospectionSpec)
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
       const ctx = createContext(
@@ -141,7 +149,7 @@ describe('Access Token Routes', (): void => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
-          keys: [testJwk]
+          keys: [testClientKey]
         })
 
       const ctx = createContext(
@@ -179,7 +187,7 @@ describe('Access Token Routes', (): void => {
         ],
         key: {
           proof: 'httpsig',
-          jwk: testJwk
+          jwk: testClientKey
         },
         client_id: clientId
       })
@@ -190,7 +198,7 @@ describe('Access Token Routes', (): void => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
-          keys: [testJwk]
+          keys: [testClientKey]
         })
       const tokenCreatedDate = new Date(token.createdAt)
       const now = new Date(
@@ -238,7 +246,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testJwk.kid
+        clientKeyId: testKeys.keyId
       })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -269,7 +277,7 @@ describe('Access Token Routes', (): void => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
-          keys: [testJwk]
+          keys: [testClientKey]
         })
 
       const ctx = createContext(
@@ -298,7 +306,7 @@ describe('Access Token Routes', (): void => {
       const scope = nock(CLIENT)
         .get('/jwks.json')
         .reply(200, {
-          keys: [testJwk]
+          keys: [testClientKey]
         })
 
       const ctx = createContext(
@@ -333,7 +341,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testJwk.kid
+        clientKeyId: testKeys.keyId
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,

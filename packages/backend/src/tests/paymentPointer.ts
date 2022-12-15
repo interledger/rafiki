@@ -1,4 +1,3 @@
-import assert from 'assert'
 import axios from 'axios'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
@@ -32,7 +31,9 @@ export async function createPaymentPointer(
       options.url || `https://${faker.internet.domainName()}/.well-known/pay`,
     asset: options.asset || randomAsset()
   })) as MockPaymentPointer
-  assert.ok(!isPaymentPointerError(paymentPointerOrError))
+  if (isPaymentPointerError(paymentPointerOrError)) {
+    throw new Error()
+  }
   if (options.createLiquidityAccount) {
     const accountingService = await deps.use('accountingService')
     await accountingService.createLiquidityAccount({

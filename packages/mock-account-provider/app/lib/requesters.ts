@@ -2,8 +2,10 @@ import { gql } from '@apollo/client'
 import type {
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
-  CreatePaymentPointerMutationResponse,
-  PaymentPointer
+  PaymentPointer,
+  CreatePaymentPointerKeyMutationResponse,
+  CreatePaymentPointerKeyInput,
+  CreatePaymentPointerInput
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 
@@ -113,7 +115,7 @@ export async function createPaymentPointer(
   accountUrl: string,
   assetCode: string,
   assetScale: number
-): Promise<CreatePaymentPointerMutationResponse> {
+): Promise<PaymentPointer> {
   const createPaymentPointerMutation = gql`
     mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
       createPaymentPointer(input: $input) {
@@ -128,27 +130,70 @@ export async function createPaymentPointer(
       }
     }
   `
-  const createPaymentPointerInput = {
-    input: {
-      asset: {
-        code: assetCode,
-        scale: assetScale
-      },
-      url: accountUrl,
-      publicName: accountName
-    }
+  const createPaymentPointerInput: CreatePaymentPointerInput = {
+    asset: {
+      code: assetCode,
+      scale: assetScale
+    },
+    url: accountUrl,
+    publicName: accountName
   }
+
   return apolloClient
     .mutate({
       mutation: createPaymentPointerMutation,
-      variables: createPaymentPointerInput
+      variables: {
+        input: createPaymentPointerInput
+      }
     })
-    .then(({ data }): CreatePaymentPointerMutationResponse => {
+    .then(({ data }) => {
       console.log(data)
-      if (!data.createPaymentPointer.success) {
+
+      if (
+        !data.createPaymentPointer.success ||
+        !data.createPaymentPointer.paymentPointer
+      ) {
         throw new Error('Data was empty')
       }
-      return data.createPaymentPointer
+
+      return data.createPaymentPointer.paymentPointer
+    })
+}
+
+export async function createPaymentPointerKey({
+  paymentPointerId,
+  jwk
+}: {
+  paymentPointerId: string
+  jwk: string
+}): Promise<CreatePaymentPointerKeyMutationResponse> {
+  const createPaymentPointerKeyMutation = gql`
+    mutation CreatePaymentPointerKey($input: CreatePaymentPointerKeyInput!) {
+      createPaymentPointerKey(input: $input) {
+        code
+        success
+        message
+      }
+    }
+  `
+  const createPaymentPointerKeyInput: CreatePaymentPointerKeyInput = {
+    paymentPointerId,
+    jwk
+  }
+
+  return apolloClient
+    .mutate({
+      mutation: createPaymentPointerKeyMutation,
+      variables: {
+        input: createPaymentPointerKeyInput
+      }
+    })
+    .then(({ data }): CreatePaymentPointerKeyMutationResponse => {
+      console.log(data)
+      if (!data.createPaymentPointerKey.success) {
+        throw new Error('Data was empty')
+      }
+      return data.createPaymentPointerKey
     })
 }
 

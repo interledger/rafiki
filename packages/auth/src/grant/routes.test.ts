@@ -10,7 +10,7 @@ import { URL } from 'url'
 import { createContext as createAppContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
-import { initIocContainer, JWKWithRequired } from '..'
+import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes, GrantChoices } from './routes'
@@ -19,7 +19,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateTestKeys } from '../tests/signature'
+import { generateTestKeys } from 'http-signature-utils'
 
 import { KEY_REGISTRY_ORIGIN } from '../tests/signature'
 export { KEY_REGISTRY_ORIGIN } from '../tests/signature'
@@ -86,7 +86,7 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
-  let clientKey: JWKWithRequired
+  let clientKeyId: string
 
   let grant: Grant
 
@@ -99,7 +99,7 @@ describe('Grant Routes', (): void => {
     finishUri: 'https://example.com',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
     client: CLIENT,
-    clientKeyId: clientKey.kid,
+    clientKeyId: clientKeyId,
     interactId: v4(),
     interactRef: v4(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -110,7 +110,7 @@ describe('Grant Routes', (): void => {
     params: Record<string, unknown>
   ) => {
     const ctx = createAppContext(reqOpts, params)
-    ctx.clientKeyId = clientKey.kid
+    ctx.clientKeyId = clientKeyId
     return ctx
   }
 
@@ -133,8 +133,7 @@ describe('Grant Routes', (): void => {
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
 
-    const { publicKey } = await generateTestKeys()
-    clientKey = publicKey
+    clientKeyId = (await generateTestKeys()).keyId
   })
 
   afterEach(async (): Promise<void> => {
@@ -275,7 +274,7 @@ describe('Grant Routes', (): void => {
           value: expect.any(String),
           manage: expect.any(String),
           access: body.access_token.access,
-          expiresIn: 600
+          expires_in: 600
         },
         continue: {
           access_token: {
@@ -865,7 +864,7 @@ describe('Grant Routes', (): void => {
               type: 'incoming-payment'
             }
           ]),
-          expiresIn: 600
+          expires_in: 600
         },
         continue: {
           access_token: {

@@ -1,8 +1,15 @@
+import { RequestLike, validateSignature } from 'http-signature-utils'
 import { AccessType, AccessAction } from './grant'
-import { Transaction } from 'objection'
-import { GrantReference } from '../grantReference/model'
-import { HttpSigContext, verifySigAndChallenge } from 'auth'
+import { PaymentPointerContext } from '../../app'
 
+function contextToRequestLike(ctx: PaymentPointerContext): RequestLike {
+  return {
+    url: ctx.href,
+    method: ctx.method,
+    headers: ctx.headers,
+    body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
+  }
+}
 export function createAuthMiddleware({
   type,
   action
@@ -11,14 +18,10 @@ export function createAuthMiddleware({
   action: AccessAction
 }) {
   return async (
-    ctx: HttpSigContext,
+    ctx: PaymentPointerContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
-    const grantReferenceService = await ctx.container.use(
-      'grantReferenceService'
-    )
-    const logger = await ctx.container.use('logger')
     try {
       const parts = ctx.request.headers.authorization?.split(' ')
       if (parts?.length !== 2 || parts[0] !== 'GNAP') {
@@ -47,7 +50,9 @@ export function createAuthMiddleware({
       }
       if (!config.bypassSignatureValidation) {
         try {
-          if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
+          if (
+            !(await validateSignature(grant.key.jwk, contextToRequestLike(ctx)))
+          ) {
             ctx.throw(401, 'Invalid signature')
           }
         } catch (e) {
@@ -55,26 +60,6 @@ export function createAuthMiddleware({
           ctx.throw(401, `Invalid signature`)
         }
       }
-      await GrantReference.transaction(async (trx: Transaction) => {
-        const grantRef = await grantReferenceService.get(grant.grant, trx)
-        if (grantRef) {
-          if (grantRef.clientId !== grant.clientId) {
-            logger.debug(
-              `clientID ${grant.clientId} for grant ${grant.grant} does not match internal reference clientId ${grantRef.clientId}.`
-            )
-            ctx.throw(500)
-          }
-        } else if (action === AccessAction.Create) {
-          // Grant and client ID's are only stored for create routes
-          await grantReferenceService.create(
-            {
-              id: grant.grant,
-              clientId: grant.clientId
-            },
-            trx
-          )
-        }
-      })
       ctx.grant = grant
 
       // Unless the relevant grant action is ReadAll/ListAll add the

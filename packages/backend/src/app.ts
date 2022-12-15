@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
@@ -48,7 +47,6 @@ import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './paymentPointerKey/service'
-import { GrantReferenceService } from './open_payments/grantReference/service'
 import { AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
@@ -147,7 +145,6 @@ export interface AppServices {
   apiKeyService: Promise<ApiKeyService>
   sessionService: Promise<SessionService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
-  grantReferenceService: Promise<GrantReferenceService>
   openPaymentsClient: Promise<AuthenticatedClient>
 }
 
@@ -259,7 +256,7 @@ export class App {
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
     const connectionRoutes = await this.container.use('connectionRoutes')
-    const openApi = await this.container.use('openApi')
+    const { resourceServerSpec } = await this.container.use('openApi')
     const toRouterPath = (path: string): string =>
       path.replace(/{/g, ':').replace(/}/g, '')
 
@@ -293,11 +290,13 @@ export class App {
       [AccessAction.ListAll]: 'list'
     }
 
-    for (const path in openApi.paths) {
-      for (const method in openApi.paths[path]) {
+    for (const path in resourceServerSpec.paths) {
+      for (const method in resourceServerSpec.paths[path]) {
         if (isHttpMethod(method)) {
           const action = toAction({ path, method })
-          assert.ok(action)
+          if (!action) {
+            throw new Error()
+          }
 
           let type: AccessType
           let route: (ctx: AppContext) => Promise<void>
@@ -315,10 +314,13 @@ export class App {
               route = connectionRoutes.get
               router[method](
                 toRouterPath(path),
-                createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-                  path,
-                  method
-                }),
+                createValidatorMiddleware<ContextType<typeof route>>(
+                  resourceServerSpec,
+                  {
+                    path,
+                    method
+                  }
+                ),
                 route
               )
             } else if (path !== '/' || method !== HttpMethod.GET) {
@@ -330,10 +332,13 @@ export class App {
           router[method](
             PAYMENT_POINTER_PATH + toRouterPath(path),
             createPaymentPointerMiddleware(),
-            createValidatorMiddleware<ContextType<typeof route>>(openApi, {
-              path,
-              method
-            }),
+            createValidatorMiddleware<ContextType<typeof route>>(
+              resourceServerSpec,
+              {
+                path,
+                method
+              }
+            ),
             createAuthMiddleware({
               type,
               action
@@ -349,7 +354,7 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/jwks.json',
         method: HttpMethod.GET
       }),
@@ -364,7 +369,7 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH,
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerContext>(openApi, {
+      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),
