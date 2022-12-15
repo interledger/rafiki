@@ -159,7 +159,7 @@ importers:
       graphql-tools: ^8.3.3
       http-signature-utils: workspace:../http-signature-utils
       ilp-packet: 3.1.4-alpha.1
-      ilp-protocol-ccp: ^1.2.2
+      ilp-protocol-ccp: ^1.2.3
       ilp-protocol-ildcp: ^2.2.3
       ilp-protocol-stream: ^2.7.1
       ioredis: ^5.2.2
