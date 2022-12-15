@@ -1,12 +1,12 @@
 import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
-import { createContentDigestHeader } from 'httpbis-digest-headers'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
-import { createSignatureHeaders } from './signatures'
+import { createHeaders } from 'http-signature-utils'
 
 interface GetArgs {
   url: string
+  queryParams?: Record<string, unknown>
   accessToken?: string
 }
 
@@ -15,6 +15,9 @@ interface PostArgs<T = undefined> {
   body?: T
   accessToken?: string
 }
+
+const removeEmptyValues = (obj: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null))
 
 export const get = async <T>(
   deps: BaseDeps,
@@ -37,7 +40,8 @@ export const get = async <T>(
         ? {
             Authorization: `GNAP ${accessToken}`
           }
-        : {}
+        : {},
+      params: args.queryParams ? removeEmptyValues(args.queryParams) : undefined
     })
 
     try {
@@ -137,26 +141,26 @@ export const createAxiosInstance = (args: {
   if (args.privateKey && args.keyId) {
     axiosInstance.interceptors.request.use(
       async (config) => {
-        if (config.data) {
-          const data = JSON.stringify(config.data)
-          config.headers['Content-Digest'] = createContentDigestHeader(data, [
-            'sha-512'
-          ])
-          config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
-          config.headers['Content-Type'] = 'application/json'
-        }
-        const sigHeaders = await createSignatureHeaders({
+        const contentAndSigHeaders = await createHeaders({
           request: {
             method: config.method.toUpperCase(),
             url: config.url,
             headers: config.headers,
-            body: config.data
+            body: config.data ? JSON.stringify(config.data) : undefined
           },
           privateKey: args.privateKey,
           keyId: args.keyId
         })
-        config.headers['Signature'] = sigHeaders['Signature']
-        config.headers['Signature-Input'] = sigHeaders['Signature-Input']
+        if (config.data) {
+          config.headers['Content-Digest'] =
+            contentAndSigHeaders['Content-Digest']
+          config.headers['Content-Length'] =
+            contentAndSigHeaders['Content-Length']
+          config.headers['Content-Type'] = contentAndSigHeaders['Content-Type']
+        }
+        config.headers['Signature'] = contentAndSigHeaders['Signature']
+        config.headers['Signature-Input'] =
+          contentAndSigHeaders['Signature-Input']
         return config
       },
       null,

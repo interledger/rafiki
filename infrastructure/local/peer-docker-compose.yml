@@ -14,7 +14,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
       INTROSPECTION_HTTPSIG: "false"
-      BYPASS_SIGNATURE_VALIDATION: "true"
+      BYPASS_SIGNATURE_VALIDATION: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
   peer-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
@@ -50,7 +50,7 @@ services:
       PRICES_URL: http://local-bank/prices
       REDIS_URL: redis://redis:6379/1
       QUOTE_URL: http://local-bank/quote
-      BYPASS_SIGNATURE_VALIDATION: "true"
+      BYPASS_SIGNATURE_VALIDATION: "false"
       PAYMENT_POINTER_URL: https://peer-backend/.well-known/pay
   local-bank:
     build:
@@ -66,10 +66,23 @@ services:
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.peer.yml
+      KEY_FILE: /workspace/private-key.pem
     volumes:
       - ./seed.peer.yml:/workspace/seed.peer.yml
+      - ./peer-private-key.pem:/workspace/private-key.pem
     depends_on:
       - peer-backend
+  peer-signatures:
+    build:
+      context: ../..
+      dockerfile: ./packages/http-signature-utils/Dockerfile
+    restart: always
+    ports:
+      - '3041:3000'
+    environment:
+      KEY_FILE: /workspace/private-key.pem
+    volumes:
+      - ./peer-private-key.pem:/workspace/private-key.pem
 networks:
   local_rafiki:
     external: true
