@@ -1,6 +1,15 @@
+import { RequestLike, validateSignature } from 'http-signature-utils'
 import { AccessType, AccessAction } from './grant'
-import { HttpSigContext, verifySigAndChallenge } from 'auth'
+import { PaymentPointerContext } from '../../app'
 
+function contextToRequestLike(ctx: PaymentPointerContext): RequestLike {
+  return {
+    url: ctx.href,
+    method: ctx.method,
+    headers: ctx.headers,
+    body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
+  }
+}
 export function createAuthMiddleware({
   type,
   action
@@ -9,7 +18,7 @@ export function createAuthMiddleware({
   action: AccessAction
 }) {
   return async (
-    ctx: HttpSigContext,
+    ctx: PaymentPointerContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
@@ -41,7 +50,9 @@ export function createAuthMiddleware({
       }
       if (!config.bypassSignatureValidation) {
         try {
-          if (!(await verifySigAndChallenge(grant.key.jwk, ctx))) {
+          if (
+            !(await validateSignature(grant.key.jwk, contextToRequestLike(ctx)))
+          ) {
             ctx.throw(401, 'Invalid signature')
           }
         } catch (e) {

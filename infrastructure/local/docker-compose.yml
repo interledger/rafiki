@@ -14,7 +14,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
       INTROSPECTION_HTTPSIG: "false"
-      BYPASS_SIGNATURE_VALIDATION: "true"
+      BYPASS_SIGNATURE_VALIDATION: "false"
     depends_on:
       - tigerbeetle
       - database
@@ -32,8 +32,10 @@ services:
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.primary.yml
+      KEY_FILE: /workspace/private-key.pem
     volumes:
       - ./seed.primary.yml:/workspace/seed.primary.yml
+      - ./private-key.pem:/workspace/private-key.pem
     depends_on:
       - backend
   backend:
@@ -70,7 +72,7 @@ services:
       PRICES_URL: http://fynbos/prices
       REDIS_URL: redis://redis:6379/0
       QUOTE_URL: http://fynbos/quotes
-      BYPASS_SIGNATURE_VALIDATION: "true"
+      BYPASS_SIGNATURE_VALIDATION: "false"
       PAYMENT_POINTER_URL: https://backend/.well-known/pay
     depends_on:
       - tigerbeetle
@@ -119,6 +121,19 @@ services:
   redis:
     image: 'redis:7'
     restart: unless-stopped
+    networks:
+      - rafiki
+  signatures:
+    build:
+      context: ../..
+      dockerfile: ./packages/http-signature-utils/Dockerfile
+    restart: always
+    ports:
+      - '3040:3000'
+    environment:
+      KEY_FILE: /workspace/private-key.pem
+    volumes:
+      - ./private-key.pem:/workspace/private-key.pem
     networks:
       - rafiki
 volumes:

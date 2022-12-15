@@ -13,7 +13,20 @@ import Router from '@koa/router'
 import { IAppConfig } from './config/app'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
-import { AccessTokenRoutes } from './accessToken/routes'
+import {
+  CreateContext,
+  ContinueContext,
+  StartContext,
+  GetContext,
+  ChooseContext,
+  FinishContext
+} from './grant/routes'
+import {
+  AccessTokenRoutes,
+  IntrospectContext,
+  RevokeContext,
+  RotateContext
+} from './accessToken/routes'
 import { createValidatorMiddleware, HttpMethod } from 'openapi'
 
 import {
@@ -195,7 +208,7 @@ export class App {
     // Grant Initiation
     this.publicRouter.post(
       '/',
-      createValidatorMiddleware(openApi.authServerSpec, {
+      createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
         path: '/',
         method: HttpMethod.POST
       }),
@@ -208,7 +221,7 @@ export class App {
     // Grant Continue
     this.publicRouter.post(
       '/continue/:id',
-      createValidatorMiddleware(openApi.authServerSpec, {
+      createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
@@ -221,7 +234,7 @@ export class App {
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',
-      createValidatorMiddleware(openApi.authServerSpec, {
+      createValidatorMiddleware<RotateContext>(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
@@ -234,7 +247,7 @@ export class App {
     // Token Revocation
     this.publicRouter.delete(
       '/token/:id',
-      createValidatorMiddleware(openApi.authServerSpec, {
+      createValidatorMiddleware<RevokeContext>(openApi.authServerSpec, {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
@@ -248,10 +261,13 @@ export class App {
     // Token Introspection
     this.publicRouter.post(
       '/introspect',
-      createValidatorMiddleware(openApi.tokenIntrospectionSpec, {
-        path: '/introspect',
-        method: HttpMethod.POST
-      }),
+      createValidatorMiddleware<IntrospectContext>(
+        openApi.tokenIntrospectionSpec,
+        {
+          path: '/introspect',
+          method: HttpMethod.POST
+        }
+      ),
       accessTokenRoutes.introspect
     )
 
@@ -261,7 +277,7 @@ export class App {
     // Interaction start
     this.publicRouter.get(
       '/interact/:id/:nonce',
-      createValidatorMiddleware(openApi.idpSpec, {
+      createValidatorMiddleware<StartContext>(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -271,7 +287,7 @@ export class App {
     // Interaction finish
     this.publicRouter.get(
       '/interact/:id/:nonce/finish',
-      createValidatorMiddleware(openApi.idpSpec, {
+      createValidatorMiddleware<FinishContext>(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}/finish',
         method: HttpMethod.GET
       }),
@@ -281,7 +297,7 @@ export class App {
     // Grant lookup
     this.publicRouter.get(
       '/grant/:id/:nonce',
-      createValidatorMiddleware(openApi.idpSpec, {
+      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}',
         method: HttpMethod.GET
       }),
@@ -291,7 +307,7 @@ export class App {
     // Grant accept/reject
     this.publicRouter.post(
       '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware(openApi.idpSpec, {
+      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),

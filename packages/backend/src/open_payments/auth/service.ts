@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { KeyInfo } from 'auth'
 import { Logger } from 'pino'
 
 import {
@@ -10,6 +9,12 @@ import {
   GrantAccessJSON
 } from './grant'
 import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
+import { JWK } from 'http-signature-utils'
+
+export interface KeyInfo {
+  proof: string
+  jwk: JWK
+}
 
 export interface TokenInfoJSON extends GrantJSON {
   key: KeyInfo

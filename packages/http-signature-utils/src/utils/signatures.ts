@@ -6,13 +6,13 @@ import {
   Signer
 } from 'http-message-signatures'
 
-interface SignOptions {
+export interface SignOptions {
   request: RequestLike
   privateKey: KeyLike
   keyId: string
 }
 
-interface SignatureHeaders {
+export interface SignatureHeaders {
   Signature: string
   'Signature-Input': string
 }
@@ -29,7 +29,7 @@ export const createSignatureHeaders = async ({
   keyId
 }: SignOptions): Promise<SignatureHeaders> => {
   const components = ['@method', '@target-uri']
-  if (request.headers['Authorization']) {
+  if (request.headers['Authorization'] || request.headers['authorization']) {
     components.push('authorization')
   }
   if (request.body) {

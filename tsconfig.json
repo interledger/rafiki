@@ -1,6 +1,9 @@
 {
   "references": [
     {
+      "path": "packages/http-signature-utils"
+    },
+    {
       "path": "packages/openapi"
     },
     {
