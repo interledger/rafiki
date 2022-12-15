@@ -37,9 +37,9 @@ describe('token', (): void => {
   describe('rotateToken', (): void => {
     test('returns accessToken if passes validation', async (): Promise<void> => {
       const accessToken = mockAccessToken()
-      const token = 'accessToken'
+      const tokenId = 'accessTokenId'
 
-      nock(baseUrl).post(`/token/${token}`).reply(200, accessToken)
+      nock(baseUrl).post(`/token/${tokenId}`).reply(200, accessToken)
 
       const result = await rotateToken(
         {
