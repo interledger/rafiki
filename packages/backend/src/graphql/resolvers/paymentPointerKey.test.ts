@@ -1,6 +1,7 @@
 import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import { Knex } from 'knex'
+import { JWK } from 'open-payments'
 import { v4 as uuid } from 'uuid'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -17,13 +18,12 @@ import {
 import { PaymentPointerKeyService } from '../../paymentPointerKey/service'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 
-const TEST_KEY = {
+const TEST_KEY: JWK = {
   kid: uuid(),
   x: 'test-public-key',
   kty: 'OKP',
   alg: 'EdDSA',
   crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
   use: 'sig'
 }
 
@@ -72,6 +72,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
                   id
                   paymentPointerId
                   jwk
+                  revoked
                   createdAt
                 }
               }
@@ -94,7 +95,8 @@ describe('Payment Pointer Key Resolvers', (): void => {
       assert.ok(response.paymentPointerKey)
       expect(response.paymentPointerKey).toMatchObject({
         __typename: 'PaymentPointerKey',
-        paymentPointerId: input.paymentPointerId
+        paymentPointerId: input.paymentPointerId,
+        revoked: false
       })
       expect(JSON.parse(input.jwk)).toEqual(TEST_KEY)
     })
@@ -172,6 +174,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
                   id
                   paymentPointerId
                   jwk
+                  revoked
                 }
               }
             }
@@ -194,10 +197,10 @@ describe('Payment Pointer Key Resolvers', (): void => {
       expect(response.paymentPointerKey).toMatchObject({
         __typename: 'PaymentPointerKey',
         id: key.id,
-        paymentPointerId: key.paymentPointerId
+        paymentPointerId: key.paymentPointerId,
+        revoked: true
       })
 
-      key.jwk.revoked = true
       expect(JSON.parse(response.paymentPointerKey.jwk)).toEqual(key.jwk)
     })
 

@@ -601,6 +601,7 @@ export type PaymentPointerKey = Model & {
   id: Scalars['ID'];
   jwk: Scalars['String'];
   paymentPointerId: Scalars['ID'];
+  revoked: Scalars['Boolean'];
 };
 
 export type PaymentPointerWithdrawal = {
@@ -1306,6 +1307,7 @@ export type PaymentPointerKeyResolvers<ContextType = any, ParentType extends Res
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   jwk?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  revoked?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

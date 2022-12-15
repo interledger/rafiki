@@ -410,7 +410,7 @@ describe('Auth Middleware', (): void => {
 
   test('returns 401 for invalid key type without body', async (): Promise<void> => {
     await prepareTest(false)
-    mockKeyInfo.jwk.kty = 'EC'
+    mockKeyInfo.jwk.kty = 'EC' as 'OKP'
     const grant = new TokenInfo(
       {
         active: true,
@@ -434,7 +434,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 for invalid key type with body', async (): Promise<void> => {
-    mockKeyInfo.jwk.kty = 'EC'
+    mockKeyInfo.jwk.kty = 'EC' as 'OKP'
     const grant = new TokenInfo(
       {
         active: true,

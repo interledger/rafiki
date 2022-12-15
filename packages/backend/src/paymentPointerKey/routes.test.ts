@@ -1,6 +1,6 @@
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
-import { generateJwk } from 'http-signature-utils'
+import { generateJwk, JWK } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../tests/context'
@@ -14,7 +14,7 @@ import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerKeyService } from './service'
 import { createPaymentPointer } from '../tests/paymentPointer'
 
-const TEST_KEY = {
+const TEST_KEY: JWK = {
   kid: uuid(),
   x: 'test-public-key',
   kty: 'OKP',

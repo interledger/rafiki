@@ -521,6 +521,7 @@ type PaymentPointerKey implements Model {
   id: ID!
   paymentPointerId: ID!
   jwk: String!
+  revoked: Boolean!
   createdAt: String!
 }
 

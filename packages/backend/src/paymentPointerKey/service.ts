@@ -58,17 +58,12 @@ async function revoke(
   const key = await PaymentPointerKey.query(deps.knex).findById(id)
   if (!key) {
     return undefined
+  } else if (key.revoked) {
+    return key
   }
 
-  const revokedJwk = key.jwk
-  revokedJwk.revoked = true
-
   try {
-    const revokedKey = await key
-      .$query(deps.knex)
-      .patchAndFetch({ jwk: revokedJwk })
-
-    return revokedKey
+    return await key.$query(deps.knex).patchAndFetch({ revoked: true })
   } catch (error) {
     deps.logger.error(
       {

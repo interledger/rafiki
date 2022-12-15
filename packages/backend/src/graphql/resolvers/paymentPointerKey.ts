@@ -93,5 +93,6 @@ export const paymentPointerKeyToGraphql = (
   id: paymentPointerKey.id,
   paymentPointerId: paymentPointerKey.paymentPointerId,
   jwk: JSON.stringify(paymentPointerKey.jwk),
+  revoked: paymentPointerKey.revoked,
   createdAt: new Date(+paymentPointerKey.createdAt).toISOString()
 })
