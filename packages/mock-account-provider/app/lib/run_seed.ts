@@ -1,6 +1,5 @@
 import * as _ from 'lodash'
-import { CONFIG } from './parse_config'
-import type { SeedInstance, Account, Peering } from './parse_config'
+import { CONFIG, type Config, type Account, type Peering } from './parse_config'
 import {
   createPeer,
   addPeerLiquidity,
@@ -9,11 +8,11 @@ import {
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
-import { generateJwk } from './crypto.server'
+import { generateJwk } from 'http-signature-utils'
 
-export async function setupFromSeed(config: SeedInstance): Promise<void> {
+export async function setupFromSeed(config: Config): Promise<void> {
   const peerResponses = await Promise.all(
-    _.map(config.peers, async (peer: Peering) => {
+    _.map(config.seed.peers, async (peer: Peering) => {
       const peerResponse = await createPeer(
         peer.peerIlpAddress,
         peer.peerUrl,
@@ -25,7 +24,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
       }
       const transferUid = v4()
       const liquidity = await addPeerLiquidity(
-        config.self.graphqlUrl,
+        config.seed.self.graphqlUrl,
         peerResponse.id,
         peer.initialLiquidity,
         transferUid
@@ -40,7 +39,7 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
   await mockAccounts.clearAccounts()
 
   const accountResponses = await Promise.all(
-    _.map(config.accounts, async (account: Account) => {
+    _.map(config.seed.accounts, async (account: Account) => {
       await mockAccounts.create(
         account.id,
         account.name,
@@ -55,9 +54,9 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
         )
       }
       const paymentPointer = await createPaymentPointer(
-        config.self.graphqlUrl,
+        config.seed.self.graphqlUrl,
         account.name,
-        `https://${CONFIG.self.hostname}/${account.path}`,
+        `https://${CONFIG.seed.self.hostname}/${account.path}`,
         account.asset,
         account.scale
       )
@@ -70,15 +69,17 @@ export async function setupFromSeed(config: SeedInstance): Promise<void> {
 
       await createPaymentPointerKey({
         paymentPointerId: paymentPointer.id,
-        jwk: JSON.stringify(generateJwk({ keyId: `keyid-${account.id}` }))
+        jwk: JSON.stringify(
+          generateJwk({ keyId: `keyid-${account.id}`, privateKey: config.key })
+        )
       })
 
       return paymentPointer
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
-  const envVarStrings = _.map(config.accounts, (account) => {
-    return `${account.postmanEnvVar}: http://localhost:${CONFIG.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.self.hostname}`
+  const envVarStrings = _.map(config.seed.accounts, (account) => {
+    return `${account.postmanEnvVar}: http://localhost:${CONFIG.seed.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.seed.self.hostname}`
   })
   console.log(envVarStrings.join('\n'))
 }

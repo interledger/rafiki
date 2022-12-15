@@ -1,4 +1,4 @@
-import { generateJwk, JWK } from 'open-payments'
+import { generateJwk, JWK } from 'http-signature-utils'
 
 import { PaymentPointerContext } from '../app'
 import { IAppConfig } from '../config/app'

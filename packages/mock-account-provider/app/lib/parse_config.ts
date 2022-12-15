@@ -1,5 +1,7 @@
+import type * as crypto from 'crypto'
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
+import { parseOrProvisionKey } from 'http-signature-utils'
 
 export interface Self {
   graphqlUrl: string
@@ -40,8 +42,16 @@ export interface SeedInstance {
   fees: Array<Fees>
 }
 
-export const CONFIG: SeedInstance = parse(
-  readFileSync(process.env.SEED_FILE_LOCATION || `./seed.example.yml`).toString(
-    'utf8'
-  )
-)
+export interface Config {
+  seed: SeedInstance
+  key: crypto.KeyObject
+}
+
+export const CONFIG: Config = {
+  seed: parse(
+    readFileSync(
+      process.env.SEED_FILE_LOCATION || `./seed.example.yml`
+    ).toString('utf8')
+  ),
+  key: parseOrProvisionKey(process.env.KEY_FILE)
+}
