@@ -5,6 +5,7 @@ import { post } from './requests'
 
 interface RotateRequestArgs {
   url: string
+  accessToken: string
 }
 
 export interface TokenRoutes {
@@ -17,7 +18,7 @@ export const rotateToken = async (
   validateOpenApiResponse: ResponseValidator<AccessToken>
 ) => {
   const { axiosInstance, logger } = deps
-  const { url } = args
+  const { url, accessToken } = args
 
   return post(
     {
@@ -25,7 +26,8 @@ export const rotateToken = async (
       logger
     },
     {
-      url
+      url,
+      accessToken
     },
     validateOpenApiResponse
   )

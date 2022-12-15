@@ -47,7 +47,8 @@ describe('token', (): void => {
           logger
         },
         {
-          url: accessToken.access_token.manage
+          url: accessToken.access_token.manage,
+          accessToken: accessToken.access_token.value
         },
         openApiValidators.successfulValidator
       )
@@ -68,7 +69,8 @@ describe('token', (): void => {
             logger
           },
           {
-            url: accessToken.access_token.manage
+            url: accessToken.access_token.manage,
+            accessToken: accessToken.access_token.value
           },
           openApiValidators.failedValidator
         )
