@@ -62,7 +62,7 @@ importers:
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
       knex: ^0.95
-      koa: ^2.13.4
+      koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-session: ^6.2.0
       nock: ^13.2.4
@@ -87,7 +87,7 @@ importers:
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       knex: 0.95.15_pg@8.7.3
-      koa: 2.13.4
+      koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-session: 6.2.0
       node-mocks-http: 1.11.0
@@ -167,7 +167,7 @@ importers:
       jest-openapi: ^0.14.2
       json-canonicalize: ^1.0.4
       knex: ^0.95
-      koa: ^2.13.1
+      koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       lodash: ^4.17.21
       luxon: ^3.0.1
@@ -206,7 +206,7 @@ importers:
       '@types/bcrypt': 5.0.0
       add: 2.0.6
       ajv: 8.11.2
-      apollo-server-koa: 3.10.1_graphql@16.6.0+koa@2.13.4
+      apollo-server-koa: 3.10.1_graphql@16.6.0+koa@2.14.1
       axios: 0.26.1
       base64url: 3.0.1
       bcrypt: 5.0.1
@@ -223,7 +223,7 @@ importers:
       iso8601-duration: 2.1.1
       json-canonicalize: 1.0.4
       knex: 0.95.15_pg@8.7.3
-      koa: 2.13.4
+      koa: 2.14.1
       koa-bodyparser: 4.3.0
       lodash: 4.17.21
       luxon: 3.0.1
@@ -282,7 +282,7 @@ importers:
       http-message-signatures: ^0.1.2
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jose: ^4.9.0
-      koa: ^2.13.4
+      koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-json: ^2.0.2
       koa-logger: ^3.2.1
@@ -294,7 +294,7 @@ importers:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       jose: 4.9.0
-      koa: 2.13.4
+      koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-json: 2.0.2
       koa-logger: 3.2.1
@@ -395,7 +395,7 @@ importers:
       '@types/uuid': ^8.3.4
       ajv: ^8.11.2
       ajv-formats: ^2.1.1
-      koa: ^2.13.4
+      koa: ^2.14.1
       node-mocks-http: ^1.11.0
       openapi-default-setter: ^12.0.0
       openapi-request-coercer: ^12.0.0
@@ -417,7 +417,7 @@ importers:
       '@types/jest': 28.1.8
       '@types/koa': 2.13.5
       '@types/uuid': 8.3.4
-      koa: 2.13.4
+      koa: 2.14.1
       node-mocks-http: 1.11.0
       typescript: 4.7.4
       uuid: 8.3.2
@@ -4793,7 +4793,7 @@ packages:
       - supports-color
     dev: true
 
-  /apollo-server-koa/3.10.1_graphql@16.6.0+koa@2.13.4:
+  /apollo-server-koa/3.10.1_graphql@16.6.0+koa@2.14.1:
     resolution: {integrity: sha512-NdrmB6oIHca14L/xHwgFlnA/LnvlRfoVuHNzgB9o9gnQS4AeUDR8hzKJ2Zue45OEn0BeIBY1g5N/fX4oqE3WqA==}
     engines: {node: '>=12.0'}
     peerDependencies:
@@ -4810,7 +4810,7 @@ packages:
       apollo-server-core: 3.10.1_graphql@16.6.0
       apollo-server-types: 3.6.2_graphql@16.6.0
       graphql: 16.6.0
-      koa: 2.13.4
+      koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-compose: 4.1.0
     transitivePeerDependencies:
@@ -9634,8 +9634,8 @@ packages:
       - supports-color
     dev: false
 
-  /koa/2.13.4:
-    resolution: {integrity: sha512-43zkIKubNbnrULWlHdN5h1g3SEKXOEzoAlRsHOTFpnlDu8JlAOZSMJBLULusuXRequboiwJcj5vtYXKB3k7+2g==}
+  /koa/2.14.1:
+    resolution: {integrity: sha512-USJFyZgi2l0wDgqkfD27gL4YGno7TfUkcmOe6UOLFOVuN+J7FwnNu4Dydl4CUQzraM1lBAiGed0M9OVJoT0Kqw==}
     engines: {node: ^4.8.4 || ^6.10.1 || ^7.10.1 || >= 8.1.4}
     dependencies:
       accepts: 1.3.8
