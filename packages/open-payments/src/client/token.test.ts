@@ -38,7 +38,9 @@ describe('token', (): void => {
       const accessToken = mockAccessToken()
 
       const manageUrl = new URL(accessToken.access_token.manage)
-      const scope = nock(manageUrl.origin).post(manageUrl.pathname).reply(200, accessToken)
+      const scope = nock(manageUrl.origin)
+        .post(manageUrl.pathname)
+        .reply(200, accessToken)
 
       const result = await rotateToken(
         {
@@ -48,7 +50,7 @@ describe('token', (): void => {
         },
         {
           url: accessToken.access_token.manage,
-          accessToken: accessToken.access_token.value
+          accessToken: 'accessToken'
         },
         openApiValidators.successfulValidator
       )
@@ -60,7 +62,9 @@ describe('token', (): void => {
       const accessToken = mockAccessToken()
 
       const manageUrl = new URL(accessToken.access_token.manage)
-      nock(manageUrl.origin).post(manageUrl.pathname).reply(200, accessToken)
+      const scope = nock(manageUrl.origin)
+        .post(manageUrl.pathname)
+        .reply(200, accessToken)
 
       await expect(() =>
         rotateToken(
@@ -71,11 +75,12 @@ describe('token', (): void => {
           },
           {
             url: accessToken.access_token.manage,
-            accessToken: accessToken.access_token.value
+            accessToken: 'accessToken'
           },
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
+      scope.done()
     })
   })
 })
