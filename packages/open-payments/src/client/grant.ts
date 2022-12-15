@@ -72,9 +72,7 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
         {
           url,
           accessToken,
-          body: {
-            ...args
-          }
+          body: args
         },
         continueGrantValidator
       ),

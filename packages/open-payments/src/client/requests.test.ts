@@ -382,21 +382,6 @@ describe('requests', (): void => {
     test('properly makes DELETE request', async (): Promise<void> => {
       const status = 202
 
-      // https://github.com/nock/nock/issues/2200#issuecomment-1280957462
-      jest
-        .useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'setImmediate',
-            'clearImmediate',
-            'setInterval',
-            'clearInterval',
-            'setTimeout',
-            'clearTimeout'
-          ]
-        })
-        .setSystemTime(new Date())
-
       const scope = nock(baseUrl)
         .delete(`/grant`)
         // TODO: verify signature
@@ -419,21 +404,6 @@ describe('requests', (): void => {
     test('properly makes DELETE request with accessToken', async (): Promise<void> => {
       const status = 202
       const accessToken = 'someAccessToken'
-
-      // https://github.com/nock/nock/issues/2200#issuecomment-1280957462
-      jest
-        .useFakeTimers({
-          doNotFake: [
-            'nextTick',
-            'setImmediate',
-            'clearImmediate',
-            'setInterval',
-            'clearInterval',
-            'setTimeout',
-            'clearTimeout'
-          ]
-        })
-        .setSystemTime(new Date())
 
       const scope = nock(baseUrl)
         .matchHeader('Signature', /sig1=:([a-zA-Z0-9+/]){86}==:/)
@@ -465,7 +435,7 @@ describe('requests', (): void => {
       })
     })
 
-    test('throws if non-succesful status', async (): Promise<void> => {
+    test('throws if non-successful status', async (): Promise<void> => {
       const status = 404
       nock(baseUrl).delete('/grant').reply(status)
 

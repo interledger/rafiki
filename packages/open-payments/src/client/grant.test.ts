@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createGrantRoutes } from './grant'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import config from '../config'
@@ -40,9 +41,9 @@ describe('grant', (): void => {
 
         jest
           .spyOn(openApi, 'createResponseValidator')
-          .mockImplementation(mockResponseValidator as never)
+          .mockImplementation(mockResponseValidator as any)
 
-        const postSpy = jest.spyOn(requestors, 'post').mockResolvedValueOnce({})
+        const postSpy = jest.spyOn(requestors, 'post')
         const grantRequest = mockGrantRequest()
 
         await createGrantRoutes({ openApi, ...deps }).request(
@@ -71,7 +72,7 @@ describe('grant', (): void => {
 
         jest
           .spyOn(openApi, 'createResponseValidator')
-          .mockImplementation(mockResponseValidator as never)
+          .mockImplementation(mockResponseValidator as any)
 
         const deleteSpy = jest
           .spyOn(requestors, 'deleteRequest')
@@ -97,9 +98,9 @@ describe('grant', (): void => {
 
         jest
           .spyOn(openApi, 'createResponseValidator')
-          .mockImplementation(mockResponseValidator as never)
+          .mockImplementation(mockResponseValidator as any)
 
-        const postSpy = jest.spyOn(requestors, 'post').mockResolvedValueOnce({})
+        const postSpy = jest.spyOn(requestors, 'post')
         const interact_ref = uuid()
 
         await createGrantRoutes({ openApi, ...deps }).continue(
