@@ -184,11 +184,6 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects expired token', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
       const tokenCreatedDate = new Date(token.createdAt)
       const now = new Date(
         tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
@@ -219,8 +214,6 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: false
       })
-
-      scope.isDone()
     })
   })
 

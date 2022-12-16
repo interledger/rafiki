@@ -157,7 +157,7 @@ describe('Access Token Service', (): void => {
         key: { proof: 'httpsig', jwk: testClientKey },
         clientId
       })
-      scope.isDone()
+      scope.done()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
