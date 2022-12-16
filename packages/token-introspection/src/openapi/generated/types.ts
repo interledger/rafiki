@@ -20,29 +20,29 @@ export interface components {
     key: {
       /** @description The form of proof that the client instance will use when presenting the key. */
       proof: "httpsig";
-      /** @description The public key and its properties represented as a JSON Web Key [[RFC7517](https://datatracker.ietf.org/doc/html/rfc7517)]. */
+      /**
+       * Ed25519 Public Key
+       * @description A JWK representation of an Ed25519 Public Key
+       */
       jwk: {
+        kid: string;
         /** @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
         alg: "EdDSA";
-        /** @description A Key ID can be used to match a specific key. */
-        kid: string;
-        /** @description The Key Type. The only allowed value is `OKP`. */
-        kty: "OKP";
-        /** @description The intended use of the key. */
         use?: "sig";
-        /** @description The cryptographic curve used with the key. The only allowed value is `Ed25519`. */
+        kty: "OKP";
         crv: "Ed25519";
-        /** @description Public key encoded using the `base64url` encoding. */
+        /** @description The base64 url-encoded public key. */
         x: string;
-        /** @description Array of allowed operations this key may be used for. */
-        key_ops?: ("sign" | "verify")[];
-        /** @description UNIX timestamp indicating the earliest this key may be used. */
-        nbf?: number;
-        /** @description UNIX timestamp indicating the latest this key may be used. */
-        exp?: number;
-        /** @description The revocation status of the key. */
-        revoked?: boolean;
       };
+    };
+    /** token-info */
+    "token-info": {
+      active: true;
+      grant: string;
+      access: external["schemas.yaml"]["components"]["schemas"]["access"];
+      key: components["schemas"]["key"];
+      /** @description Opaque client identifier. */
+      client_id: string;
     };
   };
 }
@@ -55,14 +55,11 @@ export interface operations {
       /** OK */
       200: {
         content: {
-          "application/json": {
-            active: boolean;
-            grant?: string;
-            access?: external["schemas.yaml"]["components"]["schemas"]["access"];
-            key?: components["schemas"]["key"];
-            /** @description Opaque client identifier. */
-            client_id?: string;
-          };
+          "application/json":
+            | {
+                active: false;
+              }
+            | components["schemas"]["token-info"];
         };
       };
       /** Not Found */
@@ -73,10 +70,6 @@ export interface operations {
         "application/json": {
           /** @description The access token value presented to the RS by the client instance. */
           access_token: string;
-          /** @description The proofing method used by the client instance to bind the token to the RS request. */
-          proof?: string;
-          /** @description The identification used to authenticate the resource server making this call, either by value or by reference. */
-          resource_server: components["schemas"]["key"] | string;
           access?: external["schemas.yaml"]["components"]["schemas"]["access"];
         };
       };

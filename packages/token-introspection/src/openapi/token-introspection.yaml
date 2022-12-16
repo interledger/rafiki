@@ -26,21 +26,14 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  active:
-                    type: boolean
-                  grant:
-                    type: string
-                  access:
-                    $ref: ./schemas.yaml#/components/schemas/access
-                  key:
-                    $ref: '#/components/schemas/key'
-                  client_id:
-                    type: string
-                    description: Opaque client identifier.
-                required:
-                  - active
+                oneOf:
+                  - properties:
+                      active:
+                        enum:
+                          - false
+                    required:
+                      - active
+                  - $ref: '#/components/schemas/token-info'
               examples:
                 Token Introspection:
                   value:
@@ -81,25 +74,14 @@ paths:
                 access_token:
                   type: string
                   description: The access token value presented to the RS by the client instance.
-                proof:
-                  type: string
-                  description: The proofing method used by the client instance to bind the token to the RS request.
-                resource_server:
-                  oneOf:
-                    - $ref: '#/components/schemas/key'
-                    - type: string
-                  description: 'The identification used to authenticate the resource server making this call, either by value or by reference.'
                 access:
                   $ref: ./schemas.yaml#/components/schemas/access
               required:
                 - access_token
-                - resource_server
             examples:
               Introspect token:
                 value:
                   access_token: OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0
-                  proof: httpsig
-                  resource_server: 7C7C4AZ9KHRS6X63AJAO
       tags:
         - introspection
 components:
@@ -162,6 +144,28 @@ components:
       required:
         - proof
         - jwk
+    token-info:
+      title: token-info
+      type: object
+      properties:
+        active:
+          enum:
+            - true
+        grant:
+          type: string
+        access:
+          $ref: ./schemas.yaml#/components/schemas/access
+        key:
+          $ref: '#/components/schemas/key'
+        client_id:
+          type: string
+          description: Opaque client identifier.
+      required:
+        - active
+        - grant
+        - access
+        - key
+        - client_id
   securitySchemes:
     GNAP:
       name: Authorization
