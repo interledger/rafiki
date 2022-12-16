@@ -155,7 +155,7 @@ importers:
       extensible-error: ^1.0.2
       fishery: ^2.2.2
       graphql: ^16.6.0
-      graphql-scalars: ^1.18.0
+      graphql-scalars: ^1.20.1
       graphql-tools: ^8.3.14
       http-signature-utils: workspace:../http-signature-utils
       ilp-packet: 3.1.4-alpha.1
@@ -213,7 +213,7 @@ importers:
       extensible-error: 1.0.2
       fishery: 2.2.2
       graphql: 16.6.0
-      graphql-scalars: 1.18.0_graphql@16.6.0
+      graphql-scalars: 1.20.1_graphql@16.6.0
       graphql-tools: 8.3.14_onqnqwb3ubg5opvemcqf7c2qhy
       http-signature-utils: link:../http-signature-utils
       ilp-packet: 3.1.4-alpha.1
@@ -7957,14 +7957,14 @@ packages:
       - encoding
     dev: true
 
-  /graphql-scalars/1.18.0_graphql@16.6.0:
-    resolution: {integrity: sha512-XrMwSim4xJ5n1UdT3YMJh9uT3oB/th5jR5bIMJvYxmgq/rGDkfXNtCRSL/+dLMHxGM0thYPfIZDua1+aQlKBMA==}
+  /graphql-scalars/1.20.1_graphql@16.6.0:
+    resolution: {integrity: sha512-HCSosMh8l/DVYL3/wCesnZOb+gbiaO/XlZQEIKOkWDJUGBrc15xWAs5TCQVmrycT0tbEInii+J8eoOyMwxx8zg==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       graphql: 16.6.0
-      tslib: 2.4.0
+      tslib: 2.4.1
     dev: false
 
   /graphql-tag/2.12.6_graphql@16.6.0:
