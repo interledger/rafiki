@@ -730,6 +730,7 @@ describe('incoming-payment', (): void => {
 
         jest
           .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .mockImplementation(mockResponseValidator as any)
 
         const getSpy = jest
