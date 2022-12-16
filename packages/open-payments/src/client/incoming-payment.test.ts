@@ -20,6 +20,16 @@ import {
 } from '../test/helpers'
 import nock from 'nock'
 import { v4 as uuid } from 'uuid'
+import * as requestors from './requests'
+import { getRSPath } from '../types'
+
+jest.mock('./requests', () => {
+  return {
+    // https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options
+    __esModule: true,
+    ...jest.requireActual('./requests')
+  }
+})
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
@@ -702,6 +712,45 @@ describe('incoming-payment', (): void => {
       expect(() => validateCompletedIncomingPayment(incomingPayment)).toThrow(
         'Incoming payment could not be completed.'
       )
+    })
+  })
+
+  describe('routes', (): void => {
+    describe('list', (): void => {
+      test('calls get method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/incoming-payments' && method === HttpMethod.GET
+
+        const incomingPaymentPaginationResult =
+          mockIncomingPaymentPaginationResult({
+            result: [mockIncomingPayment()]
+          })
+        const paymentPointer = `${baseUrl}/.well-known/pay`
+        const url = `${paymentPointer}${getRSPath('/incoming-payments')}`
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          .mockImplementation(mockResponseValidator as any)
+
+        const getSpy = jest
+          .spyOn(requestors, 'get')
+          .mockResolvedValueOnce(incomingPaymentPaginationResult)
+
+        await createIncomingPaymentRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).list({ paymentPointer, accessToken: 'accessToken' })
+
+        expect(getSpy).toHaveBeenCalledWith(
+          {
+            axiosInstance,
+            logger
+          },
+          { url, accessToken: 'accessToken' },
+          true
+        )
+      })
     })
   })
 })
