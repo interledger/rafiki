@@ -14,13 +14,24 @@ describe('quote', (): void => {
   const logger = silentLogger
 
   describe('createQuoteRoutes', (): void => {
-    test('calls createResponseValidator properly', async (): Promise<void> => {
+    test('creates getQuoteOpenApiValidator  properly', async (): Promise<void> => {
       jest.spyOn(openApi, 'createResponseValidator')
 
       createQuoteRoutes({ axiosInstance, openApi, logger })
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/quotes/{id}',
         method: HttpMethod.GET
+      })
+    })
+
+    test('creates createQuoteOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createQuoteRoutes({ openApi, axiosInstance, logger })
+
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/quotes',
+        method: HttpMethod.POST
       })
     })
   })
