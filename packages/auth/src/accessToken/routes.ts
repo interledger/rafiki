@@ -6,6 +6,29 @@ import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
+type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
+  body?: BodyT
+}
+
+type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
+  request: TokenRequest<BodyT>
+}
+
+type ManagementRequest = Omit<AppContext['request'], 'params'> & {
+  params?: Record<'id', string>
+}
+
+type ManagementContext = Omit<AppContext, 'request'> & {
+  request: ManagementRequest
+}
+
+interface IntrospectBody {
+  access_token: string
+}
+export type IntrospectContext = TokenContext<IntrospectBody>
+export type RevokeContext = ManagementContext
+export type RotateContext = ManagementContext
+
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
@@ -14,9 +37,9 @@ interface ServiceDependencies {
 }
 
 export interface AccessTokenRoutes {
-  introspect(ctx: AppContext): Promise<void>
-  revoke(ctx: AppContext): Promise<void>
-  rotate(ctx: AppContext): Promise<void>
+  introspect(ctx: IntrospectContext): Promise<void>
+  revoke(ctx: RevokeContext): Promise<void>
+  rotate(ctx: RotateContext): Promise<void>
 }
 
 export function createAccessTokenRoutes(
@@ -27,15 +50,15 @@ export function createAccessTokenRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    introspect: (ctx: AppContext) => introspectToken(deps, ctx),
-    revoke: (ctx: AppContext) => revokeToken(deps, ctx),
-    rotate: (ctx: AppContext) => rotateToken(deps, ctx)
+    introspect: (ctx: IntrospectContext) => introspectToken(deps, ctx),
+    revoke: (ctx: RevokeContext) => revokeToken(deps, ctx),
+    rotate: (ctx: RotateContext) => rotateToken(deps, ctx)
   }
 }
 
 async function introspectToken(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: IntrospectContext
 ): Promise<void> {
   const { body } = ctx.request
   const introspectionResult = await deps.accessTokenService.introspect(
@@ -44,12 +67,10 @@ async function introspectToken(
   if (introspectionResult) {
     ctx.body = introspectionToBody(introspectionResult)
   } else {
-    ctx.status = 404
-    ctx.body = {
+    ctx.throw(404, {
       error: 'invalid_request',
       message: 'token not found'
-    }
-    return
+    })
   }
 }
 
@@ -68,7 +89,7 @@ function introspectionToBody(result: Introspection) {
 
 async function revokeToken(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: RevokeContext
 ): Promise<void> {
   const { id: managementId } = ctx.params
   await deps.accessTokenService.revoke(managementId)
@@ -77,7 +98,7 @@ async function revokeToken(
 
 async function rotateToken(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: RotateContext
 ): Promise<void> {
   // TODO: verify Authorization: GNAP ${accessToken} contains correct token value
   const { id: managementId } = ctx.params
@@ -93,7 +114,6 @@ async function rotateToken(
       }
     }
   } else {
-    ctx.status = 404
-    return ctx.throw(ctx.status, result.error.message)
+    ctx.throw(404, { message: result.error.message })
   }
 }

@@ -1,9 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
-import { createContentDigestHeader } from 'httpbis-digest-headers'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
-import { createSignatureHeaders } from './signatures'
+import { createHeaders } from 'http-signature-utils'
 
 interface GetArgs {
   url: string
@@ -14,6 +13,11 @@ interface GetArgs {
 interface PostArgs<T = undefined> {
   url: string
   body?: T
+  accessToken?: string
+}
+
+interface DeleteArgs {
+  url: string
   accessToken?: string
 }
 
@@ -129,6 +133,58 @@ export const post = async <TRequest, TResponse>(
   }
 }
 
+export const deleteRequest = async <TResponse>(
+  deps: BaseDeps,
+  args: DeleteArgs,
+  openApiResponseValidator: ResponseValidator<TResponse>
+): Promise<void> => {
+  const { axiosInstance, logger } = deps
+  const { accessToken } = args
+
+  const requestUrl = new URL(args.url)
+  if (process.env.NODE_ENV === 'development') {
+    requestUrl.protocol = 'http'
+  }
+
+  const url = requestUrl.href
+
+  try {
+    const { data, status } = await axiosInstance.delete<TResponse>(url, {
+      headers: accessToken
+        ? {
+            Authorization: `GNAP ${accessToken}`
+          }
+        : {}
+    })
+
+    try {
+      openApiResponseValidator({
+        status,
+        body: data || undefined
+      })
+    } catch (error) {
+      const errorMessage = 'Failed to validate OpenApi response'
+      logger.error(
+        {
+          status,
+          url,
+          validationError: error?.message
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    }
+  } catch (error) {
+    const errorMessage = `Error when making Open Payments DELETE request: ${
+      error?.message ? error.message : 'Unknown error'
+    }`
+    logger.error({ url }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+}
+
 export const createAxiosInstance = (args: {
   requestTimeoutMs: number
   privateKey?: KeyLike
@@ -142,26 +198,26 @@ export const createAxiosInstance = (args: {
   if (args.privateKey && args.keyId) {
     axiosInstance.interceptors.request.use(
       async (config) => {
-        if (config.data) {
-          const data = JSON.stringify(config.data)
-          config.headers['Content-Digest'] = createContentDigestHeader(data, [
-            'sha-512'
-          ])
-          config.headers['Content-Length'] = Buffer.from(data, 'utf-8').length
-          config.headers['Content-Type'] = 'application/json'
-        }
-        const sigHeaders = await createSignatureHeaders({
+        const contentAndSigHeaders = await createHeaders({
           request: {
             method: config.method.toUpperCase(),
             url: config.url,
             headers: config.headers,
-            body: config.data
+            body: config.data ? JSON.stringify(config.data) : undefined
           },
           privateKey: args.privateKey,
           keyId: args.keyId
         })
-        config.headers['Signature'] = sigHeaders['Signature']
-        config.headers['Signature-Input'] = sigHeaders['Signature-Input']
+        if (config.data) {
+          config.headers['Content-Digest'] =
+            contentAndSigHeaders['Content-Digest']
+          config.headers['Content-Length'] =
+            contentAndSigHeaders['Content-Length']
+          config.headers['Content-Type'] = contentAndSigHeaders['Content-Type']
+        }
+        config.headers['Signature'] = contentAndSigHeaders['Signature']
+        config.headers['Signature-Input'] =
+          contentAndSigHeaders['Signature-Input']
         return config
       },
       null,

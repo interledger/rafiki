@@ -10,7 +10,7 @@ import { URL } from 'url'
 import { createContext as createAppContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
-import { initIocContainer, JWKWithRequired } from '..'
+import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes, GrantChoices } from './routes'
@@ -19,7 +19,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateTestKeys } from '../tests/signature'
+import { generateTestKeys } from 'http-signature-utils'
 
 import { KEY_REGISTRY_ORIGIN } from '../tests/signature'
 export { KEY_REGISTRY_ORIGIN } from '../tests/signature'
@@ -86,7 +86,7 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
-  let clientKey: JWKWithRequired
+  let clientKeyId: string
 
   let grant: Grant
 
@@ -99,7 +99,7 @@ describe('Grant Routes', (): void => {
     finishUri: 'https://example.com',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
     client: CLIENT,
-    clientKeyId: clientKey.kid,
+    clientKeyId: clientKeyId,
     interactId: v4(),
     interactRef: v4(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -110,7 +110,7 @@ describe('Grant Routes', (): void => {
     params: Record<string, unknown>
   ) => {
     const ctx = createAppContext(reqOpts, params)
-    ctx.clientKeyId = clientKey.kid
+    ctx.clientKeyId = clientKeyId
     return ctx
   }
 
@@ -133,8 +133,7 @@ describe('Grant Routes', (): void => {
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
 
-    const { publicKey } = await generateTestKeys()
-    clientKey = publicKey
+    clientKeyId = (await generateTestKeys()).keyId
   })
 
   afterEach(async (): Promise<void> => {
@@ -157,46 +156,6 @@ describe('Grant Routes', (): void => {
 
     const exp = Math.round(expDate.getTime() / 1000)
     const nbf = Math.round(nbfDate.getTime() / 1000)
-
-    test('accepts json only', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'text/plain',
-            'Content-Type': 'application/json'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = BASE_GRANT_REQUEST
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(406)
-      expect(ctx.body).toEqual({ error: 'invalid_request' })
-    })
-
-    test('sends json body only', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'text/plain'
-          },
-          url,
-          method
-        },
-        {}
-      )
-
-      ctx.request.body = BASE_GRANT_REQUEST
-
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(406)
-      expect(ctx.body).toEqual({ error: 'invalid_request' })
-    })
 
     test('Can initiate a grant request', async (): Promise<void> => {
       const scope = nock(CLIENT).get('/').reply(200, {
@@ -323,8 +282,10 @@ describe('Grant Routes', (): void => {
       }
       ctx.request.body = body
 
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(500)
+      await expect(grantRoutes.create(ctx)).rejects.toHaveProperty(
+        'status',
+        500
+      )
       scope.isDone()
     })
     test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
@@ -351,8 +312,10 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = { ...BASE_GRANT_REQUEST, interact: undefined }
 
-      await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(400)
+      await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+        status: 400,
+        error: 'interaction_required'
+      })
 
       scope.isDone()
     })
@@ -383,11 +346,10 @@ describe('Grant Routes', (): void => {
           { id: 'unknown_interaction', nonce: grant.interactNonce }
         )
 
-        await expect(
-          grantRoutes.interaction.start(ctx)
-        ).resolves.toBeUndefined()
-        expect(ctx.status).toBe(401)
-        expect(ctx.body).toEqual({ error: 'unknown_request' })
+        await expect(grantRoutes.interaction.start(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'unknown_request'
+        })
         scope.isDone()
       })
 
@@ -445,13 +407,12 @@ describe('Grant Routes', (): void => {
           { id: '', nonce: grant.interactNonce }
         )
 
-        await expect(
-          grantRoutes.interaction.finish(ctx)
-        ).resolves.toBeUndefined()
-        expect(ctx.status).toBe(404)
-        expect(ctx.body).toEqual({
-          error: 'unknown_request'
-        })
+        await expect(grantRoutes.interaction.finish(ctx)).rejects.toMatchObject(
+          {
+            status: 404,
+            error: 'unknown_request'
+          }
+        )
       })
 
       test('Cannot finish interaction with invalid session', async (): Promise<void> => {
@@ -467,13 +428,12 @@ describe('Grant Routes', (): void => {
           { nonce: grant.interactNonce, id: grant.interactId }
         )
 
-        await expect(
-          grantRoutes.interaction.finish(ctx)
-        ).resolves.toBeUndefined()
-        expect(ctx.status).toBe(401)
-        expect(ctx.body).toEqual({
-          error: 'invalid_request'
-        })
+        await expect(grantRoutes.interaction.finish(ctx)).rejects.toMatchObject(
+          {
+            status: 401,
+            error: 'invalid_request'
+          }
+        )
       })
 
       test('Cannot finish interaction that does not exist', async (): Promise<void> => {
@@ -489,13 +449,12 @@ describe('Grant Routes', (): void => {
           { id: fakeInteractId, nonce: grant.interactNonce }
         )
 
-        await expect(
-          grantRoutes.interaction.finish(ctx)
-        ).resolves.toBeUndefined()
-        expect(ctx.status).toBe(404)
-        expect(ctx.body).toEqual({
-          error: 'unknown_request'
-        })
+        await expect(grantRoutes.interaction.finish(ctx)).rejects.toMatchObject(
+          {
+            status: 404,
+            error: 'unknown_request'
+          }
+        )
       })
 
       test('Can finish accepted interaction', async (): Promise<void> => {
@@ -623,9 +582,8 @@ describe('Grant Routes', (): void => {
 
       await expect(
         grantRoutes.interaction.acceptOrReject(ctx)
-      ).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({
+      ).rejects.toMatchObject({
+        status: 401,
         error: 'invalid_interaction'
       })
     })
@@ -671,8 +629,10 @@ describe('Grant Routes', (): void => {
 
       await expect(
         grantRoutes.interaction.acceptOrReject(ctx)
-      ).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
+      ).rejects.toMatchObject({
+        status: 404,
+        error: 'unknown_request'
+      })
     })
 
     test('Can reject grant', async (): Promise<void> => {
@@ -718,8 +678,9 @@ describe('Grant Routes', (): void => {
 
       await expect(
         grantRoutes.interaction.acceptOrReject(ctx)
-      ).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
+      ).rejects.toMatchObject({
+        status: 404
+      })
 
       const issuedGrant = await Grant.query().findById(grant.id)
       expect(issuedGrant.state).toEqual(GrantState.Pending)
@@ -780,11 +741,9 @@ describe('Grant Routes', (): void => {
         },
         { id: v4(), nonce: grant.interactNonce }
       )
-      await expect(
-        grantRoutes.interaction.details(ctx)
-      ).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
-      expect(ctx.response).toSatisfyApiSpec()
+      await expect(grantRoutes.interaction.details(ctx)).rejects.toMatchObject({
+        status: 404
+      })
     })
 
     test('Cannot get grant details without secret', async (): Promise<void> => {
@@ -800,12 +759,9 @@ describe('Grant Routes', (): void => {
         { id: grant.interactId, nonce: grant.interactNonce }
       )
 
-      await expect(
-        grantRoutes.interaction.details(ctx)
-      ).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      // TODO: add this response to spec
-      // expect(ctx.response).toSatisfyApiSpec()
+      await expect(grantRoutes.interaction.details(ctx)).rejects.toMatchObject({
+        status: 401
+      })
     })
   })
 
@@ -894,9 +850,8 @@ describe('Grant Routes', (): void => {
         interact_ref: v4()
       }
 
-      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
-      expect(ctx.body).toEqual({
+      await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+        status: 404,
         error: 'unknown_request'
       })
     })
@@ -924,9 +879,8 @@ describe('Grant Routes', (): void => {
         interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({
+      await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+        status: 401,
         error: 'request_denied'
       })
     })
@@ -947,9 +901,8 @@ describe('Grant Routes', (): void => {
 
       ctx.request.body = {}
 
-      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({
+      await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+        status: 401,
         error: 'invalid_request'
       })
     })
@@ -971,9 +924,8 @@ describe('Grant Routes', (): void => {
         interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({
+      await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+        status: 401,
         error: 'invalid_request'
       })
     })
@@ -994,9 +946,8 @@ describe('Grant Routes', (): void => {
         interact_ref: grant.interactRef
       }
 
-      await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(ctx.body).toEqual({
+      await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+        status: 401,
         error: 'invalid_request'
       })
     })

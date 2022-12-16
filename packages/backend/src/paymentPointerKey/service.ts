@@ -2,7 +2,7 @@ import { TransactionOrKnex } from 'objection'
 
 import { PaymentPointerKey } from './model'
 import { BaseService } from '../shared/baseService'
-import { JWKWithRequired } from 'auth'
+import { JWK } from 'http-signature-utils'
 
 export interface PaymentPointerKeyService {
   create(options: CreateOptions): Promise<PaymentPointerKey>
@@ -37,7 +37,7 @@ export async function createPaymentPointerKeyService({
 
 interface CreateOptions {
   paymentPointerId: string
-  jwk: JWKWithRequired
+  jwk: JWK
 }
 
 async function create(

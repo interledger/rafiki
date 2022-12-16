@@ -1,0 +1,34 @@
+{
+  "name": "http-signature-utils",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc --build tsconfig.json",
+    "test": "jest --passWithNoTests --maxWorkers=50%"
+  },
+  "dependencies": {
+    "http-message-signatures": "^0.1.2",
+    "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
+    "jose": "^4.9.0",
+    "koa": "^2.14.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^12.0.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/koa": "2.13.5",
+    "@types/koa-bodyparser": "^4.3.7",
+    "@types/koa-json": "^2.0.20",
+    "@types/koa-logger": "^3.1.2",
+    "@types/koa-router": "^7.4.4",
+    "@types/node": "^18.7.12",
+    "@types/uuid": "^8.3.4",
+    "node-mocks-http": "^1.12.1",
+    "typescript": "^4.9.3"
+  }
+}
