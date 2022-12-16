@@ -61,6 +61,9 @@ export type InteractiveGrant = {
   interact: ASComponents['schemas']['interact-response']
   continue: ASComponents['schemas']['continue']
 }
+export type AccessToken = {
+  access_token: ASComponents['schemas']['access_token']
+}
 export const isInteractiveGrant = (
   grant: InteractiveGrant | NonInteractiveGrant
 ): grant is InteractiveGrant => !!(grant as InteractiveGrant).interact

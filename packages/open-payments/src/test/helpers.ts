@@ -9,7 +9,8 @@ import {
   GrantContinuationRequest,
   NonInteractiveGrant,
   OutgoingPayment,
-  OutgoingPaymentPaginationResult
+  OutgoingPaymentPaginationResult,
+  AccessToken
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -187,5 +188,22 @@ export const mockContinuationRequest = (
   overrides?: Partial<GrantContinuationRequest>
 ): GrantContinuationRequest => ({
   interact_ref: uuid(),
+  ...overrides
+})
+
+export const mockAccessToken = (
+  overrides?: Partial<AccessToken>
+): AccessToken => ({
+  access_token: {
+    value: '99C36C2A4DB5BEBC',
+    manage: `http://example.com/token/${uuid()}`,
+    access: [
+      {
+        type: 'incoming-payment',
+        actions: ['create', 'read', 'list', 'complete']
+      }
+    ],
+    expires_in: 600
+  },
   ...overrides
 })

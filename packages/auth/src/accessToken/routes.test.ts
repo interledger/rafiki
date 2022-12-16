@@ -135,9 +135,8 @@ describe('Access Token Routes', (): void => {
         access_token: v4(),
         resource_server: 'test'
       }
-      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(404)
-      expect(ctx.body).toMatchObject({
+      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
+        status: 404,
         error: 'invalid_request',
         message: 'token not found'
       })
@@ -361,7 +360,9 @@ describe('Access Token Routes', (): void => {
       managementId = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' }
+          headers: { Accept: 'application/json' },
+          method: 'POST',
+          url: `/token/${managementId}`
         },
         { id: managementId }
       )
