@@ -26,7 +26,7 @@
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0",
     "koa-session": "^6.2.0",
-    "node-mocks-http": "^1.11.0",
+    "node-mocks-http": "^1.12.1",
     "objection": "^3.0.1",
     "objection-db-errors": "^1.1.2",
     "open-payments": "workspace:*",
