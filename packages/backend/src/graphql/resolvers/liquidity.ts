@@ -1,4 +1,3 @@
-import assert from 'assert'
 import { paymentPointerToGraphql } from './payment_pointer'
 import {
   ResolversTypes,
@@ -320,7 +319,9 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
       if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
         return responses[LiquidityError.InvalidId]
       }
-      assert.ok(event.data.payment?.sendAmount)
+      if (!event.data.payment?.sendAmount) {
+        throw new Error()
+      }
       const outgoingPaymentService = await ctx.container.use(
         'outgoingPaymentService'
       )
@@ -367,7 +368,9 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
       }
       const assetService = await ctx.container.use('assetService')
       const asset = await assetService.getById(event.withdrawal.assetId)
-      assert.ok(asset)
+      if (!asset) {
+        throw new Error()
+      }
       const accountingService = await ctx.container.use('accountingService')
       const error = await accountingService.createWithdrawal({
         id: event.id,

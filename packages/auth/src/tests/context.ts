@@ -1,12 +1,12 @@
+import crypto from 'crypto'
 import EventEmitter from 'events'
 import * as httpMocks from 'node-mocks-http'
 import Koa from 'koa'
 import session from 'koa-session'
 import { IocContract } from '@adonisjs/fold'
+import { createHeaders } from 'http-signature-utils'
 
 import { AppContext, AppContextData, AppServices } from '../app'
-import { generateSigHeaders } from './signature'
-import { JWKWithRequired } from '../client/service'
 
 export function createContext(
   reqOpts: httpMocks.RequestOptions,
@@ -41,20 +41,21 @@ export async function createContextWithSigHeaders(
   reqOpts: httpMocks.RequestOptions,
   params: Record<string, unknown>,
   requestBody: Record<string, unknown>,
-  privateKey: JWKWithRequired,
+  privateKey: crypto.KeyObject,
   keyId: string,
   container?: IocContract<AppServices>
 ): Promise<AppContext> {
   const { headers, url, method } = reqOpts
-  const { signature, sigInput, contentDigest } = await generateSigHeaders({
-    privateKey,
-    keyId,
+  const request = {
     url,
     method,
-    optionalComponents: {
-      body: requestBody,
-      authorization: headers.Authorization as string
-    }
+    headers,
+    body: JSON.stringify(requestBody)
+  }
+  const sigHeaders = await createHeaders({
+    request,
+    privateKey,
+    keyId
   })
 
   const ctx = createContext(
@@ -62,9 +63,7 @@ export async function createContextWithSigHeaders(
       ...reqOpts,
       headers: {
         ...headers,
-        'Content-Digest': contentDigest,
-        Signature: signature,
-        'Signature-Input': sigInput
+        ...sigHeaders
       }
     },
     params,

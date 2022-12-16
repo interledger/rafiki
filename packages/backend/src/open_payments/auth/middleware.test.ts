@@ -2,6 +2,15 @@ import assert from 'assert'
 import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
+import { Context } from 'koa'
+import {
+  generateTestKeys,
+  JWK,
+  createHeaders,
+  Headers,
+  TestKeys,
+  generateJwk
+} from 'http-signature-utils'
 
 import { createAuthMiddleware } from './middleware'
 import { GrantJSON, AccessType, AccessAction } from './grant'
@@ -14,17 +23,10 @@ import { HttpMethod, RequestValidator } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { GrantReference } from '../grantReference/model'
-import { GrantReferenceService } from '../grantReference/service'
 import { setup, SetupOptions } from '../payment_pointer/model.test'
-import { HttpSigContext, JWKWithRequired, KeyInfo } from 'auth'
-import { generateTestKeys, generateSigHeaders } from 'auth/src/tests/signature'
-import { TokenInfo, TokenInfoJSON } from './service'
+import { KeyInfo, TokenInfo, TokenInfoJSON } from './service'
 
-type AppMiddleware = (
-  ctx: HttpSigContext,
-  next: () => Promise<void>
-) => Promise<void>
+type AppMiddleware = (ctx: Context, next: () => Promise<void>) => Promise<void>
 
 type IntrospectionBody = {
   access_token: string
@@ -36,30 +38,21 @@ describe('Auth Middleware', (): void => {
   let appContainer: TestContainer
   let authServerIntrospectionUrl: URL
   let middleware: AppMiddleware
-  let ctx: HttpSigContext
+  let ctx: Context
   let next: jest.MockedFunction<() => Promise<void>>
   let validateRequest: RequestValidator<IntrospectionBody>
-  let grantReferenceService: GrantReferenceService
   let mockKeyInfo: KeyInfo
   const token = 'OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1LT0'
-  let generatedKeyPair: {
-    keyId: string
-    publicKey: JWKWithRequired
-    privateKey: JWKWithRequired
-  }
+  let testKeys: TestKeys
   let requestPath: string
   let requestAuthorization: string
   let requestBody: Body
   let requestUrl: string
   let requestMethod: RequestMethod
-  let requestSignatureHeaders: {
-    sigInput: string
-    signature: string
-    contentDigest?: string
-  }
-  let requestJwk: JWKWithRequired
+  let requestSignatureHeaders: Headers
+  let requestJwk: JWK
 
-  function setupHttpSigContext(options: SetupOptions): HttpSigContext {
+  function setupHttpSigContext(options: SetupOptions): Context {
     const context = setup(options)
     if (
       !context.headers['signature'] ||
@@ -78,31 +71,28 @@ describe('Auth Middleware', (): void => {
   }
 
   async function prepareTest(includeBody: boolean) {
-    requestSignatureHeaders = await generateSigHeaders({
-      privateKey: generatedKeyPair.privateKey,
-      keyId: generatedKeyPair.keyId,
+    const request = {
       url: requestUrl,
       method: requestMethod,
-      optionalComponents: {
-        body: includeBody ? requestBody : undefined,
-        authorization: requestAuthorization
-      }
+      headers: { authorization: requestAuthorization },
+      body: includeBody ? JSON.stringify(requestBody) : undefined
+    }
+    requestSignatureHeaders = await createHeaders({
+      request,
+      privateKey: testKeys.privateKey,
+      keyId: testKeys.keyId
     })
-    requestJwk = generatedKeyPair.publicKey
+    requestJwk = generateJwk({
+      privateKey: testKeys.privateKey,
+      keyId: testKeys.keyId
+    })
 
     ctx = setupHttpSigContext({
       reqOpts: {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: `sig1=:${requestSignatureHeaders.signature}:`,
-          'Signature-Input': requestSignatureHeaders.sigInput,
-          'Content-Digest': includeBody
-            ? requestSignatureHeaders.contentDigest
-            : undefined,
-          'Content-Length': includeBody
-            ? JSON.stringify(requestBody).length.toString()
-            : undefined
+          ...requestSignatureHeaders
         },
         method: requestMethod,
         body: includeBody ? requestBody : undefined,
@@ -126,14 +116,13 @@ describe('Auth Middleware', (): void => {
       type: AccessType.IncomingPayment,
       action: AccessAction.Read
     })
-    const authOpenApi = await deps.use('authOpenApi')
+    const { tokenIntrospectionSpec } = await deps.use('openApi')
     requestPath = '/introspect'
-    validateRequest = authOpenApi.createRequestValidator({
+    validateRequest = tokenIntrospectionSpec.createRequestValidator({
       path: requestPath,
       method: HttpMethod.POST
     })
-    grantReferenceService = await deps.use('grantReferenceService')
-    generatedKeyPair = await generateTestKeys()
+    testKeys = await generateTestKeys()
     requestMethod = HttpMethod.POST.toUpperCase() as RequestMethod
     requestBody = {
       access_token: token,
@@ -235,33 +224,6 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
     scope.done()
   })
-  test('returns 500 for not matching clientId', async (): Promise<void> => {
-    const grant = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.Read],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      mockKeyInfo
-    )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: uuid()
-    })
-    const scope = mockAuthServer(grant.toJSON())
-    await expect(middleware(ctx, next)).rejects.toMatchObject({
-      status: 500
-    })
-    expect(next).not.toHaveBeenCalled()
-    scope.done()
-  })
 
   test.each`
     limitAccount
@@ -306,80 +268,13 @@ describe('Auth Middleware', (): void => {
         mockKeyInfo
       )
       const scope = mockAuthServer(grant.toJSON())
-      const next = jest.fn().mockImplementation(async () => {
-        await expect(
-          GrantReference.query().findById(grant.grant)
-        ).resolves.toBeUndefined()
-      })
+      const next = jest.fn()
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
       expect(ctx.grant).toEqual(grant)
       scope.done()
     }
   )
-  const types = {
-    [AccessType.IncomingPayment]: Object.values(AccessAction),
-    [AccessType.OutgoingPayment]: Object.values(AccessAction).filter(
-      (action) => action !== AccessAction.Complete
-    ),
-    [AccessType.Quote]: [
-      AccessAction.Create,
-      AccessAction.Read
-      // TODO
-      // AccessAction.ReadAll
-    ]
-  }
-  Object.values(AccessType).forEach((type) => {
-    for (const action of types[type]) {
-      const description =
-        action === AccessAction.Create
-          ? 'stores grant details'
-          : 'does not store grant details'
-      test(`${description} for ${type} on the ${action} path`, async (): Promise<void> => {
-        const actionPathMiddleware: AppMiddleware = createAuthMiddleware({
-          type: type,
-          action: action
-        })
-        const grant = new TokenInfo(
-          {
-            active: true,
-            clientId: uuid(),
-            grant: uuid(),
-            access: [
-              {
-                type: type,
-                actions: [action],
-                identifier: ctx.paymentPointer.url
-              }
-            ]
-          },
-          mockKeyInfo
-        )
-        const scope = mockAuthServer(grant.toJSON())
-        let next
-        if (action === AccessAction.Create) {
-          next = jest.fn().mockImplementation(async () => {
-            await expect(
-              GrantReference.query().findById(grant.grant)
-            ).resolves.toEqual({
-              id: grant.grant,
-              clientId: grant.clientId
-            })
-          })
-        } else {
-          next = jest.fn().mockImplementation(async () => {
-            await expect(
-              GrantReference.query().findById(grant.grant)
-            ).resolves.toBeUndefined()
-          })
-        }
-        await expect(actionPathMiddleware(ctx, next)).resolves.toBeUndefined()
-        expect(next).toHaveBeenCalled()
-        expect(ctx.grant).toEqual(grant)
-        scope.isDone()
-      })
-    }
-  })
 
   test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
     ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
@@ -388,33 +283,6 @@ describe('Auth Middleware', (): void => {
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(introspectSpy).not.toHaveBeenCalled()
     expect(next).toHaveBeenCalled()
-  })
-
-  test('sets the context and calls next if grant has been seen before', async (): Promise<void> => {
-    const grant = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.IncomingPayment,
-            actions: [AccessAction.Read],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      mockKeyInfo
-    )
-    await grantReferenceService.create({
-      id: grant.grant,
-      clientId: grant.clientId
-    })
-    const scope = mockAuthServer(grant.toJSON())
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(next).toHaveBeenCalled()
-    expect(ctx.grant).toEqual(grant)
-    scope.done()
   })
 
   test('returns 200 with valid http signature without body', async (): Promise<void> => {
@@ -469,7 +337,7 @@ describe('Auth Middleware', (): void => {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
           Signature: 'aaaaaaaaaa=',
-          'Signature-Input': requestSignatureHeaders.sigInput
+          'Signature-Input': requestSignatureHeaders['Signature-Input']
         },
         method: requestMethod,
         url: requestUrl
@@ -507,8 +375,8 @@ describe('Auth Middleware', (): void => {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
           Signature: 'aaaaaaaaaa=',
-          'Signature-Input': requestSignatureHeaders.sigInput,
-          'Content-Digest': requestSignatureHeaders.contentDigest,
+          'Signature-Input': requestSignatureHeaders['Signature-Input'],
+          'Content-Digest': requestSignatureHeaders['Content-Digest'],
           'Content-Length': JSON.stringify(requestBody).length.toString()
         },
         method: requestMethod,
@@ -607,9 +475,12 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    ctx.request.headers['signature-input'] = ctx.request.headers[
-      'signature-input'
-    ].replace('gnap-key', 'mismatched-key')
+    let sigInput = ctx.request.headers['signature-input'] as string
+    sigInput = sigInput.replace(
+      /(keyid=")[0-9a-z-]{36}/g,
+      '$1' + 'mismatched-key'
+    )
+    ctx.request.headers['signature-input'] = sigInput
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
@@ -633,9 +504,12 @@ describe('Auth Middleware', (): void => {
       mockKeyInfo
     )
     const scope = mockAuthServer(grant.toJSON())
-    ctx.request.headers['signature-input'] = ctx.request.headers[
-      'signature-input'
-    ].replace('gnap-key', 'mismatched-key')
+    let sigInput = ctx.request.headers['signature-input'] as string
+    sigInput = sigInput.replace(
+      /(keyid=")[0-9a-z-]{36}/g,
+      '$1' + 'mismatched-key'
+    )
+    ctx.request.headers['signature-input'] = sigInput
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(ctx.status).toBe(401)
     expect(next).not.toHaveBeenCalled()
@@ -648,8 +522,8 @@ describe('Auth Middleware', (): void => {
         headers: {
           Accept: 'application/json',
           Authorization: `GNAP ${token}`,
-          Signature: `sig1=:${requestSignatureHeaders.signature}:`,
-          'Signature-Input': requestSignatureHeaders.sigInput,
+          Signature: `sig1=:${requestSignatureHeaders['Signature']}:`,
+          'Signature-Input': requestSignatureHeaders['Signature-Input'],
           'Content-Digest': 'aaaaaaaaaa=',
           'Content-Length': JSON.stringify(requestBody).length.toString()
         },

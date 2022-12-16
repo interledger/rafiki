@@ -1,10 +1,14 @@
 import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
-  ILPStreamConnection as OpenPaymentsConnection
+  ILPStreamConnection as OpenPaymentsConnection,
+  isNonInteractiveGrant
 } from 'open-payments'
 
+import { AccessAction, AccessType } from '../auth/grant'
 import { ConnectionService } from '../connection/service'
+import { Grant } from '../grant/model'
+import { GrantService } from '../grant/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
@@ -17,8 +21,8 @@ export interface ReceiverService {
 }
 
 interface ServiceDependencies extends BaseService {
-  accessToken: string
   connectionService: ConnectionService
+  grantService: GrantService
   incomingPaymentService: IncomingPaymentService
   openPaymentsUrl: string
   paymentPointerService: PaymentPointerService
@@ -140,9 +144,13 @@ async function getIncomingPayment(
       })
     }
 
+    const grant = await getIncomingPaymentGrant(
+      deps,
+      urlParseResult.paymentPointerUrl
+    )
     return await deps.openPaymentsClient.incomingPayment.get({
       url,
-      accessToken: deps.accessToken
+      accessToken: grant.accessToken
     })
   } catch (error) {
     deps.logger.error(
@@ -178,4 +186,59 @@ async function getLocalIncomingPayment({
   }
 
   return incomingPayment.toOpenPaymentsType({ ilpStreamConnection: connection })
+}
+
+async function getIncomingPaymentGrant(
+  deps: ServiceDependencies,
+  paymentPointerUrl: string
+): Promise<Grant | undefined> {
+  const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
+    url: paymentPointerUrl
+  })
+  if (!paymentPointer) {
+    return undefined
+  }
+  const grantOptions = {
+    authServer: paymentPointer.authServer,
+    accessType: AccessType.IncomingPayment,
+    accessActions: [AccessAction.ReadAll]
+  }
+
+  const existingGrant = await deps.grantService.get(grantOptions)
+  if (existingGrant) {
+    if (existingGrant.expired) {
+      // TODO
+      // https://github.com/interledger/rafiki/issues/795
+      deps.logger.warn({ grantOptions }, 'Grant access token expired')
+      return undefined
+    }
+    return existingGrant
+  }
+
+  const grant = await deps.openPaymentsClient.grant.request(
+    { url: paymentPointer.authServer },
+    {
+      access_token: {
+        access: [
+          {
+            type: grantOptions.accessType as 'incoming-payment',
+            actions: grantOptions.accessActions
+          }
+        ]
+      },
+      interact: {
+        start: ['redirect']
+      }
+    }
+  )
+
+  if (isNonInteractiveGrant(grant)) {
+    return await deps.grantService.create({
+      ...grantOptions,
+      accessToken: grant.access_token.value,
+      expiresIn: grant.access_token.expires_in
+    })
+  }
+  deps.logger.warn({ grantOptions }, 'Grant request required interaction')
+  return undefined
 }

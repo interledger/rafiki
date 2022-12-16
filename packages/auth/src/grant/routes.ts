@@ -1,7 +1,9 @@
 import * as crypto from 'crypto'
 import { URL } from 'url'
+import { ParsedUrlQuery } from 'querystring'
+
 import { AppContext } from '../app'
-import { GrantService } from './service'
+import { GrantService, GrantRequest as GrantRequestBody } from './service'
 import { Grant, GrantState } from './model'
 import { Access } from '../access/model'
 import { ClientService } from '../client/service'
@@ -24,16 +26,84 @@ interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
 
+type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  AppContext['request'],
+  'body'
+> & {
+  body: BodyT
+  query: ParsedUrlQuery & QueryT
+}
+
+type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+  AppContext,
+  'request'
+> & {
+  request: GrantRequest<BodyT, QueryT>
+  clientKeyId: string
+}
+
+export type CreateContext = GrantContext<GrantRequestBody>
+
+interface GrantContinueBody {
+  interact_ref: string
+}
+
+interface GrantContinueParams {
+  id: string
+}
+export type ContinueContext = GrantContext<
+  GrantContinueBody,
+  GrantContinueParams
+>
+
+type InteractionRequest<
+  BodyT = never,
+  QueryT = ParsedUrlQuery,
+  ParamsT = { [key: string]: string }
+> = Omit<AppContext['request'], 'body'> & {
+  body: BodyT
+  query: ParsedUrlQuery & QueryT
+  params: ParamsT
+}
+
+type InteractionContext<QueryT, ParamsT> = Omit<AppContext, 'request'> & {
+  request: InteractionRequest<QueryT, ParamsT>
+}
+
+interface StartQuery {
+  clientName: string
+  clientUri: string
+}
+
+interface InteractionParams {
+  id: string
+  nonce: string
+}
+export type StartContext = InteractionContext<StartQuery, InteractionParams>
+
+export type GetContext = InteractionContext<never, InteractionParams>
+
+export enum GrantChoices {
+  Accept = 'accept',
+  Reject = 'reject'
+}
+interface ChooseParams extends InteractionParams {
+  choice: string
+}
+export type ChooseContext = InteractionContext<never, ChooseParams>
+
+export type FinishContext = InteractionContext<never, InteractionParams>
+
 export interface GrantRoutes {
-  create(ctx: AppContext): Promise<void>
+  create(ctx: CreateContext): Promise<void>
   // TODO: factor this out into separate routes service
   interaction: {
-    start(ctx: AppContext): Promise<void>
-    finish(ctx: AppContext): Promise<void>
-    acceptOrReject(ctx: AppContext): Promise<void>
-    details(ctx: AppContext): Promise<void>
+    start(ctx: StartContext): Promise<void>
+    finish(ctx: FinishContext): Promise<void>
+    acceptOrReject(ctx: ChooseContext): Promise<void>
+    details(ctx: GetContext): Promise<void>
   }
-  continue(ctx: AppContext): Promise<void>
+  continue(ctx: ContinueContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -57,32 +127,21 @@ export function createGrantRoutes({
     config
   }
   return {
-    create: (ctx: AppContext) => createGrantInitiation(deps, ctx),
+    create: (ctx: CreateContext) => createGrantInitiation(deps, ctx),
     interaction: {
-      start: (ctx: AppContext) => startInteraction(deps, ctx),
-      finish: (ctx: AppContext) => finishInteraction(deps, ctx),
-      acceptOrReject: (ctx: AppContext) => handleGrantChoice(deps, ctx),
-      details: (ctx: AppContext) => getGrantDetails(deps, ctx)
+      start: (ctx: StartContext) => startInteraction(deps, ctx),
+      finish: (ctx: FinishContext) => finishInteraction(deps, ctx),
+      acceptOrReject: (ctx: ChooseContext) => handleGrantChoice(deps, ctx),
+      details: (ctx: GetContext) => getGrantDetails(deps, ctx)
     },
-    continue: (ctx: AppContext) => continueGrant(deps, ctx)
+    continue: (ctx: ContinueContext) => continueGrant(deps, ctx)
   }
 }
 
 async function createGrantInitiation(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: CreateContext
 ): Promise<void> {
-  if (
-    !ctx.accepts('application/json') ||
-    ctx.get('Content-Type') !== 'application/json'
-  ) {
-    ctx.status = 406
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
-  }
-
   const { body } = ctx.request
   const { grantService, config } = deps
   const clientKeyId = ctx.clientKeyId
@@ -112,7 +171,7 @@ async function createGrantInitiation(
       await trx.commit()
     } catch (err) {
       await trx.rollback()
-      ctx.status = 500
+      ctx.throw(500)
       return
     }
     const access = await deps.accessService.getByGrant(grant.id)
@@ -127,20 +186,12 @@ async function createGrantInitiation(
   }
 
   if (!body.interact) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'interaction_required'
-    }
-    return
+    ctx.throw(400, { error: 'interaction_required' })
   }
 
   const client = await deps.clientService.get(body.client)
   if (!client) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'invalid_client'
-    }
-    return
+    ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
   }
 
   const grant = await grantService.create({
@@ -173,7 +224,7 @@ async function createGrantInitiation(
 
 async function getGrantDetails(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: GetContext
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
   const { config, grantService } = deps
@@ -184,13 +235,12 @@ async function getGrantDetails(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.status = 401
-    return
+    ctx.throw(401)
   }
   const { id: interactId, nonce } = ctx.params
   const grant = await grantService.getByInteractionSession(interactId, nonce)
   if (!grant) {
-    ctx.status = 404
+    ctx.throw(404)
     return
   }
 
@@ -205,7 +255,7 @@ async function getGrantDetails(
 
 async function startInteraction(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: StartContext
 ): Promise<void> {
   deps.logger.info(
     {
@@ -220,12 +270,7 @@ async function startInteraction(
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'unknown_request'
-    }
-
-    return
+    ctx.throw(401, { error: 'unknown_request' })
   }
 
   // TODO: also establish session in redis with short expiry
@@ -240,15 +285,10 @@ async function startInteraction(
   ctx.redirect(interactionUrl.toString())
 }
 
-export enum GrantChoices {
-  Accept = 'accept',
-  Reject = 'reject'
-}
-
 // TODO: allow idp to specify the reason for rejection
 async function handleGrantChoice(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: ChooseContext
 ): Promise<void> {
   // TODO: check redis for a session
   const { id: interactId, nonce, choice } = ctx.params
@@ -261,40 +301,24 @@ async function handleGrantChoice(
       Buffer.from(config.identityServerSecret)
     )
   ) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_interaction'
-    }
-    return
+    ctx.throw(401, { error: 'invalid_interaction' })
   }
 
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
+    ctx.throw(404, { error: 'unknown_request' })
   }
 
   if (
     grant.state === GrantState.Revoked ||
     grant.state === GrantState.Rejected
   ) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'user_denied'
-    }
-    return
+    ctx.throw(401, { error: 'user_denied' })
   }
 
   if (grant.state === GrantState.Granted) {
-    ctx.status = 400
-    ctx.body = {
-      error: 'request_denied'
-    }
-    return
+    ctx.throw(400, { error: 'request_denied' })
   }
 
   if (choice === GrantChoices.Accept) {
@@ -302,8 +326,7 @@ async function handleGrantChoice(
   } else if (choice === GrantChoices.Reject) {
     await grantService.rejectGrant(grant.id)
   } else {
-    ctx.status = 404
-    return
+    ctx.throw(404)
   }
 
   ctx.status = 202
@@ -311,18 +334,14 @@ async function handleGrantChoice(
 
 async function finishInteraction(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: FinishContext
 ): Promise<void> {
   const { id: interactId, nonce } = ctx.params
   const sessionNonce = ctx.session.nonce
 
   // TODO: redirect with this error in query string
   if (sessionNonce !== nonce) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
+    ctx.throw(401, { error: 'invalid_request' })
   }
 
   const { grantService, config } = deps
@@ -330,11 +349,7 @@ async function finishInteraction(
 
   // TODO: redirect with this error in query string
   if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
+    ctx.throw(404, { error: 'unknown_request' })
   }
 
   const clientRedirectUri = new URL(grant.finishUri)
@@ -361,7 +376,7 @@ async function finishInteraction(
 
 async function continueGrant(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: ContinueContext
 ): Promise<void> {
   const { id: continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
@@ -370,11 +385,7 @@ async function continueGrant(
   const { interact_ref: interactRef } = ctx.request.body
 
   if (!continueId || !continueToken || !interactRef) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'invalid_request'
-    }
-    return
+    ctx.throw(401, { error: 'invalid_request' })
   }
 
   const { config, accessTokenService, grantService, accessService } = deps
@@ -384,19 +395,11 @@ async function continueGrant(
     interactRef
   )
   if (!grant) {
-    ctx.status = 404
-    ctx.body = {
-      error: 'unknown_request'
-    }
-    return
+    ctx.throw(404, { error: 'unknown_request' })
   }
 
   if (grant.state !== GrantState.Granted) {
-    ctx.status = 401
-    ctx.body = {
-      error: 'request_denied'
-    }
-    return
+    ctx.throw(401, { error: 'request_denied' })
   }
 
   const accessToken = await accessTokenService.create(grant.id)
@@ -427,7 +430,7 @@ function createGrantBody({
       value: accessToken.value,
       manage: domain + `/token/${accessToken.managementId}`,
       access: access.map((a: Access) => accessToBody(a)),
-      expiresIn: accessToken.expiresIn
+      expires_in: accessToken.expiresIn
     },
     continue: {
       access_token: {

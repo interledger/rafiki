@@ -1,6 +1,4 @@
-import assert from 'assert'
 import axios from 'axios'
-import { KeyInfo } from 'auth'
 import { Logger } from 'pino'
 
 import {
@@ -11,6 +9,12 @@ import {
   GrantAccessJSON
 } from './grant'
 import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
+import { JWK } from 'http-signature-utils'
+
+export interface KeyInfo {
+  proof: string
+  jwk: JWK
+}
 
 export interface TokenInfoJSON extends GrantJSON {
   key: KeyInfo
@@ -38,7 +42,7 @@ export interface AuthService {
 
 interface ServiceDependencies {
   authServerIntrospectionUrl: string
-  authOpenApi: OpenAPI
+  tokenIntrospectionSpec: OpenAPI
   logger: Logger
   validateResponse: ResponseValidator<TokenInfoJSON>
 }
@@ -50,7 +54,7 @@ export async function createAuthService(
     service: 'AuthService'
   })
   const validateResponse =
-    deps_.authOpenApi.createResponseValidator<TokenInfoJSON>({
+    deps_.tokenIntrospectionSpec.createResponseValidator<TokenInfoJSON>({
       path: '/introspect',
       method: HttpMethod.POST
     })
@@ -92,12 +96,11 @@ async function introspectToken(
       }
     )
 
-    assert.ok(
-      deps.validateResponse({
-        status,
-        body: data
-      })
-    )
+    deps.validateResponse({
+      status,
+      body: data
+    })
+
     const options: GrantOptions = {
       active: data.active,
       clientId: data.client_id,

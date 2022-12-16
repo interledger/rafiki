@@ -19,7 +19,6 @@ import {
   getRouteTests,
   setup as setupContext
 } from '../../payment_pointer/model.test'
-import { createGrant } from '../../../tests/grant'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
@@ -62,7 +61,8 @@ describe('Outgoing Payment Routes', (): void => {
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
-    jestOpenAPI(await deps.use('openApi'))
+    const { resourceServerSpec } = await deps.use('openApi')
+    jestOpenAPI(resourceServerSpec)
   })
 
   beforeEach(async (): Promise<void> => {
@@ -83,18 +83,21 @@ describe('Outgoing Payment Routes', (): void => {
     ${true}  | ${' failed'}
   `('get/list$description outgoing payment', ({ failed }): void => {
     getRouteTests({
-      createGrant: async ({ clientId }) =>
-        createGrant(deps, {
-          clientId,
-          access: [
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read]
-            }
-          ]
-        }),
       getPaymentPointer: async () => paymentPointer,
-      createModel: async ({ grant }) => {
+      createModel: async ({ clientId }) => {
+        const grant = clientId
+          ? new Grant({
+              active: true,
+              clientId,
+              grant: uuid(),
+              access: [
+                {
+                  type: AccessType.OutgoingPayment,
+                  actions: [AccessAction.Create, AccessAction.Read]
+                }
+              ]
+            })
+          : undefined
         const outgoingPayment = await createPayment({
           paymentPointerId: paymentPointer.id,
           grant,
@@ -168,7 +171,10 @@ describe('Outgoing Payment Routes', (): void => {
 
       beforeEach(async (): Promise<void> => {
         grant = withGrant
-          ? await createGrant(deps, {
+          ? new Grant({
+              active: true,
+              grant: uuid(),
+              clientId: uuid(),
               access: [
                 {
                   type: AccessType.OutgoingPayment,

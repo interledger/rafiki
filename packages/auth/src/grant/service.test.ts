@@ -13,8 +13,7 @@ import { GrantService, GrantRequest } from '../grant/service'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
-import { JWKWithRequired } from '../client/service'
-import { generateTestKeys } from '../tests/signature'
+import { generateTestKeys } from 'http-signature-utils'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -22,7 +21,7 @@ describe('Grant Service', (): void => {
   let grantService: GrantService
   let knex: Knex
   let trx: Knex.Transaction
-  let testJwk: JWKWithRequired
+  let testKeyId: string
 
   let grant: Grant
 
@@ -32,8 +31,7 @@ describe('Grant Service', (): void => {
     knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
 
-    const { publicKey } = await generateTestKeys()
-    testJwk = publicKey
+    testKeyId = (await generateTestKeys()).keyId
   })
 
   const CLIENT = faker.internet.url()
@@ -48,7 +46,7 @@ describe('Grant Service', (): void => {
       finishUri: 'https://example.com',
       clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
       client: CLIENT,
-      clientKeyId: testJwk.kid,
+      clientKeyId: testKeyId,
       interactId: v4(),
       interactRef: v4(),
       interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -71,7 +69,6 @@ describe('Grant Service', (): void => {
 
   const BASE_GRANT_ACCESS = {
     actions: [Action.Create, Action.Read, Action.List],
-    locations: ['https://example.com'],
     identifier: `https://example.com/${v4()}`
   }
 
@@ -91,7 +88,7 @@ describe('Grant Service', (): void => {
     test('Can initiate a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
-        clientKeyId: testJwk.kid,
+        clientKeyId: testKeyId,
         access_token: {
           access: [
             {
@@ -115,7 +112,7 @@ describe('Grant Service', (): void => {
         finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
         clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
         client: CLIENT,
-        clientKeyId: testJwk.kid,
+        clientKeyId: testKeyId,
         startMethod: expect.arrayContaining([StartMethod.Redirect])
       })
 
@@ -132,7 +129,7 @@ describe('Grant Service', (): void => {
     test('Can issue a grant without interaction', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
-        clientKeyId: testJwk.kid,
+        clientKeyId: testKeyId,
         access_token: {
           access: [
             {
@@ -150,7 +147,7 @@ describe('Grant Service', (): void => {
         state: GrantState.Granted,
         continueId: expect.any(String),
         continueToken: expect.any(String),
-        clientKeyId: testJwk.kid
+        clientKeyId: testKeyId
       })
 
       await expect(
