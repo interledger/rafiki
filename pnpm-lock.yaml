@@ -65,7 +65,7 @@ importers:
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-session: ^6.2.0
-      nock: ^13.2.4
+      nock: ^13.2.9
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
@@ -171,7 +171,7 @@ importers:
       koa-bodyparser: ^4.3.0
       lodash: ^4.17.21
       luxon: ^3.0.1
-      nock: ^13.1.0
+      nock: ^13.2.9
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
