@@ -10,10 +10,9 @@
     "build:deps": "pnpm --filter open-payments build",
     "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "fetch-schemas": "./scripts/get-op-schema.sh",
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build",
-    "copy-files": "cp -r ./src/openapi ./dist"
+    "copy-files": "cp -r ./src/openapi ./dist/"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.1.0",

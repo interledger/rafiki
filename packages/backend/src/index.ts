@@ -110,24 +110,16 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
-  container.singleton('openApi', async (deps: IocContract<AppServices>) => {
-    try {
-      const tokenIntrospectionSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/token-introspection.yaml')
-      )
-      const resourceServerSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/resource-server.yaml')
-      )
-      return {
-        resourceServerSpec,
-        tokenIntrospectionSpec
-      }
-    } catch (err) {
-      const logger = await deps.use('logger')
-      logger.error({ err }, 'error while loading OpenAPI files')
-      throw new Error(
-        'Could not load OpenAPI files. Did you run `pnpm fetch-schemas`?'
-      )
+  container.singleton('openApi', async () => {
+    const tokenIntrospectionSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/token-introspection.yaml')
+    )
+    const resourceServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/resource-server.yaml')
+    )
+    return {
+      resourceServerSpec,
+      tokenIntrospectionSpec
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {

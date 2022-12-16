@@ -8,7 +8,6 @@ import {
   validateIncomingPayment
 } from './incoming-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
-import config from '../config'
 import {
   defaultAxiosInstance,
   mockILPStreamConnection,
@@ -17,12 +16,15 @@ import {
   silentLogger
 } from '../test/helpers'
 import nock from 'nock'
+import path from 'path'
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
-    openApi = await createOpenAPI(config.OPEN_PAYMENTS_RS_OPEN_API_URL)
+    openApi = await createOpenAPI(
+      path.resolve(__dirname, '../openapi/resource-server.yaml')
+    )
   })
 
   const axiosInstance = defaultAxiosInstance

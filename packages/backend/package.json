@@ -7,8 +7,7 @@
     "build:deps": "pnpm --filter open-payments build",
     "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "cp src/graphql/schema.graphql dist/graphql/",
-    "fetch-schemas": "./scripts/get-op-schema.sh",
+    "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
     "prepack": "pnpm build"
   },
   "devDependencies": {
