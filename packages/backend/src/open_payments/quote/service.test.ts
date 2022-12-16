@@ -16,7 +16,6 @@ import { IAppConfig, Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
-import { createGrant } from '../../tests/grant'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import {
   createPaymentPointer,
@@ -31,8 +30,6 @@ import {
   IncomingPaymentState
 } from '../payment/incoming/model'
 import { getTests } from '../payment_pointer/model.test'
-import { GrantReference } from '../grantReference/model'
-import { GrantReferenceService } from '../grantReference/service'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -43,8 +40,6 @@ describe('QuoteService', (): void => {
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
-  let grantReferenceService: GrantReferenceService
-  let grantRef: GrantReference
   const SIGNATURE_SECRET = 'test secret'
 
   const asset: AssetOptions = {
@@ -85,7 +80,6 @@ describe('QuoteService', (): void => {
     knex = await deps.use('knex')
     config = await deps.use('config')
     quoteUrl = new URL(Config.quoteUrl)
-    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -100,10 +94,6 @@ describe('QuoteService', (): void => {
     receivingPaymentPointer = await createPaymentPointer(deps, {
       asset: destinationAsset,
       mockServerPort: appContainer.openPaymentsPort
-    })
-    grantRef = await grantReferenceService.create({
-      id: uuid(),
-      clientId: appContainer.clientId
     })
     const accountingService = await deps.use('accountingService')
     await expect(
@@ -127,8 +117,7 @@ describe('QuoteService', (): void => {
 
   describe('get/getPaymentPointerPage', (): void => {
     getTests({
-      createGrant: async (options) => createGrant(deps, options),
-      createModel: ({ grant }) =>
+      createModel: ({ clientId }) =>
         createQuote(deps, {
           paymentPointerId,
           receiver: `${
@@ -139,7 +128,7 @@ describe('QuoteService', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          grantId: grant?.grant,
+          clientId,
           validDestination: false
         }),
       get: (options) => quoteService.get(options),
@@ -240,12 +229,11 @@ describe('QuoteService', (): void => {
         let options: CreateQuoteOptions
         let incomingPayment: IncomingPayment
         let expected: ExpectedQuote
-        const grantId = uuid()
+        const clientId = uuid()
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointer.id,
-            grantId: grantRef.id,
             incomingAmount
           })
           const connectionService = await deps.use('connectionService')
@@ -261,11 +249,6 @@ describe('QuoteService', (): void => {
             ...options,
             paymentType
           }
-
-          await grantReferenceService.create({
-            id: grantId,
-            clientId: uuid()
-          })
         })
 
         if (!sendAmount && !receiveAmount && !incomingAmount) {
@@ -277,18 +260,18 @@ describe('QuoteService', (): void => {
         } else {
           if (sendAmount || receiveAmount) {
             it.each`
-              grantId      | description
-              ${grantId}   | ${'with a grantId'}
-              ${undefined} | ${'without a grantId'}
+              clientId     | description
+              ${clientId}  | ${'with a clientId'}
+              ${undefined} | ${'without a clientId'}
             `(
               'creates a Quote $description',
-              async ({ grantId }): Promise<void> => {
+              async ({ clientId }): Promise<void> => {
                 const walletScope = mockWalletQuote({
                   expected
                 })
                 const quote = await quoteService.create({
                   ...options,
-                  grantId
+                  clientId
                 })
                 assert.ok(!isQuoteError(quote))
                 walletScope.isDone()
@@ -321,7 +304,7 @@ describe('QuoteService', (): void => {
                   expiresAt: new Date(
                     quote.createdAt.getTime() + config.quoteLifespan
                   ),
-                  grantId: grantId || null
+                  clientId: clientId || null
                 })
                 expect(quote.minExchangeRate.valueOf()).toBe(
                   0.5 * (1 - config.slippage)
@@ -362,18 +345,18 @@ describe('QuoteService', (): void => {
           } else {
             if (incomingAmount) {
               it.each`
-                grantId      | description
-                ${grantId}   | ${'with a grantId'}
-                ${undefined} | ${'without a grantId'}
+                clientId     | description
+                ${clientId}  | ${'with a clientId'}
+                ${undefined} | ${'without a clientId'}
               `(
                 'creates a Quote $description',
-                async ({ grantId }): Promise<void> => {
+                async ({ clientId }): Promise<void> => {
                   const scope = mockWalletQuote({
                     expected
                   })
                   const quote = await quoteService.create({
                     ...options,
-                    grantId
+                    clientId
                   })
                   scope.isDone()
                   assert.ok(!isQuoteError(quote))
@@ -396,7 +379,7 @@ describe('QuoteService', (): void => {
                     expiresAt: new Date(
                       quote.createdAt.getTime() + config.quoteLifespan
                     ),
-                    grantId: grantId || null
+                    clientId: clientId || null
                   })
                   expect(quote.minExchangeRate.valueOf()).toBe(
                     0.5 * (1 - config.slippage)
@@ -581,7 +564,6 @@ describe('QuoteService', (): void => {
       async ({ expiryDate }): Promise<void> => {
         const incomingPayment = await createIncomingPayment(deps, {
           paymentPointerId: receivingPaymentPointer.id,
-          grantId: grantRef.id,
           incomingAmount,
           expiresAt: expiryDate
         })
@@ -669,8 +651,7 @@ describe('QuoteService', (): void => {
             paymentPointerId,
             receiver: (
               await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointer.id,
-                grantId: grantRef.id
+                paymentPointerId: receivingPaymentPointer.id
               })
             ).url,
             sendAmount,
@@ -690,8 +671,7 @@ describe('QuoteService', (): void => {
           paymentPointerId,
           receiver: (
             await createIncomingPayment(deps, {
-              paymentPointerId: receivingPaymentPointer.id,
-              grantId: grantRef.id
+              paymentPointerId: receivingPaymentPointer.id
             })
           ).url,
           sendAmount

@@ -6,7 +6,6 @@ import {
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
-import assert from 'assert'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
@@ -29,7 +28,7 @@ export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
   paymentPointerId: string
-  grantId?: string
+  clientId?: string
   description?: string
   expiresAt?: Date
   incomingAmount?: Amount
@@ -100,7 +99,7 @@ async function createIncomingPayment(
   deps: ServiceDependencies,
   {
     paymentPointerId,
-    grantId,
+    clientId,
     description,
     expiresAt,
     incomingAmount,
@@ -131,7 +130,7 @@ async function createIncomingPayment(
   const incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
       paymentPointerId,
-      grantId,
+      clientId,
       assetId: paymentPointer.asset.id,
       description,
       expiresAt,
@@ -213,7 +212,9 @@ async function handleDeactivated(
   deps: ServiceDependencies,
   incomingPayment: IncomingPayment
 ): Promise<void> {
-  assert.ok(incomingPayment.processAt)
+  if (!incomingPayment.processAt) {
+    throw new Error()
+  }
   try {
     const amountReceived = await deps.accountingService.getTotalReceived(
       incomingPayment.id

@@ -1,4 +1,3 @@
-import assert from 'assert'
 import axios from 'axios'
 import { createHmac } from 'crypto'
 import { ModelObject, TransactionOrKnex } from 'objection'
@@ -67,7 +66,7 @@ export interface CreateQuoteOptions {
   sendAmount?: Amount
   receiveAmount?: Amount
   receiver: string
-  grantId?: string
+  clientId?: string
 }
 
 async function createQuote(
@@ -131,7 +130,7 @@ async function createQuote(
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
           expiresAt: new Date(0),
-          grantId: options.grantId
+          clientId: options.clientId
         })
         .withGraphFetched('asset')
 
@@ -252,8 +251,13 @@ export async function startQuote(
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
     // Outgoing payments' sendAmount or receiveAmount should never be
     // zero or negative.
-    assert.ok(quote.maxSourceAmount > BigInt(0))
-    assert.ok(quote.minDeliveryAmount > BigInt(0))
+    if (quote.maxSourceAmount <= BigInt(0)) {
+      throw new Error()
+    }
+
+    if (quote.minDeliveryAmount <= BigInt(0)) {
+      throw new Error()
+    }
 
     return quote
   } finally {

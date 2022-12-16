@@ -1,4 +1,3 @@
-import assert from 'assert'
 import base64url from 'base64url'
 import { IocContract } from '@adonisjs/fold'
 
@@ -36,7 +35,9 @@ export async function createOutgoingPayment(
     ...options,
     quoteId: quote.id
   })
-  assert.ok(!isOutgoingPaymentError(outgoingPaymentOrError))
+  if (isOutgoingPaymentError(outgoingPaymentOrError)) {
+    throw new Error()
+  }
 
   const accountingService = await deps.use('accountingService')
   await accountingService.createLiquidityAccount(outgoingPaymentOrError)

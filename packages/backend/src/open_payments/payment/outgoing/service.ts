@@ -1,4 +1,3 @@
-import assert from 'assert'
 import {
   ForeignKeyViolationError,
   TransactionOrKnex,
@@ -13,6 +12,7 @@ import {
 } from './errors'
 import {
   OutgoingPayment,
+  OutgoingPaymentGrant,
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
@@ -31,7 +31,6 @@ import {
 } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
-import { GrantReferenceService } from '../../grantReference/service'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -49,7 +48,6 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
-  grantReferenceService: GrantReferenceService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
 }
 
@@ -97,6 +95,14 @@ async function createOutgoingPayment(
   const grantId = options.grant ? options.grant.grant : undefined
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      if (grantId) {
+        await OutgoingPaymentGrant.query(trx)
+          .insert({
+            id: grantId
+          })
+          .onConflict('id')
+          .ignore()
+      }
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
@@ -104,6 +110,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
+          clientId: options.grant?.clientId,
           grantId
         })
         .withGraphFetched('[quote.asset]')
@@ -252,8 +259,14 @@ async function validateGrant(
     return false
   }
 
-  //lock grant
-  await deps.grantReferenceService.lock(grant.grant, deps.knex)
+  // Lock grant
+  // TODO: update to use objection once it supports forNoKeyUpdate
+  await deps
+    .knex<OutgoingPaymentGrant>('outgoingPaymentGrants')
+    .select()
+    .where('id', grant.grant)
+    .forNoKeyUpdate()
+    .timeout(5000)
 
   if (callback) await new Promise(callback)
 
@@ -283,7 +296,9 @@ async function validateGrant(
         const totalSent = await deps.accountingService.getTotalSent(
           grantPayment.id
         )
-        assert.ok(totalSent !== undefined)
+        if (totalSent === undefined) {
+          throw new Error()
+        }
         if (totalSent === BigInt(0)) {
           continue
         }
@@ -375,10 +390,12 @@ async function getPaymentPointerPage(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   return page.map((payment: OutgoingPayment, i: number) => {
     try {
-      assert.ok(
-        amounts[i] !== undefined ||
-          payment.state === OutgoingPaymentState.Funding
-      )
+      if (
+        amounts[i] === undefined &&
+        payment.state !== OutgoingPaymentState.Funding
+      ) {
+        throw new Error()
+      }
       payment.sentAmount = {
         value: amounts[i] ?? BigInt(0),
         assetCode: payment.asset.code,
@@ -405,10 +422,10 @@ async function addSentAmount(
 ): Promise<OutgoingPayment> {
   const fundingZeroOrUndefined =
     payment.state === OutgoingPaymentState.Funding ? BigInt(0) : undefined
-  let sent = value || (await deps.accountingService.getTotalSent(payment.id))
-  if (sent === undefined) {
-    sent = fundingZeroOrUndefined
-  }
+  const sent =
+    value ??
+    (await deps.accountingService.getTotalSent(payment.id)) ??
+    fundingZeroOrUndefined
 
   if (sent !== undefined) {
     payment.sentAmount = {

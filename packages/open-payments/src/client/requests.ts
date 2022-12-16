@@ -2,16 +2,27 @@ import axios, { AxiosInstance } from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
-import { createSignatureHeaders } from './signatures'
+import { createHeaders } from 'http-signature-utils'
 
 interface GetArgs {
   url: string
+  queryParams?: Record<string, unknown>
   accessToken?: string
 }
-interface PostArgs<T> {
+
+interface PostArgs<T = undefined> {
   url: string
-  body: T
+  body?: T
+  accessToken?: string
 }
+
+interface DeleteArgs {
+  url: string
+  accessToken?: string
+}
+
+const removeEmptyValues = (obj: Record<string, unknown>) =>
+  Object.fromEntries(Object.entries(obj).filter(([_, v]) => v != null))
 
 export const get = async <T>(
   deps: BaseDeps,
@@ -34,7 +45,8 @@ export const get = async <T>(
         ? {
             Authorization: `GNAP ${accessToken}`
           }
-        : {}
+        : {},
+      params: args.queryParams ? removeEmptyValues(args.queryParams) : undefined
     })
 
     try {
@@ -73,7 +85,7 @@ export const post = async <TRequest, TResponse>(
   openApiResponseValidator: ResponseValidator<TResponse>
 ): Promise<TResponse> => {
   const { axiosInstance, logger } = deps
-  const { body } = args
+  const { body, accessToken } = args
 
   const requestUrl = new URL(args.url)
   if (process.env.NODE_ENV === 'development') {
@@ -83,7 +95,13 @@ export const post = async <TRequest, TResponse>(
   const url = requestUrl.href
 
   try {
-    const { data, status } = await axiosInstance.post<TResponse>(url, body)
+    const { data, status } = await axiosInstance.post<TResponse>(url, body, {
+      headers: accessToken
+        ? {
+            Authorization: `GNAP ${accessToken}`
+          }
+        : {}
+    })
 
     try {
       openApiResponseValidator({
@@ -115,37 +133,101 @@ export const post = async <TRequest, TResponse>(
   }
 }
 
+export const deleteRequest = async <TResponse>(
+  deps: BaseDeps,
+  args: DeleteArgs,
+  openApiResponseValidator: ResponseValidator<TResponse>
+): Promise<void> => {
+  const { axiosInstance, logger } = deps
+  const { accessToken } = args
+
+  const requestUrl = new URL(args.url)
+  if (process.env.NODE_ENV === 'development') {
+    requestUrl.protocol = 'http'
+  }
+
+  const url = requestUrl.href
+
+  try {
+    const { data, status } = await axiosInstance.delete<TResponse>(url, {
+      headers: accessToken
+        ? {
+            Authorization: `GNAP ${accessToken}`
+          }
+        : {}
+    })
+
+    try {
+      openApiResponseValidator({
+        status,
+        body: data || undefined
+      })
+    } catch (error) {
+      const errorMessage = 'Failed to validate OpenApi response'
+      logger.error(
+        {
+          status,
+          url,
+          validationError: error?.message
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    }
+  } catch (error) {
+    const errorMessage = `Error when making Open Payments DELETE request: ${
+      error?.message ? error.message : 'Unknown error'
+    }`
+    logger.error({ url }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+}
+
 export const createAxiosInstance = (args: {
   requestTimeoutMs: number
-  privateKey: KeyLike
-  keyId: string
+  privateKey?: KeyLike
+  keyId?: string
 }): AxiosInstance => {
   const axiosInstance = axios.create({
     timeout: args.requestTimeoutMs
   })
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
 
-  axiosInstance.interceptors.request.use(
-    async (config) => {
-      const sigHeaders = await createSignatureHeaders({
-        request: {
-          method: config.method.toUpperCase(),
-          url: config.url,
-          headers: config.headers,
-          body: config.data
-        },
-        privateKey: args.privateKey,
-        keyId: args.keyId
-      })
-      config.headers['Signature'] = sigHeaders['Signature']
-      config.headers['Signature-Input'] = sigHeaders['Signature-Input']
-      return config
-    },
-    null,
-    {
-      runWhen: (config) => !!config.headers['Authorization']
-    }
-  )
+  if (args.privateKey && args.keyId) {
+    axiosInstance.interceptors.request.use(
+      async (config) => {
+        const contentAndSigHeaders = await createHeaders({
+          request: {
+            method: config.method.toUpperCase(),
+            url: config.url,
+            headers: config.headers,
+            body: config.data ? JSON.stringify(config.data) : undefined
+          },
+          privateKey: args.privateKey,
+          keyId: args.keyId
+        })
+        if (config.data) {
+          config.headers['Content-Digest'] =
+            contentAndSigHeaders['Content-Digest']
+          config.headers['Content-Length'] =
+            contentAndSigHeaders['Content-Length']
+          config.headers['Content-Type'] = contentAndSigHeaders['Content-Type']
+        }
+        config.headers['Signature'] = contentAndSigHeaders['Signature']
+        config.headers['Signature-Input'] =
+          contentAndSigHeaders['Signature-Input']
+        return config
+      },
+      null,
+      {
+        runWhen: (config) =>
+          config.method.toLowerCase() === 'post' ||
+          !!config.headers['Authorization']
+      }
+    )
+  }
 
   return axiosInstance
 }

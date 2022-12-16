@@ -1,14 +1,13 @@
 import { PaymentPointerSubresource } from './model'
 import { PaymentPointerSubresourceService } from './service'
 import { PaymentPointerContext, ListContext } from '../../app'
-import { IAppConfig } from '../../config/app'
 import {
   getPageInfo,
   parsePaginationQueryParameters
 } from '../../shared/pagination'
 
 interface ServiceDependencies {
-  config: IAppConfig
+  authServer: string
 }
 
 export interface PaymentPointerRoutes {
@@ -32,13 +31,9 @@ export async function getPaymentPointer(
     return ctx.throw(404)
   }
 
-  ctx.body = {
-    id: ctx.paymentPointer.url,
-    publicName: ctx.paymentPointer.publicName ?? undefined,
-    assetCode: ctx.paymentPointer.asset.code,
-    assetScale: ctx.paymentPointer.asset.scale,
-    authServer: deps.config.authServerGrantUrl
-  }
+  ctx.body = ctx.paymentPointer.toOpenPaymentsType({
+    authServer: deps.authServer
+  })
 }
 
 interface ListSubresourceOptions<M extends PaymentPointerSubresource> {

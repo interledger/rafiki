@@ -17,8 +17,6 @@ import { createOpenAPI } from 'openapi'
 import { createUnauthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 
 export { KeyInfo } from './accessToken/service'
-export { JWKWithRequired } from './client/service'
-export { HttpSigContext, verifySigAndChallenge } from './signature/middleware'
 const container = initIocContainer(Config)
 const app = new App(container)
 
@@ -111,20 +109,28 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('openApi', async () => {
-    const authServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/auth-server.yaml')
-    )
-    const resourceServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/resource-server.yaml')
-    )
-    const idpSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/id-provider.yaml')
-    )
-    return {
-      authServerSpec,
-      resourceServerSpec,
-      idpSpec
+  container.singleton('openApi', async (deps: IocContract<AppServices>) => {
+    try {
+      const authServerSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/auth-server.yaml')
+      )
+      const idpSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/id-provider.yaml')
+      )
+      const tokenIntrospectionSpec = await createOpenAPI(
+        path.resolve(__dirname, './openapi/token-introspection.yaml')
+      )
+      return {
+        authServerSpec,
+        idpSpec,
+        tokenIntrospectionSpec
+      }
+    } catch (err) {
+      const logger = await deps.use('logger')
+      logger.error({ err }, 'error while loading OpenAPI files')
+      throw new Error(
+        'Could not load OpenAPI files. Did you run `pnpm fetch-schemas`?'
+      )
     }
   })
 

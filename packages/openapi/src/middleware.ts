@@ -1,8 +1,8 @@
-import { OpenAPI, RequestOptions } from './'
+import { OpenAPI, RequestOptions, isValidationError } from './'
 
 import Koa from 'koa'
 
-export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
+export function createValidatorMiddleware<T extends Koa.DefaultContext>(
   spec: OpenAPI,
   options: RequestOptions
 ): (ctx: Koa.Context, next: () => Promise<unknown>) => Promise<void> {
@@ -19,8 +19,6 @@ export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
     try {
       if (validateRequest(ctx.request)) {
         await next()
-        console.log('request=', ctx.request)
-        console.log('response=', ctx.response)
         if (validateResponse && !validateResponse(ctx.response)) {
           throw new Error('unreachable')
         }
@@ -28,7 +26,14 @@ export function createValidatorMiddleware<T extends Koa.ParameterizedContext>(
         throw new Error('unreachable')
       }
     } catch (err) {
-      ctx.throw(err.status || 500, err.errors?.[0])
+      if (err instanceof Koa.HttpError) {
+        throw err
+      } else if (isValidationError(err)) {
+        ctx.throw(err.status ?? 500, err.errors[0])
+      } else {
+        console.log('err=', err)
+        ctx.throw(500)
+      }
     }
   }
 }

@@ -1,0 +1,4 @@
+name: "CodeQL source files config"
+
+paths-ignore: 
+  - '**/*.test.ts'

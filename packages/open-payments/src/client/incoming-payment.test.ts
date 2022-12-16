@@ -1,6 +1,10 @@
 import {
+  completeIncomingPayment,
+  createIncomingPayment,
   createIncomingPaymentRoutes,
   getIncomingPayment,
+  validateCompletedIncomingPayment,
+  validateCreatedIncomingPayment,
   validateIncomingPayment
 } from './incoming-payment'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
@@ -40,13 +44,43 @@ describe('incoming-payment', (): void => {
         method: HttpMethod.GET
       })
     })
+
+    test('creates createIncomingPaymentOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/incoming-payments',
+        method: HttpMethod.POST
+      })
+    })
+
+    test('creates completeIncomingPaymentOpenApiValidator properly', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/incoming-payments/{id}/complete',
+        method: HttpMethod.POST
+      })
+    })
   })
 
   describe('getIncomingPayment', (): void => {
     test('returns incoming payment if passes validation', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment()
 
-      nock(baseUrl).get('/incoming-payment').reply(200, incomingPayment)
+      nock(baseUrl).get('/incoming-payments').reply(200, incomingPayment)
 
       const result = await getIncomingPayment(
         {
@@ -54,7 +88,7 @@ describe('incoming-payment', (): void => {
           logger
         },
         {
-          url: `${baseUrl}/incoming-payment`,
+          url: `${baseUrl}/incoming-payments`,
           accessToken: 'accessToken'
         },
         openApiValidators.successfulValidator
@@ -76,7 +110,7 @@ describe('incoming-payment', (): void => {
         }
       })
 
-      nock(baseUrl).get('/incoming-payment').reply(200, incomingPayment)
+      nock(baseUrl).get('/incoming-payments').reply(200, incomingPayment)
 
       await expect(() =>
         getIncomingPayment(
@@ -85,12 +119,206 @@ describe('incoming-payment', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/incoming-payment`,
+            url: `${baseUrl}/incoming-payments`,
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
         )
       ).rejects.toThrowError()
+    })
+
+    test('throws if incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment()
+
+      nock(baseUrl).get('/incoming-payments').reply(200, incomingPayment)
+
+      await expect(() =>
+        getIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/incoming-payments`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+    })
+  })
+
+  describe('createIncomingPayment', (): void => {
+    test.each`
+      incomingAmount                                      | expiresAt                                      | description  | externalRef
+      ${undefined}                                        | ${undefined}                                   | ${undefined} | ${undefined}
+      ${{ assetCode: 'USD', assetScale: 2, value: '10' }} | ${new Date(Date.now() + 60_000).toISOString()} | ${'Invoice'} | ${'#INV-1'}
+    `(
+      'returns the incoming payment on success',
+      async ({
+        incomingAmount,
+        expiresAt,
+        description,
+        externalRef
+      }): Promise<void> => {
+        const incomingPayment = mockIncomingPayment({
+          incomingAmount,
+          expiresAt,
+          description,
+          externalRef
+        })
+
+        const scope = nock(baseUrl)
+          .post('/incoming-payments')
+          .reply(200, incomingPayment)
+
+        const result = await createIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/incoming-payments`,
+            body: {
+              incomingAmount,
+              expiresAt,
+              description,
+              externalRef
+            },
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+
+        scope.done()
+        expect(result).toEqual(incomingPayment)
+      }
+    )
+
+    test('throws if the created incoming payment does not pass validation', async (): Promise<void> => {
+      const amount = {
+        assetCode: 'USD',
+        assetScale: 2,
+        value: '10'
+      }
+
+      const incomingPayment = mockIncomingPayment({
+        incomingAmount: amount,
+        receivedAmount: amount,
+        completed: false
+      })
+
+      const scope = nock(baseUrl)
+        .post('/incoming-payments')
+        .reply(200, incomingPayment)
+
+      await expect(() =>
+        createIncomingPayment(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments`,
+            body: {},
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError()
+      scope.done()
+    })
+
+    test('throws if the created incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment()
+
+      const scope = nock(baseUrl)
+        .post('/incoming-payments')
+        .reply(200, incomingPayment)
+
+      await expect(() =>
+        createIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            url: `${baseUrl}/incoming-payments`,
+            body: {},
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+      scope.done()
+    })
+  })
+
+  describe('completeIncomingPayment', (): void => {
+    test('returns incoming payment if it is successfully completed', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      const scope = nock(baseUrl)
+        .post(`/incoming-payments/${incomingPayment.id}/complete`)
+        .reply(200, incomingPayment)
+
+      const result = await completeIncomingPayment(
+        { axiosInstance, logger },
+        {
+          url: `${baseUrl}/incoming-payments/${incomingPayment.id}/complete`,
+          accessToken: 'accessToken'
+        },
+        openApiValidators.successfulValidator
+      )
+
+      scope.done()
+
+      expect(result).toStrictEqual(incomingPayment)
+    })
+
+    test('throws if the incoming payment does not pass validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: false
+      })
+
+      const scope = nock(baseUrl)
+        .post(`/incoming-payments/${incomingPayment.id}/complete`)
+        .reply(200, incomingPayment)
+
+      await expect(() =>
+        completeIncomingPayment(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments/${incomingPayment.id}/complete`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrowError()
+
+      scope.done()
+    })
+
+    test('throws if the incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      const scope = nock(baseUrl)
+        .post(`/incoming-payments/${incomingPayment.id}/complete`)
+        .reply(200, incomingPayment)
+
+      await expect(() =>
+        completeIncomingPayment(
+          { axiosInstance, logger },
+          {
+            url: `${baseUrl}/incoming-payments/${incomingPayment.id}/complete`,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+
+      scope.done()
     })
   })
 
@@ -238,6 +466,73 @@ describe('incoming-payment', (): void => {
 
       expect(() => validateIncomingPayment(incomingPayment)).toThrow(
         'Stream connection asset information does not match incoming payment asset information'
+      )
+    })
+  })
+
+  describe('validateCreatedIncomingPayment', (): void => {
+    test('returns the created incoming payment if it passes validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        incomingAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '5'
+        },
+        receivedAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '0'
+        }
+      })
+
+      expect(validateCreatedIncomingPayment(incomingPayment)).toStrictEqual(
+        incomingPayment
+      )
+    })
+
+    test('throws if received amount is a non-zero value for a newly created incoming payment', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        receivedAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '1'
+        }
+      })
+
+      expect(() => validateCreatedIncomingPayment(incomingPayment)).toThrow(
+        'Received amount is a non-zero value.'
+      )
+    })
+
+    test('throws if the created incoming payment is completed', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      expect(() => validateCreatedIncomingPayment(incomingPayment)).toThrow(
+        'Can not create a completed incoming payment.'
+      )
+    })
+  })
+
+  describe('validateCompletedIncomingPayment', (): void => {
+    test('returns the completed incoming payment if it passes validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: true
+      })
+
+      expect(validateCompletedIncomingPayment(incomingPayment)).toStrictEqual(
+        incomingPayment
+      )
+    })
+
+    test('throws if the incoming payment is not completed', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        completed: false
+      })
+
+      expect(() => validateCompletedIncomingPayment(incomingPayment)).toThrow(
+        'Incoming payment could not be completed.'
       )
     })
   })
