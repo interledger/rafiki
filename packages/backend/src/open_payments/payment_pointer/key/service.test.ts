@@ -1,24 +1,17 @@
 import { Knex } from 'knex'
+import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { PaymentPointerKeyService } from './service'
-import { createTestApp, TestContainer } from '../tests/app'
-import { truncateTables } from '../tests/tableManager'
-import { Config } from '../config/app'
+import { createTestApp, TestContainer } from '../../../tests/app'
+import { truncateTables } from '../../../tests/tableManager'
+import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '..'
-import { AppServices } from '../app'
-import { createPaymentPointer } from '../tests/paymentPointer'
+import { initIocContainer } from '../../..'
+import { AppServices } from '../../../app'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 
-const TEST_KEY = {
-  kid: uuid(),
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
-  use: 'sig'
-}
+const TEST_KEY = generateJwk({ keyId: uuid() })
 
 describe('Payment Pointer Key Service', (): void => {
   let deps: IocContract<AppServices>
@@ -87,12 +80,12 @@ describe('Payment Pointer Key Service', (): void => {
       }
 
       const key = await paymentPointerKeyService.create(keyOption)
-      key.jwk.revoked = true
-
       const revokedKey = await paymentPointerKeyService.revoke(key.id)
-
-      expect(revokedKey.id).toEqual(key.id)
-      expect(revokedKey.jwk).toEqual(key.jwk)
+      expect(revokedKey).toEqual({
+        ...key,
+        revoked: true,
+        updatedAt: revokedKey.updatedAt
+      })
     })
 
     test('Returns undefined if key does not exist', async (): Promise<void> => {
@@ -110,13 +103,11 @@ describe('Payment Pointer Key Service', (): void => {
       }
 
       const key = await paymentPointerKeyService.create(keyOption)
-      key.jwk.revoked = true
 
       const revokedKey = await paymentPointerKeyService.revoke(key.id)
-
-      expect(revokedKey.id).toEqual(key.id)
-      expect(revokedKey.paymentPointerId).toEqual(key.paymentPointerId)
-      expect(revokedKey.jwk).toEqual(key.jwk)
+      await expect(paymentPointerKeyService.revoke(key.id)).resolves.toEqual(
+        revokedKey
+      )
     })
   })
 })

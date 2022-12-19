@@ -1,10 +1,13 @@
 import {
   ResolversTypes,
   MutationResolvers,
-  PaymentPointerKey as SchemaPaymentPointerKey
+  PaymentPointerKey as SchemaPaymentPointerKey,
+  Alg,
+  Kty,
+  Crv
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
-import { PaymentPointerKey } from '../../paymentPointerKey/model'
+import { PaymentPointerKey } from '../../open_payments/payment_pointer/key/model'
 
 export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePaymentPointerKey'] =
   async (
@@ -59,10 +62,7 @@ export const createPaymentPointerKey: MutationResolvers<ApolloContext>['createPa
         'paymentPointerKeyService'
       )
 
-      const key = await paymentPointerKeyService.create({
-        ...args.input,
-        jwk: JSON.parse(args.input.jwk)
-      })
+      const key = await paymentPointerKeyService.create(args.input)
 
       return {
         code: '200',
@@ -92,6 +92,12 @@ export const paymentPointerKeyToGraphql = (
 ): SchemaPaymentPointerKey => ({
   id: paymentPointerKey.id,
   paymentPointerId: paymentPointerKey.paymentPointerId,
-  jwk: JSON.stringify(paymentPointerKey.jwk),
+  jwk: {
+    ...paymentPointerKey.jwk,
+    alg: Alg.EdDsa,
+    kty: Kty.Okp,
+    crv: Crv.Ed25519
+  },
+  revoked: paymentPointerKey.revoked,
   createdAt: new Date(+paymentPointerKey.createdAt).toISOString()
 })

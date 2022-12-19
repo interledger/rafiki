@@ -19,38 +19,14 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateTestKeys } from 'http-signature-utils'
 
-import { KEY_REGISTRY_ORIGIN } from '../tests/signature'
-export { KEY_REGISTRY_ORIGIN } from '../tests/signature'
-export const KID_PATH = '/keys/base-test-key'
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
   uri: 'https://example.com'
 }
 
-// TODO: figure out why factoring this out causes tests to break, then factor out test client consts
-export const TEST_CLIENT_KEY = {
-  proof: 'httpsig',
-  jwk: {
-    client: {
-      id: v4(),
-      name: TEST_CLIENT_DISPLAY.name,
-      email: 'bob@bob.com',
-      image: 'a link to an image',
-      uri: TEST_CLIENT_DISPLAY.uri
-    },
-    kid: KEY_REGISTRY_ORIGIN + KID_PATH,
-    x: 'hin88zzQxp79OOqIFNCME26wMiz0yqjzgkcBe0MW8pE',
-    kty: 'OKP',
-    alg: 'EdDSA',
-    crv: 'Ed25519',
-    key_ops: ['sign', 'verify'],
-    use: 'sig'
-  }
-}
-
 const CLIENT = faker.internet.url()
+const CLIENT_KEY_ID = v4()
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
@@ -86,7 +62,6 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
-  let clientKeyId: string
 
   let grant: Grant
 
@@ -99,7 +74,7 @@ describe('Grant Routes', (): void => {
     finishUri: 'https://example.com',
     clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
     client: CLIENT,
-    clientKeyId: clientKeyId,
+    clientKeyId: CLIENT_KEY_ID,
     interactId: v4(),
     interactRef: v4(),
     interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
@@ -110,7 +85,7 @@ describe('Grant Routes', (): void => {
     params: Record<string, unknown>
   ) => {
     const ctx = createAppContext(reqOpts, params)
-    ctx.clientKeyId = clientKeyId
+    ctx.clientKeyId = CLIENT_KEY_ID
     return ctx
   }
 
@@ -132,8 +107,6 @@ describe('Grant Routes', (): void => {
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
-
-    clientKeyId = (await generateTestKeys()).keyId
   })
 
   afterEach(async (): Promise<void> => {
@@ -147,15 +120,6 @@ describe('Grant Routes', (): void => {
   describe('/create', (): void => {
     const url = '/'
     const method = 'POST'
-
-    const expDate = new Date()
-    expDate.setTime(expDate.getTime() + 1000 * 60 * 60)
-
-    const nbfDate = new Date()
-    nbfDate.setTime(nbfDate.getTime() - 1000 * 60 * 60)
-
-    const exp = Math.round(expDate.getTime() / 1000)
-    const nbf = Math.round(nbfDate.getTime() / 1000)
 
     test('Can initiate a grant request', async (): Promise<void> => {
       const scope = nock(CLIENT).get('/').reply(200, {
@@ -248,14 +212,6 @@ describe('Grant Routes', (): void => {
       jest
         .spyOn(accessTokenService, 'create')
         .mockRejectedValueOnce(new Error())
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp,
-          nbf,
-          revoked: false
-        })
 
       const ctx = createContext(
         {
@@ -286,18 +242,8 @@ describe('Grant Routes', (): void => {
         'status',
         500
       )
-      scope.isDone()
     })
     test('Fails to initiate a grant w/o interact field', async (): Promise<void> => {
-      const scope = nock(KEY_REGISTRY_ORIGIN)
-        .get(KID_PATH)
-        .reply(200, {
-          ...TEST_CLIENT_KEY.jwk,
-          exp,
-          nbf,
-          revoked: false
-        })
-
       const ctx = createContext(
         {
           headers: {
@@ -316,8 +262,6 @@ describe('Grant Routes', (): void => {
         status: 400,
         error: 'interaction_required'
       })
-
-      scope.isDone()
     })
   })
 
@@ -329,13 +273,6 @@ describe('Grant Routes', (): void => {
     })
     describe('interaction start', (): void => {
       test('Interaction start fails if grant is invalid', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(KID_PATH)
-          .reply(200, {
-            ...TEST_CLIENT_KEY.jwk,
-            revoked: false
-          })
-
         const ctx = createContext(
           {
             headers: {
@@ -350,17 +287,9 @@ describe('Grant Routes', (): void => {
           status: 401,
           error: 'unknown_request'
         })
-        scope.isDone()
       })
 
       test('Can start an interaction', async (): Promise<void> => {
-        const scope = nock(KEY_REGISTRY_ORIGIN)
-          .get(KID_PATH)
-          .reply(200, {
-            ...TEST_CLIENT_KEY.jwk,
-            revoked: false
-          })
-
         const ctx = createContext(
           {
             headers: {
@@ -387,8 +316,6 @@ describe('Grant Routes', (): void => {
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
         expect(ctx.session.nonce).toEqual(grant.interactNonce)
-
-        scope.isDone()
       })
     })
 
