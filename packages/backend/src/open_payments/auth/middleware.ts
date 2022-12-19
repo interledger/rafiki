@@ -1,4 +1,5 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
+import Koa from 'koa'
 import { AccessType, AccessAction } from './grant'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
 
@@ -91,8 +92,17 @@ export const httpsigMiddleware = async (
     ) {
       ctx.throw(401, 'Invalid signature')
     }
-  } catch (e) {
-    ctx.status = 401
+  } catch (err) {
+    if (err instanceof Koa.HttpError) {
+      throw err
+    }
+    const logger = await ctx.container.use('logger')
+    logger.warn(
+      {
+        err
+      },
+      'httpsig error'
+    )
     ctx.throw(401, `Invalid signature`)
   }
   await next()
