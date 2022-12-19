@@ -2,7 +2,6 @@ import { v4 } from 'uuid'
 
 export const SIGNATURE_METHOD = 'GET'
 export const SIGNATURE_TARGET_URI = '/test'
-export const KEY_REGISTRY_ORIGIN = 'https://openpayments.network'
 
 export const TEST_CLIENT = {
   id: v4(),
