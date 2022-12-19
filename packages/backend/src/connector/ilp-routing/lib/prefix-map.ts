@@ -72,7 +72,6 @@ export default class PrefixMap<T> {
 
   *getKeysPrefixesOf(search: string): IterableIterator<string> {
     const predicate = (key: string): boolean => search.startsWith(key + '.')
-    // let index = -1
     // tslint:disable-next-line:no-conditional-assignment
     for (let index = 0; index < this.prefixes.length; index++) {
       if (predicate(this.prefixes[index])) {
