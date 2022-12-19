@@ -32,6 +32,6 @@
     "http-message-signatures": "^0.1.2",
     "http-signature-utils": "workspace:../http-signature-utils",
     "openapi": "workspace:../openapi",
-    "pino": "^8.4.2"
+    "pino": "^8.8.0"
   }
 }
