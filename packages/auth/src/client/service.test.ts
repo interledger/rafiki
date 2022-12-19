@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
-import { JWK } from 'open-payments'
+import { JWK, generateJwk, generateTestKeys } from 'http-signature-utils'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -8,7 +8,6 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { ClientService } from './service'
-import { generateTestKeys } from '../tests/signature'
 
 const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -78,8 +77,8 @@ describe('Client Service', (): void => {
 
     beforeAll(async (): Promise<void> => {
       for (let i = 0; i < 3; i++) {
-        const { publicKey } = await generateTestKeys()
-        keys.push(publicKey)
+        const { privateKey, keyId } = await generateTestKeys()
+        keys.push(generateJwk({ privateKey, keyId }))
       }
     })
 

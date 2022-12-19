@@ -32,7 +32,7 @@ export type Quote = {
 export async function action({ request }: ActionArgs) {
   const receivedQuote: Quote = await request.json()
 
-  const feeStructure = CONFIG.fees[0]
+  const feeStructure = CONFIG.seed.fees[0]
   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
     // TODO: handle quote fee calculation for different assets/scales
     if (

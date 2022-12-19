@@ -1,10 +1,11 @@
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
+import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
-import { Config, IAppConfig } from '../config/app'
+import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices, PaymentPointerContext } from '../app'
@@ -19,7 +20,6 @@ const TEST_KEY = {
   kty: 'OKP',
   alg: 'EdDSA',
   crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
   use: 'sig'
 }
 
@@ -28,19 +28,18 @@ describe('Payment Pointer Keys Routes', (): void => {
   let appContainer: TestContainer
   let knex: Knex
   let paymentPointerKeyService: PaymentPointerKeyService
-  let config: IAppConfig
   let paymentPointerKeyRoutes: PaymentPointerKeyRoutes
   const mockMessageProducer = {
     send: jest.fn()
   }
 
   beforeAll(async (): Promise<void> => {
-    config = Config
-    deps = await initIocContainer(config)
+    deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
-    jestOpenAPI(await deps.use('openApi'))
+    const { resourceServerSpec } = await deps.use('openApi')
+    jestOpenAPI(resourceServerSpec)
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
@@ -71,6 +70,7 @@ describe('Payment Pointer Keys Routes', (): void => {
         url: `/jwks.json`
       })
       ctx.paymentPointer = paymentPointer
+      ctx.paymentPointerUrl = paymentPointer.url
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
@@ -89,12 +89,34 @@ describe('Payment Pointer Keys Routes', (): void => {
         url: `/jwks.json`
       })
       ctx.paymentPointer = paymentPointer
+      ctx.paymentPointerUrl = paymentPointer.url
 
       await expect(
         paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
       ).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         keys: []
+      })
+    })
+
+    test('returns 200 with backend key', async (): Promise<void> => {
+      const config = await deps.use('config')
+      const jwk = generateJwk({
+        privateKey: config.privateKey,
+        keyId: config.keyId
+      })
+
+      const ctx = createContext<PaymentPointerContext>({
+        headers: { Accept: 'application/json' },
+        url: '/jwks.json'
+      })
+      ctx.paymentPointerUrl = config.paymentPointerUrl
+
+      await expect(
+        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.body).toEqual({
+        keys: [jwk]
       })
     })
 

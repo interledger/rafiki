@@ -16,12 +16,10 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { randomAsset } from '../../../tests/asset'
-import { createGrant } from '../../../tests/grant'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
-import { GrantReferenceService } from '../../grantReference/service'
 import { getTests } from '../../payment_pointer/model.test'
 
 describe('Incoming Payment Service', (): void => {
@@ -31,7 +29,6 @@ describe('Incoming Payment Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountingService: AccountingService
-  let grantReferenceService: GrantReferenceService
   const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
@@ -39,7 +36,6 @@ describe('Incoming Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = await deps.use('knex')
-    grantReferenceService = await deps.use('grantReferenceService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -57,42 +53,20 @@ describe('Incoming Payment Service', (): void => {
   })
 
   describe('Create IncomingPayment', (): void => {
-    test('An incoming payment can be created', async (): Promise<void> => {
-      const incomingPayment = await incomingPaymentService.create({
-        paymentPointerId,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        description: 'Test incoming payment',
-        externalRef: '#123'
-      })
-      assert.ok(!isIncomingPaymentError(incomingPayment))
-      expect(incomingPayment).toMatchObject({
-        id: incomingPayment.id,
-        asset,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
-      })
-    })
+    const amount = {
+      value: BigInt(123),
+      assetCode: asset.code,
+      assetScale: asset.scale
+    }
 
-    test('An incoming payment with corresponding grant can be created', async (): Promise<void> => {
-      const grant = await grantReferenceService.create({
-        id: uuid(),
-        clientId: uuid()
-      })
+    test.each`
+      clientId     | incomingAmount | expiresAt                        | description                | externalRef
+      ${undefined} | ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
+      ${uuid()}    | ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+    `('An incoming payment can be created', async (options): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
-        grantId: grant.id,
-        incomingAmount: {
-          value: BigInt(123),
-          assetCode: asset.code,
-          assetScale: asset.scale
-        },
-        expiresAt: new Date(Date.now() + 30_000),
-        description: 'Test incoming payment',
-        externalRef: '#123'
+        ...options
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
@@ -195,11 +169,10 @@ describe('Incoming Payment Service', (): void => {
 
   describe('get/getPaymentPointerPage', (): void => {
     getTests({
-      createGrant: async (options) => createGrant(deps, options),
-      createModel: ({ grant }) =>
+      createModel: ({ clientId }) =>
         createIncomingPayment(deps, {
           paymentPointerId,
-          grantId: grant?.grant,
+          clientId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,

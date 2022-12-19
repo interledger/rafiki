@@ -1,5 +1,6 @@
 import { KeyLike } from 'crypto'
 import { createOpenAPI, OpenAPI } from 'openapi'
+import path from 'path'
 import createLogger, { Logger } from 'pino'
 import config from '../config'
 import {
@@ -17,6 +18,12 @@ import {
 import { createAxiosInstance } from './requests'
 import { AxiosInstance } from 'axios'
 import { createGrantRoutes, GrantRoutes } from './grant'
+import {
+  createOutgoingPaymentRoutes,
+  OutgoingPaymentRoutes
+} from './outgoing-payment'
+import { createTokenRoutes, TokenRoutes } from './token'
+import { createQuoteRoutes, QuoteRoutes } from './quote'
 
 export interface BaseDeps {
   axiosInstance: AxiosInstance
@@ -44,10 +51,10 @@ const createDeps = async (
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
   const resourceServerOpenApi = await createOpenAPI(
-    config.OPEN_PAYMENTS_RS_OPEN_API_URL
+    path.resolve(__dirname, '../openapi/resource-server.yaml')
   )
   const authServerOpenApi = await createOpenAPI(
-    config.OPEN_PAYMENTS_AS_OPEN_API_URL
+    path.resolve(__dirname, '../openapi/auth-server.yaml')
   )
   const logger = args?.logger ?? createLogger()
   return {
@@ -93,11 +100,15 @@ export interface CreateAuthenticatedClientArgs
   extends CreateUnauthenticatedClientArgs {
   privateKey: KeyLike
   keyId: string
+  paymentPointerUrl: string
 }
 
 export interface AuthenticatedClient extends UnauthenticatedClient {
   incomingPayment: IncomingPaymentRoutes
+  outgoingPayment: OutgoingPaymentRoutes
   grant: GrantRoutes
+  token: TokenRoutes
+  quote: QuoteRoutes
 }
 
 export const createAuthenticatedClient = async (
@@ -108,6 +119,11 @@ export const createAuthenticatedClient = async (
 
   return {
     incomingPayment: createIncomingPaymentRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
+      logger
+    }),
+    outgoingPayment: createOutgoingPaymentRoutes({
       axiosInstance,
       openApi: resourceServerOpenApi,
       logger
@@ -125,6 +141,17 @@ export const createAuthenticatedClient = async (
     grant: createGrantRoutes({
       axiosInstance,
       openApi: authServerOpenApi,
+      logger,
+      client: args.paymentPointerUrl
+    }),
+    token: createTokenRoutes({
+      axiosInstance,
+      openApi: authServerOpenApi,
+      logger
+    }),
+    quote: createQuoteRoutes({
+      axiosInstance,
+      openApi: resourceServerOpenApi,
       logger
     })
   }

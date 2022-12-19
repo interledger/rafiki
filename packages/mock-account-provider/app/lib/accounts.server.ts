@@ -1,5 +1,3 @@
-import assert from 'assert'
-
 export interface Account {
   id: string
   name: string
@@ -54,7 +52,10 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
 
     acc.paymentPointer = paymentPointer
     acc.paymentPointerID = pointerID
@@ -114,7 +115,10 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
 
     if (clearPending && acc.creditsPending - amount < 0) {
       throw new Error('invalid amount, credits pending cannot be less than 0')
@@ -139,7 +143,10 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
 
     if (
       (clearPending && acc.debitsPending - amount < 0) ||
@@ -169,7 +176,11 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
+
     acc.creditsPending += amount
   }
 
@@ -182,7 +193,10 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
 
     if (acc.creditsPosted < acc.debitsPosted + acc.debitsPending + amount) {
       throw new Error('invalid pending debit amount, insufficient funds')
@@ -200,7 +214,10 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
 
     if (acc.debitsPending - amount < 0) {
       throw new Error('invalid amount, debits pending cannot be less than 0')
@@ -218,7 +235,10 @@ export class AccountProvider implements AccountsServer {
     }
 
     const acc = this.accounts.get(id)
-    assert.ok(acc)
+
+    if (!acc) {
+      throw new Error()
+    }
 
     if (acc.debitsPending - amount < 0) {
       throw new Error('invalid amount, credits pending cannot be less than 0')
