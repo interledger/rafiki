@@ -1,6 +1,7 @@
 import assert from 'assert'
 import { gql } from 'apollo-server-koa'
 import { Knex } from 'knex'
+import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -12,20 +13,13 @@ import { truncateTables } from '../../tests/tableManager'
 import {
   CreatePaymentPointerKeyInput,
   CreatePaymentPointerKeyMutationResponse,
-  RevokePaymentPointerKeyMutationResponse
+  RevokePaymentPointerKeyMutationResponse,
+  JwkInput
 } from '../generated/graphql'
-import { PaymentPointerKeyService } from '../../paymentPointerKey/service'
+import { PaymentPointerKeyService } from '../../open_payments/payment_pointer/key/service'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 
-const TEST_KEY = {
-  kid: uuid(),
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  key_ops: ['sign', 'verify'],
-  use: 'sig'
-}
+const TEST_KEY = generateJwk({ keyId: uuid() })
 
 describe('Payment Pointer Key Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -55,7 +49,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
       const input: CreatePaymentPointerKeyInput = {
         paymentPointerId: paymentPointer.id,
-        jwk: JSON.stringify(TEST_KEY)
+        jwk: TEST_KEY as JwkInput
       }
 
       const response = await appContainer.apolloClient
@@ -71,7 +65,14 @@ describe('Payment Pointer Key Resolvers', (): void => {
                 paymentPointerKey {
                   id
                   paymentPointerId
-                  jwk
+                  jwk {
+                    kid
+                    x
+                    alg
+                    kty
+                    crv
+                  }
+                  revoked
                   createdAt
                 }
               }
@@ -94,9 +95,13 @@ describe('Payment Pointer Key Resolvers', (): void => {
       assert.ok(response.paymentPointerKey)
       expect(response.paymentPointerKey).toMatchObject({
         __typename: 'PaymentPointerKey',
-        paymentPointerId: input.paymentPointerId
+        paymentPointerId: input.paymentPointerId,
+        jwk: {
+          __typename: 'Jwk',
+          ...TEST_KEY
+        },
+        revoked: false
       })
-      expect(JSON.parse(input.jwk)).toEqual(TEST_KEY)
     })
 
     test('500', async (): Promise<void> => {
@@ -110,7 +115,7 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
       const input = {
         paymentPointerId: paymentPointer.id,
-        jwk: JSON.stringify(TEST_KEY)
+        jwk: TEST_KEY
       }
 
       const response = await appContainer.apolloClient
@@ -126,7 +131,13 @@ describe('Payment Pointer Key Resolvers', (): void => {
                 paymentPointerKey {
                   id
                   paymentPointerId
-                  jwk
+                  jwk {
+                    kid
+                    x
+                    alg
+                    kty
+                    crv
+                  }
                   createdAt
                 }
               }
@@ -171,7 +182,14 @@ describe('Payment Pointer Key Resolvers', (): void => {
                 paymentPointerKey {
                   id
                   paymentPointerId
-                  jwk
+                  jwk {
+                    kid
+                    x
+                    alg
+                    kty
+                    crv
+                  }
+                  revoked
                 }
               }
             }
@@ -194,11 +212,13 @@ describe('Payment Pointer Key Resolvers', (): void => {
       expect(response.paymentPointerKey).toMatchObject({
         __typename: 'PaymentPointerKey',
         id: key.id,
-        paymentPointerId: key.paymentPointerId
+        paymentPointerId: key.paymentPointerId,
+        jwk: {
+          ...key.jwk,
+          __typename: 'Jwk'
+        },
+        revoked: true
       })
-
-      key.jwk.revoked = true
-      expect(JSON.parse(response.paymentPointerKey.jwk)).toEqual(key.jwk)
     })
 
     test('Returns 404 if key does not exist', async (): Promise<void> => {
@@ -213,7 +233,6 @@ describe('Payment Pointer Key Resolvers', (): void => {
                 paymentPointerKey {
                   id
                   paymentPointerId
-                  jwk
                 }
               }
             }

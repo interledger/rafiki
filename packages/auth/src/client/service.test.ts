@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
-import { JWK, generateJwk, generateTestKeys } from 'http-signature-utils'
+import { JWK, generateTestKeys } from 'http-signature-utils'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -75,10 +75,9 @@ describe('Client Service', (): void => {
   describe('getKeys', (): void => {
     const keys: JWK[] = []
 
-    beforeAll(async (): Promise<void> => {
+    beforeAll((): void => {
       for (let i = 0; i < 3; i++) {
-        const { privateKey, keyId } = await generateTestKeys()
-        keys.push(generateJwk({ privateKey, keyId }))
+        keys.push(generateTestKeys().publicKey)
       }
     })
 

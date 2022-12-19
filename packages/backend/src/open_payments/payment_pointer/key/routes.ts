@@ -1,8 +1,8 @@
 import { generateJwk, JWK } from 'http-signature-utils'
 
-import { PaymentPointerContext } from '../app'
-import { IAppConfig } from '../config/app'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
+import { PaymentPointerContext } from '../../../app'
+import { IAppConfig } from '../../../config/app'
+import { PaymentPointerService } from '../service'
 import { PaymentPointerKeyService } from './service'
 
 interface ServiceDependencies {

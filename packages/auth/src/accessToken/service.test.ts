@@ -16,12 +16,7 @@ import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import {
-  generateJwk,
-  generateTestKeys,
-  JWK,
-  TestKeys
-} from 'http-signature-utils'
+import { generateTestKeys, JWK } from 'http-signature-utils'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -29,7 +24,6 @@ describe('Access Token Service', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
-  let testKeys: TestKeys
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
@@ -38,11 +32,7 @@ describe('Access Token Service', (): void => {
     knex = await deps.use('knex')
     accessTokenService = await deps.use('accessTokenService')
 
-    testKeys = await generateTestKeys()
-    testClientKey = generateJwk({
-      privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
-    })
+    testClientKey = generateTestKeys().publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -90,7 +80,7 @@ describe('Access Token Service', (): void => {
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
-      clientKeyId: testKeys.keyId,
+      clientKeyId: testClientKey.kid,
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
       continueId: v4(),
       interactId: v4(),
@@ -167,7 +157,7 @@ describe('Access Token Service', (): void => {
         key: { proof: 'httpsig', jwk: testClientKey },
         clientId
       })
-      scope.isDone()
+      scope.done()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
@@ -203,7 +193,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId,
+        clientKeyId: testClientKey.kid,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
         continueId: v4(),
         interactId: v4(),
@@ -250,7 +240,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId,
+        clientKeyId: testClientKey.kid,
         continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
         continueId: v4(),
         interactId: v4(),
