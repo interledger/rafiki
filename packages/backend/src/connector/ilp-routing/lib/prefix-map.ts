@@ -62,7 +62,6 @@ export default class PrefixMap<T> {
   *getKeysStartingWith(prefix: string): IterableIterator<string> {
     // TODO: This could be done *much* more efficiently
     const predicate = (key: string): boolean => key.startsWith(prefix)
-    // let index = -1
     // tslint:disable-next-line:no-conditional-assignment
     for (let index = 0; index < this.prefixes.length; index++) {
       if (predicate(this.prefixes[index])) {
