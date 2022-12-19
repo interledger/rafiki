@@ -295,6 +295,10 @@ describe('Grant Routes', (): void => {
             headers: {
               Accept: 'application/json',
               'Content-Type': 'application/json'
+            },
+            query: {
+              clientName: 'Test Client',
+              clientUri: 'https://example.com'
             }
           },
           { id: grant.interactId, nonce: grant.interactNonce }
@@ -309,9 +313,8 @@ describe('Grant Routes', (): void => {
         ).resolves.toBeUndefined()
 
         redirectUrl.searchParams.set('nonce', grant.interactNonce as string)
-        // TODO: make sure display params get passed through; not passing them now to fix tests for demo
-        redirectUrl.searchParams.set('clientName', 'undefined')
-        redirectUrl.searchParams.set('clientUri', 'undefined')
+        redirectUrl.searchParams.set('clientName', 'Test Client')
+        redirectUrl.searchParams.set('clientUri', 'https://example.com')
 
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
