@@ -10,7 +10,7 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
-export function createAuthMiddleware({
+export function createTokenIntrospectionMiddleware({
   type,
   action
 }: {
@@ -76,6 +76,13 @@ export const httpsigMiddleware = async (
   // TODO: look up client jwks.json
   // https://github.com/interledger/rafiki/issues/737
   if (!ctx.grant?.key.jwk) {
+    const logger = await ctx.container.use('logger')
+    logger.warn(
+      {
+        grant: ctx.grant
+      },
+      'missing grant key'
+    )
     ctx.throw(500)
   }
   try {

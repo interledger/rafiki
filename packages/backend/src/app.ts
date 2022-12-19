@@ -26,7 +26,7 @@ import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
 import {
-  createAuthMiddleware,
+  createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './open_payments/auth/middleware'
 import { AuthService, TokenInfo } from './open_payments/auth/service'
@@ -355,13 +355,11 @@ export class App {
                 method
               }
             ),
-            createAuthMiddleware({
+            createTokenIntrospectionMiddleware({
               type,
               action
             }),
-            this.config.bypassSignatureValidation
-              ? (ctx, next) => next()
-              : httpsigMiddleware,
+            httpsigMiddleware,
             route
           )
         }

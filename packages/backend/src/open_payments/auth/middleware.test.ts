@@ -7,7 +7,10 @@ import {
   createHeaders
 } from 'http-signature-utils'
 
-import { createAuthMiddleware, httpsigMiddleware } from './middleware'
+import {
+  createTokenIntrospectionMiddleware,
+  httpsigMiddleware
+} from './middleware'
 import { AccessType, AccessAction } from './grant'
 import { AuthService } from './service'
 import { Config } from '../../config/app'
@@ -42,7 +45,7 @@ describe('Auth Middleware', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    middleware = createAuthMiddleware({
+    middleware = createTokenIntrospectionMiddleware({
       type: AccessType.IncomingPayment,
       action: AccessAction.Read
     })

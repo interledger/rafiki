@@ -42,7 +42,7 @@ describe('Auth Service', (): void => {
     await appContainer.shutdown()
   })
 
-  function mockAuthServer(
+  function mockAuthServerResponse(
     tokenInfo: TokenInfoJSON | string | undefined
   ): nock.Scope {
     return nock(authServerIntrospectionUrl.origin)
@@ -69,7 +69,7 @@ describe('Auth Service', (): void => {
     `(
       'returns undefined for $description',
       async ({ tokenInfo }): Promise<void> => {
-        const scope = mockAuthServer(tokenInfo)
+        const scope = mockAuthServerResponse(tokenInfo)
         await expect(authService.introspect(token)).resolves.toBeUndefined()
         scope.done()
       }
@@ -93,7 +93,7 @@ describe('Auth Service', (): void => {
           proof: 'httpsig'
         }
       )
-      const scope = mockAuthServer(tokenInfo.toJSON())
+      const scope = mockAuthServerResponse(tokenInfo.toJSON())
       await expect(authService.introspect(token)).resolves.toEqual(tokenInfo)
       scope.done()
     })
