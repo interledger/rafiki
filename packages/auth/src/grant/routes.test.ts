@@ -951,5 +951,55 @@ describe('Grant Routes', (): void => {
         error: 'invalid_request'
       })
     })
+
+    test('Can cancel a grant request / pending grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          url: '/continue/{id}',
+          method: 'delete'
+        },
+        {
+          id: grant.continueId
+        }
+      )
+      await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(202)
+    })
+
+    test('Can delete an existing grant', async (): Promise<void> => {
+      const grant = await Grant.query().insert({
+        ...generateBaseGrant(),
+        state: GrantState.Granted
+      })
+      const ctx = createContext(
+        {
+          url: '/continue/{id}',
+          method: 'delete'
+        },
+        {
+          id: grant.continueId
+        }
+      )
+      await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(202)
+    })
+
+    test('Cannot delete non-existing grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          url: '/continue/{id}',
+          method: 'delete'
+        },
+        {
+          id: v4()
+        }
+      )
+      await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+        status: 404,
+        error: 'unknown_continue_id'
+      })
+    })
   })
 })

@@ -231,6 +231,19 @@ export class App {
       grantRoutes.continue
     )
 
+    // Grant Cancel
+    this.publicRouter.delete(
+      '/continue/:id',
+      createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
+        path: '/continue/{id}',
+        method: HttpMethod.POST
+      }),
+      this.config.bypassSignatureValidation
+        ? (ctx, next) => next()
+        : grantContinueHttpsigMiddleware,
+      grantRoutes.delete
+    )
+
     // Token Rotation
     this.publicRouter.post(
       '/token/:id',

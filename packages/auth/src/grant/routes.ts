@@ -48,13 +48,12 @@ interface GrantContinueBody {
   interact_ref: string
 }
 
-interface GrantContinueParams {
+interface GrantParams {
   id: string
 }
-export type ContinueContext = GrantContext<
-  GrantContinueBody,
-  GrantContinueParams
->
+export type ContinueContext = GrantContext<GrantContinueBody, GrantParams>
+
+export type DeleteContext = GrantContext<null, GrantParams>
 
 type InteractionRequest<
   BodyT = never,
@@ -104,6 +103,7 @@ export interface GrantRoutes {
     details(ctx: GetContext): Promise<void>
   }
   continue(ctx: ContinueContext): Promise<void>
+  delete(ctx: DeleteContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -134,7 +134,8 @@ export function createGrantRoutes({
       acceptOrReject: (ctx: ChooseContext) => handleGrantChoice(deps, ctx),
       details: (ctx: GetContext) => getGrantDetails(deps, ctx)
     },
-    continue: (ctx: ContinueContext) => continueGrant(deps, ctx)
+    continue: (ctx: ContinueContext) => continueGrant(deps, ctx),
+    delete: (ctx: DeleteContext) => deleteGrant(deps, ctx)
   }
 }
 
@@ -412,6 +413,17 @@ async function continueGrant(
     access,
     accessToken
   })
+}
+async function deleteGrant(
+  deps: ServiceDependencies,
+  ctx: ContinueContext
+): Promise<void> {
+  const { id: continueId } = ctx.params
+  const deletion = await deps.grantService.deleteGrant(continueId)
+  if (deletion === 0) {
+    ctx.throw(404, { error: 'unknown_continue_id' })
+  }
+  ctx.status = 202
 }
 
 function createGrantBody({

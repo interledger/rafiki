@@ -22,6 +22,7 @@ export interface GrantService {
     interactRef: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
+  deleteGrant(continueId: string): Promise<number>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -86,7 +87,8 @@ export async function createGrantService({
       continueToken: string,
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
-    rejectGrant: (grantId: string) => rejectGrant(deps, grantId)
+    rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
+    deleteGrant: (continueId: string) => deleteGrant(deps, continueId)
   }
 }
 
@@ -110,6 +112,19 @@ async function rejectGrant(
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
     state: GrantState.Rejected
   })
+}
+
+async function deleteGrant(
+  deps: ServiceDependencies,
+  continueId: string
+): Promise<number> {
+  const deletion = await Grant.query(deps.knex).delete().where({ continueId })
+  if (deletion === 0) {
+    deps.logger.info(
+      `Could not find grant corresponding to continueId: ${continueId}`
+    )
+  }
+  return deletion
 }
 
 async function create(
