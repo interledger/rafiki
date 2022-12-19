@@ -76,6 +76,7 @@ importers:
       pino: ^8.8.0
       pino-pretty: ^9.1.1
       testcontainers: ^8.16.0
+      token-introspection: workspace:*
       typescript: ^4.9.4
       uuid: ^9.0.0
     dependencies:
@@ -99,6 +100,7 @@ importers:
       pino: 8.8.0
       pino-pretty: 9.1.1
       testcontainers: 8.16.0
+      token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
       '@faker-js/faker': 7.6.0

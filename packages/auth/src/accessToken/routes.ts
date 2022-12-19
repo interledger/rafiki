@@ -1,4 +1,6 @@
+import { createHash } from 'crypto'
 import { Logger } from 'pino'
+import { ActiveTokenInfo } from 'token-introspection'
 import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
@@ -64,26 +66,25 @@ async function introspectToken(
   const introspectionResult = await deps.accessTokenService.introspect(
     body['access_token']
   )
-  if (introspectionResult) {
-    ctx.body = introspectionToBody(introspectionResult)
-  } else {
-    ctx.throw(404, {
-      error: 'invalid_request',
-      message: 'token not found'
-    })
-  }
+  ctx.body = introspectionResult
+    ? introspectionToBody(introspectionResult)
+    : {
+        active: false
+      }
 }
 
-function introspectionToBody(result: Introspection) {
-  if (!result.active) return { active: result.active }
-  else {
-    return {
-      active: result.active,
-      grant: result.id,
-      access: result.access?.map((a: Access) => accessToBody(a)),
-      key: result.key,
-      client_id: result.clientId
-    }
+function introspectionToBody({ grant, jwk }: Introspection): ActiveTokenInfo {
+  return {
+    active: true,
+    grant: grant.id,
+    access: grant.access.map((a: Access) =>
+      accessToBody(a)
+    ) as ActiveTokenInfo['access'],
+    key: {
+      proof: 'httpsig',
+      jwk
+    },
+    client_id: createHash('sha256').update(grant.client).digest('hex')
   }
 }
 
