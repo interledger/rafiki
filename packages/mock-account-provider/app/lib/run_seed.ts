@@ -1,4 +1,3 @@
-import * as _ from 'lodash'
 import { CONFIG, type Config, type Account, type Peering } from './parse_config'
 import {
   createPeer,
@@ -12,7 +11,7 @@ import { generateJwk } from 'http-signature-utils'
 
 export async function setupFromSeed(config: Config): Promise<void> {
   const peerResponses = await Promise.all(
-    _.map(config.seed.peers, async (peer: Peering) => {
+    config.seed.peers.map(async (peer: Peering) => {
       const peerResponse = await createPeer(
         peer.peerIlpAddress,
         peer.peerUrl,
@@ -39,7 +38,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
   await mockAccounts.clearAccounts()
 
   const accountResponses = await Promise.all(
-    _.map(config.seed.accounts, async (account: Account) => {
+    config.seed.accounts.map(async (account: Account) => {
       await mockAccounts.create(
         account.id,
         account.name,
@@ -78,7 +77,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     })
   )
   console.log(JSON.stringify(accountResponses, null, 2))
-  const envVarStrings = _.map(config.seed.accounts, (account) => {
+  const envVarStrings = config.seed.accounts.map((account) => {
     return `${account.postmanEnvVar}: http://localhost:${CONFIG.seed.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.seed.self.hostname}`
   })
   console.log(envVarStrings.join('\n'))

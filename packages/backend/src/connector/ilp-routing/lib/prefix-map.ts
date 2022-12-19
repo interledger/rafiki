@@ -1,5 +1,3 @@
-import { findIndex } from 'lodash'
-
 /**
  * A key-value map where the members' keys represent prefixes.
  *
@@ -46,7 +44,7 @@ export default class PrefixMap<T> {
     // Exact match
     if (this.items[key]) return key // redundant; optimization?
     // prefix match (the list is in descending length order, and secondarily, reverse-alphabetically)
-    const index = findIndex(this.prefixes, (e: string) =>
+    const index = this.prefixes.findIndex((e: string) =>
       key.startsWith(e + '.')
     )
     if (index === -1) return undefined
@@ -64,19 +62,23 @@ export default class PrefixMap<T> {
   *getKeysStartingWith(prefix: string): IterableIterator<string> {
     // TODO: This could be done *much* more efficiently
     const predicate = (key: string): boolean => key.startsWith(prefix)
-    let index = -1
+    // let index = -1
     // tslint:disable-next-line:no-conditional-assignment
-    while ((index = findIndex(this.prefixes, predicate, index + 1)) !== -1) {
-      yield this.prefixes[index]
+    for (let index = 0; index < this.prefixes.length; index++) {
+      if (predicate(this.prefixes[index])) {
+        yield this.prefixes[index]
+      }
     }
   }
 
   *getKeysPrefixesOf(search: string): IterableIterator<string> {
     const predicate = (key: string): boolean => search.startsWith(key + '.')
-    let index = -1
+    // let index = -1
     // tslint:disable-next-line:no-conditional-assignment
-    while ((index = findIndex(this.prefixes, predicate, index + 1)) !== -1) {
-      yield this.prefixes[index]
+    for (let index = 0; index < this.prefixes.length; index++) {
+      if (predicate(this.prefixes[index])) {
+        yield this.prefixes[index]
+      }
     }
   }
 
@@ -95,7 +97,7 @@ export default class PrefixMap<T> {
    */
   insert(prefix: string, item: T): T {
     if (!this.items[prefix]) {
-      const index = findIndex(this.prefixes, (e) => {
+      const index = this.prefixes.findIndex((e: string) => {
         if (prefix.length === e.length) {
           return prefix > e
         }
