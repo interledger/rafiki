@@ -1,14 +1,21 @@
 import crypto from 'crypto'
 import { v4 } from 'uuid'
 
+import { generateJwk, JWK } from '../utils/jwk'
+
 export type TestKeys = {
-  keyId: string
-  publicKey: crypto.KeyObject
+  publicKey: JWK
   privateKey: crypto.KeyObject
 }
 
-export async function generateTestKeys(): Promise<TestKeys> {
-  const keyId = v4()
-  const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519')
-  return { keyId, privateKey, publicKey }
+export function generateTestKeys(): TestKeys {
+  const { privateKey } = crypto.generateKeyPairSync('ed25519')
+
+  return {
+    publicKey: generateJwk({
+      keyId: v4(),
+      privateKey
+    }),
+    privateKey
+  }
 }

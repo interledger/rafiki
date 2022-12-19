@@ -3,25 +3,18 @@ import { Knex } from 'knex'
 import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
-import { createContext } from '../tests/context'
-import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
+import { createContext } from '../../../tests/context'
+import { createTestApp, TestContainer } from '../../../tests/app'
+import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '..'
-import { AppServices, PaymentPointerContext } from '../app'
-import { truncateTables } from '../tests/tableManager'
+import { initIocContainer } from '../../..'
+import { AppServices, PaymentPointerContext } from '../../../app'
+import { truncateTables } from '../../../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerKeyService } from './service'
-import { createPaymentPointer } from '../tests/paymentPointer'
+import { createPaymentPointer } from '../../../tests/paymentPointer'
 
-const TEST_KEY = {
-  kid: uuid(),
-  x: 'test-public-key',
-  kty: 'OKP',
-  alg: 'EdDSA',
-  crv: 'Ed25519',
-  use: 'sig'
-}
+const TEST_KEY = generateJwk({ keyId: uuid() })
 
 describe('Payment Pointer Keys Routes', (): void => {
   let deps: IocContract<AppServices>

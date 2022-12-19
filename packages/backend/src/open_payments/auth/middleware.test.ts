@@ -5,11 +5,9 @@ import { v4 as uuid } from 'uuid'
 import { Context } from 'koa'
 import {
   generateTestKeys,
-  JWK,
   createHeaders,
   Headers,
-  TestKeys,
-  generateJwk
+  TestKeys
 } from 'http-signature-utils'
 
 import { createAuthMiddleware } from './middleware'
@@ -50,7 +48,6 @@ describe('Auth Middleware', (): void => {
   let requestUrl: string
   let requestMethod: RequestMethod
   let requestSignatureHeaders: Headers
-  let requestJwk: JWK
 
   function setupHttpSigContext(options: SetupOptions): Context {
     const context = setup(options)
@@ -80,11 +77,7 @@ describe('Auth Middleware', (): void => {
     requestSignatureHeaders = await createHeaders({
       request,
       privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
-    })
-    requestJwk = generateJwk({
-      privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
+      keyId: testKeys.publicKey.kid
     })
 
     ctx = setupHttpSigContext({
@@ -103,7 +96,7 @@ describe('Auth Middleware', (): void => {
     ctx.container = deps
     next = jest.fn()
     mockKeyInfo = {
-      jwk: requestJwk,
+      jwk: testKeys.publicKey,
       proof: 'httpsig'
     }
   }
@@ -122,7 +115,7 @@ describe('Auth Middleware', (): void => {
       path: requestPath,
       method: HttpMethod.POST
     })
-    testKeys = await generateTestKeys()
+    testKeys = generateTestKeys()
     requestMethod = HttpMethod.POST.toUpperCase() as RequestMethod
     requestBody = {
       access_token: token,
@@ -410,7 +403,7 @@ describe('Auth Middleware', (): void => {
 
   test('returns 401 for invalid key type without body', async (): Promise<void> => {
     await prepareTest(false)
-    mockKeyInfo.jwk.kty = 'EC'
+    mockKeyInfo.jwk.kty = 'EC' as 'OKP'
     const grant = new TokenInfo(
       {
         active: true,
@@ -434,7 +427,7 @@ describe('Auth Middleware', (): void => {
   })
 
   test('returns 401 for invalid key type with body', async (): Promise<void> => {
-    mockKeyInfo.jwk.kty = 'EC'
+    mockKeyInfo.jwk.kty = 'EC' as 'OKP'
     const grant = new TokenInfo(
       {
         active: true,

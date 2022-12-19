@@ -68,9 +68,10 @@ export async function setupFromSeed(config: Config): Promise<void> {
 
       await createPaymentPointerKey({
         paymentPointerId: paymentPointer.id,
-        jwk: JSON.stringify(
-          generateJwk({ keyId: `keyid-${account.id}`, privateKey: config.key })
-        )
+        jwk: generateJwk({
+          keyId: `keyid-${account.id}`,
+          privateKey: config.key
+        })
       })
 
       return paymentPointer
