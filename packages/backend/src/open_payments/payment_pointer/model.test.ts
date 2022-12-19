@@ -33,9 +33,6 @@ export const setup = <T extends PaymentPointerContext>(
     },
     options.params
   )
-  if (options.reqOpts.body !== undefined) {
-    ctx.request.body = options.reqOpts.body
-  }
   ctx.paymentPointer = options.paymentPointer
   ctx.grant = options.grant
   ctx.clientId = options.clientId
