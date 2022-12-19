@@ -38,7 +38,7 @@
     "rosie": "^2.1.0",
     "testcontainers": "^8.16.0",
     "tmp": "^0.2.1",
-    "typescript": "^4.2.4"
+    "typescript": "^4.9.4"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
