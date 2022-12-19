@@ -14,7 +14,6 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
       INTROSPECTION_HTTPSIG: "false"
-      BYPASS_SIGNATURE_VALIDATION: "false"
     depends_on:
       - tigerbeetle
       - database
@@ -72,7 +71,6 @@ services:
       PRICES_URL: http://fynbos/prices
       REDIS_URL: redis://redis:6379/0
       QUOTE_URL: http://fynbos/quotes
-      BYPASS_SIGNATURE_VALIDATION: "false"
       PAYMENT_POINTER_URL: https://backend/.well-known/pay
     depends_on:
       - tigerbeetle
