@@ -18,6 +18,7 @@ import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
 import { generateTestKeys, JWK } from 'http-signature-utils'
+import { generateNonceOrToken } from '../shared/utils'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -53,15 +54,15 @@ describe('Access Token Routes', (): void => {
   const BASE_GRANT = {
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    continueToken: generateNonceOrToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
-    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientNonce: generateNonceOrToken(),
     client: CLIENT,
     interactId: v4(),
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    interactRef: generateNonceOrToken(),
+    interactNonce: generateNonceOrToken()
   }
 
   const BASE_ACCESS = {
@@ -80,7 +81,7 @@ describe('Access Token Routes', (): void => {
   }
 
   const BASE_TOKEN = {
-    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    value: generateNonceOrToken(),
     managementId: v4(),
     expiresIn: 3600
   }

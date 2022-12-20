@@ -1,4 +1,3 @@
-import crypto from 'crypto'
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
@@ -12,6 +11,7 @@ import { AppServices } from '../app'
 import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Action, AccessType, AccessRequest } from './types'
+import { generateNonceOrToken } from '../shared/utils'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
@@ -39,16 +39,16 @@ describe('Access Service', (): void => {
   const BASE_GRANT = {
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    continueToken: generateNonceOrToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
-    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientNonce: generateNonceOrToken(),
     client: faker.internet.url(),
     clientKeyId: 'test-key',
     interactId: v4(),
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    interactRef: generateNonceOrToken(),
+    interactNonce: generateNonceOrToken()
   }
 
   test('Can create incoming payment access', async (): Promise<void> => {

@@ -1,8 +1,8 @@
 import { v4 } from 'uuid'
-import * as crypto from 'crypto'
 import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
+import { generateNonceOrToken } from '../shared/utils'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -138,13 +138,9 @@ async function create(
       clientKeyId,
       interactId: interact ? v4() : undefined,
       interactRef: interact ? v4() : undefined,
-      interactNonce: interact
-        ? // TODO: factor out nonce generation
-          // https://github.com/interledger/rafiki/issues/887
-          crypto.randomBytes(8).toString('hex').toUpperCase()
-        : undefined,
+      interactNonce: interact ? generateNonceOrToken() : undefined,
       continueId: v4(),
-      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
+      continueToken: generateNonceOrToken()
     })
 
     // Associate provided accesses with grant
