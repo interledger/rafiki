@@ -58,7 +58,6 @@
     "apollo-server-koa": "^3.11.1",
     "axios": "0.26.1",
     "base64url": "^3.0.1",
-    "bcrypt": "^5.0.1",
     "extensible-error": "^1.0.2",
     "fishery": "^2.2.2",
     "graphql": "^16.6.0",
