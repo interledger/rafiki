@@ -45,7 +45,7 @@ importers:
 
   packages/auth:
     specifiers:
-      '@adonisjs/fold': ^8.1.0
+      '@adonisjs/fold': ^8.2.0
       '@faker-js/faker': ^7.4.0
       '@koa/cors': ^3.3.0
       '@koa/router': ^12.0.0
