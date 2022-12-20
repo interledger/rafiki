@@ -26,8 +26,9 @@ type GenerateSignatureRequestBody = {
   keyId: string
 }
 
-router.post('/', async (ctx: AppContext<Headers>): Promise<void> => {
+router.post('/', async (ctx: AppContext): Promise<void> => {
   const validateBody = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     requestBody: any
   ): requestBody is GenerateSignatureRequestBody =>
     !!requestBody.keyId &&
