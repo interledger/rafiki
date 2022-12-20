@@ -4,8 +4,8 @@
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
-    "build:deps": "pnpm --filter open-payments build",
-    "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
+    "build:deps": "pnpm --filter open-payments build && pnpm --filter token-introspection build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
     "prepack": "pnpm build"
@@ -81,6 +81,7 @@
     "pino-pretty": "^9.1.1",
     "raw-body": "^2.5.1",
     "tigerbeetle-node": "^0.10.0",
+    "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   }
 }

@@ -1,9 +1,15 @@
 import { Interval, Duration, DateTime, Settings } from 'luxon'
 
-import { Amount, parseAmount } from '../../amount'
-import { AccessLimits } from '../../auth/service'
+import { Amount, AmountJSON, parseAmount } from '../../amount'
 
 Settings.defaultZone = 'utc'
+
+export interface AccessLimits {
+  receiver?: string
+  sendAmount?: AmountJSON
+  receiveAmount?: AmountJSON
+  interval?: string
+}
 
 export type Limits = Omit<AccessLimits, 'sendAmount' | 'receiveAmount'> & {
   sendAmount?: Amount
