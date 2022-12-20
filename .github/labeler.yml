@@ -6,6 +6,7 @@
 'pkg: openapi': packages/openapi/**/*
 'pkg: map': packages/mock-account-provider/**/*
 'pkg: open-payments': packages/open-payments/**/*
+'pkg: http-signature-utils': packages/http-signature-utils/**/*
 
 # Add 'type: documentation' label to any change to *.md files
 'type: ci':
@@ -24,6 +25,7 @@
   - packages/auth/src/**/*
   - packages/openapi/src/**/*
   - packages/open-payments/src/**/*
+  - packages/http-signature-utils/src/**/*
 
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts
