@@ -28,7 +28,7 @@
     "uuid": "^9.0.0"
   },
   "dependencies": {
-    "axios": "^1.1.2",
+    "axios": "^1.2.1",
     "http-message-signatures": "^0.1.2",
     "http-signature-utils": "workspace:../http-signature-utils",
     "openapi": "workspace:../openapi",
