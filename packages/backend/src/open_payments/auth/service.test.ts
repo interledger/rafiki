@@ -4,7 +4,7 @@ import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { AccessType, AccessAction } from './grant'
-import { AuthService, TokenInfo, TokenInfoJSON } from './service'
+import { AuthService, TokenInfo } from './service'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
@@ -43,7 +43,7 @@ describe('Auth Service', (): void => {
   })
 
   function mockAuthServerResponse(
-    tokenInfo: TokenInfoJSON | string | undefined
+    tokenInfo: TokenInfo | string | undefined
   ): nock.Scope {
     return nock(authServerIntrospectionUrl.origin)
       .post(
@@ -76,24 +76,22 @@ describe('Auth Service', (): void => {
     )
 
     test('returns token info', async (): Promise<void> => {
-      const tokenInfo = new TokenInfo(
-        {
-          active: true,
-          grant: uuid(),
-          clientId: uuid(),
-          access: [
-            {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Read]
-            }
-          ]
-        },
-        {
+      const tokenInfo = {
+        active: true,
+        grant: uuid(),
+        client_id: uuid(),
+        access: [
+          {
+            type: AccessType.IncomingPayment,
+            actions: [AccessAction.Read]
+          }
+        ],
+        key: {
           jwk: generateTestKeys().publicKey,
           proof: 'httpsig'
         }
-      )
-      const scope = mockAuthServerResponse(tokenInfo.toJSON())
+      }
+      const scope = mockAuthServerResponse(tokenInfo)
       await expect(authService.introspect(token)).resolves.toEqual(tokenInfo)
       scope.done()
     })

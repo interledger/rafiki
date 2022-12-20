@@ -1,11 +1,9 @@
 import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
-import * as httpMocks from 'node-mocks-http'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
-import { createContext } from '../../tests/context'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config, IAppConfig } from '../../config/app'
 import { initIocContainer } from '../..'
@@ -15,9 +13,11 @@ import { QuoteService } from './service'
 import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount, serializeAmount } from '../amount'
-import { AccessAction, AccessType, Grant } from '../auth/grant'
 import { PaymentPointer } from '../payment_pointer/model'
-import { getRouteTests } from '../payment_pointer/model.test'
+import {
+  getRouteTests,
+  setup as setupContext
+} from '../payment_pointer/model.test'
 import { randomAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
@@ -112,26 +112,21 @@ describe('Quote Routes', (): void => {
 
   describe('create', (): void => {
     let options: CreateBody
-    let grant: Grant | undefined
 
-    function setup(
-      reqOpts: Pick<httpMocks.RequestOptions, 'headers'>
-    ): CreateContext<CreateBody> {
-      const ctx = createContext<CreateContext<CreateBody>>({
-        headers: Object.assign(
-          { Accept: 'application/json', 'Content-Type': 'application/json' },
-          reqOpts.headers
-        ),
-        method: 'POST',
-        url: `/quotes`
+    const setup = ({
+      clientId
+    }: {
+      clientId?: string
+    }): CreateContext<CreateBody> =>
+      setupContext<CreateContext<CreateBody>>({
+        reqOpts: {
+          body: options,
+          method: 'POST',
+          url: `/quotes`
+        },
+        paymentPointer,
+        clientId
       })
-      ctx.paymentPointer = paymentPointer
-      ctx.request.body = {
-        ...options
-      }
-      ctx.grant = grant
-      return ctx
-    }
 
     test('returns error on invalid sendAmount asset', async (): Promise<void> => {
       options = {
@@ -165,22 +160,6 @@ describe('Quote Routes', (): void => {
       ${uuid()}    | ${'clientId'}
       ${undefined} | ${'no clientId'}
     `('returns the quote on success ($description)', ({ clientId }): void => {
-      beforeEach(async (): Promise<void> => {
-        grant = clientId
-          ? new Grant({
-              active: true,
-              clientId,
-              grant: uuid(),
-              access: [
-                {
-                  type: AccessType.Quote,
-                  actions: [AccessAction.Create, AccessAction.Read]
-                }
-              ]
-            })
-          : undefined
-      })
-
       test.each`
         sendAmount   | receiveAmount | description
         ${'123'}     | ${undefined}  | ${'sendAmount'}
@@ -205,7 +184,7 @@ describe('Quote Routes', (): void => {
                 }
               : undefined
           }
-          const ctx = setup({})
+          const ctx = setup({ clientId })
           let quote: Quote | undefined
           const quoteSpy = jest
             .spyOn(quoteService, 'create')
@@ -260,7 +239,7 @@ describe('Quote Routes', (): void => {
         options = {
           receiver
         }
-        const ctx = setup({})
+        const ctx = setup({ clientId })
         let quote: Quote | undefined
         const quoteSpy = jest
           .spyOn(quoteService, 'create')

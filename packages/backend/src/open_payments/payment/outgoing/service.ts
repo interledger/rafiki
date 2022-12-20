@@ -10,6 +10,7 @@ import {
   isOutgoingPaymentError,
   OutgoingPaymentError
 } from './errors'
+import { Limits, getInterval } from './limits'
 import {
   OutgoingPayment,
   OutgoingPaymentGrant,
@@ -18,7 +19,6 @@ import {
 } from './model'
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
-import { Grant, AccessLimits, getInterval } from '../../auth/grant'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
 import { PaymentPointerSubresourceService } from '../../payment_pointer/service'
@@ -31,6 +31,11 @@ import {
 } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
+
+export interface Grant {
+  id: string
+  limits?: Limits
+}
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -82,6 +87,7 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   paymentPointerId: string
   quoteId: string
+  clientId?: string
   grant?: Grant
   description?: string
   externalRef?: string
@@ -92,7 +98,7 @@ async function createOutgoingPayment(
   deps: ServiceDependencies,
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
-  const grantId = options.grant ? options.grant.grant : undefined
+  const grantId = options.grant?.id
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
       if (grantId) {
@@ -110,7 +116,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
-          clientId: options.grant?.clientId,
+          clientId: options.clientId,
           grantId
         })
         .withGraphFetched('[quote.asset]')
@@ -182,7 +188,7 @@ async function createOutgoingPayment(
 
 function validateAccessLimits(
   payment: OutgoingPayment,
-  limits: AccessLimits
+  limits: Limits
 ): PaymentLimits | undefined {
   if (
     (!limits.receiver || payment.receiver === limits?.receiver) &&
@@ -213,7 +219,7 @@ function validatePaymentInterval({
 
 function validateAmountAssets(
   payment: OutgoingPayment,
-  limits: AccessLimits
+  limits: Limits
 ): boolean {
   if (
     limits.sendAmount &&
@@ -229,7 +235,7 @@ function validateAmountAssets(
   )
 }
 
-interface PaymentLimits extends AccessLimits {
+interface PaymentLimits extends Limits {
   paymentInterval?: Interval
 }
 
@@ -240,11 +246,10 @@ async function validateGrant(
   grant: Grant,
   callback?: (f: unknown) => NodeJS.Timeout
 ): Promise<boolean> {
-  const grantAccess = grant.access[0]
-  if (!grantAccess.limits) {
+  if (!grant.limits) {
     return true
   }
-  const paymentLimits = validateAccessLimits(payment, grantAccess.limits)
+  const paymentLimits = validateAccessLimits(payment, grant.limits)
   if (!paymentLimits) {
     return false
   }
@@ -264,7 +269,7 @@ async function validateGrant(
   await deps
     .knex<OutgoingPaymentGrant>('outgoingPaymentGrants')
     .select()
-    .where('id', grant.grant)
+    .where('id', grant.id)
     .forNoKeyUpdate()
     .timeout(5000)
 
@@ -272,7 +277,7 @@ async function validateGrant(
 
   const grantPayments = await OutgoingPayment.query(deps.knex)
     .where({
-      grantId: grant.grant
+      grantId: grant.id
     })
     .andWhereNot({
       id: payment.id

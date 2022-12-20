@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
+import { JWK } from 'http-signature-utils'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
@@ -24,12 +25,12 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
+import { AccessType, AccessAction } from './open_payments/auth/grant'
 import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './open_payments/auth/middleware'
-import { AuthService, TokenInfo } from './open_payments/auth/service'
+import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
@@ -41,7 +42,10 @@ import { WebhookService } from './webhook/service'
 import { QuoteRoutes } from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
 import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
-import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import {
+  Grant,
+  OutgoingPaymentService
+} from './open_payments/payment/outgoing/service'
 import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
@@ -81,6 +85,7 @@ export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
   clientId?: string
+  clientKey?: JWK
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -92,7 +97,8 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  grant: TokenInfo
+  grant: Grant
+  clientKey: JWK
   clientId?: string
 }
 

@@ -2,7 +2,7 @@ import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { Amount, serializeAmount } from '../../amount'
+import { Amount, parseAmount, serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { getRouteTests, setup } from '../../payment_pointer/model.test'
 import { createTestApp, TestContainer } from '../../../tests/app'
@@ -20,7 +20,6 @@ import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { AccessAction, AccessType, Grant } from '../../auth/grant'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -131,11 +130,7 @@ describe('Incoming Payment Routes', (): void => {
     })
   })
 
-  describe.each`
-    withGrant | description
-    ${false}  | ${'without grant'}
-    ${true}   | ${'with grant'}
-  `('create - $description', ({ withGrant }): void => {
+  describe('create', (): void => {
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup<CreateContext<CreateBody>>({
         reqOpts: { body: {} },
@@ -151,30 +146,18 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test.each`
-      incomingAmount                                     | description  | externalRef  | expiresAt
-      ${{ value: '2', assetCode: 'USD', assetScale: 2 }} | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined}                                       | ${undefined} | ${undefined} | ${undefined}
+      clientId     | incomingAmount                                     | description  | externalRef  | expiresAt
+      ${uuid()}    | ${{ value: '2', assetCode: 'USD', assetScale: 2 }} | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
+      ${undefined} | ${undefined}                                       | ${undefined} | ${undefined} | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
+        clientId,
         incomingAmount,
         description,
         externalRef,
         expiresAt
       }): Promise<void> => {
-        const grant = withGrant
-          ? new Grant({
-              active: true,
-              grant: uuid(),
-              clientId: uuid(),
-              access: [
-                {
-                  type: AccessType.IncomingPayment,
-                  actions: [AccessAction.Create]
-                }
-              ]
-            })
-          : undefined
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: {
             body: {
@@ -187,9 +170,21 @@ describe('Incoming Payment Routes', (): void => {
             url: `/incoming-payments`
           },
           paymentPointer,
-          grant
+          clientId
         })
+        const incomingPaymentService = await deps.use('incomingPaymentService')
+        const createSpy = jest.spyOn(incomingPaymentService, 'create')
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+        expect(createSpy).toHaveBeenCalledWith({
+          paymentPointerId: paymentPointer.id,
+          incomingAmount: incomingAmount
+            ? parseAmount(incomingAmount)
+            : undefined,
+          description,
+          externalRef,
+          expiresAt: expiresAt ? new Date(expiresAt) : undefined,
+          clientId
+        })
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
           (ctx.response.body as Record<string, unknown>)['id'] as string
