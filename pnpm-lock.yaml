@@ -46,8 +46,8 @@ importers:
   packages/auth:
     specifiers:
       '@adonisjs/fold': ^8.2.0
-      '@faker-js/faker': ^7.4.0
-      '@koa/cors': ^3.3.0
+      '@faker-js/faker': ^7.6.0
+      '@koa/cors': ^3.4.3
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.8
       '@types/koa': 2.13.5
@@ -55,7 +55,7 @@ importers:
       '@types/koa__router': ^8.0.11
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa-session': ^5.10.6
-      '@types/uuid': ^8.3.4
+      '@types/uuid': ^9.0.0
       ajv: ^8.11.2
       axios: ^0.27.2
       http-signature-utils: workspace:../http-signature-utils
@@ -73,14 +73,14 @@ importers:
       openapi: workspace:../openapi
       openapi-types: ^12.0.0
       pg: ^8.6.0
-      pino: ^8.4.2
+      pino: ^8.8.0
       pino-pretty: ^9.0.1
       testcontainers: ^8.16.0
       typescript: ^4.9.4
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@koa/cors': 3.3.0
+      '@koa/cors': 3.4.3
       '@koa/router': 12.0.0
       ajv: 8.11.2
       axios: 0.27.2
@@ -96,19 +96,19 @@ importers:
       open-payments: link:../open-payments
       openapi: link:../openapi
       pg: 8.7.3
-      pino: 8.4.2
+      pino: 8.8.0
       pino-pretty: 9.0.1
       testcontainers: 8.16.0
-      uuid: 8.3.2
+      uuid: 9.0.0
     devDependencies:
-      '@faker-js/faker': 7.4.0
+      '@faker-js/faker': 7.6.0
       '@types/jest': 28.1.8
       '@types/koa': 2.13.5
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
       '@types/koa-bodyparser': 4.3.10
       '@types/koa-session': 5.10.6
-      '@types/uuid': 8.3.4
+      '@types/uuid': 9.0.0
       jest-openapi: 0.14.2
       nock: 13.2.9
       openapi-types: 12.0.0
@@ -118,7 +118,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.2
-      '@faker-js/faker': ^7.4.0
+      '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 2.16.1
       '@graphql-codegen/introspection': 2.2.3
       '@graphql-codegen/typescript': 2.8.5
@@ -129,7 +129,7 @@ importers:
       '@graphql-tools/utils': ^8.13.1
       '@interledger/pay': 0.4.0-alpha.8
       '@interledger/stream-receiver': ^0.3.3-alpha.1
-      '@koa/cors': ^3.1.0
+      '@koa/cors': ^3.4.3
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
       '@types/bcrypt': ^5.0.0
@@ -138,16 +138,16 @@ importers:
       '@types/koa__cors': ^3.3.0
       '@types/koa__router': ^8.0.11
       '@types/koa-bodyparser': ^4.3.7
-      '@types/luxon': ^3.0.0
+      '@types/luxon': ^3.1.0
       '@types/react': ^18.0.26
       '@types/rosie': ^0.0.40
       '@types/tmp': ^0.2.3
-      '@types/uuid': ^8.3.4
+      '@types/uuid': ^9.0.0
       add: ^2.0.6
       ajv: ^8.11.2
       apollo-server: ^3.11.1
       apollo-server-koa: ^3.11.1
-      axios: 0.26.1
+      axios: 0.27.2
       base64url: ^3.0.1
       bcrypt: ^5.0.1
       cross-fetch: ^3.1.4
@@ -168,7 +168,7 @@ importers:
       knex: ^0.95
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
-      luxon: ^3.0.1
+      luxon: ^3.1.1
       nock: ^13.2.9
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
@@ -178,7 +178,7 @@ importers:
       openapi: workspace:../openapi
       openapi-types: ^12.0.0
       pg: ^8.6.0
-      pino: ^8.4.2
+      pino: ^8.8.0
       pino-pretty: ^9.0.1
       raw-body: ^2.4.1
       react: ~18.2.0
@@ -187,25 +187,25 @@ importers:
       tigerbeetle-node: ^0.10.0
       tmp: ^0.2.1
       typescript: ^4.9.4
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
       '@apollo/client': 3.7.2_onqnqwb3ubg5opvemcqf7c2qhy
-      '@faker-js/faker': 7.4.0
+      '@faker-js/faker': 7.6.0
       '@graphql-tools/graphql-file-loader': 7.5.13_graphql@16.6.0
       '@graphql-tools/load': 7.8.8_graphql@16.6.0
       '@graphql-tools/schema': 9.0.12_graphql@16.6.0
       '@graphql-tools/utils': 8.13.1_graphql@16.6.0
       '@interledger/pay': 0.4.0-alpha.8
       '@interledger/stream-receiver': 0.3.3-alpha.1
-      '@koa/cors': 3.3.0
+      '@koa/cors': 3.4.3
       '@koa/router': 12.0.0
       '@poppinss/file-generator': 1.0.2
       '@types/bcrypt': 5.0.0
       add: 2.0.6
       ajv: 8.11.2
       apollo-server-koa: 3.11.1_graphql@16.6.0+koa@2.14.1
-      axios: 0.26.1
+      axios: 0.27.2
       base64url: 3.0.1
       bcrypt: 5.0.1
       extensible-error: 1.0.2
@@ -223,18 +223,18 @@ importers:
       knex: 0.95.15_pg@8.7.3
       koa: 2.14.1
       koa-bodyparser: 4.3.0
-      luxon: 3.0.1
+      luxon: 3.1.1
       objection: 3.0.1_knex@0.95.15
       objection-db-errors: 1.1.2_objection@3.0.1
       oer-utils: 5.1.3-alpha.1
       open-payments: link:../open-payments
       openapi: link:../openapi
       pg: 8.7.3
-      pino: 8.4.2
+      pino: 8.8.0
       pino-pretty: 9.0.1
       raw-body: 2.5.1
       tigerbeetle-node: 0.10.0
-      uuid: 8.3.2
+      uuid: 9.0.0
     devDependencies:
       '@graphql-codegen/cli': 2.16.1_tgu5afi2dtgcjcf3jfpje4ooeq
       '@graphql-codegen/introspection': 2.2.3_graphql@16.6.0
@@ -245,11 +245,11 @@ importers:
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
       '@types/koa-bodyparser': 4.3.7
-      '@types/luxon': 3.0.0
+      '@types/luxon': 3.1.0
       '@types/react': 18.0.26
       '@types/rosie': 0.0.40
       '@types/tmp': 0.2.3
-      '@types/uuid': 8.3.4
+      '@types/uuid': 9.0.0
       apollo-server: 3.11.1_graphql@16.6.0
       cross-fetch: 3.1.5
       ilp-protocol-stream: 2.7.1
@@ -274,10 +274,10 @@ importers:
       '@types/koa-logger': ^3.1.2
       '@types/koa-router': ^7.4.4
       '@types/node': ^18.7.12
-      '@types/uuid': ^8.3.4
+      '@types/uuid': ^9.0.0
       http-message-signatures: ^0.1.2
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
-      jose: ^4.9.0
+      jose: ^4.11.1
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-json: ^2.0.2
@@ -285,17 +285,17 @@ importers:
       koa-router: ^12.0.0
       node-mocks-http: ^1.12.1
       typescript: ^4.9.4
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      jose: 4.9.0
+      jose: 4.11.1
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-json: 2.0.2
       koa-logger: 3.2.1
       koa-router: 12.0.0
-      uuid: 8.3.2
+      uuid: 9.0.0
     devDependencies:
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10
@@ -303,7 +303,7 @@ importers:
       '@types/koa-logger': 3.1.2
       '@types/koa-router': 7.4.4
       '@types/node': 18.11.9
-      '@types/uuid': 8.3.4
+      '@types/uuid': 9.0.0
       node-mocks-http: 1.12.1
       typescript: 4.9.4
 
@@ -318,7 +318,7 @@ importers:
       '@types/node': ^18.7.12
       '@types/react': ^18.0.26
       '@types/react-dom': ^18.0.9
-      '@types/uuid': ^8.3.4
+      '@types/uuid': ^9.0.0
       axios: ^1.1.3
       eslint: ^8.30.0
       graphql: ^16.6.0
@@ -326,7 +326,7 @@ importers:
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^4.9.4
-      uuid: ^8.3.2
+      uuid: ^9.0.0
       yaml: ^2.1.3
     dependencies:
       '@apollo/client': 3.7.2_gdcq4dv6opitr3wbfwyjmanyra
@@ -334,13 +334,13 @@ importers:
       '@remix-run/react': 1.9.0_biqbaboplfbrettd7655fr4n2y
       '@remix-run/serve': 1.9.0_biqbaboplfbrettd7655fr4n2y
       '@types/node': 18.7.12
-      '@types/uuid': 8.3.4
+      '@types/uuid': 9.0.0
       axios: 1.1.3
       graphql: 16.6.0
       http-signature-utils: link:../http-signature-utils
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      uuid: 8.3.2
+      uuid: 9.0.0
       yaml: 2.1.3
     devDependencies:
       '@remix-run/dev': 1.9.0_mkzy6tkjmjsmfnxs5znqfowy5i
@@ -360,16 +360,16 @@ importers:
       nock: ^13.2.9
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
-      pino: ^8.4.2
+      pino: ^8.8.0
       ts-node: ^10.9.1
       typescript: ^4.9.4
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       axios: 1.1.2
       http-message-signatures: 0.1.2
       http-signature-utils: link:../http-signature-utils
       openapi: link:../openapi
-      pino: 8.4.2
+      pino: 8.8.0
     devDependencies:
       '@types/node': 18.7.13
       base64url: 3.0.1
@@ -377,14 +377,14 @@ importers:
       openapi-typescript: 4.5.0
       ts-node: 10.9.1_2ruir5wjsr7guwibcnwysex364
       typescript: 4.9.4
-      uuid: 8.3.2
+      uuid: 9.0.0
 
   packages/openapi:
     specifiers:
       '@apidevtools/json-schema-ref-parser': ^9.1.0
       '@types/jest': ^28.1.8
       '@types/koa': 2.13.5
-      '@types/uuid': ^8.3.4
+      '@types/uuid': ^9.0.0
       ajv: ^8.11.2
       ajv-formats: ^2.1.1
       koa: ^2.14.1
@@ -395,7 +395,7 @@ importers:
       openapi-response-validator: ^12.0.0
       openapi-types: ^12.0.0
       typescript: ^4.9.4
-      uuid: ^8.3.2
+      uuid: ^9.0.0
     dependencies:
       '@apidevtools/json-schema-ref-parser': 9.1.0
       ajv: 8.11.2
@@ -408,11 +408,11 @@ importers:
     devDependencies:
       '@types/jest': 28.1.8
       '@types/koa': 2.13.5
-      '@types/uuid': 8.3.4
+      '@types/uuid': 9.0.0
       koa: 2.14.1
       node-mocks-http: 1.12.1
       typescript: 4.9.4
-      uuid: 8.3.2
+      uuid: 9.0.0
 
 packages:
 
@@ -2933,8 +2933,8 @@ packages:
       - supports-color
     dev: true
 
-  /@faker-js/faker/7.4.0:
-    resolution: {integrity: sha512-xDd3Tvkt2jgkx1LkuwwxpNBy/Oe+LkZBTwkgEFTiWpVSZgQ5sc/LenbHKRHbFl0dq/KFeeq/szyyPtpJRKY0fg==}
+  /@faker-js/faker/7.6.0:
+    resolution: {integrity: sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
 
   /@gar/promisify/1.1.3:
@@ -3869,8 +3869,8 @@ packages:
     resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
     dev: false
 
-  /@koa/cors/3.3.0:
-    resolution: {integrity: sha512-lzlkqLlL5Ond8jb6JLnVVDmD2OPym0r5kvZlMgAWiS9xle+Q5ulw1T358oW+RVguxUkANquZQz82i/STIRmsqQ==}
+  /@koa/cors/3.4.3:
+    resolution: {integrity: sha512-WPXQUaAeAMVaLTEFpoq3T2O1C+FstkjJnDQqy95Ck1UdILajsRhu6mhJ8H2f4NFPRBoCNN+qywTJfq/gGki5mw==}
     engines: {node: '>= 8.0.0'}
     dependencies:
       vary: 1.1.2
@@ -4800,8 +4800,8 @@ packages:
   /@types/long/4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
 
-  /@types/luxon/3.0.0:
-    resolution: {integrity: sha512-Lx+EZoJxUKw4dp8uei9XiUVNlgkYmax5+ovqt6Xf3LzJOnWhlfJw/jLBmqfGVwOP/pDr4HT8bI1WtxK0IChMLw==}
+  /@types/luxon/3.1.0:
+    resolution: {integrity: sha512-gCd/HcCgjqSxfMrgtqxCgYk/22NBQfypwFUG7ZAyG/4pqs51WLTcUzVp1hqTbieDYeHS3WoVEh2Yv/2l+7B0Vg==}
     dev: true
 
   /@types/mdast/3.0.10:
@@ -4964,8 +4964,8 @@ packages:
     resolution: {integrity: sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==}
     dev: true
 
-  /@types/uuid/8.3.4:
-    resolution: {integrity: sha512-c/I8ZRb51j+pYGAu5CrFMRxqZ2ke4y2grEBO5AUjgSkSk+qT2Ea+OdWElz/OiMf5MNpn2b17kuVBwZLQJXzihw==}
+  /@types/uuid/9.0.0:
+    resolution: {integrity: sha512-kr90f+ERiQtKWMz5rP32ltJ/BtULDI5RVO0uavn1HQUOwjx0R1h0rnDYNL0CepF1zL5bSY6FISAfd9tOdDhU5Q==}
 
   /@types/ws/8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
@@ -5419,7 +5419,7 @@ packages:
       graphql: ^15.3.0 || ^16.0.0
       koa: ^2.13.1
     dependencies:
-      '@koa/cors': 3.3.0
+      '@koa/cors': 3.4.3
       '@types/accepts': 1.3.5
       '@types/koa': 2.13.5
       '@types/koa__cors': 3.3.0
@@ -5731,14 +5731,6 @@ packages:
     transitivePeerDependencies:
       - debug
     dev: true
-
-  /axios/0.26.1:
-    resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
-    dependencies:
-      follow-redirects: 1.15.1
-    transitivePeerDependencies:
-      - debug
-    dev: false
 
   /axios/0.27.2:
     resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
@@ -9921,8 +9913,8 @@ packages:
       - ts-node
     dev: true
 
-  /jose/4.9.0:
-    resolution: {integrity: sha512-RgaqEOZLkVO+ViN3KkN44XJt9g7+wMveUv59sVLaTxONcUPc8ZpfqOCeLphVBZyih2dgkvZ0Ap1CNcokvY7Uyw==}
+  /jose/4.11.1:
+    resolution: {integrity: sha512-YRv4Tk/Wlug8qicwqFNFVEZSdbROCHRAC6qu/i0dyNKr5JQdoa2pIGoS04lLO/jXQX7Z9omoNewYIVIxqZBd9Q==}
     dev: false
 
   /joycon/3.1.1:
@@ -10548,8 +10540,8 @@ packages:
     resolution: {integrity: sha512-EIRtP1GrSJny0dqb50QXRUNBxHJhcpxHC++M5tD7RYbvLLn5KVWKsbyswSSqDuU15UFi3bgTQIY8nhDMeF6aDQ==}
     engines: {node: '>=12'}
 
-  /luxon/3.0.1:
-    resolution: {integrity: sha512-hF3kv0e5gwHQZKz4wtm4c+inDtyc7elkanAsBq+fundaCdUBNJB1dHEGUZIM6SfSBUlbVFduPwEtNjFK8wLtcw==}
+  /luxon/3.1.1:
+    resolution: {integrity: sha512-Ah6DloGmvseB/pX1cAmjbFvyU/pKuwQMQqz7d0yvuDlVYLTs2WeDHQMpC8tGjm1da+BriHROW/OEIT/KfYg6xw==}
     engines: {node: '>=12'}
     dev: false
 
@@ -12066,8 +12058,8 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino/8.4.2:
-    resolution: {integrity: sha512-PlXDeGhJZfAuVay+wtlS02s5j8uisQveZExYdAm9MwwxUQSz9R7Q78XtjM2tTa4sa5KJmygimZjZxXXuHgV6ew==}
+  /pino/8.8.0:
+    resolution: {integrity: sha512-cF8iGYeu2ODg2gIwgAHcPrtR63ILJz3f7gkogaHC/TXVVXxZgInmNYiIpDYEwgEkxZti2Se6P2W2DxlBIZe6eQ==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
@@ -14245,6 +14237,7 @@ packages:
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
     hasBin: true
+    dev: false
 
   /uuid/9.0.0:
     resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
