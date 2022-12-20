@@ -154,8 +154,10 @@ async function create(
       interactId: interact ? v4() : undefined,
       interactRef: interact ? v4() : undefined,
       interactNonce: interact
-        ? crypto.randomBytes(8).toString('hex').toUpperCase()
-        : undefined, // TODO: factor out nonce generation
+        ? // TODO: factor out nonce generation
+          // https://github.com/interledger/rafiki/issues/887
+          crypto.randomBytes(8).toString('hex').toUpperCase()
+        : undefined,
       continueId: v4(),
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
     })

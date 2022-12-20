@@ -72,7 +72,6 @@ export interface AppServices {
   knex: Promise<Knex>
   closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
-  // TODO: Add GNAP-related services
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
   accessTokenRoutes: Promise<AccessTokenRoutes>
@@ -123,7 +122,6 @@ export class App {
       session(
         {
           key: 'sessionId',
-          // TODO: make this time shorter?
           maxAge: 60 * 1000,
           signed: true
         },
@@ -285,7 +283,6 @@ export class App {
     )
 
     /* Front Channel Routes */
-    // TODO: update front-channel routes to have /frontend prefix here and in openapi spec
 
     // Interaction start
     this.publicRouter.get(

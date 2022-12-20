@@ -274,7 +274,6 @@ async function startInteraction(
     ctx.throw(401, { error: 'unknown_request' })
   }
 
-  // TODO: also establish session in redis with short expiry
   ctx.session.nonce = grant.interactNonce
 
   const interactionUrl = new URL(config.identityServerDomain)
@@ -287,11 +286,11 @@ async function startInteraction(
 }
 
 // TODO: allow idp to specify the reason for rejection
+// https://github.com/interledger/rafiki/issues/886
 async function handleGrantChoice(
   deps: ServiceDependencies,
   ctx: ChooseContext
 ): Promise<void> {
-  // TODO: check redis for a session
   const { id: interactId, nonce, choice } = ctx.params
   const { config, grantService } = deps
 
