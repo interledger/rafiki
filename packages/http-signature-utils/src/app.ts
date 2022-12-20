@@ -50,8 +50,8 @@ router.post('/', async (ctx: AppContext<Headers>): Promise<void> => {
 })
 
 // Middlewares
-app.use(logger())
 app.use(json())
+app.use(logger())
 app.use(bodyParser())
 
 // Routes
