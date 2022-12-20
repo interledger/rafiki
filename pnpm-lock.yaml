@@ -180,7 +180,7 @@ importers:
       pg: ^8.6.0
       pino: ^8.8.0
       pino-pretty: ^9.1.1
-      raw-body: ^2.4.1
+      raw-body: ^2.5.1
       react: ~18.2.0
       rosie: ^2.1.0
       testcontainers: ^8.16.0
