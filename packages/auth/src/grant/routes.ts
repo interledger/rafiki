@@ -280,11 +280,11 @@ async function startInteraction(
 }
 
 // TODO: allow idp to specify the reason for rejection
+// https://github.com/interledger/rafiki/issues/886
 async function handleGrantChoice(
   deps: ServiceDependencies,
   ctx: ChooseContext
 ): Promise<void> {
-  // TODO: check redis for a session
   const { id: interactId, nonce, choice } = ctx.params
   const { config, grantService } = deps
 
