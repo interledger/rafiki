@@ -33,7 +33,10 @@ export async function createOpenAPI(spec: string): Promise<OpenAPI> {
 // export interface PathsObject<T extends {} = {}, P extends {} = {}> {
 //   [pattern: string]: (PathItemObject<T> & P) | undefined;
 // }
-interface Paths<T = unknown, P = unknown> {
+interface Paths<
+  T extends Record<string, unknown> = Record<string, unknown>,
+  P extends Record<string, unknown> = Record<string, unknown>
+> {
   [pattern: string]: OpenAPIV3_1.PathItemObject<T> & P
 }
 
