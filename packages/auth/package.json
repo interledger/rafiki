@@ -32,7 +32,7 @@
     "open-payments": "workspace:*",
     "openapi": "workspace:../openapi",
     "pg": "^8.6.0",
-    "pino": "^8.4.2",
+    "pino": "^8.8.0",
     "pino-pretty": "^9.0.1",
     "testcontainers": "^8.16.0",
     "uuid": "^8.3.2"
