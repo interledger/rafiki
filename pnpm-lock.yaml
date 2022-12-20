@@ -46,7 +46,7 @@ importers:
   packages/auth:
     specifiers:
       '@adonisjs/fold': ^8.2.0
-      '@faker-js/faker': ^7.4.0
+      '@faker-js/faker': ^7.6.0
       '@koa/cors': ^3.3.0
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.8
@@ -101,7 +101,7 @@ importers:
       testcontainers: 8.16.0
       uuid: 8.3.2
     devDependencies:
-      '@faker-js/faker': 7.4.0
+      '@faker-js/faker': 7.6.0
       '@types/jest': 28.1.8
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.7
@@ -118,7 +118,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.2
-      '@faker-js/faker': ^7.4.0
+      '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 2.16.1
       '@graphql-codegen/introspection': 2.2.3
       '@graphql-codegen/typescript': 2.8.5
@@ -187,7 +187,7 @@ importers:
     dependencies:
       '@adonisjs/fold': 8.2.0
       '@apollo/client': 3.7.2_onqnqwb3ubg5opvemcqf7c2qhy
-      '@faker-js/faker': 7.4.0
+      '@faker-js/faker': 7.6.0
       '@graphql-tools/graphql-file-loader': 7.5.13_graphql@16.6.0
       '@graphql-tools/load': 7.8.8_graphql@16.6.0
       '@graphql-tools/schema': 9.0.12_graphql@16.6.0
@@ -2595,8 +2595,8 @@ packages:
       - supports-color
     dev: true
 
-  /@faker-js/faker/7.4.0:
-    resolution: {integrity: sha512-xDd3Tvkt2jgkx1LkuwwxpNBy/Oe+LkZBTwkgEFTiWpVSZgQ5sc/LenbHKRHbFl0dq/KFeeq/szyyPtpJRKY0fg==}
+  /@faker-js/faker/7.6.0:
+    resolution: {integrity: sha512-XK6BTq1NDMo9Xqw/YkYyGjSsg44fbNwYRx7QK2CuoQgyy+f1rrTDHoExVM5PsyXCtfl2vs2vVJ0MN0yN6LppRw==}
     engines: {node: '>=14.0.0', npm: '>=6.0.0'}
 
   /@gar/promisify/1.1.3:
