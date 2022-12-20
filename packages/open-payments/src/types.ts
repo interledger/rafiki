@@ -2,12 +2,12 @@ import {
   components as RSComponents,
   paths as RSPaths,
   operations as RSOperations
-} from './generated/resource-server-types'
+} from './openapi/generated/resource-server-types'
 import {
   components as ASComponents,
   paths as ASPaths,
   operations as ASOperations
-} from './generated/auth-server-types'
+} from './openapi/generated/auth-server-types'
 
 export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
   path as string

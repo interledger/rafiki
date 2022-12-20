@@ -25,12 +25,15 @@ import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
 import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
-import { createAuthMiddleware } from './open_payments/auth/middleware'
-import { AuthService } from './open_payments/auth/service'
+import {
+  createTokenIntrospectionMiddleware,
+  httpsigMiddleware
+} from './open_payments/auth/middleware'
+import { AuthService, TokenInfo } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { PaymentPointerKeyRoutes } from './paymentPointerKey/routes'
+import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
@@ -46,7 +49,7 @@ import { SessionService } from './session/service'
 import { addDirectivesToSchema } from './graphql/directives'
 import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
-import { PaymentPointerKeyService } from './paymentPointerKey/service'
+import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
@@ -77,6 +80,19 @@ export type AppRequest<ParamsT extends string = string> = Omit<
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
+  clientId?: string
+}
+
+type HttpSigHeaders = Record<'signature' | 'signature-input', string>
+
+type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
+  headers: HttpSigHeaders
+}
+
+export type HttpSigContext = AppContext & {
+  request: HttpSigRequest
+  headers: HttpSigHeaders
+  grant: TokenInfo
   clientId?: string
 }
 
@@ -339,10 +355,11 @@ export class App {
                 method
               }
             ),
-            createAuthMiddleware({
+            createTokenIntrospectionMiddleware({
               type,
               action
             }),
+            httpsigMiddleware,
             route
           )
         }

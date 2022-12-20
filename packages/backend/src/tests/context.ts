@@ -15,6 +15,9 @@ export function createContext<T extends AppContext>(
   if (reqOpts.query) {
     ctx.request.query = reqOpts.query
   }
+  if (reqOpts.body !== undefined) {
+    ctx.request.body = reqOpts.body
+  }
   ctx.closeEmitter = new EventEmitter()
   return ctx as T
 }

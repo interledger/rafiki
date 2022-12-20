@@ -1,5 +1,6 @@
 import { KeyLike } from 'crypto'
 import { createOpenAPI, OpenAPI } from 'openapi'
+import path from 'path'
 import createLogger, { Logger } from 'pino'
 import config from '../config'
 import {
@@ -50,10 +51,10 @@ const createDeps = async (
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
   const resourceServerOpenApi = await createOpenAPI(
-    config.OPEN_PAYMENTS_RS_OPEN_API_URL
+    path.resolve(__dirname, '../openapi/resource-server.yaml')
   )
   const authServerOpenApi = await createOpenAPI(
-    config.OPEN_PAYMENTS_AS_OPEN_API_URL
+    path.resolve(__dirname, '../openapi/auth-server.yaml')
   )
   const logger = args?.logger ?? createLogger()
   return {
