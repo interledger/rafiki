@@ -59,7 +59,7 @@ function getSigInputKeyId(sigInput: string): string | undefined {
 }
 
 export async function grantContinueHttpsigMiddleware(
-  ctx: AppContext,
+  ctx: ContinueContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
@@ -70,8 +70,7 @@ export async function grantContinueHttpsigMiddleware(
     'GNAP ',
     ''
   ) as string
-  const { interact_ref: interactRef } = ctx.request
-    .body as ContinueContext['request']['body']
+  const { interact_ref: interactRef } = ctx.request.body
 
   const logger = await ctx.container.use('logger')
   logger.info(
@@ -106,14 +105,14 @@ export async function grantContinueHttpsigMiddleware(
 }
 
 export async function grantInitiationHttpsigMiddleware(
-  ctx: AppContext,
+  ctx: CreateContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
-  const { body } = ctx.request as CreateContext['request']
+  const { body } = ctx.request
 
   const sigInput = ctx.headers['signature-input'] as string
   ctx.clientKeyId = getSigInputKeyId(sigInput)

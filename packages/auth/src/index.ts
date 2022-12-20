@@ -140,7 +140,7 @@ export function initIocContainer(
   container.singleton(
     'accessTokenRoutes',
     async (deps: IocContract<AppServices>) => {
-      return await createAccessTokenRoutes({
+      return createAccessTokenRoutes({
         config: await deps.use('config'),
         logger: await deps.use('logger'),
         accessTokenService: await deps.use('accessTokenService'),
