@@ -47,7 +47,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@faker-js/faker': ^7.6.0
-      '@koa/cors': ^3.3.0
+      '@koa/cors': ^3.4.3
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.8
       '@types/koa': 2.13.5
@@ -80,7 +80,7 @@ importers:
       uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@koa/cors': 3.3.0
+      '@koa/cors': 3.4.3
       '@koa/router': 12.0.0
       ajv: 8.11.2
       axios: 0.27.2
@@ -128,7 +128,7 @@ importers:
       '@graphql-tools/schema': ^9.0.12
       '@interledger/pay': 0.4.0-alpha.8
       '@interledger/stream-receiver': ^0.3.3-alpha.1
-      '@koa/cors': ^3.1.0
+      '@koa/cors': ^3.4.3
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
       '@types/jest': ^28.1.8
@@ -193,7 +193,7 @@ importers:
       '@graphql-tools/schema': 9.0.12_graphql@16.6.0
       '@interledger/pay': 0.4.0-alpha.8
       '@interledger/stream-receiver': 0.3.3-alpha.1
-      '@koa/cors': 3.3.0
+      '@koa/cors': 3.4.3
       '@koa/router': 12.0.0
       '@poppinss/file-generator': 1.0.2
       add: 2.0.6
@@ -3537,8 +3537,8 @@ packages:
     resolution: {integrity: sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==}
     dev: false
 
-  /@koa/cors/3.3.0:
-    resolution: {integrity: sha512-lzlkqLlL5Ond8jb6JLnVVDmD2OPym0r5kvZlMgAWiS9xle+Q5ulw1T358oW+RVguxUkANquZQz82i/STIRmsqQ==}
+  /@koa/cors/3.4.3:
+    resolution: {integrity: sha512-WPXQUaAeAMVaLTEFpoq3T2O1C+FstkjJnDQqy95Ck1UdILajsRhu6mhJ8H2f4NFPRBoCNN+qywTJfq/gGki5mw==}
     engines: {node: '>= 8.0.0'}
     dependencies:
       vary: 1.1.2
@@ -5035,7 +5035,7 @@ packages:
       graphql: ^15.3.0 || ^16.0.0
       koa: ^2.13.1
     dependencies:
-      '@koa/cors': 3.3.0
+      '@koa/cors': 3.4.3
       '@types/accepts': 1.3.5
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.7
