@@ -143,19 +143,12 @@ async function revoke(
   id: string,
   tokenValue: string
 ): Promise<void> {
-  const trx = await AccessToken.startTransaction()
-  try {
-    await AccessToken.query(trx)
-      .findOne({
-        managementId: id,
-        value: tokenValue
-      })
-      .delete()
-
-    await trx.commit()
-  } catch {
-    await trx.rollback()
-  }
+  await AccessToken.query()
+    .findOne({
+      managementId: id,
+      value: tokenValue
+    })
+    .delete()
 }
 
 async function createAccessToken(
@@ -176,43 +169,41 @@ async function rotate(
   managementId: string,
   tokenValue: string
 ): Promise<Rotation> {
-  const trx = await AccessToken.startTransaction()
   try {
-    const oldToken = await AccessToken.query(trx)
-      .delete()
-      .returning('*')
-      .findOne({
-        managementId,
-        value: tokenValue
-      })
-    if (oldToken) {
-      const token = await AccessToken.query(trx).insertAndFetch({
-        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        grantId: oldToken.grantId,
-        expiresIn: oldToken.expiresIn,
-        managementId: v4()
-      })
-      const access = await Access.query(trx).where({
-        grantId: token.grantId
-      })
+    return await AccessToken.transaction(async (trx) => {
+      const oldToken = await AccessToken.query(trx)
+        .delete()
+        .returning('*')
+        .findOne({
+          managementId,
+          value: tokenValue
+        })
+      if (oldToken) {
+        const token = await AccessToken.query(trx).insertAndFetch({
+          value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          grantId: oldToken.grantId,
+          expiresIn: oldToken.expiresIn,
+          managementId: v4()
+        })
+        const access = await Access.query(trx).where({
+          grantId: token.grantId
+        })
 
-      await trx.commit()
-      return {
-        success: true,
-        access,
-        value: token.value,
-        managementId: token.managementId,
-        expiresIn: token.expiresIn
+        return {
+          success: true,
+          access,
+          value: token.value,
+          managementId: token.managementId,
+          expiresIn: token.expiresIn
+        }
+      } else {
+        return {
+          success: false,
+          error: new Error('token not found')
+        }
       }
-    } else {
-      await trx.rollback()
-      return {
-        success: false,
-        error: new Error('token not found')
-      }
-    }
+    })
   } catch (error) {
-    await trx.rollback()
     return {
       success: false,
       error
