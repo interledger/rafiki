@@ -238,12 +238,30 @@ describe('Access Token Routes', (): void => {
       url = `/token/${managementId}`
     })
 
-    test('Returns status 204 even if token does not exist', async (): Promise<void> => {
+    test('Returns status 204 even if management id does not exist', async (): Promise<void> => {
       managementId = v4()
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json'
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
+          url: `/token/${managementId}`,
+          method
+        },
+        { id: managementId }
+      )
+
+      await accessTokenRoutes.revoke(ctx)
+      expect(ctx.response.status).toBe(204)
+    })
+
+    test('Returns status 204 even if token does not exist', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${v4()}`
           },
           url: `/token/${managementId}`,
           method
@@ -259,7 +277,8 @@ describe('Access Token Routes', (): void => {
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json'
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
           },
           url,
           method
@@ -281,7 +300,8 @@ describe('Access Token Routes', (): void => {
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json'
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
           },
           url,
           method
@@ -325,11 +345,33 @@ describe('Access Token Routes', (): void => {
       jestOpenAPI(openApi.authServerSpec)
     })
 
-    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+    test('Cannot rotate nonexistent token management id', async (): Promise<void> => {
       managementId = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
+          method: 'POST',
+          url: `/token/${managementId}`
+        },
+        { id: managementId }
+      )
+
+      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
+        status: 404,
+        message: 'token not found'
+      })
+    })
+
+    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${v4()}`
+          },
           method: 'POST',
           url: `/token/${managementId}`
         },
@@ -345,7 +387,10 @@ describe('Access Token Routes', (): void => {
     test('Can rotate token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
           url: `/token/${token.id}`,
           method: 'POST'
         },
@@ -376,7 +421,10 @@ describe('Access Token Routes', (): void => {
     test('Can rotate an expired token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
           url: `/token/${token.id}`,
           method: 'POST'
         },
