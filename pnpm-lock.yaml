@@ -390,7 +390,7 @@ importers:
       koa: ^2.14.1
       node-mocks-http: ^1.12.1
       openapi-default-setter: ^12.0.0
-      openapi-request-coercer: ^12.0.0
+      openapi-request-coercer: ^12.1.0
       openapi-request-validator: ^12.0.0
       openapi-response-validator: ^12.0.0
       openapi-types: ^12.0.0
@@ -401,7 +401,7 @@ importers:
       ajv: 8.11.2
       ajv-formats: 2.1.1_ajv@8.11.2
       openapi-default-setter: 12.0.0
-      openapi-request-coercer: 12.0.0
+      openapi-request-coercer: 12.1.0
       openapi-request-validator: 12.0.0
       openapi-response-validator: 12.0.0
       openapi-types: 12.0.0
@@ -11296,13 +11296,13 @@ packages:
   /openapi-jsonschema-parameters/12.0.0:
     resolution: {integrity: sha512-OqPabvo3qEUpgG2blD+CqAUNC+/RNYsUKEqY3vSAu2syxrabRNxtaagLhA5WdieVQPLFuOlSX13TFUu8R/+kbA==}
     dependencies:
-      openapi-types: 12.0.0
+      openapi-types: 12.1.0
     dev: false
 
-  /openapi-request-coercer/12.0.0:
-    resolution: {integrity: sha512-iWgPUfyrGT5C6MNYnL61YJygwymqwVF57K6Ny9nZC41E14JaC+Wxbw1Q5XsNDi8Q+PolmYO2108RxStrk9wKyA==}
+  /openapi-request-coercer/12.1.0:
+    resolution: {integrity: sha512-fcZSwRsE/L5coxLhCUCa7LMFBJl8lVbihkR8yXbgLr6jAKHXsKGDB9UWVyZCkJecdROSNwUHmBsnN9kScN27Aw==}
     dependencies:
-      openapi-types: 12.0.0
+      openapi-types: 12.1.0
       ts-log: 2.2.4
     dev: false
 
@@ -11342,6 +11342,10 @@ packages:
 
   /openapi-types/12.0.0:
     resolution: {integrity: sha512-6Wd9k8nmGQHgCbehZCP6wwWcfXcvinhybUTBatuhjRsCxUIujuYFZc9QnGeae75CyHASewBtxs0HX/qwREReUw==}
+
+  /openapi-types/12.1.0:
+    resolution: {integrity: sha512-XpeCy01X6L5EpP+6Hc3jWN7rMZJ+/k1lwki/kTmWzbVhdPie3jd5O2ZtedEx8Yp58icJ0osVldLMrTB/zslQXA==}
+    dev: false
 
   /openapi-types/9.3.1:
     resolution: {integrity: sha512-/Yvsd2D7miYB4HLJ3hOOS0+vnowQpaT75FsHzr/y5M9P4q9bwa7RcbW2YdH6KZBn8ceLbKGnHxMZ1CHliGHUFw==}
