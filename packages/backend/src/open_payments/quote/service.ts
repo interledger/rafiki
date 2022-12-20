@@ -61,28 +61,36 @@ async function getQuote(
   return Quote.query(deps.knex).get(options).withGraphFetched('asset')
 }
 
-export interface CreateQuoteOptions {
+interface QuoteOptionsBase {
   paymentPointerId: string
-  sendAmount?: Amount
-  receiveAmount?: Amount
   receiver: string
   clientId?: string
 }
+
+interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
+  sendAmount: Amount
+}
+
+interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
+  receiveAmount: Amount
+}
+
+export type CreateQuoteOptions =
+  | QuoteOptionsBase
+  | QuoteOptionsWithSendAmount
+  | QuoteOptionsWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
-  if (options.sendAmount && options.receiveAmount) {
-    return QuoteError.InvalidAmount
-  }
   const paymentPointer = await deps.paymentPointerService.get(
     options.paymentPointerId
   )
   if (!paymentPointer) {
     return QuoteError.UnknownPaymentPointer
   }
-  if (options.sendAmount) {
+  if ('sendAmount' in options) {
     if (
       options.sendAmount.value <= BigInt(0) ||
       options.sendAmount.assetCode !== paymentPointer.asset.code ||
@@ -90,7 +98,8 @@ async function createQuote(
     ) {
       return QuoteError.InvalidAmount
     }
-  } else if (options.receiveAmount) {
+  }
+  if ('receiveAmount' in options) {
     if (options.receiveAmount.value <= BigInt(0)) {
       return QuoteError.InvalidAmount
     }
@@ -135,7 +144,7 @@ async function createQuote(
         .withGraphFetched('asset')
 
       let maxReceiveAmountValue: bigint | undefined
-      if (options.sendAmount) {
+      if ('sendAmount' in options) {
         const receivingPaymentValue = receiver.incomingAmount
           ? receiver.incomingAmount.value - receiver.receivedAmount.value
           : undefined
@@ -172,7 +181,7 @@ export async function resolveReceiver(
   if (!receiver) {
     throw QuoteError.InvalidReceiver
   }
-  if (options.receiveAmount) {
+  if ('receiveAmount' in options) {
     if (
       options.receiveAmount.assetScale !== receiver.assetScale ||
       options.receiveAmount.assetCode !== receiver.assetCode
@@ -186,7 +195,8 @@ export async function resolveReceiver(
         throw QuoteError.InvalidAmount
       }
     }
-  } else if (!options.sendAmount && !receiver.incomingAmount) {
+  }
+  if ('sendAmount' in options && !receiver.incomingAmount) {
     throw QuoteError.InvalidReceiver
   }
   return receiver
