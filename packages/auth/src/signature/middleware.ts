@@ -8,6 +8,7 @@ import {
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
+import { ContinueContext, CreateContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -69,7 +70,8 @@ export async function grantContinueHttpsigMiddleware(
     'GNAP ',
     ''
   ) as string
-  const { interact_ref: interactRef } = ctx.request.body
+  const { interact_ref: interactRef } = ctx.request
+    .body as ContinueContext['request']['body']
 
   const logger = await ctx.container.use('logger')
   logger.info(
@@ -111,7 +113,7 @@ export async function grantInitiationHttpsigMiddleware(
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
-  const { body } = ctx.request
+  const { body } = ctx.request as CreateContext['request']
 
   const sigInput = ctx.headers['signature-input'] as string
   ctx.clientKeyId = getSigInputKeyId(sigInput)

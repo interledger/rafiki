@@ -1,10 +1,9 @@
 import { Server } from 'http'
 import { EventEmitter } from 'events'
-
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
 import Koa, { DefaultState, DefaultContext } from 'koa'
-import { koaBody as bodyParser } from 'koa-body'
+import bodyParser from 'koa-bodyparser'
 import session from 'koa-session'
 import cors from '@koa/cors'
 import { Logger } from 'pino'
@@ -206,7 +205,7 @@ export class App {
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
     // Grant Initiation
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, CreateContext>(
       '/',
       createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
         path: '/',
@@ -219,7 +218,7 @@ export class App {
     )
 
     // Grant Continue
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, ContinueContext>(
       '/continue/:id',
       createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
@@ -259,7 +258,7 @@ export class App {
 
     /* AS <-> RS Routes */
     // Token Introspection
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, IntrospectContext>(
       '/introspect',
       createValidatorMiddleware<IntrospectContext>(
         openApi.tokenIntrospectionSpec,
