@@ -147,7 +147,7 @@ importers:
       ajv: ^8.11.2
       apollo-server: ^3.11.1
       apollo-server-koa: ^3.11.1
-      axios: 0.26.1
+      axios: 0.27.2
       base64url: ^3.0.1
       bcrypt: ^5.0.1
       cross-fetch: ^3.1.4
@@ -205,7 +205,7 @@ importers:
       add: 2.0.6
       ajv: 8.11.2
       apollo-server-koa: 3.11.1_graphql@16.6.0+koa@2.14.1
-      axios: 0.26.1
+      axios: 0.27.2
       base64url: 3.0.1
       bcrypt: 5.0.1
       extensible-error: 1.0.2
@@ -5386,14 +5386,6 @@ packages:
     transitivePeerDependencies:
       - debug
     dev: true
-
-  /axios/0.26.1:
-    resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
-    dependencies:
-      follow-redirects: 1.15.1
-    transitivePeerDependencies:
-      - debug
-    dev: false
 
   /axios/0.27.2:
     resolution: {integrity: sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==}
