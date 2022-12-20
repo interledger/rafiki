@@ -31,6 +31,7 @@ export function createContext(
   )
   const ctx = koa.createContext(req, res)
   ctx.params = params
+  ctx.query = reqOpts.query
   ctx.session = { ...req.session }
   ctx.closeEmitter = new EventEmitter()
   ctx.container = container
