@@ -33,7 +33,7 @@
     "openapi": "workspace:../openapi",
     "pg": "^8.6.0",
     "pino": "^8.8.0",
-    "pino-pretty": "^9.0.1",
+    "pino-pretty": "^9.1.1",
     "testcontainers": "^8.16.0",
     "uuid": "^9.0.0"
   },
