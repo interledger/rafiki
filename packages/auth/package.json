@@ -38,7 +38,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "@faker-js/faker": "^7.4.0",
+    "@faker-js/faker": "^7.6.0",
     "@types/jest": "^28.1.8",
     "@types/koa": "2.13.5",
     "@types/koa-bodyparser": "^4.3.7",
