@@ -53,7 +53,7 @@ importers:
       '@types/koa': 2.13.5
       '@types/koa__cors': ^3.3.0
       '@types/koa__router': ^8.0.11
-      '@types/koa-bodyparser': 4.3.10
+      '@types/koa-bodyparser': ^4.3.10
       '@types/koa-session': ^5.10.6
       '@types/uuid': ^8.3.4
       ajv: ^8.11.2
@@ -82,7 +82,6 @@ importers:
       '@adonisjs/fold': 8.2.0
       '@koa/cors': 3.3.0
       '@koa/router': 12.0.0
-      '@types/koa-bodyparser': 4.3.10
       ajv: 8.11.2
       axios: 0.27.2
       http-signature-utils: link:../http-signature-utils
@@ -107,6 +106,7 @@ importers:
       '@types/koa': 2.13.5
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 8.0.11
+      '@types/koa-bodyparser': 4.3.10
       '@types/koa-session': 5.10.6
       '@types/uuid': 8.3.4
       jest-openapi: 0.14.2
@@ -4721,6 +4721,7 @@ packages:
     resolution: {integrity: sha512-6ae05pjhmrmGhUR8GYD5qr5p9LTEMEGfGXCsK8VaSL+totwigm8+H/7MHW7K4854CMeuwRAubT8qcc/EagaeIA==}
     dependencies:
       '@types/koa': 2.13.5
+    dev: true
 
   /@types/koa-bodyparser/4.3.7:
     resolution: {integrity: sha512-21NhEp7LjZm4zbNV5alHHmrNY4J+S7B8lYTO6CzRL8ShTMnl20Gd14dRgVhAxraLaW5iZMofox+BycbuiDvj2Q==}
