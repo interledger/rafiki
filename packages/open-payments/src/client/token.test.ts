@@ -45,7 +45,7 @@ describe('token', (): void => {
         .spyOn(openApi, 'createResponseValidator')
         .mockImplementation(mockResponseValidator as any)
 
-      const getSpy = jest
+      const postSpy = jest
         .spyOn(requestors, 'post')
         .mockResolvedValueOnce(mockedAccessToken)
 
@@ -53,7 +53,7 @@ describe('token', (): void => {
         url,
         accessToken
       })
-      expect(getSpy).toHaveBeenCalledWith(
+      expect(postSpy).toHaveBeenCalledWith(
         {
           axiosInstance,
           logger
@@ -79,7 +79,7 @@ describe('token', (): void => {
         url,
         accessToken
       })
-      expect(getSpy).toHaveBeenCalledWith(
+      expect(deleteSpy).toHaveBeenCalledWith(
         {
           axiosInstance,
           logger
@@ -146,9 +146,7 @@ describe('token', (): void => {
       const accessToken = mockAccessToken()
 
       const manageUrl = new URL(accessToken.access_token.manage)
-      const scope = nock(manageUrl.origin)
-        .delete(manageUrl.pathname)
-        .reply(204)
+      const scope = nock(manageUrl.origin).delete(manageUrl.pathname).reply(204)
 
       const result = await revokeToken(
         {
@@ -172,7 +170,7 @@ describe('token', (): void => {
       const manageUrl = new URL(accessToken.access_token.manage)
       const scope = nock(manageUrl.origin)
         .delete(manageUrl.pathname)
-        .reply(200, accessToken)
+        .reply(204, accessToken)
 
       await expect(() =>
         revokeToken(
