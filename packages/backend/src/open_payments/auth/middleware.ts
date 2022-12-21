@@ -49,26 +49,35 @@ export function createTokenIntrospectionMiddleware({
       }
       // TODO
       // https://github.com/interledger/rafiki/issues/835
-      const access = tokenInfo.access.find(
-        (access) =>
-          access.type === type &&
-          (!access.identifier ||
-            access.identifier === ctx.paymentPointer.url) &&
-          access.actions.find((tokenAction) => {
-            if (tokenAction === action) {
-              // Unless the relevant grant action is ReadAll/ListAll add the
-              // clientId to ctx for Read/List filtering
-              ctx.clientId = tokenInfo.client_id
-              return true
-            }
-            return (
-              (action === AccessAction.Read &&
-                tokenAction === AccessAction.ReadAll) ||
-              (action === AccessAction.List &&
-                tokenAction === AccessAction.ListAll)
-            )
-          })
-      )
+      const access = tokenInfo.access.find((access) => {
+        if (
+          access.type !== type ||
+          (access.identifier && access.identifier !== ctx.paymentPointer.url)
+        ) {
+          return false
+        }
+        if (
+          action === AccessAction.Read &&
+          access.actions.includes(AccessAction.ReadAll)
+        ) {
+          return true
+        }
+        if (
+          action === AccessAction.List &&
+          access.actions.includes(AccessAction.ListAll)
+        ) {
+          return true
+        }
+        return access.actions.find((tokenAction) => {
+          if (tokenAction === action) {
+            // Unless the relevant grant action is ReadAll/ListAll add the
+            // clientId to ctx for Read/List filtering
+            ctx.clientId = tokenInfo.client_id
+            return true
+          }
+          return false
+        })
+      })
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
