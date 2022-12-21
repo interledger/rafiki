@@ -15,6 +15,10 @@ export function accessToBody(access: Access) {
   )
 }
 
-export function generateNonceOrToken(): string {
+export function generateNonce(): string {
   return crypto.randomBytes(8).toString('hex').toUpperCase()
+}
+
+export function generateToken(): string {
+  return crypto.randomBytes(10).toString('hex').toUpperCase()
 }

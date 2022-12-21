@@ -2,7 +2,7 @@ import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
-import { generateNonceOrToken } from '../shared/utils'
+import { generateNonce, generateToken } from '../shared/utils'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -138,9 +138,9 @@ async function create(
       clientKeyId,
       interactId: interact ? v4() : undefined,
       interactRef: interact ? v4() : undefined,
-      interactNonce: interact ? generateNonceOrToken() : undefined,
+      interactNonce: interact ? generateNonce() : undefined,
       continueId: v4(),
-      continueToken: generateNonceOrToken()
+      continueToken: generateToken()
     })
 
     // Associate provided accesses with grant

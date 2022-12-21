@@ -17,7 +17,7 @@ import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
 import { generateTestKeys, JWK } from 'http-signature-utils'
-import { generateNonceOrToken } from '../shared/utils'
+import { generateNonce, generateToken } from '../shared/utils'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -53,7 +53,7 @@ describe('Access Token Service', (): void => {
     startMethod: [StartMethod.Redirect],
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
-    clientNonce: generateNonceOrToken(),
+    clientNonce: generateNonce(),
     client: CLIENT
   }
 
@@ -82,11 +82,11 @@ describe('Access Token Service', (): void => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
       clientKeyId: testClientKey.kid,
-      continueToken: generateNonceOrToken(),
+      continueToken: generateToken(),
       continueId: v4(),
       interactId: v4(),
-      interactRef: generateNonceOrToken(),
-      interactNonce: generateNonceOrToken()
+      interactRef: generateNonce(),
+      interactNonce: generateNonce()
     })
     access = await Access.query(trx).insertAndFetch({
       grantId: grant.id,
@@ -95,7 +95,7 @@ describe('Access Token Service', (): void => {
     token = await AccessToken.query(trx).insertAndFetch({
       grantId: grant.id,
       ...BASE_TOKEN,
-      value: generateNonceOrToken(),
+      value: generateToken(),
       managementId: v4()
     })
   })
@@ -195,16 +195,16 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         clientKeyId: testClientKey.kid,
-        continueToken: generateNonceOrToken(),
+        continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
-        interactRef: generateNonceOrToken(),
-        interactNonce: generateNonceOrToken()
+        interactRef: generateNonce(),
+        interactNonce: generateNonce()
       })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
-        value: generateNonceOrToken(),
+        value: generateToken(),
         managementId: v4()
       })
     })
@@ -248,11 +248,11 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         clientKeyId: testClientKey.kid,
-        continueToken: generateNonceOrToken(),
+        continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
-        interactRef: generateNonceOrToken(),
-        interactNonce: generateNonceOrToken()
+        interactRef: generateNonce(),
+        interactNonce: generateNonce()
       })
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -261,7 +261,7 @@ describe('Access Token Service', (): void => {
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
-        value: generateNonceOrToken(),
+        value: generateToken(),
         managementId: v4()
       })
       originalTokenValue = token.value

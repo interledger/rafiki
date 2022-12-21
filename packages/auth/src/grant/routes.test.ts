@@ -19,7 +19,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateNonceOrToken } from '../shared/utils'
+import { generateNonce, generateToken } from '../shared/utils'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -51,7 +51,7 @@ const BASE_GRANT_REQUEST = {
     finish: {
       method: FinishMethod.Redirect,
       uri: 'https://example.com/finish',
-      nonce: generateNonceOrToken()
+      nonce: generateNonce()
     }
   }
 }
@@ -69,16 +69,16 @@ describe('Grant Routes', (): void => {
   const generateBaseGrant = () => ({
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: generateNonceOrToken(),
+    continueToken: generateToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com',
-    clientNonce: generateNonceOrToken(),
+    clientNonce: generateNonce(),
     client: CLIENT,
     clientKeyId: CLIENT_KEY_ID,
     interactId: v4(),
     interactRef: v4(),
-    interactNonce: generateNonceOrToken()
+    interactNonce: generateNonce()
   })
 
   const createContext = (
@@ -348,7 +348,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot finish interaction with invalid session', async (): Promise<void> => {
-        const invalidNonce = generateNonceOrToken()
+        const invalidNonce = generateNonce()
         const ctx = createContext(
           {
             headers: {
@@ -547,7 +547,7 @@ describe('Grant Routes', (): void => {
 
     test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
       const interactId = v4()
-      const nonce = generateNonceOrToken()
+      const nonce = generateNonce()
       const ctx = createContext(
         {
           headers: {
