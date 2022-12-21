@@ -148,7 +148,7 @@ describe('token', (): void => {
       const manageUrl = new URL(accessToken.access_token.manage)
       const scope = nock(manageUrl.origin)
         .delete(manageUrl.pathname)
-        .reply(200, accessToken)
+        .reply(204)
 
       const result = await revokeToken(
         {
