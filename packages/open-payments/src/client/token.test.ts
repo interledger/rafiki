@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createTokenRoutes, revokeToken, rotateToken } from './token'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import path from 'path'
