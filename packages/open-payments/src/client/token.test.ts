@@ -1,4 +1,4 @@
-import { createTokenRoutes, rotateToken } from './token'
+import { createTokenRoutes, revokeToken, rotateToken } from './token'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import path from 'path'
 import {
@@ -27,10 +27,14 @@ describe('token', (): void => {
       jest.spyOn(openApi, 'createResponseValidator')
       createTokenRoutes({ axiosInstance, openApi, logger })
 
-      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(1)
+      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(2)
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/token/{id}',
         method: HttpMethod.POST
+      })
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/token/{id}',
+        method: HttpMethod.DELETE
       })
     })
   })
@@ -70,6 +74,57 @@ describe('token', (): void => {
 
       await expect(() =>
         rotateToken(
+          {
+            axiosInstance,
+            openApi,
+            logger
+          },
+          {
+            url: accessToken.access_token.manage,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+      scope.done()
+    })
+  })
+
+  describe('revokeToken', (): void => {
+    test('returns accessToken if passes validation', async (): Promise<void> => {
+      const accessToken = mockAccessToken()
+
+      const manageUrl = new URL(accessToken.access_token.manage)
+      const scope = nock(manageUrl.origin)
+        .delete(manageUrl.pathname)
+        .reply(200, accessToken)
+
+      const result = await revokeToken(
+        {
+          axiosInstance,
+          openApi,
+          logger
+        },
+        {
+          url: accessToken.access_token.manage,
+          accessToken: 'accessToken'
+        },
+        openApiValidators.successfulValidator
+      )
+      expect(result).toBeUndefined()
+      scope.done()
+    })
+
+    test('throws if revoke token does not pass open api validation', async (): Promise<void> => {
+      const accessToken = mockAccessToken()
+
+      const manageUrl = new URL(accessToken.access_token.manage)
+      const scope = nock(manageUrl.origin)
+        .delete(manageUrl.pathname)
+        .reply(200, accessToken)
+
+      await expect(() =>
+        revokeToken(
           {
             axiosInstance,
             openApi,
