@@ -215,10 +215,8 @@ describe('QuoteService', (): void => {
     }
 
     describe.each`
-      toConnection | incomingAmount    | description
-      ${true}      | ${undefined}      | ${'connection'}
-      ${false}     | ${undefined}      | ${'incomingPayment'}
-      ${false}     | ${incomingAmount} | ${'incomingPayment.incomingAmount'}
+      toConnection | incomingAmount | description
+      ${true}      | ${undefined}   | ${'connection'}
     `('$description', ({ toConnection, incomingAmount }): void => {
       describe.each`
         sendAmount    | receiveAmount    | paymentType                      | description
@@ -237,13 +235,16 @@ describe('QuoteService', (): void => {
             incomingAmount
           })
           const connectionService = await deps.use('connectionService')
-          options = {
+          const baseOptions = {
             paymentPointerId,
             receiver: toConnection
               ? connectionService.getUrl(incomingPayment)
-              : incomingPayment.url,
-            sendAmount,
-            receiveAmount
+              : incomingPayment.url
+          }
+          if (sendAmount) {
+            options = { ...baseOptions, sendAmount }
+          } else {
+            options = { ...baseOptions, receiveAmount }
           }
           expected = {
             ...options,
@@ -636,7 +637,6 @@ describe('QuoteService', (): void => {
 
     test.each`
       sendAmount                              | receiveAmount                              | description
-      ${sendAmount}                           | ${receiveAmount}                           | ${'with multiple amounts'}
       ${{ ...sendAmount, value: BigInt(0) }}  | ${undefined}                               | ${'with sendAmount of zero'}
       ${{ ...sendAmount, value: BigInt(-1) }} | ${undefined}                               | ${'with negative sendAmount'}
       ${{ ...sendAmount, assetScale: 3 }}     | ${undefined}                               | ${'with wrong sendAmount asset'}
@@ -646,18 +646,23 @@ describe('QuoteService', (): void => {
     `(
       'fails to create $description',
       async ({ sendAmount, receiveAmount }): Promise<void> => {
-        await expect(
-          quoteService.create({
-            paymentPointerId,
-            receiver: (
-              await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointer.id
-              })
-            ).url,
-            sendAmount,
-            receiveAmount
-          })
-        ).resolves.toEqual(QuoteError.InvalidAmount)
+        let options: CreateQuoteOptions
+        const baseOptions = {
+          paymentPointerId,
+          receiver: (
+            await createIncomingPayment(deps, {
+              paymentPointerId: receivingPaymentPointer.id
+            })
+          ).url
+        }
+        if (sendAmount) {
+          options = { ...baseOptions, sendAmount }
+        } else {
+          options = { ...baseOptions, receiveAmount }
+        }
+        await expect(quoteService.create(options)).resolves.toEqual(
+          QuoteError.InvalidAmount
+        )
       }
     )
 
