@@ -37,7 +37,7 @@ export const rotateToken = async (
 export const revokeToken = async (
   deps: RouteDeps,
   args: RotateRequestArgs,
-  validateOpenApiResponse: ResponseValidator<AccessToken>
+  validateOpenApiResponse: ResponseValidator<void>
 ) => {
   const { axiosInstance, logger } = deps
   const { url, accessToken } = args
@@ -62,11 +62,10 @@ export const createTokenRoutes = (deps: RouteDeps): TokenRoutes => {
       method: HttpMethod.POST
     })
 
-  const revokeTokenValidator =
-    deps.openApi.createResponseValidator({
-      path: getASPath('/token/{id}'),
-      method: HttpMethod.DELETE
-    })
+  const revokeTokenValidator = deps.openApi.createResponseValidator<void>({
+    path: getASPath('/token/{id}'),
+    method: HttpMethod.DELETE
+  })
 
   return {
     rotate: (args: RotateRequestArgs) =>
