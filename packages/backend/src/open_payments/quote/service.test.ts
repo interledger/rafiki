@@ -215,8 +215,10 @@ describe('QuoteService', (): void => {
     }
 
     describe.each`
-      toConnection | incomingAmount | description
-      ${true}      | ${undefined}   | ${'connection'}
+      toConnection | incomingAmount    | description
+      ${true}      | ${undefined}      | ${'connection'}
+      ${false}     | ${undefined}      | ${'incomingPayment'}
+      ${false}     | ${incomingAmount} | ${'incomingPayment.incomingAmount'}
     `('$description', ({ toConnection, incomingAmount }): void => {
       describe.each`
         sendAmount    | receiveAmount    | paymentType                      | description
