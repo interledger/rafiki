@@ -1,13 +1,22 @@
 import { createTokenRoutes, revokeToken, rotateToken } from './token'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import path from 'path'
+import nock from 'nock'
 import {
   defaultAxiosInstance,
   mockAccessToken,
   mockOpenApiResponseValidators,
   silentLogger
 } from '../test/helpers'
-import nock from 'nock'
+import * as requestors from './requests'
+
+jest.mock('./requests', () => {
+  return {
+    // https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options
+    __esModule: true,
+    ...jest.requireActual('./requests')
+  }
+})
 
 describe('token', (): void => {
   let openApi: OpenAPI
@@ -23,19 +32,60 @@ describe('token', (): void => {
   const openApiValidators = mockOpenApiResponseValidators()
 
   describe('createTokenRoutes', (): void => {
-    test('creates response validator for token requests', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-      createTokenRoutes({ axiosInstance, openApi, logger })
+    const url = 'http://localhost:1000'
+    const accessToken = 'someAccessToken'
 
-      expect(openApi.createResponseValidator).toHaveBeenCalledTimes(2)
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/token/{id}',
-        method: HttpMethod.POST
+    test('creates rotateTokenValidator properly', async (): Promise<void> => {
+      const mockedAccessToken = mockAccessToken()
+      const mockResponseValidator = ({ path, method }) =>
+        path === '/token/{id}' && method === HttpMethod.POST
+
+      jest
+        .spyOn(openApi, 'createResponseValidator')
+        .mockImplementation(mockResponseValidator as any)
+
+      const getSpy = jest
+        .spyOn(requestors, 'post')
+        .mockResolvedValueOnce(mockedAccessToken)
+
+      createTokenRoutes({ axiosInstance, openApi, logger }).rotate({
+        url,
+        accessToken
       })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/token/{id}',
-        method: HttpMethod.DELETE
+      expect(getSpy).toHaveBeenCalledWith(
+        {
+          axiosInstance,
+          logger
+        },
+        { url, accessToken },
+        true
+      )
+    })
+
+    test('creates revokeTokenValidator properly', async (): Promise<void> => {
+      const mockResponseValidator = ({ path, method }) =>
+        path === '/token/{id}' && method === HttpMethod.DELETE
+
+      jest
+        .spyOn(openApi, 'createResponseValidator')
+        .mockImplementation(mockResponseValidator as any)
+
+      const getSpy = jest
+        .spyOn(requestors, 'deleteRequest')
+        .mockResolvedValueOnce()
+
+      createTokenRoutes({ axiosInstance, openApi, logger }).revoke({
+        url,
+        accessToken
       })
+      expect(getSpy).toHaveBeenCalledWith(
+        {
+          axiosInstance,
+          logger
+        },
+        { url, accessToken },
+        true
+      )
     })
   })
 
