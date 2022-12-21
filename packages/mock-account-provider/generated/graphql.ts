@@ -174,6 +174,7 @@ export type CreatePeerInput = {
   asset: AssetInput;
   http: HttpInput;
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
+  name?: InputMaybe<Scalars['String']>;
   staticIlpAddress: Scalars['String'];
 };
 
@@ -294,7 +295,7 @@ export enum IncomingPaymentState {
 }
 
 export type Jwk = {
-  __typename?: 'JWK';
+  __typename?: 'Jwk';
   alg: Alg;
   crv: Crv;
   kid: Scalars['String'];
@@ -656,6 +657,7 @@ export type Peer = Model & {
   http: Http;
   id: Scalars['ID'];
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
+  name?: Maybe<Scalars['String']>;
   staticIlpAddress: Scalars['String'];
 };
 
@@ -838,6 +840,7 @@ export type UpdatePeerInput = {
   http?: InputMaybe<HttpInput>;
   id: Scalars['String'];
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
+  name?: InputMaybe<Scalars['String']>;
   staticIlpAddress?: InputMaybe<Scalars['String']>;
 };
 
@@ -962,8 +965,8 @@ export type ResolversTypes = {
   IncomingPaymentResponse: ResolverTypeWrapper<Partial<IncomingPaymentResponse>>;
   IncomingPaymentState: ResolverTypeWrapper<Partial<IncomingPaymentState>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
-  JWK: ResolverTypeWrapper<Partial<Jwk>>;
-  JWKInput: ResolverTypeWrapper<Partial<JwkInput>>;
+  Jwk: ResolverTypeWrapper<Partial<Jwk>>;
+  JwkInput: ResolverTypeWrapper<Partial<JwkInput>>;
   Kty: ResolverTypeWrapper<Partial<Kty>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
@@ -1048,8 +1051,8 @@ export type ResolversParentTypes = {
   IncomingPaymentEdge: Partial<IncomingPaymentEdge>;
   IncomingPaymentResponse: Partial<IncomingPaymentResponse>;
   Int: Partial<Scalars['Int']>;
-  JWK: Partial<Jwk>;
-  JWKInput: Partial<JwkInput>;
+  Jwk: Partial<Jwk>;
+  JwkInput: Partial<JwkInput>;
   LiquidityMutationResponse: Partial<LiquidityMutationResponse>;
   Model: ResolversParentTypes['ApiKey'] | ResolversParentTypes['Asset'] | ResolversParentTypes['IncomingPayment'] | ResolversParentTypes['OutgoingPayment'] | ResolversParentTypes['PaymentPointer'] | ResolversParentTypes['PaymentPointerKey'] | ResolversParentTypes['Peer'];
   Mutation: {};
@@ -1231,7 +1234,7 @@ export type IncomingPaymentResponseResolvers<ContextType = any, ParentType exten
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
-export type JwkResolvers<ContextType = any, ParentType extends ResolversParentTypes['JWK'] = ResolversParentTypes['JWK']> = {
+export type JwkResolvers<ContextType = any, ParentType extends ResolversParentTypes['Jwk'] = ResolversParentTypes['Jwk']> = {
   alg?: Resolver<ResolversTypes['Alg'], ParentType, ContextType>;
   crv?: Resolver<ResolversTypes['Crv'], ParentType, ContextType>;
   kid?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1350,7 +1353,7 @@ export type PaymentPointerResolvers<ContextType = any, ParentType extends Resolv
 export type PaymentPointerKeyResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointerKey'] = ResolversParentTypes['PaymentPointerKey']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  jwk?: Resolver<ResolversTypes['JWK'], ParentType, ContextType>;
+  jwk?: Resolver<ResolversTypes['Jwk'], ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   revoked?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1378,6 +1381,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1522,7 +1526,7 @@ export type Resolvers<ContextType = any> = {
   IncomingPaymentConnection?: IncomingPaymentConnectionResolvers<ContextType>;
   IncomingPaymentEdge?: IncomingPaymentEdgeResolvers<ContextType>;
   IncomingPaymentResponse?: IncomingPaymentResponseResolvers<ContextType>;
-  JWK?: JwkResolvers<ContextType>;
+  Jwk?: JwkResolvers<ContextType>;
   LiquidityMutationResponse?: LiquidityMutationResponseResolvers<ContextType>;
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

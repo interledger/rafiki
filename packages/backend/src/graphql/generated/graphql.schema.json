@@ -1104,7 +1104,7 @@
               "name": null,
               "ofType": {
                 "kind": "INPUT_OBJECT",
-                "name": "JWKInput",
+                "name": "JwkInput",
                 "ofType": null
               }
             },
@@ -1374,6 +1374,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "defaultValue": null,
@@ -2342,7 +2354,7 @@
       },
       {
         "kind": "OBJECT",
-        "name": "JWK",
+        "name": "Jwk",
         "description": null,
         "fields": [
           {
@@ -2433,7 +2445,7 @@
       },
       {
         "kind": "INPUT_OBJECT",
-        "name": "JWKInput",
+        "name": "JwkInput",
         "description": null,
         "fields": null,
         "inputFields": [
@@ -4517,7 +4529,7 @@
               "name": null,
               "ofType": {
                 "kind": "OBJECT",
-                "name": "JWK",
+                "name": "Jwk",
                 "ofType": null
               }
             },
@@ -4792,6 +4804,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "isDeprecated": false,
@@ -6230,6 +6254,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "UInt64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
               "ofType": null
             },
             "defaultValue": null,
