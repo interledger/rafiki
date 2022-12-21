@@ -63,7 +63,7 @@ export const createTokenRoutes = (deps: RouteDeps): TokenRoutes => {
     })
 
   const revokeTokenValidator =
-    deps.openApi.createResponseValidator<AccessToken>({
+    deps.openApi.createResponseValidator({
       path: getASPath('/token/{id}'),
       method: HttpMethod.DELETE
     })
