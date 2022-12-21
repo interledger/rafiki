@@ -11,8 +11,8 @@ import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
-import { AccessType, AccessAction } from './grant'
 import { Access, AuthService, TokenInfo } from './service'
+import { AccessType, AccessAction } from '../grant/model'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'

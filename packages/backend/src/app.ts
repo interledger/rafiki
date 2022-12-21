@@ -25,10 +25,11 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { AccessType, AccessAction } from './open_payments/auth/grant'
+import { AccessType, AccessAction } from './open_payments/grant/model'
 import {
   createTokenIntrospectionMiddleware,
-  httpsigMiddleware
+  httpsigMiddleware,
+  RequestAction
 } from './open_payments/auth/middleware'
 import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
@@ -288,7 +289,7 @@ export class App {
     }: {
       path: string
       method: HttpMethod
-    }): AccessAction | undefined => {
+    }): RequestAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
           return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
@@ -302,14 +303,12 @@ export class App {
     }
 
     const actionToRoute: {
-      [key in AccessAction]: string
+      [key in RequestAction]: string
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
-      [AccessAction.ReadAll]: 'get',
       [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list',
-      [AccessAction.ListAll]: 'list'
+      [AccessAction.List]: 'list'
     }
 
     for (const path in resourceServerSpec.paths) {

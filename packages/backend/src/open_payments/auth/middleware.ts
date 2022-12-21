@@ -1,8 +1,13 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
-import { AccessType, AccessAction } from './grant'
+import { AccessType, AccessAction } from '../grant/model'
 import { parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
+
+export type RequestAction = Exclude<
+  AccessAction,
+  AccessAction.ReadAll | AccessAction.ListAll
+>
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
@@ -17,7 +22,7 @@ export function createTokenIntrospectionMiddleware({
   action
 }: {
   type: AccessType
-  action: AccessAction
+  action: RequestAction
 }) {
   return async (
     ctx: PaymentPointerContext,
