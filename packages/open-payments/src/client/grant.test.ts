@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createGrantRoutes } from './grant'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
-import config from '../config'
+import path from 'path'
 import {
   defaultAxiosInstance,
   mockGrantRequest,
@@ -21,7 +21,9 @@ describe('grant', (): void => {
   let openApi: OpenAPI
 
   beforeAll(async () => {
-    openApi = await createOpenAPI(config.OPEN_PAYMENTS_AS_OPEN_API_URL)
+    openApi = await createOpenAPI(
+      path.resolve(__dirname, '../openapi/auth-server.yaml')
+    )
   })
 
   const deps = {

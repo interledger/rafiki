@@ -1,8 +1,9 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
+import Koa from 'koa'
 import { AccessType, AccessAction } from './grant'
-import { PaymentPointerContext } from '../../app'
+import { HttpSigContext, PaymentPointerContext } from '../../app'
 
-function contextToRequestLike(ctx: PaymentPointerContext): RequestLike {
+function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
     url: ctx.href,
     method: ctx.method,
@@ -10,7 +11,7 @@ function contextToRequestLike(ctx: PaymentPointerContext): RequestLike {
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
-export function createAuthMiddleware({
+export function createTokenIntrospectionMiddleware({
   type,
   action
 }: {
@@ -37,7 +38,7 @@ export function createAuthMiddleware({
       }
       const authService = await ctx.container.use('authService')
       const grant = await authService.introspect(token)
-      if (!grant || !grant.active) {
+      if (!grant) {
         ctx.throw(401, 'Invalid Token')
       }
       const access = grant.findAccess({
@@ -47,18 +48,6 @@ export function createAuthMiddleware({
       })
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
-      }
-      if (!config.bypassSignatureValidation) {
-        try {
-          if (
-            !(await validateSignature(grant.key.jwk, contextToRequestLike(ctx)))
-          ) {
-            ctx.throw(401, 'Invalid signature')
-          }
-        } catch (e) {
-          ctx.status = 401
-          ctx.throw(401, `Invalid signature`)
-        }
       }
       ctx.grant = grant
 
@@ -79,4 +68,42 @@ export function createAuthMiddleware({
       }
     }
   }
+}
+
+export const httpsigMiddleware = async (
+  ctx: HttpSigContext,
+  next: () => Promise<unknown>
+): Promise<void> => {
+  // TODO: look up client jwks.json
+  // https://github.com/interledger/rafiki/issues/737
+  if (!ctx.grant?.key.jwk) {
+    const logger = await ctx.container.use('logger')
+    logger.warn(
+      {
+        grant: ctx.grant
+      },
+      'missing grant key'
+    )
+    ctx.throw(500)
+  }
+  try {
+    if (
+      !(await validateSignature(ctx.grant.key.jwk, contextToRequestLike(ctx)))
+    ) {
+      ctx.throw(401, 'Invalid signature')
+    }
+  } catch (err) {
+    if (err instanceof Koa.HttpError) {
+      throw err
+    }
+    const logger = await ctx.container.use('logger')
+    logger.warn(
+      {
+        err
+      },
+      'httpsig error'
+    )
+    ctx.throw(401, `Invalid signature`)
+  }
+  await next()
 }

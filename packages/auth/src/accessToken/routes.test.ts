@@ -17,12 +17,7 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import {
-  generateJwk,
-  generateTestKeys,
-  JWK,
-  TestKeys
-} from 'http-signature-utils'
+import { generateTestKeys, JWK } from 'http-signature-utils'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -30,7 +25,6 @@ describe('Access Token Routes', (): void => {
   let knex: Knex
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
-  let testKeys: TestKeys
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
@@ -41,11 +35,7 @@ describe('Access Token Routes', (): void => {
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
 
-    testKeys = await generateTestKeys()
-    testClientKey = generateJwk({
-      privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
-    })
+    testClientKey = generateTestKeys().publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -106,7 +96,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testClientKey.kid
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -194,11 +184,6 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects expired token', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
       const tokenCreatedDate = new Date(token.createdAt)
       const now = new Date(
         tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
@@ -229,8 +214,6 @@ describe('Access Token Routes', (): void => {
       expect(ctx.body).toEqual({
         active: false
       })
-
-      scope.isDone()
     })
   })
 
@@ -245,7 +228,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testClientKey.kid
       })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -255,12 +238,30 @@ describe('Access Token Routes', (): void => {
       url = `/token/${managementId}`
     })
 
-    test('Returns status 204 even if token does not exist', async (): Promise<void> => {
+    test('Returns status 204 even if management id does not exist', async (): Promise<void> => {
       managementId = v4()
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json'
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
+          url: `/token/${managementId}`,
+          method
+        },
+        { id: managementId }
+      )
+
+      await accessTokenRoutes.revoke(ctx)
+      expect(ctx.response.status).toBe(204)
+    })
+
+    test('Returns status 204 even if token does not exist', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${v4()}`
           },
           url: `/token/${managementId}`,
           method
@@ -273,16 +274,11 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json'
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
           },
           url,
           method
@@ -298,20 +294,14 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
-      scope.isDone()
     })
 
     test('Returns status 204 if token has expired', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       const ctx = createContext(
         {
           headers: {
-            Accept: 'application/json'
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
           },
           url,
           method
@@ -327,7 +317,6 @@ describe('Access Token Routes', (): void => {
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
-      scope.isDone()
     })
   })
 
@@ -340,7 +329,7 @@ describe('Access Token Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testClientKey.kid
       })
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -356,11 +345,33 @@ describe('Access Token Routes', (): void => {
       jestOpenAPI(openApi.authServerSpec)
     })
 
-    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+    test('Cannot rotate nonexistent token management id', async (): Promise<void> => {
       managementId = v4()
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
+          method: 'POST',
+          url: `/token/${managementId}`
+        },
+        { id: managementId }
+      )
+
+      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
+        status: 404,
+        message: 'token not found'
+      })
+    })
+
+    test('Cannot rotate nonexistent token', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${v4()}`
+          },
           method: 'POST',
           url: `/token/${managementId}`
         },
@@ -376,7 +387,10 @@ describe('Access Token Routes', (): void => {
     test('Can rotate token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
           url: `/token/${token.id}`,
           method: 'POST'
         },
@@ -407,7 +421,10 @@ describe('Access Token Routes', (): void => {
     test('Can rotate an expired token', async (): Promise<void> => {
       const ctx = createContext(
         {
-          headers: { Accept: 'application/json' },
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${token.value}`
+          },
           url: `/token/${token.id}`,
           method: 'POST'
         },

@@ -60,7 +60,6 @@ export function initIocContainer(
   })
 
   container.singleton('closeEmitter', async () => new EventEmitter())
-  // TODO: add redis
 
   container.singleton('openPaymentsClient', async (deps) => {
     const logger = await deps.use('logger')
@@ -109,28 +108,20 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('openApi', async (deps: IocContract<AppServices>) => {
-    try {
-      const authServerSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/auth-server.yaml')
-      )
-      const idpSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/id-provider.yaml')
-      )
-      const tokenIntrospectionSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/token-introspection.yaml')
-      )
-      return {
-        authServerSpec,
-        idpSpec,
-        tokenIntrospectionSpec
-      }
-    } catch (err) {
-      const logger = await deps.use('logger')
-      logger.error({ err }, 'error while loading OpenAPI files')
-      throw new Error(
-        'Could not load OpenAPI files. Did you run `pnpm fetch-schemas`?'
-      )
+  container.singleton('openApi', async () => {
+    const authServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/auth-server.yaml')
+    )
+    const idpSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/id-provider.yaml')
+    )
+    const tokenIntrospectionSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/token-introspection.yaml')
+    )
+    return {
+      authServerSpec,
+      idpSpec,
+      tokenIntrospectionSpec
     }
   })
 
@@ -169,9 +160,6 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
-  // TODO: add redis to container
-  // const redis = await container.use('redis')
-  // await redis.disconnect()
 }
 
 export const start = async (

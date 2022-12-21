@@ -29,7 +29,7 @@ import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
 import { createSPSPRoutes } from './spsp/routes'
-import { createPaymentPointerKeyRoutes } from './paymentPointerKey/routes'
+import { createPaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
 import { createPaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
@@ -42,7 +42,7 @@ import { createOpenAPI } from 'openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
-import { createPaymentPointerKeyService } from './paymentPointerKey/service'
+import { createPaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
 
 BigInt.prototype.toJSON = function () {
@@ -110,24 +110,16 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
-  container.singleton('openApi', async (deps: IocContract<AppServices>) => {
-    try {
-      const tokenIntrospectionSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/token-introspection.yaml')
-      )
-      const resourceServerSpec = await createOpenAPI(
-        path.resolve(__dirname, './openapi/resource-server.yaml')
-      )
-      return {
-        resourceServerSpec,
-        tokenIntrospectionSpec
-      }
-    } catch (err) {
-      const logger = await deps.use('logger')
-      logger.error({ err }, 'error while loading OpenAPI files')
-      throw new Error(
-        'Could not load OpenAPI files. Did you run `pnpm fetch-schemas`?'
-      )
+  container.singleton('openApi', async () => {
+    const tokenIntrospectionSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/token-introspection.yaml')
+    )
+    const resourceServerSpec = await createOpenAPI(
+      path.resolve(__dirname, './openapi/resource-server.yaml')
+    )
+    return {
+      resourceServerSpec,
+      tokenIntrospectionSpec
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {

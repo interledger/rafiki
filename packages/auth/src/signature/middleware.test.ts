@@ -3,12 +3,7 @@ import nock from 'nock'
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
 import { Knex } from 'knex'
-import {
-  JWK,
-  generateTestKeys,
-  TestKeys,
-  generateJwk
-} from 'http-signature-utils'
+import { JWK, generateTestKeys, TestKeys } from 'http-signature-utils'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -39,11 +34,8 @@ describe('Signature Service', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
-    testKeys = await generateTestKeys()
-    testClientKey = generateJwk({
-      privateKey: testKeys.privateKey,
-      keyId: testKeys.keyId
-    })
+    testKeys = generateTestKeys()
+    testClientKey = testKeys.publicKey
   })
 
   afterAll(async (): Promise<void> => {
@@ -102,7 +94,7 @@ describe('Signature Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testKeys.keyId
+        clientKeyId: testKeys.publicKey.kid
       })
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -146,14 +138,14 @@ describe('Signature Service', (): void => {
           client: CLIENT
         },
         testKeys.privateKey,
-        testKeys.keyId,
+        testKeys.publicKey.kid,
         deps
       )
 
       await grantInitiationHttpsigMiddleware(ctx, next)
 
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.clientKeyId).toEqual(testKeys.keyId)
+      expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
       expect(next).toHaveBeenCalled()
 
       scope.done()
@@ -178,13 +170,13 @@ describe('Signature Service', (): void => {
         { id: grant.continueId },
         { interact_ref: grant.interactRef },
         testKeys.privateKey,
-        testKeys.keyId,
+        testKeys.publicKey.kid,
         deps
       )
 
       await grantContinueHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.clientKeyId).toEqual(testKeys.keyId)
+      expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
       expect(next).toHaveBeenCalled()
 
       scope.done()
@@ -212,7 +204,7 @@ describe('Signature Service', (): void => {
           resource_server: 'test'
         },
         testKeys.privateKey,
-        testKeys.keyId,
+        testKeys.publicKey.kid,
         deps
       )
 
@@ -220,7 +212,7 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.clientKeyId).toEqual(testKeys.keyId)
+      expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
 
       scope.done()
     })
@@ -271,7 +263,7 @@ describe('Signature Service', (): void => {
         { id: grant.continueId },
         { interact_ref: grant.interactRef },
         testKeys.privateKey,
-        testKeys.keyId,
+        testKeys.publicKey.kid,
         deps
       )
 
@@ -298,7 +290,7 @@ describe('Signature Service', (): void => {
           client: CLIENT
         },
         testKeys.privateKey,
-        testKeys.keyId,
+        testKeys.publicKey.kid,
         deps
       )
 
@@ -324,7 +316,7 @@ describe('Signature Service', (): void => {
           client: CLIENT
         },
         testKeys.privateKey,
-        testKeys.keyId,
+        testKeys.publicKey.kid,
         deps
       )
 
