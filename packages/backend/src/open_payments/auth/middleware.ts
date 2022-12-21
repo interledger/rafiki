@@ -47,10 +47,10 @@ export function createTokenIntrospectionMiddleware({
       const access = tokenInfo.access.find(
         (access) =>
           access.type === type &&
-          (!access['identifier'] ||
-            access['identifier'] === ctx.paymentPointer.url) &&
+          (!access.identifier ||
+            access.identifier === ctx.paymentPointer.url) &&
           access.actions.find((tokenAction) => {
-            if (tokenAction == action) {
+            if (tokenAction === action) {
               // Unless the relevant grant action is ReadAll/ListAll add the
               // clientId to ctx for Read/List filtering
               ctx.clientId = tokenInfo.client_id
@@ -58,9 +58,9 @@ export function createTokenIntrospectionMiddleware({
             }
             return (
               (action === AccessAction.Read &&
-                tokenAction == AccessAction.ReadAll) ||
+                tokenAction === AccessAction.ReadAll) ||
               (action === AccessAction.List &&
-                tokenAction == AccessAction.ListAll)
+                tokenAction === AccessAction.ListAll)
             )
           })
       )
