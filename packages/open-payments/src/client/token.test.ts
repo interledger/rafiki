@@ -142,7 +142,7 @@ describe('token', (): void => {
   })
 
   describe('revokeToken', (): void => {
-    test('returns accessToken if passes validation', async (): Promise<void> => {
+    test('returns undefined if successfully revokes token', async (): Promise<void> => {
       const accessToken = mockAccessToken()
 
       const manageUrl = new URL(accessToken.access_token.manage)
