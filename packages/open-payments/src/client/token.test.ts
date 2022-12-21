@@ -71,7 +71,7 @@ describe('token', (): void => {
         .spyOn(openApi, 'createResponseValidator')
         .mockImplementation(mockResponseValidator as any)
 
-      const getSpy = jest
+      const deleteSpy = jest
         .spyOn(requestors, 'deleteRequest')
         .mockResolvedValueOnce()
 
