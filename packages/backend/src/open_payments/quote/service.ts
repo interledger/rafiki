@@ -68,12 +68,12 @@ interface QuoteOptionsBase {
 }
 
 interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
-  sendAmount: Amount
   receiveAmount?: never
+  sendAmount?: Amount
 }
 
 interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
-  receiveAmount: Amount
+  receiveAmount?: Amount
   sendAmount?: never
 }
 
@@ -99,7 +99,8 @@ async function createQuote(
     ) {
       return QuoteError.InvalidAmount
     }
-  } else if (options.receiveAmount) {
+  }
+  if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
       return QuoteError.InvalidAmount
     }

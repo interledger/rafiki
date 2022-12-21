@@ -1,7 +1,7 @@
 import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
-import { QuoteService } from './service'
+import { CreateQuoteOptions, QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
@@ -54,14 +54,16 @@ async function createQuote(
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
+  const options: CreateQuoteOptions = {
+    paymentPointerId: ctx.paymentPointer.id,
+    receiver: body.receiver,
+    clientId: ctx.grant?.clientId
+  }
+  if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
+  if (body.receiveAmount)
+    options.receiveAmount = parseAmount(body.receiveAmount)
   try {
-    const quoteOrErr = await deps.quoteService.create({
-      paymentPointerId: ctx.paymentPointer.id,
-      receiver: body.receiver,
-      sendAmount: body.sendAmount && parseAmount(body.sendAmount),
-      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount),
-      clientId: ctx.grant?.clientId
-    })
+    const quoteOrErr = await deps.quoteService.create(options)
 
     if (isQuoteError(quoteOrErr)) {
       throw quoteOrErr
