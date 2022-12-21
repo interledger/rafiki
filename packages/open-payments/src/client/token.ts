@@ -3,19 +3,19 @@ import { RouteDeps } from '.'
 import { getASPath, AccessToken } from '../types'
 import { deleteRequest, post } from './requests'
 
-interface RotateRequestArgs {
+interface TokenRequestArgs {
   url: string
   accessToken: string
 }
 
 export interface TokenRoutes {
-  rotate(args: RotateRequestArgs): Promise<AccessToken>
-  revoke(args: RotateRequestArgs): Promise<void>
+  rotate(args: TokenRequestArgs): Promise<AccessToken>
+  revoke(args: TokenRequestArgs): Promise<void>
 }
 
 export const rotateToken = async (
   deps: RouteDeps,
-  args: RotateRequestArgs,
+  args: TokenRequestArgs,
   validateOpenApiResponse: ResponseValidator<AccessToken>
 ) => {
   const { axiosInstance, logger } = deps
@@ -36,7 +36,7 @@ export const rotateToken = async (
 
 export const revokeToken = async (
   deps: RouteDeps,
-  args: RotateRequestArgs,
+  args: TokenRequestArgs,
   validateOpenApiResponse: ResponseValidator<void>
 ) => {
   const { axiosInstance, logger } = deps
@@ -68,9 +68,9 @@ export const createTokenRoutes = (deps: RouteDeps): TokenRoutes => {
   })
 
   return {
-    rotate: (args: RotateRequestArgs) =>
+    rotate: (args: TokenRequestArgs) =>
       rotateToken(deps, args, rotateTokenValidator),
-    revoke: (args: RotateRequestArgs) =>
+    revoke: (args: TokenRequestArgs) =>
       revokeToken(deps, args, revokeTokenValidator)
   }
 }
