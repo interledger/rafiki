@@ -69,14 +69,15 @@ interface QuoteOptionsBase {
 
 interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
   sendAmount: Amount
+  receiveAmount?: never
 }
 
 interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
   receiveAmount: Amount
+  sendAmount?: never
 }
 
 export type CreateQuoteOptions =
-  | QuoteOptionsBase
   | QuoteOptionsWithSendAmount
   | QuoteOptionsWithReceiveAmount
 
@@ -90,7 +91,7 @@ async function createQuote(
   if (!paymentPointer) {
     return QuoteError.UnknownPaymentPointer
   }
-  if ('sendAmount' in options) {
+  if (options.sendAmount) {
     if (
       options.sendAmount.value <= BigInt(0) ||
       options.sendAmount.assetCode !== paymentPointer.asset.code ||
@@ -98,8 +99,7 @@ async function createQuote(
     ) {
       return QuoteError.InvalidAmount
     }
-  }
-  if ('receiveAmount' in options) {
+  } else if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
       return QuoteError.InvalidAmount
     }
@@ -144,7 +144,7 @@ async function createQuote(
         .withGraphFetched('asset')
 
       let maxReceiveAmountValue: bigint | undefined
-      if ('sendAmount' in options) {
+      if (options.sendAmount) {
         const receivingPaymentValue = receiver.incomingAmount
           ? receiver.incomingAmount.value - receiver.receivedAmount.value
           : undefined
@@ -181,7 +181,7 @@ export async function resolveReceiver(
   if (!receiver) {
     throw QuoteError.InvalidReceiver
   }
-  if ('receiveAmount' in options) {
+  if (options.receiveAmount) {
     if (
       options.receiveAmount.assetScale !== receiver.assetScale ||
       options.receiveAmount.assetCode !== receiver.assetCode
@@ -195,8 +195,7 @@ export async function resolveReceiver(
         throw QuoteError.InvalidAmount
       }
     }
-  }
-  if ('sendAmount' in options && !receiver.incomingAmount) {
+  } else if (!options.sendAmount && !receiver.incomingAmount) {
     throw QuoteError.InvalidReceiver
   }
   return receiver
