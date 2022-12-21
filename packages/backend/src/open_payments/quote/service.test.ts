@@ -237,17 +237,14 @@ describe('QuoteService', (): void => {
             incomingAmount
           })
           const connectionService = await deps.use('connectionService')
-          const baseOptions = {
+          options = {
             paymentPointerId,
             receiver: toConnection
               ? connectionService.getUrl(incomingPayment)
               : incomingPayment.url
           }
-          if (sendAmount) {
-            options = { ...baseOptions, sendAmount }
-          } else {
-            options = { ...baseOptions, receiveAmount }
-          }
+          if (sendAmount) options.sendAmount = sendAmount
+          if (receiveAmount) options.receiveAmount = receiveAmount
           expected = {
             ...options,
             paymentType
@@ -648,8 +645,7 @@ describe('QuoteService', (): void => {
     `(
       'fails to create $description',
       async ({ sendAmount, receiveAmount }): Promise<void> => {
-        let options: CreateQuoteOptions
-        const baseOptions = {
+        const options: CreateQuoteOptions = {
           paymentPointerId,
           receiver: (
             await createIncomingPayment(deps, {
@@ -657,11 +653,11 @@ describe('QuoteService', (): void => {
             })
           ).url
         }
-        if (sendAmount) {
-          options = { ...baseOptions, sendAmount }
-        } else {
-          options = { ...baseOptions, receiveAmount }
-        }
+        if (sendAmount) options.sendAmount = sendAmount
+        if (receiveAmount) options.receiveAmount = receiveAmount
+        await expect(quoteService.create(options)).resolves.toEqual(
+          QuoteError.InvalidAmount
+        )
         await expect(quoteService.create(options)).resolves.toEqual(
           QuoteError.InvalidAmount
         )
