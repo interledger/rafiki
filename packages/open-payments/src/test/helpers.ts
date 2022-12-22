@@ -10,7 +10,8 @@ import {
   NonInteractiveGrant,
   OutgoingPayment,
   OutgoingPaymentPaginationResult,
-  AccessToken
+  AccessToken,
+  Quote
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -205,5 +206,24 @@ export const mockAccessToken = (
     ],
     expires_in: 600
   },
+  ...overrides
+})
+
+export const mockQuote = (overrides?: Partial<Quote>): Quote => ({
+  id: uuid(),
+  receiver: `receiver`,
+  paymentPointer: 'paymentPointer',
+  sendAmount: {
+    value: '100',
+    assetCode: 'USD',
+    assetScale: 2
+  },
+  receiveAmount: {
+    value: '90',
+    assetCode: 'USD',
+    assetScale: 2
+  },
+  createdAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 60_000).toISOString(),
   ...overrides
 })
