@@ -1,4 +1,4 @@
-import { sign, KeyLike } from 'crypto'
+import { sign, KeyLike, BinaryLike } from 'crypto'
 import {
   httpis as httpsig,
   Algorithm,
@@ -18,7 +18,8 @@ export interface SignatureHeaders {
 }
 
 const createSigner = (privateKey: KeyLike): Signer => {
-  const signer = async (data: Buffer) => sign(null, data, privateKey)
+  const signer = async (data: BinaryLike) =>
+    sign(null, data as Buffer, privateKey)
   signer.alg = 'ed25519' as Algorithm
   return signer
 }
