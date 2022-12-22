@@ -6,20 +6,21 @@ import { JWK } from './jwk'
 
 export function validateSignatureHeaders(request: RequestLike): boolean {
   const sig = request.headers['signature']
-  const sigInput = request.headers['signature-input'] as string
+  const sigInput = request.headers['signature-input']
 
-  const sigInputComponents = getSigInputComponents(sigInput ?? '')
   if (
-    !sigInputComponents ||
-    !validateSigInputComponents(sigInputComponents, request)
+    !sig ||
+    !sigInput ||
+    typeof sig !== 'string' ||
+    typeof sigInput !== 'string'
   )
     return false
 
+  const sigInputComponents = getSigInputComponents(sigInput)
+
   return (
-    sig !== undefined &&
-    sigInput !== undefined &&
-    typeof sig === 'string' &&
-    typeof sigInput === 'string'
+    !!sigInputComponents &&
+    validateSigInputComponents(sigInputComponents, request)
   )
 }
 

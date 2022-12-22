@@ -26,7 +26,7 @@ interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
 
-type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   AppContext['request'],
   'body'
 > & {
@@ -34,7 +34,7 @@ type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   query: ParsedUrlQuery & QueryT
 }
 
-type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   AppContext,
   'request'
 > & {

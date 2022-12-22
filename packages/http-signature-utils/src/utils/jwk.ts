@@ -31,7 +31,7 @@ export const generateJwk = ({
     throw new Error('Failed to derive public key')
   }
 
-  if (jwk.crv !== 'Ed25519' || jwk.kty !== 'OKP') {
+  if (jwk.crv !== 'Ed25519' || jwk.kty !== 'OKP' || !jwk.x) {
     throw new Error('Key is not EdDSA-Ed25519')
   }
 
