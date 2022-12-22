@@ -27,8 +27,7 @@ describe('quote', (): void => {
     )
   })
 
-  let quote = mockQuote()
-
+  const quote = mockQuote()
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
   const baseUrl = 'http://localhost:1000'

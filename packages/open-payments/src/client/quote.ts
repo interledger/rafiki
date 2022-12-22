@@ -33,9 +33,10 @@ export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   })
 
   return {
-    get: (args: GetArgs) => getQuote(deps, args, getQuoteOpenApiValidator),
+    get: (args: GetArgs) =>
+      getQuote({ axiosInstance, logger }, args, getQuoteOpenApiValidator),
     create: (args: PostArgs<CreateQuoteArgs>) =>
-      createQuote(deps, args, createQuoteOpenApiValidator)
+      createQuote({ axiosInstance, logger }, args, createQuoteOpenApiValidator)
   }
 }
 
