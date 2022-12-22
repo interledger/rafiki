@@ -33,6 +33,13 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
     const quoteService = await ctx.container.use('quoteService')
+    if (args.input.sendAmount && args.input.receiveAmount) {
+      return {
+        code: errorToCode[QuoteError.InvalidAmount].toString(),
+        success: false,
+        message: errorToMessage[QuoteError.InvalidAmount]
+      }
+    }
     const options: CreateQuoteOptions = {
       paymentPointerId: args.input.paymentPointerId,
       receiver: args.input.receiver
