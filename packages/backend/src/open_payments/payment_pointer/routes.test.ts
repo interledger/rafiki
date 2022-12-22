@@ -24,7 +24,7 @@ describe('Payment Pointer Routes', (): void => {
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })

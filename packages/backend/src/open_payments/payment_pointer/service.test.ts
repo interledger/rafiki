@@ -34,7 +34,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     paymentPointerService = await deps.use('paymentPointerService')
     accountingService = await deps.use('accountingService')
   })

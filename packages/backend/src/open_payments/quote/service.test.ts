@@ -77,7 +77,7 @@ describe('QuoteService', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     config = await deps.use('config')
     quoteUrl = new URL(Config.quoteUrl)
   })

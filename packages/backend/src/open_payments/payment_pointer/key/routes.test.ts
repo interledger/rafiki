@@ -30,7 +30,7 @@ describe('Payment Pointer Keys Routes', (): void => {
     deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')

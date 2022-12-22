@@ -26,7 +26,7 @@ describe('Payment Pointer Key Service', (): void => {
     deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 

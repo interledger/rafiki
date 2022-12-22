@@ -31,7 +31,7 @@ describe('Quote Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     quoteService = await deps.use('quoteService')
   })
 

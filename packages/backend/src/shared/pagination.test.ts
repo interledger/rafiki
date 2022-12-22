@@ -36,7 +36,7 @@ describe('Pagination', (): void => {
     config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

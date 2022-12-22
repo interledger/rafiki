@@ -35,7 +35,7 @@ describe('Asset Service', (): void => {
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     assetService = await deps.use('assetService')
   })
 

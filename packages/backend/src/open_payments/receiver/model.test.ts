@@ -22,7 +22,7 @@ describe('Receiver Model', (): void => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     connectionService = await deps.use('connectionService')
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

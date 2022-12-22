@@ -50,7 +50,7 @@ describe('Peer Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     peerService = await deps.use('peerService')
     peerFactory = new PeerFactory(peerService)
   })

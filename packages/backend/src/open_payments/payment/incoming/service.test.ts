@@ -35,7 +35,7 @@ describe('Incoming Payment Service', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {
