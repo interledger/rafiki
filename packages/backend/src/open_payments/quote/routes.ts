@@ -43,11 +43,21 @@ async function getQuote(
   ctx.body = body
 }
 
-export type CreateBody = {
+interface CreateBodyBase {
   receiver: string
+}
+
+interface CreateBodyWithSendAmount extends CreateBodyBase {
   sendAmount?: AmountJSON
+  receiveAmount?: never
+}
+
+interface CreateBodyWithReceiveAmount extends CreateBodyBase {
+  sendAmount?: never
   receiveAmount?: AmountJSON
 }
+
+export type CreateBody = CreateBodyWithSendAmount | CreateBodyWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
