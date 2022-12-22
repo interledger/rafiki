@@ -99,8 +99,6 @@ async function introspectToken(
     })
 
     return data.active ? data : undefined
-
-    return data
   } catch (err) {
     if (err.errors) {
       deps.logger.warn({ err }, 'invalid token introspection')

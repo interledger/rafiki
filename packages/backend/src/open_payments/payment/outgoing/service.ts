@@ -17,6 +17,7 @@ import {
   OutgoingPaymentState,
   PaymentEventType
 } from './model'
+import { Grant } from '../../auth/middleware'
 import { AccountingService } from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { ReceiverService } from '../../receiver/service'
@@ -31,11 +32,6 @@ import {
 } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
-
-export interface Grant {
-  id: string
-  limits?: Limits
-}
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {

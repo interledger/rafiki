@@ -10,13 +10,10 @@ import {
   OutgoingPaymentError,
   isOutgoingPaymentError
 } from './errors'
-import {
-  CreateOutgoingPaymentOptions,
-  OutgoingPaymentService,
-  Grant
-} from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
+import { Grant } from '../../auth/middleware'
 import { CreateQuoteOptions } from '../../quote/service'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'

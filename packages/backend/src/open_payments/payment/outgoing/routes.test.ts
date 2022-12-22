@@ -10,14 +10,11 @@ import { AppServices, CreateContext, ListContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { randomAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
-import {
-  CreateOutgoingPaymentOptions,
-  OutgoingPaymentService,
-  Grant
-} from './service'
+import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { serializeAmount } from '../../amount'
+import { Grant } from '../../auth/middleware'
 import { PaymentPointer } from '../../payment_pointer/model'
 import {
   getRouteTests,

@@ -1,13 +1,18 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
 import { AccessType, AccessAction } from '../grant/model'
-import { parseLimits } from '../payment/outgoing/limits'
+import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
 
 export type RequestAction = Exclude<
   AccessAction,
   AccessAction.ReadAll | AccessAction.ListAll
 >
+
+export interface Grant {
+  id: string
+  limits?: Limits
+}
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
@@ -18,11 +23,11 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   }
 }
 export function createTokenIntrospectionMiddleware({
-  type,
-  action
+  requestType,
+  requestAction
 }: {
-  type: AccessType
-  action: RequestAction
+  requestType: AccessType
+  requestAction: RequestAction
 }) {
   return async (
     ctx: PaymentPointerContext,
@@ -51,26 +56,26 @@ export function createTokenIntrospectionMiddleware({
       // https://github.com/interledger/rafiki/issues/835
       const access = tokenInfo.access.find((access) => {
         if (
-          access.type !== type ||
+          access.type !== requestType ||
           (access.identifier && access.identifier !== ctx.paymentPointer.url)
         ) {
           return false
         }
         if (
-          action === AccessAction.Read &&
+          requestAction === AccessAction.Read &&
           access.actions.includes(AccessAction.ReadAll)
         ) {
           return true
         }
         if (
-          action === AccessAction.List &&
+          requestAction === AccessAction.List &&
           access.actions.includes(AccessAction.ListAll)
         ) {
           return true
         }
         return access.actions.find((tokenAction) => {
-          if (tokenAction === action) {
-            // Unless the relevant grant action is ReadAll/ListAll add the
+          if (tokenAction === requestAction) {
+            // Unless the relevant token action is ReadAll/ListAll add the
             // clientId to ctx for Read/List filtering
             ctx.clientId = tokenInfo.client_id
             return true
@@ -83,8 +88,8 @@ export function createTokenIntrospectionMiddleware({
       }
       ctx.clientKey = tokenInfo.key.jwk
       if (
-        type === AccessType.OutgoingPayment &&
-        action === AccessAction.Create
+        requestType === AccessType.OutgoingPayment &&
+        requestAction === AccessAction.Create
       ) {
         ctx.grant = {
           id: tokenInfo.grant,

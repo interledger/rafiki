@@ -29,6 +29,7 @@ import { AccessType, AccessAction } from './open_payments/grant/model'
 import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware,
+  Grant,
   RequestAction
 } from './open_payments/auth/middleware'
 import { AuthService } from './open_payments/auth/service'
@@ -43,10 +44,7 @@ import { WebhookService } from './webhook/service'
 import { QuoteRoutes } from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
 import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
-import {
-  Grant,
-  OutgoingPaymentService
-} from './open_payments/payment/outgoing/service'
+import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { ApiKeyService } from './apiKey/service'
@@ -314,22 +312,22 @@ export class App {
     for (const path in resourceServerSpec.paths) {
       for (const method in resourceServerSpec.paths[path]) {
         if (isHttpMethod(method)) {
-          const action = toAction({ path, method })
-          if (!action) {
+          const requestAction = toAction({ path, method })
+          if (!requestAction) {
             throw new Error()
           }
 
-          let type: AccessType
+          let requestType: AccessType
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('incoming-payments')) {
-            type = AccessType.IncomingPayment
-            route = incomingPaymentRoutes[actionToRoute[action]]
+            requestType = AccessType.IncomingPayment
+            route = incomingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('outgoing-payments')) {
-            type = AccessType.OutgoingPayment
-            route = outgoingPaymentRoutes[actionToRoute[action]]
+            requestType = AccessType.OutgoingPayment
+            route = outgoingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('quotes')) {
-            type = AccessType.Quote
-            route = quoteRoutes[actionToRoute[action]]
+            requestType = AccessType.Quote
+            route = quoteRoutes[actionToRoute[requestAction]]
           } else {
             if (path.includes('connections')) {
               route = connectionRoutes.get
@@ -361,8 +359,8 @@ export class App {
               }
             ),
             createTokenIntrospectionMiddleware({
-              type,
-              action
+              requestType,
+              requestAction
             }),
             httpsigMiddleware,
             route

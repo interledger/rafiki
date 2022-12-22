@@ -49,8 +49,8 @@ describe('Auth Middleware', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     middleware = createTokenIntrospectionMiddleware({
-      type,
-      action
+      requestType: type,
+      requestAction: action
     })
     authService = await deps.use('authService')
   })
@@ -194,8 +194,8 @@ describe('Auth Middleware', (): void => {
         `('$subAction/$superAction', ({ superAction, subAction }): void => {
           test("calls next (but doesn't restrict ctx.clientId) for sub-action request", async (): Promise<void> => {
             const middleware = createTokenIntrospectionMiddleware({
-              type,
-              action: subAction
+              requestType: type,
+              requestAction: subAction
             })
             const tokenInfo = createTokenInfo([
               {
@@ -218,8 +218,8 @@ describe('Auth Middleware', (): void => {
 
           test('returns 403 for super-action request', async (): Promise<void> => {
             const middleware = createTokenIntrospectionMiddleware({
-              type,
-              action: superAction
+              requestType: type,
+              requestAction: superAction
             })
             const tokenInfo = createTokenInfo([
               {
@@ -271,8 +271,8 @@ describe('Auth Middleware', (): void => {
               ctxLimits
             }): Promise<void> => {
               const middleware = createTokenIntrospectionMiddleware({
-                type,
-                action
+                requestType: type,
+                requestAction: action
               })
               const tokenInfo = createTokenInfo([
                 {
