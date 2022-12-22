@@ -28,7 +28,7 @@ export const generateJwk = ({
     format: 'jwk'
   })
 
-  if (jwk.crv !== 'Ed25519' || jwk.kty !== 'OKP') {
+  if (jwk.crv !== 'Ed25519' || jwk.kty !== 'OKP' || !jwk.x) {
     throw new Error('Key is not EdDSA-Ed25519')
   }
 

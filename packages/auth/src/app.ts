@@ -19,7 +19,8 @@ import {
   StartContext,
   GetContext,
   ChooseContext,
-  FinishContext
+  FinishContext,
+  GrantRoutes
 } from './grant/routes'
 import {
   AccessTokenRoutes,
@@ -75,6 +76,7 @@ export interface AppServices {
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
   accessTokenRoutes: Promise<AccessTokenRoutes>
+  grantRoutes: Promise<GrantRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -204,7 +206,7 @@ export class App {
     const openApi = await this.container.use('openApi')
     /* Back-channel GNAP Routes */
     // Grant Initiation
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, CreateContext>(
       '/',
       createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
         path: '/',
@@ -217,7 +219,7 @@ export class App {
     )
 
     // Grant Continue
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, ContinueContext>(
       '/continue/:id',
       createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
@@ -270,7 +272,7 @@ export class App {
 
     /* AS <-> RS Routes */
     // Token Introspection
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, IntrospectContext>(
       '/introspect',
       createValidatorMiddleware<IntrospectContext>(
         openApi.tokenIntrospectionSpec,
@@ -285,7 +287,7 @@ export class App {
     /* Front Channel Routes */
 
     // Interaction start
-    this.publicRouter.get(
+    this.publicRouter.get<DefaultState, StartContext>(
       '/interact/:id/:nonce',
       createValidatorMiddleware<StartContext>(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}',
@@ -295,7 +297,7 @@ export class App {
     )
 
     // Interaction finish
-    this.publicRouter.get(
+    this.publicRouter.get<DefaultState, FinishContext>(
       '/interact/:id/:nonce/finish',
       createValidatorMiddleware<FinishContext>(openApi.idpSpec, {
         path: '/interact/{id}/{nonce}/finish',
@@ -305,7 +307,7 @@ export class App {
     )
 
     // Grant lookup
-    this.publicRouter.get(
+    this.publicRouter.get<DefaultState, GetContext>(
       '/grant/:id/:nonce',
       createValidatorMiddleware<GetContext>(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}',
@@ -315,7 +317,7 @@ export class App {
     )
 
     // Grant accept/reject
-    this.publicRouter.post(
+    this.publicRouter.post<DefaultState, ChooseContext>(
       '/grant/:id/:nonce/:choice',
       createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
         path: '/grant/{id}/{nonce}/{choice}',
