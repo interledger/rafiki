@@ -266,6 +266,7 @@ describe('Grant Routes', (): void => {
   })
 
   // TODO: validate that routes satisfy API spec
+  // https://github.com/interledger/rafiki/issues/841
   describe('interaction', (): void => {
     beforeEach(async (): Promise<void> => {
       const openApi = await deps.use('openApi')

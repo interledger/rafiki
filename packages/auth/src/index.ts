@@ -60,7 +60,6 @@ export function initIocContainer(
   })
 
   container.singleton('closeEmitter', async () => new EventEmitter())
-  // TODO: add redis
 
   container.singleton('openPaymentsClient', async (deps) => {
     const logger = await deps.use('logger')
@@ -161,9 +160,6 @@ export const gracefulShutdown = async (
   await app.shutdown()
   const knex = await container.use('knex')
   await knex.destroy()
-  // TODO: add redis to container
-  // const redis = await container.use('redis')
-  // await redis.disconnect()
 }
 
 export const start = async (
