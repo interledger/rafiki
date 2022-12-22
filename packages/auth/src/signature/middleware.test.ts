@@ -26,14 +26,14 @@ describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   const CLIENT = faker.internet.url()
-
+  let knex: Knex
   let testKeys: TestKeys
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-
+    knex = appContainer.knex
     testKeys = generateTestKeys()
     testClientKey = testKeys.publicKey
   })
@@ -46,7 +46,6 @@ describe('Signature Service', (): void => {
   describe('Signature middleware', (): void => {
     let grant: Grant
     let token: AccessToken
-    let knex: Knex
     let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
@@ -86,10 +85,6 @@ describe('Signature Service', (): void => {
       managementId: v4(),
       expiresIn: 3600
     }
-
-    beforeAll(async (): Promise<void> => {
-      knex = await deps.use('knex')
-    })
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({

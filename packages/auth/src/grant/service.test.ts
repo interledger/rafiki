@@ -26,8 +26,8 @@ describe('Grant Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     grantService = await deps.use('grantService')
-    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
   })
 
   const CLIENT = faker.internet.url()

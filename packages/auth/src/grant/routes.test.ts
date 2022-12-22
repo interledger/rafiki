@@ -102,8 +102,8 @@ describe('Grant Routes', (): void => {
     deps = await initIocContainer(Config)
     grantRoutes = await deps.use('grantRoutes')
     config = await deps.use('config')
-    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')

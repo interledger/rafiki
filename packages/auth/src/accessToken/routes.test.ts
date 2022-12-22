@@ -30,7 +30,7 @@ describe('Access Token Routes', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     accessTokenRoutes = await deps.use('accessTokenRoutes')
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)

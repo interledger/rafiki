@@ -23,8 +23,8 @@ describe('Access Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     accessService = await deps.use('accessService')
-    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
+    knex = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

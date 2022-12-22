@@ -29,7 +29,7 @@ describe('Access Token Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     accessTokenService = await deps.use('accessTokenService')
 
     testClientKey = generateTestKeys().publicKey
