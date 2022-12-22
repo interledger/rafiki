@@ -6,24 +6,47 @@ import json from 'koa-json'
 import bodyParser from 'koa-bodyparser'
 
 import { parseOrProvisionKey } from './utils/key'
-import { createHeaders } from './utils/headers'
+import { createHeaders, Headers } from './utils/headers'
+import { RequestLike } from '.'
 
-const app = new Koa()
+type AppContext<TResponseBody = unknown> = Koa.ParameterizedContext<
+  Koa.DefaultState,
+  Koa.DefaultContext,
+  TResponseBody
+>
+
+const app = new Koa<Koa.DefaultState, AppContext>()
 const router = new Router()
 
 // Load key
 const privateKey = parseOrProvisionKey(process.env.KEY_FILE)
 
-// Router
-router.post('/', async (ctx): Promise<void> => {
-  const { request, keyId } = ctx.request.body
-  if (!keyId || !request.headers || !request.method || !request.url) {
+type GenerateSignatureRequestBody = {
+  request: RequestLike
+  keyId: string
+}
+
+router.post('/', async (ctx: AppContext<Headers>): Promise<void> => {
+  const validateBody = (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    requestBody: any
+  ): requestBody is GenerateSignatureRequestBody =>
+    !!requestBody.keyId &&
+    !!requestBody.request.headers &&
+    !!requestBody.request.method &&
+    !!requestBody.request.url
+
+  if (!validateBody(ctx.request.body)) {
     ctx.status = 400
     return
   }
+
+  const { keyId, request } = ctx.request.body
+
   const headers = await createHeaders({ request, privateKey, keyId })
   delete headers['Content-Length']
   delete headers['Content-Type']
+
   ctx.body = headers
 })
 

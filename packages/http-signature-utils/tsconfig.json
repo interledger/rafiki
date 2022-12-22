@@ -4,7 +4,8 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "declaration": true
+    "declaration": true,
+    "strict": true
   },
   "include": ["src/**/*"],
   "exclude": ["**/*.test.ts", "src/test/*"]
