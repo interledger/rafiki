@@ -55,7 +55,6 @@ export const Config = {
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
   adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
   sessionLength: envInt('SESSION_LENGTH', 30), // in minutes
-  devAccessToken: envString('DEV_ACCESS_TOKEN', 'dev-access-token'),
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   streamSecret: process.env.STREAM_SECRET
