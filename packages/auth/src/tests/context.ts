@@ -31,7 +31,7 @@ export function createContext(
   )
   const ctx = koa.createContext(req, res)
   ctx.params = params
-  ctx.query = reqOpts.query
+  ctx.query = reqOpts.query || {}
   ctx.session = { ...req.session }
   ctx.closeEmitter = new EventEmitter()
   ctx.container = container
@@ -47,6 +47,9 @@ export async function createContextWithSigHeaders(
   container?: IocContract<AppServices>
 ): Promise<AppContext> {
   const { headers, url, method } = reqOpts
+  if (!headers || !url || !method) {
+    throw new Error('ReqestOptions miss headers or method or url')
+  }
   const request = {
     url,
     method,

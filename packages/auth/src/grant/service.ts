@@ -8,13 +8,13 @@ import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
-  get(grantId: string): Promise<Grant>
+  get(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteraction(interactId: string): Promise<Grant>
+  getByInteraction(interactId: string): Promise<Grant | undefined>
   getByInteractionSession(
     interactId: string,
     interactNonce: string
-  ): Promise<Grant>
+  ): Promise<Grant | undefined>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
@@ -90,7 +90,7 @@ export async function createGrantService({
   }
 }
 
-async function get(grantId: string): Promise<Grant> {
+async function get(grantId: string): Promise<Grant | undefined> {
   return Grant.query().findById(grantId)
 }
 
@@ -162,14 +162,16 @@ async function create(
   }
 }
 
-async function getByInteraction(interactId: string): Promise<Grant> {
+async function getByInteraction(
+  interactId: string
+): Promise<Grant | undefined> {
   return Grant.query().findOne({ interactId })
 }
 
 async function getByInteractionSession(
   interactId: string,
   interactNonce: string
-): Promise<Grant> {
+): Promise<Grant | undefined> {
   return Grant.query()
     .findOne({ interactId, interactNonce })
     .withGraphFetched('access')

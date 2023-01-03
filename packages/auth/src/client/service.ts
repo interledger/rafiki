@@ -10,7 +10,7 @@ export interface ClientKey {
 
 interface ClientDetails {
   // id: string
-  name: string
+  name?: string
   // image: string
   uri: string
   // email: string
@@ -49,7 +49,7 @@ export async function createClientService(
 async function getClient(
   deps: ServiceDependencies,
   client: string
-): Promise<ClientDetails> {
+): Promise<ClientDetails | undefined> {
   try {
     const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
       url: client

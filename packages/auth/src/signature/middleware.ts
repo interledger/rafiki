@@ -25,7 +25,7 @@ async function verifySigFromClient(
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
     client,
-    keyId: ctx.clientKeyId
+    keyId: ctx.clientKeyId || ''
   })
 
   if (!clientKey) {
@@ -61,7 +61,10 @@ export async function grantContinueHttpsigMiddleware(
   ctx: AppContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
+  if (
+    !validateSignatureHeaders(contextToRequestLike(ctx)) ||
+    !ctx.headers['authorization']
+  ) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -149,6 +152,15 @@ export async function tokenHttpsigMiddleware(
 
   const grantService = await ctx.container.use('grantService')
   const grant = await grantService.get(accessToken.grantId)
+
+  if (!grant) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_interaction',
+      message: 'invalid grant'
+    }
+    return
+  }
 
   const sigVerified = await verifySigFromBoundKey(grant, ctx)
   if (!sigVerified) {

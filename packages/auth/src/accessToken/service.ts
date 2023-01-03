@@ -11,8 +11,8 @@ import { IAppConfig } from '../config/app'
 import { Access } from '../access/model'
 
 export interface AccessTokenService {
-  get(token: string): Promise<AccessToken>
-  getByManagementId(managementId: string): Promise<AccessToken>
+  get(token: string): Promise<AccessToken | undefined>
+  getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
@@ -89,11 +89,13 @@ function isTokenExpired(token: AccessToken): boolean {
   return expiresAt < now.getTime()
 }
 
-async function get(token: string): Promise<AccessToken> {
+async function get(token: string): Promise<AccessToken | undefined> {
   return AccessToken.query().findOne('value', token)
 }
 
-async function getByManagementId(managementId: string): Promise<AccessToken> {
+async function getByManagementId(
+  managementId: string
+): Promise<AccessToken | undefined> {
   return AccessToken.query().findOne('managementId', managementId)
 }
 
@@ -110,29 +112,33 @@ async function introspect(
     const grant = await Grant.query(deps.knex)
       .findById(token.grantId)
       .withGraphFetched('access')
-    if (grant.state === GrantState.Revoked) {
-      return { active: false }
-    }
+    if (!grant) {
+      return
+    } else {
+      if (grant.state === GrantState.Revoked) {
+        return { active: false }
+      }
 
-    const jwk = await deps.clientService.getKey({
-      client: grant.client,
-      keyId: grant.clientKeyId
-    })
+      const jwk = await deps.clientService.getKey({
+        client: grant.client,
+        keyId: grant.clientKeyId
+      })
 
-    if (!jwk) {
-      return { active: false }
-    }
+      if (!jwk) {
+        return { active: false }
+      }
 
-    const clientId = crypto
-      .createHash('sha256')
-      .update(grant.client)
-      .digest('hex')
+      const clientId = crypto
+        .createHash('sha256')
+        .update(grant.client)
+        .digest('hex')
 
-    return {
-      active: true,
-      ...grant,
-      key: { proof: 'httpsig', jwk },
-      clientId
+      return {
+        active: true,
+        ...grant,
+        key: { proof: 'httpsig', jwk },
+        clientId
+      }
     }
   }
 }

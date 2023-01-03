@@ -62,7 +62,9 @@ async function introspectToken(
 ): Promise<void> {
   const { body } = ctx.request
   const introspectionResult = await deps.accessTokenService.introspect(
-    body['access_token']
+    // body.access_token exists since it is checked for by the request validation
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    body!['access_token']
   )
   if (introspectionResult) {
     ctx.body = introspectionToBody(introspectionResult)

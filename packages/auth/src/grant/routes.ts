@@ -192,32 +192,32 @@ async function createGrantInitiation(
   const client = await deps.clientService.get(body.client)
   if (!client) {
     ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
-  }
+  } else {
+    const grant = await grantService.create({
+      ...body,
+      clientKeyId
+    })
+    ctx.status = 200
 
-  const grant = await grantService.create({
-    ...body,
-    clientKeyId
-  })
-  ctx.status = 200
+    const redirectUri = new URL(
+      config.authServerDomain +
+        `/interact/${grant.interactId}/${grant.interactNonce}`
+    )
 
-  const redirectUri = new URL(
-    config.authServerDomain +
-      `/interact/${grant.interactId}/${grant.interactNonce}`
-  )
-
-  redirectUri.searchParams.set('clientName', client.name)
-  redirectUri.searchParams.set('clientUri', client.uri)
-  ctx.body = {
-    interact: {
-      redirect: redirectUri.toString(),
-      finish: grant.interactNonce
-    },
-    continue: {
-      access_token: {
-        value: grant.continueToken
+    redirectUri.searchParams.set('clientName', client.name || '')
+    redirectUri.searchParams.set('clientUri', client.uri)
+    ctx.body = {
+      interact: {
+        redirect: redirectUri.toString(),
+        finish: grant.interactNonce
       },
-      uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
-      wait: config.waitTimeSeconds
+      continue: {
+        access_token: {
+          value: grant.continueToken
+        },
+        uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
+        wait: config.waitTimeSeconds
+      }
     }
   }
 }
@@ -244,13 +244,7 @@ async function getGrantDetails(
     return
   }
 
-  for (const access of grant.access) {
-    delete access.id
-    delete access.createdAt
-    delete access.updatedAt
-  }
-
-  ctx.body = { access: grant.access }
+  ctx.body = { access: createAccessBody(grant.access) }
 }
 
 async function startInteraction(
@@ -271,18 +265,18 @@ async function startInteraction(
 
   if (!grant) {
     ctx.throw(401, { error: 'unknown_request' })
+  } else {
+    // TODO: also establish session in redis with short expiry
+    ctx.session.nonce = grant.interactNonce || ''
+
+    const interactionUrl = new URL(config.identityServerDomain)
+    interactionUrl.searchParams.set('interactId', grant.interactId || '')
+    interactionUrl.searchParams.set('nonce', grant.interactNonce || '')
+    interactionUrl.searchParams.set('clientName', clientName as string)
+    interactionUrl.searchParams.set('clientUri', clientUri as string)
+
+    ctx.redirect(interactionUrl.toString())
   }
-
-  // TODO: also establish session in redis with short expiry
-  ctx.session.nonce = grant.interactNonce
-
-  const interactionUrl = new URL(config.identityServerDomain)
-  interactionUrl.searchParams.set('interactId', grant.interactId)
-  interactionUrl.searchParams.set('nonce', grant.interactNonce)
-  interactionUrl.searchParams.set('clientName', clientName as string)
-  interactionUrl.searchParams.set('clientUri', clientUri as string)
-
-  ctx.redirect(interactionUrl.toString())
 }
 
 // TODO: allow idp to specify the reason for rejection
@@ -308,28 +302,28 @@ async function handleGrantChoice(
 
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
-  }
-
-  if (
-    grant.state === GrantState.Revoked ||
-    grant.state === GrantState.Rejected
-  ) {
-    ctx.throw(401, { error: 'user_denied' })
-  }
-
-  if (grant.state === GrantState.Granted) {
-    ctx.throw(400, { error: 'request_denied' })
-  }
-
-  if (choice === GrantChoices.Accept) {
-    await grantService.issueGrant(grant.id)
-  } else if (choice === GrantChoices.Reject) {
-    await grantService.rejectGrant(grant.id)
   } else {
-    ctx.throw(404)
-  }
+    if (
+      grant.state === GrantState.Revoked ||
+      grant.state === GrantState.Rejected
+    ) {
+      ctx.throw(401, { error: 'user_denied' })
+    }
 
-  ctx.status = 202
+    if (grant.state === GrantState.Granted) {
+      ctx.throw(400, { error: 'request_denied' })
+    }
+
+    if (choice === GrantChoices.Accept) {
+      await grantService.issueGrant(grant.id)
+    } else if (choice === GrantChoices.Reject) {
+      await grantService.rejectGrant(grant.id)
+    } else {
+      ctx.throw(404)
+    }
+
+    ctx.status = 202
+  }
 }
 
 async function finishInteraction(
@@ -350,27 +344,29 @@ async function finishInteraction(
   // TODO: redirect with this error in query string
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
-  }
-
-  const clientRedirectUri = new URL(grant.finishUri)
-  if (grant.state === GrantState.Granted) {
-    const { clientNonce, interactNonce, interactRef } = grant
-    const interactUrl = config.identityServerDomain + `/interact/${interactId}`
-
-    // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
-    const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
-
-    const hash = crypto.createHash('sha3-512').update(data).digest('base64')
-    clientRedirectUri.searchParams.set('hash', hash)
-    clientRedirectUri.searchParams.set('interact_ref', interactRef)
-    ctx.redirect(clientRedirectUri.toString())
-  } else if (grant.state === GrantState.Rejected) {
-    clientRedirectUri.searchParams.set('result', 'grant_rejected')
-    ctx.redirect(clientRedirectUri.toString())
   } else {
-    // Grant is not in either an accepted or rejected state
-    clientRedirectUri.searchParams.set('result', 'grant_invalid')
-    ctx.redirect(clientRedirectUri.toString())
+    // TODO: figure out what to do if no finish URI is provided
+    const clientRedirectUri = new URL(grant.finishUri || ctx.request.href)
+    if (grant.state === GrantState.Granted) {
+      const { clientNonce, interactNonce, interactRef } = grant
+      const interactUrl =
+        config.identityServerDomain + `/interact/${interactId}`
+
+      // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
+      const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
+
+      const hash = crypto.createHash('sha3-512').update(data).digest('base64')
+      clientRedirectUri.searchParams.set('hash', hash)
+      clientRedirectUri.searchParams.set('interact_ref', interactRef || '')
+      ctx.redirect(clientRedirectUri.toString())
+    } else if (grant.state === GrantState.Rejected) {
+      clientRedirectUri.searchParams.set('result', 'grant_rejected')
+      ctx.redirect(clientRedirectUri.toString())
+    } else {
+      // Grant is not in either an accepted or rejected state
+      clientRedirectUri.searchParams.set('result', 'grant_invalid')
+      ctx.redirect(clientRedirectUri.toString())
+    }
   }
 }
 
@@ -396,22 +392,22 @@ async function continueGrant(
   )
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
+  } else {
+    if (grant.state !== GrantState.Granted) {
+      ctx.throw(401, { error: 'request_denied' })
+    }
+
+    const accessToken = await accessTokenService.create(grant.id)
+    const access = await accessService.getByGrant(grant.id)
+
+    // TODO: add "continue" to response if additional grant request steps are added
+    ctx.body = createGrantBody({
+      domain: config.authServerDomain,
+      grant,
+      access,
+      accessToken
+    })
   }
-
-  if (grant.state !== GrantState.Granted) {
-    ctx.throw(401, { error: 'request_denied' })
-  }
-
-  const accessToken = await accessTokenService.create(grant.id)
-  const access = await accessService.getByGrant(grant.id)
-
-  // TODO: add "continue" to response if additional grant request steps are added
-  ctx.body = createGrantBody({
-    domain: config.authServerDomain,
-    grant,
-    access,
-    accessToken
-  })
 }
 
 function createGrantBody({
@@ -439,4 +435,14 @@ function createGrantBody({
       uri: domain + `/continue/${grant.continueId}`
     }
   }
+}
+
+function createAccessBody(accesses: Access[]): Partial<Access>[] {
+  return accesses.map((access) => ({
+    grantId: access.grantId,
+    type: access.type,
+    actions: access.actions,
+    identifier: access.identifier,
+    limits: access.limits
+  }))
 }
