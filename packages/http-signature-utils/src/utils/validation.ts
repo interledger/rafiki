@@ -16,7 +16,10 @@ export function validateSignatureHeaders(request: RequestLike): boolean {
     return false
 
   return (
-    sig && sigInput && typeof sig === 'string' && typeof sigInput === 'string'
+    sig !== undefined &&
+    sigInput !== undefined &&
+    typeof sig === 'string' &&
+    typeof sigInput === 'string'
   )
 }
 

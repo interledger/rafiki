@@ -27,6 +27,9 @@ export const generateJwk = ({
   const jwk = createPublicKey(privateKey).export({
     format: 'jwk'
   })
+  if (jwk.x === undefined) {
+    throw new Error('Failed to derive public key')
+  }
 
   if (jwk.crv !== 'Ed25519' || jwk.kty !== 'OKP') {
     throw new Error('Key is not EdDSA-Ed25519')

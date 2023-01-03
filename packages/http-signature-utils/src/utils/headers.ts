@@ -29,7 +29,7 @@ export const createHeaders = async ({
   privateKey,
   keyId
 }: SignOptions): Promise<Headers> => {
-  let contentHeaders: ContentHeaders
+  let contentHeaders: ContentHeaders | undefined
   if (request.body) {
     contentHeaders = createContentHeaders(request.body as string)
     request.headers = { ...request.headers, ...contentHeaders }
@@ -39,7 +39,7 @@ export const createHeaders = async ({
     privateKey,
     keyId
   })
-  if (contentHeaders) {
+  if (contentHeaders !== undefined) {
     return {
       ...contentHeaders,
       ...signatureHeaders
