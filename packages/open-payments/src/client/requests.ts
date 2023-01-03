@@ -185,6 +185,13 @@ export const deleteRequest = async <TResponse>(
   }
 }
 
+type RequestConfig = {
+  method: string
+  url: string
+  headers: Record<string, string>
+  data?: Record<string, unknown>
+}
+
 export const createAxiosInstance = (args: {
   requestTimeoutMs: number
   privateKey?: KeyLike
@@ -195,9 +202,11 @@ export const createAxiosInstance = (args: {
   })
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
 
-  if (args.privateKey && args.keyId) {
+  if (args.privateKey !== undefined && args.keyId !== undefined) {
+    const privateKey = args.privateKey
+    const keyId = args.keyId
     axiosInstance.interceptors.request.use(
-      async (config) => {
+      async (config: RequestConfig) => {
         const contentAndSigHeaders = await createHeaders({
           request: {
             method: config.method.toUpperCase(),
@@ -205,24 +214,31 @@ export const createAxiosInstance = (args: {
             headers: config.headers,
             body: config.data ? JSON.stringify(config.data) : undefined
           },
-          privateKey: args.privateKey,
-          keyId: args.keyId
+          privateKey,
+          keyId
         })
-        if (config.data) {
+        if (
+          config.data &&
+          contentAndSigHeaders['Content-Digest'] &&
+          contentAndSigHeaders['Content-Length'] &&
+          contentAndSigHeaders['Content-Type']
+        ) {
           config.headers['Content-Digest'] =
             contentAndSigHeaders['Content-Digest']
           config.headers['Content-Length'] =
             contentAndSigHeaders['Content-Length']
           config.headers['Content-Type'] = contentAndSigHeaders['Content-Type']
+        } else {
+          throw new Error('Error creating content headers')
         }
         config.headers['Signature'] = contentAndSigHeaders['Signature']
         config.headers['Signature-Input'] =
           contentAndSigHeaders['Signature-Input']
         return config
       },
-      null,
+      undefined,
       {
-        runWhen: (config) =>
+        runWhen: (config: RequestConfig) =>
           config.method.toLowerCase() === 'post' ||
           !!config.headers['Authorization']
       }

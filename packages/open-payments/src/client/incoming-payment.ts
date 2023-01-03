@@ -161,6 +161,7 @@ export const validateIncomingPayment = (
   }
 
   if (
+    !payment.ilpStreamConnection ||
     payment.ilpStreamConnection.assetCode !==
       payment.receivedAmount.assetCode ||
     payment.ilpStreamConnection.assetScale !== payment.receivedAmount.assetScale
