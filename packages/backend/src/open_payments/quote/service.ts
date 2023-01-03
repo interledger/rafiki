@@ -85,6 +85,9 @@ async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
+  if (options.sendAmount && options.receiveAmount) {
+    return QuoteError.InvalidAmount
+  }
   const paymentPointer = await deps.paymentPointerService.get(
     options.paymentPointerId
   )
