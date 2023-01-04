@@ -180,6 +180,7 @@ input CreatePeerInput {
   http: HttpInput!
   asset: AssetInput!
   staticIlpAddress: String!
+  name: String
 }
 
 input UpdatePeerInput {
@@ -187,6 +188,7 @@ input UpdatePeerInput {
   maxPacketAmount: UInt64
   http: HttpInput
   staticIlpAddress: String
+  name: String
 }
 
 input HttpInput {
@@ -320,6 +322,7 @@ type Peer implements Model {
   http: Http!
   asset: Asset!
   staticIlpAddress: String!
+  name: String
   createdAt: String!
 }
 
