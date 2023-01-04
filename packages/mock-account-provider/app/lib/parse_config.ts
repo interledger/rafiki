@@ -23,6 +23,7 @@ export interface Peering {
   asset: string
   scale: number
   initialLiquidity: string
+  name: string
 }
 
 export interface Account {

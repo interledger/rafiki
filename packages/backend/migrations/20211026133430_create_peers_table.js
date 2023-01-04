@@ -12,6 +12,8 @@ exports.up = function (knex) {
     table.string('outgoingToken').nullable()
     table.string('outgoingEndpoint').nullable()
 
+    table.string('name').nullable()
+
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 

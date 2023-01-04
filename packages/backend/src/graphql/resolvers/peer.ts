@@ -159,5 +159,6 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   http: peer.http,
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
+  name: peer.name,
   createdAt: new Date(+peer.createdAt).toISOString()
 })
