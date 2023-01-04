@@ -152,6 +152,7 @@ export type CreatePeerInput = {
   asset: AssetInput;
   http: HttpInput;
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
+  name?: InputMaybe<Scalars['String']>;
   staticIlpAddress: Scalars['String'];
 };
 
@@ -587,6 +588,7 @@ export type Peer = Model & {
   http: Http;
   id: Scalars['ID'];
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
+  name?: Maybe<Scalars['String']>;
   staticIlpAddress: Scalars['String'];
 };
 
@@ -723,6 +725,7 @@ export type UpdatePeerInput = {
   http?: InputMaybe<HttpInput>;
   id: Scalars['String'];
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
+  name?: InputMaybe<Scalars['String']>;
   staticIlpAddress?: InputMaybe<Scalars['String']>;
 };
 
@@ -1202,6 +1205,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

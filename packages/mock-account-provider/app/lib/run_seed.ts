@@ -16,7 +16,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
         peer.peerIlpAddress,
         peer.peerUrl,
         peer.asset,
-        peer.scale
+        peer.scale,
+        peer.name
       ).then((response) => response.peer)
       if (!peerResponse) {
         throw new Error('peer response not defined')
