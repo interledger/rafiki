@@ -56,13 +56,13 @@ paths:
         - schema:
             type: string
           name: clientName
-          in: path
+          in: query
           required: true
           description: 'Name of the client that created the grant'
         - schema:
             type: string
           name: clientUri
-          in: path
+          in: query
           required: true
           description: 'URI of the client that created the grant'
       description: 'To start the user interaction for grant approval, this endpoint redirects the user to an Identity provider endpoint for authentication.'
