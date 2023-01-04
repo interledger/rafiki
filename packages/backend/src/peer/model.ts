@@ -46,6 +46,8 @@ export class Peer
 
   public staticIlpAddress!: string
 
+  public name?: string
+
   $formatDatabaseJson(json: Pojo): Pojo {
     if (json.http?.outgoing) {
       json.outgoingToken = json.http.outgoing.authToken
