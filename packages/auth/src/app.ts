@@ -212,9 +212,7 @@ export class App {
         path: '/',
         method: HttpMethod.POST
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : grantInitiationHttpsigMiddleware,
+      grantInitiationHttpsigMiddleware,
       grantRoutes.create
     )
 
@@ -225,9 +223,7 @@ export class App {
         path: '/continue/{id}',
         method: HttpMethod.POST
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : grantContinueHttpsigMiddleware,
+      grantContinueHttpsigMiddleware,
       grantRoutes.continue
     )
 
@@ -251,9 +247,7 @@ export class App {
         path: '/token/{id}',
         method: HttpMethod.POST
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : tokenHttpsigMiddleware,
+      tokenHttpsigMiddleware,
       accessTokenRoutes.rotate
     )
 
@@ -264,9 +258,7 @@ export class App {
         path: '/token/{id}',
         method: HttpMethod.DELETE
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : tokenHttpsigMiddleware,
+      tokenHttpsigMiddleware,
       accessTokenRoutes.revoke
     )
 
