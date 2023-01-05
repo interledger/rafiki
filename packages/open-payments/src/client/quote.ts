@@ -8,15 +8,17 @@ interface GetArgs {
   accessToken: string
 }
 
-interface PostArgs<T> {
-  url: string
-  body: T
+interface CreateArgs {
+  paymentPointer: string
   accessToken: string
 }
 
 export interface QuoteRoutes {
   get(args: GetArgs): Promise<Quote>
-  create(args: PostArgs<CreateQuoteArgs>): Promise<Quote>
+  create(
+    createArgs: CreateArgs,
+    createQuoteArgs: CreateQuoteArgs
+  ): Promise<Quote>
 }
 
 export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
@@ -35,8 +37,13 @@ export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   return {
     get: (args: GetArgs) =>
       getQuote({ axiosInstance, logger }, args, getQuoteOpenApiValidator),
-    create: (args: PostArgs<CreateQuoteArgs>) =>
-      createQuote({ axiosInstance, logger }, args, createQuoteOpenApiValidator)
+    create: (createArgs: CreateArgs, createQuoteArgs: CreateQuoteArgs) =>
+      createQuote(
+        { axiosInstance, logger },
+        createArgs,
+        createQuoteOpenApiValidator,
+        createQuoteArgs
+      )
   }
 }
 
@@ -58,14 +65,17 @@ export const getQuote = async (
 
 export const createQuote = async (
   deps: BaseDeps,
-  args: PostArgs<CreateQuoteArgs>,
-  validateOpenApiResponse: ResponseValidator<Quote>
+  createArgs: CreateArgs,
+  validateOpenApiResponse: ResponseValidator<Quote>,
+  createQuoteArgs: CreateQuoteArgs
 ) => {
   const { axiosInstance, logger } = deps
+  const { accessToken, paymentPointer } = createArgs
+  const url = `${paymentPointer}${getRSPath('/quotes')}`
 
   const quote = await post(
     { axiosInstance, logger },
-    args,
+    { url, accessToken, body: createQuoteArgs },
     validateOpenApiResponse
   )
 
