@@ -208,4 +208,17 @@ describe('Grant Service', (): void => {
       expect(rejectedGrant).toBeUndefined()
     })
   })
+
+  describe('delete', (): void => {
+    test('Can delete a grant', async (): Promise<void> => {
+      await expect(grantService.deleteGrant(grant.continueId)).resolves.toEqual(
+        true
+      )
+      await expect(grantService.get(grant.id)).resolves.toBeUndefined()
+    })
+
+    test('Can "delete" unknown grant', async (): Promise<void> => {
+      await expect(grantService.deleteGrant(v4())).resolves.toEqual(false)
+    })
+  })
 })
