@@ -108,7 +108,7 @@ export const Config = {
   bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false),
 
   keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', undefined)),
+  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
