@@ -390,7 +390,7 @@ importers:
       koa: ^2.14.1
       node-mocks-http: ^1.12.1
       openapi-default-setter: ^12.0.0
-      openapi-request-coercer: ^12.0.0
+      openapi-request-coercer: ^12.1.0
       openapi-request-validator: ^12.0.0
       openapi-response-validator: ^12.1.0
       openapi-types: ^12.0.0
@@ -401,7 +401,7 @@ importers:
       ajv: 8.11.2
       ajv-formats: 2.1.1
       openapi-default-setter: 12.0.0
-      openapi-request-coercer: 12.0.0
+      openapi-request-coercer: 12.1.0
       openapi-request-validator: 12.0.0
       openapi-response-validator: 12.1.0
       openapi-types: 12.0.0
@@ -11573,10 +11573,10 @@ packages:
       openapi-types: 12.1.0
     dev: false
 
-  /openapi-request-coercer/12.0.0:
-    resolution: {integrity: sha512-iWgPUfyrGT5C6MNYnL61YJygwymqwVF57K6Ny9nZC41E14JaC+Wxbw1Q5XsNDi8Q+PolmYO2108RxStrk9wKyA==}
+  /openapi-request-coercer/12.1.0:
+    resolution: {integrity: sha512-fcZSwRsE/L5coxLhCUCa7LMFBJl8lVbihkR8yXbgLr6jAKHXsKGDB9UWVyZCkJecdROSNwUHmBsnN9kScN27Aw==}
     dependencies:
-      openapi-types: 12.0.0
+      openapi-types: 12.1.0
       ts-log: 2.2.4
     dev: false
 
