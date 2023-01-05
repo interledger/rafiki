@@ -22,7 +22,7 @@ export interface GrantService {
     interactRef: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
-  deleteGrant(continueId: string): Promise<number>
+  deleteGrant(continueId: string): Promise<boolean>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -117,14 +117,15 @@ async function rejectGrant(
 async function deleteGrant(
   deps: ServiceDependencies,
   continueId: string
-): Promise<number> {
+): Promise<boolean> {
   const deletion = await Grant.query(deps.knex).delete().where({ continueId })
   if (deletion === 0) {
     deps.logger.info(
       `Could not find grant corresponding to continueId: ${continueId}`
     )
+    return false
   }
-  return deletion
+  return true
 }
 
 async function create(

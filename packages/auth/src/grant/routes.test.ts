@@ -896,7 +896,7 @@ describe('Grant Routes', (): void => {
       )
       await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(202)
+      expect(ctx.status).toBe(204)
     })
 
     test('Can delete an existing grant', async (): Promise<void> => {
@@ -915,7 +915,7 @@ describe('Grant Routes', (): void => {
       )
       await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
-      expect(ctx.status).toBe(202)
+      expect(ctx.status).toBe(204)
     })
 
     test('Cannot delete non-existing grant', async (): Promise<void> => {

@@ -20,7 +20,8 @@ import {
   GetContext,
   ChooseContext,
   FinishContext,
-  GrantRoutes
+  GrantRoutes,
+  DeleteContext
 } from './grant/routes'
 import {
   AccessTokenRoutes,
@@ -228,15 +229,13 @@ export class App {
     )
 
     // Grant Cancel
-    this.publicRouter.delete(
+    this.publicRouter.delete<DefaultState, DeleteContext>(
       '/continue/:id',
-      createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
+      createValidatorMiddleware<DeleteContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
-        method: HttpMethod.POST
+        method: HttpMethod.DELETE
       }),
-      this.config.bypassSignatureValidation
-        ? (ctx, next) => next()
-        : grantContinueHttpsigMiddleware,
+      grantContinueHttpsigMiddleware,
       grantRoutes.delete
     )
 

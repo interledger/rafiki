@@ -415,14 +415,14 @@ async function continueGrant(
 }
 async function deleteGrant(
   deps: ServiceDependencies,
-  ctx: ContinueContext
+  ctx: DeleteContext
 ): Promise<void> {
   const { id: continueId } = ctx.params
   const deletion = await deps.grantService.deleteGrant(continueId)
-  if (deletion === 0) {
+  if (!deletion) {
     ctx.throw(404, { error: 'unknown_continue_id' })
   }
-  ctx.status = 202
+  ctx.status = 204
 }
 
 function createGrantBody({
