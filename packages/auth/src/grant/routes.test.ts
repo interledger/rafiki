@@ -19,6 +19,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
+import { generateNonce, generateToken } from '../shared/utils'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -50,7 +51,7 @@ const BASE_GRANT_REQUEST = {
     finish: {
       method: FinishMethod.Redirect,
       uri: 'https://example.com/finish',
-      nonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      nonce: generateNonce()
     }
   }
 }
@@ -68,16 +69,16 @@ describe('Grant Routes', (): void => {
   const generateBaseGrant = () => ({
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    continueToken: generateToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com',
-    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientNonce: generateNonce(),
     client: CLIENT,
     clientKeyId: CLIENT_KEY_ID,
     interactId: v4(),
     interactRef: v4(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    interactNonce: generateNonce()
   })
 
   const createContext = (
@@ -347,7 +348,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot finish interaction with invalid session', async (): Promise<void> => {
-        const invalidNonce = crypto.randomBytes(8).toString('hex')
+        const invalidNonce = generateNonce()
         const ctx = createContext(
           {
             headers: {
@@ -546,7 +547,7 @@ describe('Grant Routes', (): void => {
 
     test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
       const interactId = v4()
-      const nonce = crypto.randomBytes(8).toString('hex').toUpperCase()
+      const nonce = generateNonce()
       const ctx = createContext(
         {
           headers: {
