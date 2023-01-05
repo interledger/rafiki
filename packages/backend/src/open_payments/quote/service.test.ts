@@ -658,9 +658,6 @@ describe('QuoteService', (): void => {
         await expect(quoteService.create(options)).resolves.toEqual(
           QuoteError.InvalidAmount
         )
-        await expect(quoteService.create(options)).resolves.toEqual(
-          QuoteError.InvalidAmount
-        )
       }
     )
 
