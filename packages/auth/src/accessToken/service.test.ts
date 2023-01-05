@@ -17,6 +17,7 @@ import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
 import { generateTestKeys, JWK } from 'http-signature-utils'
+import { generateNonce, generateToken } from '../shared/utils'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -52,7 +53,7 @@ describe('Access Token Service', (): void => {
     startMethod: [StartMethod.Redirect],
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
-    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientNonce: generateNonce(),
     client: CLIENT
   }
 
@@ -81,11 +82,11 @@ describe('Access Token Service', (): void => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
       clientKeyId: testClientKey.kid,
-      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      continueToken: generateToken(),
       continueId: v4(),
       interactId: v4(),
-      interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      interactRef: generateNonce(),
+      interactNonce: generateNonce()
     })
     access = await Access.query(trx).insertAndFetch({
       grantId: grant.id,
@@ -94,7 +95,7 @@ describe('Access Token Service', (): void => {
     token = await AccessToken.query(trx).insertAndFetch({
       grantId: grant.id,
       ...BASE_TOKEN,
-      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      value: generateToken(),
       managementId: v4()
     })
   })
@@ -194,16 +195,16 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         clientKeyId: testClientKey.kid,
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
-        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        interactRef: generateNonce(),
+        interactNonce: generateNonce()
       })
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
-        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        value: generateToken(),
         managementId: v4()
       })
     })
@@ -247,11 +248,11 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         clientKeyId: testClientKey.kid,
-        continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
-        interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-        interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        interactRef: generateNonce(),
+        interactNonce: generateNonce()
       })
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -260,7 +261,7 @@ describe('Access Token Service', (): void => {
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
-        value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+        value: generateToken(),
         managementId: v4()
       })
       originalTokenValue = token.value

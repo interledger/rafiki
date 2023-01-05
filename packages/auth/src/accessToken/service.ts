@@ -4,6 +4,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { JWK } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
+import { generateToken } from '../shared/utils'
 import { Grant, GrantState } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
@@ -163,7 +164,7 @@ async function createAccessToken(
   opts?: AccessTokenOpts
 ): Promise<AccessToken> {
   return AccessToken.query(opts?.trx || deps.knex).insert({
-    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    value: generateToken(),
     managementId: v4(),
     grantId,
     expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
@@ -186,7 +187,7 @@ async function rotate(
         })
       if (oldToken) {
         const token = await AccessToken.query(trx).insertAndFetch({
-          value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+          value: generateToken(),
           grantId: oldToken.grantId,
           expiresIn: oldToken.expiresIn,
           managementId: v4()
