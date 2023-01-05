@@ -19,9 +19,10 @@ export interface GrantService {
   getByContinue(
     continueId: string,
     continueToken: string,
-    interactRef: string
+    interactRef?: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
+  deleteGrant(continueId: string): Promise<boolean>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -86,7 +87,8 @@ export async function createGrantService({
       continueToken: string,
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
-    rejectGrant: (grantId: string) => rejectGrant(deps, grantId)
+    rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
+    deleteGrant: (continueId: string) => deleteGrant(deps, continueId)
   }
 }
 
@@ -110,6 +112,20 @@ async function rejectGrant(
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
     state: GrantState.Rejected
   })
+}
+
+async function deleteGrant(
+  deps: ServiceDependencies,
+  continueId: string
+): Promise<boolean> {
+  const deletion = await Grant.query(deps.knex).delete().where({ continueId })
+  if (deletion === 0) {
+    deps.logger.info(
+      `Could not find grant corresponding to continueId: ${continueId}`
+    )
+    return false
+  }
+  return true
 }
 
 async function create(
@@ -176,12 +192,12 @@ async function getByInteractionSession(
 async function getByContinue(
   continueId: string,
   continueToken: string,
-  interactRef: string
+  interactRef?: string
 ): Promise<Grant | null> {
-  const grant = await Grant.query().findOne({ interactRef })
+  const grant = await Grant.query().findOne({ continueId })
   if (
-    continueId !== grant?.continueId ||
-    continueToken !== grant?.continueToken
+    continueToken !== grant?.continueToken ||
+    (interactRef && interactRef !== grant?.interactRef)
   )
     return null
   return grant
