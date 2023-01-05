@@ -32,6 +32,7 @@ describe('quote', (): void => {
   const logger = silentLogger
   const baseUrl = 'http://localhost:1000'
   const openApiValidators = mockOpenApiResponseValidators()
+  const paymentPointer = 'http://localhost:1000/.well-known/pay'
   const accessToken = 'accessToken'
 
   describe('createQuoteRoutes', (): void => {
@@ -97,27 +98,25 @@ describe('quote', (): void => {
 
   describe('createQuote', (): void => {
     test('returns the quote if it passes open api validation', async (): Promise<void> => {
-      const scope = nock(baseUrl).post(`/quotes`).reply(200, quote)
+      const scope = nock(paymentPointer).post(`/quotes`).reply(200, quote)
       const result = await createQuote(
         {
           axiosInstance,
           logger
         },
         {
-          url: `${baseUrl}/quotes`,
-          accessToken,
-          body: {
-            receiver: quote.receiver
-          }
+          paymentPointer,
+          accessToken
         },
-        openApiValidators.successfulValidator
+        openApiValidators.successfulValidator,
+        { receiver: quote.receiver }
       )
       expect(result).toStrictEqual(quote)
       scope.done()
     })
 
     test('throws if quote does not pass open api validation', async (): Promise<void> => {
-      const scope = nock(baseUrl).post(`/quotes`).reply(200, quote)
+      const scope = nock(paymentPointer).post(`/quotes`).reply(200, quote)
       await expect(() =>
         createQuote(
           {
@@ -125,13 +124,11 @@ describe('quote', (): void => {
             logger
           },
           {
-            url: `${baseUrl}/quotes`,
-            accessToken,
-            body: {
-              receiver: quote.receiver
-            }
+            paymentPointer,
+            accessToken
           },
-          openApiValidators.failedValidator
+          openApiValidators.failedValidator,
+          { receiver: quote.receiver }
         )
       ).rejects.toThrowError()
       scope.done()
@@ -174,7 +171,7 @@ describe('quote', (): void => {
       })
     })
 
-    describe('post', (): void => {
+    describe('create', (): void => {
       test('calls post method with the correct validator', async (): Promise<void> => {
         const mockResponseValidator = ({ path, method }) =>
           path === `/quotes` && method === HttpMethod.POST
@@ -187,19 +184,19 @@ describe('quote', (): void => {
         const postSpy = jest
           .spyOn(requestors, 'post')
           .mockResolvedValueOnce(quote)
-        const url = `${baseUrl}${getRSPath('/quotes')}`
+        const url = `${paymentPointer}${getRSPath('/quotes')}`
 
         await createQuoteRoutes({
           openApi,
           axiosInstance,
           logger
-        }).create({
-          url,
-          accessToken,
-          body: {
-            receiver: quote.receiver
-          }
-        })
+        }).create(
+          {
+            paymentPointer,
+            accessToken
+          },
+          { receiver: quote.receiver }
+        )
 
         expect(postSpy).toHaveBeenCalledWith(
           {
