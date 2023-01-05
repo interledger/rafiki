@@ -75,14 +75,12 @@ describe('Stream Controller', function () {
     const next = jest.fn()
     await expect(controller(ctx, next)).resolves.toBeUndefined()
     expect(next).toHaveBeenCalledTimes(0)
-    expect(
-      await services.redis.get(
-        streamReceivedKey(
-          sha256(ctx.request.prepare.destination).toString('hex')
-        )
-      )
-    ).toBe(ctx.request.prepare.amount)
-
+    const connectionKey = streamReceivedKey(
+      sha256(ctx.request.prepare.destination).toString('hex')
+    )
+    await expect(services.redis.get(connectionKey)).resolves.toEqual(
+      ctx.request.prepare.amount
+    )
     const reply = ctx.response.reply as IlpFulfill
     expect(reply.fulfillment).toEqual(fulfillment)
     const replyPacket = await StreamPacket.decryptAndDeserialize(
@@ -92,6 +90,9 @@ describe('Stream Controller', function () {
     expect(+replyPacket.sequence).toBe(100)
     expect(+replyPacket.prepareAmount).toBe(+ctx.request.prepare.amount)
     expect(replyPacket.frames.length).toBe(0) // No `StreamReceipt` frame
+    expect(ctx.revertTotalReceived).toEqual(expect.any(Function))
+    await expect(ctx.revertTotalReceived()).resolves.toEqual('0')
+    await expect(services.redis.get(connectionKey)).resolves.toBe('0')
   })
 
   test("skips when the payment tag can't be decrypted", async () => {
@@ -114,6 +115,7 @@ describe('Stream Controller', function () {
     const next = jest.fn()
     await expect(controller(ctx, next)).resolves.toBeUndefined()
     expect(ctx.response.reply).toBeUndefined()
+    expect(ctx.revertTotalReceived).toBeUndefined()
     expect(next).toHaveBeenCalledTimes(1)
   })
 
@@ -133,6 +135,7 @@ describe('Stream Controller', function () {
     const next = jest.fn()
     await expect(controller(ctx, next)).resolves.toBeUndefined()
     expect(ctx.response.reply).toBeUndefined()
+    expect(ctx.revertTotalReceived).toBeUndefined()
     expect(next).toHaveBeenCalledTimes(1)
   })
 })
