@@ -384,7 +384,7 @@ importers:
       openapi-default-setter: ^12.0.0
       openapi-request-coercer: ^12.0.0
       openapi-request-validator: ^12.0.0
-      openapi-response-validator: ^12.0.0
+      openapi-response-validator: ^12.1.0
       openapi-types: ^12.0.0
       typescript: ^4.9.4
       uuid: ^9.0.0
@@ -395,7 +395,7 @@ importers:
       openapi-default-setter: 12.0.0
       openapi-request-coercer: 12.0.0
       openapi-request-validator: 12.0.0
-      openapi-response-validator: 12.0.0
+      openapi-response-validator: 12.1.0
       openapi-types: 12.0.0
     devDependencies:
       '@types/jest': 28.1.8
@@ -11445,7 +11445,7 @@ packages:
   /openapi-jsonschema-parameters/12.0.0:
     resolution: {integrity: sha512-OqPabvo3qEUpgG2blD+CqAUNC+/RNYsUKEqY3vSAu2syxrabRNxtaagLhA5WdieVQPLFuOlSX13TFUu8R/+kbA==}
     dependencies:
-      openapi-types: 12.0.0
+      openapi-types: 12.1.0
     dev: false
 
   /openapi-request-coercer/12.0.0:
@@ -11466,11 +11466,11 @@ packages:
       ts-log: 2.2.4
     dev: false
 
-  /openapi-response-validator/12.0.0:
-    resolution: {integrity: sha512-02zzantcJFYBeBeDJVLLNUushxMYkdM4tD9+V1BM7U/witfEc++IX0C/GRuEa1KJ/TTLvnzsXbyR/o/9DipUKg==}
+  /openapi-response-validator/12.1.0:
+    resolution: {integrity: sha512-GavGFToPoCt6iF5IZXfyXggmu4urNYmC0FN4CLJF5y8mbwWviI73Te5fybiUE2TmXvvaGSs9EKumSX7Ibxv6Sw==}
     dependencies:
       ajv: 8.11.2
-      openapi-types: 12.0.0
+      openapi-types: 12.1.0
     dev: false
 
   /openapi-response-validator/9.3.1:
@@ -11491,6 +11491,10 @@ packages:
 
   /openapi-types/12.0.0:
     resolution: {integrity: sha512-6Wd9k8nmGQHgCbehZCP6wwWcfXcvinhybUTBatuhjRsCxUIujuYFZc9QnGeae75CyHASewBtxs0HX/qwREReUw==}
+
+  /openapi-types/12.1.0:
+    resolution: {integrity: sha512-XpeCy01X6L5EpP+6Hc3jWN7rMZJ+/k1lwki/kTmWzbVhdPie3jd5O2ZtedEx8Yp58icJ0osVldLMrTB/zslQXA==}
+    dev: false
 
   /openapi-types/9.3.1:
     resolution: {integrity: sha512-/Yvsd2D7miYB4HLJ3hOOS0+vnowQpaT75FsHzr/y5M9P4q9bwa7RcbW2YdH6KZBn8ceLbKGnHxMZ1CHliGHUFw==}
