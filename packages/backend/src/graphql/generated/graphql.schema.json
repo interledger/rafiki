@@ -1042,14 +1042,14 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "asset",
+            "name": "assetId",
             "description": null,
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "INPUT_OBJECT",
-                "name": "AssetInput",
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },
@@ -1337,14 +1337,14 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "asset",
+            "name": "assetId",
             "description": null,
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "kind": "INPUT_OBJECT",
-                "name": "AssetInput",
+                "kind": "SCALAR",
+                "name": "String",
                 "ofType": null
               }
             },

@@ -178,7 +178,7 @@ type PeerEdge {
 input CreatePeerInput {
   maxPacketAmount: UInt64
   http: HttpInput!
-  asset: AssetInput!
+  assetId: String!
   staticIlpAddress: String!
   name: String
 }
@@ -523,7 +523,7 @@ type IncomingPaymentResponse {
 }
 
 input CreatePaymentPointerInput {
-  asset: AssetInput!
+  assetId: String!
   url: String!
   publicName: String
 }

@@ -197,12 +197,10 @@ export function initIocContainer(
   })
   container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
-    const assetService = await deps.use('assetService')
     return await createPaymentPointerService({
       knex: await deps.use('knex'),
       logger: logger,
-      accountingService: await deps.use('accountingService'),
-      assetService: assetService
+      accountingService: await deps.use('accountingService')
     })
   })
   container.singleton('spspRoutes', async (deps) => {

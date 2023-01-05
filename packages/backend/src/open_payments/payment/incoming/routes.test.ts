@@ -2,7 +2,7 @@ import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { Amount, serializeAmount } from '../../amount'
+import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
 import { getRouteTests, setup } from '../../payment_pointer/model.test'
 import { createTestApp, TestContainer } from '../../../tests/app'
@@ -18,9 +18,11 @@ import {
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
+import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { Asset } from '../../../asset/model'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -38,10 +40,7 @@ describe('Incoming Payment Routes', (): void => {
     jestOpenAPI(resourceServerSpec)
   })
 
-  const asset = {
-    code: 'USD',
-    scale: 2
-  }
+  let asset: Asset
   let paymentPointer: PaymentPointer
   let expiresAt: Date
   let incomingAmount: Amount
@@ -53,8 +52,9 @@ describe('Incoming Payment Routes', (): void => {
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
 
     expiresAt = new Date(Date.now() + 30_000)
+    asset = await createAsset(deps)
     paymentPointer = await createPaymentPointer(deps, {
-      asset
+      assetId: asset.id
     })
     incomingAmount = {
       value: BigInt('123'),
@@ -136,6 +136,16 @@ describe('Incoming Payment Routes', (): void => {
     ${false}  | ${'without grant'}
     ${true}   | ${'with grant'}
   `('create - $description', ({ withGrant }): void => {
+    let amount: AmountJSON
+
+    beforeEach((): void => {
+      amount = {
+        value: '2',
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+    })
+
     test('returns error on distant-future expiresAt', async (): Promise<void> => {
       const ctx = setup<CreateContext<CreateBody>>({
         reqOpts: { body: {} },
@@ -151,9 +161,9 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test.each`
-      incomingAmount                                     | description  | externalRef  | expiresAt
-      ${{ value: '2', assetCode: 'USD', assetScale: 2 }} | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined}                                       | ${undefined} | ${undefined} | ${undefined}
+      incomingAmount | description  | externalRef  | expiresAt
+      ${amount}      | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
+      ${undefined}   | ${undefined} | ${undefined} | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({

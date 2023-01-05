@@ -1,10 +1,15 @@
-import { NotFoundError, raw, Transaction } from 'objection'
+import {
+  ForeignKeyViolationError,
+  NotFoundError,
+  raw,
+  Transaction
+} from 'objection'
 import { isValidIlpAddress } from 'ilp-packet'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
 import { AccountingService, AccountTypeCode } from '../accounting/service'
-import { AssetOptions, AssetService } from '../asset/service'
+import { AssetService } from '../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
 import { Pagination } from '../shared/baseModel'
@@ -28,7 +33,7 @@ export type Options = {
 }
 
 export type CreateOptions = Options & {
-  asset: AssetOptions
+  assetId: string
 }
 
 export type UpdateOptions = Partial<Options> & {
@@ -37,7 +42,7 @@ export type UpdateOptions = Partial<Options> & {
 
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
-  create(options: CreateOptions, trx?: Transaction): Promise<Peer | PeerError>
+  create(options: CreateOptions): Promise<Peer | PeerError>
   update(options: UpdateOptions): Promise<Peer | PeerError>
   getByDestinationAddress(address: string): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
@@ -69,7 +74,7 @@ export async function createPeerService({
   }
   return {
     get: (id) => getPeer(deps, id),
-    create: (options, trx) => createPeer(deps, options, trx),
+    create: (options) => createPeer(deps, options),
     update: (options) => updatePeer(deps, options),
     getByDestinationAddress: (destinationAddress) =>
       getPeerByDestinationAddress(deps, destinationAddress),
@@ -82,65 +87,58 @@ async function getPeer(
   deps: ServiceDependencies,
   id: string
 ): Promise<Peer | undefined> {
-  return Peer.query(deps.knex).findById(id).withGraphJoined('asset')
+  return Peer.query(deps.knex).findById(id).withGraphFetched('asset')
 }
 
 async function createPeer(
   deps: ServiceDependencies,
-  options: CreateOptions,
-  trx?: Transaction
+  options: CreateOptions
 ): Promise<Peer | PeerError> {
   if (!isValidIlpAddress(options.staticIlpAddress)) {
     return PeerError.InvalidStaticIlpAddress
   }
 
-  const peerTrx = trx || (await Peer.startTransaction(deps.knex))
-
   try {
-    const asset = await deps.assetService.getOrCreate(
-      options.asset as AssetOptions
-    )
+    return await Peer.transaction(deps.knex, async (trx) => {
+      const peer = await Peer.query(trx)
+        .insertAndFetch({
+          assetId: options.assetId,
+          http: options.http,
+          maxPacketAmount: options.maxPacketAmount,
+          staticIlpAddress: options.staticIlpAddress,
+          name: options.name
+        })
+        .withGraphFetched('asset')
 
-    const peer = await Peer.query(peerTrx)
-      .insertAndFetch({
-        assetId: asset.id,
-        http: options.http,
-        maxPacketAmount: options.maxPacketAmount,
-        staticIlpAddress: options.staticIlpAddress,
-        name: options.name
-      })
-      .withGraphFetched('asset')
-
-    if (options.http?.incoming) {
-      const err = await addIncomingHttpTokens({
-        deps,
-        peerId: peer.id,
-        tokens: options.http?.incoming?.authTokens,
-        trx: peerTrx
-      })
-      if (err) {
-        if (!trx) {
-          await peerTrx.rollback()
+      if (options.http?.incoming) {
+        const err = await addIncomingHttpTokens({
+          deps,
+          peerId: peer.id,
+          tokens: options.http?.incoming?.authTokens,
+          trx
+        })
+        if (err) {
+          throw err
         }
-        return err
       }
-    }
 
-    await deps.accountingService.createLiquidityAccount(
-      {
-        id: peer.id,
-        asset
-      },
-      AccountTypeCode.LiquidityPeer
-    )
+      await deps.accountingService.createLiquidityAccount(
+        {
+          id: peer.id,
+          asset: peer.asset
+        },
+        AccountTypeCode.LiquidityPeer
+      )
 
-    if (!trx) {
-      await peerTrx.commit()
-    }
-    return peer
+      return peer
+    })
   } catch (err) {
-    if (!trx) {
-      await peerTrx.rollback()
+    if (err instanceof ForeignKeyViolationError) {
+      if (err.constraint === 'peers_assetid_foreign') {
+        return PeerError.UnknownAsset
+      }
+    } else if (isPeerError(err)) {
+      return err
     }
     throw err
   }
@@ -172,7 +170,7 @@ async function updatePeer(
           trx
         })
         if (err) {
-          await trx.rollback(err)
+          throw err
         }
       }
       return await Peer.query(trx)

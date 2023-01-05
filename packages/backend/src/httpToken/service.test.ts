@@ -4,7 +4,7 @@ import { v4 as uuid } from 'uuid'
 import { HttpTokenService } from './service'
 import { HttpTokenError } from './errors'
 import { createTestApp, TestContainer } from '../tests/app'
-import { PeerFactory } from '../tests/peerFactory'
+import { createPeer } from '../tests/peer'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -16,7 +16,6 @@ describe('HTTP Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let httpTokenService: HttpTokenService
-  let peerFactory: PeerFactory
   let peer: Peer
   let knex: Knex
 
@@ -25,12 +24,10 @@ describe('HTTP Token Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = await deps.use('knex')
     httpTokenService = await deps.use('httpTokenService')
-    const peerService = await deps.use('peerService')
-    peerFactory = new PeerFactory(peerService)
   })
 
   beforeEach(async (): Promise<void> => {
-    peer = await peerFactory.build()
+    peer = await createPeer(deps)
   })
 
   afterEach(async (): Promise<void> => {
@@ -135,7 +132,7 @@ describe('HTTP Token Service', (): void => {
       await expect(
         httpTokenService.create([
           {
-            peerId: (await peerFactory.build()).id,
+            peerId: (await createPeer(deps)).id,
             token
           }
         ])
