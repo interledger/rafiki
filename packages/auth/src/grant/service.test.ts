@@ -1,5 +1,4 @@
 import assert from 'assert'
-import crypto from 'crypto'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -13,6 +12,7 @@ import { GrantService, GrantRequest } from '../grant/service'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
+import { generateNonce, generateToken } from '../shared/utils'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -37,16 +37,16 @@ describe('Grant Service', (): void => {
     grant = await Grant.query().insert({
       state: GrantState.Pending,
       startMethod: [StartMethod.Redirect],
-      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      continueToken: generateToken(),
       continueId: v4(),
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com',
-      clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      clientNonce: generateNonce(),
       client: CLIENT,
       clientKeyId: CLIENT_KEY_ID,
       interactId: v4(),
       interactRef: v4(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      interactNonce: generateNonce()
     })
 
     await Access.query().insert({
@@ -76,7 +76,7 @@ describe('Grant Service', (): void => {
       finish: {
         method: FinishMethod.Redirect,
         uri: 'https://example.com/finish',
-        nonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+        nonce: generateNonce()
       }
     }
   }
