@@ -888,7 +888,10 @@ describe('Grant Routes', (): void => {
       const ctx = createContext(
         {
           url: '/continue/{id}',
-          method: 'delete'
+          method: 'delete',
+          headers: {
+            Authorization: `GNAP ${grant.continueToken}`
+          }
         },
         {
           id: grant.continueId
@@ -907,7 +910,10 @@ describe('Grant Routes', (): void => {
       const ctx = createContext(
         {
           url: '/continue/{id}',
-          method: 'delete'
+          method: 'delete',
+          headers: {
+            Authorization: `GNAP ${grant.continueToken}`
+          }
         },
         {
           id: grant.continueId
@@ -922,7 +928,10 @@ describe('Grant Routes', (): void => {
       const ctx = createContext(
         {
           url: '/continue/{id}',
-          method: 'delete'
+          method: 'delete',
+          headers: {
+            Authorization: `GNAP ${grant.continueToken}`
+          }
         },
         {
           id: v4()
@@ -930,8 +939,36 @@ describe('Grant Routes', (): void => {
       )
       await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
         status: 404,
-        error: 'unknown_continue_id'
+        error: 'unknown_request'
       })
     })
+
+    test.each`
+      token    | description    | status | error
+      ${true}  | ${' matching'} | ${404} | ${'unknown_request'}
+      ${false} | ${''}          | ${401} | ${'invalid_request'}
+    `(
+      'Cannot delete without$description continueToken',
+      async ({ token, status, error }): Promise<void> => {
+        const ctx = createContext(
+          {
+            url: '/continue/{id}',
+            method: 'delete',
+            headers: token
+              ? {
+                  Authorization: `GNAP ${v4()}`
+                }
+              : undefined
+          },
+          {
+            id: v4()
+          }
+        )
+        await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+          status,
+          error
+        })
+      }
+    )
   })
 })

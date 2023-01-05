@@ -19,7 +19,7 @@ export interface GrantService {
   getByContinue(
     continueId: string,
     continueToken: string,
-    interactRef: string
+    interactRef?: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
   deleteGrant(continueId: string): Promise<boolean>
@@ -192,12 +192,12 @@ async function getByInteractionSession(
 async function getByContinue(
   continueId: string,
   continueToken: string,
-  interactRef: string
+  interactRef?: string
 ): Promise<Grant | null> {
-  const grant = await Grant.query().findOne({ interactRef })
+  const grant = await Grant.query().findOne({ continueId })
   if (
-    continueId !== grant?.continueId ||
-    continueToken !== grant?.continueToken
+    continueToken !== grant?.continueToken ||
+    (interactRef && interactRef !== grant?.interactRef)
   )
     return null
   return grant
