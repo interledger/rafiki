@@ -36,8 +36,6 @@ import { createIncomingPaymentService } from './open_payments/payment/incoming/s
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './connector'
-import { createSessionService } from './session/service'
-import { createApiKeyService } from './apiKey/service'
 import { createOpenAPI } from 'openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 import { createConnectionService } from './open_payments/connection/service'
@@ -343,27 +341,6 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       outgoingPaymentService: await deps.use('outgoingPaymentService')
-    })
-  })
-
-  container.singleton('sessionService', async (deps) => {
-    const logger = await deps.use('logger')
-    const redis = await deps.use('redis')
-    return await createSessionService({
-      logger: logger,
-      redis: redis,
-      sessionLength: config.sessionLength
-    })
-  })
-
-  container.singleton('apiKeyService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-    const sessionService = await deps.use('sessionService')
-    return await createApiKeyService({
-      logger: logger,
-      knex: knex,
-      sessionService: sessionService
     })
   })
 
