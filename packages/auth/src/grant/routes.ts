@@ -432,6 +432,28 @@ async function deleteGrant(
   }
   ctx.status = 204
 }
+async function deleteGrant(
+  deps: ServiceDependencies,
+  ctx: DeleteContext
+): Promise<void> {
+  const { id: continueId } = ctx.params
+  const continueToken = (ctx.headers['authorization'] as string)?.split(
+    'GNAP '
+  )[1]
+  if (!continueId || !continueToken) {
+    ctx.throw(401, { error: 'invalid_request' })
+  }
+  const grant = await deps.grantService.getByContinue(continueId, continueToken)
+  if (!grant) {
+    ctx.throw(404, { error: 'unknown_request' })
+  }
+
+  const deletion = await deps.grantService.deleteGrant(continueId)
+  if (!deletion) {
+    ctx.throw(404, { error: 'unknown_request' })
+  }
+  ctx.status = 204
+}
 
 function createGrantBody({
   domain,
