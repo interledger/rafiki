@@ -48,8 +48,6 @@ export const Config = {
   ),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
-  adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
-  sessionLength: envInt('SESSION_LENGTH', 30), // in minutes
   devAccessToken: envString('DEV_ACCESS_TOKEN', 'dev-access-token'),
 
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
