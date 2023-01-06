@@ -383,7 +383,7 @@ importers:
       node-mocks-http: ^1.12.1
       openapi-default-setter: ^12.0.0
       openapi-request-coercer: ^12.1.0
-      openapi-request-validator: ^12.0.0
+      openapi-request-validator: ^12.1.0
       openapi-response-validator: ^12.1.0
       openapi-types: ^12.0.0
       typescript: ^4.9.4
@@ -394,7 +394,7 @@ importers:
       ajv-formats: 2.1.1_ajv@8.11.2
       openapi-default-setter: 12.0.0
       openapi-request-coercer: 12.1.0
-      openapi-request-validator: 12.0.0
+      openapi-request-validator: 12.1.0
       openapi-response-validator: 12.1.0
       openapi-types: 12.0.0
     devDependencies:
@@ -11102,8 +11102,8 @@ packages:
       openapi-types: 12.0.0
     dev: false
 
-  /openapi-jsonschema-parameters/12.0.0:
-    resolution: {integrity: sha512-OqPabvo3qEUpgG2blD+CqAUNC+/RNYsUKEqY3vSAu2syxrabRNxtaagLhA5WdieVQPLFuOlSX13TFUu8R/+kbA==}
+  /openapi-jsonschema-parameters/12.1.0:
+    resolution: {integrity: sha512-JmJfBHAomeWefA9HAu5Ee9VDtLRG6C2jVwOjHXvBL8BcRw65ibYTmWMvA7MIYbPT1WHe1waUzw4An7a+Nr/RWg==}
     dependencies:
       openapi-types: 12.1.0
     dev: false
@@ -11115,14 +11115,14 @@ packages:
       ts-log: 2.2.4
     dev: false
 
-  /openapi-request-validator/12.0.0:
-    resolution: {integrity: sha512-z0K3fRViKbamg80RJgNLzLZik2QBvXVfHgtpK4nGlTQ7qgn06PApFzF1Arc4Fb3aAB26BFBQGzjrojT58XjA3A==}
+  /openapi-request-validator/12.1.0:
+    resolution: {integrity: sha512-WbcX/mrRGq0GBOqf/Rv4X0vY2WUO1ZmOjrWsnRByEIIJ/6LDWVUqlgEnpVEzpDN8Z2/XoK+YPcFnqIalFmn3sA==}
     dependencies:
       ajv: 8.11.2
       ajv-formats: 2.1.1_ajv@8.11.2
       content-type: 1.0.4
-      openapi-jsonschema-parameters: 12.0.0
-      openapi-types: 12.0.0
+      openapi-jsonschema-parameters: 12.1.0
+      openapi-types: 12.1.0
       ts-log: 2.2.4
     dev: false
 
