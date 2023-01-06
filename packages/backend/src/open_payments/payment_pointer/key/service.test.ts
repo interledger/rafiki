@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -17,7 +16,6 @@ describe('Payment Pointer Key Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let paymentPointerKeyService: PaymentPointerKeyService
-  let knex: Knex
   const mockMessageProducer = {
     send: jest.fn()
   }
@@ -26,13 +24,12 @@ describe('Payment Pointer Key Service', (): void => {
     deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

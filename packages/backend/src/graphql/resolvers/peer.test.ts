@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker'
 import { gql } from 'apollo-server-koa'
 import assert from 'assert'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 
@@ -28,7 +27,6 @@ import {
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let peerFactory: PeerFactory
   let peerService: PeerService
 
@@ -50,13 +48,12 @@ describe('Peer Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     peerService = await deps.use('peerService')
     peerFactory = new PeerFactory(peerService)
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

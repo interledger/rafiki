@@ -1,5 +1,4 @@
 import * as crypto from 'crypto'
-import { Knex } from 'knex'
 import { AppServices } from '../app'
 
 import { SPSPRoutes } from './routes'
@@ -17,7 +16,6 @@ import { truncateTables } from '../tests/tableManager'
 describe('SPSP Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let spspRoutes: SPSPRoutes
   let streamServer: StreamServer
   const nonce = crypto.randomBytes(16).toString('base64')
@@ -26,7 +24,6 @@ describe('SPSP Routes', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {
@@ -35,7 +32,7 @@ describe('SPSP Routes', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
     await appContainer.shutdown()
   })
 

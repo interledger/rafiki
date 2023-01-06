@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker'
-import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
@@ -58,7 +57,6 @@ const BASE_GRANT_REQUEST = {
 describe('Grant Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
@@ -103,14 +101,13 @@ describe('Grant Routes', (): void => {
     grantRoutes = await deps.use('grantRoutes')
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
     accessTokenService = await deps.use('accessTokenService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

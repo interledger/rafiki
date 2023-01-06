@@ -1,6 +1,4 @@
-import { Knex } from 'knex'
 import { URL } from 'url'
-
 import { createPaymentPointerMiddleware } from './middleware'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -22,12 +20,10 @@ describe('Payment Pointer Middleware', (): void => {
   let middleware: AppMiddleware
   let ctx: AppContext
   let next: jest.MockedFunction<() => Promise<void>>
-  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     middleware = createPaymentPointerMiddleware()
   })
 
@@ -45,7 +41,7 @@ describe('Payment Pointer Middleware', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

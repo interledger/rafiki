@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { faker } from '@faker-js/faker'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { isPeerError, PeerError } from './errors'
@@ -21,7 +20,6 @@ describe('Peer Service', (): void => {
   let appContainer: TestContainer
   let peerFactory: PeerFactory
   let peerService: PeerService
-  let knex: Knex
 
   const randomPeer = (): CreateOptions => ({
     asset: randomAsset(),
@@ -41,13 +39,12 @@ describe('Peer Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     peerService = await deps.use('peerService')
     peerFactory = new PeerFactory(peerService)
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

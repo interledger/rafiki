@@ -26,14 +26,12 @@ describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   const CLIENT = faker.internet.url()
-  let knex: Knex
   let testKeys: TestKeys
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     testKeys = generateTestKeys()
     testClientKey = testKeys.publicKey
   })
@@ -110,7 +108,7 @@ describe('Signature Service', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.useRealTimers()
-      await truncateTables(knex)
+      await truncateTables(appContainer.knex)
     })
 
     test('Validate grant initiation request with middleware', async (): Promise<void> => {

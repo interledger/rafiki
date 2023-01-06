@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-koa'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
@@ -21,7 +20,6 @@ import { Quote, QuoteResponse } from '../generated/graphql'
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let quoteService: QuoteService
 
   const receivingPaymentPointer = 'http://wallet2.example/bob'
@@ -31,13 +29,12 @@ describe('Quote Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     quoteService = await deps.use('quoteService')
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

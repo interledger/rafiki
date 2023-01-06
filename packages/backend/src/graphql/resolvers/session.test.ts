@@ -1,6 +1,4 @@
 import { gql } from 'apollo-server-koa'
-import { Knex } from 'knex'
-
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
@@ -21,20 +19,18 @@ import { isApiKeyError } from '../../apiKey/errors'
 describe('Session Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let apiKeyService: ApiKeyService
   let sessionService: SessionService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     apiKeyService = await deps.use('apiKeyService')
     sessionService = await deps.use('sessionService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

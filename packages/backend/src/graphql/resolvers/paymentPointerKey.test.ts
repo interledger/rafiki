@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { gql } from 'apollo-server-koa'
-import { Knex } from 'knex'
 import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -24,18 +23,16 @@ const TEST_KEY = generateJwk({ keyId: uuid() })
 describe('Payment Pointer Key Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let paymentPointerKeyService: PaymentPointerKeyService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

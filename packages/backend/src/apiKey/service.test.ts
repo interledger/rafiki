@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { ApiKeyService } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -16,12 +15,10 @@ describe('Api Key Service', (): void => {
   let appContainer: TestContainer
   let apiKeyService: ApiKeyService
   let paymentPointer: PaymentPointer
-  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     apiKeyService = await deps.use('apiKeyService')
   })
 
@@ -30,7 +27,7 @@ describe('Api Key Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

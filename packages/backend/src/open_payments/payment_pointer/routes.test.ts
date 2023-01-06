@@ -1,6 +1,4 @@
 import jestOpenAPI from 'jest-openapi'
-import { Knex } from 'knex'
-
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { initIocContainer } from '../../'
@@ -15,7 +13,6 @@ import { PaymentPointerRoutes } from './routes'
 describe('Payment Pointer Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let config: IAppConfig
   let paymentPointerRoutes: PaymentPointerRoutes
 
@@ -24,7 +21,6 @@ describe('Payment Pointer Routes', (): void => {
     config.authServerGrantUrl = 'https://auth.wallet.example/authorize'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -35,7 +31,7 @@ describe('Payment Pointer Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

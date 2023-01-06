@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
@@ -26,7 +25,6 @@ import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let accountingService: AccountingService
   let accountFactory: AccountFactory
   let tigerbeetleContainer: StartedTestContainer
@@ -44,13 +42,12 @@ describe('Accounting Service', (): void => {
     ]
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = appContainer.knex
     accountingService = await deps.use('accountingService')
     accountFactory = new AccountFactory(accountingService, newLedger)
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
