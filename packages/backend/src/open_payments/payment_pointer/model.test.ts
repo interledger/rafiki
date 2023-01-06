@@ -98,7 +98,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
                   paymentPointerId = uuid()
                   break
                 case GetOption.Unspecified:
-                  paymentPointerId = undefined
+                  paymentPointerId = ''
                   break
               }
             })
@@ -211,7 +211,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
       paymentPointer,
       clientId
     })
-    await expect(list(ctx)).resolves.toBeUndefined()
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await expect(list!(ctx)).resolves.toBeUndefined()
     if (expectedMatch) {
       // TODO: https://github.com/interledger/open-payments/issues/191
       expect(ctx.response).toSatisfyApiSpec()
@@ -231,7 +232,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
     createModel,
     testGet: async ({ id, paymentPointerId, clientId }, expectedMatch) => {
       const paymentPointer = await getPaymentPointer()
-      paymentPointer.id = paymentPointerId
+      paymentPointer.id = paymentPointerId as string
       const ctx = setup<ReadContext>({
         reqOpts: {
           headers: { Accept: 'application/json' },

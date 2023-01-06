@@ -143,10 +143,11 @@ describe('OutgoingPaymentService', (): void => {
         amount
       })
     ).resolves.toBeUndefined()
+    const totalReceived = (await accountingService.getTotalReceived(
+      incomingPayment.id
+    )) as bigint
     await incomingPayment.onCredit({
-      totalReceived: await accountingService.getTotalReceived(
-        incomingPayment.id
-      )
+      totalReceived
     })
   }
 
@@ -337,7 +338,7 @@ describe('OutgoingPaymentService', (): void => {
             const peerFactory = new PeerFactory(peerService)
             const peer = await peerFactory.build()
             if (toConnection) {
-              receiver = connectionService.getUrl(incomingPayment)
+              receiver = connectionService.getUrl(incomingPayment) as string
             }
             const quote = await createQuote(deps, {
               paymentPointerId,
@@ -852,7 +853,7 @@ describe('OutgoingPaymentService', (): void => {
 
       beforeEach((): void => {
         if (toConnection) {
-          receiver = connectionService.getUrl(incomingPayment)
+          receiver = connectionService.getUrl(incomingPayment) as string
         }
       })
 
@@ -919,7 +920,7 @@ describe('OutgoingPaymentService', (): void => {
         })
         const paymentId = await setup({
           receiver: toConnection
-            ? connectionService.getUrl(incomingPayment)
+            ? (connectionService.getUrl(incomingPayment) as string)
             : incomingPayment.url,
           receiveAmount
         })

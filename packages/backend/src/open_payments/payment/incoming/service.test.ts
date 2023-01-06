@@ -586,7 +586,8 @@ describe('Incoming Payment Service', (): void => {
     })
     test('returns incoming payment id on correct connectionId', async (): Promise<void> => {
       await expect(
-        incomingPaymentService.getByConnection(incomingPayment.connectionId)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        incomingPaymentService.getByConnection(incomingPayment.connectionId!)
       ).resolves.toEqual(incomingPayment)
     })
     test('returns undefined on incorrect connectionId', async (): Promise<void> => {

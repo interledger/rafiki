@@ -11,6 +11,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
 import { Receiver } from './model'
 import { IncomingPaymentState } from '../payment/incoming/model'
+import { Connection } from '../connection/model'
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
@@ -43,7 +44,9 @@ describe('Receiver Model', (): void => {
 
       const receiver = Receiver.fromIncomingPayment(
         incomingPayment.toOpenPaymentsType({
-          ilpStreamConnection: connectionService.get(incomingPayment)
+          ilpStreamConnection: connectionService.get(
+            incomingPayment
+          ) as Connection
         })
       )
 
@@ -68,7 +71,9 @@ describe('Receiver Model', (): void => {
 
       const receiver = Receiver.fromIncomingPayment(
         incomingPayment.toOpenPaymentsType({
-          ilpStreamConnection: connectionService.get(incomingPayment)
+          ilpStreamConnection: connectionService.get(
+            incomingPayment
+          ) as Connection
         })
       )
 
@@ -85,7 +90,9 @@ describe('Receiver Model', (): void => {
 
       const receiver = Receiver.fromIncomingPayment(
         incomingPayment.toOpenPaymentsType({
-          ilpStreamConnection: connectionService.get(incomingPayment)
+          ilpStreamConnection: connectionService.get(
+            incomingPayment
+          ) as Connection
         })
       )
 
@@ -101,7 +108,9 @@ describe('Receiver Model', (): void => {
       })
 
       const receiver = Receiver.fromConnection(
-        connectionService.get(incomingPayment).toOpenPaymentsType()
+        (
+          connectionService.get(incomingPayment) as Connection
+        ).toOpenPaymentsType()
       )
 
       expect(receiver).toEqual({
@@ -121,9 +130,9 @@ describe('Receiver Model', (): void => {
         paymentPointerId: paymentPointer.id
       })
 
-      const connection = connectionService
-        .get(incomingPayment)
-        .toOpenPaymentsType()
+      const connection = (
+        connectionService.get(incomingPayment) as Connection
+      ).toOpenPaymentsType()
 
       connection.ilpAddress = 'not base 64 encoded'
 

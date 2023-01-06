@@ -8,7 +8,7 @@ interface GetArgs {
 }
 
 export interface ILPStreamConnectionRoutes {
-  get(args: GetArgs): Promise<ILPStreamConnection>
+  get(args: GetArgs): Promise<ILPStreamConnection | undefined>
 }
 
 export const createILPStreamConnectionRoutes = (

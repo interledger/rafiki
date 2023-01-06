@@ -52,13 +52,13 @@ describe('Connection Service', (): void => {
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret: expect.any(Buffer)
       })
-      expect(connection.url).toEqual(
+      expect(connection?.url).toEqual(
         `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
       )
-      expect(connection.toJSON()).toEqual({
-        id: connection.url,
-        ilpAddress: connection.ilpAddress,
-        sharedSecret: base64url(connection.sharedSecret),
+      expect(connection?.toJSON()).toEqual({
+        id: connection?.url,
+        ilpAddress: connection?.ilpAddress,
+        sharedSecret: base64url(connection?.sharedSecret || ''),
         assetCode: incomingPayment.asset.code,
         assetScale: incomingPayment.asset.scale
       })

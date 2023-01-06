@@ -23,6 +23,7 @@ import { GrantService } from '../grant/service'
 import { IncomingPayment } from '../payment/incoming/model'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
+import { Connection } from '../connection/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -98,7 +99,9 @@ describe('Receiver Service', (): void => {
         const clientGetConnectionSpy = jest
           .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
           .mockImplementationOnce(async () =>
-            connectionService.get(incomingPayment).toOpenPaymentsType()
+            (
+              connectionService.get(incomingPayment) as Connection
+            ).toOpenPaymentsType()
           )
 
         await expect(receiverService.get(remoteUrl.href)).resolves.toEqual({
@@ -194,7 +197,7 @@ describe('Receiver Service', (): void => {
           {
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale,
-            incomingAmountValue: incomingPayment.incomingAmount.value,
+            incomingAmountValue: incomingPayment.incomingAmount?.value,
             receivedAmountValue: incomingPayment.receivedAmount.value,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
@@ -287,7 +290,9 @@ describe('Receiver Service', (): void => {
             .spyOn(openPaymentsClient.incomingPayment, 'get')
             .mockResolvedValueOnce(
               incomingPayment.toOpenPaymentsType({
-                ilpStreamConnection: connectionService.get(incomingPayment)
+                ilpStreamConnection: connectionService.get(
+                  incomingPayment
+                ) as Connection
               })
             )
 
@@ -296,7 +301,7 @@ describe('Receiver Service', (): void => {
           ).resolves.toEqual({
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale,
-            incomingAmountValue: incomingPayment.incomingAmount.value,
+            incomingAmountValue: incomingPayment.incomingAmount?.value,
             receivedAmountValue: incomingPayment.receivedAmount.value,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
@@ -338,7 +343,7 @@ describe('Receiver Service', (): void => {
               ...grantOptions,
               authServer
             })
-            await grant.$query(knex).patch({ expiresAt: new Date() })
+            await grant?.$query(knex).patch({ expiresAt: new Date() })
             jest
               .spyOn(openPaymentsClient.paymentPointer, 'get')
               .mockResolvedValueOnce(

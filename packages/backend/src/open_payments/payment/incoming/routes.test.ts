@@ -90,7 +90,9 @@ describe('Incoming Payment Routes', (): void => {
         id: incomingPayment.url,
         paymentPointer: paymentPointer.url,
         completed: false,
-        incomingAmount: serializeAmount(incomingPayment.incomingAmount),
+        incomingAmount: serializeAmount(
+          incomingPayment.incomingAmount as Amount
+        ),
         description: incomingPayment.description,
         expiresAt: incomingPayment.expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
@@ -105,8 +107,8 @@ describe('Incoming Payment Routes', (): void => {
                 /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
               ),
               sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
-              assetCode: incomingPayment.incomingAmount.assetCode,
-              assetScale: incomingPayment.incomingAmount.assetScale
+              assetCode: incomingPayment.incomingAmount?.assetCode,
+              assetScale: incomingPayment.incomingAmount?.assetScale
             }
       }),
       list: (ctx) => incomingPaymentRoutes.list(ctx),

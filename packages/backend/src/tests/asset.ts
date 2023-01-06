@@ -3,7 +3,7 @@ import { randomInt } from 'crypto'
 // Use unique assets as a workaround for not being able to reset
 // Tigerbeetle between tests
 export function randomAsset(): { code: string; scale: number } {
-  const letters = []
+  const letters: number[] = []
   while (letters.length < 3) {
     letters.push(randomInt(65, 91))
   }
