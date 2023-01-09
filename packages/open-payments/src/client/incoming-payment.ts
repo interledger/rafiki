@@ -1,6 +1,12 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
 import { BaseDeps, RouteDeps } from '.'
-import { IncomingPayment, getRSPath, CreateIncomingPaymentArgs } from '../types'
+import {
+  IncomingPayment,
+  getRSPath,
+  CreateIncomingPaymentArgs,
+  PaginationArgs,
+  IncomingPaymentPaginationResult
+} from '../types'
 import { get, post } from './requests'
 
 interface GetArgs {
@@ -14,10 +20,19 @@ interface PostArgs<T = undefined> {
   accessToken: string
 }
 
+interface ListGetArgs {
+  paymentPointer: string
+  accessToken: string
+}
+
 export interface IncomingPaymentRoutes {
   get(args: GetArgs): Promise<IncomingPayment>
   create(args: PostArgs<CreateIncomingPaymentArgs>): Promise<IncomingPayment>
   complete(args: PostArgs): Promise<IncomingPayment>
+  list(
+    args: ListGetArgs,
+    pagination?: PaginationArgs
+  ): Promise<IncomingPaymentPaginationResult>
 }
 
 export const createIncomingPaymentRoutes = (
@@ -43,6 +58,12 @@ export const createIncomingPaymentRoutes = (
       method: HttpMethod.POST
     })
 
+  const listIncomingPaymentOpenApiValidator =
+    openApi.createResponseValidator<IncomingPaymentPaginationResult>({
+      path: getRSPath('/incoming-payments'),
+      method: HttpMethod.GET
+    })
+
   return {
     get: (args: GetArgs) =>
       getIncomingPayment(
@@ -61,6 +82,13 @@ export const createIncomingPaymentRoutes = (
         { axiosInstance, logger },
         args,
         completeIncomingPaymentOpenApiValidator
+      ),
+    list: (args: ListGetArgs, pagination?: PaginationArgs) =>
+      listIncomingPayment(
+        { axiosInstance, logger },
+        args,
+        listIncomingPaymentOpenApiValidator,
+        pagination
       )
   }
 }
@@ -135,6 +163,48 @@ export const completeIncomingPayment = async (
 
     throw new Error(errorMessage)
   }
+}
+
+export const listIncomingPayment = async (
+  deps: BaseDeps,
+  args: ListGetArgs,
+  validateOpenApiResponse: ResponseValidator<IncomingPaymentPaginationResult>,
+  pagination?: PaginationArgs
+) => {
+  const { axiosInstance, logger } = deps
+  const { accessToken, paymentPointer } = args
+
+  const url = `${paymentPointer}${getRSPath('/incoming-payments')}`
+
+  const incomingPayments = await get(
+    { axiosInstance, logger },
+    {
+      url,
+      accessToken,
+      ...(pagination ? { queryParams: { ...pagination } } : {})
+    },
+    validateOpenApiResponse
+  )
+
+  for (const incomingPayment of incomingPayments.result) {
+    try {
+      validateIncomingPayment(incomingPayment)
+    } catch (error) {
+      const errorMessage = 'Could not validate incoming payment'
+      logger.error(
+        {
+          url,
+          validateError: error?.message,
+          incomingPaymentId: incomingPayment.id
+        },
+        errorMessage
+      )
+
+      throw new Error(errorMessage)
+    }
+  }
+
+  return incomingPayments
 }
 
 export const validateIncomingPayment = (

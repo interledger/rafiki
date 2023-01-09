@@ -2,6 +2,7 @@ import {
   completeIncomingPayment,
   createIncomingPayment,
   createIncomingPaymentRoutes,
+  listIncomingPayment,
   getIncomingPayment,
   validateCompletedIncomingPayment,
   validateCreatedIncomingPayment,
@@ -12,11 +13,23 @@ import {
   defaultAxiosInstance,
   mockILPStreamConnection,
   mockIncomingPayment,
+  mockIncomingPaymentPaginationResult,
   mockOpenApiResponseValidators,
   silentLogger
 } from '../test/helpers'
 import nock from 'nock'
 import path from 'path'
+import { v4 as uuid } from 'uuid'
+import * as requestors from './requests'
+import { getRSPath } from '../types'
+
+jest.mock('./requests', () => {
+  return {
+    // https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options
+    __esModule: true,
+    ...jest.requireActual('./requests')
+  }
+})
 
 describe('incoming-payment', (): void => {
   let openApi: OpenAPI
@@ -74,6 +87,21 @@ describe('incoming-payment', (): void => {
       expect(openApi.createResponseValidator).toHaveBeenCalledWith({
         path: '/incoming-payments/{id}/complete',
         method: HttpMethod.POST
+      })
+    })
+
+    test('creates listIncomingPaymentsOpenApiValidator', async (): Promise<void> => {
+      jest.spyOn(openApi, 'createResponseValidator')
+
+      createIncomingPaymentRoutes({
+        axiosInstance,
+        openApi,
+        logger
+      })
+
+      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
+        path: '/incoming-payments',
+        method: HttpMethod.GET
       })
     })
   })
@@ -324,6 +352,156 @@ describe('incoming-payment', (): void => {
     })
   })
 
+  describe('listIncomingPayment', (): void => {
+    const paymentPointer = `${baseUrl}/.well-known/pay`
+
+    describe('forward pagination', (): void => {
+      test.each`
+        first        | cursor
+        ${undefined} | ${undefined}
+        ${1}         | ${undefined}
+        ${5}         | ${uuid()}
+      `(
+        'returns incoming payments list',
+        async ({ first, cursor }): Promise<void> => {
+          const incomingPaymentPaginationResult =
+            mockIncomingPaymentPaginationResult({
+              result: Array(first).fill(mockIncomingPayment())
+            })
+
+          const scope = nock(paymentPointer)
+            .get('/incoming-payments')
+            .query({
+              ...(first ? { first } : {}),
+              ...(cursor ? { cursor } : {})
+            })
+            .reply(200, incomingPaymentPaginationResult)
+
+          const result = await listIncomingPayment(
+            {
+              axiosInstance,
+              logger
+            },
+            {
+              paymentPointer,
+              accessToken: 'accessToken'
+            },
+            openApiValidators.successfulValidator,
+            {
+              first,
+              cursor
+            }
+          )
+
+          expect(result).toStrictEqual(incomingPaymentPaginationResult)
+          scope.done()
+        }
+      )
+    })
+
+    describe('backward pagination', (): void => {
+      test.each`
+        last         | cursor
+        ${undefined} | ${uuid()}
+        ${5}         | ${uuid()}
+      `(
+        'returns incoming payments list',
+        async ({ last, cursor }): Promise<void> => {
+          const incomingPaymentPaginationResult =
+            mockIncomingPaymentPaginationResult({
+              result: Array(last).fill(mockIncomingPayment())
+            })
+
+          const scope = nock(paymentPointer)
+            .get('/incoming-payments')
+            .query({
+              ...(last ? { last } : {}),
+              cursor
+            })
+            .reply(200, incomingPaymentPaginationResult)
+
+          const result = await listIncomingPayment(
+            {
+              axiosInstance,
+              logger
+            },
+            {
+              paymentPointer,
+              accessToken: 'accessToken'
+            },
+            openApiValidators.successfulValidator,
+            {
+              last,
+              cursor
+            }
+          )
+
+          expect(result).toStrictEqual(incomingPaymentPaginationResult)
+          scope.done()
+        }
+      )
+    })
+
+    test('throws if an incoming payment does not pass validation', async (): Promise<void> => {
+      const incomingPayment = mockIncomingPayment({
+        incomingAmount: {
+          assetCode: 'USD',
+          assetScale: 2,
+          value: '10'
+        },
+        receivedAmount: {
+          assetCode: 'USD',
+          assetScale: 4,
+          value: '0'
+        }
+      })
+
+      const incomingPaymentPaginationResult =
+        mockIncomingPaymentPaginationResult({
+          result: [incomingPayment]
+        })
+
+      const scope = nock(paymentPointer)
+        .get('/incoming-payments')
+        .reply(200, incomingPaymentPaginationResult)
+
+      await expect(() =>
+        listIncomingPayment(
+          {
+            axiosInstance,
+            logger
+          },
+          {
+            paymentPointer,
+            accessToken: 'accessToken'
+          },
+          openApiValidators.successfulValidator
+        )
+      ).rejects.toThrow('Could not validate incoming payment')
+
+      scope.done()
+    })
+
+    test('throws if an incoming payment does not pass open api validation', async (): Promise<void> => {
+      const incomingPaymentPaginationResult =
+        mockIncomingPaymentPaginationResult()
+
+      const scope = nock(paymentPointer)
+        .get('/incoming-payments')
+        .reply(200, incomingPaymentPaginationResult)
+
+      await expect(() =>
+        listIncomingPayment(
+          { axiosInstance, logger },
+          { paymentPointer, accessToken: 'accessToken' },
+          openApiValidators.failedValidator
+        )
+      ).rejects.toThrowError()
+
+      scope.done()
+    })
+  })
+
   describe('validateIncomingPayment', (): void => {
     test('returns incoming payment if passes validation', async (): Promise<void> => {
       const incomingPayment = mockIncomingPayment({
@@ -536,6 +714,46 @@ describe('incoming-payment', (): void => {
       expect(() => validateCompletedIncomingPayment(incomingPayment)).toThrow(
         'Incoming payment could not be completed.'
       )
+    })
+  })
+
+  describe('routes', (): void => {
+    describe('list', (): void => {
+      test('calls get method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/incoming-payments' && method === HttpMethod.GET
+
+        const incomingPaymentPaginationResult =
+          mockIncomingPaymentPaginationResult({
+            result: [mockIncomingPayment()]
+          })
+        const paymentPointer = `${baseUrl}/.well-known/pay`
+        const url = `${paymentPointer}${getRSPath('/incoming-payments')}`
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .mockImplementation(mockResponseValidator as any)
+
+        const getSpy = jest
+          .spyOn(requestors, 'get')
+          .mockResolvedValueOnce(incomingPaymentPaginationResult)
+
+        await createIncomingPaymentRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).list({ paymentPointer, accessToken: 'accessToken' })
+
+        expect(getSpy).toHaveBeenCalledWith(
+          {
+            axiosInstance,
+            logger
+          },
+          { url, accessToken: 'accessToken' },
+          true
+        )
+      })
     })
   })
 })
