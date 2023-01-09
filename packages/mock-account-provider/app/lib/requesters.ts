@@ -26,7 +26,8 @@ export async function createPeer(
   staticIlpAddress: string,
   outgoingEndpoint: string,
   assetCode: string,
-  assetScale: number
+  assetScale: number,
+  name: string
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -41,6 +42,7 @@ export async function createPeer(
             scale
           }
           staticIlpAddress
+          name
         }
       }
     }
@@ -55,7 +57,8 @@ export async function createPeer(
       asset: {
         code: assetCode,
         scale: assetScale
-      }
+      },
+      name
     }
   }
   return apolloClient

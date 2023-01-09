@@ -24,6 +24,7 @@ export type Options = {
   http: HttpOptions
   maxPacketAmount?: bigint
   staticIlpAddress: string
+  name?: string
 }
 
 export type CreateOptions = Options & {
@@ -105,7 +106,8 @@ async function createPeer(
         assetId: asset.id,
         http: options.http,
         maxPacketAmount: options.maxPacketAmount,
-        staticIlpAddress: options.staticIlpAddress
+        staticIlpAddress: options.staticIlpAddress,
+        name: options.name
       })
       .withGraphFetched('asset')
 

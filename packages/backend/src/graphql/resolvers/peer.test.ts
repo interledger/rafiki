@@ -44,7 +44,8 @@ describe('Peer Resolvers', (): void => {
       }
     },
     maxPacketAmount: BigInt(100),
-    staticIlpAddress: 'test.' + uuid()
+    staticIlpAddress: 'test.' + uuid(),
+    name: faker.name.fullName()
   })
 
   beforeAll(async (): Promise<void> => {
@@ -89,6 +90,7 @@ describe('Peer Resolvers', (): void => {
                     }
                   }
                   staticIlpAddress
+                  name
                 }
               }
             }
@@ -113,7 +115,8 @@ describe('Peer Resolvers', (): void => {
         asset: peer.asset,
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
-        staticIlpAddress: peer.staticIlpAddress
+        staticIlpAddress: peer.staticIlpAddress,
+        name: peer.name
       })
     })
 
@@ -253,6 +256,7 @@ describe('Peer Resolvers', (): void => {
                   }
                 }
                 staticIlpAddress
+                name
               }
             }
           `,
@@ -284,7 +288,8 @@ describe('Peer Resolvers', (): void => {
           }
         },
         staticIlpAddress: peer.staticIlpAddress,
-        maxPacketAmount: peer.maxPacketAmount?.toString()
+        maxPacketAmount: peer.maxPacketAmount?.toString(),
+        name: peer.name
       })
     })
 
@@ -352,6 +357,7 @@ describe('Peer Resolvers', (): void => {
                       }
                     }
                     staticIlpAddress
+                    name
                   }
                   cursor
                 }
@@ -387,7 +393,8 @@ describe('Peer Resolvers', (): void => {
             }
           },
           staticIlpAddress: peer.staticIlpAddress,
-          maxPacketAmount: peer.maxPacketAmount?.toString()
+          maxPacketAmount: peer.maxPacketAmount?.toString(),
+          name: peer.name
         })
       })
     })
@@ -413,7 +420,8 @@ describe('Peer Resolvers', (): void => {
             endpoint: faker.internet.url()
           }
         },
-        staticIlpAddress: 'g.rafiki.' + peer.id
+        staticIlpAddress: 'g.rafiki.' + peer.id,
+        name: faker.name.fullName()
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient
@@ -434,6 +442,7 @@ describe('Peer Resolvers', (): void => {
                     }
                   }
                   staticIlpAddress
+                  name
                 }
               }
             }
@@ -462,7 +471,8 @@ describe('Peer Resolvers', (): void => {
             ...updateOptions.http.outgoing
           }
         },
-        staticIlpAddress: updateOptions.staticIlpAddress
+        staticIlpAddress: updateOptions.staticIlpAddress,
+        name: updateOptions.name
       })
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
         asset: peer.asset,
@@ -470,7 +480,8 @@ describe('Peer Resolvers', (): void => {
           outgoing: updateOptions.http.outgoing
         },
         maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
-        staticIlpAddress: updateOptions.staticIlpAddress
+        staticIlpAddress: updateOptions.staticIlpAddress,
+        name: updateOptions.name
       })
     })
 

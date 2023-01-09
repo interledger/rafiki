@@ -10,14 +10,11 @@ import { ILPContext, ILPMiddleware } from '../rafiki'
 export function createIncomingErrorHandlerMiddleware(
   serverAddress: string
 ): ILPMiddleware {
-  return async (
-    { response, services: { logger } }: ILPContext,
-    next: () => Promise<void>
-  ): Promise<void> => {
+  return async (ctx: ILPContext, next: () => Promise<void>): Promise<void> => {
     try {
       await next()
-      if (!response.rawReply) {
-        logger.error('handler did not return a valid value.')
+      if (!ctx.response.rawReply) {
+        ctx.services.logger.error('handler did not return a valid value.')
         throw new Error('handler did not return a value.')
       }
     } catch (e) {
@@ -25,8 +22,11 @@ export function createIncomingErrorHandlerMiddleware(
       if (!err || typeof err !== 'object') {
         err = new Error('Non-object thrown: ' + e)
       }
-      logger.debug({ err }, 'Error thrown in incoming pipeline')
-      response.reject = errorToIlpReject(serverAddress, err)
+      ctx.services.logger.debug({ err }, 'Error thrown in incoming pipeline')
+      if (ctx.revertTotalReceived) {
+        await ctx.revertTotalReceived()
+      }
+      ctx.response.reject = errorToIlpReject(serverAddress, err)
     }
   }
 }
