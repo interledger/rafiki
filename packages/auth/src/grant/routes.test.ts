@@ -18,6 +18,7 @@ import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
+import { generateNonce, generateToken } from '../shared/utils'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -49,7 +50,7 @@ const BASE_GRANT_REQUEST = {
     finish: {
       method: FinishMethod.Redirect,
       uri: 'https://example.com/finish',
-      nonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+      nonce: generateNonce()
     }
   }
 }
@@ -66,16 +67,16 @@ describe('Grant Routes', (): void => {
   const generateBaseGrant = () => ({
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    continueToken: generateToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com',
-    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientNonce: generateNonce(),
     client: CLIENT,
     clientKeyId: CLIENT_KEY_ID,
     interactId: v4(),
     interactRef: v4(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    interactNonce: generateNonce()
   })
 
   const createContext = (
@@ -344,7 +345,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot finish interaction with invalid session', async (): Promise<void> => {
-        const invalidNonce = crypto.randomBytes(8).toString('hex')
+        const invalidNonce = generateNonce()
         const ctx = createContext(
           {
             headers: {
@@ -543,7 +544,7 @@ describe('Grant Routes', (): void => {
 
     test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
       const interactId = v4()
-      const nonce = crypto.randomBytes(8).toString('hex').toUpperCase()
+      const nonce = generateNonce()
       const ctx = createContext(
         {
           headers: {
@@ -879,5 +880,92 @@ describe('Grant Routes', (): void => {
         error: 'invalid_request'
       })
     })
+
+    test('Can cancel a grant request / pending grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          url: '/continue/{id}',
+          method: 'delete',
+          headers: {
+            Authorization: `GNAP ${grant.continueToken}`
+          }
+        },
+        {
+          id: grant.continueId
+        }
+      )
+      await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(204)
+    })
+
+    test('Can delete an existing grant', async (): Promise<void> => {
+      const grant = await Grant.query().insert({
+        ...generateBaseGrant(),
+        state: GrantState.Granted
+      })
+      const ctx = createContext(
+        {
+          url: '/continue/{id}',
+          method: 'delete',
+          headers: {
+            Authorization: `GNAP ${grant.continueToken}`
+          }
+        },
+        {
+          id: grant.continueId
+        }
+      )
+      await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(204)
+    })
+
+    test('Cannot delete non-existing grant', async (): Promise<void> => {
+      const ctx = createContext(
+        {
+          url: '/continue/{id}',
+          method: 'delete',
+          headers: {
+            Authorization: `GNAP ${grant.continueToken}`
+          }
+        },
+        {
+          id: v4()
+        }
+      )
+      await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+        status: 404,
+        error: 'unknown_request'
+      })
+    })
+
+    test.each`
+      token    | description    | status | error
+      ${true}  | ${' matching'} | ${404} | ${'unknown_request'}
+      ${false} | ${''}          | ${401} | ${'invalid_request'}
+    `(
+      'Cannot delete without$description continueToken',
+      async ({ token, status, error }): Promise<void> => {
+        const ctx = createContext(
+          {
+            url: '/continue/{id}',
+            method: 'delete',
+            headers: token
+              ? {
+                  Authorization: `GNAP ${v4()}`
+                }
+              : undefined
+          },
+          {
+            id: v4()
+          }
+        )
+        await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+          status,
+          error
+        })
+      }
+    )
   })
 })

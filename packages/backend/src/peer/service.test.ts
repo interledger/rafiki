@@ -33,7 +33,8 @@ describe('Peer Service', (): void => {
       }
     },
     maxPacketAmount: BigInt(100),
-    staticIlpAddress: 'test.' + uuid()
+    staticIlpAddress: 'test.' + uuid(),
+    name: faker.name.fullName()
   })
 
   beforeAll(async (): Promise<void> => {
@@ -63,7 +64,8 @@ describe('Peer Service', (): void => {
             endpoint: faker.internet.url()
           }
         },
-        staticIlpAddress: 'test.' + uuid()
+        staticIlpAddress: 'test.' + uuid(),
+        name: faker.name.fullName()
       }
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
@@ -75,7 +77,8 @@ describe('Peer Service', (): void => {
         http: {
           outgoing: options.http.outgoing
         },
-        staticIlpAddress: options.staticIlpAddress
+        staticIlpAddress: options.staticIlpAddress,
+        name: options.name
       })
       const retrievedPeer = await peerService.get(peer.id)
       if (!retrievedPeer) throw new Error('peer not found')
@@ -94,7 +97,8 @@ describe('Peer Service', (): void => {
           outgoing: options.http.outgoing
         },
         maxPacketAmount: options.maxPacketAmount,
-        staticIlpAddress: options.staticIlpAddress
+        staticIlpAddress: options.staticIlpAddress,
+        name: options.name
       })
       const retrievedPeer = await peerService.get(peer.id)
       if (!retrievedPeer) throw new Error('peer not found')
@@ -169,12 +173,13 @@ describe('Peer Service', (): void => {
   describe('Update Peer', (): void => {
     test('Can update a peer', async (): Promise<void> => {
       const peer = await peerFactory.build()
-      const { http, maxPacketAmount, staticIlpAddress } = randomPeer()
+      const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
       const updateOptions: UpdateOptions = {
         id: peer.id,
         http,
         maxPacketAmount,
-        staticIlpAddress
+        staticIlpAddress,
+        name
       }
 
       const peerOrError = await peerService.update(updateOptions)
@@ -187,7 +192,8 @@ describe('Peer Service', (): void => {
           outgoing: updateOptions.http.outgoing
         },
         maxPacketAmount: updateOptions.maxPacketAmount,
-        staticIlpAddress: updateOptions.staticIlpAddress
+        staticIlpAddress: updateOptions.staticIlpAddress,
+        name: updateOptions.name
       }
       expect(peerOrError).toMatchObject(expectedPeer)
       await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)

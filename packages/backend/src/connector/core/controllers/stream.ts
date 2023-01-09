@@ -43,6 +43,11 @@ export function createStreamController(): ILPMiddleware {
       .exec()
     if (typeof totalReceived === 'string' && !err && !err2) {
       moneyOrReply.setTotalReceived(totalReceived)
+      ctx.revertTotalReceived = () =>
+        redis.decrby(
+          connectionKey,
+          request.prepare.amount.toString() as unknown as number
+        )
     } else {
       logger.warn(
         {

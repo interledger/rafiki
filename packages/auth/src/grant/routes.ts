@@ -26,7 +26,7 @@ interface ServiceDependencies extends BaseService {
   config: IAppConfig
 }
 
-type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   AppContext['request'],
   'body'
 > & {
@@ -34,7 +34,7 @@ type GrantRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   query: ParsedUrlQuery & QueryT
 }
 
-type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
+type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   AppContext,
   'request'
 > & {
@@ -48,13 +48,12 @@ interface GrantContinueBody {
   interact_ref: string
 }
 
-interface GrantContinueParams {
+interface GrantParams {
   id: string
 }
-export type ContinueContext = GrantContext<
-  GrantContinueBody,
-  GrantContinueParams
->
+export type ContinueContext = GrantContext<GrantContinueBody, GrantParams>
+
+export type DeleteContext = GrantContext<null, GrantParams>
 
 type InteractionRequest<
   BodyT = never,
@@ -104,6 +103,7 @@ export interface GrantRoutes {
     details(ctx: GetContext): Promise<void>
   }
   continue(ctx: ContinueContext): Promise<void>
+  delete(ctx: DeleteContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -134,7 +134,8 @@ export function createGrantRoutes({
       acceptOrReject: (ctx: ChooseContext) => handleGrantChoice(deps, ctx),
       details: (ctx: GetContext) => getGrantDetails(deps, ctx)
     },
-    continue: (ctx: ContinueContext) => continueGrant(deps, ctx)
+    continue: (ctx: ContinueContext) => continueGrant(deps, ctx),
+    delete: (ctx: DeleteContext) => deleteGrant(deps, ctx)
   }
 }
 
@@ -411,6 +412,28 @@ async function continueGrant(
     access,
     accessToken
   })
+}
+async function deleteGrant(
+  deps: ServiceDependencies,
+  ctx: DeleteContext
+): Promise<void> {
+  const { id: continueId } = ctx.params
+  const continueToken = (ctx.headers['authorization'] as string)?.split(
+    'GNAP '
+  )[1]
+  if (!continueId || !continueToken) {
+    ctx.throw(401, { error: 'invalid_request' })
+  }
+  const grant = await deps.grantService.getByContinue(continueId, continueToken)
+  if (!grant) {
+    ctx.throw(404, { error: 'unknown_request' })
+  }
+
+  const deletion = await deps.grantService.deleteGrant(continueId)
+  if (!deletion) {
+    ctx.throw(404, { error: 'unknown_request' })
+  }
+  ctx.status = 204
 }
 
 function createGrantBody({

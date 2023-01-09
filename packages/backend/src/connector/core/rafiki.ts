@@ -100,6 +100,7 @@ export type ILPContext<T = any> = {
   }
   response: IlpResponse
   throw: (status: number, msg: string) => never
+  revertTotalReceived?: () => Promise<number>
   state: T
 }
 

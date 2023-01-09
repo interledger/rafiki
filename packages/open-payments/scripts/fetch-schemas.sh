@@ -9,6 +9,6 @@ while [ -L "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symli
 done
 OUTDIR=$( cd -P "$( dirname "$SOURCE" )/../src/openapi" >/dev/null 2>&1 && pwd )
 
-curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/ae0e924a56fe9f12834f65da109a1042760c1605/openapi/schemas.yaml
-curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/ae0e924a56fe9f12834f65da109a1042760c1605/openapi/auth-server.yaml
-curl -o "$OUTDIR/resource-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/ae0e924a56fe9f12834f65da109a1042760c1605/openapi/resource-server.yaml
+curl -o "$OUTDIR/schemas.yaml" https://raw.githubusercontent.com/interledger/open-payments/f1b51c3c051c9030cea1f3d2542cfb492c4330d3/openapi/schemas.yaml
+curl -o "$OUTDIR/auth-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/f1b51c3c051c9030cea1f3d2542cfb492c4330d3/openapi/auth-server.yaml
+curl -o "$OUTDIR/resource-server.yaml" https://raw.githubusercontent.com/interledger/open-payments/f1b51c3c051c9030cea1f3d2542cfb492c4330d3/openapi/resource-server.yaml
