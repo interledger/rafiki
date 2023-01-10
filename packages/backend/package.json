@@ -79,7 +79,7 @@
     "pg": "^8.6.0",
     "pino": "^8.8.0",
     "pino-pretty": "^9.1.1",
-    "raw-body": "^2.4.1",
+    "raw-body": "^2.5.1",
     "tigerbeetle-node": "^0.10.0",
     "uuid": "^9.0.0"
   }
