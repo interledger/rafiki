@@ -51,7 +51,7 @@ export const GraphQLBigIntConfig: GraphQLScalarTypeConfig<
     ) {
       return coerceBigIntValue(ast.value)
     }
-    return null
+    return ''
   }
 }
 
