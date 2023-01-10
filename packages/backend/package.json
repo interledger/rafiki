@@ -51,7 +51,7 @@
     "@koa/router": "^12.0.0",
     "@poppinss/file-generator": "^1.0.2",
     "add": "^2.0.6",
-    "ajv": "^8.11.2",
+    "ajv": "^8.12.0",
     "apollo-server-koa": "^3.11.1",
     "axios": "1.2.1",
     "base64url": "^3.0.1",
