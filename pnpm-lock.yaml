@@ -47,7 +47,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@faker-js/faker': ^7.6.0
-      '@koa/cors': ^3.4.3
+      '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@types/jest': ^28.1.8
       '@types/koa': 2.13.5
@@ -80,7 +80,7 @@ importers:
       uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@koa/cors': 3.4.3
+      '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
       axios: 1.2.1
@@ -128,7 +128,7 @@ importers:
       '@graphql-tools/schema': ^9.0.12
       '@interledger/pay': 0.4.0-alpha.8
       '@interledger/stream-receiver': ^0.3.3-alpha.1
-      '@koa/cors': ^3.4.3
+      '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
       '@types/jest': ^28.1.8
@@ -193,7 +193,7 @@ importers:
       '@graphql-tools/schema': 9.0.12_graphql@16.6.0
       '@interledger/pay': 0.4.0-alpha.8
       '@interledger/stream-receiver': 0.3.3-alpha.1
-      '@koa/cors': 3.4.3
+      '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       '@poppinss/file-generator': 1.0.2
       add: 2.0.6
@@ -3502,6 +3502,13 @@ packages:
   /@koa/cors/3.4.3:
     resolution: {integrity: sha512-WPXQUaAeAMVaLTEFpoq3T2O1C+FstkjJnDQqy95Ck1UdILajsRhu6mhJ8H2f4NFPRBoCNN+qywTJfq/gGki5mw==}
     engines: {node: '>= 8.0.0'}
+    dependencies:
+      vary: 1.1.2
+    dev: false
+
+  /@koa/cors/4.0.0:
+    resolution: {integrity: sha512-Y4RrbvGTlAaa04DBoPBWJqDR5gPj32OOz827ULXfgB1F7piD1MB/zwn8JR2LAnvdILhxUbXbkXGWuNVsFuVFCQ==}
+    engines: {node: '>= 14.0.0'}
     dependencies:
       vary: 1.1.2
     dev: false
