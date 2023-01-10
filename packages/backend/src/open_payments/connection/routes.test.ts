@@ -9,6 +9,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../../'
 import { ConnectionRoutes } from './routes'
+import { createAsset } from '../../tests/asset'
 import { createContext } from '../../tests/context'
 import { PaymentPointer } from '../payment_pointer/model'
 import {
@@ -36,17 +37,14 @@ describe('Connection Routes', (): void => {
     jestOpenAPI(resourceServerSpec)
   })
 
-  const asset = {
-    code: 'USD',
-    scale: 2
-  }
   let paymentPointer: PaymentPointer
   let incomingPayment: IncomingPayment
   beforeEach(async (): Promise<void> => {
     connectionRoutes = await deps.use('connectionRoutes')
     config = await deps.use('config')
 
-    paymentPointer = await createPaymentPointer(deps, { asset })
+    const asset = await createAsset(deps)
+    paymentPointer = await createPaymentPointer(deps, { assetId: asset.id })
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: paymentPointer.id,
       description: 'hello world',

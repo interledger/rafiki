@@ -10,18 +10,19 @@ export interface Self {
   openPaymentPublishedPort: number
 }
 
+export interface Asset {
+  code: string
+  scale: number
+}
+
 export interface Fees {
   fixed: number
   percentage: number
-  asset: string
-  scale: number
 }
 
 export interface Peering {
   peerUrl: string
   peerIlpAddress: string
-  asset: string
-  scale: number
   initialLiquidity: string
   name: string
 }
@@ -29,8 +30,6 @@ export interface Peering {
 export interface Account {
   name: string
   id: string
-  asset: string
-  scale: number
   initialBalance: bigint
   path: string
   postmanEnvVar: string

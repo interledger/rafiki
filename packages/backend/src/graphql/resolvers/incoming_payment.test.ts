@@ -4,8 +4,9 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
+import { Asset } from '../../asset/model'
 import { Config } from '../../config/app'
-import { randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
@@ -19,20 +20,20 @@ import {
   IncomingPaymentError,
   errorToMessage
 } from '../../open_payments/payment/incoming/errors'
-import { serializeAmount } from '../../open_payments/amount'
+import { Amount, serializeAmount } from '../../open_payments/amount'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let paymentPointerId: string
   let incomingPaymentService: IncomingPaymentService
-
-  const asset = randomAsset()
+  let asset: Asset
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     incomingPaymentService = await deps.use('incomingPaymentService')
+    asset = await createAsset(deps)
   })
 
   afterAll(async (): Promise<void> => {
@@ -43,7 +44,9 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Payment pointer incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      paymentPointerId = (await createPaymentPointer(deps, { asset })).id
+      paymentPointerId = (
+        await createPaymentPointer(deps, { assetId: asset.id })
+      ).id
     })
 
     getPageTests({
@@ -69,11 +72,15 @@ describe('Incoming Payment Resolver', (): void => {
   })
 
   describe('Mutation.createIncomingPayment', (): void => {
-    const amount = {
-      value: BigInt(56),
-      assetCode: asset.code,
-      assetScale: asset.scale
-    }
+    let amount: Amount
+
+    beforeEach((): void => {
+      amount = {
+        value: BigInt(56),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+    })
 
     test.each`
       description  | externalRef  | expiresAt                        | incomingAmount | desc
@@ -90,7 +97,7 @@ describe('Incoming Payment Resolver', (): void => {
         incomingAmount
       }): Promise<void> => {
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
-          asset
+          assetId: asset.id
         })
         const payment = await createIncomingPayment(deps, {
           paymentPointerId,

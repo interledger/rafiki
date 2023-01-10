@@ -7,7 +7,8 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { randomAsset } from '../../tests/asset'
+import { Asset } from '../../asset/model'
+import { createAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
@@ -15,21 +16,25 @@ import { QuoteError, errorToMessage } from '../../open_payments/quote/errors'
 import { QuoteService } from '../../open_payments/quote/service'
 import { Quote as QuoteModel } from '../../open_payments/quote/model'
 import { Amount } from '../../open_payments/amount'
-import { Quote, QuoteResponse } from '../generated/graphql'
+import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
 
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
+  let asset: Asset
 
   const receivingPaymentPointer = 'http://wallet2.example/bob'
   const receiver = `${receivingPaymentPointer}/incoming-payments/${uuid()}`
-  const asset = randomAsset()
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     quoteService = await deps.use('quoteService')
+  })
+
+  beforeEach(async (): Promise<void> => {
+    asset = await createAsset(deps)
   })
 
   afterEach(async (): Promise<void> => {
@@ -60,7 +65,7 @@ describe('Quote Resolvers', (): void => {
   describe('Query.quote', (): void => {
     test('200', async (): Promise<void> => {
       const { id: paymentPointerId } = await createPaymentPointer(deps, {
-        asset
+        assetId: asset.id
       })
       const quote = await createPaymentPointerQuote(paymentPointerId)
 
@@ -146,22 +151,26 @@ describe('Quote Resolvers', (): void => {
       code: 'XRP',
       scale: 9
     }
-    const sendAmount: Amount = {
-      value: BigInt(123),
-      assetCode: asset.code,
-      assetScale: asset.scale
-    }
     const receiveAmount: Amount = {
       value: BigInt(56),
       assetCode: receiveAsset.code,
       assetScale: receiveAsset.scale
     }
+    let sendAmount: Amount
+    let input: CreateQuoteInput
 
-    const input = {
-      paymentPointerId: uuid(),
-      receiver,
-      sendAmount
-    }
+    beforeEach((): void => {
+      sendAmount = {
+        value: BigInt(123),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+      input = {
+        paymentPointerId: uuid(),
+        receiver,
+        sendAmount
+      }
+    })
 
     test.each`
       sendAmount    | receiveAmount    | type
@@ -170,7 +179,7 @@ describe('Quote Resolvers', (): void => {
       ${undefined}  | ${undefined}     | ${'incoming payment'}
     `('200 ($type)', async ({ sendAmount, receiveAmount }): Promise<void> => {
       const { id: paymentPointerId } = await createPaymentPointer(deps, {
-        asset
+        assetId: asset.id
       })
       const input = {
         paymentPointerId,
@@ -275,7 +284,7 @@ describe('Quote Resolvers', (): void => {
     beforeEach(async (): Promise<void> => {
       paymentPointerId = (
         await createPaymentPointer(deps, {
-          asset
+          assetId: asset.id
         })
       ).id
     })

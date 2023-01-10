@@ -1,4 +1,4 @@
-import { TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
 import { URL } from 'url'
 
 import { PaymentPointerError } from './errors'
@@ -12,11 +12,10 @@ import {
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
-import { AssetService, AssetOptions } from '../../asset/service'
 
 export interface CreateOptions {
   url: string
-  asset: AssetOptions
+  assetId: string
   publicName?: string
 }
 
@@ -31,14 +30,12 @@ export interface PaymentPointerService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  assetService: AssetService
 }
 
 export async function createPaymentPointerService({
   logger,
   knex,
-  accountingService,
-  assetService
+  accountingService
 }: ServiceDependencies): Promise<PaymentPointerService> {
   const log = logger.child({
     service: 'PaymentPointerService'
@@ -46,8 +43,7 @@ export async function createPaymentPointerService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountingService,
-    assetService
+    accountingService
   }
   return {
     create: (options) => createPaymentPointer(deps, options),
@@ -88,14 +84,22 @@ async function createPaymentPointer(
   if (!isValidPaymentPointerUrl(options.url)) {
     return PaymentPointerError.InvalidUrl
   }
-  const asset = await deps.assetService.getOrCreate(options.asset)
-  return await PaymentPointer.query(deps.knex)
-    .insertAndFetch({
-      url: options.url,
-      publicName: options.publicName,
-      assetId: asset.id
-    })
-    .withGraphFetched('asset')
+  try {
+    return await PaymentPointer.query(deps.knex)
+      .insertAndFetch({
+        url: options.url,
+        publicName: options.publicName,
+        assetId: options.assetId
+      })
+      .withGraphFetched('asset')
+  } catch (err) {
+    if (err instanceof ForeignKeyViolationError) {
+      if (err.constraint === 'paymentpointers_assetid_foreign') {
+        return PaymentPointerError.UnknownAsset
+      }
+    }
+    throw err
+  }
 }
 
 async function getPaymentPointer(

@@ -10,6 +10,7 @@ import { setup } from '../open_payments/payment_pointer/model.test'
 
 import { IocContract } from '@adonisjs/fold'
 import { StreamServer } from '@interledger/stream-receiver'
+import { createAsset } from '../tests/asset'
 import { createPaymentPointer } from '../tests/paymentPointer'
 import { truncateTables } from '../tests/tableManager'
 
@@ -40,11 +41,9 @@ describe('SPSP Routes', (): void => {
     let paymentPointer: PaymentPointer
 
     beforeEach(async (): Promise<void> => {
+      const { id: assetId } = await createAsset(deps)
       paymentPointer = await createPaymentPointer(deps, {
-        asset: {
-          scale: 6,
-          code: 'USD'
-        }
+        assetId
       })
     })
 
@@ -117,8 +116,8 @@ describe('SPSP Routes', (): void => {
       expect(connectionDetails).toEqual({
         paymentTag: paymentPointer.id,
         asset: {
-          code: 'USD',
-          scale: 6
+          code: paymentPointer.asset.code,
+          scale: paymentPointer.asset.scale
         }
       })
     })
@@ -150,8 +149,8 @@ describe('SPSP Routes', (): void => {
       expect(connectionDetails).toEqual({
         paymentTag: paymentPointer.id,
         asset: {
-          code: 'USD',
-          scale: 6
+          code: paymentPointer.asset.code,
+          scale: paymentPointer.asset.scale
         },
         receiptSetup: {
           nonce: Buffer.from(nonce, 'base64'),

@@ -110,7 +110,7 @@ describe('Asset Resolvers', (): void => {
           withdrawalThreshold: expectedWithdrawalThreshold
         })
         await expect(
-          assetService.getById(response.asset.id)
+          assetService.get(response.asset.id)
         ).resolves.toMatchObject({
           ...input,
           withdrawalThreshold: withdrawalThreshold ?? null
@@ -390,7 +390,7 @@ describe('Asset Resolvers', (): void => {
                 ? null
                 : withdrawalThreshold.toString()
           })
-          await expect(assetService.getById(asset.id)).resolves.toMatchObject({
+          await expect(assetService.get(asset.id)).resolves.toMatchObject({
             withdrawalThreshold
           })
         }

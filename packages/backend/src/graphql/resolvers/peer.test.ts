@@ -8,30 +8,31 @@ import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
+import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
+import { errorToCode, errorToMessage, PeerError } from '../../peer/errors'
 import { Peer as PeerModel } from '../../peer/model'
 import { PeerService } from '../../peer/service'
-import { randomAsset } from '../../tests/asset'
-import { PeerFactory } from '../../tests/peerFactory'
+import { createAsset } from '../../tests/asset'
+import { createPeer } from '../../tests/peer'
 import {
   CreatePeerInput,
   CreatePeerMutationResponse,
   Peer,
   PeersConnection,
-  UpdatePeerInput,
   UpdatePeerMutationResponse
 } from '../generated/graphql'
 
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let peerFactory: PeerFactory
   let peerService: PeerService
+  let asset: Asset
 
   const randomPeer = (): CreatePeerInput => ({
-    asset: randomAsset(),
+    assetId: asset.id,
     http: {
       incoming: {
         authTokens: [faker.datatype.string(32)]
@@ -50,7 +51,10 @@ describe('Peer Resolvers', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
-    peerFactory = new PeerFactory(peerService)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    asset = await createAsset(deps)
   })
 
   afterEach(async (): Promise<void> => {
@@ -107,9 +111,28 @@ describe('Peer Resolvers', (): void => {
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
       assert.ok(response.peer)
+      expect(response.peer).toEqual({
+        __typename: 'Peer',
+        id: response.peer.id,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        },
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            ...peer.http.outgoing
+          }
+        },
+        maxPacketAmount: peer.maxPacketAmount?.toString(),
+        staticIlpAddress: peer.staticIlpAddress,
+        name: peer.name
+      })
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
-        asset: peer.asset,
+        asset,
         http: peer.http,
         maxPacketAmount: peer.maxPacketAmount,
         staticIlpAddress: peer.staticIlpAddress,
@@ -117,18 +140,14 @@ describe('Peer Resolvers', (): void => {
       })
     })
 
-    test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = faker.datatype.string(32)
-      await peerFactory.build({
-        http: {
-          incoming: {
-            authTokens: [incomingToken]
-          }
-        }
-      })
+    test.each`
+      error
+      ${PeerError.DuplicateIncomingToken}
+      ${PeerError.InvalidStaticIlpAddress}
+      ${PeerError.UnknownAsset}
+    `('4XX - $error', async ({ error }): Promise<void> => {
+      jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
       const peer = randomPeer()
-      assert.ok(peer.http.incoming)
-      peer.http.incoming.authTokens.push(incomingToken)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -156,42 +175,8 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('409')
-      expect(response.message).toEqual('Incoming token already exists')
-    })
-
-    test('Returns error for invalid ILP address', async (): Promise<void> => {
-      const peer = randomPeer()
-      peer.staticIlpAddress = 'test.hello!'
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeer($input: CreatePeerInput!) {
-              createPeer(input: $input) {
-                code
-                success
-                message
-                peer {
-                  id
-                }
-              }
-            }
-          `,
-          variables: {
-            input: peer
-          }
-        })
-        .then((query): CreatePeerMutationResponse => {
-          if (query.data) {
-            return query.data.createPeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('400')
-      expect(response.message).toEqual('Invalid ILP address')
+      expect(response.code).toEqual(errorToCode[error].toString())
+      expect(response.message).toEqual(errorToMessage[error])
     })
 
     test('500', async (): Promise<void> => {
@@ -234,7 +219,7 @@ describe('Peer Resolvers', (): void => {
 
   describe('Peer Queries', (): void => {
     test('Can get a peer', async (): Promise<void> => {
-      const peer = await peerFactory.build(randomPeer())
+      const peer = await createPeer(deps, randomPeer())
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -321,18 +306,16 @@ describe('Peer Resolvers', (): void => {
   })
 
   describe('Peers Queries', (): void => {
-    const asset = randomAsset()
-
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => peerFactory.build({ asset }),
+      createModel: () => createPeer(deps),
       pagedQuery: 'peers'
     })
 
     test('Can get peers', async (): Promise<void> => {
       const peers: PeerModel[] = []
       for (let i = 0; i < 2; i++) {
-        peers.push(await peerFactory.build(randomPeer()))
+        peers.push(await createPeer(deps, randomPeer()))
       }
       const query = await appContainer.apolloClient
         .query({
@@ -401,7 +384,7 @@ describe('Peer Resolvers', (): void => {
     let peer: PeerModel
 
     beforeEach(async (): Promise<void> => {
-      peer = await peerFactory.build()
+      peer = await createPeer(deps)
     })
 
     test('Can update a peer', async (): Promise<void> => {
@@ -482,10 +465,13 @@ describe('Peer Resolvers', (): void => {
       })
     })
 
-    test('Returns error for unknown peer', async (): Promise<void> => {
-      const updateOptions: UpdatePeerInput = {
-        id: uuid()
-      }
+    test.each`
+      error
+      ${PeerError.DuplicateIncomingToken}
+      ${PeerError.InvalidStaticIlpAddress}
+      ${PeerError.UnknownPeer}
+    `('4XX - $error', async ({ error }): Promise<void> => {
+      jest.spyOn(peerService, 'update').mockResolvedValueOnce(error)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -501,46 +487,10 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            input: updateOptions
-          }
-        })
-        .then((query): UpdatePeerMutationResponse => {
-          if (query.data) {
-            return query.data.updatePeer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown peer')
-    })
-
-    test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = faker.datatype.string(32)
-      const updateOptions: UpdatePeerInput = {
-        id: peer.id,
-        http: randomPeer().http
-      }
-      assert.ok(updateOptions.http?.incoming)
-      updateOptions.http.incoming.authTokens.push(incomingToken, incomingToken)
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation UpdatePeer($input: UpdatePeerInput!) {
-              updatePeer(input: $input) {
-                code
-                success
-                message
-                peer {
-                  id
-                }
-              }
+            input: {
+              id: peer.id,
+              maxPacketAmount: '100'
             }
-          `,
-          variables: {
-            input: updateOptions
           }
         })
         .then((query): UpdatePeerMutationResponse => {
@@ -552,8 +502,8 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('409')
-      expect(response.message).toEqual('Incoming token already exists')
+      expect(response.code).toEqual(errorToCode[error].toString())
+      expect(response.message).toEqual(errorToMessage[error])
     })
   })
 })

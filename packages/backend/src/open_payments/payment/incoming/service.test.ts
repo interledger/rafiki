@@ -15,11 +15,13 @@ import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
-import { randomAsset } from '../../../tests/asset'
+import { Asset } from '../../../asset/model'
+import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
+import { Amount } from '../../amount'
 import { getTests } from '../../payment_pointer/model.test'
 
 describe('Incoming Payment Service', (): void => {
@@ -29,18 +31,20 @@ describe('Incoming Payment Service', (): void => {
   let knex: Knex
   let paymentPointerId: string
   let accountingService: AccountingService
-  const asset = randomAsset()
+  let asset: Asset
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
     knex = appContainer.knex
+    incomingPaymentService = await deps.use('incomingPaymentService')
   })
 
   beforeEach(async (): Promise<void> => {
-    incomingPaymentService = await deps.use('incomingPaymentService')
-    paymentPointerId = (await createPaymentPointer(deps, { asset })).id
+    asset = await createAsset(deps)
+    paymentPointerId = (await createPaymentPointer(deps, { assetId: asset.id }))
+      .id
   })
 
   afterEach(async (): Promise<void> => {
@@ -53,11 +57,15 @@ describe('Incoming Payment Service', (): void => {
   })
 
   describe('Create IncomingPayment', (): void => {
-    const amount = {
-      value: BigInt(123),
-      assetCode: asset.code,
-      assetScale: asset.scale
-    }
+    let amount: Amount
+
+    beforeEach((): void => {
+      amount = {
+        value: BigInt(123),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      }
+    })
 
     test.each`
       clientId     | incomingAmount | expiresAt                        | description                | externalRef
