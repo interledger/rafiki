@@ -64,7 +64,7 @@ importers:
       knex: ^0.95
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
-      koa-session: ^6.2.0
+      koa-session: ^6.3.1
       nock: ^13.2.9
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
@@ -89,7 +89,7 @@ importers:
       knex: 0.95.15_pg@8.7.3
       koa: 2.14.1
       koa-bodyparser: 4.3.0
-      koa-session: 6.2.0
+      koa-session: 6.3.1
       node-mocks-http: 1.12.1
       objection: 3.0.1_knex@0.95.15
       objection-db-errors: 1.1.2_objection@3.0.1
@@ -6376,6 +6376,7 @@ packages:
         optional: true
     dependencies:
       ms: 2.1.3
+    dev: true
 
   /debug/4.3.2:
     resolution: {integrity: sha512-mOp8wKcvj7XxC78zLgw/ZA+6TSgkoE2C/ienthhRD298T7UNwAg9diBpLRxC0mOezLl4B0xV7M0cCO6P/O0Xhw==}
@@ -9758,14 +9759,14 @@ packages:
       path-to-regexp: 6.2.1
     dev: false
 
-  /koa-session/6.2.0:
-    resolution: {integrity: sha512-l2ZC6D1BnRkIXhWkRgpewdqKn38/9/2WScmxyShuN408TxX+J/gUzdzGBIvGZaRwmezOU819sNpGmfFGLeDckg==}
-    engines: {node: '>=7.6'}
+  /koa-session/6.3.1:
+    resolution: {integrity: sha512-Y6206QSkDgtIgjTT7ndmIgZjWrOcY3jflfsDjwvxLfYwSiwKGVAi3l1ExhI2KjkEO1uhKyPxcEWhEDn8HaoRUg==}
+    engines: {node: '>=8.0.0'}
     dependencies:
       crc: 3.8.0
-      debug: 3.2.7
+      debug: 4.3.4
       is-type-of: 1.2.1
-      uuid: 3.4.0
+      uuid: 8.3.2
     transitivePeerDependencies:
       - supports-color
     dev: false
@@ -13699,6 +13700,7 @@ packages:
     resolution: {integrity: sha512-HjSDRw6gZE5JMggctHBcjVak08+KEVhSIiDzFnT9S9aegmp85S/bReBVTb4QTFaRNptJ9kuYaNhnbNEOkbKb/A==}
     deprecated: Please upgrade  to version 7 or higher.  Older versions may use Math.random() in certain circumstances, which is known to be problematic.  See https://v8.dev/blog/math-random for details.
     hasBin: true
+    dev: true
 
   /uuid/8.3.2:
     resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
