@@ -61,7 +61,7 @@ importers:
       http-signature-utils: workspace:../http-signature-utils
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
-      knex: ^0.95
+      knex: ^2.4
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-session: ^6.3.1
@@ -86,12 +86,12 @@ importers:
       axios: 1.2.1
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      knex: 0.95.15_pg@8.8.0
+      knex: 2.4.0_pg@8.8.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-session: 6.3.1
       node-mocks-http: 1.12.1
-      objection: 3.0.1_knex@0.95.15
+      objection: 3.0.1_knex@2.4.0
       objection-db-errors: 1.1.2_objection@3.0.1
       open-payments: link:../open-payments
       openapi: link:../openapi
@@ -161,7 +161,7 @@ importers:
       iso8601-duration: ^2.1.1
       jest-openapi: ^0.14.2
       json-canonicalize: ^1.0.4
-      knex: ^0.95
+      knex: ^2.4
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       luxon: ^3.2.1
@@ -213,11 +213,11 @@ importers:
       ioredis: 5.2.4
       iso8601-duration: 2.1.1
       json-canonicalize: 1.0.4
-      knex: 0.95.15_pg@8.8.0
+      knex: 2.4.0_pg@8.8.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       luxon: 3.2.1
-      objection: 3.0.1_knex@0.95.15
+      objection: 3.0.1_knex@2.4.0
       objection-db-errors: 1.1.2_objection@3.0.1
       oer-utils: 5.1.3-alpha.1
       open-payments: link:../open-payments
@@ -6019,10 +6019,6 @@ packages:
     resolution: {integrity: sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==}
     dev: true
 
-  /colorette/2.0.16:
-    resolution: {integrity: sha512-hUewv7oMjCp+wkBv5Rm0v87eJhq4woh5rSR+42YSQJKecCqgIqNkZ6lAlQms/BwHPJA5NKMRlpxPRv0n8HQW6g==}
-    dev: false
-
   /colorette/2.0.19:
     resolution: {integrity: sha512-3tlv/dIP7FWvj3BsbHrGLJ6l/oKh1O3TcgBqMn+yyCagOxc23fyzDS6HypQbgxWbkpDnf52p1LuR4eWDQ/K9WQ==}
 
@@ -6044,9 +6040,9 @@ packages:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
     dev: false
 
-  /commander/7.2.0:
-    resolution: {integrity: sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw==}
-    engines: {node: '>= 10'}
+  /commander/9.5.0:
+    resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
+    engines: {node: ^12.20.0 || >=14}
     dev: false
 
   /common-tags/1.8.2:
@@ -6384,18 +6380,6 @@ packages:
     dependencies:
       ms: 2.1.3
     dev: true
-
-  /debug/4.3.2:
-    resolution: {integrity: sha512-mOp8wKcvj7XxC78zLgw/ZA+6TSgkoE2C/ienthhRD298T7UNwAg9diBpLRxC0mOezLl4B0xV7M0cCO6P/O0Xhw==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-    dev: false
 
   /debug/4.3.4:
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
@@ -7778,7 +7762,6 @@ packages:
   /get-package-type/0.1.0:
     resolution: {integrity: sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==}
     engines: {node: '>=8.0.0'}
-    dev: true
 
   /get-port/5.1.1:
     resolution: {integrity: sha512-g/Q1aTSDOxFpchXC4i8ZWvxA1lnPqx/JHqcpIw0/LX9T8x/GBbi6YnlN5nhaKIFkT8oFsscUKgDJYxfwfS6QsQ==}
@@ -7826,8 +7809,8 @@ packages:
     engines: {node: '>=0.10.0'}
     dev: true
 
-  /getopts/2.2.5:
-    resolution: {integrity: sha512-9jb7AW5p3in+IiJWhQiZmmwkpLaR/ccTWdWQCtZM66HJcHHLegowh4q4tSD7gouUyeNvFWRavfK9GXosQHDpFA==}
+  /getopts/2.3.0:
+    resolution: {integrity: sha512-5eDf9fuSXwxBL6q5HX+dhDj+dslFGWzU5thZ9kNKUkcPtaPdatmUFKwHFrLb/uf/WpA4BHET+AX3Scl56cAjpA==}
     dev: false
 
   /git-hooks-list/1.0.3:
@@ -9674,11 +9657,12 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /knex/0.95.15_pg@8.8.0:
-    resolution: {integrity: sha512-Loq6WgHaWlmL2bfZGWPsy4l8xw4pOE+tmLGkPG0auBppxpI0UcK+GYCycJcqz9W54f2LiGewkCVLBm3Wq4ur/w==}
-    engines: {node: '>=10'}
+  /knex/2.4.0_pg@8.8.0:
+    resolution: {integrity: sha512-i0GWwqYp1Hs2yvc2rlDO6nzzkLhwdyOZKRdsMTB8ZxOs2IXQyL5rBjSbS1krowCh6V65T4X9CJaKtuIfkaPGSA==}
+    engines: {node: '>=12'}
     hasBin: true
     peerDependencies:
+      better-sqlite3: '*'
       mysql: '*'
       mysql2: '*'
       pg: '*'
@@ -9686,6 +9670,8 @@ packages:
       sqlite3: '*'
       tedious: '*'
     peerDependenciesMeta:
+      better-sqlite3:
+        optional: true
       mysql:
         optional: true
       mysql2:
@@ -9699,17 +9685,18 @@ packages:
       tedious:
         optional: true
     dependencies:
-      colorette: 2.0.16
-      commander: 7.2.0
-      debug: 4.3.2
+      colorette: 2.0.19
+      commander: 9.5.0
+      debug: 4.3.4
       escalade: 3.1.1
       esm: 3.2.25
-      getopts: 2.2.5
+      get-package-type: 0.1.0
+      getopts: 2.3.0
       interpret: 2.2.0
       lodash: 4.17.21
       pg: 8.8.0
       pg-connection-string: 2.5.0
-      rechoir: 0.7.0
+      rechoir: 0.8.0
       resolve-from: 5.0.0
       tarn: 3.0.2
       tildify: 2.0.0
@@ -10999,10 +10986,10 @@ packages:
       objection: '>= 0.9.1'
     dependencies:
       db-errors: 0.2.3
-      objection: 3.0.1_knex@0.95.15
+      objection: 3.0.1_knex@2.4.0
     dev: false
 
-  /objection/3.0.1_knex@0.95.15:
+  /objection/3.0.1_knex@2.4.0:
     resolution: {integrity: sha512-rqNnyQE+C55UHjdpTOJEKQHJGZ/BGtBBtgxdUpKG4DQXRUmqxfmgS/MhPWxB9Pw0mLSVLEltr6soD4c0Sddy0Q==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -11010,7 +10997,7 @@ packages:
     dependencies:
       ajv: 8.12.0
       db-errors: 0.2.3
-      knex: 0.95.15_pg@8.8.0
+      knex: 2.4.0_pg@8.8.0
     dev: false
 
   /oer-utils/5.1.2:
@@ -11978,9 +11965,9 @@ packages:
       tslib: 2.4.1
     dev: true
 
-  /rechoir/0.7.0:
-    resolution: {integrity: sha512-ADsDEH2bvbjltXEP+hTIAmeFekTFK0V2BTxMkok6qILyAJEXV0AFfoWcAq4yfll5VdIMd/RVXq0lR+wQi5ZU3Q==}
-    engines: {node: '>= 0.10'}
+  /rechoir/0.8.0:
+    resolution: {integrity: sha512-/vxpCXddiX8NGfGO/mTafwjq4aFa/71pvamip0++IQk3zG8cbCj0fifNPrjjF1XMXUne91jL9OoxmdykoEtifQ==}
+    engines: {node: '>= 10.13.0'}
     dependencies:
       resolve: 1.22.1
     dev: false
