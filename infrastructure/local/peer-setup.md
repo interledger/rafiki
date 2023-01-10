@@ -32,13 +32,62 @@ the response, which should always contain `"success": true` if things are workin
 #### On the Primary Instance
 
 On the [primary instance](http://localhost:3001), execute the following query to create
-a peer record for the secondary instance:
+an asset:
+
+Query:
+
+```
+mutation CreateAsset ($input: CreateAssetInput!) {
+  createAsset(input: $input) {
+    code
+    success
+    message
+    asset {
+      id
+      code
+      scale
+    }
+  }
+}
+```
+
+Query Variables:
+
+```
+{
+  "input": {
+    "code": "USD",
+    "scale": 2
+  }
+}
+```
+
+Example Successful Response
+
+```
+{
+  "data": {
+    "createAsset": {
+      "code": "200",
+      "success": true,
+      "message": "Created Asset",
+      "asset": {
+        "id": "b3dffeda-1e0e-47d4-82a3-69b1a622eeb9",
+        "code": "USD",
+        "scale": 2
+      }
+    }
+  }
+}
+```
+
+Next, execute the following query to create a peer record for the secondary instance:
 
 Query:
 
 ```
 mutation CreatePeer ($input: CreatePeerInput!) {
-      createPeer (input: $input) {
+  createPeer (input: $input) {
     code
     success
     message
@@ -54,7 +103,7 @@ mutation CreatePeer ($input: CreatePeerInput!) {
 }
 ```
 
-Query Variables:
+Query Variables (substitute the asset ID from the "create asset" response for `INSERT_ASSET_ID`):
 
 ```
 {
@@ -64,10 +113,7 @@ Query Variables:
       "incoming": {"authTokens": ["test"]},
       "outgoing": {"endpoint": "peer-backend:3002", "authToken": "test"}
     },
-    "asset": {
-      "code": "710",
-      "scale": 2
-    }
+    "assetId": "INSERT_ASSET_ID"
   }
 }
 ```
@@ -84,7 +130,7 @@ Example Successful Response
       "peer": {
         "id": "480ef339-7842-4501-a905-923fc1339cef",
         "asset": {
-          "code": "710",
+          "code": "USD",
           "scale": 2
         },
         "staticIlpAddress": "test.peer"
@@ -142,13 +188,62 @@ Next, run the reciprocal commands on the [secondary instance](http://localhost:4
 are directed _from_ the secondary instance _to_ the primary instance, so if you simply
 copy the commands above it will not work.
 
-Execute the following query to create a peer record for the primary instance:
+Execute the following query to create an asset:
+
+Query:
+
+```
+mutation CreateAsset ($input: CreateAssetInput!) {
+  createAsset(input: $input) {
+    code
+    success
+    message
+    asset {
+      id
+      code
+      scale
+    }
+  }
+}
+```
+
+Query Variables:
+
+```
+{
+  "input": {
+    "code": "USD",
+    "scale": 2
+  }
+}
+```
+
+Example Successful Response
+
+```
+{
+  "data": {
+    "createAsset": {
+      "code": "200",
+      "success": true,
+      "message": "Created Asset",
+      "asset": {
+        "id": "c79fedc0-f062-4992-b539-e7f4c125180c",
+        "code": "USD",
+        "scale": 2
+      }
+    }
+  }
+}
+```
+
+Next, execute the following query to create a peer record for the primary instance:
 
 Query:
 
 ```
 mutation CreatePeer ($input: CreatePeerInput!) {
-      createPeer (input: $input) {
+  createPeer (input: $input) {
     code
     success
     message
@@ -164,7 +259,7 @@ mutation CreatePeer ($input: CreatePeerInput!) {
 }
 ```
 
-Query Variables:
+Query Variables (substitute the asset ID from the "create asset" response for `INSERT_ASSET_ID`):
 
 ```
 {
@@ -174,10 +269,7 @@ Query Variables:
       "incoming": {"authTokens": ["test"]},
       "outgoing": {"endpoint": "backend:3002", "authToken": "test"}
     },
-    "asset": {
-      "code": "710",
-      "scale": 2
-    }
+    "assetId": "INSERT_ASSET_ID"
   }
 }
 ```
@@ -194,7 +286,7 @@ Example successful response:
       "peer": {
         "id": "b282a8f7-1874-4d53-8135-32c23058268f",
         "asset": {
-          "code": "710",
+          "code": "USD",
           "scale": 2
         },
         "staticIlpAddress": "test.rafiki"
@@ -252,7 +344,7 @@ In this step we will provision payment pointers on the primary and secondary Raf
 Payment pointers are not accounts. Rafiki operators must supply their own "account provider"
 service for actually "holding" currency. Rafiki provides payment pointers--addresses within the
 ILP network to which other nodes on the network can send payments, which will then be routed
-to the account provider system and into the appropriate account. A payment pointer is a string that
+to the account provider system and into the appropriate account.
 
 At the end of this step, we will have two payment pointer IDs: one provisioned on the primary
 instance and one provisioned on the secondary instance. We will use these payment pointer IDs in
@@ -266,12 +358,12 @@ pointer ID:
 Query
 
 ```
-mutation CreateAccount ($input: CreateAccountInput!) {
-  createAccount(input: $input) {
+mutation CreatePaymentPointer ($input: CreateAccountInput!) {
+  createPaymentPointer(input: $input) {
     code
     success
     message
-    account {
+    paymentPointer {
       id
       asset {
         id
@@ -284,15 +376,12 @@ mutation CreateAccount ($input: CreateAccountInput!) {
 }
 ```
 
-Query variables
+Query Variables (substitute the asset ID from the "create asset" response for `INSERT_ASSET_ID`):
 
 ```
 {
   "input": {
-    "asset": {
-      "code": "710",
-      "scale": 2
-    },
+    "assetId": "INSERT_ASSET_ID",
     "publicName": "test-primary"
   }
 }
@@ -303,15 +392,15 @@ Example successful response
 ```
 {
   "data": {
-    "createAccount": {
+    "createPaymentPointer": {
       "code": "200",
       "success": true,
       "message": "Created Account",
-      "account": {
+      "paymentPointer": {
         "id": "afb2b1de-d819-4e85-b901-859c27445936",
         "asset": {
           "id": "5a27f8ec-17a5-4388-8d1e-8243d1926778",
-          "code": "710",
+          "code": "USD",
           "scale": 2,
           "withdrawalThreshold": null
         }
@@ -329,12 +418,12 @@ pointer ID:
 Query
 
 ```
-mutation CreateAccount ($input: CreateAccountInput!) {
-  createAccount(input: $input) {
+mutation CreatePaymentPointer ($input: CreateAccountInput!) {
+  createPaymentPointer(input: $input) {
     code
     success
     message
-    account {
+    paymentPointer {
       id
       asset {
         id
@@ -347,15 +436,12 @@ mutation CreateAccount ($input: CreateAccountInput!) {
 }
 ```
 
-Query variables
+Query Variables (substitute the asset ID from the "create asset" response for `INSERT_ASSET_ID`):
 
 ```
 {
   "input": {
-    "asset": {
-      "code": "710",
-      "scale": 2
-    },
+    "assetId": "INSERT_ASSET_ID",
     "publicName": "test-secondary"
   }
 }
@@ -366,15 +452,15 @@ Example successful response
 ```
 {
   "data": {
-    "createAccount": {
+    "createPaymentPointer": {
       "code": "200",
       "success": true,
       "message": "Created Account",
-      "account": {
+      "paymentPointer": {
         "id": "7e8b99f5-0861-49bd-95ab-e871c021d84d",
         "asset": {
           "id": "209fe717-bf02-4deb-826f-b7ed4f179713",
-          "code": "710",
+          "code": "USD",
           "scale": 2,
           "withdrawalThreshold": null
         }
@@ -386,6 +472,6 @@ Example successful response
 
 #### Note the Payment Pointer IDs
 
-The `data.createAccount.account.id` field in the response is the payment pointer ID, which we will
+The `data.createPaymentPointer.paymentPointer.id` field in the response is the payment pointer ID, which we will
 use in the next steps. In this example, the primary payment pointer ID is `afb2b1de-d819-4e85-b901-859c27445936`,
 and the secondary payment pointer ID is `7e8b99f5-0861-49bd-95ab-e871c021d84d`.
