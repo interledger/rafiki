@@ -1,4 +1,4 @@
-import axios, { AxiosInstance } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
@@ -60,7 +60,7 @@ export const get = async <T>(
         {
           data: JSON.stringify(data),
           url,
-          validationError: error?.message
+          validationError: error && error['message']
         },
         errorMessage
       )
@@ -71,7 +71,7 @@ export const get = async <T>(
     return data
   } catch (error) {
     const errorMessage = `Error when making Open Payments GET request: ${
-      error?.message ? error.message : 'Unknown error'
+      error && error['message'] ? error['message'] : 'Unknown error'
     }`
     logger.error({ url }, errorMessage)
 
@@ -114,7 +114,7 @@ export const post = async <TRequest, TResponse>(
         {
           data: JSON.stringify(data),
           url,
-          validationError: error?.message
+          validationError: error && error['message']
         },
         errorMessage
       )
@@ -125,7 +125,7 @@ export const post = async <TRequest, TResponse>(
     return data
   } catch (error) {
     const errorMessage = `Error when making Open Payments POST request: ${
-      error?.message ? error.message : 'Unknown error'
+      error && error['message'] ? error['message'] : 'Unknown error'
     }`
     logger.error({ url }, errorMessage)
 
@@ -168,7 +168,7 @@ export const deleteRequest = async <TResponse>(
         {
           status,
           url,
-          validationError: error?.message
+          validationError: error && error['message']
         },
         errorMessage
       )
@@ -177,19 +177,12 @@ export const deleteRequest = async <TResponse>(
     }
   } catch (error) {
     const errorMessage = `Error when making Open Payments DELETE request: ${
-      error?.message ? error.message : 'Unknown error'
+      error && error['message'] ? error['message'] : 'Unknown error'
     }`
     logger.error({ url }, errorMessage)
 
     throw new Error(errorMessage)
   }
-}
-
-type RequestConfig = {
-  method: string
-  url: string
-  headers: Record<string, string>
-  data?: Record<string, unknown>
 }
 
 export const createAxiosInstance = (args: {
@@ -206,17 +199,21 @@ export const createAxiosInstance = (args: {
     const privateKey = args.privateKey
     const keyId = args.keyId
     axiosInstance.interceptors.request.use(
-      async (config: RequestConfig) => {
+      async (config: AxiosRequestConfig) => {
+        if (!config.method || !config.url) {
+          throw new Error('Cannot intercept request: url or method missing')
+        }
         const contentAndSigHeaders = await createHeaders({
           request: {
             method: config.method.toUpperCase(),
             url: config.url,
-            headers: config.headers,
+            headers: JSON.parse(JSON.stringify(config.headers)),
             body: config.data ? JSON.stringify(config.data) : undefined
           },
           privateKey,
           keyId
         })
+        if (!config.headers) config.headers = {}
         if (
           config.data &&
           contentAndSigHeaders['Content-Digest'] &&
@@ -238,9 +235,9 @@ export const createAxiosInstance = (args: {
       },
       undefined,
       {
-        runWhen: (config: RequestConfig) =>
-          config.method.toLowerCase() === 'post' ||
-          !!config.headers['Authorization']
+        runWhen: (config: AxiosRequestConfig) =>
+          config.method?.toLowerCase() === 'post' ||
+          !!(config.headers && config.headers['Authorization'])
       }
     )
   }

@@ -98,7 +98,10 @@ export const getOutgoingPayment = async (
     return validateOutgoingPayment(outgoingPayment)
   } catch (error) {
     const errorMessage = 'Could not validate outgoing payment'
-    logger.error({ url, validateError: error?.message }, errorMessage)
+    logger.error(
+      { url, validateError: error && error['message'] },
+      errorMessage
+    )
 
     throw new Error(errorMessage)
   }
@@ -122,7 +125,10 @@ export const createOutgoingPayment = async (
     return validateOutgoingPayment(outgoingPayment)
   } catch (error) {
     const errorMessage = 'Could not validate outgoing payment'
-    logger.error({ url, validateError: error?.message }, errorMessage)
+    logger.error(
+      { url, validateError: error && error['message'] },
+      errorMessage
+    )
 
     throw new Error(errorMessage)
   }
@@ -156,7 +162,7 @@ export const listOutgoingPayments = async (
       logger.error(
         {
           url,
-          validateError: error?.message,
+          validateError: error && error['message'],
           outgoingPaymentId: outgoingPayment.id
         },
         errorMessage
