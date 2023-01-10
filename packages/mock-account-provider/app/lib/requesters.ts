@@ -1,5 +1,6 @@
 import { gql } from '@apollo/client'
 import type {
+  CreateAssetMutationResponse,
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
   PaymentPointer,
@@ -22,11 +23,48 @@ export interface GraphqlResponseElement {
   }
 }
 
+export async function createAsset(
+  code: string,
+  scale: number
+): Promise<CreateAssetMutationResponse> {
+  const createAssetMutation = gql`
+    mutation CreateAsset($input: CreateAssetInput!) {
+      createAsset(input: $input) {
+        code
+        success
+        message
+        asset {
+          id
+          code
+          scale
+        }
+      }
+    }
+  `
+  const createAssetInput = {
+    input: {
+      code,
+      scale
+    }
+  }
+  return apolloClient
+    .mutate({
+      mutation: createAssetMutation,
+      variables: createAssetInput
+    })
+    .then(({ data }): CreateAssetMutationResponse => {
+      console.log(data)
+      if (!data.createAsset.success) {
+        throw new Error('Data was empty')
+      }
+      return data.createAsset
+    })
+}
+
 export async function createPeer(
   staticIlpAddress: string,
   outgoingEndpoint: string,
-  assetCode: string,
-  assetScale: number,
+  assetId: string,
   name: string
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
@@ -37,10 +75,6 @@ export async function createPeer(
         message
         peer {
           id
-          asset {
-            code
-            scale
-          }
           staticIlpAddress
           name
         }
@@ -54,10 +88,7 @@ export async function createPeer(
         incoming: { authTokens: ['test'] },
         outgoing: { endpoint: outgoingEndpoint, authToken: 'test' }
       },
-      asset: {
-        code: assetCode,
-        scale: assetScale
-      },
+      assetId,
       name
     }
   }
@@ -116,8 +147,7 @@ export async function createPaymentPointer(
   backendUrl: string,
   accountName: string,
   accountUrl: string,
-  assetCode: string,
-  assetScale: number
+  assetId: string
 ): Promise<PaymentPointer> {
   const createPaymentPointerMutation = gql`
     mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
@@ -134,10 +164,7 @@ export async function createPaymentPointer(
     }
   `
   const createPaymentPointerInput: CreatePaymentPointerInput = {
-    asset: {
-      code: assetCode,
-      scale: assetScale
-    },
+    assetId,
     url: accountUrl,
     publicName: accountName
   }

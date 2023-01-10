@@ -15,7 +15,7 @@ import {
 } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { Config } from '../../config/app'
@@ -49,10 +49,15 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('Create or Get Payment Pointer', (): void => {
-    const options: CreateOptions = {
-      url: 'https://alice.me/.well-known/pay',
-      asset: randomAsset()
-    }
+    let options: CreateOptions
+
+    beforeEach(async (): Promise<void> => {
+      const { id: assetId } = await createAsset(deps)
+      options = {
+        url: 'https://alice.me/.well-known/pay',
+        assetId
+      }
+    })
 
     test.each`
       publicName                | description
@@ -72,6 +77,15 @@ describe('Open Payments Payment Pointer Service', (): void => {
         ).resolves.toEqual(paymentPointer)
       }
     )
+
+    test('Cannot create payment pointer with unknown asset', async (): Promise<void> => {
+      await expect(
+        paymentPointerService.create({
+          ...options,
+          assetId: uuid()
+        })
+      ).resolves.toEqual(PaymentPointerError.UnknownAsset)
+    })
 
     test.each`
       url                      | description
@@ -333,14 +347,14 @@ describe('Open Payments Payment Pointer Service', (): void => {
 
   describe('triggerEvents', (): void => {
     let paymentPointers: PaymentPointer[]
-    const asset = randomAsset()
 
     beforeEach(async (): Promise<void> => {
+      const { id: assetId } = await createAsset(deps)
       paymentPointers = []
       for (let i = 0; i < 5; i++) {
         paymentPointers.push(
           await createPaymentPointer(deps, {
-            asset,
+            assetId,
             createLiquidityAccount: true
           })
         )

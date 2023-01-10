@@ -15,6 +15,7 @@ export type IncomingPayment =
   RSComponents['schemas']['incoming-payment-with-connection']
 export type CreateIncomingPaymentArgs =
   RSOperations['create-incoming-payment']['requestBody']['content']['application/json']
+export type IncomingPaymentPaginationResult = PaginationResult<IncomingPayment>
 export type ILPStreamConnection =
   RSComponents['schemas']['ilp-stream-connection']
 export type OutgoingPayment = RSComponents['schemas']['outgoing-payment']

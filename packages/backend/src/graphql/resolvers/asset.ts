@@ -36,7 +36,7 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   ctx
 ): Promise<ResolversTypes['Asset']> => {
   const assetService = await ctx.container.use('assetService')
-  const asset = await assetService.getById(args.id)
+  const asset = await assetService.get(args.id)
   if (!asset) {
     throw new Error('No asset')
   }

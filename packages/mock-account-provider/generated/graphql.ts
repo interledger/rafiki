@@ -115,7 +115,7 @@ export type CreateOutgoingPaymentInput = {
 };
 
 export type CreatePaymentPointerInput = {
-  asset: AssetInput;
+  assetId: Scalars['String'];
   publicName?: InputMaybe<Scalars['String']>;
   url: Scalars['String'];
 };
@@ -149,7 +149,7 @@ export type CreatePaymentPointerWithdrawalInput = {
 };
 
 export type CreatePeerInput = {
-  asset: AssetInput;
+  assetId: Scalars['String'];
   http: HttpInput;
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
   name?: InputMaybe<Scalars['String']>;

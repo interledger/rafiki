@@ -23,6 +23,7 @@ describe('Error Handler Middleware', () => {
       },
       'Error thrown in incoming pipeline'
     )
+    expect(ctx.revertTotalReceived).toBeUndefined()
   })
 
   test('sets triggeredBy to own address if error is thrown in next', async () => {
@@ -38,6 +39,7 @@ describe('Error Handler Middleware', () => {
     expect(ctx.response.reject).toBeDefined()
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(ctx.response.reject!.triggeredBy).toEqual(ADDRESS)
+    expect(ctx.revertTotalReceived).toBeUndefined()
   })
 
   test('creates reject if reply is not set in next', async () => {
@@ -53,5 +55,23 @@ describe('Error Handler Middleware', () => {
     expect(ctx.services.logger.error).toHaveBeenCalledWith(
       'handler did not return a valid value.'
     )
+    expect(ctx.revertTotalReceived).toBeUndefined()
+  })
+
+  test('reverts stream connection total received amount', async () => {
+    const ctx = createILPContext({ services })
+    const errorToBeThrown = new Error('Test Error')
+    const next = jest.fn().mockImplementation(() => {
+      ctx.revertTotalReceived = jest.fn().mockResolvedValueOnce('0')
+      throw errorToBeThrown
+    })
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.response.reject).toBeDefined()
+
+    expect(ctx.revertTotalReceived).toEqual(expect.any(Function))
+    expect(ctx.revertTotalReceived).toHaveBeenCalledTimes(1)
   })
 })
