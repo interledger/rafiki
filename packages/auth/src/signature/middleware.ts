@@ -8,7 +8,7 @@ import {
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
-import { ContinueContext, CreateContext } from '../grant/routes'
+import { ContinueContext, CreateContext, DeleteContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -59,7 +59,7 @@ function getSigInputKeyId(sigInput: string): string | undefined {
 }
 
 export async function grantContinueHttpsigMiddleware(
-  ctx: ContinueContext,
+  ctx: ContinueContext | DeleteContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (
@@ -73,7 +73,7 @@ export async function grantContinueHttpsigMiddleware(
     'GNAP ',
     ''
   ) as string
-  const { interact_ref: interactRef } = ctx.request.body
+  const interactRef = ctx.request.body?.interact_ref
 
   const logger = await ctx.container.use('logger')
   logger.info(
@@ -118,7 +118,7 @@ export async function grantInitiationHttpsigMiddleware(
   const { body } = ctx.request
 
   const sigInput = ctx.headers['signature-input'] as string
-  ctx.clientKeyId = getSigInputKeyId(sigInput)
+  ctx.clientKeyId = getSigInputKeyId(sigInput) || ''
   if (!ctx.clientKeyId) {
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }

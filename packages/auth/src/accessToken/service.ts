@@ -213,7 +213,7 @@ async function rotate(
   } catch (error) {
     return {
       success: false,
-      error
+      error: new Error(error && error['message'])
     }
   }
 }

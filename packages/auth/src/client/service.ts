@@ -73,14 +73,14 @@ async function getClient(
 
 async function getClientKey(
   deps: ServiceDependencies,
-  { client, keyId }
+  { client, keyId }: KeyOptions
 ): Promise<JWK | undefined> {
   try {
     const { keys } = await deps.openPaymentsClient.paymentPointer.getKeys({
       url: client
     })
 
-    return keys.find((key) => key.kid === keyId)
+    return keys.find((key: JWK) => key.kid === keyId)
   } catch (error) {
     deps.logger.debug(
       {
