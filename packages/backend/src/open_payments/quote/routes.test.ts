@@ -1,7 +1,6 @@
 import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
 import * as httpMocks from 'node-mocks-http'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
@@ -25,7 +24,6 @@ import { createQuote } from '../../tests/quote'
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
@@ -63,7 +61,6 @@ describe('Quote Routes', (): void => {
     config = Config
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     config = await deps.use('config')
     quoteRoutes = await deps.use('quoteRoutes')
     quoteService = await deps.use('quoteService')
@@ -82,7 +79,7 @@ describe('Quote Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

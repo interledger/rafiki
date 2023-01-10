@@ -237,7 +237,7 @@ describe('OutgoingPaymentService', (): void => {
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
     connectionService = await deps.use('connectionService')
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {

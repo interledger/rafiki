@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
@@ -24,7 +23,6 @@ describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let knex: Knex
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
@@ -35,12 +33,11 @@ describe('Asset Service', (): void => {
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     assetService = await deps.use('assetService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
