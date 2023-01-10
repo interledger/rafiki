@@ -14,13 +14,14 @@ import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { CreateQuoteOptions } from '../../quote/service'
+import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import {
   createPaymentPointer,
   MockPaymentPointer
 } from '../../../tests/paymentPointer'
-import { PeerFactory } from '../../../tests/peerFactory'
+import { createPeer } from '../../../tests/peer'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../../'
@@ -240,16 +241,15 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const { id: sendAssetId } = await createAsset(deps, asset)
     paymentPointerId = (
       await createPaymentPointer(deps, {
-        asset: {
-          code: sendAmount.assetCode,
-          scale: sendAmount.assetScale
-        }
+        assetId: sendAssetId
       })
     ).id
+    const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverPaymentPointer = await createPaymentPointer(deps, {
-      asset: destinationAsset,
+      assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
     await expect(
@@ -334,8 +334,7 @@ describe('OutgoingPaymentService', (): void => {
           'creates an OutgoingPayment from a quote $description',
           async ({ outgoingPeer }): Promise<void> => {
             const peerService = await deps.use('peerService')
-            const peerFactory = new PeerFactory(peerService)
-            const peer = await peerFactory.build()
+            const peer = await createPeer(deps)
             if (toConnection) {
               receiver = connectionService.getUrl(incomingPayment)
             }
@@ -1142,8 +1141,7 @@ describe('OutgoingPaymentService', (): void => {
           receiver,
           sendAmount
         })
-        const assetService = await deps.use('assetService')
-        const { id: assetId } = await assetService.getOrCreate({
+        const { id: assetId } = await createAsset(deps, {
           code: asset.code,
           scale: asset.scale + 1
         })

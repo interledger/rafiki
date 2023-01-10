@@ -8,6 +8,7 @@ import {
 
 import { AppContext } from '../app'
 import { Grant } from '../grant/model'
+import { ContinueContext, CreateContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -58,7 +59,7 @@ function getSigInputKeyId(sigInput: string): string | undefined {
 }
 
 export async function grantContinueHttpsigMiddleware(
-  ctx: AppContext,
+  ctx: ContinueContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
@@ -104,7 +105,7 @@ export async function grantContinueHttpsigMiddleware(
 }
 
 export async function grantInitiationHttpsigMiddleware(
-  ctx: AppContext,
+  ctx: CreateContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (!validateSignatureHeaders(contextToRequestLike(ctx))) {

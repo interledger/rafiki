@@ -10,7 +10,6 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: password
-      BYPASS_SIGNATURE_VALIDATION: false
   redis:
     image: "redis:7"
     restart: unless-stopped

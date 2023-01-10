@@ -5,7 +5,7 @@ import nock from 'nock'
 import { URL } from 'url'
 
 import { testAccessToken } from './app'
-import { randomAsset } from './asset'
+import { createAsset } from './asset'
 import { AppServices } from '../app'
 import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
@@ -27,9 +27,8 @@ export async function createPaymentPointer(
   const paymentPointerService = await deps.use('paymentPointerService')
   const paymentPointerOrError = (await paymentPointerService.create({
     ...options,
-    url:
-      options.url || `https://${faker.internet.domainName()}/.well-known/pay`,
-    asset: options.asset || randomAsset()
+    assetId: options.assetId || (await createAsset(deps)).id,
+    url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockPaymentPointer
   if (isPaymentPointerError(paymentPointerOrError)) {
     throw new Error()

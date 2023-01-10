@@ -72,7 +72,7 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
         return responses[LiquidityError.AmountZero]
       }
       const assetService = await ctx.container.use('assetService')
-      const asset = await assetService.getById(args.input.assetId)
+      const asset = await assetService.get(args.input.assetId)
       if (!asset) {
         return responses[LiquidityError.UnknownAsset]
       }
@@ -163,7 +163,7 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         return responses[LiquidityError.AmountZero]
       }
       const assetService = await ctx.container.use('assetService')
-      const asset = await assetService.getById(args.input.assetId)
+      const asset = await assetService.get(args.input.assetId)
       if (!asset) {
         return responses[LiquidityError.UnknownAsset]
       }
@@ -367,7 +367,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
         return responses[LiquidityError.InvalidId]
       }
       const assetService = await ctx.container.use('assetService')
-      const asset = await assetService.getById(event.withdrawal.assetId)
+      const asset = await assetService.get(event.withdrawal.assetId)
       if (!asset) {
         throw new Error()
       }

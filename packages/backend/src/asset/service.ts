@@ -1,7 +1,6 @@
-import { Knex } from 'knex'
 import { NotFoundError, UniqueViolationError } from 'objection'
 
-import { AssetError, isAssetError } from './errors'
+import { AssetError } from './errors'
 import { Asset } from './model'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
@@ -24,9 +23,7 @@ export interface UpdateOptions {
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
-  get(asset: AssetOptions, trx?: Knex.Transaction): Promise<void | Asset>
-  getOrCreate(asset: AssetOptions): Promise<Asset>
-  getById(id: string, trx?: Knex.Transaction): Promise<void | Asset>
+  get(id: string): Promise<void | Asset>
   getPage(pagination?: Pagination): Promise<Asset[]>
 }
 
@@ -50,9 +47,7 @@ export async function createAssetService({
   return {
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
-    get: (asset, trx) => getAsset(deps, asset, trx),
-    getOrCreate: (asset) => getOrCreateAsset(deps, asset),
-    getById: (id, trx) => getAssetById(deps, id, trx),
+    get: (id) => getAsset(deps, id),
     getPage: (pagination?) => getAssetsPage(deps, pagination)
   }
 }
@@ -111,34 +106,9 @@ async function updateAsset(
 
 async function getAsset(
   deps: ServiceDependencies,
-  { code, scale }: AssetOptions,
-  trx?: Knex.Transaction
+  id: string
 ): Promise<void | Asset> {
-  return await Asset.query(trx || deps.knex).findOne({ code, scale })
-}
-
-async function getOrCreateAsset(
-  deps: ServiceDependencies,
-  options: AssetOptions
-): Promise<Asset> {
-  const asset = await Asset.query(deps.knex).findOne(options)
-  if (asset) {
-    return asset
-  } else {
-    const asset = await createAsset(deps, options)
-    if (isAssetError(asset)) {
-      throw new Error()
-    }
-    return asset
-  }
-}
-
-async function getAssetById(
-  deps: ServiceDependencies,
-  id: string,
-  trx?: Knex.Transaction
-): Promise<void | Asset> {
-  return await Asset.query(trx || deps.knex).findById(id)
+  return await Asset.query(deps.knex).findById(id)
 }
 
 async function getAssetsPage(

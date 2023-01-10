@@ -18,7 +18,7 @@ import { Amount, serializeAmount } from '../amount'
 import { AccessAction, AccessType, Grant } from '../auth/grant'
 import { PaymentPointer } from '../payment_pointer/model'
 import { getRouteTests } from '../payment_pointer/model.test'
-import { randomAsset } from '../../tests/asset'
+import { createAsset, randomAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 
@@ -72,11 +72,12 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const { id: assetId } = await createAsset(deps, {
+      code: sendAmount.assetCode,
+      scale: sendAmount.assetScale
+    })
     paymentPointer = await createPaymentPointer(deps, {
-      asset: {
-        code: sendAmount.assetCode,
-        scale: sendAmount.assetScale
-      }
+      assetId
     })
   })
 

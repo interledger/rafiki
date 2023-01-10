@@ -6,7 +6,12 @@ import {
   MutationResolvers
 } from '../generated/graphql'
 import { Peer } from '../../peer/model'
-import { PeerError, isPeerError } from '../../peer/errors'
+import {
+  PeerError,
+  isPeerError,
+  errorToCode,
+  errorToMessage
+} from '../../peer/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
@@ -50,47 +55,37 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
     args,
     ctx
   ): Promise<ResolversTypes['CreatePeerMutationResponse']> => {
-    try {
-      const peerService = await ctx.container.use('peerService')
-      const peerOrError = await peerService.create(args.input)
-      if (isPeerError(peerOrError)) {
-        switch (peerOrError) {
-          case PeerError.DuplicateIncomingToken:
-            return {
-              code: '409',
-              message: 'Incoming token already exists',
-              success: false
+    const peerService = await ctx.container.use('peerService')
+    return peerService
+      .create(args.input)
+      .then((peerOrError: Peer | PeerError) =>
+        isPeerError(peerOrError)
+          ? {
+              code: errorToCode[peerOrError].toString(),
+              success: false,
+              message: errorToMessage[peerOrError]
             }
-          case PeerError.InvalidStaticIlpAddress:
-            return {
-              code: '400',
-              message: 'Invalid ILP address',
-              success: false
+          : {
+              code: '200',
+              success: true,
+              message: 'Created ILP Peer',
+              peer: peerToGraphql(peerOrError)
             }
-          default:
-            throw new Error(`PeerError: ${peerOrError}`)
-        }
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Created ILP Peer',
-        peer: peerToGraphql(peerOrError)
-      }
-    } catch (error) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          error
-        },
-        'error creating peer'
       )
-      return {
-        code: '500',
-        message: 'Error trying to create peer',
-        success: false
-      }
-    }
+      .catch((error) => {
+        ctx.logger.error(
+          {
+            options: args.input,
+            error
+          },
+          'error creating peer'
+        )
+        return {
+          code: '500',
+          success: false,
+          message: 'Error trying to create peer'
+        }
+      })
   }
 
 export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
@@ -99,47 +94,37 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
     args,
     ctx
   ): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
-    try {
-      const peerService = await ctx.container.use('peerService')
-      const peerOrError = await peerService.update(args.input)
-      if (isPeerError(peerOrError)) {
-        switch (peerOrError) {
-          case PeerError.UnknownPeer:
-            return {
-              code: '404',
-              message: 'Unknown peer',
-              success: false
+    const peerService = await ctx.container.use('peerService')
+    return peerService
+      .update(args.input)
+      .then((peerOrError: Peer | PeerError) =>
+        isPeerError(peerOrError)
+          ? {
+              code: errorToCode[peerOrError].toString(),
+              success: false,
+              message: errorToMessage[peerOrError]
             }
-          case PeerError.DuplicateIncomingToken:
-            return {
-              code: '409',
-              message: 'Incoming token already exists',
-              success: false
+          : {
+              code: '200',
+              success: true,
+              message: 'Updated ILP Peer',
+              peer: peerToGraphql(peerOrError)
             }
-          default:
-            throw new Error(`PeerError: ${peerOrError}`)
-        }
-      }
-      return {
-        code: '200',
-        success: true,
-        message: 'Updated ILP Peer',
-        peer: peerToGraphql(peerOrError)
-      }
-    } catch (error) {
-      ctx.logger.error(
-        {
-          options: args.input,
-          error
-        },
-        'error updating peer'
       )
-      return {
-        code: '400',
-        message: 'Error trying to update peer',
-        success: false
-      }
-    }
+      .catch((error) => {
+        ctx.logger.error(
+          {
+            options: args.input,
+            error
+          },
+          'error updating peer'
+        )
+        return {
+          code: '400',
+          message: 'Error trying to update peer',
+          success: false
+        }
+      })
   }
 
 export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
@@ -159,5 +144,6 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   http: peer.http,
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
+  name: peer.name,
   createdAt: new Date(+peer.createdAt).toISOString()
 })

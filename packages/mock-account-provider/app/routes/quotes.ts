@@ -33,11 +33,12 @@ export async function action({ request }: ActionArgs) {
   const receivedQuote: Quote = await request.json()
 
   const feeStructure = CONFIG.seed.fees[0]
+  const asset = CONFIG.seed.asset
   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
     // TODO: handle quote fee calculation for different assets/scales
     if (
-      receivedQuote.sendAmount.assetCode !== feeStructure.asset ||
-      receivedQuote.sendAmount.assetScale !== feeStructure.scale
+      receivedQuote.sendAmount.assetCode !== asset.code ||
+      receivedQuote.sendAmount.assetScale !== asset.scale
     ) {
       throw json('Invalid quote sendAmount asset', { status: 400 })
     }
@@ -50,8 +51,8 @@ export async function action({ request }: ActionArgs) {
     receivedQuote.sendAmount.value = (sendAmountValue + fees).toString()
   } else if (receivedQuote.paymentType === PaymentType.FixedSend) {
     if (
-      receivedQuote.receiveAmount.assetCode !== feeStructure.asset ||
-      receivedQuote.receiveAmount.assetScale !== feeStructure.scale
+      receivedQuote.receiveAmount.assetCode !== asset.code ||
+      receivedQuote.receiveAmount.assetScale !== asset.scale
     ) {
       throw json('Invalid quote receiveAmount asset', { status: 400 })
     }

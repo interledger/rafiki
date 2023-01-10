@@ -44,10 +44,6 @@ import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
-import { ApiKeyService } from './apiKey/service'
-import { SessionService } from './session/service'
-import { addDirectivesToSchema } from './graphql/directives'
-import { Session } from './session/util'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { AuthenticatedClient } from 'open-payments'
@@ -65,8 +61,6 @@ export interface AppContextData {
 export interface ApolloContext {
   container: IocContract<AppServices>
   logger: Logger
-  admin: boolean
-  session: Session | undefined
 }
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
@@ -158,8 +152,6 @@ export interface AppServices {
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(options: IlpPluginOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
-  apiKeyService: Promise<ApiKeyService>
-  sessionService: Promise<SessionService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   openPaymentsClient: Promise<AuthenticatedClient>
 }
@@ -221,23 +213,13 @@ export class App {
       resolvers
     })
 
-    let schemaWithDirectives = schemaWithResolvers
-    // Add directives to schema
-    if (this.config.env !== 'test') {
-      schemaWithDirectives = addDirectivesToSchema(schemaWithResolvers)
-    }
-
     // Setup Apollo on graphql endpoint
     this.apolloServer = new ApolloServer({
-      schema: schemaWithDirectives,
-      context: async ({ ctx }: Koa.Context): Promise<ApolloContext> => {
-        const admin = this._isAdmin(ctx)
-        const session = await this._getSession(ctx)
+      schema: schemaWithResolvers,
+      context: async (): Promise<ApolloContext> => {
         return {
           container: this.container,
-          logger: await this.container.use('logger'),
-          admin,
-          session
+          logger: await this.container.use('logger')
         }
       }
     })
@@ -436,20 +418,6 @@ export class App {
       return address.port
     }
     return 0
-  }
-
-  private _isAdmin(ctx: Koa.Context): boolean {
-    return ctx.request.header['x-api-key'] == this.config.adminKey
-  }
-
-  private async _getSession(ctx: Koa.Context): Promise<Session | undefined> {
-    const key = ctx.request.header.authorization || ''
-    if (key && key.length) {
-      const sessionService = await this.container.use('sessionService')
-      return await sessionService.get(key)
-    } else {
-      return undefined
-    }
   }
 
   private async processPaymentPointer(): Promise<void> {

@@ -20,7 +20,6 @@ import {
   createOutgoingPayment,
   getPaymentPointerOutgoingPayments
 } from './outgoing_payment'
-import { createApiKey, deleteAllApiKeys, redeemApiKey } from './apiKey'
 import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
   addAssetLiquidity,
@@ -34,7 +33,6 @@ import {
   withdrawEventLiquidity
 } from './liquidity'
 import { GraphQLBigInt } from '../scalars'
-import { refreshSession, revokeSession } from './session'
 import {
   createPaymentPointerKey,
   revokePaymentPointerKey
@@ -66,11 +64,6 @@ export const resolvers: Resolvers = {
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,
-    createApiKey: createApiKey,
-    redeemApiKey: redeemApiKey,
-    deleteAllApiKeys: deleteAllApiKeys,
-    refreshSession: refreshSession,
-    revokeSession: revokeSession,
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
