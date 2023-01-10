@@ -33,7 +33,7 @@ export function createStreamController(): ILPMiddleware {
     const connectionKey = streamReceivedKey(connectionId)
     // Thanks to Redis's `stringNumbers:true`, `incrby` returns a string rather than a number.
     // This ensures that precision isn't lost when dealing with integers larger than MAX_SAFE_INTEGER.
-    const [[err, totalReceived], [err2]] = await redis
+    const query = await redis //[[err, totalReceived], [err2]]
       .multi()
       .incrby(
         connectionKey,
@@ -41,18 +41,20 @@ export function createStreamController(): ILPMiddleware {
       )
       .expire(connectionKey, CONNECTION_EXPIRY)
       .exec()
-    if (typeof totalReceived === 'string' && !err && !err2) {
-      moneyOrReply.setTotalReceived(totalReceived)
-    } else {
-      logger.warn(
-        {
-          totalReceived,
-          err,
-          err2
-        },
-        'error incrementing stream totalReceived'
-      )
+    if (query) {
+      if (typeof query[0][1] === 'string' && !query[0][0] && !query[1][0]) {
+        moneyOrReply.setTotalReceived(query[0][1])
+      } else {
+        logger.warn(
+          {
+            totalReceived: query[0][1],
+            err: query[0][0],
+            err2: query[1][0]
+          },
+          'error incrementing stream totalReceived'
+        )
+      }
+      response.reply = moneyOrReply.accept()
     }
-    response.reply = moneyOrReply.accept()
   }
 }
