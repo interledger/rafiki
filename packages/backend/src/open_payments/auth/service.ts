@@ -140,7 +140,7 @@ async function introspectToken(
     }
     return new TokenInfo(options, data.key)
   } catch (err) {
-    if (err.errors) {
+    if (err && err['errors']) {
       deps.logger.warn({ err }, 'invalid token introspection')
     }
     return

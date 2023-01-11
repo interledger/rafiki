@@ -199,7 +199,10 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   list,
   urlPath
 }: RouteTestsOptions<M>): void => {
-  const testList = async ({ paymentPointerId, clientId }, expectedMatch) => {
+  const testList = async (
+    { paymentPointerId, clientId }: ListOptions,
+    expectedMatch?: M
+  ) => {
     const paymentPointer = await getPaymentPointer()
     paymentPointer.id = paymentPointerId
     const ctx = setup<ListContext>({

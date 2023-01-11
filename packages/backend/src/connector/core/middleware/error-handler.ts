@@ -1,4 +1,4 @@
-import { errorToIlpReject } from 'ilp-packet'
+import { errorToIlpReject, IlpErrorClass } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 
 /**
@@ -26,7 +26,10 @@ export function createIncomingErrorHandlerMiddleware(
       if (ctx.revertTotalReceived) {
         await ctx.revertTotalReceived()
       }
-      ctx.response.reject = errorToIlpReject(serverAddress, err)
+      ctx.response.reject = errorToIlpReject(
+        serverAddress,
+        err as IlpErrorClass
+      )
     }
   }
 }

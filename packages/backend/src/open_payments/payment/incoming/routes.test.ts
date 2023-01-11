@@ -164,8 +164,8 @@ describe('Incoming Payment Routes', (): void => {
 
     test.each`
       incomingAmount | description  | externalRef  | expiresAt
-      ${amount}      | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined}   | ${undefined} | ${undefined} | ${undefined}
+      ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
+      ${false}       | ${undefined} | ${undefined} | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
@@ -190,7 +190,7 @@ describe('Incoming Payment Routes', (): void => {
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: {
             body: {
-              incomingAmount,
+              incomingAmount: incomingAmount ? amount : undefined,
               description,
               externalRef,
               expiresAt
@@ -220,7 +220,7 @@ describe('Incoming Payment Routes', (): void => {
         expect(ctx.response.body).toEqual({
           id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
           paymentPointer: paymentPointer.url,
-          incomingAmount,
+          incomingAmount: incomingAmount ? amount : undefined,
           description,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),

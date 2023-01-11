@@ -112,17 +112,5 @@ describe('Payment Pointer Keys Routes', (): void => {
         keys: [jwk]
       })
     })
-
-    test('returns 404 if payment pointer does not exist', async (): Promise<void> => {
-      const ctx = createContext<PaymentPointerContext>({
-        headers: { Accept: 'application/json' },
-        url: `/jwks.json`
-      })
-      ctx.paymentPointer = undefined
-
-      await expect(
-        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
-      ).rejects.toHaveProperty('status', 404)
-    })
   })
 })

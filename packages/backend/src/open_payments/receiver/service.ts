@@ -101,7 +101,7 @@ async function getConnection(
     })
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get connection'
     )
 
@@ -158,7 +158,7 @@ async function getIncomingPayment(
     }
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get incoming payment'
     )
     return undefined

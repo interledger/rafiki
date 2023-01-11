@@ -23,10 +23,12 @@ function patchBigInt() {
   }
 }
 
-function coerceBigIntValue(value: bigint | number | string): bigint | number {
+function coerceBigIntValue(
+  value: bigint | number | string | unknown
+): bigint | number {
   if (isBigIntAvailable()) {
     patchBigInt()
-    const uInt64 = BigInt(value)
+    const uInt64 = BigInt(value as bigint | number | string)
     if (uInt64 < BigInt(0)) throw new TypeError('Input must be unsigned.')
     return uInt64
   } else {

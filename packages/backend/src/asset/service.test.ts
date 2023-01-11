@@ -190,7 +190,8 @@ describe('Asset Service', (): void => {
   describe('getPage', (): void => {
     getPageTests({
       createModel: () => createAsset(deps),
-      getPage: (pagination: Pagination) => assetService.getPage(pagination)
+      getPage: (pagination: Pagination | undefined) =>
+        assetService.getPage(pagination)
     })
   })
 })

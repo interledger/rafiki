@@ -67,6 +67,6 @@ async function getPay(
       receipts_enabled: !!(nonce && secret)
     })
   } catch (err) {
-    ctx.throw(400, err.message)
+    ctx.throw(400, err && err['message'])
   }
 }

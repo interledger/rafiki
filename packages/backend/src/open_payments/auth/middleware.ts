@@ -59,9 +59,9 @@ export function createTokenIntrospectionMiddleware({
 
       await next()
     } catch (err) {
-      if (err.status === 401) {
+      if (err && err['status'] === 401) {
         ctx.status = 401
-        ctx.message = err.message
+        ctx.message = err['message']
         ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
       } else {
         throw err

@@ -405,7 +405,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo =
-        err && typeof err === 'object' && err.stack ? err.stack : err
+        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -421,7 +421,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo =
-        err && typeof err === 'object' && err.stack ? err.stack : err
+        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -461,8 +461,11 @@ if (!module.parent) {
 }
 
 // Used for running migrations in a try loop with exponential backoff
-const callWithRetry = async (fn, depth = 0) => {
-  const wait = (ms) => new Promise((res) => setTimeout(res, ms))
+const callWithRetry: CallableFunction = async (
+  fn: CallableFunction,
+  depth = 0
+) => {
+  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
   try {
     return await fn()

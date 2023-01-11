@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'
 import { createHmac } from 'crypto'
 import { canonicalize } from 'json-canonicalize'
 
@@ -110,19 +110,23 @@ async function sendWebhookEvent(
       processAt: null
     })
   } catch (err) {
+    const error = err as AxiosError
     const attempts = event.attempts + 1
-    const error = err.message
+    const errorMessage = error.message
     deps.logger.warn(
       {
         attempts,
-        error
+        error: errorMessage
       },
       'webhook request failed'
     )
 
     await event.$query(deps.knex).patch({
       attempts,
-      statusCode: err.isAxiosError && err.response?.status,
+      statusCode:
+        error.isAxiosError && error.response
+          ? error.response.status
+          : undefined,
       processAt: new Date(Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS)
     })
   }

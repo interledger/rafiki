@@ -328,7 +328,8 @@ describe('Peer Service', (): void => {
   describe('Peer pagination', (): void => {
     getPageTests({
       createModel: () => createPeer(deps, { assetId: asset.id }),
-      getPage: (pagination: Pagination) => peerService.getPage(pagination)
+      getPage: (pagination: Pagination | undefined) =>
+        peerService.getPage(pagination)
     })
   })
 })
