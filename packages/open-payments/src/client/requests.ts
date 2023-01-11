@@ -214,19 +214,12 @@ export const createAxiosInstance = (args: {
           keyId
         })
         if (!config.headers) config.headers = {}
-        if (
-          config.data &&
-          contentAndSigHeaders['Content-Digest'] &&
-          contentAndSigHeaders['Content-Length'] &&
-          contentAndSigHeaders['Content-Type']
-        ) {
+        if (config.data) {
           config.headers['Content-Digest'] =
             contentAndSigHeaders['Content-Digest']
           config.headers['Content-Length'] =
             contentAndSigHeaders['Content-Length']
           config.headers['Content-Type'] = contentAndSigHeaders['Content-Type']
-        } else {
-          throw new Error('Error creating content headers')
         }
         config.headers['Signature'] = contentAndSigHeaders['Signature']
         config.headers['Signature-Input'] =
