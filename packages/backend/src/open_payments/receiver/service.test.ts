@@ -42,7 +42,7 @@ describe('Receiver Service', (): void => {
     connectionService = await deps.use('connectionService')
     paymentPointerService = await deps.use('paymentPointerService')
     grantService = await deps.use('grantService')
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {

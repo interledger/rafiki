@@ -1,5 +1,4 @@
 import jestOpenAPI from 'jest-openapi'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
@@ -27,7 +26,6 @@ import { Asset } from '../../../asset/model'
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
 
@@ -35,7 +33,6 @@ describe('Incoming Payment Routes', (): void => {
     config = Config
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
   })
@@ -66,7 +63,7 @@ describe('Incoming Payment Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-koa'
-import { Knex } from 'knex'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
@@ -34,7 +33,6 @@ import {
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
   let asset: Asset
@@ -42,7 +40,6 @@ describe('OutgoingPayment Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
   })
@@ -53,7 +50,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
