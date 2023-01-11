@@ -75,12 +75,13 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     if (!state.streamDestination || response.fulfill) {
+      // TODO: make this single-phase if streamDestination === true
+      const trx = await createPendingTransfer()
+
       if (!state.streamDestination) {
         await next()
       }
 
-      // TODO: make this single-phase if streamDestination === true
-      const trx = await createPendingTransfer()
       if (trx) {
         if (response.fulfill) {
           await trx.commit()
