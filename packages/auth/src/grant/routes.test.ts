@@ -14,12 +14,12 @@ import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes, GrantChoices } from './routes'
-import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -30,8 +30,8 @@ const CLIENT = faker.internet.url()
 const CLIENT_KEY_ID = v4()
 
 const BASE_GRANT_ACCESS = {
-  type: AccessType.IncomingPayment,
-  actions: [Action.Create, Action.Read, Action.List],
+  type: AccessTypeMapping.IncomingPayment,
+  actions: [ActionMapping.Create, ActionMapping.Read, ActionMapping.List],
   identifier: `https://example.com/${v4()}`
 }
 
@@ -39,8 +39,8 @@ const BASE_GRANT_REQUEST = {
   access_token: {
     access: [
       {
-        type: AccessType.OutgoingPayment,
-        actions: [Action.Create, Action.Read, Action.List],
+        type: AccessTypeMapping.OutgoingPayment,
+        actions: [ActionMapping.Create, ActionMapping.Read, ActionMapping.List],
         identifier: `https://example.com/${v4()}`
       }
     ]
@@ -181,8 +181,12 @@ describe('Grant Routes', (): void => {
         access_token: {
           access: [
             {
-              type: AccessType.IncomingPayment,
-              actions: [Action.Create, Action.Read, Action.List],
+              type: AccessTypeMapping.IncomingPayment,
+              actions: [
+                ActionMapping.Create,
+                ActionMapping.Read,
+                ActionMapping.List
+              ],
               identifier: `https://example.com/${v4()}`
             }
           ]
@@ -229,8 +233,12 @@ describe('Grant Routes', (): void => {
         access_token: {
           access: [
             {
-              type: AccessType.IncomingPayment,
-              actions: [Action.Create, Action.Read, Action.List],
+              type: AccessTypeMapping.IncomingPayment,
+              actions: [
+                ActionMapping.Create,
+                ActionMapping.Read,
+                ActionMapping.List
+              ],
               identifier: `https://example.com/${v4()}`
             }
           ]

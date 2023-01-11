@@ -4,13 +4,13 @@ import { Knex } from 'knex'
 
 import { Grant } from './model'
 import { GrantOptions, GrantService } from './service'
-import { AccessType, AccessAction } from '../auth/grant'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -86,8 +86,8 @@ describe('Grant Service', (): void => {
         async ({ expiresIn }): Promise<void> => {
           const options: GrantOptions = {
             authServer: authServerUrl,
-            accessType: AccessType.IncomingPayment,
-            accessActions: [AccessAction.ReadAll]
+            accessType: AccessTypeMapping.IncomingPayment,
+            accessActions: [ActionMapping.ReadAll]
           }
           grant = await grantService.create({
             ...options,
@@ -109,8 +109,8 @@ describe('Grant Service', (): void => {
     test('cannot fetch non-existing grant', async (): Promise<void> => {
       const options: GrantOptions = {
         authServer: faker.internet.url(),
-        accessType: AccessType.IncomingPayment,
-        accessActions: [AccessAction.ReadAll]
+        accessType: AccessTypeMapping.IncomingPayment,
+        accessActions: [ActionMapping.ReadAll]
       }
       await grantService.create(options)
       await expect(
@@ -122,13 +122,13 @@ describe('Grant Service', (): void => {
       await expect(
         grantService.get({
           ...options,
-          accessType: AccessType.Quote
+          accessType: AccessTypeMapping.Quote
         })
       ).resolves.toBeUndefined()
       await expect(
         grantService.get({
           ...options,
-          accessActions: [AccessAction.Read]
+          accessActions: [ActionMapping.Read]
         })
       ).resolves.toBeUndefined()
     })

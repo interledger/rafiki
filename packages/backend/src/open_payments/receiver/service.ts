@@ -5,7 +5,6 @@ import {
   isNonInteractiveGrant
 } from 'open-payments'
 
-import { AccessAction, AccessType } from '../auth/grant'
 import { ConnectionService } from '../connection/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
@@ -14,6 +13,7 @@ import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 // A receiver is resolved from an incoming payment or a connection
 export interface ReceiverService {
@@ -200,8 +200,8 @@ async function getIncomingPaymentGrant(
   }
   const grantOptions = {
     authServer: paymentPointer.authServer,
-    accessType: AccessType.IncomingPayment,
-    accessActions: [AccessAction.ReadAll]
+    accessType: AccessTypeMapping.IncomingPayment,
+    accessActions: [ActionMapping.ReadAll]
   }
 
   const existingGrant = await deps.grantService.get(grantOptions)

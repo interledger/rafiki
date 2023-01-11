@@ -12,12 +12,12 @@ import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
-import { AccessType, Action } from '../access/types'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
 import { generateTestKeys, JWK } from 'http-signature-utils'
 import { generateNonce, generateToken } from '../shared/utils'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -58,8 +58,8 @@ describe('Access Token Service', (): void => {
   }
 
   const BASE_ACCESS = {
-    type: AccessType.OutgoingPayment,
-    actions: [Action.Read, Action.Create],
+    type: AccessTypeMapping.OutgoingPayment,
+    actions: [ActionMapping.Read, ActionMapping.Create],
     identifier: `https://example.com/${v4()}`,
     limits: {
       receiver: 'https://wallet.com/alice',

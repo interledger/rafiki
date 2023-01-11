@@ -17,8 +17,9 @@ import { URL } from 'url'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
-import { Grant, AccessAction, AccessType } from '../open_payments/auth/grant'
+import { Grant } from '../open_payments/auth/grant'
 import { v4 as uuid } from 'uuid'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
@@ -67,12 +68,16 @@ export const createTestApp = async (
     grant: 'PRY5NM33OM4TB8N6BW7',
     access: [
       {
-        type: AccessType.IncomingPayment,
-        actions: [AccessAction.Create, AccessAction.Complete, AccessAction.Read]
+        type: AccessTypeMapping.IncomingPayment,
+        actions: [
+          ActionMapping.Create,
+          ActionMapping.Complete,
+          ActionMapping.Read
+        ]
       },
       {
-        type: AccessType.OutgoingPayment,
-        actions: [AccessAction.Read]
+        type: AccessTypeMapping.OutgoingPayment,
+        actions: [ActionMapping.Read]
       }
     ]
   })

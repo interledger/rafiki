@@ -11,7 +11,6 @@ import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
-import { AccessType, AccessAction } from './grant'
 import { AuthService } from './service'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -22,6 +21,7 @@ import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { setup } from '../payment_pointer/model.test'
 import { TokenInfo } from './service'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -46,8 +46,8 @@ describe('Auth Middleware', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     middleware = createTokenIntrospectionMiddleware({
-      type: AccessType.IncomingPayment,
-      action: AccessAction.Read
+      type: AccessTypeMapping.IncomingPayment,
+      action: ActionMapping.Read
     })
     authService = await deps.use('authService')
   })
@@ -113,8 +113,8 @@ describe('Auth Middleware', (): void => {
         grant: uuid(),
         access: [
           {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create],
+            type: AccessTypeMapping.OutgoingPayment,
+            actions: [ActionMapping.Create],
             identifier: ctx.paymentPointer.url
           }
         ]
@@ -146,13 +146,13 @@ describe('Auth Middleware', (): void => {
           grant: uuid(),
           access: [
             {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Read],
+              type: AccessTypeMapping.IncomingPayment,
+              actions: [ActionMapping.Read],
               identifier: limitAccount ? ctx.paymentPointer.url : undefined
             },
             {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
+              type: AccessTypeMapping.OutgoingPayment,
+              actions: [ActionMapping.Create, ActionMapping.Read],
               identifier: ctx.paymentPointer.url,
               interval: 'R/2022-03-01T13:00:00Z/P1M',
               limits: {
@@ -252,8 +252,8 @@ describe('HTTP Signature Middleware', (): void => {
           grant: uuid(),
           access: [
             {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Read]
+              type: AccessTypeMapping.IncomingPayment,
+              actions: [ActionMapping.Read]
             }
           ]
         },

@@ -21,7 +21,8 @@ import {
 } from '../../payment_pointer/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { Grant } from '../../auth/grant'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -92,8 +93,8 @@ describe('Outgoing Payment Routes', (): void => {
               grant: uuid(),
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read]
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read]
                 }
               ]
             })
@@ -176,8 +177,8 @@ describe('Outgoing Payment Routes', (): void => {
               clientId: uuid(),
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read]
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read]
                 }
               ]
             })

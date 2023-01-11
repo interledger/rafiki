@@ -21,8 +21,9 @@ import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { Grant } from '../../auth/grant'
 import { Asset } from '../../../asset/model'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -179,8 +180,8 @@ describe('Incoming Payment Routes', (): void => {
               clientId: uuid(),
               access: [
                 {
-                  type: AccessType.IncomingPayment,
-                  actions: [AccessAction.Create]
+                  type: AccessTypeMapping.IncomingPayment,
+                  actions: [ActionMapping.Create]
                 }
               ]
             })

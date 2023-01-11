@@ -43,8 +43,9 @@ import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
 import { getTests } from '../../payment_pointer/model.test'
-import { AccessAction, AccessType, Grant } from '../../auth/grant'
+import { Grant } from '../../auth/grant'
 import { Quote } from '../../quote/model'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -292,8 +293,8 @@ describe('OutgoingPaymentService', (): void => {
                 grant: uuid(),
                 access: [
                   {
-                    type: AccessType.OutgoingPayment,
-                    actions: [AccessAction.Create, AccessAction.Read]
+                    type: AccessTypeMapping.OutgoingPayment,
+                    actions: [ActionMapping.Create, ActionMapping.Read]
                   }
                 ]
               })
@@ -500,8 +501,8 @@ describe('OutgoingPaymentService', (): void => {
           grant: grantId,
           access: [
             {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
+              type: AccessTypeMapping.OutgoingPayment,
+              actions: [ActionMapping.Create, ActionMapping.Read],
               limits: {
                 receiver,
                 sendAmount
@@ -578,8 +579,8 @@ describe('OutgoingPaymentService', (): void => {
             grant: grantId,
             access: [
               {
-                type: AccessType.OutgoingPayment,
-                actions: [AccessAction.Create, AccessAction.Read],
+                type: AccessTypeMapping.OutgoingPayment,
+                actions: [ActionMapping.Create, ActionMapping.Read],
                 limits: {
                   sendAmount,
                   interval: `R0/${start.toISOString()}/P1M`
@@ -606,8 +607,8 @@ describe('OutgoingPaymentService', (): void => {
               grant: grantId,
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read],
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read],
                   identifier: `${Config.publicHost}/${paymentPointerId}`,
                   limits: { ...limits, interval }
                 }
@@ -640,8 +641,8 @@ describe('OutgoingPaymentService', (): void => {
               grant: grantId,
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read],
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read],
                   identifier: `${Config.publicHost}/${paymentPointerId}`,
                   limits: sendAmount
                     ? {
@@ -684,8 +685,8 @@ describe('OutgoingPaymentService', (): void => {
               grant: grantId,
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read],
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read],
                   identifier: `${Config.publicHost}/${paymentPointerId}`,
                   limits: {
                     sendAmount: sendAmount ? grantAmount : undefined,
@@ -740,8 +741,8 @@ describe('OutgoingPaymentService', (): void => {
               grant: grantId,
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read],
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read],
                   identifier: `${Config.publicHost}/${paymentPointerId}`,
                   limits
                 }
@@ -786,8 +787,8 @@ describe('OutgoingPaymentService', (): void => {
               grant: grantId,
               access: [
                 {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read],
+                  type: AccessTypeMapping.OutgoingPayment,
+                  actions: [ActionMapping.Create, ActionMapping.Read],
                   identifier: `${Config.publicHost}/${paymentPointerId}`,
                   limits: sendAmount
                     ? {

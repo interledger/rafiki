@@ -10,9 +10,9 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { GrantService, GrantRequest } from '../grant/service'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
-import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -51,7 +51,7 @@ describe('Grant Service', (): void => {
 
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
-      type: AccessType.IncomingPayment,
+      type: AccessTypeMapping.IncomingPayment,
       grantId: grant.id
     })
   })
@@ -65,7 +65,7 @@ describe('Grant Service', (): void => {
   })
 
   const BASE_GRANT_ACCESS = {
-    actions: [Action.Create, Action.Read, Action.List],
+    actions: [ActionMapping.Create, ActionMapping.Read, ActionMapping.List],
     identifier: `https://example.com/${v4()}`
   }
 
@@ -90,7 +90,7 @@ describe('Grant Service', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment
+              type: AccessTypeMapping.IncomingPayment
             }
           ]
         }
@@ -120,7 +120,7 @@ describe('Grant Service', (): void => {
           })
           .first()
       ).resolves.toMatchObject({
-        type: AccessType.IncomingPayment
+        type: AccessTypeMapping.IncomingPayment
       })
     })
     test('Can issue a grant without interaction', async (): Promise<void> => {
@@ -131,7 +131,7 @@ describe('Grant Service', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment
+              type: AccessTypeMapping.IncomingPayment
             }
           ]
         },
@@ -154,7 +154,7 @@ describe('Grant Service', (): void => {
           })
           .first()
       ).resolves.toMatchObject({
-        type: AccessType.IncomingPayment
+        type: AccessTypeMapping.IncomingPayment
       })
     })
   })

@@ -6,7 +6,8 @@ import {
 import {
   components as ASComponents,
   paths as ASPaths,
-  operations as ASOperations
+  operations as ASOperations,
+  external as ASExternal
 } from './openapi/generated/auth-server-types'
 
 export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
@@ -72,3 +73,36 @@ export const isInteractiveGrant = (
 export const isNonInteractiveGrant = (
   grant: InteractiveGrant | NonInteractiveGrant
 ): grant is NonInteractiveGrant => !!(grant as NonInteractiveGrant).access_token
+
+type ASExternalComponents = ASExternal['schemas.yaml']['components']['schemas']
+export type AccessIncomingActions =
+  ASExternalComponents['access-incoming']['actions']
+export type AccessOutgoingActions =
+  ASExternalComponents['access-outgoing']['actions']
+export type AccessQuoteActions = ASExternalComponents['access-quote']['actions']
+
+export type AccessType =
+  | ASExternalComponents['access-incoming']['type']
+  | ASExternalComponents['access-outgoing']['type']
+  | ASExternalComponents['access-quote']['type']
+
+export type Action = (
+  | AccessIncomingActions
+  | AccessOutgoingActions
+  | AccessQuoteActions
+)[number]
+
+export const AccessTypeMapping: Record<string, AccessType> = Object.freeze({
+  IncomingPayment: 'incoming-payment',
+  OutgoingPayment: 'outgoing-payment',
+  Quote: 'quote'
+})
+
+export const ActionMapping: Record<string, Action> = Object.freeze({
+  Create: 'create',
+  Read: 'read',
+  ReadAll: 'read-all',
+  Complete: 'complete',
+  List: 'list',
+  ListAll: 'list-all'
+})

@@ -3,7 +3,6 @@ import nock, { Definition } from 'nock'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
-import { AccessType, AccessAction } from './grant'
 import { AuthService, TokenInfo, TokenInfoJSON } from './service'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -11,6 +10,7 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { HttpMethod, RequestValidator } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 type IntrospectionBody = {
   access_token: string
@@ -83,8 +83,8 @@ describe('Auth Service', (): void => {
           clientId: uuid(),
           access: [
             {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Read]
+              type: AccessTypeMapping.IncomingPayment,
+              actions: [ActionMapping.Read]
             }
           ]
         },

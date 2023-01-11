@@ -1,6 +1,7 @@
 import { Interval, Duration, DateTime, Settings } from 'luxon'
 
 import { Amount } from '../amount'
+import { AccessType, Action, ActionMapping } from 'open-payments/dist/types'
 
 Settings.defaultZone = 'utc'
 
@@ -8,22 +9,6 @@ interface AmountJSON {
   value: string
   assetCode: string
   assetScale: number
-}
-
-// TODO: replace with open-payments generated types
-export enum AccessType {
-  IncomingPayment = 'incoming-payment',
-  OutgoingPayment = 'outgoing-payment',
-  Quote = 'quote'
-}
-
-export enum AccessAction {
-  Create = 'create',
-  Read = 'read',
-  ReadAll = 'read-all',
-  Complete = 'complete',
-  List = 'list',
-  ListAll = 'list-all'
 }
 
 export interface AccessLimits {
@@ -41,7 +26,7 @@ interface AccessLimitsJSON {
 
 export interface GrantAccess {
   type: AccessType
-  actions: AccessAction[]
+  actions: Action[]
   identifier?: string
   interval?: string
   limits?: AccessLimits
@@ -85,7 +70,7 @@ export class Grant {
     identifier
   }: {
     type: AccessType
-    action: AccessAction
+    action: Action
     identifier: string
   }): GrantAccess | undefined {
     return this.access?.find(
@@ -93,10 +78,10 @@ export class Grant {
         access.type === type &&
         (!access.identifier || access.identifier === identifier) &&
         (access.actions.includes(action) ||
-          (action === AccessAction.Read &&
-            access.actions.includes(AccessAction.ReadAll)) ||
-          (action === AccessAction.List &&
-            access.actions.includes(AccessAction.ListAll)))
+          (action === ActionMapping.Read &&
+            access.actions.includes(ActionMapping.ReadAll)) ||
+          (action === ActionMapping.List &&
+            access.actions.includes(ActionMapping.ListAll)))
     )
   }
 

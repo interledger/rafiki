@@ -1,7 +1,8 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
-import { LimitData, AccessType, Action } from './types'
+import { LimitData } from './types'
 import { join } from 'path'
+import { AccessType, Action } from 'open-payments/dist/types'
 
 export class Access extends BaseModel {
   public static get tableName(): string {

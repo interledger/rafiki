@@ -1,17 +1,9 @@
-export enum AccessType {
-  IncomingPayment = 'incoming-payment',
-  OutgoingPayment = 'outgoing-payment',
-  Quote = 'quote'
-}
-
-export enum Action {
-  Create = 'create',
-  Read = 'read',
-  ReadAll = 'read-all',
-  List = 'list',
-  ListAll = 'list-all',
-  Complete = 'complete'
-}
+import {
+  AccessType,
+  AccessTypeMapping,
+  Action,
+  ActionMapping
+} from 'open-payments/dist/types'
 
 interface BaseAccessRequest {
   actions: Action[]
@@ -19,17 +11,17 @@ interface BaseAccessRequest {
 }
 
 export interface IncomingPaymentRequest extends BaseAccessRequest {
-  type: AccessType.IncomingPayment
+  type: 'incoming-payment'
   limits?: never
 }
 
-interface OutgoingPaymentRequest extends BaseAccessRequest {
-  type: AccessType.OutgoingPayment
+export interface OutgoingPaymentRequest extends BaseAccessRequest {
+  type: 'outgoing-payment'
   limits?: OutgoingPaymentLimit
 }
 
-interface QuoteRequest extends BaseAccessRequest {
-  type: AccessType.Quote
+export interface QuoteRequest extends BaseAccessRequest {
+  type: 'quote'
   limits?: never
 }
 
@@ -39,13 +31,13 @@ export type AccessRequest =
   | QuoteRequest
 
 export function isAccessType(accessType: AccessType): accessType is AccessType {
-  return Object.values(AccessType).includes(accessType)
+  return Object.values(AccessTypeMapping).includes(accessType)
 }
 
 export function isAction(actions: Action[]): actions is Action[] {
   if (typeof actions !== 'object') return false
   for (const action of actions) {
-    if (!Object.values(Action).includes(action)) return false
+    if (!Object.values(ActionMapping).includes(action)) return false
   }
 
   return true
@@ -55,7 +47,7 @@ export function isIncomingPaymentAccessRequest(
   accessRequest: IncomingPaymentRequest
 ): accessRequest is IncomingPaymentRequest {
   return (
-    accessRequest.type === AccessType.IncomingPayment &&
+    accessRequest.type === AccessTypeMapping.IncomingPayment &&
     isAction(accessRequest.actions) &&
     !accessRequest.limits
   )
@@ -65,7 +57,7 @@ function isOutgoingPaymentAccessRequest(
   accessRequest: OutgoingPaymentRequest
 ): accessRequest is OutgoingPaymentRequest {
   return (
-    accessRequest.type === AccessType.OutgoingPayment &&
+    accessRequest.type === AccessTypeMapping.OutgoingPayment &&
     isAction(accessRequest.actions) &&
     (!accessRequest.limits || isOutgoingPaymentLimit(accessRequest.limits))
   )
@@ -75,7 +67,7 @@ function isQuoteAccessRequest(
   accessRequest: QuoteRequest
 ): accessRequest is QuoteRequest {
   return (
-    accessRequest.type === AccessType.Quote &&
+    accessRequest.type === AccessTypeMapping.Quote &&
     isAction(accessRequest.actions) &&
     !accessRequest.limits
   )

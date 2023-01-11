@@ -17,12 +17,12 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { AccessAction, AccessType } from '../auth/grant'
 import { ConnectionService } from '../connection/service'
 import { GrantService } from '../grant/service'
 import { IncomingPayment } from '../payment/incoming/model'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -214,8 +214,8 @@ describe('Receiver Service', (): void => {
         const authServer = faker.internet.url()
         const INCOMING_PAYMENT_PATH = 'incoming-payments'
         const grantOptions = {
-          accessType: AccessType.IncomingPayment,
-          accessActions: [AccessAction.ReadAll],
+          accessType: AccessTypeMapping.IncomingPayment,
+          accessActions: [ActionMapping.ReadAll],
           accessToken: 'OZB8CDFONP219RP1LT0OS9M2PMHKUR64TB8N6BW7'
         }
         const grantRequest: GrantRequest = {

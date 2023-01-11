@@ -15,12 +15,13 @@ import { QuoteService } from './service'
 import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount, serializeAmount } from '../amount'
-import { AccessAction, AccessType, Grant } from '../auth/grant'
+import { Grant } from '../auth/grant'
 import { PaymentPointer } from '../payment_pointer/model'
 import { getRouteTests } from '../payment_pointer/model.test'
 import { createAsset, randomAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
+import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -174,8 +175,8 @@ describe('Quote Routes', (): void => {
               grant: uuid(),
               access: [
                 {
-                  type: AccessType.Quote,
-                  actions: [AccessAction.Create, AccessAction.Read]
+                  type: AccessTypeMapping.Quote,
+                  actions: [ActionMapping.Create, ActionMapping.Read]
                 }
               ]
             })

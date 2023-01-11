@@ -24,7 +24,7 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
+import { Grant } from './open_payments/auth/grant'
 import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
@@ -47,6 +47,12 @@ import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { AuthenticatedClient } from 'open-payments'
+import {
+  AccessType,
+  AccessTypeMapping,
+  Action,
+  ActionMapping
+} from 'open-payments/dist/types'
 
 export interface AppContextData {
   logger: Logger
@@ -264,28 +270,26 @@ export class App {
     }: {
       path: string
       method: HttpMethod
-    }): AccessAction | undefined => {
+    }): Action | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('{id}') ? ActionMapping.Read : ActionMapping.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
-            ? AccessAction.Complete
-            : AccessAction.Create
+            ? ActionMapping.Complete
+            : ActionMapping.Create
         default:
           return undefined
       }
     }
 
-    const actionToRoute: {
-      [key in AccessAction]: string
-    } = {
-      [AccessAction.Create]: 'create',
-      [AccessAction.Read]: 'get',
-      [AccessAction.ReadAll]: 'get',
-      [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list',
-      [AccessAction.ListAll]: 'list'
+    const actionToRoute: Record<Action, string> = {
+      create: 'create',
+      read: 'get',
+      'read-all': 'get',
+      complete: 'complete',
+      list: 'list',
+      'list-all': 'list'
     }
 
     for (const path in resourceServerSpec.paths) {
@@ -299,13 +303,13 @@ export class App {
           let type: AccessType
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('incoming-payments')) {
-            type = AccessType.IncomingPayment
+            type = AccessTypeMapping.IncomingPayment
             route = incomingPaymentRoutes[actionToRoute[action]]
           } else if (path.includes('outgoing-payments')) {
-            type = AccessType.OutgoingPayment
+            type = AccessTypeMapping.OutgoingPayment
             route = outgoingPaymentRoutes[actionToRoute[action]]
           } else if (path.includes('quotes')) {
-            type = AccessType.Quote
+            type = AccessTypeMapping.Quote
             route = quoteRoutes[actionToRoute[action]]
           } else {
             if (path.includes('connections')) {
