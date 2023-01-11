@@ -25,13 +25,17 @@ export class Receiver extends ConnectionBase {
   static fromIncomingPayment(
     incomingPayment: OpenPaymentsIncomingPayment
   ): Receiver | undefined {
-    if (!incomingPayment.ilpStreamConnection) {
+    if (!incomingPayment.ilpStreamConnection || incomingPayment.completed) {
       return undefined
     }
 
     const expiresAt = incomingPayment.expiresAt
       ? new Date(incomingPayment.expiresAt)
       : undefined
+
+    if (expiresAt && expiresAt.getTime() <= Date.now()) {
+      return undefined
+    }
 
     const incomingAmount = incomingPayment.incomingAmount
       ? parseAmount(incomingPayment.incomingAmount)
