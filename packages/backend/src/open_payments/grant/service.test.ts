@@ -20,7 +20,7 @@ describe('Grant Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {

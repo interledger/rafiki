@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
@@ -8,7 +7,7 @@ import { AssetService } from './service'
 import { Pagination } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
-import { randomAsset } from '../tests/asset'
+import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import {
   startTigerbeetleContainer,
@@ -24,7 +23,6 @@ describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let knex: Knex
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
@@ -35,12 +33,11 @@ describe('Asset Service', (): void => {
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     assetService = await deps.use('assetService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -60,7 +57,6 @@ describe('Asset Service', (): void => {
           ...randomAsset(),
           withdrawalThreshold
         }
-        await expect(assetService.get(options)).resolves.toBeUndefined()
         const asset = await assetService.create(options)
         assert.ok(!isAssetError(asset))
         await expect(asset).toMatchObject({
@@ -69,8 +65,7 @@ describe('Asset Service', (): void => {
           ledger: asset.ledger,
           withdrawalThreshold: withdrawalThreshold || null
         })
-        await expect(assetService.get(asset)).resolves.toEqual(asset)
-        await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
+        await expect(assetService.get(asset.id)).resolves.toEqual(asset)
       }
     )
 
@@ -107,15 +102,14 @@ describe('Asset Service', (): void => {
         ...randomAsset(),
         withdrawalThreshold: BigInt(10)
       }
-      const asset = await assetService.getOrCreate(options)
+      const asset = await assetService.create(options)
       assert.ok(!isAssetError(asset))
       await expect(asset).toMatchObject({
         ...options,
         id: asset.id,
         ledger: asset.ledger
       })
-      await expect(assetService.get(asset)).resolves.toEqual(asset)
-      await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
+      await expect(assetService.get(asset.id)).resolves.toEqual(asset)
     })
 
     test('Cannot create duplicate asset', async (): Promise<void> => {
@@ -127,43 +121,15 @@ describe('Asset Service', (): void => {
     })
   })
 
-  describe('getOrCreate', (): void => {
-    test('Asset can be created or fetched', async (): Promise<void> => {
-      const options = randomAsset()
-      await expect(assetService.get(options)).resolves.toBeUndefined()
-      const asset = await assetService.getOrCreate(options)
-      assert.ok(!isAssetError(asset))
-      await expect(asset).toMatchObject({
-        ...options,
-        id: asset.id,
-        ledger: asset.ledger
-      })
-      await expect(assetService.get(asset)).resolves.toEqual(asset)
-      await expect(assetService.getOrCreate(asset)).resolves.toEqual(asset)
-    })
-  })
-
   describe('get', (): void => {
-    test('Can get asset', async (): Promise<void> => {
-      const options = randomAsset()
-      const asset = await assetService.create(options)
-      await expect(assetService.get(options)).resolves.toEqual(asset)
-    })
-
-    test('Cannot get unknown asset', async (): Promise<void> => {
-      await expect(assetService.get(randomAsset())).resolves.toBeUndefined()
-    })
-  })
-
-  describe('getById', (): void => {
     test('Can get asset by id', async (): Promise<void> => {
       const asset = await assetService.create(randomAsset())
       assert.ok(!isAssetError(asset))
-      await expect(assetService.getById(asset.id)).resolves.toEqual(asset)
+      await expect(assetService.get(asset.id)).resolves.toEqual(asset)
     })
 
     test('Cannot get unknown asset', async (): Promise<void> => {
-      await expect(assetService.getById(uuid())).resolves.toBeUndefined()
+      await expect(assetService.get(uuid())).resolves.toBeUndefined()
     })
   })
 
@@ -202,7 +168,7 @@ describe('Asset Service', (): void => {
             })
             assert.ok(!isAssetError(asset))
             expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
-            await expect(assetService.getById(assetId)).resolves.toEqual(asset)
+            await expect(assetService.get(assetId)).resolves.toEqual(asset)
           }
         )
       }
@@ -220,7 +186,7 @@ describe('Asset Service', (): void => {
 
   describe('getPage', (): void => {
     getPageTests({
-      createModel: () => assetService.getOrCreate(randomAsset()),
+      createModel: () => createAsset(deps),
       getPage: (pagination: Pagination) => assetService.getPage(pagination)
     })
   })

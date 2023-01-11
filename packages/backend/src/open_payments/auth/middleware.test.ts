@@ -318,15 +318,6 @@ describe('Auth Middleware', (): void => {
       }
     }
   )
-
-  test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
-    ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
-    const authService = await deps.use('authService')
-    const introspectSpy = jest.spyOn(authService, 'introspect')
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(introspectSpy).not.toHaveBeenCalled()
-    expect(next).toHaveBeenCalled()
-  })
 })
 
 describe('HTTP Signature Middleware', (): void => {

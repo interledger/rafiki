@@ -40,13 +40,6 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(401, 'Unauthorized')
       }
       const token = parts[1]
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        token === config.devAccessToken
-      ) {
-        await next()
-        return
-      }
       const authService = await ctx.container.use('authService')
       const tokenInfo = await authService.introspect(token)
       if (!tokenInfo) {

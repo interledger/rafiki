@@ -7,16 +7,22 @@ import { ApolloError } from '@apollo/client'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
+import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
+import {
+  PaymentPointerError,
+  errorToCode,
+  errorToMessage
+} from '../../open_payments/payment_pointer/errors'
 import {
   PaymentPointer as PaymentPointerModel,
   PaymentPointerEvent,
   PaymentPointerEventType
 } from '../../open_payments/payment_pointer/model'
 import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
-import { randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import {
   CreatePaymentPointerInput,
@@ -34,7 +40,7 @@ describe('Payment Pointer Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     paymentPointerService = await deps.use('paymentPointerService')
   })
 
@@ -48,10 +54,16 @@ describe('Payment Pointer Resolvers', (): void => {
   })
 
   describe('Create Payment Pointer', (): void => {
-    const input: CreatePaymentPointerInput = {
-      asset: randomAsset(),
-      url: 'https://alice.me/.well-known/pay'
-    }
+    let asset: Asset
+    let input: CreatePaymentPointerInput
+
+    beforeEach(async (): Promise<void> => {
+      asset = await createAsset(deps)
+      input = {
+        assetId: asset.id,
+        url: 'https://alice.me/.well-known/pay'
+      }
+    })
 
     test.each`
       publicName
@@ -104,8 +116,8 @@ describe('Payment Pointer Resolvers', (): void => {
           url: input.url,
           asset: {
             __typename: 'Asset',
-            code: input.asset.code,
-            scale: input.asset.scale
+            code: asset.code,
+            scale: asset.scale
           },
           publicName: publicName ?? null
         })
@@ -113,13 +125,51 @@ describe('Payment Pointer Resolvers', (): void => {
           paymentPointerService.get(response.paymentPointer.id)
         ).resolves.toMatchObject({
           id: response.paymentPointer.id,
-          asset: {
-            code: input.asset.code,
-            scale: input.asset.scale
-          }
+          asset
         })
       }
     )
+
+    test.each`
+      error
+      ${PaymentPointerError.InvalidUrl}
+      ${PaymentPointerError.UnknownAsset}
+    `('4XX - $error', async ({ error }): Promise<void> => {
+      jest.spyOn(paymentPointerService, 'create').mockResolvedValueOnce(error)
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
+              createPaymentPointer(input: $input) {
+                code
+                success
+                message
+                paymentPointer {
+                  id
+                  asset {
+                    code
+                    scale
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): CreatePaymentPointerMutationResponse => {
+          if (query.data) {
+            return query.data.createPaymentPointer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual(errorToCode[error].toString())
+      expect(response.message).toEqual(errorToMessage[error])
+    })
 
     test('500', async (): Promise<void> => {
       jest

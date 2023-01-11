@@ -1,6 +1,5 @@
 import { gql } from 'apollo-server-koa'
 import assert from 'assert'
-import { Knex } from 'knex'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
@@ -30,7 +29,6 @@ import {
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let assetService: AssetService
   let tigerbeetleContainer: StartedTestContainer
 
@@ -42,12 +40,11 @@ describe('Asset Resolvers', (): void => {
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     assetService = await deps.use('assetService')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -113,7 +110,7 @@ describe('Asset Resolvers', (): void => {
           withdrawalThreshold: expectedWithdrawalThreshold
         })
         await expect(
-          assetService.getById(response.asset.id)
+          assetService.get(response.asset.id)
         ).resolves.toMatchObject({
           ...input,
           withdrawalThreshold: withdrawalThreshold ?? null
@@ -393,7 +390,7 @@ describe('Asset Resolvers', (): void => {
                 ? null
                 : withdrawalThreshold.toString()
           })
-          await expect(assetService.getById(asset.id)).resolves.toMatchObject({
+          await expect(assetService.get(asset.id)).resolves.toMatchObject({
             withdrawalThreshold
           })
         }

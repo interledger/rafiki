@@ -1,5 +1,3 @@
-import assert from 'assert'
-import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -7,7 +5,7 @@ import { Amount } from '../open_payments/amount'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { Config, IAppConfig } from '../config/app'
-import { randomAsset } from '../tests/asset'
+import { createAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { initIocContainer } from '..'
 import { OutgoingPaymentService } from '../open_payments/payment/outgoing/service'
@@ -19,13 +17,11 @@ import { createPaymentPointer } from '../tests/paymentPointer'
 import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
-import { PeerFactory } from '../tests/peerFactory'
-import { isAssetError } from '../asset/errors'
+import { createPeer } from '../tests/peer'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let incomingPaymentService: IncomingPaymentService
   let outgoingPaymentService: OutgoingPaymentService
   let quoteService: QuoteService
@@ -36,11 +32,10 @@ describe('Pagination', (): void => {
     config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -73,10 +68,12 @@ describe('Pagination', (): void => {
         outgoingPaymentService = await deps.use('outgoingPaymentService')
         quoteService = await deps.use('quoteService')
 
-        const asset = randomAsset()
-        defaultPaymentPointer = await createPaymentPointer(deps, { asset })
+        const asset = await createAsset(deps)
+        defaultPaymentPointer = await createPaymentPointer(deps, {
+          assetId: asset.id
+        })
         secondaryPaymentPointer = await createPaymentPointer(deps, {
-          asset
+          assetId: asset.id
         })
         sendAmount = {
           value: BigInt(42),
@@ -248,11 +245,9 @@ describe('Pagination', (): void => {
     describe('non-payment pointer resources', (): void => {
       let assetService: AssetService
       let peerService: PeerService
-      let peerFactory: PeerFactory
       beforeEach(async (): Promise<void> => {
         assetService = await deps.use('assetService')
         peerService = await deps.use('peerService')
-        peerFactory = new PeerFactory(peerService)
       })
       describe('assets', (): void => {
         test.each`
@@ -275,8 +270,7 @@ describe('Pagination', (): void => {
           }): Promise<void> => {
             const assetIds: string[] = []
             for (let i = 0; i < num; i++) {
-              const asset = await assetService.create(randomAsset())
-              assert.ok(!isAssetError(asset))
+              const asset = await createAsset(deps)
               assetIds.push(asset.id)
             }
             if (cursor) {
@@ -318,7 +312,7 @@ describe('Pagination', (): void => {
           }): Promise<void> => {
             const peerIds: string[] = []
             for (let i = 0; i < num; i++) {
-              const peer = await peerFactory.build()
+              const peer = await createPeer(deps)
               peerIds.push(peer.id)
             }
             if (cursor) {

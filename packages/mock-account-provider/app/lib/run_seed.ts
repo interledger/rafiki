@@ -1,5 +1,6 @@
 import { CONFIG, type Config, type Account, type Peering } from './parse_config'
 import {
+  createAsset,
   createPeer,
   addPeerLiquidity,
   createPaymentPointer,
@@ -10,13 +11,21 @@ import { mockAccounts } from './accounts.server'
 import { generateJwk } from 'http-signature-utils'
 
 export async function setupFromSeed(config: Config): Promise<void> {
+  const { asset } = await createAsset(
+    config.seed.asset.code,
+    config.seed.asset.scale
+  )
+  if (!asset) {
+    throw new Error('asset not defined')
+  }
+  console.log(JSON.stringify(asset, null, 2))
   const peerResponses = await Promise.all(
     config.seed.peers.map(async (peer: Peering) => {
       const peerResponse = await createPeer(
         peer.peerIlpAddress,
         peer.peerUrl,
-        peer.asset,
-        peer.scale
+        asset.id,
+        peer.name
       ).then((response) => response.peer)
       if (!peerResponse) {
         throw new Error('peer response not defined')
@@ -42,8 +51,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
       await mockAccounts.create(
         account.id,
         account.name,
-        account.asset,
-        account.scale
+        asset.code,
+        asset.scale
       )
       if (account.initialBalance) {
         await mockAccounts.credit(
@@ -56,8 +65,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
         config.seed.self.graphqlUrl,
         account.name,
         `https://${CONFIG.seed.self.hostname}/${account.path}`,
-        account.asset,
-        account.scale
+        asset.id
       )
 
       await mockAccounts.setPaymentPointer(

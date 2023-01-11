@@ -8,7 +8,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices, CreateContext, ListContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { randomAsset } from '../../../tests/asset'
+import { createAsset } from '../../../tests/asset'
 import { errorToCode, errorToMessage, OutgoingPaymentError } from './errors'
 import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
@@ -33,10 +33,8 @@ describe('Outgoing Payment Routes', (): void => {
   let paymentPointer: PaymentPointer
 
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
-  const asset = randomAsset()
 
   const createPayment = async (options: {
-    paymentPointerId: string
     clientId?: string
     grant?: Grant
     description?: string
@@ -44,11 +42,12 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
+      paymentPointerId: paymentPointer.id,
       receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
       sendAmount: {
         value: BigInt(56),
-        assetCode: asset.code,
-        assetScale: asset.scale
+        assetCode: paymentPointer.asset.code,
+        assetScale: paymentPointer.asset.scale
       },
       validDestination: false
     })
@@ -58,7 +57,7 @@ describe('Outgoing Payment Routes', (): void => {
     config = Config
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
@@ -67,7 +66,8 @@ describe('Outgoing Payment Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    paymentPointer = await createPaymentPointer(deps, { asset })
+    const asset = await createAsset(deps)
+    paymentPointer = await createPaymentPointer(deps, { assetId: asset.id })
   })
 
   afterEach(async (): Promise<void> => {
@@ -87,7 +87,6 @@ describe('Outgoing Payment Routes', (): void => {
       getPaymentPointer: async () => paymentPointer,
       createModel: async ({ clientId }) => {
         const outgoingPayment = await createPayment({
-          paymentPointerId: paymentPointer.id,
           clientId,
           description: 'rent',
           externalRef: '202201'
@@ -164,7 +163,6 @@ describe('Outgoing Payment Routes', (): void => {
         'returns the outgoing payment on success ($desc)',
         async ({ description, externalRef }): Promise<void> => {
           const payment = await createPayment({
-            paymentPointerId: paymentPointer.id,
             clientId,
             grant,
             description,
@@ -214,8 +212,8 @@ describe('Outgoing Payment Routes', (): void => {
             externalRef: options.externalRef,
             sentAmount: {
               value: '0',
-              assetCode: asset.code,
-              assetScale: asset.scale
+              assetCode: paymentPointer.asset.code,
+              assetScale: paymentPointer.asset.scale
             },
             failed: false,
             createdAt: expect.any(String),

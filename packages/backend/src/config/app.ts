@@ -18,11 +18,6 @@ function envFloat(name: string, value: number): number {
   return envValue == null ? value : +envValue
 }
 
-function envBool(name: string, value: boolean): boolean {
-  const envValue = process.env[name]
-  return envValue == null ? value : envValue === 'true'
-}
-
 export type IAppConfig = typeof Config
 
 export const Config = {
@@ -53,10 +48,6 @@ export const Config = {
   ),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
-  adminKey: envString('ADMIN_KEY', 'qwertyuiop1234567890'),
-  sessionLength: envInt('SESSION_LENGTH', 30), // in minutes
-  devAccessToken: envString('DEV_ACCESS_TOKEN', 'dev-access-token'),
-
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
@@ -105,7 +96,6 @@ export const Config = {
 
   signatureSecret: process.env.SIGNATURE_SECRET, // optional
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
-  bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false),
 
   keyId: envString('KEY_ID', 'rafiki'),
   privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', undefined)),

@@ -35,13 +35,12 @@ export const Config = {
   authServerDomain: envString(
     'AUTH_SERVER_DOMAIN',
     `http://localhost:${envInt('PORT', 3006)}`
-  ), // TODO: replace this with whatever frontend port ends up being
+  ),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
   introspectionHttpsig: envBool('INTROSPECTION_HTTPSIG', false),
-  incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
-  bypassSignatureValidation: envBool('BYPASS_SIGNATURE_VALIDATION', false)
+  incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false)
 }

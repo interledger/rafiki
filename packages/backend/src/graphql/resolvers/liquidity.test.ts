@@ -15,7 +15,6 @@ import {
   Withdrawal
 } from '../../accounting/service'
 import { Asset } from '../../asset/model'
-import { AssetService } from '../../asset/service'
 import {
   PaymentPointer,
   PaymentPointerEventType
@@ -31,11 +30,11 @@ import {
   isPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../peer/model'
-import { randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
-import { PeerFactory } from '../../tests/peerFactory'
+import { createPeer } from '../../tests/peer'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEvent } from '../../webhook/model'
 import {
@@ -48,19 +47,14 @@ describe('Liquidity Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
-  let assetService: AssetService
-  let peerFactory: PeerFactory
   let knex: Knex
   const timeout = BigInt(10_000) // 10 seconds
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     accountingService = await deps.use('accountingService')
-    assetService = await deps.use('assetService')
-    const peerService = await deps.use('peerService')
-    peerFactory = new PeerFactory(peerService)
   })
 
   afterAll(async (): Promise<void> => {
@@ -73,7 +67,7 @@ describe('Liquidity Resolvers', (): void => {
     let peer: Peer
 
     beforeEach(async (): Promise<void> => {
-      peer = await peerFactory.build()
+      peer = await createPeer(deps)
     })
 
     test('Can add liquidity to peer', async (): Promise<void> => {
@@ -263,7 +257,7 @@ describe('Liquidity Resolvers', (): void => {
     let asset: Asset
 
     beforeEach(async (): Promise<void> => {
-      asset = await assetService.getOrCreate(randomAsset())
+      asset = await createAsset(deps)
     })
 
     test('Can add liquidity to asset', async (): Promise<void> => {
@@ -454,7 +448,7 @@ describe('Liquidity Resolvers', (): void => {
     const startingBalance = BigInt(100)
 
     beforeEach(async (): Promise<void> => {
-      peer = await peerFactory.build()
+      peer = await createPeer(deps)
       await expect(
         accountingService.createDeposit({
           id: uuid(),
@@ -668,7 +662,7 @@ describe('Liquidity Resolvers', (): void => {
     const startingBalance = BigInt(100)
 
     beforeEach(async (): Promise<void> => {
-      asset = await assetService.getOrCreate(randomAsset())
+      asset = await createAsset(deps)
       await expect(
         accountingService.createDeposit({
           id: uuid(),
@@ -1126,7 +1120,7 @@ describe('Liquidity Resolvers', (): void => {
       let withdrawalId: string
 
       beforeEach(async (): Promise<void> => {
-        const peer = await peerFactory.build()
+        const peer = await createPeer(deps)
         const deposit = {
           id: uuid(),
           account: type === 'peer' ? peer : peer.asset,
@@ -1314,7 +1308,7 @@ describe('Liquidity Resolvers', (): void => {
       let withdrawalId: string
 
       beforeEach(async (): Promise<void> => {
-        const peer = await peerFactory.build()
+        const peer = await createPeer(deps)
         const deposit = {
           id: uuid(),
           account: type === 'peer' ? peer : peer.asset,

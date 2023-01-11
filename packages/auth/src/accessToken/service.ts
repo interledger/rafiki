@@ -4,6 +4,7 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { JWK } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
+import { generateToken } from '../shared/utils'
 import { Grant, GrantState } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
@@ -14,9 +15,9 @@ export interface AccessTokenService {
   get(token: string): Promise<AccessToken>
   getByManagementId(managementId: string): Promise<AccessToken>
   introspect(token: string): Promise<Introspection | undefined>
-  revoke(id: string): Promise<void>
+  revoke(id: string, tokenValue: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
-  rotate(managementId: string): Promise<Rotation>
+  rotate(managementId: string, tokenValue: string): Promise<Rotation>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -76,10 +77,11 @@ export async function createAccessTokenService({
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
     introspect: (token: string) => introspect(deps, token),
-    revoke: (id: string) => revoke(deps, id),
+    revoke: (id: string, tokenValue: string) => revoke(deps, id, tokenValue),
     create: (grantId: string, opts?: AccessTokenOpts) =>
       createAccessToken(deps, grantId, opts),
-    rotate: (managementId: string) => rotate(deps, managementId)
+    rotate: (managementId: string, tokenValue: string) =>
+      rotate(deps, managementId, tokenValue)
   }
 }
 
@@ -137,11 +139,17 @@ async function introspect(
   }
 }
 
-async function revoke(deps: ServiceDependencies, id: string): Promise<void> {
-  const token = await AccessToken.query(deps.knex).findOne({ managementId: id })
-  if (token) {
-    await token.$query(deps.knex).delete()
-  }
+async function revoke(
+  deps: ServiceDependencies,
+  id: string,
+  tokenValue: string
+): Promise<void> {
+  await AccessToken.query()
+    .findOne({
+      managementId: id,
+      value: tokenValue
+    })
+    .delete()
 }
 
 async function createAccessToken(
@@ -150,7 +158,7 @@ async function createAccessToken(
   opts?: AccessTokenOpts
 ): Promise<AccessToken> {
   return AccessToken.query(opts?.trx || deps.knex).insert({
-    value: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    value: generateToken(),
     managementId: v4(),
     grantId,
     expiresIn: opts?.expiresIn || deps.config.accessTokenExpirySeconds
@@ -159,31 +167,47 @@ async function createAccessToken(
 
 async function rotate(
   deps: ServiceDependencies,
-  managementId: string
+  managementId: string,
+  tokenValue: string
 ): Promise<Rotation> {
-  let token = await AccessToken.query(deps.knex).findOne({ managementId })
-  if (token) {
-    await token.$query(deps.knex).delete()
-    token = await AccessToken.query(deps.knex).insertAndFetch({
-      value: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      grantId: token.grantId,
-      expiresIn: token.expiresIn,
-      managementId: v4()
+  try {
+    return await AccessToken.transaction(async (trx) => {
+      const oldToken = await AccessToken.query(trx)
+        .delete()
+        .returning('*')
+        .findOne({
+          managementId,
+          value: tokenValue
+        })
+      if (oldToken) {
+        const token = await AccessToken.query(trx).insertAndFetch({
+          value: generateToken(),
+          grantId: oldToken.grantId,
+          expiresIn: oldToken.expiresIn,
+          managementId: v4()
+        })
+        const access = await Access.query(trx).where({
+          grantId: token.grantId
+        })
+
+        return {
+          success: true,
+          access,
+          value: token.value,
+          managementId: token.managementId,
+          expiresIn: token.expiresIn
+        }
+      } else {
+        return {
+          success: false,
+          error: new Error('token not found')
+        }
+      }
     })
-    const access = await Access.query(deps.knex).where({
-      grantId: token.grantId
-    })
-    return {
-      success: true,
-      access,
-      value: token.value,
-      managementId: token.managementId,
-      expiresIn: token.expiresIn
-    }
-  } else {
+  } catch (error) {
     return {
       success: false,
-      error: new Error('token not found')
+      error
     }
   }
 }

@@ -1,6 +1,5 @@
 import assert from 'assert'
 import jestOpenAPI from 'jest-openapi'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
@@ -18,14 +17,13 @@ import {
   getRouteTests,
   setup as setupContext
 } from '../payment_pointer/model.test'
-import { randomAsset } from '../../tests/asset'
+import { createAsset, randomAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
@@ -63,7 +61,6 @@ describe('Quote Routes', (): void => {
     config = Config
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     config = await deps.use('config')
     quoteRoutes = await deps.use('quoteRoutes')
     quoteService = await deps.use('quoteService')
@@ -72,16 +69,17 @@ describe('Quote Routes', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
+    const { id: assetId } = await createAsset(deps, {
+      code: sendAmount.assetCode,
+      scale: sendAmount.assetScale
+    })
     paymentPointer = await createPaymentPointer(deps, {
-      asset: {
-        code: sendAmount.assetCode,
-        scale: sendAmount.assetScale
-      }
+      assetId
     })
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

@@ -10,6 +10,7 @@ import {
   NonInteractiveGrant,
   OutgoingPayment,
   OutgoingPaymentPaginationResult,
+  IncomingPaymentPaginationResult,
   AccessToken
 } from '../types'
 import base64url from 'base64url'
@@ -70,6 +71,26 @@ export const mockIncomingPayment = (
   ilpStreamConnection: mockILPStreamConnection(),
   ...overrides
 })
+
+export const mockIncomingPaymentPaginationResult = (
+  overrides?: Partial<IncomingPaymentPaginationResult>
+): IncomingPaymentPaginationResult => {
+  const result = overrides?.result || [
+    mockIncomingPayment(),
+    mockIncomingPayment(),
+    mockIncomingPayment()
+  ]
+
+  return {
+    result,
+    pagination: overrides?.pagination || {
+      startCursor: result[0].id,
+      hasNextPage: true,
+      hasPreviousPage: true,
+      endCursor: result[result.length - 1].id
+    }
+  }
+}
 
 export const mockOutgoingPayment = (
   overrides?: Partial<OutgoingPayment>

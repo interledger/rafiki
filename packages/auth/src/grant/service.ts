@@ -1,8 +1,8 @@
 import { v4 } from 'uuid'
-import * as crypto from 'crypto'
 import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
+import { generateNonce, generateToken } from '../shared/utils'
 import { Grant, GrantState, StartMethod, FinishMethod } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -19,9 +19,10 @@ export interface GrantService {
   getByContinue(
     continueId: string,
     continueToken: string,
-    interactRef: string
+    interactRef?: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
+  deleteGrant(continueId: string): Promise<boolean>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -86,7 +87,8 @@ export async function createGrantService({
       continueToken: string,
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
-    rejectGrant: (grantId: string) => rejectGrant(deps, grantId)
+    rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
+    deleteGrant: (continueId: string) => deleteGrant(deps, continueId)
   }
 }
 
@@ -110,6 +112,20 @@ async function rejectGrant(
   return Grant.query(deps.knex).patchAndFetchById(grantId, {
     state: GrantState.Rejected
   })
+}
+
+async function deleteGrant(
+  deps: ServiceDependencies,
+  continueId: string
+): Promise<boolean> {
+  const deletion = await Grant.query(deps.knex).delete().where({ continueId })
+  if (deletion === 0) {
+    deps.logger.info(
+      `Could not find grant corresponding to continueId: ${continueId}`
+    )
+    return false
+  }
+  return true
 }
 
 async function create(
@@ -138,11 +154,9 @@ async function create(
       clientKeyId,
       interactId: interact ? v4() : undefined,
       interactRef: interact ? v4() : undefined,
-      interactNonce: interact
-        ? crypto.randomBytes(8).toString('hex').toUpperCase()
-        : undefined, // TODO: factor out nonce generation
+      interactNonce: interact ? generateNonce() : undefined,
       continueId: v4(),
-      continueToken: crypto.randomBytes(8).toString('hex').toUpperCase()
+      continueToken: generateToken()
     })
 
     // Associate provided accesses with grant
@@ -178,12 +192,12 @@ async function getByInteractionSession(
 async function getByContinue(
   continueId: string,
   continueToken: string,
-  interactRef: string
+  interactRef?: string
 ): Promise<Grant | null> {
-  const grant = await Grant.query().findOne({ interactRef })
+  const grant = await Grant.query().findOne({ continueId })
   if (
-    continueId !== grant?.continueId ||
-    continueToken !== grant?.continueToken
+    continueToken !== grant?.continueToken ||
+    (interactRef && interactRef !== grant?.interactRef)
   )
     return null
   return grant

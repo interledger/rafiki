@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-koa'
-import { Knex } from 'knex'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
@@ -10,7 +9,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
-import { randomAsset } from '../../tests/asset'
+import { createAsset } from '../../tests/asset'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
@@ -24,6 +23,7 @@ import {
   OutgoingPaymentState
 } from '../../open_payments/payment/outgoing/model'
 import { AccountingService } from '../../accounting/service'
+import { Asset } from '../../asset/model'
 import {
   OutgoingPayment,
   OutgoingPaymentResponse,
@@ -33,23 +33,24 @@ import {
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let accountingService: AccountingService
   let outgoingPaymentService: OutgoingPaymentService
-
-  const asset = randomAsset()
+  let asset: Asset
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     accountingService = await deps.use('accountingService')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
   })
 
+  beforeEach(async (): Promise<void> => {
+    asset = await createAsset(deps)
+  })
+
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -84,7 +85,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     `('$desc', ({ description, externalRef }): void => {
       beforeEach(async (): Promise<void> => {
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
-          asset
+          assetId: asset.id
         })
         payment = await createPayment({
           paymentPointerId,
@@ -238,7 +239,7 @@ describe('OutgoingPayment Resolvers', (): void => {
       ${undefined} | ${'202201'}  | ${'externalRef'}
     `('200 ($desc)', async ({ description, externalRef }): Promise<void> => {
       const { id: paymentPointerId } = await createPaymentPointer(deps, {
-        asset
+        assetId: asset.id
       })
       const payment = await createPayment({
         paymentPointerId,
@@ -371,7 +372,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     beforeEach(async (): Promise<void> => {
       paymentPointerId = (
         await createPaymentPointer(deps, {
-          asset
+          assetId: asset.id
         })
       ).id
     })

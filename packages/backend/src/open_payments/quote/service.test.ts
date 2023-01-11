@@ -16,6 +16,7 @@ import { IAppConfig, Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
+import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import {
   createPaymentPointer,
@@ -77,22 +78,24 @@ describe('QuoteService', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     config = await deps.use('config')
     quoteUrl = new URL(Config.quoteUrl)
   })
 
   beforeEach(async (): Promise<void> => {
     quoteService = await deps.use('quoteService')
+    const { id: sendAssetId } = await createAsset(deps, {
+      code: sendAmount.assetCode,
+      scale: sendAmount.assetScale
+    })
     const paymentPointer = await createPaymentPointer(deps, {
-      asset: {
-        code: sendAmount.assetCode,
-        scale: sendAmount.assetScale
-      }
+      assetId: sendAssetId
     })
     paymentPointerId = paymentPointer.id
+    const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receivingPaymentPointer = await createPaymentPointer(deps, {
-      asset: destinationAsset,
+      assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
     const accountingService = await deps.use('accountingService')

@@ -13,7 +13,7 @@ import {
 import { AccountingService } from '../accounting/service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { AccountFactory } from '../tests/accountFactory'
-import { randomAsset } from '../tests/asset'
+import { createAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -31,9 +31,8 @@ describe('Webhook Service', (): void => {
   const WEBHOOK_SECRET = 'test secret'
 
   async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
-    const assetService = await deps.use('assetService')
     const accountFactory = new AccountFactory(accountingService)
-    const asset = await assetService.getOrCreate(randomAsset())
+    const asset = await createAsset(deps)
     const amount = BigInt(10)
     const account = await accountFactory.build({
       asset,
@@ -52,7 +51,7 @@ describe('Webhook Service', (): void => {
     Config.signatureSecret = WEBHOOK_SECRET
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     webhookService = await deps.use('webhookService')
     accountingService = await deps.use('accountingService')
     webhookUrl = new URL(Config.webhookUrl)

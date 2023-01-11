@@ -1,4 +1,3 @@
-import crypto from 'crypto'
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
@@ -12,23 +11,22 @@ import { AppServices } from '../app'
 import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Action, AccessType, AccessRequest } from './types'
+import { generateNonce, generateToken } from '../shared/utils'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accessService: AccessService
-  let knex: Knex
   let trx: Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     accessService = await deps.use('accessService')
-    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
@@ -39,16 +37,16 @@ describe('Access Service', (): void => {
   const BASE_GRANT = {
     state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
-    continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    continueToken: generateToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
-    clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+    clientNonce: generateNonce(),
     client: faker.internet.url(),
     clientKeyId: 'test-key',
     interactId: v4(),
-    interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-    interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
+    interactRef: generateNonce(),
+    interactNonce: generateNonce()
   }
 
   test('Can create incoming payment access', async (): Promise<void> => {
