@@ -186,9 +186,7 @@ describe('Incoming Payment Routes', (): void => {
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
-          incomingAmount: incomingAmount
-            ? parseAmount(incomingAmount)
-            : undefined,
+          incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           description,
           externalRef,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
