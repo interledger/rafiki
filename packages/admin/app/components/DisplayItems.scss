@@ -1,0 +1,32 @@
+@import '../styles/_variables';
+
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+thead {
+  background-color: $admin-panel-background;
+}
+
+td,
+th {
+  border: 1px solid $admin-panel-background;
+  text-align: left;
+  padding: 8px;
+}
+
+tr {
+  a:link,
+  a:visited,
+  a:active,
+  a:hover {
+    text-decoration: none;
+    color: $black;
+  }
+}
+
+tr:nth-child(even) {
+  background-color: $admin-panel-background;
+}

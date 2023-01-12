@@ -1,0 +1,58 @@
+#peer-form,
+#asset-form {
+  margin: 50px 50px 50px 0px; }
+  #peer-form span,
+  #asset-form span {
+    display: flex;
+    flex-direction: row;
+    margin: 1rem; }
+    #peer-form span div,
+    #asset-form span div {
+      flex-basis: 50%; }
+  #peer-form label,
+  #asset-form label {
+    display: inline-block;
+    text-align: left;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-right: 1rem;
+    flex-basis: 50%;
+    max-width: 250px; }
+  #peer-form input,
+  #asset-form input {
+    display: inline-block;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    border-width: 0.5px;
+    width: 100%;
+    max-width: 500px; }
+  #peer-form input.input-error,
+  #asset-form input.input-error {
+    border-color: #f00; }
+  #peer-form .input-error:focus,
+  #asset-form .input-error:focus {
+    outline-color: #f00; }
+  #peer-form input.input,
+  #asset-form input.input {
+    border-color: #000; }
+  #peer-form p,
+  #asset-form p {
+    padding: 0.5rem 1rem;
+    margin: 0; }
+
+@media (max-width: 1000px) {
+  #peer-form,
+  #asset-form {
+    margin: 25px 0px 0px 0px; }
+    #peer-form span,
+    #asset-form span {
+      margin: 1rem 0 1rem 0;
+      flex-direction: column; }
+    #peer-form input,
+    #asset-form input {
+      flex-basis: 100%;
+      max-width: 400px;
+      min-width: 200px; }
+  div main form span {
+    flex-direction: row; } }

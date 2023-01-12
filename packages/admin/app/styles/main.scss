@@ -1,0 +1,227 @@
+@import '__variables.scss';
+
+body {
+  background: url('../../../public/polkadot-backdrop.png') no-repeat fixed
+    center;
+  background-size: cover;
+  min-height: 100vh;
+  min-width: 60px + 110px + 200px + 400px + 100px + 50px;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  .admin-panel {
+    .admin-panel-background {
+      top: 0px;
+      right: 0px;
+      bottom: 0px;
+      left: 0px;
+      position: absolute;
+      display: flex;
+      padding: 50px;
+      margin: 30px;
+      background-color: $admin-panel-background;
+      border-radius: 30px;
+      min-height: 380px;
+
+      .admin-menu {
+        padding: 50px 50px 0px 0px;
+        min-width: 200px;
+
+        #main-navigation {
+          display: flex;
+          flex-direction: column;
+          justify-content: left;
+          gap: 0.5rem;
+
+          .nav-item {
+            padding: 10px 10px 10px 30px;
+            text-decoration: none;
+            color: black;
+          }
+
+          .nav-item:hover,
+          .nav-item.active {
+            background-color: $menu-item-highlight;
+          }
+        }
+      }
+
+      .admin-panel-inside {
+        min-width: 400px;
+        min-height: 100px;
+        flex-basis: 100%;
+        background-color: $white;
+        padding: 50px;
+        border-radius: 30px;
+        display: flex;
+        flex-direction: column;
+
+        main {
+          overflow: hidden;
+          flex-basis: 100%;
+        }
+      }
+    }
+  }
+}
+
+main {
+  min-width: inherit;
+  flex-basis: 100%;
+  background-color: $white;
+  padding: 25px;
+  border-radius: 0px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .header-row {
+    flex-basis: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 5px 5px 25px 5px;
+    h1 {
+      flex-basis: 25%;
+      margin: 0px 5px;
+    }
+
+    form {
+      flex-basis: 50%;
+      margin: 0px 5px;
+    }
+
+    a {
+      flex-basis: 25%;
+      text-align: right;
+      margin: 0px 0px 0px 5px;
+    }
+  }
+
+  .main-content {
+    margin: 5px;
+    flex-basis: 90%;
+    overflow: auto;
+  }
+
+  .bottom-buttons {
+    flex-basis: 5%;
+    margin: 25px 5px 5px 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+
+button.basic-button {
+  margin: 0;
+  text-align: center;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+  background-color: $button-color;
+  font-size: 1.05rem;
+
+  &:hover {
+    background-color: $button-highlight;
+  }
+
+  &:disabled {
+    background-color: $button-disabled;
+    color: $white;
+    cursor: not-allowed;
+  }
+}
+
+button.basic-button.left {
+  margin-right: 5px;
+}
+
+button.basic-button.right {
+  margin-left: 5px;
+}
+
+#peer-search-form,
+#asset-search-form {
+  span {
+    display: flex;
+    flex-direction: row;
+  }
+
+  input {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    border-width: 0.5px;
+    border-color: $black;
+    flex-basis: 100%;
+    max-width: 500px;
+    height: line-height;
+  }
+}
+
+button.search-button {
+  margin: 0px 0px 0px 5px;
+  padding: 0;
+  background-color: $white;
+  box-shadow: none;
+  cursor: pointer;
+  border: none;
+
+  img {
+    height: 1.75rem;
+    width: 1.75rem;
+  }
+
+  &:hover {
+    background-color: $white;
+  }
+}
+
+// For tablets and mobile devices
+@media (max-width: 1000px) {
+  body {
+    background: none;
+    background-color: $admin-panel-background;
+    background-size: cover;
+
+    .admin-panel {
+      .admin-panel-background {
+        flex-direction: column;
+        padding: 0px;
+        margin: 0px;
+        border-radius: 0px;
+
+        .admin-menu {
+          padding: 25px 0px 0px 25px;
+
+          #main-navigation {
+            flex-direction: row;
+
+            .nav-item {
+              padding: 10px 10px 10px 10px;
+            }
+          }
+        }
+
+        .admin-panel-inside {
+          padding: 0px;
+          border-radius: 0px;
+
+          .header-row {
+            justify-content: flex-start;
+          }
+
+          .bottom-buttons {
+            justify-content: flex-start;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+@import '../styles/_variables';
+
+#peer-form,
+#asset-form {
+  margin: 50px 50px 50px 0px;
+
+  span {
+    display: flex;
+    flex-direction: row;
+    margin: 1rem;
+
+    div {
+      flex-basis: 50%;
+    }
+  }
+
+  label {
+    display: inline-block;
+    text-align: left;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    margin-right: 1rem;
+    flex-basis: 50%;
+    max-width: 250px;
+  }
+
+  input {
+    display: inline-block;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border-radius: 30px;
+    border-width: 0.5px;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  input.input-error {
+    border-color: $red;
+  }
+
+  .input-error:focus {
+    outline-color: $red;
+  }
+
+  input.input {
+    border-color: $black;
+  }
+
+  p {
+    padding: 0.5rem 1rem;
+    margin: 0;
+  }
+}
+
+// For tablets and mobile devices
+@media (max-width: 1000px) {
+  #peer-form,
+  #asset-form {
+    margin: 25px 0px 0px 0px;
+
+    span {
+      margin: 1rem 0 1rem 0;
+      flex-direction: column;
+    }
+
+    input {
+      flex-basis: 100%;
+      max-width: 400px;
+      min-width: 200px;
+    }
+  }
+
+  div main form span {
+    flex-direction: row;
+  }
+}

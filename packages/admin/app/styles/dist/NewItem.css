@@ -1,0 +1,88 @@
+#peer-form,
+#peer-search-form,
+#asset-form,
+#asset-search-form {
+  margin: 50px 50px 50px 0px;
+}
+#peer-form span,
+#peer-search-form span,
+#asset-form span,
+#asset-search-form span {
+  display: flex;
+  flex-direction: row;
+  margin: 1rem;
+}
+#peer-form label,
+#peer-search-form label,
+#asset-form label,
+#asset-search-form label {
+  display: inline-block;
+  text-align: left;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  margin-right: 1rem;
+  flex-basis: 50%;
+  max-width: 250px;
+}
+#peer-form input,
+#peer-search-form input,
+#asset-form input,
+#asset-search-form input {
+  display: inline-block;
+  text-align: left;
+  padding: 0.5rem 1rem;
+  border-radius: 30px;
+  border-width: 0.5px;
+  border-color: #000;
+  flex-basis: 50%;
+  max-width: 500px;
+}
+
+.form-actions {
+  text-align: right;
+}
+
+button.basic-button {
+  margin: 25px 5px 5px 5px;
+  text-align: center;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 5px;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+  background-color: #eee6e2;
+  font-size: 1.05rem;
+}
+button.basic-button:hover {
+  background-color: #e3d7d0;
+}
+button.basic-button:disabled {
+  background-color: #e2e2e2;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1000px) {
+  #peer-form,
+  #asset-form {
+    margin: 25px 0px 0px 0px;
+  }
+  #peer-form span,
+  #asset-form span {
+    margin: 1rem 0 1rem 0;
+    flex-direction: column;
+  }
+  #peer-form input,
+  #asset-form input {
+    flex-basis: 100%;
+    max-width: 400px;
+    min-width: 200px;
+  }
+  .form-actions {
+    text-align: left;
+  }
+  div main form span {
+    flex-direction: row;
+  }
+}

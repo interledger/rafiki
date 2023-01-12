@@ -1,0 +1,50 @@
+{
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "remix build",
+    "dev": "PORT=3005 remix dev",
+    "start": "PORT=3005 remix-serve build",
+    "scss": "node-sass app/styles -o app/styles/dist && node-sass app/components -o app/styles/dist",
+    "lint": "npx eslint --fix app/",
+    "format": "prettier --write app/ && npm run lint",
+    "checks": "npm run check:prettier && npm run check:lint",
+    "check:lint": "npx eslint app/",
+    "check:prettier": "prettier --check app/"
+  },
+  "dependencies": {
+    "@remix-run/node": "^1.7.6",
+    "@remix-run/react": "^1.7.6",
+    "@remix-run/serve": "^1.7.6",
+    "graphql": "^16.6.0",
+    "ilp-packet": "3.1.4-alpha.1",
+    "isbot": "^3.6.5",
+    "ramda": "^0.28.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tiny-invariant": "^1.3.1"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "^1.7.6",
+    "@remix-run/eslint-config": "^1.7.6",
+    "@types/react": "^18.0.25",
+    "@types/react-dom": "^18.0.8",
+    "@typescript-eslint/eslint-plugin": "^5.47.0",
+    "@typescript-eslint/parser": "^5.47.0",
+    "eslint": "^8.27.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-react": "^7.31.11",
+    "node-sass": "^8.0.0",
+    "prettier": "^2.8.1",
+    "typescript": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "prettier": {
+    "semi": false,
+    "singleQuote": true,
+    "jsxSingleQuote": true,
+    "trailingComma": "none"
+  }
+}
