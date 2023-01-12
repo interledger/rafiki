@@ -268,10 +268,6 @@ describe('Grant Routes', (): void => {
     })
 
     describe('/continue', (): void => {
-      beforeEach(async (): Promise<void> => {
-        const openApi = await deps.use('openApi')
-        jestOpenAPI(openApi.authServerSpec)
-      })
       test('Can issue access token', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
