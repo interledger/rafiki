@@ -1,5 +1,4 @@
-import { Grant } from './model'
-import { AccessType, AccessAction } from '../auth/grant'
+import { AccessType, AccessAction, Grant } from './model'
 import { AuthServerService } from '../authServer/service'
 import { BaseService } from '../../shared/baseService'
 

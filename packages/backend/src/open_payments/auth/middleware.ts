@@ -1,7 +1,18 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
-import { AccessType, AccessAction } from './grant'
+import { AccessType, AccessAction } from '../grant/model'
+import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
+
+export type RequestAction = Exclude<
+  AccessAction,
+  AccessAction.ReadAll | AccessAction.ListAll
+>
+
+export interface Grant {
+  id: string
+  limits?: Limits
+}
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
@@ -12,11 +23,11 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   }
 }
 export function createTokenIntrospectionMiddleware({
-  type,
-  action
+  requestType,
+  requestAction
 }: {
-  type: AccessType
-  action: AccessAction
+  requestType: AccessType
+  requestAction: RequestAction
 }) {
   return async (
     ctx: PaymentPointerContext,
@@ -29,34 +40,55 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(401, 'Unauthorized')
       }
       const token = parts[1]
-      if (
-        process.env.NODE_ENV !== 'production' &&
-        token === config.devAccessToken
-      ) {
-        await next()
-        return
-      }
       const authService = await ctx.container.use('authService')
-      const grant = await authService.introspect(token)
-      if (!grant) {
+      const tokenInfo = await authService.introspect(token)
+      if (!tokenInfo) {
         ctx.throw(401, 'Invalid Token')
       }
-      const access = grant.findAccess({
-        type,
-        action,
-        identifier: ctx.paymentPointer.url
+      // TODO
+      // https://github.com/interledger/rafiki/issues/835
+      const access = tokenInfo.access.find((access) => {
+        if (
+          access.type !== requestType ||
+          (access.identifier && access.identifier !== ctx.paymentPointer.url)
+        ) {
+          return false
+        }
+        if (
+          requestAction === AccessAction.Read &&
+          access.actions.includes(AccessAction.ReadAll)
+        ) {
+          return true
+        }
+        if (
+          requestAction === AccessAction.List &&
+          access.actions.includes(AccessAction.ListAll)
+        ) {
+          return true
+        }
+        return access.actions.find((tokenAction) => {
+          if (tokenAction === requestAction) {
+            // Unless the relevant token action is ReadAll/ListAll add the
+            // clientId to ctx for Read/List filtering
+            ctx.clientId = tokenInfo.client_id
+            return true
+          }
+          return false
+        })
       })
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      ctx.grant = grant
-
-      // Unless the relevant grant action is ReadAll/ListAll add the
-      // clientId to ctx for Read/List filtering
-      if (access.actions.includes(action)) {
-        ctx.clientId = grant.clientId
+      ctx.clientKey = tokenInfo.key.jwk
+      if (
+        requestType === AccessType.OutgoingPayment &&
+        requestAction === AccessAction.Create
+      ) {
+        ctx.grant = {
+          id: tokenInfo.grant,
+          limits: access['limits'] ? parseLimits(access['limits']) : undefined
+        }
       }
-
       await next()
     } catch (err) {
       if (err && err['status'] === 401) {
@@ -76,7 +108,7 @@ export const httpsigMiddleware = async (
 ): Promise<void> => {
   // TODO: look up client jwks.json
   // https://github.com/interledger/rafiki/issues/737
-  if (!ctx.grant?.key.jwk) {
+  if (!ctx.clientKey) {
     const logger = await ctx.container.use('logger')
     logger.warn(
       {
@@ -87,9 +119,7 @@ export const httpsigMiddleware = async (
     ctx.throw(500)
   }
   try {
-    if (
-      !(await validateSignature(ctx.grant.key.jwk, contextToRequestLike(ctx)))
-    ) {
+    if (!(await validateSignature(ctx.clientKey, contextToRequestLike(ctx)))) {
       ctx.throw(401, 'Invalid signature')
     }
   } catch (err) {

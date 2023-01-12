@@ -1,5 +1,4 @@
 import jestOpenAPI from 'jest-openapi'
-import { Knex } from 'knex'
 import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
@@ -19,7 +18,6 @@ const TEST_KEY = generateJwk({ keyId: uuid() })
 describe('Payment Pointer Keys Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let paymentPointerKeyService: PaymentPointerKeyService
   let paymentPointerKeyRoutes: PaymentPointerKeyRoutes
   const mockMessageProducer = {
@@ -30,7 +28,6 @@ describe('Payment Pointer Keys Routes', (): void => {
     deps = await initIocContainer(Config)
     deps.bind('messageProducer', async () => mockMessageProducer)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
     paymentPointerKeyService = await deps.use('paymentPointerKeyService')
@@ -41,7 +38,7 @@ describe('Payment Pointer Keys Routes', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

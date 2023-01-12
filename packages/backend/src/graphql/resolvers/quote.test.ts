@@ -1,5 +1,4 @@
 import { gql } from 'apollo-server-koa'
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
@@ -22,7 +21,6 @@ import { CreateQuoteInput, Quote, QuoteResponse } from '../generated/graphql'
 describe('Quote Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let quoteService: QuoteService
   let asset: Asset
 
@@ -32,7 +30,6 @@ describe('Quote Resolvers', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     quoteService = await deps.use('quoteService')
   })
 
@@ -42,7 +39,7 @@ describe('Quote Resolvers', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

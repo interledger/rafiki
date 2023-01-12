@@ -2,9 +2,8 @@ import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 
-import { Grant } from './model'
+import { AccessType, AccessAction, Grant } from './model'
 import { GrantOptions, GrantService } from './service'
-import { AccessType, AccessAction } from '../auth/grant'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
@@ -21,7 +20,7 @@ describe('Grant Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {

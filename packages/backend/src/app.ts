@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
+import { JWK } from 'http-signature-utils'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
@@ -24,12 +25,14 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { AccessType, AccessAction, Grant } from './open_payments/auth/grant'
+import { AccessType, AccessAction } from './open_payments/grant/model'
 import {
   createTokenIntrospectionMiddleware,
-  httpsigMiddleware
+  httpsigMiddleware,
+  Grant,
+  RequestAction
 } from './open_payments/auth/middleware'
-import { AuthService, TokenInfo } from './open_payments/auth/service'
+import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
@@ -75,6 +78,7 @@ export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
   clientId?: string
+  clientKey?: JWK
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -86,7 +90,8 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  grant: TokenInfo
+  grant: Grant
+  clientKey: JWK
   clientId?: string
 }
 
@@ -264,7 +269,7 @@ export class App {
     }: {
       path: string
       method: HttpMethod
-    }): AccessAction | undefined => {
+    }): RequestAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
           return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
@@ -278,35 +283,33 @@ export class App {
     }
 
     const actionToRoute: {
-      [key in AccessAction]: string
+      [key in RequestAction]: string
     } = {
       [AccessAction.Create]: 'create',
       [AccessAction.Read]: 'get',
-      [AccessAction.ReadAll]: 'get',
       [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list',
-      [AccessAction.ListAll]: 'list'
+      [AccessAction.List]: 'list'
     }
 
     for (const path in resourceServerSpec.paths) {
       for (const method in resourceServerSpec.paths[path]) {
         if (isHttpMethod(method)) {
-          const action = toAction({ path, method })
-          if (!action) {
+          const requestAction = toAction({ path, method })
+          if (!requestAction) {
             throw new Error()
           }
 
-          let type: AccessType
+          let requestType: AccessType
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('incoming-payments')) {
-            type = AccessType.IncomingPayment
-            route = incomingPaymentRoutes[actionToRoute[action]]
+            requestType = AccessType.IncomingPayment
+            route = incomingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('outgoing-payments')) {
-            type = AccessType.OutgoingPayment
-            route = outgoingPaymentRoutes[actionToRoute[action]]
+            requestType = AccessType.OutgoingPayment
+            route = outgoingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('quotes')) {
-            type = AccessType.Quote
-            route = quoteRoutes[actionToRoute[action]]
+            requestType = AccessType.Quote
+            route = quoteRoutes[actionToRoute[requestAction]]
           } else {
             if (path.includes('connections')) {
               route = connectionRoutes.get
@@ -338,8 +341,8 @@ export class App {
               }
             ),
             createTokenIntrospectionMiddleware({
-              type,
-              action
+              requestType,
+              requestAction
             }),
             httpsigMiddleware,
             route

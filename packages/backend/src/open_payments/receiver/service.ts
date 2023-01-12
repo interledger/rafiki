@@ -5,9 +5,8 @@ import {
   isNonInteractiveGrant
 } from 'open-payments'
 
-import { AccessAction, AccessType } from '../auth/grant'
 import { ConnectionService } from '../connection/service'
-import { Grant } from '../grant/model'
+import { AccessType, AccessAction, Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../../shared/baseService'

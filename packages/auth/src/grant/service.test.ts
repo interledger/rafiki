@@ -18,15 +18,12 @@ describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let grantService: GrantService
-  let knex: Knex
   let trx: Knex.Transaction
-
   let grant: Grant
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     grantService = await deps.use('grantService')
-    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
   })
 
@@ -57,7 +54,7 @@ describe('Grant Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

@@ -48,8 +48,6 @@ export const Config = {
   ),
   coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
-  devAccessToken: envString('DEV_ACCESS_TOKEN', 'dev-access-token'),
-
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')

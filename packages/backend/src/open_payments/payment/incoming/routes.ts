@@ -94,7 +94,7 @@ async function createIncomingPayment(
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     paymentPointerId: ctx.paymentPointer.id,
-    clientId: ctx.grant?.clientId,
+    clientId: ctx.clientId,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt,

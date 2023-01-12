@@ -1,6 +1,4 @@
-import { Knex } from 'knex'
 import { gql } from 'apollo-server-koa'
-
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -27,7 +25,6 @@ import { Amount, serializeAmount } from '../../open_payments/amount'
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let paymentPointerId: string
   let incomingPaymentService: IncomingPaymentService
   let asset: Asset
@@ -35,13 +32,12 @@ describe('Incoming Payment Resolver', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     incomingPaymentService = await deps.use('incomingPaymentService')
     asset = await createAsset(deps)
   })
 
   afterAll(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })

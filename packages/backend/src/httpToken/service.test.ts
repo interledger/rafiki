@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
 import { HttpTokenService } from './service'
@@ -17,12 +16,10 @@ describe('HTTP Token Service', (): void => {
   let appContainer: TestContainer
   let httpTokenService: HttpTokenService
   let peer: Peer
-  let knex: Knex
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     httpTokenService = await deps.use('httpTokenService')
   })
 
@@ -31,7 +28,7 @@ describe('HTTP Token Service', (): void => {
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

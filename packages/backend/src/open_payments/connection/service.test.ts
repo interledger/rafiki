@@ -26,7 +26,7 @@ describe('Connection Service', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     connectionService = await deps.use('connectionService')
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {

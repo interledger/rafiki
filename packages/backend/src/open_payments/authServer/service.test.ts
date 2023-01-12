@@ -19,7 +19,7 @@ describe('Auth Server Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     authServerService = await deps.use('authServerService')
   })
 
