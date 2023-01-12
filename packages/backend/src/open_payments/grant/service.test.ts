@@ -10,7 +10,7 @@ import { AppServices } from '../../app'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -86,8 +86,8 @@ describe('Grant Service', (): void => {
         async ({ expiresIn }): Promise<void> => {
           const options: GrantOptions = {
             authServer: authServerUrl,
-            accessType: AccessTypeMapping.IncomingPayment,
-            accessActions: [ActionMapping.ReadAll]
+            accessType: AccessType.IncomingPayment,
+            accessActions: [AccessAction.ReadAll]
           }
           grant = await grantService.create({
             ...options,
@@ -109,8 +109,8 @@ describe('Grant Service', (): void => {
     test('cannot fetch non-existing grant', async (): Promise<void> => {
       const options: GrantOptions = {
         authServer: faker.internet.url(),
-        accessType: AccessTypeMapping.IncomingPayment,
-        accessActions: [ActionMapping.ReadAll]
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll]
       }
       await grantService.create(options)
       await expect(
@@ -122,13 +122,13 @@ describe('Grant Service', (): void => {
       await expect(
         grantService.get({
           ...options,
-          accessType: AccessTypeMapping.Quote
+          accessType: AccessType.Quote
         })
       ).resolves.toBeUndefined()
       await expect(
         grantService.get({
           ...options,
-          accessActions: [ActionMapping.Read]
+          accessActions: [AccessAction.Read]
         })
       ).resolves.toBeUndefined()
     })

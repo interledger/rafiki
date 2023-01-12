@@ -12,7 +12,7 @@ import { GrantService, GrantRequest } from '../grant/service'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -51,7 +51,7 @@ describe('Grant Service', (): void => {
 
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
-      type: AccessTypeMapping.IncomingPayment,
+      type: AccessType.IncomingPayment,
       grantId: grant.id
     })
   })
@@ -65,7 +65,7 @@ describe('Grant Service', (): void => {
   })
 
   const BASE_GRANT_ACCESS = {
-    actions: [ActionMapping.Create, ActionMapping.Read, ActionMapping.List],
+    actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
     identifier: `https://example.com/${v4()}`
   }
 
@@ -90,7 +90,7 @@ describe('Grant Service', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessTypeMapping.IncomingPayment
+              type: AccessType.IncomingPayment
             }
           ]
         }
@@ -120,7 +120,7 @@ describe('Grant Service', (): void => {
           })
           .first()
       ).resolves.toMatchObject({
-        type: AccessTypeMapping.IncomingPayment
+        type: AccessType.IncomingPayment
       })
     })
     test('Can issue a grant without interaction', async (): Promise<void> => {
@@ -131,7 +131,7 @@ describe('Grant Service', (): void => {
           access: [
             {
               ...BASE_GRANT_ACCESS,
-              type: AccessTypeMapping.IncomingPayment
+              type: AccessType.IncomingPayment
             }
           ]
         },
@@ -154,7 +154,7 @@ describe('Grant Service', (): void => {
           })
           .first()
       ).resolves.toMatchObject({
-        type: AccessTypeMapping.IncomingPayment
+        type: AccessType.IncomingPayment
       })
     })
   })

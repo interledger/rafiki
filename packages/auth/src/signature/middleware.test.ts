@@ -20,7 +20,7 @@ import {
   grantContinueHttpsigMiddleware,
   grantInitiationHttpsigMiddleware
 } from './middleware'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -68,8 +68,8 @@ describe('Signature Service', (): void => {
     }
 
     const BASE_ACCESS = {
-      type: AccessTypeMapping.OutgoingPayment,
-      actions: [ActionMapping.Read, ActionMapping.Create],
+      type: AccessType.OutgoingPayment,
+      actions: [AccessAction.Read, AccessAction.Create],
       identifier: `https://example.com/${v4()}`,
       limits: {
         receiver: 'https://wallet.com/alice',

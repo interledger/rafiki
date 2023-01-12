@@ -18,7 +18,7 @@ import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
 import { generateTestKeys, JWK } from 'http-signature-utils'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -66,8 +66,8 @@ describe('Access Token Routes', (): void => {
   }
 
   const BASE_ACCESS = {
-    type: AccessTypeMapping.OutgoingPayment,
-    actions: [ActionMapping.Read, ActionMapping.Create, ActionMapping.List],
+    type: AccessType.OutgoingPayment,
+    actions: [AccessAction.Read, AccessAction.Create, AccessAction.List],
     identifier: `https://example.com/${v4()}`,
     limits: {
       receiver:

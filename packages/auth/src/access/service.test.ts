@@ -12,7 +12,7 @@ import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
@@ -59,7 +59,7 @@ describe('Access Service', (): void => {
 
     const incomingPaymentAccess: IncomingPaymentRequest = {
       type: 'incoming-payment',
-      actions: [ActionMapping.Create, ActionMapping.Read, ActionMapping.List]
+      actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
     }
 
     const access = await accessService.createAccess(grant.id, [
@@ -68,7 +68,7 @@ describe('Access Service', (): void => {
 
     expect(access.length).toEqual(1)
     expect(access[0].grantId).toEqual(grant.id)
-    expect(access[0].type).toEqual(AccessTypeMapping.IncomingPayment)
+    expect(access[0].type).toEqual(AccessType.IncomingPayment)
   })
 
   test('Can create outgoing payment access', async (): Promise<void> => {
@@ -89,7 +89,7 @@ describe('Access Service', (): void => {
 
     const outgoingPaymentAccess: OutgoingPaymentRequest = {
       type: 'outgoing-payment',
-      actions: [ActionMapping.Create, ActionMapping.Read, ActionMapping.List],
+      actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
       limits: outgoingPaymentLimit
     }
 
@@ -101,7 +101,7 @@ describe('Access Service', (): void => {
 
     expect(access.length).toEqual(1)
     expect(access[0].grantId).toEqual(grant.id)
-    expect(access[0].type).toEqual(AccessTypeMapping.OutgoingPayment)
+    expect(access[0].type).toEqual(AccessType.OutgoingPayment)
     expect(access[0].limits).toEqual(outgoingPaymentLimit)
   })
 })

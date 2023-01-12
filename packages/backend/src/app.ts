@@ -47,12 +47,7 @@ import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { AuthenticatedClient } from 'open-payments'
-import {
-  AccessType,
-  AccessTypeMapping,
-  Action,
-  ActionMapping
-} from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -270,20 +265,20 @@ export class App {
     }: {
       path: string
       method: HttpMethod
-    }): Action | undefined => {
+    }): AccessAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? ActionMapping.Read : ActionMapping.List
+          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
-            ? ActionMapping.Complete
-            : ActionMapping.Create
+            ? AccessAction.Complete
+            : AccessAction.Create
         default:
           return undefined
       }
     }
 
-    const actionToRoute: Record<Action, string> = {
+    const actionToRoute: Record<AccessAction, string> = {
       create: 'create',
       read: 'get',
       'read-all': 'get',
@@ -303,13 +298,13 @@ export class App {
           let type: AccessType
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('incoming-payments')) {
-            type = AccessTypeMapping.IncomingPayment
+            type = AccessType.IncomingPayment
             route = incomingPaymentRoutes[actionToRoute[action]]
           } else if (path.includes('outgoing-payments')) {
-            type = AccessTypeMapping.OutgoingPayment
+            type = AccessType.OutgoingPayment
             route = outgoingPaymentRoutes[actionToRoute[action]]
           } else if (path.includes('quotes')) {
-            type = AccessTypeMapping.Quote
+            type = AccessType.Quote
             route = quoteRoutes[actionToRoute[action]]
           } else {
             if (path.includes('connections')) {

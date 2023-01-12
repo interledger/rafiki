@@ -21,7 +21,7 @@ import { getRouteTests } from '../payment_pointer/model.test'
 import { createAsset, randomAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createQuote } from '../../tests/quote'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Quote Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -175,8 +175,8 @@ describe('Quote Routes', (): void => {
               grant: uuid(),
               access: [
                 {
-                  type: AccessTypeMapping.Quote,
-                  actions: [ActionMapping.Create, ActionMapping.Read]
+                  type: AccessType.Quote,
+                  actions: [AccessAction.Create, AccessAction.Read]
                 }
               ]
             })

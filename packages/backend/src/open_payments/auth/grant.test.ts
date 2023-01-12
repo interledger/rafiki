@@ -1,13 +1,13 @@
 import { Grant, getInterval } from './grant'
 import { Interval } from 'luxon'
 import { v4 as uuid } from 'uuid'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Grant', (): void => {
   describe('findAccess', (): void => {
     let grant: Grant
-    const type = AccessTypeMapping.IncomingPayment
-    const action = ActionMapping.Create
+    const type = AccessType.IncomingPayment
+    const action = AccessAction.Create
     const clientId = uuid()
 
     describe.each`
@@ -22,13 +22,13 @@ describe('Grant', (): void => {
           clientId,
           access: [
             {
-              type: AccessTypeMapping.OutgoingPayment,
-              actions: [ActionMapping.Read],
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Read],
               identifier: 'https://wallet.example/bob'
             },
             {
               type,
-              actions: [ActionMapping.Read, action],
+              actions: [AccessAction.Read, action],
               identifier
             }
           ]
@@ -45,9 +45,9 @@ describe('Grant', (): void => {
         ).toEqual(grant.access[1])
       })
       test.each`
-        superAction              | subAction             | description
-        ${ActionMapping.ReadAll} | ${ActionMapping.Read} | ${'read'}
-        ${ActionMapping.ListAll} | ${ActionMapping.List} | ${'list'}
+        superAction             | subAction            | description
+        ${AccessAction.ReadAll} | ${AccessAction.Read} | ${'read'}
+        ${AccessAction.ListAll} | ${AccessAction.List} | ${'list'}
       `(
         'Returns true for $description super access',
         async ({ superAction, subAction }): Promise<void> => {
@@ -74,9 +74,9 @@ describe('Grant', (): void => {
       )
 
       test.each`
-        type                                 | action                    | identifier    | description
-        ${AccessTypeMapping.OutgoingPayment} | ${action}                 | ${identifier} | ${'type'}
-        ${type}                              | ${ActionMapping.Complete} | ${identifier} | ${'action'}
+        type                          | action                   | identifier    | description
+        ${AccessType.OutgoingPayment} | ${action}                | ${identifier} | ${'type'}
+        ${type}                       | ${AccessAction.Complete} | ${identifier} | ${'action'}
       `(
         'Returns false for missing $description',
         async ({ type, action, identifier }): Promise<void> => {

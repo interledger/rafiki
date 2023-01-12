@@ -10,7 +10,7 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { HttpMethod, RequestValidator } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 type IntrospectionBody = {
   access_token: string
@@ -83,8 +83,8 @@ describe('Auth Service', (): void => {
           clientId: uuid(),
           access: [
             {
-              type: AccessTypeMapping.IncomingPayment,
-              actions: [ActionMapping.Read]
+              type: AccessType.IncomingPayment,
+              actions: [AccessAction.Read]
             }
           ]
         },

@@ -1,12 +1,7 @@
-import {
-  AccessType,
-  AccessTypeMapping,
-  Action,
-  ActionMapping
-} from 'open-payments/dist/types'
+import { AccessAction, AccessType } from 'open-payments'
 
 interface BaseAccessRequest {
-  actions: Action[]
+  actions: AccessAction[]
   identifier?: string
 }
 
@@ -30,14 +25,10 @@ export type AccessRequest =
   | OutgoingPaymentRequest
   | QuoteRequest
 
-export function isAccessType(accessType: AccessType): accessType is AccessType {
-  return Object.values(AccessTypeMapping).includes(accessType)
-}
-
-export function isAction(actions: Action[]): actions is Action[] {
+export function isAction(actions: AccessAction[]): actions is AccessAction[] {
   if (typeof actions !== 'object') return false
   for (const action of actions) {
-    if (!Object.values(ActionMapping).includes(action)) return false
+    if (!Object.values(AccessAction).includes(action)) return false
   }
 
   return true
@@ -47,39 +38,9 @@ export function isIncomingPaymentAccessRequest(
   accessRequest: IncomingPaymentRequest
 ): accessRequest is IncomingPaymentRequest {
   return (
-    accessRequest.type === AccessTypeMapping.IncomingPayment &&
+    accessRequest.type === AccessType.IncomingPayment &&
     isAction(accessRequest.actions) &&
     !accessRequest.limits
-  )
-}
-
-function isOutgoingPaymentAccessRequest(
-  accessRequest: OutgoingPaymentRequest
-): accessRequest is OutgoingPaymentRequest {
-  return (
-    accessRequest.type === AccessTypeMapping.OutgoingPayment &&
-    isAction(accessRequest.actions) &&
-    (!accessRequest.limits || isOutgoingPaymentLimit(accessRequest.limits))
-  )
-}
-
-function isQuoteAccessRequest(
-  accessRequest: QuoteRequest
-): accessRequest is QuoteRequest {
-  return (
-    accessRequest.type === AccessTypeMapping.Quote &&
-    isAction(accessRequest.actions) &&
-    !accessRequest.limits
-  )
-}
-
-export function isAccessRequest(
-  accessRequest: AccessRequest
-): accessRequest is AccessRequest {
-  return (
-    isIncomingPaymentAccessRequest(accessRequest as IncomingPaymentRequest) ||
-    isOutgoingPaymentAccessRequest(accessRequest as OutgoingPaymentRequest) ||
-    isQuoteAccessRequest(accessRequest as QuoteRequest)
   )
 }
 
@@ -99,23 +60,3 @@ export type OutgoingPaymentLimit = {
 }
 
 export type LimitData = OutgoingPaymentLimit
-
-function isPaymentAmount(
-  paymentAmount: PaymentAmount | undefined
-): paymentAmount is PaymentAmount {
-  return (
-    paymentAmount?.value !== undefined &&
-    paymentAmount?.assetCode !== undefined &&
-    paymentAmount?.assetScale !== undefined
-  )
-}
-
-export function isOutgoingPaymentLimit(
-  limit: OutgoingPaymentLimit
-): limit is OutgoingPaymentLimit {
-  return (
-    typeof limit.receiver === 'string' &&
-    isPaymentAmount(limit.sendAmount) &&
-    isPaymentAmount(limit.receiveAmount)
-  )
-}

@@ -23,7 +23,7 @@ import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { Grant } from '../../auth/grant'
 import { Asset } from '../../../asset/model'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -180,8 +180,8 @@ describe('Incoming Payment Routes', (): void => {
               clientId: uuid(),
               access: [
                 {
-                  type: AccessTypeMapping.IncomingPayment,
-                  actions: [ActionMapping.Create]
+                  type: AccessType.IncomingPayment,
+                  actions: [AccessAction.Create]
                 }
               ]
             })

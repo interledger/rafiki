@@ -21,7 +21,7 @@ import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { setup } from '../payment_pointer/model.test'
 import { TokenInfo } from './service'
-import { AccessTypeMapping, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -46,8 +46,8 @@ describe('Auth Middleware', (): void => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     middleware = createTokenIntrospectionMiddleware({
-      type: AccessTypeMapping.IncomingPayment,
-      action: ActionMapping.Read
+      type: AccessType.IncomingPayment,
+      action: AccessAction.Read
     })
     authService = await deps.use('authService')
   })
@@ -113,8 +113,8 @@ describe('Auth Middleware', (): void => {
         grant: uuid(),
         access: [
           {
-            type: AccessTypeMapping.OutgoingPayment,
-            actions: [ActionMapping.Create],
+            type: AccessType.OutgoingPayment,
+            actions: [AccessAction.Create],
             identifier: ctx.paymentPointer.url
           }
         ]
@@ -146,13 +146,13 @@ describe('Auth Middleware', (): void => {
           grant: uuid(),
           access: [
             {
-              type: AccessTypeMapping.IncomingPayment,
-              actions: [ActionMapping.Read],
+              type: AccessType.IncomingPayment,
+              actions: [AccessAction.Read],
               identifier: limitAccount ? ctx.paymentPointer.url : undefined
             },
             {
-              type: AccessTypeMapping.OutgoingPayment,
-              actions: [ActionMapping.Create, ActionMapping.Read],
+              type: AccessType.OutgoingPayment,
+              actions: [AccessAction.Create, AccessAction.Read],
               identifier: ctx.paymentPointer.url,
               interval: 'R/2022-03-01T13:00:00Z/P1M',
               limits: {
@@ -252,8 +252,8 @@ describe('HTTP Signature Middleware', (): void => {
           grant: uuid(),
           access: [
             {
-              type: AccessTypeMapping.IncomingPayment,
-              actions: [ActionMapping.Read]
+              type: AccessType.IncomingPayment,
+              actions: [AccessAction.Read]
             }
           ]
         },

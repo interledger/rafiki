@@ -2,7 +2,7 @@ import { Model, QueryContext } from 'objection'
 
 import { AuthServer } from '../authServer/model'
 import { BaseModel } from '../../shared/baseModel'
-import { AccessType, Action } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 export class Grant extends BaseModel {
   public static get tableName(): string {
@@ -29,7 +29,7 @@ export class Grant extends BaseModel {
   public continueToken?: string
   public accessToken?: string
   public accessType!: AccessType
-  public accessActions!: Action[]
+  public accessActions!: AccessAction[]
   public expiresAt?: Date
 
   public get expired(): boolean {

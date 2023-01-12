@@ -1,7 +1,7 @@
 import { Interval, Duration, DateTime, Settings } from 'luxon'
 
 import { Amount } from '../amount'
-import { AccessType, Action, ActionMapping } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 Settings.defaultZone = 'utc'
 
@@ -26,7 +26,7 @@ interface AccessLimitsJSON {
 
 export interface GrantAccess {
   type: AccessType
-  actions: Action[]
+  actions: AccessAction[]
   identifier?: string
   interval?: string
   limits?: AccessLimits
@@ -70,7 +70,7 @@ export class Grant {
     identifier
   }: {
     type: AccessType
-    action: Action
+    action: AccessAction
     identifier: string
   }): GrantAccess | undefined {
     return this.access?.find(
@@ -78,10 +78,10 @@ export class Grant {
         access.type === type &&
         (!access.identifier || access.identifier === identifier) &&
         (access.actions.includes(action) ||
-          (action === ActionMapping.Read &&
-            access.actions.includes(ActionMapping.ReadAll)) ||
-          (action === ActionMapping.List &&
-            access.actions.includes(ActionMapping.ListAll)))
+          (action === AccessAction.Read &&
+            access.actions.includes(AccessAction.ReadAll)) ||
+          (action === AccessAction.List &&
+            access.actions.includes(AccessAction.ListAll)))
     )
   }
 

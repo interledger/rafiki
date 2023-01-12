@@ -1,7 +1,7 @@
 import { Grant } from './model'
 import { AuthServerService } from '../authServer/service'
 import { BaseService } from '../../shared/baseService'
-import { AccessType, Action } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 export interface GrantService {
   create(options: CreateOptions): Promise<Grant>
@@ -31,7 +31,7 @@ export async function createGrantService(
 export interface GrantOptions {
   authServer: string
   accessType: AccessType
-  accessActions: Action[]
+  accessActions: AccessAction[]
 }
 
 export interface CreateOptions extends GrantOptions {

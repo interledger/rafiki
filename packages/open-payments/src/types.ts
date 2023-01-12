@@ -86,19 +86,19 @@ export type AccessType =
   | ASExternalComponents['access-outgoing']['type']
   | ASExternalComponents['access-quote']['type']
 
-export type Action = (
+export type AccessAction = (
   | AccessIncomingActions
   | AccessOutgoingActions
   | AccessQuoteActions
 )[number]
 
-export const AccessTypeMapping: Record<string, AccessType> = Object.freeze({
+export const AccessType: Record<string, AccessType> = Object.freeze({
   IncomingPayment: 'incoming-payment',
   OutgoingPayment: 'outgoing-payment',
   Quote: 'quote'
 })
 
-export const ActionMapping: Record<string, Action> = Object.freeze({
+export const AccessAction: Record<string, AccessAction> = Object.freeze({
   Create: 'create',
   Read: 'read',
   ReadAll: 'read-all',

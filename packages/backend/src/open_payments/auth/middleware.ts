@@ -1,7 +1,7 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
-import { AccessType, Action } from 'open-payments/dist/types'
+import { AccessType, AccessAction } from 'open-payments'
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   return {
@@ -16,7 +16,7 @@ export function createTokenIntrospectionMiddleware({
   action
 }: {
   type: AccessType
-  action: Action
+  action: AccessAction
 }) {
   return async (
     ctx: PaymentPointerContext,
