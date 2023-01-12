@@ -11,7 +11,9 @@ import {
   OutgoingPayment,
   OutgoingPaymentPaginationResult,
   IncomingPaymentPaginationResult,
-  AccessToken
+  AccessToken,
+  PaymentPointer,
+  JWK
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -37,6 +39,26 @@ export const mockOpenApiResponseValidators = () => ({
     throw new Error('Failed to validate response')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as ResponseValidator<any>
+})
+
+export const mockJwk = (overrides?: Partial<JWK>): JWK => ({
+  x: uuid(),
+  kid: uuid(),
+  alg: 'EdDSA',
+  kty: 'OKP',
+  crv: 'Ed25519',
+  ...overrides
+})
+
+export const mockPaymentPointer = (
+  overrides?: Partial<PaymentPointer>
+): PaymentPointer => ({
+  id: 'https://example.com/.well-known/pay',
+  publicName: 'Payment Pointer',
+  authServer: 'https://auth.wallet.example/authorize',
+  assetScale: 2,
+  assetCode: 'USD',
+  ...overrides
 })
 
 export const mockILPStreamConnection = (
