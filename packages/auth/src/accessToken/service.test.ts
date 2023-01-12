@@ -135,6 +135,13 @@ describe('Access Token Service', (): void => {
       expect(fetchedToken.managementId).toEqual(accessToken.managementId)
       expect(fetchedToken.grantId).toEqual(accessToken.grantId)
     })
+
+    test('Cannot get an access token that does not exist', async (): Promise<void> => {
+      await expect(accessTokenService.get(v4())).resolves.toBeUndefined()
+      await expect(
+        accessTokenService.getByManagementId(v4())
+      ).resolves.toBeUndefined()
+    })
   })
 
   describe('Introspect', (): void => {
