@@ -1,39 +1,36 @@
 import axios from 'axios'
 import { Logger } from 'pino'
 
-import {
-  Grant,
-  GrantJSON,
-  GrantOptions,
-  GrantAccess,
-  GrantAccessJSON
-} from './grant'
 import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
 import { JWK } from 'http-signature-utils'
+import { AmountJSON } from '../amount'
+import { AccessAction, AccessType } from 'open-payments'
 
 export interface KeyInfo {
   proof: string
   jwk: JWK
 }
 
-export interface TokenInfoJSON extends GrantJSON {
-  key: KeyInfo
+export interface AccessLimits {
+  receiver?: string
+  sendAmount?: AmountJSON
+  receiveAmount?: AmountJSON
+  interval?: string
 }
 
-export class TokenInfo extends Grant {
-  public readonly key: KeyInfo
+export interface Access {
+  type: AccessType
+  actions: AccessAction[]
+  identifier?: string
+  limits?: AccessLimits
+}
 
-  constructor(options: GrantOptions, key: KeyInfo) {
-    super(options)
-    this.key = key
-  }
-
-  public toJSON(): TokenInfoJSON {
-    return {
-      ...super.toJSON(),
-      key: this.key
-    }
-  }
+export interface TokenInfo {
+  active: boolean
+  grant: string
+  client_id: string
+  access?: Access[]
+  key: KeyInfo
 }
 
 export interface AuthService {
@@ -44,7 +41,7 @@ interface ServiceDependencies {
   authServerIntrospectionUrl: string
   tokenIntrospectionSpec: OpenAPI
   logger: Logger
-  validateResponse: ResponseValidator<TokenInfoJSON>
+  validateResponse: ResponseValidator<TokenInfo>
 }
 
 export async function createAuthService(
@@ -54,7 +51,7 @@ export async function createAuthService(
     service: 'AuthService'
   })
   const validateResponse =
-    deps_.tokenIntrospectionSpec.createResponseValidator<TokenInfoJSON>({
+    deps_.tokenIntrospectionSpec.createResponseValidator<TokenInfo>({
       path: '/introspect',
       method: HttpMethod.POST
     })
@@ -101,44 +98,7 @@ async function introspectToken(
       body: data
     })
 
-    const options: GrantOptions = {
-      active: data.active,
-      clientId: data.client_id,
-      grant: data.grant
-    }
-    if (data.access) {
-      options.access = data.access.map(
-        (access: GrantAccessJSON): GrantAccess => {
-          const options: GrantAccess = {
-            type: access.type,
-            actions: access.actions,
-            identifier: access.identifier,
-            interval: access.interval
-          }
-          if (access.limits) {
-            options.limits = {
-              receiver: access.limits.receiver
-            }
-            if (access.limits.sendAmount) {
-              options.limits.sendAmount = {
-                value: BigInt(access.limits.sendAmount.value),
-                assetCode: access.limits.sendAmount.assetCode,
-                assetScale: access.limits.sendAmount.assetScale
-              }
-            }
-            if (access.limits.receiveAmount) {
-              options.limits.receiveAmount = {
-                value: BigInt(access.limits.receiveAmount.value),
-                assetCode: access.limits.receiveAmount.assetCode,
-                assetScale: access.limits.receiveAmount.assetScale
-              }
-            }
-          }
-          return options
-        }
-      )
-    }
-    return new TokenInfo(options, data.key)
+    return data.active ? data : undefined
   } catch (err) {
     if (err.errors) {
       deps.logger.warn({ err }, 'invalid token introspection')

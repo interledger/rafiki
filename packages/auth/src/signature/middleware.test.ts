@@ -26,14 +26,12 @@ describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   const CLIENT = faker.internet.url()
-
   let testKeys: TestKeys
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-
     testKeys = generateTestKeys()
     testClientKey = testKeys.publicKey
   })
@@ -46,7 +44,6 @@ describe('Signature Service', (): void => {
   describe('Signature middleware', (): void => {
     let grant: Grant
     let token: AccessToken
-    let knex: Knex
     let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let next: () => Promise<any>
@@ -87,10 +84,6 @@ describe('Signature Service', (): void => {
       expiresIn: 3600
     }
 
-    beforeAll(async (): Promise<void> => {
-      knex = await deps.use('knex')
-    })
-
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
@@ -115,7 +108,7 @@ describe('Signature Service', (): void => {
 
     afterEach(async (): Promise<void> => {
       jest.useRealTimers()
-      await truncateTables(knex)
+      await truncateTables(appContainer.knex)
     })
 
     test('Validate grant initiation request with middleware', async (): Promise<void> => {

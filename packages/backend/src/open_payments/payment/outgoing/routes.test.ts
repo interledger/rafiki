@@ -14,6 +14,7 @@ import { CreateOutgoingPaymentOptions, OutgoingPaymentService } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { serializeAmount } from '../../amount'
+import { Grant } from '../../auth/middleware'
 import { PaymentPointer } from '../../payment_pointer/model'
 import {
   getRouteTests,
@@ -21,8 +22,6 @@ import {
 } from '../../payment_pointer/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { Grant } from '../../auth/grant'
-import { AccessType, AccessAction } from 'open-payments'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -36,6 +35,7 @@ describe('Outgoing Payment Routes', (): void => {
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
 
   const createPayment = async (options: {
+    clientId?: string
     grant?: Grant
     description?: string
     externalRef?: string
@@ -57,7 +57,7 @@ describe('Outgoing Payment Routes', (): void => {
     config = Config
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
+    knex = appContainer.knex
     config = await deps.use('config')
     outgoingPaymentRoutes = await deps.use('outgoingPaymentRoutes')
     outgoingPaymentService = await deps.use('outgoingPaymentService')
@@ -86,21 +86,8 @@ describe('Outgoing Payment Routes', (): void => {
     getRouteTests({
       getPaymentPointer: async () => paymentPointer,
       createModel: async ({ clientId }) => {
-        const grant = clientId
-          ? new Grant({
-              active: true,
-              clientId,
-              grant: uuid(),
-              access: [
-                {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read]
-                }
-              ]
-            })
-          : undefined
         const outgoingPayment = await createPayment({
-          grant,
+          clientId,
           description: 'rent',
           externalRef: '202201'
         })
@@ -159,32 +146,15 @@ describe('Outgoing Payment Routes', (): void => {
           body: options
         },
         paymentPointer,
+        clientId: options.clientId,
         grant: options.grant
       })
 
     describe.each`
-      withGrant | description
-      ${true}   | ${'grant'}
-      ${false}  | ${'no grant'}
-    `('create ($description)', ({ withGrant }): void => {
-      let grant: Grant | undefined
-
-      beforeEach(async (): Promise<void> => {
-        grant = withGrant
-          ? new Grant({
-              active: true,
-              grant: uuid(),
-              clientId: uuid(),
-              access: [
-                {
-                  type: AccessType.OutgoingPayment,
-                  actions: [AccessAction.Create, AccessAction.Read]
-                }
-              ]
-            })
-          : undefined
-      })
-
+      grant             | clientId     | description
+      ${{ id: uuid() }} | ${uuid()}    | ${'grant'}
+      ${undefined}      | ${undefined} | ${'no grant'}
+    `('create ($description)', ({ grant, clientId }): void => {
       test.each`
         description  | externalRef  | desc
         ${'rent'}    | ${undefined} | ${'description'}
@@ -193,12 +163,14 @@ describe('Outgoing Payment Routes', (): void => {
         'returns the outgoing payment on success ($desc)',
         async ({ description, externalRef }): Promise<void> => {
           const payment = await createPayment({
+            clientId,
             grant,
             description,
             externalRef
           })
           const options = {
             quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
+            clientId,
             grant,
             description,
             externalRef
@@ -215,6 +187,7 @@ describe('Outgoing Payment Routes', (): void => {
             quoteId: payment.quote.id,
             description,
             externalRef,
+            clientId,
             grant
           })
           expect(ctx.response).toSatisfyApiSpec()

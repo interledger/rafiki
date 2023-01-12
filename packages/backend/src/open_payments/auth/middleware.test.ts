@@ -11,7 +11,7 @@ import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
-import { AuthService } from './service'
+import { Access, AuthService, TokenInfo } from './service'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
@@ -20,8 +20,8 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { setup } from '../payment_pointer/model.test'
-import { TokenInfo } from './service'
-import { AccessType, AccessAction } from 'open-payments'
+import { parseLimits } from '../payment/outgoing/limits'
+import { AccessAction, AccessType } from 'open-payments'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -42,12 +42,15 @@ describe('Auth Middleware', (): void => {
     proof: 'httpsig'
   }
 
+  const type = AccessType.IncomingPayment
+  const action: AccessAction = 'create'
+
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     middleware = createTokenIntrospectionMiddleware({
-      type: AccessType.IncomingPayment,
-      action: AccessAction.Read
+      requestType: type,
+      requestAction: action
     })
     authService = await deps.use('authService')
   })
@@ -105,94 +108,216 @@ describe('Auth Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('returns 403 for unauthorized request', async (): Promise<void> => {
-    const tokenInfo = new TokenInfo(
-      {
-        active: true,
-        clientId: uuid(),
-        grant: uuid(),
-        access: [
-          {
-            type: AccessType.OutgoingPayment,
-            actions: [AccessAction.Create],
-            identifier: ctx.paymentPointer.url
-          }
-        ]
-      },
-      key
-    )
-    const introspectSpy = jest
-      .spyOn(authService, 'introspect')
-      .mockResolvedValueOnce(tokenInfo)
-    await expect(middleware(ctx, next)).rejects.toMatchObject({
-      status: 403,
-      message: 'Insufficient Grant'
-    })
-    expect(introspectSpy).toHaveBeenCalledWith(token)
-    expect(next).not.toHaveBeenCalled()
-  })
+  enum IdentifierOption {
+    Matching = 'matching',
+    Conflicting = 'conflicting',
+    None = 'no'
+  }
 
-  test.each`
-    limitAccount
-    ${false}
-    ${true}
+  describe.each`
+    identifierOption
+    ${IdentifierOption.Matching}
+    ${IdentifierOption.Conflicting}
+    ${IdentifierOption.None}
   `(
-    'sets the context grant and calls next (limitAccount: $limitAccount)',
-    async ({ limitAccount }): Promise<void> => {
-      const tokenInfo = new TokenInfo(
-        {
-          active: true,
-          clientId: uuid(),
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Read],
-              identifier: limitAccount ? ctx.paymentPointer.url : undefined
-            },
-            {
-              type: AccessType.OutgoingPayment,
-              actions: [AccessAction.Create, AccessAction.Read],
-              identifier: ctx.paymentPointer.url,
-              interval: 'R/2022-03-01T13:00:00Z/P1M',
-              limits: {
-                receiveAmount: {
-                  value: BigInt(500),
-                  assetCode: 'EUR',
-                  assetScale: 2
-                },
-                sendAmount: {
-                  value: BigInt(811),
-                  assetCode: 'USD',
-                  assetScale: 2
-                },
-                receiver:
-                  'https://wallet2.example/bob/incoming-payments/aa9da466-12ba-4760-9aa0-8c06061f333b'
-              }
-            }
-          ]
-        },
-        key
-      )
-      const introspectSpy = jest
-        .spyOn(authService, 'introspect')
-        .mockResolvedValueOnce(tokenInfo)
+    '$identifierOption token access identifier',
+    ({ identifierOption }): void => {
+      let identifier: string | undefined
 
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(introspectSpy).toHaveBeenCalledWith(token)
-      expect(next).toHaveBeenCalled()
-      expect(ctx.grant).toEqual(tokenInfo)
+      beforeEach(async (): Promise<void> => {
+        if (identifierOption === IdentifierOption.Matching) {
+          identifier = ctx.paymentPointer.url
+        } else if (identifierOption === IdentifierOption.Conflicting) {
+          identifier = faker.internet.url()
+        }
+      })
+
+      const createTokenInfo = (access?: Access[]): TokenInfo => ({
+        active: true,
+        grant: uuid(),
+        client_id: uuid(),
+        access: access ?? [
+          {
+            type,
+            actions: [action],
+            identifier
+          }
+        ],
+        key
+      })
+
+      test.each`
+        type                          | action                   | description
+        ${AccessType.OutgoingPayment} | ${action}                | ${'type'}
+        ${type}                       | ${AccessAction.Complete} | ${'action'}
+      `(
+        'returns 403 for unauthorized request (conflicting $description)',
+        async ({ type, action }): Promise<void> => {
+          const tokenInfo = createTokenInfo([
+            {
+              type,
+              actions: [action],
+              identifier
+            }
+          ])
+          const introspectSpy = jest
+            .spyOn(authService, 'introspect')
+            .mockResolvedValueOnce(tokenInfo)
+          await expect(middleware(ctx, next)).rejects.toMatchObject({
+            status: 403,
+            message: 'Insufficient Grant'
+          })
+          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(next).not.toHaveBeenCalled()
+        }
+      )
+
+      if (identifierOption !== IdentifierOption.Conflicting) {
+        test('sets the context client info and calls next', async (): Promise<void> => {
+          const tokenInfo = createTokenInfo()
+          const introspectSpy = jest
+            .spyOn(authService, 'introspect')
+            .mockResolvedValueOnce(tokenInfo)
+
+          await expect(middleware(ctx, next)).resolves.toBeUndefined()
+          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(next).toHaveBeenCalled()
+          expect(ctx.clientId).toEqual(tokenInfo.client_id)
+          expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
+          expect(ctx.grant).toBeUndefined()
+        })
+
+        describe.each`
+          superAction             | subAction
+          ${AccessAction.ReadAll} | ${AccessAction.Read}
+          ${AccessAction.ListAll} | ${AccessAction.List}
+        `('$subAction/$superAction', ({ superAction, subAction }): void => {
+          test("calls next (but doesn't restrict ctx.clientId) for sub-action request", async (): Promise<void> => {
+            const middleware = createTokenIntrospectionMiddleware({
+              requestType: type,
+              requestAction: subAction
+            })
+            const tokenInfo = createTokenInfo([
+              {
+                type,
+                actions: [superAction],
+                identifier
+              }
+            ])
+            const introspectSpy = jest
+              .spyOn(authService, 'introspect')
+              .mockResolvedValueOnce(tokenInfo)
+
+            await expect(middleware(ctx, next)).resolves.toBeUndefined()
+            expect(introspectSpy).toHaveBeenCalledWith(token)
+            expect(next).toHaveBeenCalled()
+            expect(ctx.clientId).toBeUndefined()
+            expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
+            expect(ctx.grant).toBeUndefined()
+          })
+
+          test('returns 403 for super-action request', async (): Promise<void> => {
+            const middleware = createTokenIntrospectionMiddleware({
+              requestType: type,
+              requestAction: superAction
+            })
+            const tokenInfo = createTokenInfo([
+              {
+                type,
+                actions: [subAction],
+                identifier
+              }
+            ])
+            const introspectSpy = jest
+              .spyOn(authService, 'introspect')
+              .mockResolvedValueOnce(tokenInfo)
+            await expect(middleware(ctx, next)).rejects.toMatchObject({
+              status: 403,
+              message: 'Insufficient Grant'
+            })
+            expect(introspectSpy).toHaveBeenCalledWith(token)
+            expect(next).not.toHaveBeenCalled()
+          })
+
+          const limits = {
+            receiveAmount: {
+              value: '500',
+              assetCode: 'EUR',
+              assetScale: 2
+            },
+            sendAmount: {
+              value: '811',
+              assetCode: 'USD',
+              assetScale: 2
+            },
+            receiver:
+              'https://wallet2.example/bob/incoming-payments/aa9da466-12ba-4760-9aa0-8c06061f333b',
+            interval: 'R/2022-03-01T13:00:00Z/P1M'
+          }
+
+          test.each`
+            type                          | action                 | limits       | ctxGrant | ctxLimits
+            ${AccessType.IncomingPayment} | ${AccessAction.Create} | ${undefined} | ${false} | ${false}
+            ${AccessType.OutgoingPayment} | ${AccessAction.Read}   | ${limits}    | ${false} | ${false}
+            ${AccessType.OutgoingPayment} | ${AccessAction.Create} | ${undefined} | ${true}  | ${false}
+            ${AccessType.OutgoingPayment} | ${AccessAction.Create} | ${limits}    | ${true}  | ${limits}
+          `(
+            'sets the context grant limits and calls next (limitAccount: $limitAccount)',
+            async ({
+              type,
+              action,
+              limits,
+              ctxGrant,
+              ctxLimits
+            }): Promise<void> => {
+              const middleware = createTokenIntrospectionMiddleware({
+                requestType: type,
+                requestAction: action
+              })
+              const tokenInfo = createTokenInfo([
+                {
+                  type,
+                  actions: [action],
+                  identifier,
+                  limits
+                }
+              ])
+              const introspectSpy = jest
+                .spyOn(authService, 'introspect')
+                .mockResolvedValueOnce(tokenInfo)
+
+              await expect(middleware(ctx, next)).resolves.toBeUndefined()
+              expect(introspectSpy).toHaveBeenCalledWith(token)
+              expect(next).toHaveBeenCalled()
+              expect(ctx.clientId).toEqual(tokenInfo.client_id)
+              expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
+              expect(ctx.grant).toEqual(
+                ctxGrant
+                  ? {
+                      id: tokenInfo.grant,
+                      limits: ctxLimits ? parseLimits(limits) : undefined
+                    }
+                  : undefined
+              )
+            }
+          )
+        })
+      } else {
+        test('returns 403 for super-action request', async (): Promise<void> => {
+          const tokenInfo = createTokenInfo()
+          const introspectSpy = jest
+            .spyOn(authService, 'introspect')
+            .mockResolvedValueOnce(tokenInfo)
+          await expect(middleware(ctx, next)).rejects.toMatchObject({
+            status: 403,
+            message: 'Insufficient Grant'
+          })
+          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(next).not.toHaveBeenCalled()
+        })
+      }
     }
   )
-
-  test('bypasses token introspection for configured DEV_ACCESS_TOKEN', async (): Promise<void> => {
-    ctx.headers.authorization = `GNAP ${Config.devAccessToken}`
-    const authService = await deps.use('authService')
-    const introspectSpy = jest.spyOn(authService, 'introspect')
-    await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(introspectSpy).not.toHaveBeenCalled()
-    expect(next).toHaveBeenCalled()
-  })
 })
 
 describe('HTTP Signature Middleware', (): void => {
@@ -245,26 +370,10 @@ describe('HTTP Signature Middleware', (): void => {
         url
       })
       ctx.container = deps
-      ctx.grant = new TokenInfo(
-        {
-          active: true,
-          clientId: uuid(),
-          grant: uuid(),
-          access: [
-            {
-              type: AccessType.IncomingPayment,
-              actions: [AccessAction.Read]
-            }
-          ]
-        },
-        {
-          jwk: generateJwk({
-            keyId,
-            privateKey
-          }),
-          proof: 'httpsig'
-        }
-      )
+      ctx.clientKey = generateJwk({
+        keyId,
+        privateKey
+      })
     })
 
     test('calls next with valid http signature', async (): Promise<void> => {
@@ -282,7 +391,7 @@ describe('HTTP Signature Middleware', (): void => {
     })
 
     test('returns 401 for invalid key type', async (): Promise<void> => {
-      ctx.grant.key.jwk.kty = 'EC' as 'OKP'
+      ctx.clientKey.kty = 'EC' as 'OKP'
       await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 401,
         message: 'Invalid signature'
@@ -293,7 +402,7 @@ describe('HTTP Signature Middleware', (): void => {
     // TODO: remove with
     // https://github.com/interledger/rafiki/issues/737
     test.skip('returns 401 if any signature keyid does not match the jwk key id', async (): Promise<void> => {
-      ctx.grant.key.jwk.kid = 'mismatched-key'
+      ctx.clientKey.kid = 'mismatched-key'
       await expect(httpsigMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(ctx.status).toBe(401)
       expect(next).not.toHaveBeenCalled()

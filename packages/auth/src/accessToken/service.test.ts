@@ -22,7 +22,6 @@ import { AccessType, AccessAction } from 'open-payments'
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
   let testClientKey: JWK
@@ -30,7 +29,6 @@ describe('Access Token Service', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
     accessTokenService = await deps.use('accessTokenService')
 
     testClientKey = generateTestKeys().publicKey
@@ -38,7 +36,7 @@ describe('Access Token Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

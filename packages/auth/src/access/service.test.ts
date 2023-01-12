@@ -18,18 +18,16 @@ describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accessService: AccessService
-  let knex: Knex
   let trx: Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     accessService = await deps.use('accessService')
-    knex = await deps.use('knex')
     appContainer = await createTestApp(deps)
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

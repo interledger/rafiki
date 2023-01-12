@@ -4,6 +4,7 @@ import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
+import { JWK } from 'http-signature-utils'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
@@ -24,12 +25,13 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { Grant } from './open_payments/auth/grant'
 import {
   createTokenIntrospectionMiddleware,
-  httpsigMiddleware
+  httpsigMiddleware,
+  Grant,
+  RequestAction
 } from './open_payments/auth/middleware'
-import { AuthService, TokenInfo } from './open_payments/auth/service'
+import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
@@ -46,8 +48,7 @@ import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AuthenticatedClient } from 'open-payments'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessAction, AccessType, AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -76,6 +77,7 @@ export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
   clientId?: string
+  clientKey?: JWK
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -87,7 +89,8 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  grant: TokenInfo
+  grant: Grant
+  clientKey: JWK
   clientId?: string
 }
 
@@ -265,47 +268,47 @@ export class App {
     }: {
       path: string
       method: HttpMethod
-    }): AccessAction | undefined => {
+    }): RequestAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('{id}') ? RequestAction.Read : RequestAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
-            ? AccessAction.Complete
-            : AccessAction.Create
+            ? RequestAction.Complete
+            : RequestAction.Create
         default:
           return undefined
       }
     }
 
-    const actionToRoute: Record<AccessAction, string> = {
+    const actionToRoute: {
+      [key in RequestAction]: string
+    } = {
       create: 'create',
       read: 'get',
-      'read-all': 'get',
       complete: 'complete',
-      list: 'list',
-      'list-all': 'list'
+      list: 'list'
     }
 
     for (const path in resourceServerSpec.paths) {
       for (const method in resourceServerSpec.paths[path]) {
         if (isHttpMethod(method)) {
-          const action = toAction({ path, method })
-          if (!action) {
+          const requestAction = toAction({ path, method })
+          if (!requestAction) {
             throw new Error()
           }
 
-          let type: AccessType
+          let requestType: AccessType
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('incoming-payments')) {
-            type = AccessType.IncomingPayment
-            route = incomingPaymentRoutes[actionToRoute[action]]
+            requestType = AccessType.IncomingPayment
+            route = incomingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('outgoing-payments')) {
-            type = AccessType.OutgoingPayment
-            route = outgoingPaymentRoutes[actionToRoute[action]]
+            requestType = AccessType.OutgoingPayment
+            route = outgoingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('quotes')) {
-            type = AccessType.Quote
-            route = quoteRoutes[actionToRoute[action]]
+            requestType = AccessType.Quote
+            route = quoteRoutes[actionToRoute[requestAction]]
           } else {
             if (path.includes('connections')) {
               route = connectionRoutes.get
@@ -337,8 +340,8 @@ export class App {
               }
             ),
             createTokenIntrospectionMiddleware({
-              type,
-              action
+              requestType,
+              requestAction
             }),
             httpsigMiddleware,
             route

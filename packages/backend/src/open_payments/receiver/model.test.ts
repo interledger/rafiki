@@ -1,6 +1,4 @@
 import { IocContract } from '@adonisjs/fold'
-import { Knex } from 'knex'
-
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
@@ -15,19 +13,17 @@ import { IncomingPaymentState } from '../payment/incoming/model'
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let connectionService: ConnectionService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     connectionService = await deps.use('connectionService')
-    knex = await deps.use('knex')
   })
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {
