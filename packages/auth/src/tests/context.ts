@@ -48,7 +48,7 @@ export async function createContextWithSigHeaders(
 ): Promise<AppContext> {
   const { headers, url, method } = reqOpts
   if (!headers || !url || !method) {
-    throw new Error('ReqestOptions miss headers or method or url')
+    throw new Error('ReqestOptions missing headers or method or url')
   }
   const request = {
     url,

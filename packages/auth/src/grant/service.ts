@@ -3,7 +3,14 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { generateNonce, generateToken } from '../shared/utils'
-import { Grant, GrantState, StartMethod, FinishMethod } from './model'
+import {
+  Grant,
+  GrantState,
+  StartMethod,
+  FinishMethod,
+  InteractiveGrant,
+  isInteractiveGrant
+} from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 
@@ -185,10 +192,15 @@ async function getByInteraction(
 async function getByInteractionSession(
   interactId: string,
   interactNonce: string
-): Promise<Grant | undefined> {
-  return Grant.query()
+): Promise<InteractiveGrant | undefined> {
+  const grant = await Grant.query()
     .findOne({ interactId, interactNonce })
     .withGraphFetched('access')
+  if (!grant || !isInteractiveGrant(grant)) {
+    return undefined
+  } else {
+    return grant as InteractiveGrant
+  }
 }
 
 async function getByContinue(

@@ -245,7 +245,7 @@ async function getGrantDetails(
     return
   }
 
-  ctx.body = { access: createAccessBody(grant.access) }
+  ctx.body = { access: grant.access.map((a: Access) => accessToBody(a)) }
 }
 
 async function startInteraction(
@@ -268,11 +268,11 @@ async function startInteraction(
     ctx.throw(401, { error: 'unknown_request' })
   } else {
     // TODO: also establish session in redis with short expiry
-    ctx.session.nonce = grant.interactNonce || ''
+    ctx.session.nonce = grant.interactNonce
 
     const interactionUrl = new URL(config.identityServerDomain)
-    interactionUrl.searchParams.set('interactId', grant.interactId || '')
-    interactionUrl.searchParams.set('nonce', grant.interactNonce || '')
+    interactionUrl.searchParams.set('interactId', grant.interactId)
+    interactionUrl.searchParams.set('nonce', grant.interactNonce)
     interactionUrl.searchParams.set('clientName', clientName as string)
     interactionUrl.searchParams.set('clientUri', clientUri as string)
 
@@ -459,14 +459,4 @@ function createGrantBody({
       uri: domain + `/continue/${grant.continueId}`
     }
   }
-}
-
-function createAccessBody(accesses: Access[]): Partial<Access>[] {
-  return accesses.map((access) => ({
-    grantId: access.grantId,
-    type: access.type,
-    actions: access.actions,
-    identifier: access.identifier,
-    limits: access.limits
-  }))
 }

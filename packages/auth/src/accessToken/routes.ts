@@ -7,7 +7,7 @@ import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
 type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body?: BodyT
+  body: BodyT
 }
 
 type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
@@ -63,8 +63,7 @@ async function introspectToken(
   const { body } = ctx.request
   const introspectionResult = await deps.accessTokenService.introspect(
     // body.access_token exists since it is checked for by the request validation
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    body!['access_token']
+    body['access_token']
   )
   if (introspectionResult) {
     ctx.body = introspectionToBody(introspectionResult)

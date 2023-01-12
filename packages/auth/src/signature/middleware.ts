@@ -21,12 +21,13 @@ function contextToRequestLike(ctx: AppContext): RequestLike {
 
 async function verifySigFromClient(
   client: string,
+  clientKeyId: string,
   ctx: AppContext
 ): Promise<boolean> {
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
     client,
-    keyId: ctx.clientKeyId || ''
+    keyId: clientKeyId
   })
 
   if (!clientKey) {
@@ -45,7 +46,7 @@ async function verifySigFromBoundKey(
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  return verifySigFromClient(grant.client, ctx)
+  return verifySigFromClient(grant.client, ctx.clientKeyId, ctx)
 }
 
 const KEY_ID_PREFIX = 'keyid="'
@@ -123,7 +124,11 @@ export async function grantInitiationHttpsigMiddleware(
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
-  const sigVerified = await verifySigFromClient(body.client, ctx)
+  const sigVerified = await verifySigFromClient(
+    body.client,
+    ctx.clientKeyId,
+    ctx
+  )
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }
