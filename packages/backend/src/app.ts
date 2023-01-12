@@ -48,7 +48,7 @@ import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AccessAction, AccessType, AuthenticatedClient } from 'open-payments'
+import { AccessType, AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
