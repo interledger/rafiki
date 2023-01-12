@@ -45,6 +45,12 @@ export function createTokenIntrospectionMiddleware({
       if (!tokenInfo) {
         ctx.throw(401, 'Invalid Token')
       }
+      ctx.clientKey = tokenInfo.key.jwk
+
+      if (!tokenInfo.access) {
+        await next()
+        return
+      }
       // TODO
       // https://github.com/interledger/rafiki/issues/835
       const access = tokenInfo.access.find((access) => {
@@ -79,7 +85,6 @@ export function createTokenIntrospectionMiddleware({
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      ctx.clientKey = tokenInfo.key.jwk
       if (
         requestType === AccessType.OutgoingPayment &&
         requestAction === AccessAction.Create

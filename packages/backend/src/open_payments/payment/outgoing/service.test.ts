@@ -496,6 +496,7 @@ describe('OutgoingPaymentService', (): void => {
 
       if (grantOption !== GrantOption.None) {
         test('fails to create if grant is locked', async () => {
+          assert.ok(grant)
           grant.limits = {
             receiver,
             sendAmount
@@ -565,6 +566,7 @@ describe('OutgoingPaymentService', (): void => {
           })
           test('fails if grant limits interval does not cover now', async (): Promise<void> => {
             const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
+            assert.ok(grant)
             grant.limits = {
               sendAmount,
               interval: `R0/${start.toISOString()}/P1M`
@@ -582,6 +584,7 @@ describe('OutgoingPaymentService', (): void => {
           `(
             'fails if grant limits do not match payment - $description',
             async ({ limits }): Promise<void> => {
+              assert.ok(grant)
               grant.limits = { ...limits, interval }
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
@@ -604,6 +607,7 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+              assert.ok(grant)
               grant.limits = sendAmount
                 ? {
                     sendAmount: amount,
@@ -636,6 +640,7 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+              assert.ok(grant)
               grant.limits = {
                 sendAmount: sendAmount ? grantAmount : undefined,
                 receiveAmount: sendAmount ? undefined : grantAmount,
@@ -680,6 +685,7 @@ describe('OutgoingPaymentService', (): void => {
           `(
             'succeeds if grant access $description',
             async ({ limits }): Promise<void> => {
+              assert.ok(grant)
               grant.limits = limits
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
@@ -714,7 +720,7 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
-
+              assert.ok(grant)
               grant.limits = sendAmount
                 ? {
                     sendAmount: grantAmount,
