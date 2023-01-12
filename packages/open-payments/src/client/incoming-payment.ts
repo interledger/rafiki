@@ -9,28 +9,25 @@ import {
 } from '../types'
 import { get, post } from './requests'
 
-interface GetArgs {
+interface RequestWithUrlArgs {
   url: string
   accessToken: string
 }
 
-interface PostArgs<T = undefined> {
-  url: string
-  body?: T
-  accessToken: string
-}
-
-interface ListGetArgs {
+interface RequestWithPaymentPointerArgs {
   paymentPointer: string
   accessToken: string
 }
 
 export interface IncomingPaymentRoutes {
-  get(args: GetArgs): Promise<IncomingPayment>
-  create(args: PostArgs<CreateIncomingPaymentArgs>): Promise<IncomingPayment>
-  complete(args: PostArgs): Promise<IncomingPayment>
+  get(args: RequestWithUrlArgs): Promise<IncomingPayment>
+  create(
+    args: RequestWithPaymentPointerArgs,
+    createArgs: CreateIncomingPaymentArgs
+  ): Promise<IncomingPayment>
+  complete(args: RequestWithUrlArgs): Promise<IncomingPayment>
   list(
-    args: ListGetArgs,
+    args: RequestWithPaymentPointerArgs,
     pagination?: PaginationArgs
   ): Promise<IncomingPaymentPaginationResult>
 }
@@ -65,25 +62,29 @@ export const createIncomingPaymentRoutes = (
     })
 
   return {
-    get: (args: GetArgs) =>
+    get: (args: RequestWithUrlArgs) =>
       getIncomingPayment(
         { axiosInstance, logger },
         args,
         getIncomingPaymentOpenApiValidator
       ),
-    create: (args: PostArgs<CreateIncomingPaymentArgs>) =>
+    create: (
+      requestArgs: RequestWithPaymentPointerArgs,
+      createArgs: CreateIncomingPaymentArgs
+    ) =>
       createIncomingPayment(
         { axiosInstance, logger },
-        args,
-        createIncomingPaymentOpenApiValidator
+        requestArgs,
+        createIncomingPaymentOpenApiValidator,
+        createArgs
       ),
-    complete: (args: PostArgs) =>
+    complete: (args: RequestWithUrlArgs) =>
       completeIncomingPayment(
         { axiosInstance, logger },
         args,
         completeIncomingPaymentOpenApiValidator
       ),
-    list: (args: ListGetArgs, pagination?: PaginationArgs) =>
+    list: (args: RequestWithPaymentPointerArgs, pagination?: PaginationArgs) =>
       listIncomingPayment(
         { axiosInstance, logger },
         args,
@@ -95,7 +96,7 @@ export const createIncomingPaymentRoutes = (
 
 export const getIncomingPayment = async (
   deps: BaseDeps,
-  args: GetArgs,
+  args: RequestWithUrlArgs,
   validateOpenApiResponse: ResponseValidator<IncomingPayment>
 ) => {
   const { axiosInstance, logger } = deps
@@ -119,15 +120,17 @@ export const getIncomingPayment = async (
 
 export const createIncomingPayment = async (
   deps: BaseDeps,
-  args: PostArgs<CreateIncomingPaymentArgs>,
-  validateOpenApiResponse: ResponseValidator<IncomingPayment>
+  requestArgs: RequestWithPaymentPointerArgs,
+  validateOpenApiResponse: ResponseValidator<IncomingPayment>,
+  createArgs: CreateIncomingPaymentArgs
 ) => {
   const { axiosInstance, logger } = deps
-  const { url } = args
+  const { paymentPointer, accessToken } = requestArgs
+  const url = `${paymentPointer}${getRSPath('/incoming-payments')}`
 
   const incomingPayment = await post(
     { axiosInstance, logger },
-    args,
+    { url, accessToken, body: createArgs },
     validateOpenApiResponse
   )
 
@@ -143,15 +146,16 @@ export const createIncomingPayment = async (
 
 export const completeIncomingPayment = async (
   deps: BaseDeps,
-  args: PostArgs,
+  args: RequestWithUrlArgs,
   validateOpenApiResponse: ResponseValidator<IncomingPayment>
 ) => {
   const { axiosInstance, logger } = deps
-  const { url } = args
+  const { url: incomingPaymentUrl, accessToken } = args
+  const url = `${incomingPaymentUrl}/complete`
 
   const incomingPayment = await post(
     { axiosInstance, logger },
-    args,
+    { url, accessToken },
     validateOpenApiResponse
   )
 
@@ -167,7 +171,7 @@ export const completeIncomingPayment = async (
 
 export const listIncomingPayment = async (
   deps: BaseDeps,
-  args: ListGetArgs,
+  args: RequestWithPaymentPointerArgs,
   validateOpenApiResponse: ResponseValidator<IncomingPaymentPaginationResult>,
   pagination?: PaginationArgs
 ) => {
