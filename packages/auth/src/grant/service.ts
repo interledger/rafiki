@@ -21,7 +21,7 @@ export interface GrantService {
   getByInteractionSession(
     interactId: string,
     interactNonce: string
-  ): Promise<Grant | undefined>
+  ): Promise<InteractiveGrant | undefined>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
