@@ -9,6 +9,7 @@ export interface RatesService {
   convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
   ): Promise<bigint | ConvertError>
+  checkBaseAsset(asset: unknown): void
 }
 
 interface ServiceDependencies extends BaseService {
@@ -118,11 +119,7 @@ class RatesServiceImpl implements RatesService {
     })
 
     const { base, rates } = res.data
-    if (!base) {
-      const errorMessage = 'Base currency was not provided'
-      this.deps.logger.warn({ errorMessage })
-      throw new Error(errorMessage)
-    }
+    this.checkBaseAsset(base)
 
     const data = {
       [base]: 1.0,
@@ -132,6 +129,22 @@ class RatesServiceImpl implements RatesService {
     this.pricesRequest = Promise.resolve(data)
     this.pricesExpiry = new Date(Date.now() + this.deps.pricesLifetime)
     return data
+  }
+
+  checkBaseAsset(asset: unknown): void {
+    let errorMessage: string
+    if (!asset) {
+      errorMessage = 'Missing base asset'
+    } else if (typeof asset !== 'string') {
+      errorMessage = 'Base asset should be a string'
+    } else if (typeof asset === 'string' && asset.length === 0) {
+      errorMessage = 'Invalid base asset'
+    }
+
+    if (errorMessage) {
+      this.deps.logger.warn({ err: errorMessage }, `received asset: ${asset}`)
+      throw new Error(errorMessage)
+    }
   }
 }
 

@@ -180,4 +180,15 @@ describe('Rates service', function () {
       })
     })
   })
+
+  describe('checkBaseAsset', (): void => {
+    it.each`
+      asset        | description
+      ${undefined} | ${'is not provided'}
+      ${['USD']}   | ${'is not a string'}
+      ${''}        | ${'is an empty string'}
+    `(`throws if base asset is $description`, ({ asset }): void => {
+      expect(() => service.checkBaseAsset(asset)).toThrow()
+    })
+  })
 })
