@@ -205,7 +205,7 @@ async function createGrantInitiation(
         `/interact/${grant.interactId}/${grant.interactNonce}`
     )
 
-    redirectUri.searchParams.set('clientName', client.name || '')
+    redirectUri.searchParams.set('clientName', client.name)
     redirectUri.searchParams.set('clientUri', client.uri)
     ctx.body = {
       interact: {

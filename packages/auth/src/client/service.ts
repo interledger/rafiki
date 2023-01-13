@@ -10,7 +10,7 @@ export interface ClientKey {
 
 interface ClientDetails {
   // id: string
-  name?: string
+  name: string
   // image: string
   uri: string
   // email: string
@@ -55,6 +55,9 @@ async function getClient(
       url: client
     })
     // TODO: https://github.com/interledger/rafiki/issues/734
+    if (!paymentPointer.publicName) {
+      throw new Error('Payment pointer does not have a public name.')
+    }
     return {
       name: paymentPointer.publicName,
       uri: client
