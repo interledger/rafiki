@@ -22,6 +22,11 @@ interface Prices {
   [currency: string]: number
 }
 
+interface PricesResponse {
+  base: string
+  rates: Prices
+}
+
 export enum ConvertError {
   MissingSourceAsset = 'MissingSourceAsset',
   MissingDestinationAsset = 'MissingDestinationAsset',
@@ -107,13 +112,26 @@ class RatesServiceImpl implements RatesService {
     const url = this.deps.pricesUrl
     if (!url) return {}
 
-    const res = await this.axios.get(url).catch((err) => {
+    const res = await this.axios.get<PricesResponse>(url).catch((err) => {
       this.deps.logger.warn({ err: err.message }, 'price request error')
       throw err
     })
-    this.pricesRequest = Promise.resolve(res.data)
+
+    const { base, rates } = res.data
+    if (!base) {
+      const errorMessage = 'Base currency was not provided'
+      this.deps.logger.warn({ errorMessage })
+      throw new Error(errorMessage)
+    }
+
+    const data = {
+      [base]: 1.0,
+      ...(rates ? rates : {})
+    }
+
+    this.pricesRequest = Promise.resolve(data)
     this.pricesExpiry = new Date(Date.now() + this.deps.pricesLifetime)
-    return res.data
+    return data
   }
 }
 
