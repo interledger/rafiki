@@ -1,4 +1,3 @@
-import { Knex } from 'knex'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
@@ -23,7 +22,6 @@ import { createPeer } from '../tests/peer'
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let knex: Knex
   let incomingPaymentService: IncomingPaymentService
   let outgoingPaymentService: OutgoingPaymentService
   let quoteService: QuoteService
@@ -34,11 +32,10 @@ describe('Pagination', (): void => {
     config.publicHost = 'https://wallet.example'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
-    knex = await deps.use('knex')
   })
 
   afterEach(async (): Promise<void> => {
-    await truncateTables(knex)
+    await truncateTables(appContainer.knex)
   })
 
   afterAll(async (): Promise<void> => {

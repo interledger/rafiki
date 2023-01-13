@@ -7,7 +7,7 @@ import {
   GetOptions,
   ListOptions
 } from './model'
-import { Grant } from '../auth/grant'
+import { Grant } from '../auth/middleware'
 import { PaymentPointerContext, ReadContext, ListContext } from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
 import { createContext } from '../../tests/context'

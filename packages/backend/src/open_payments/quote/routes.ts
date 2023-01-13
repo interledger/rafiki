@@ -67,7 +67,7 @@ async function createQuote(
   const options: CreateQuoteOptions = {
     paymentPointerId: ctx.paymentPointer.id,
     receiver: body.receiver,
-    clientId: ctx.grant?.clientId
+    clientId: ctx.clientId
   }
   if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
   if (body.receiveAmount)

@@ -17,8 +17,8 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { AccessAction, AccessType } from '../auth/grant'
 import { ConnectionService } from '../connection/service'
+import { AccessAction, AccessType } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { IncomingPayment } from '../payment/incoming/model'
 import { PaymentPointer } from '../payment_pointer/model'
@@ -42,7 +42,7 @@ describe('Receiver Service', (): void => {
     connectionService = await deps.use('connectionService')
     paymentPointerService = await deps.use('paymentPointerService')
     grantService = await deps.use('grantService')
-    knex = await deps.use('knex')
+    knex = appContainer.knex
   })
 
   afterEach(async (): Promise<void> => {
