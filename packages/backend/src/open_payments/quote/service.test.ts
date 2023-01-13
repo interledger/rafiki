@@ -244,10 +244,10 @@ describe('QuoteService', (): void => {
             paymentPointerId,
             receiver: toConnection
               ? connectionService.getUrl(incomingPayment)
-              : incomingPayment.url,
-            sendAmount,
-            receiveAmount
+              : incomingPayment.url
           }
+          if (sendAmount) options.sendAmount = sendAmount
+          if (receiveAmount) options.receiveAmount = receiveAmount
           expected = {
             ...options,
             paymentType
@@ -639,7 +639,6 @@ describe('QuoteService', (): void => {
 
     test.each`
       sendAmount                              | receiveAmount                              | description
-      ${sendAmount}                           | ${receiveAmount}                           | ${'with multiple amounts'}
       ${{ ...sendAmount, value: BigInt(0) }}  | ${undefined}                               | ${'with sendAmount of zero'}
       ${{ ...sendAmount, value: BigInt(-1) }} | ${undefined}                               | ${'with negative sendAmount'}
       ${{ ...sendAmount, assetScale: 3 }}     | ${undefined}                               | ${'with wrong sendAmount asset'}
@@ -649,18 +648,19 @@ describe('QuoteService', (): void => {
     `(
       'fails to create $description',
       async ({ sendAmount, receiveAmount }): Promise<void> => {
-        await expect(
-          quoteService.create({
-            paymentPointerId,
-            receiver: (
-              await createIncomingPayment(deps, {
-                paymentPointerId: receivingPaymentPointer.id
-              })
-            ).url,
-            sendAmount,
-            receiveAmount
-          })
-        ).resolves.toEqual(QuoteError.InvalidAmount)
+        const options: CreateQuoteOptions = {
+          paymentPointerId,
+          receiver: (
+            await createIncomingPayment(deps, {
+              paymentPointerId: receivingPaymentPointer.id
+            })
+          ).url
+        }
+        if (sendAmount) options.sendAmount = sendAmount
+        if (receiveAmount) options.receiveAmount = receiveAmount
+        await expect(quoteService.create(options)).resolves.toEqual(
+          QuoteError.InvalidAmount
+        )
       }
     )
 
