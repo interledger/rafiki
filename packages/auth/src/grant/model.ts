@@ -63,15 +63,14 @@ export class Grant extends BaseModel {
 }
 
 export interface InteractiveGrant extends Grant {
-  finishMethod: FinishMethod
-  finishUri: string
-
-  interactId: string
-  interactRef: string
-  interactNonce: string // AS-generated nonce for post-interaction hash
+  finishMethod: NonNullable<Grant['finishMethod']>
+  finishUri: NonNullable<Grant['finishUri']>
+  interactId: NonNullable<Grant['interactId']>
+  interactRef: NonNullable<Grant['interactRef']>
+  interactNonce: NonNullable<Grant['interactNonce']> // AS-generated nonce for post-interaction hash
 }
 
-export function isInteractiveGrant(grant: Grant): boolean {
+export function isInteractiveGrant(grant: Grant): grant is InteractiveGrant {
   return !!(
     grant.finishMethod &&
     grant.finishUri &&

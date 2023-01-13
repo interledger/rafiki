@@ -17,7 +17,7 @@ import { AccessService } from '../access/service'
 export interface GrantService {
   get(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteraction(interactId: string): Promise<Grant | undefined>
+  getByInteraction(interactId: string): Promise<InteractiveGrant | undefined>
   getByInteractionSession(
     interactId: string,
     interactNonce: string
@@ -185,8 +185,13 @@ async function create(
 
 async function getByInteraction(
   interactId: string
-): Promise<Grant | undefined> {
-  return Grant.query().findOne({ interactId })
+): Promise<InteractiveGrant | undefined> {
+  const grant = await Grant.query().findOne({ interactId })
+  if (!grant || !isInteractiveGrant(grant)) {
+    return undefined
+  } else {
+    return grant
+  }
 }
 
 async function getByInteractionSession(
@@ -199,7 +204,7 @@ async function getByInteractionSession(
   if (!grant || !isInteractiveGrant(grant)) {
     return undefined
   } else {
-    return grant as InteractiveGrant
+    return grant
   }
 }
 

@@ -347,7 +347,7 @@ async function finishInteraction(
     ctx.throw(404, { error: 'unknown_request' })
   } else {
     // TODO: figure out what to do if no finish URI is provided
-    const clientRedirectUri = new URL(grant.finishUri || ctx.request.href)
+    const clientRedirectUri = new URL(grant.finishUri)
     if (grant.state === GrantState.Granted) {
       const { clientNonce, interactNonce, interactRef } = grant
       const interactUrl =
@@ -358,7 +358,7 @@ async function finishInteraction(
 
       const hash = crypto.createHash('sha3-512').update(data).digest('base64')
       clientRedirectUri.searchParams.set('hash', hash)
-      clientRedirectUri.searchParams.set('interact_ref', interactRef || '')
+      clientRedirectUri.searchParams.set('interact_ref', interactRef)
       ctx.redirect(clientRedirectUri.toString())
     } else if (grant.state === GrantState.Rejected) {
       clientRedirectUri.searchParams.set('result', 'grant_rejected')
