@@ -1,7 +1,7 @@
 import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
-import { QuoteService } from './service'
+import { CreateQuoteOptions, QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
@@ -43,25 +43,37 @@ async function getQuote(
   ctx.body = body
 }
 
-export type CreateBody = {
+interface CreateBodyBase {
   receiver: string
+}
+
+interface CreateBodyWithSendAmount extends CreateBodyBase {
   sendAmount?: AmountJSON
+  receiveAmount?: never
+}
+
+interface CreateBodyWithReceiveAmount extends CreateBodyBase {
+  sendAmount?: never
   receiveAmount?: AmountJSON
 }
+
+export type CreateBody = CreateBodyWithSendAmount | CreateBodyWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
+  const options: CreateQuoteOptions = {
+    paymentPointerId: ctx.paymentPointer.id,
+    receiver: body.receiver,
+    clientId: ctx.clientId
+  }
+  if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
+  if (body.receiveAmount)
+    options.receiveAmount = parseAmount(body.receiveAmount)
   try {
-    const quoteOrErr = await deps.quoteService.create({
-      paymentPointerId: ctx.paymentPointer.id,
-      receiver: body.receiver,
-      sendAmount: body.sendAmount && parseAmount(body.sendAmount),
-      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount),
-      clientId: ctx.clientId
-    })
+    const quoteOrErr = await deps.quoteService.create(options)
 
     if (isQuoteError(quoteOrErr)) {
       throw quoteOrErr

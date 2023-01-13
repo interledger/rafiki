@@ -61,13 +61,25 @@ async function getQuote(
   return Quote.query(deps.knex).get(options).withGraphFetched('asset')
 }
 
-export interface CreateQuoteOptions {
+interface QuoteOptionsBase {
   paymentPointerId: string
-  sendAmount?: Amount
-  receiveAmount?: Amount
   receiver: string
   clientId?: string
 }
+
+interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
+  receiveAmount?: never
+  sendAmount?: Amount
+}
+
+interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
+  receiveAmount?: Amount
+  sendAmount?: never
+}
+
+export type CreateQuoteOptions =
+  | QuoteOptionsWithSendAmount
+  | QuoteOptionsWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
@@ -90,7 +102,8 @@ async function createQuote(
     ) {
       return QuoteError.InvalidAmount
     }
-  } else if (options.receiveAmount) {
+  }
+  if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
       return QuoteError.InvalidAmount
     }

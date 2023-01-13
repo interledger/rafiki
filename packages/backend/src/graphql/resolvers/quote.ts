@@ -15,6 +15,7 @@ import { Quote } from '../../open_payments/quote/model'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
+import { CreateQuoteOptions } from '../../open_payments/quote/service'
 
 export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
   parent,
@@ -32,8 +33,15 @@ export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
 export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
     const quoteService = await ctx.container.use('quoteService')
+    const options: CreateQuoteOptions = {
+      paymentPointerId: args.input.paymentPointerId,
+      receiver: args.input.receiver
+    }
+    if (args.input.sendAmount) options.sendAmount = args.input.sendAmount
+    if (args.input.receiveAmount)
+      options.receiveAmount = args.input.receiveAmount
     return quoteService
-      .create(args.input)
+      .create(options)
       .then((quoteOrErr: Quote | QuoteError) =>
         isQuoteError(quoteOrErr)
           ? {

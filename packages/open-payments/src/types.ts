@@ -40,6 +40,20 @@ export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
 export type JWKS = RSComponents['schemas']['json-web-key-set']
 export type Quote = RSComponents['schemas']['quote']
+type QuoteArgsBase = {
+  receiver: RSOperations['create-quote']['requestBody']['content']['application/json']['receiver']
+}
+type QuoteArgsWithSendAmount = QuoteArgsBase & {
+  sendAmount?: RSComponents['schemas']['quote']['sendAmount']
+  receiveAmount?: never
+}
+type QuoteArgsWithReceiveAmount = QuoteArgsBase & {
+  sendAmount?: never
+  receiveAmount?: RSComponents['schemas']['quote']['receiveAmount']
+}
+export type CreateQuoteArgs =
+  | QuoteArgsWithSendAmount
+  | QuoteArgsWithReceiveAmount
 
 export const getASPath = <P extends keyof ASPaths>(path: P): string =>
   path as string
