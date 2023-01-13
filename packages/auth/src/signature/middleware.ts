@@ -156,10 +156,7 @@ export async function tokenHttpsigMiddleware(
     return
   }
 
-  const grantService = await ctx.container.use('grantService')
-  const grant = await grantService.get(accessToken.grantId)
-
-  if (!grant) {
+  if (!accessToken.grant) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_interaction',
@@ -168,7 +165,7 @@ export async function tokenHttpsigMiddleware(
     return
   }
 
-  const sigVerified = await verifySigFromBoundKey(grant, ctx)
+  const sigVerified = await verifySigFromBoundKey(accessToken.grant, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }

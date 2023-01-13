@@ -98,32 +98,33 @@ async function get(token: string): Promise<AccessToken | undefined> {
 async function getByManagementId(
   managementId: string
 ): Promise<AccessToken | undefined> {
-  return AccessToken.query().findOne('managementId', managementId)
+  return AccessToken.query()
+    .findOne('managementId', managementId)
+    .withGraphFetched('grant')
 }
 
 async function introspect(
   deps: ServiceDependencies,
   value: string
 ): Promise<Introspection | undefined> {
-  const token = await AccessToken.query(deps.knex).findOne({ value })
+  const token = await AccessToken.query(deps.knex)
+    .findOne({ value })
+    .withGraphFetched('grant')
 
   if (!token) return
   if (isTokenExpired(token)) {
     return { active: false }
   } else {
-    const grant = await Grant.query(deps.knex)
-      .findById(token.grantId)
-      .withGraphFetched('access')
-    if (!grant) {
+    if (!token.grant) {
       return
     } else {
-      if (grant.state === GrantState.Revoked) {
+      if (token.grant.state === GrantState.Revoked) {
         return { active: false }
       }
 
       const jwk = await deps.clientService.getKey({
-        client: grant.client,
-        keyId: grant.clientKeyId
+        client: token.grant.client,
+        keyId: token.grant.clientKeyId
       })
 
       if (!jwk) {
@@ -132,12 +133,12 @@ async function introspect(
 
       const clientId = crypto
         .createHash('sha256')
-        .update(grant.client)
+        .update(token.grant.client)
         .digest('hex')
 
       return {
         active: true,
-        ...grant,
+        ...token.grant,
         key: { proof: 'httpsig', jwk },
         clientId
       }
