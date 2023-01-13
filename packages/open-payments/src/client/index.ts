@@ -45,14 +45,15 @@ export interface UnauthenticatedResourceRequestArgs {
   url: string
 }
 
-export interface ResourceRequestArgs {
-  url: string
+interface AuthenticatedRequestArgs {
   accessToken: string
 }
+export interface ResourceRequestArgs
+  extends UnauthenticatedResourceRequestArgs,
+    AuthenticatedRequestArgs {}
 
-export interface CollectionRequestArgs {
+export interface CollectionRequestArgs extends AuthenticatedRequestArgs {
   paymentPointer: string
-  accessToken: string
 }
 
 const createDeps = async (
