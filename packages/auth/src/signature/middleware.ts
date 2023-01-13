@@ -119,10 +119,11 @@ export async function grantInitiationHttpsigMiddleware(
   const { body } = ctx.request
 
   const sigInput = ctx.headers['signature-input'] as string
-  ctx.clientKeyId = getSigInputKeyId(sigInput) || ''
-  if (!ctx.clientKeyId) {
+  const clientKeyId = getSigInputKeyId(sigInput)
+  if (!clientKeyId) {
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
+  ctx.clientKeyId = clientKeyId
 
   const sigVerified = await verifySigFromClient(
     body.client,
