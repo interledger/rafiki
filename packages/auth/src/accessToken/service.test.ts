@@ -18,7 +18,6 @@ import { AccessTokenService } from './service'
 import { Access } from '../access/model'
 import { generateTestKeys, JWK } from 'http-signature-utils'
 import { generateNonce, generateToken } from '../shared/utils'
-import Objection from 'objection'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
