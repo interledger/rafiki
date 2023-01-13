@@ -3,6 +3,5 @@ node_modules
 /.cache
 /build
 /public/build
-# Including CSS files until the node-sass dependency has been replaced with something current
-# app/styles/dist
+app/styles/dist
 .env

@@ -19,7 +19,6 @@ Currently you need to also manually build your CSS assets:
 ```sh
 npm run scss
 ```
-Note this is currently using a deprecated node-sass package that requires Node version 12 to run.
 
 To format and lint code:
 ```sh
