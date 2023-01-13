@@ -109,7 +109,7 @@ async function introspect(
 ): Promise<Introspection | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value })
-    .withGraphFetched('grant')
+    .withGraphFetched('grant.access')
 
   if (!token) return
   if (isTokenExpired(token)) {
