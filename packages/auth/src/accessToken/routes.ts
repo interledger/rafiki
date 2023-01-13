@@ -6,11 +6,11 @@ import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
-type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
+type TokenRequest<BodyT> = Omit<AppContext['request'], 'body'> & {
   body: BodyT
 }
 
-type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
+type TokenContext<BodyT> = Omit<AppContext, 'request'> & {
   request: TokenRequest<BodyT>
 }
 
