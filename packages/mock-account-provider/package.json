@@ -8,7 +8,7 @@
     "start": "remix-serve build"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.3",
+    "@apollo/client": "^3.7.4",
     "@remix-run/node": "^1.10.0",
     "@remix-run/react": "^1.10.0",
     "@remix-run/serve": "^1.10.0",
