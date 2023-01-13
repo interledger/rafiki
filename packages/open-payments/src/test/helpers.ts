@@ -42,9 +42,11 @@ export const withEnvVariableOverride = (
       process.env[key] = override[key]
     }
 
-    await testCallback()
-
-    process.env = savedEnvVars
+    try {
+      await testCallback()
+    } finally {
+      process.env = savedEnvVars
+    }
   }
 }
 
@@ -71,7 +73,6 @@ export const mockPaymentPointer = (
   overrides?: Partial<PaymentPointer>
 ): PaymentPointer => ({
   id: 'https://example.com/.well-known/pay',
-  publicName: 'Payment Pointer',
   authServer: 'https://auth.wallet.example/authorize',
   assetScale: 2,
   assetCode: 'USD',

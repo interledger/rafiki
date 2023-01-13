@@ -1,14 +1,10 @@
 import { HttpMethod } from 'openapi'
-import { RouteDeps } from '.'
+import { ResourceRequestArgs, RouteDeps } from '.'
 import { getRSPath, Quote } from '../types'
 import { get } from './requests'
 
-interface GetArgs {
-  url: string
-}
-
 export interface QuoteRoutes {
-  get(args: GetArgs): Promise<Quote>
+  get(args: ResourceRequestArgs): Promise<Quote>
 }
 
 export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
@@ -20,7 +16,7 @@ export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   })
 
   return {
-    get: (args: GetArgs) =>
+    get: (args: ResourceRequestArgs) =>
       get({ axiosInstance, logger }, args, getQuoteValidator)
   }
 }

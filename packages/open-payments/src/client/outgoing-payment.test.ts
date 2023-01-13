@@ -78,7 +78,7 @@ describe('outgoing-payment', (): void => {
         .get('/outgoing-payments/1')
         .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         getOutgoingPayment(
           { axiosInstance, logger },
           {
@@ -98,7 +98,7 @@ describe('outgoing-payment', (): void => {
         .get('/outgoing-payments/1')
         .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         getOutgoingPayment(
           { axiosInstance, logger },
           {
@@ -215,7 +215,7 @@ describe('outgoing-payment', (): void => {
         .get('/outgoing-payments')
         .reply(200, outgoingPaymentPaginationResult)
 
-      await expect(() =>
+      await expect(
         listOutgoingPayments(
           {
             axiosInstance,
@@ -239,7 +239,7 @@ describe('outgoing-payment', (): void => {
         .get('/outgoing-payments')
         .reply(200, outgoingPaymentPaginationResult)
 
-      await expect(() =>
+      await expect(
         listOutgoingPayments(
           {
             axiosInstance,
@@ -312,7 +312,7 @@ describe('outgoing-payment', (): void => {
         .post('/outgoing-payments')
         .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         createOutgoingPayment(
           { axiosInstance, logger },
           {
@@ -335,7 +335,7 @@ describe('outgoing-payment', (): void => {
         .post('/outgoing-payments')
         .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         createOutgoingPayment(
           {
             axiosInstance,

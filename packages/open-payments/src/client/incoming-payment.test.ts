@@ -42,7 +42,8 @@ describe('incoming-payment', (): void => {
 
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
-  const paymentPointer = `http://localhost:1000/.well-known/pay`
+  const paymentPointer = 'http://localhost:1000/.well-known/pay'
+  const accessToken = 'accessToken'
   const openApiValidators = mockOpenApiResponseValidators()
 
   describe('getIncomingPayment', (): void => {
@@ -57,7 +58,7 @@ describe('incoming-payment', (): void => {
         { axiosInstance, logger },
         {
           url: `${paymentPointer}/incoming-payments/1`,
-          accessToken: 'accessToken'
+          accessToken
         },
         openApiValidators.successfulValidator
       )
@@ -82,7 +83,7 @@ describe('incoming-payment', (): void => {
         .get('/incoming-payments/1')
         .reply(200, incomingPayment)
 
-      await expect(() =>
+      await expect(
         getIncomingPayment(
           {
             axiosInstance,
@@ -90,7 +91,7 @@ describe('incoming-payment', (): void => {
           },
           {
             url: `${paymentPointer}/incoming-payments/1`,
-            accessToken: 'accessToken'
+            accessToken
           },
           openApiValidators.successfulValidator
         )
@@ -104,7 +105,7 @@ describe('incoming-payment', (): void => {
         .get('/incoming-payments/1')
         .reply(200, incomingPayment)
 
-      await expect(() =>
+      await expect(
         getIncomingPayment(
           {
             axiosInstance,
@@ -112,7 +113,7 @@ describe('incoming-payment', (): void => {
           },
           {
             url: `${paymentPointer}/incoming-payments/1`,
-            accessToken: 'accessToken'
+            accessToken
           },
           openApiValidators.failedValidator
         )
@@ -146,7 +147,7 @@ describe('incoming-payment', (): void => {
 
         const result = await createIncomingPayment(
           { axiosInstance, logger },
-          { paymentPointer, accessToken: 'accessToken' },
+          { paymentPointer, accessToken },
           openApiValidators.successfulValidator,
           {
             incomingAmount,
@@ -178,10 +179,10 @@ describe('incoming-payment', (): void => {
         .post('/incoming-payments')
         .reply(200, incomingPayment)
 
-      await expect(() =>
+      await expect(
         createIncomingPayment(
           { axiosInstance, logger },
-          { paymentPointer, accessToken: 'accessToken' },
+          { paymentPointer, accessToken },
           openApiValidators.successfulValidator,
           {}
         )
@@ -196,10 +197,10 @@ describe('incoming-payment', (): void => {
         .post('/incoming-payments')
         .reply(200, incomingPayment)
 
-      await expect(() =>
+      await expect(
         createIncomingPayment(
           { axiosInstance, logger },
-          { paymentPointer, accessToken: 'accessToken' },
+          { paymentPointer, accessToken },
           openApiValidators.failedValidator,
           {}
         )
@@ -222,7 +223,7 @@ describe('incoming-payment', (): void => {
         { axiosInstance, logger },
         {
           url: `${paymentPointer}/incoming-payments/${incomingPayment.id}`,
-          accessToken: 'accessToken'
+          accessToken
         },
         openApiValidators.successfulValidator
       )
@@ -241,12 +242,12 @@ describe('incoming-payment', (): void => {
         .post(`/incoming-payments/${incomingPayment.id}/complete`)
         .reply(200, incomingPayment)
 
-      await expect(() =>
+      await expect(
         completeIncomingPayment(
           { axiosInstance, logger },
           {
             url: `${paymentPointer}/incoming-payments/${incomingPayment.id}`,
-            accessToken: 'accessToken'
+            accessToken
           },
           openApiValidators.successfulValidator
         )
@@ -264,12 +265,12 @@ describe('incoming-payment', (): void => {
         .post(`/incoming-payments/${incomingPayment.id}/complete`)
         .reply(200, incomingPayment)
 
-      await expect(() =>
+      await expect(
         completeIncomingPayment(
           { axiosInstance, logger },
           {
             url: `${paymentPointer}/incoming-payments/${incomingPayment.id}`,
-            accessToken: 'accessToken'
+            accessToken
           },
           openApiValidators.failedValidator
         )
@@ -309,7 +310,7 @@ describe('incoming-payment', (): void => {
             },
             {
               paymentPointer,
-              accessToken: 'accessToken'
+              accessToken
             },
             openApiValidators.successfulValidator,
             {
@@ -352,7 +353,7 @@ describe('incoming-payment', (): void => {
             },
             {
               paymentPointer,
-              accessToken: 'accessToken'
+              accessToken
             },
             openApiValidators.successfulValidator,
             {
@@ -390,7 +391,7 @@ describe('incoming-payment', (): void => {
         .get('/incoming-payments')
         .reply(200, incomingPaymentPaginationResult)
 
-      await expect(() =>
+      await expect(
         listIncomingPayment(
           {
             axiosInstance,
@@ -398,7 +399,7 @@ describe('incoming-payment', (): void => {
           },
           {
             paymentPointer,
-            accessToken: 'accessToken'
+            accessToken
           },
           openApiValidators.successfulValidator
         )
@@ -415,10 +416,10 @@ describe('incoming-payment', (): void => {
         .get('/incoming-payments')
         .reply(200, incomingPaymentPaginationResult)
 
-      await expect(() =>
+      await expect(
         listIncomingPayment(
           { axiosInstance, logger },
-          { paymentPointer, accessToken: 'accessToken' },
+          { paymentPointer, accessToken },
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
@@ -663,14 +664,14 @@ describe('incoming-payment', (): void => {
           openApi,
           axiosInstance,
           logger
-        }).get({ url, accessToken: 'accessToken' })
+        }).get({ url, accessToken })
 
         expect(getSpy).toHaveBeenCalledWith(
           {
             axiosInstance,
             logger
           },
-          { url, accessToken: 'accessToken' },
+          { url, accessToken },
           true
         )
       })
@@ -700,14 +701,14 @@ describe('incoming-payment', (): void => {
           openApi,
           axiosInstance,
           logger
-        }).list({ paymentPointer, accessToken: 'accessToken' })
+        }).list({ paymentPointer, accessToken })
 
         expect(getSpy).toHaveBeenCalledWith(
           {
             axiosInstance,
             logger
           },
-          { url, accessToken: 'accessToken' },
+          { url, accessToken },
           true
         )
       })
@@ -737,17 +738,14 @@ describe('incoming-payment', (): void => {
           openApi,
           axiosInstance,
           logger
-        }).create(
-          { paymentPointer, accessToken: 'accessToken' },
-          incomingPaymentCreateArgs
-        )
+        }).create({ paymentPointer, accessToken }, incomingPaymentCreateArgs)
 
         expect(postSpy).toHaveBeenCalledWith(
           {
             axiosInstance,
             logger
           },
-          { url, accessToken: 'accessToken', body: incomingPaymentCreateArgs },
+          { url, accessToken, body: incomingPaymentCreateArgs },
           true
         )
       })
@@ -774,14 +772,14 @@ describe('incoming-payment', (): void => {
           openApi,
           axiosInstance,
           logger
-        }).complete({ url: incomingPaymentUrl, accessToken: 'accessToken' })
+        }).complete({ url: incomingPaymentUrl, accessToken })
 
         expect(postSpy).toHaveBeenCalledWith(
           {
             axiosInstance,
             logger
           },
-          { url: `${incomingPaymentUrl}/complete`, accessToken: 'accessToken' },
+          { url: `${incomingPaymentUrl}/complete`, accessToken },
           true
         )
       })
