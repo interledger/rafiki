@@ -71,8 +71,10 @@ describe('QuoteService', (): void => {
     nock(Config.pricesUrl)
       .get('/')
       .reply(200, () => ({
-        USD: 1.0, // base
-        XRP: 2.0
+        base: 'USD',
+        rates: {
+          XRP: 2.0
+        }
       }))
       .persist()
     deps = await initIocContainer(Config)
