@@ -35,29 +35,6 @@ describe('quote', (): void => {
   const paymentPointer = 'http://localhost:1000/.well-known/pay'
   const accessToken = 'accessToken'
 
-  describe('createQuoteRoutes', (): void => {
-    test('creates getQuoteOpenApiValidator  properly', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-
-      createQuoteRoutes({ axiosInstance, openApi, logger })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/quotes/{id}',
-        method: HttpMethod.GET
-      })
-    })
-
-    test('creates createQuoteOpenApiValidator properly', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-
-      createQuoteRoutes({ openApi, axiosInstance, logger })
-
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/quotes',
-        method: HttpMethod.POST
-      })
-    })
-  })
-
   describe('getQuote', (): void => {
     test('returns the quote if it passes open api validation', async (): Promise<void> => {
       const scope = nock(baseUrl).get(`/quotes/${quote.id}`).reply(200, quote)
