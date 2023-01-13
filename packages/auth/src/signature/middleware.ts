@@ -95,7 +95,7 @@ export async function grantContinueHttpsigMiddleware(
   if (!grant) {
     ctx.status = 401
     ctx.body = {
-      error: 'invalid_interaction',
+      error: 'invalid_continuation',
       message: 'invalid grant'
     }
     return
