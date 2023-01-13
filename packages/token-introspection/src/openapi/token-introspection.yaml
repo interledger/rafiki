@@ -61,7 +61,7 @@ paths:
                         use: sig
                         crv: Ed25519
                         x: AAAAC3NzaC1lZDI1NTE5AAAAIK0wmN/Cr3JXqmLW7u+g9pTh+wyqDHpSQEIQczXkVx9q
-                    client_id: 581a1dd9-aef5-4b1a-9d78-c1afc4a5fdbf
+                    client_id: 02e930483ff82fb7bdd8972242f820464fed145647094a8f3fe00a2c0bc6352d
         '404':
           description: Not Found
       description: Introspect an access token to get grant details.

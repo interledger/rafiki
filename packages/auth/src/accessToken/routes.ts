@@ -1,6 +1,6 @@
 import { createHash } from 'crypto'
 import { Logger } from 'pino'
-import { ActiveTokenInfo } from 'token-introspection'
+import { ActiveTokenInfo, TokenInfo } from 'token-introspection'
 import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
@@ -66,14 +66,16 @@ async function introspectToken(
   const introspectionResult = await deps.accessTokenService.introspect(
     body['access_token']
   )
-  ctx.body = introspectionResult
-    ? introspectionToBody(introspectionResult)
-    : {
-        active: false
-      }
+  ctx.body = introspectionToBody(introspectionResult)
 }
 
-function introspectionToBody({ grant, jwk }: Introspection): ActiveTokenInfo {
+function introspectionToBody(introspection?: Introspection): TokenInfo {
+  if (!introspection) {
+    return {
+      active: false
+    }
+  }
+  const { grant, jwk } = introspection
   return {
     active: true,
     grant: grant.id,
