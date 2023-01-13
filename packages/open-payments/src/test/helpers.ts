@@ -39,9 +39,7 @@ export const withEnvVariableOverride = (
   return async () => {
     const savedEnvVars = Object.assign({}, process.env)
 
-    for (const key in override) {
-      process.env[key] = override[key]
-    }
+    Object.assign(process.env, override)
 
     try {
       await testCallback()
