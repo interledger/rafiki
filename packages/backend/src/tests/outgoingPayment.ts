@@ -15,7 +15,15 @@ export async function createOutgoingPayment(
     'quoteId'
   >
 ): Promise<OutgoingPayment> {
-  const quote = await createQuote(deps, options)
+  const quoteOptions: CreateTestQuoteOptions = {
+    paymentPointerId: options.paymentPointerId,
+    clientId: options.clientId,
+    receiver: options.receiver,
+    validDestination: options.validDestination
+  }
+  if (options.sendAmount) quoteOptions.sendAmount = options.sendAmount
+  if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
+  const quote = await createQuote(deps, quoteOptions)
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const receiverService = await deps.use('receiverService')
   if (options.validDestination === false) {
