@@ -270,7 +270,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Fails to initiate a grant if payment pointer has no public name', async (): Promise<void> => {
-        jest.spyOn(clientService, 'get').mockReturnValueOnce(undefined)
+        jest.spyOn(clientService, 'get').mockResolvedValueOnce(undefined)
 
         const ctx = createContext(
           {

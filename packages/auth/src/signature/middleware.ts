@@ -160,7 +160,7 @@ export async function tokenHttpsigMiddleware(
   if (!accessToken.grant) {
     const logger = await ctx.container.use('logger')
     logger.error(
-      `access token with management id ${ctx.params['id']} has not grant associated with it.`
+      `access token with management id ${ctx.params['id']} has no grant associated with it.`
     )
     ctx.throw(500, 'internal server error', { error: 'internal_server_error' })
   }
