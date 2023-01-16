@@ -9,7 +9,6 @@ export interface RatesService {
   convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
   ): Promise<bigint | ConvertError>
-  checkBaseAsset(asset: unknown): void
 }
 
 interface ServiceDependencies extends BaseService {
@@ -132,13 +131,11 @@ class RatesServiceImpl implements RatesService {
   }
 
   checkBaseAsset(asset: unknown): void {
-    let errorMessage: string
+    let errorMessage: string | undefined
     if (!asset) {
       errorMessage = 'Missing base asset'
     } else if (typeof asset !== 'string') {
       errorMessage = 'Base asset should be a string'
-    } else if (typeof asset === 'string' && asset.length === 0) {
-      errorMessage = 'Invalid base asset'
     }
 
     if (errorMessage) {

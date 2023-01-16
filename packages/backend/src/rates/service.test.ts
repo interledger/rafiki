@@ -187,8 +187,8 @@ describe('Rates service', function () {
       ${undefined} | ${'is not provided'}
       ${['USD']}   | ${'is not a string'}
       ${''}        | ${'is an empty string'}
-    `(`throws if base asset is $description`, ({ asset }): void => {
-      expect(() => service.checkBaseAsset(asset)).toThrow()
+    `(`throws if base asset $description`, ({ asset }): void => {
+      expect(() => service['checkBaseAsset'](asset)).toThrow()
     })
   })
 })
