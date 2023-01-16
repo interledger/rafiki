@@ -1,8 +1,8 @@
 import styles from '../styles/dist/DisplayItems.css'
 import { Link } from '@remix-run/react'
-import * as R from 'ramda'
+import type { Peer } from '../../../backend/src/graphql/generated/graphql'
 
-function DisplayPeers({ peers }) {
+function DisplayPeers({ peers }: {peers: Peer[]}) {
   return (
     <table>
       <thead>
@@ -17,17 +17,17 @@ function DisplayPeers({ peers }) {
       <tbody>
         {peers.length
           ? peers.map((peer) => (
-              <tr key={R.path(['node', 'id'], peer)}>
+              <tr key={peer.id}>
                 <td>
-                  <Link to={R.path(['node', 'id'], peer)}>
-                    {R.path(['node', 'id'], peer)}
+                  <Link to={peer.id}>
+                    {peer.id}
                   </Link>
                 </td>
-                <td>{R.path(['node', 'staticIlpAddress'], peer)}</td>
-                <td>{R.path(['node', 'asset', 'code'], peer)}</td>
-                <td>{R.path(['node', 'asset', 'scale'], peer)}</td>
+                <td>{peer.staticIlpAddress}</td>
+                <td>{peer.asset.code}</td>
+                <td>{peer.asset.scale}</td>
                 <td>
-                  {R.path(['node', 'http', 'outgoing', 'endpoint'], peer)}
+                  {peer.http.outgoing.endpoint}
                 </td>
               </tr>
             ))

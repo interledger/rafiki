@@ -10,7 +10,7 @@ import { apolloClient } from '../../lib/apolloClient'
 import type { Peer } from '../../../../backend/src/graphql/generated/graphql'
 
 export default function ViewPeersPage() {
-  const { peer }: { peer: Peer } = useLoaderData()
+  const { peer }: { peer: Peer } = useLoaderData<typeof loader>()
 
   return (
     <main>
