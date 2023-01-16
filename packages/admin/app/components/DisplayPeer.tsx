@@ -1,9 +1,8 @@
 import styles from '../styles/dist/DisplayItem.css'
-import { useLoaderData, Link } from '@remix-run/react'
+import { Link } from '@remix-run/react'
+import type { Peer } from '../../../backend/src/graphql/generated/graphql'
 
-function DisplayPeers() {
-  const { peer } = useLoaderData()
-
+function DisplayPeer({peer}: {peer: Peer}) {
   return (
     <table>
       <tbody>
@@ -48,7 +47,7 @@ function DisplayPeers() {
   )
 }
 
-export default DisplayPeers
+export default DisplayPeer
 
 export function links() {
   return [{ rel: 'stylesheet', href: styles }]

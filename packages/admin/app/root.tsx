@@ -10,7 +10,7 @@ import {
 } from '@remix-run/react'
 
 import styles from './styles/dist/main.css'
-import MainNavigation from 'app/components/MainNavigation.jsx'
+import MainNavigation from 'app/components/MainNavigation'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',

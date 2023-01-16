@@ -1,4 +1,4 @@
-import NewPeer, { links as NewPeerLinks } from '../../components/NewPeer.jsx'
+import NewPeer, { links as NewPeerLinks } from '../../components/NewPeer'
 import { redirect, json } from '@remix-run/node'
 import fetch from '../../fetch'
 import * as R from 'ramda'
@@ -8,7 +8,8 @@ import {
   validateString,
   validateUrl,
   validateIlpAddress,
-  validatePositiveInt
+  validatePositiveInt,
+  validateId
 } from '../../lib/validate.server'
 
 export default function CreatePeerPage() {
@@ -31,8 +32,7 @@ export async function action({ request }: ActionArgs) {
     : null
 
   const formErrors = {
-    assetCode: validateString(formData.assetCode, 'asset code'),
-    assetScale: validatePositiveInt(formData.assetScale, 'asset scale'),
+    assetId: validateId(formData.assetId, 'asset ID'),
     incomingAuthTokens: validateString(
       incomingAuthTokens,
       'incoming auth tokens',
@@ -60,14 +60,11 @@ export async function action({ request }: ActionArgs) {
 
   const variables = {
     input: {
-      asset: {
-        code: formData.assetCode,
-        scale: parseInt(formData.assetScale as string, 10)
-      },
+      assetId: formData.assetId,
       http: {
         incoming: incomingAuthTokens
           ? {
-              authTokens: incomingAuthTokens?.split(', ') // TODO: consider how best to handle string[]
+              authTokens: incomingAuthTokens?.replace(/ /g, '').split(',') // TODO: consider how best to handle string[]
             }
           : null,
         outgoing: {

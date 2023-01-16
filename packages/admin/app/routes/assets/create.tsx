@@ -1,4 +1,4 @@
-import NewAsset, { links as NewAssetLinks } from '../../components/NewAsset.jsx'
+import NewAsset, { links as NewAssetLinks } from '../../components/NewAsset'
 import { redirect, json } from '@remix-run/node'
 import fetch from '../../fetch'
 import * as R from 'ramda'

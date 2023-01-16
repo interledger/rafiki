@@ -45,6 +45,7 @@ function NewPeer() {
             id='incoming-auth-tokens'
             name='incomingAuthTokens'
           />
+          <p style={{color: 'grey'}}>Accepts a comma separated list of tokens</p>
           {actionData?.formErrors?.incomingAuthTokens ? (
             <p style={{ color: 'red' }}>
               {actionData?.formErrors?.incomingAuthTokens}
@@ -94,36 +95,19 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='asset-code'>Asset code</label>
+        <label htmlFor='asset-code'>Asset ID</label>
         <div>
           <input
             className={
-              actionData?.formErrors?.assetCode ? 'input-error' : 'input'
+              actionData?.formErrors?.assetId ? 'input-error' : 'input'
             }
             type='text'
-            id='asset-code'
-            name='assetCode'
+            id='asset-id'
+            name='assetId'
             required
           />
-          {actionData?.formErrors?.assetCode ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetCode}</p>
-          ) : null}
-        </div>
-      </span>
-      <span>
-        <label htmlFor='asset-scale'>Asset scale</label>
-        <div>
-          <input
-            className={
-              actionData?.formErrors?.assetScale ? 'input-error' : 'input'
-            }
-            type='number'
-            id='asset-scale'
-            name='assetScale'
-            required
-          />
-          {actionData?.formErrors?.assetScale ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetScale}</p>
+          {actionData?.formErrors?.assetId ? (
+            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetId}</p>
           ) : null}
         </div>
       </span>

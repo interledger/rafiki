@@ -7,7 +7,7 @@ import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
 import { apolloClient } from '../../lib/apolloClient'
-import type { Peer } from '../../../generated/graphql'
+import type { Peer } from '../../../../backend/src/graphql/generated/graphql'
 
 export default function ViewPeersPage() {
   const { peer }: { peer: Peer } = useLoaderData()
@@ -37,7 +37,7 @@ export default function ViewPeersPage() {
         </Link>
       </div>
       <div className='main-content'>
-        <DisplayPeer />
+        <DisplayPeer peer={peer}/>
       </div>
       <div className='bottom-buttons'>
         <button className='basic-button left' disabled={true}>

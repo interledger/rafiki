@@ -1,6 +1,6 @@
 import UpdateAsset, {
   links as UpdatedAssetLinks
-} from '../../components/UpdateAsset.jsx'
+} from '../../components/UpdateAsset'
 import { redirect, json } from '@remix-run/node'
 import fetch from '../../fetch'
 import * as R from 'ramda'

@@ -1,7 +1,7 @@
 // TODO: This file is still a very rough work in progress
 import UpdatePeer, {
   links as UpdatedPeerLinks
-} from '../../components/UpdatePeer.jsx'
+} from '../../components/UpdatePeer'
 import { redirect, json } from '@remix-run/node'
 import fetch from '../../fetch'
 import * as R from 'ramda'
