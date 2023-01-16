@@ -785,7 +785,9 @@ describe('OutgoingPaymentService', (): void => {
 
       beforeEach((): void => {
         if (toConnection) {
-          receiver = connectionService.getUrl(incomingPayment) as string
+          const fetchedReceiver = connectionService.getUrl(incomingPayment)
+          assert.ok(fetchedReceiver)
+          receiver = fetchedReceiver
         }
       })
 
@@ -850,10 +852,10 @@ describe('OutgoingPaymentService', (): void => {
             assetScale: receiverPaymentPointer.asset.scale
           }
         })
+        const fetchedReceiver = connectionService.getUrl(incomingPayment)
+        assert.ok(fetchedReceiver)
         const paymentId = await setup({
-          receiver: toConnection
-            ? (connectionService.getUrl(incomingPayment) as string)
-            : incomingPayment.url,
+          receiver: toConnection ? fetchedReceiver : incomingPayment.url,
           receiveAmount
         })
 
