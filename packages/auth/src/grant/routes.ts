@@ -346,7 +346,6 @@ async function finishInteraction(
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
-    // TODO: figure out what to do if no finish URI is provided
     const clientRedirectUri = new URL(grant.finishUri)
     if (grant.state === GrantState.Granted) {
       const { clientNonce, interactNonce, interactRef } = grant
