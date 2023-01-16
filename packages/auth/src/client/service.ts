@@ -56,7 +56,8 @@ async function getClient(
     })
     // TODO: https://github.com/interledger/rafiki/issues/734
     if (!paymentPointer.publicName) {
-      throw new Error('Payment pointer does not have a public name.')
+      deps.logger.debug('Payment pointer does not have a public name.')
+      return
     }
     return {
       name: paymentPointer.publicName,

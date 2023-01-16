@@ -19,6 +19,7 @@ import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
+import { ClientService } from '../client/service'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -61,6 +62,7 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
+  let clientService: ClientService
 
   let grant: Grant
 
@@ -103,6 +105,7 @@ describe('Grant Routes', (): void => {
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
+    clientService = await deps.use('clientService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -263,6 +266,29 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           error: 'interaction_required'
+        })
+      })
+
+      test('Fails to initiate a grant if payment pointer has no public name', async (): Promise<void> => {
+        jest.spyOn(clientService, 'get').mockReturnValueOnce(undefined)
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+
+        ctx.request.body = BASE_GRANT_REQUEST
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          error: 'invalid_client'
         })
       })
     })
