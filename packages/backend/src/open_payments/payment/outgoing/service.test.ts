@@ -145,6 +145,7 @@ describe('OutgoingPaymentService', (): void => {
     const totalReceived = (await accountingService.getTotalReceived(
       incomingPayment.id
     )) as bigint
+    assert.ok(totalReceived)
     await incomingPayment.onCredit({
       totalReceived
     })
@@ -337,7 +338,9 @@ describe('OutgoingPaymentService', (): void => {
             const peerService = await deps.use('peerService')
             const peer = await createPeer(deps)
             if (toConnection) {
-              receiver = connectionService.getUrl(incomingPayment) as string
+              const fetchedReceiver = connectionService.getUrl(incomingPayment)
+              assert.ok(fetchedReceiver)
+              receiver = fetchedReceiver
             }
             const quote = await createQuote(deps, {
               paymentPointerId,

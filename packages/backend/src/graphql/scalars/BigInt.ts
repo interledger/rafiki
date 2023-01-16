@@ -1,4 +1,9 @@
-import { Kind, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql'
+import {
+  Kind,
+  GraphQLScalarType,
+  GraphQLScalarTypeConfig,
+  GraphQLError
+} from 'graphql'
 
 declare global {
   interface BigInt {
@@ -26,9 +31,16 @@ function patchBigInt() {
 function coerceBigIntValue(
   value: bigint | number | string | unknown
 ): bigint | number {
+  if (
+    typeof value !== 'bigint' &&
+    typeof value !== 'number' &&
+    typeof value !== 'string'
+  ) {
+    throw new TypeError('Input must be of type bigint, number, or string.')
+  }
   if (isBigIntAvailable()) {
     patchBigInt()
-    const uInt64 = BigInt(value as bigint | number | string)
+    const uInt64 = BigInt(value)
     if (uInt64 < BigInt(0)) throw new TypeError('Input must be unsigned.')
     return uInt64
   } else {
@@ -53,7 +65,9 @@ export const GraphQLBigIntConfig: GraphQLScalarTypeConfig<
     ) {
       return coerceBigIntValue(ast.value)
     }
-    return ''
+    throw new GraphQLError('Provided value is not int, float, or string', {
+      extensions: { code: 'BAD_USER_INPUT' }
+    })
   }
 }
 

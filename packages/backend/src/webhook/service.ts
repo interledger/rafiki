@@ -123,13 +123,13 @@ async function sendWebhookEvent(
 
       await event.$query(deps.knex).patch({
         attempts,
-        statusCode:
-          err.isAxiosError && err.response ? err.response.status : undefined,
+        statusCode: err.response ? err.response.status : undefined,
         processAt: new Date(
           Date.now() + Math.min(attempts, 6) * RETRY_BACKOFF_MS
         )
       })
     } else {
+      deps.logger.warn({ error: err }, 'error not type AxiosError')
       throw err
     }
   }

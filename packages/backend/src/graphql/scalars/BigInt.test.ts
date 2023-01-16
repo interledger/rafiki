@@ -24,6 +24,10 @@ describe('BigInt', () => {
       typeErr: {
         type: new GraphQLNonNull(GraphQLBigInt),
         resolve: () => 3.14
+      },
+      typeErr2: {
+        type: new GraphQLNonNull(GraphQLBigInt),
+        resolve: () => true
       }
     }
   })
@@ -78,6 +82,9 @@ describe('BigInt', () => {
   const invalidQuery2 = `{
         k: typeErr
       }`
+  const invalidQuery3 = `{
+        k: typeErr2
+      }`
 
   const validMutation = `mutation test(
         $input1: IncInput!,
@@ -111,6 +118,17 @@ describe('BigInt', () => {
     expect(errors).toBeDefined()
     const message = typeof errors !== 'undefined' ? errors[0]?.message : ''
     expect(message).toContain('is not an integer')
+    expect(data).toBeNull()
+  })
+  it('2.3', async () => {
+    const { data, errors } = await graphql({ schema, source: invalidQuery3 })
+
+    expect(errors).toHaveLength(1)
+    expect(errors).toBeDefined()
+    const message = typeof errors !== 'undefined' ? errors[0]?.message : ''
+    expect(message).toContain(
+      'Input must be of type bigint, number, or string.'
+    )
     expect(data).toBeNull()
   })
   it('3', async () => {
