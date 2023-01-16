@@ -21,6 +21,7 @@ import {
   grantContinueHttpsigMiddleware,
   grantInitiationHttpsigMiddleware
 } from './middleware'
+import { AccessTokenService } from '../accessToken/service'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -49,6 +50,7 @@ describe('Signature Service', (): void => {
     let next: () => Promise<any>
     let managementId: string
     let tokenManagementUrl: string
+    let accessTokenService: AccessTokenService
 
     const BASE_GRANT = {
       state: GrantState.Pending,
@@ -83,6 +85,10 @@ describe('Signature Service', (): void => {
       managementId: v4(),
       expiresIn: 3600
     }
+
+    beforeAll(async (): Promise<void> => {
+      accessTokenService = await deps.use('accessTokenService')
+    })
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
@@ -208,6 +214,39 @@ describe('Signature Service', (): void => {
       expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
 
       scope.done()
+    })
+
+    test('token management request fails if grant cannot be found', async () => {
+      const tokenSpy = jest
+        .spyOn(accessTokenService, 'getByManagementId')
+        .mockReturnValueOnce({ ...token, grant: undefined })
+
+      const ctx = await createContextWithSigHeaders(
+        {
+          headers: {
+            Accept: 'application/json'
+          },
+          url: 'http://example.com' + tokenManagementUrl,
+          method: 'DELETE'
+        },
+        { id: managementId },
+        {
+          access_token: token.value,
+          proof: 'httpsig',
+          resource_server: 'test'
+        },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await expect(tokenHttpsigMiddleware(ctx, next)).rejects.toMatchObject({
+        status: 500,
+        error: 'internal_server_error',
+        message: 'internal server error'
+      })
+      expect(tokenSpy).toHaveBeenCalledWith(managementId)
+      expect(next).not.toHaveBeenCalled()
     })
 
     test('httpsig middleware fails if headers are invalid', async () => {
