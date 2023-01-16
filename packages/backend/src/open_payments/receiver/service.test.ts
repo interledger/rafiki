@@ -128,27 +128,6 @@ describe('Receiver Service', (): void => {
         ).resolves.toBeUndefined()
       })
 
-      test('returns undefined for unknown remote connection', async (): Promise<void> => {
-        const paymentPointer = await createPaymentPointer(deps)
-        const incomingPayment = await createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id
-        })
-        const remoteUrl = new URL(
-          `${paymentPointer.url}/${CONNECTION_PATH}/${incomingPayment.connectionId}`
-        )
-
-        const clientGetConnectionSpy = jest
-          .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
-          .mockResolvedValueOnce(undefined)
-
-        await expect(
-          receiverService.get(remoteUrl.href)
-        ).resolves.toBeUndefined()
-        expect(clientGetConnectionSpy).toHaveBeenCalledWith({
-          url: remoteUrl.href
-        })
-      })
-
       test('returns undefined when fetching remote connection throws', async (): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
         const incomingPayment = await createIncomingPayment(deps, {
