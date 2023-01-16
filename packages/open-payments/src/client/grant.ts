@@ -1,5 +1,9 @@
 import { HttpMethod } from 'openapi'
-import { RouteDeps } from '.'
+import {
+  ResourceRequestArgs,
+  RouteDeps,
+  UnauthenticatedResourceRequestArgs
+} from '.'
 import {
   getASPath,
   InteractiveGrant,
@@ -13,21 +17,16 @@ export interface GrantRouteDeps extends RouteDeps {
   client: string
 }
 
-interface PostArgs {
-  url: string
-  accessToken: string
-}
-
 export interface GrantRoutes {
   request(
-    postArgs: Omit<PostArgs, 'accessToken'>,
+    postArgs: UnauthenticatedResourceRequestArgs,
     args: Omit<GrantRequest, 'client'>
   ): Promise<InteractiveGrant | NonInteractiveGrant>
   continue(
-    postArgs: PostArgs,
+    postArgs: ResourceRequestArgs,
     args: GrantContinuationRequest
   ): Promise<NonInteractiveGrant>
-  cancel(postArgs: PostArgs): Promise<void>
+  cancel(postArgs: ResourceRequestArgs): Promise<void>
 }
 
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
@@ -49,7 +48,7 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
 
   return {
     request: (
-      { url }: Omit<PostArgs, 'accessToken'>,
+      { url }: UnauthenticatedResourceRequestArgs,
       args: Omit<GrantRequest, 'client'>
     ) =>
       post(
@@ -64,7 +63,7 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
         requestGrantValidator
       ),
     continue: (
-      { url, accessToken }: PostArgs,
+      { url, accessToken }: ResourceRequestArgs,
       args: GrantContinuationRequest
     ) =>
       post(
@@ -76,7 +75,7 @@ export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
         },
         continueGrantValidator
       ),
-    cancel: ({ url, accessToken }: PostArgs) =>
+    cancel: ({ url, accessToken }: ResourceRequestArgs) =>
       deleteRequest(
         deps,
         {

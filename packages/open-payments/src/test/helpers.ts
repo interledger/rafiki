@@ -10,6 +10,8 @@ import {
   NonInteractiveGrant,
   OutgoingPayment,
   OutgoingPaymentPaginationResult,
+  PaymentPointer,
+  JWK,
   AccessToken,
   Quote,
   IncomingPaymentPaginationResult
@@ -30,6 +32,23 @@ export const defaultAxiosInstance = createAxiosInstance({
   privateKey: generateKeyPairSync('ed25519').privateKey
 })
 
+export const withEnvVariableOverride = (
+  override: Record<string, string>,
+  testCallback: () => Promise<void>
+): (() => Promise<void>) => {
+  return async () => {
+    const savedEnvVars = Object.assign({}, process.env)
+
+    Object.assign(process.env, override)
+
+    try {
+      await testCallback()
+    } finally {
+      process.env = savedEnvVars
+    }
+  }
+}
+
 export const mockOpenApiResponseValidators = () => ({
   successfulValidator: ((data: unknown): data is unknown =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +57,25 @@ export const mockOpenApiResponseValidators = () => ({
     throw new Error('Failed to validate response')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as ResponseValidator<any>
+})
+
+export const mockJwk = (overrides?: Partial<JWK>): JWK => ({
+  x: uuid(),
+  kid: uuid(),
+  alg: 'EdDSA',
+  kty: 'OKP',
+  crv: 'Ed25519',
+  ...overrides
+})
+
+export const mockPaymentPointer = (
+  overrides?: Partial<PaymentPointer>
+): PaymentPointer => ({
+  id: 'https://example.com/.well-known/pay',
+  authServer: 'https://auth.wallet.example/authorize',
+  assetScale: 2,
+  assetCode: 'USD',
+  ...overrides
 })
 
 export const mockILPStreamConnection = (

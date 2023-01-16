@@ -1,22 +1,17 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
-import { BaseDeps, RouteDeps } from '.'
+import {
+  ResourceRequestArgs,
+  CollectionRequestArgs,
+  BaseDeps,
+  RouteDeps
+} from '.'
 import { CreateQuoteArgs, getRSPath, Quote } from '../types'
 import { get, post } from './requests'
 
-interface GetArgs {
-  url: string
-  accessToken: string
-}
-
-interface CreateArgs {
-  paymentPointer: string
-  accessToken: string
-}
-
 export interface QuoteRoutes {
-  get(args: GetArgs): Promise<Quote>
+  get(args: ResourceRequestArgs): Promise<Quote>
   create(
-    createArgs: CreateArgs,
+    createArgs: CollectionRequestArgs,
     createQuoteArgs: CreateQuoteArgs
   ): Promise<Quote>
 }
@@ -35,9 +30,12 @@ export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   })
 
   return {
-    get: (args: GetArgs) =>
+    get: (args: ResourceRequestArgs) =>
       getQuote({ axiosInstance, logger }, args, getQuoteOpenApiValidator),
-    create: (createArgs: CreateArgs, createQuoteArgs: CreateQuoteArgs) =>
+    create: (
+      createArgs: CollectionRequestArgs,
+      createQuoteArgs: CreateQuoteArgs
+    ) =>
       createQuote(
         { axiosInstance, logger },
         createArgs,
@@ -49,7 +47,7 @@ export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
 
 export const getQuote = async (
   deps: BaseDeps,
-  args: GetArgs,
+  args: ResourceRequestArgs,
   validateOpenApiResponse: ResponseValidator<Quote>
 ) => {
   const { axiosInstance, logger } = deps
@@ -65,7 +63,7 @@ export const getQuote = async (
 
 export const createQuote = async (
   deps: BaseDeps,
-  createArgs: CreateArgs,
+  createArgs: CollectionRequestArgs,
   validateOpenApiResponse: ResponseValidator<Quote>,
   createQuoteArgs: CreateQuoteArgs
 ) => {
