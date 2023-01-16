@@ -1,15 +1,17 @@
 import DisplayPeer, {
   links as DisplayItemsLinks
 } from '../../components/DisplayPeer'
-import * as R from 'ramda'
-import fetch from '../../fetch'
 import { json, redirect } from '@remix-run/node'
 import { Link, useParams, Form, useLoaderData } from '@remix-run/react'
 import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
+import { gql } from '@apollo/client'
+import { apolloClient } from '../../lib/apolloClient'
+import type { Peer } from '../../../generated/graphql'
 
 export default function ViewPeersPage() {
-  const { peer } = useLoaderData()
+  const { peer }: { peer: Peer } = useLoaderData()
+
   return (
     <main>
       <div className='header-row'>
@@ -51,34 +53,39 @@ export default function ViewPeersPage() {
 
 export async function loader({ params }: LoaderArgs) {
   invariant(params.peerId, `params.peerId is required`)
-  const variables = {
-    peerId: params.peerId
-  }
-  const query = `
-  query Peer($peerId: String!) {
-    peer(id: $peerId) {
-      id
-      staticIlpAddress
-      http {
-        outgoing {
-          endpoint
+  // TODO: validation on peerId
+
+  const peer = await apolloClient
+    .query({
+      query: gql`
+        query Peer($peerId: String!) {
+          peer(id: $peerId) {
+            id
+            staticIlpAddress
+            createdAt
+            asset {
+              scale
+              code
+            }
+            http {
+              outgoing {
+                endpoint
+              }
+            }
+          }
         }
+      `,
+      variables: {
+        peerId: params.peerId
       }
-      createdAt
-      asset {
-        code
-        scale
-        id
+    })
+    .then((query): Peer => {
+      if (query.data) {
+        return query.data.peer
+      } else {
+        throw new Error(`Could not find peer with ID ${params.peerId}`)
       }
-    }
-  }
-  `
-
-  const result = await fetch({ query, variables })
-
-  const peer = R.path(['data', 'peer'], result)
-
-  invariant(peer, `Could not find peer with ID ${params.peerId}`)
+    })
 
   return json({ peer: peer })
 }
