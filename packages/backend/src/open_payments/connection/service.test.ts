@@ -14,6 +14,7 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
+import assert from 'assert'
 
 describe('Connection Service', (): void => {
   let deps: IocContract<AppServices>
@@ -47,18 +48,19 @@ describe('Connection Service', (): void => {
   describe('get', (): void => {
     test('returns connection for incoming payment', (): void => {
       const connection = connectionService.get(incomingPayment)
+      assert.ok(connection)
       expect(connection).toMatchObject({
         id: incomingPayment.connectionId,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret: expect.any(Buffer)
       })
-      expect(connection?.url).toEqual(
+      expect(connection.url).toEqual(
         `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
       )
-      expect(connection?.toJSON()).toEqual({
-        id: connection?.url,
-        ilpAddress: connection?.ilpAddress,
-        sharedSecret: base64url(connection?.sharedSecret || ''),
+      expect(connection.toJSON()).toEqual({
+        id: connection.url,
+        ilpAddress: connection.ilpAddress,
+        sharedSecret: base64url(connection.sharedSecret || ''),
         assetCode: incomingPayment.asset.code,
         assetScale: incomingPayment.asset.scale
       })
