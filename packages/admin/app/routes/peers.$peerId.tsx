@@ -7,7 +7,7 @@ import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
 import { apolloClient } from '../lib/apolloClient'
-import type { Peer } from '../../../backend/src/graphql/generated/graphql'
+import type { Peer } from '../generated/graphql'
 
 export default function ViewPeersPage() {
   const { peer }: { peer: Peer } = useLoaderData<typeof loader>()
@@ -81,7 +81,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Peer => {
-      if (query.data.peer) {
+      if (query.data) {
         return query.data.peer
       } else {
         throw new Error(`Could not find peer with ID ${params.peerId}`)

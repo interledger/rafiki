@@ -20,7 +20,7 @@ import { gql } from '@apollo/client'
 import type {
   CreatePeerInput,
   CreatePeerMutationResponse
-} from '../../../backend/src/graphql/generated/graphql'
+} from '../generated/graphql'
 import { apolloClient } from '../lib/apolloClient'
 
 function NewPeer() {
@@ -250,7 +250,7 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): CreatePeerMutationResponse => {
-      if (query.data.createPeer.peer.id) {
+      if (query.data) {
         return query.data.createPeer.peer.id
       } else {
         let errorMessage, status

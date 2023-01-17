@@ -17,7 +17,7 @@ import type {
   Asset,
   UpdateAssetInput,
   AssetMutationResponse
-} from '../../../backend/src/graphql/generated/graphql'
+} from '../generated/graphql'
 import { useLoaderData } from '@remix-run/react'
 
 function UpdateAsset({ asset }: { asset: Asset }) {
@@ -158,7 +158,7 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): AssetMutationResponse => {
-      if (query.data.updateAssetWithdrawalThreshold.asset.id) {
+      if (query.data) {
         return query.data.updateAssetWithdrawalThreshold.asset.id
       } else {
         let errorMessage, status
@@ -216,7 +216,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Asset => {
-      if (query.data.asset) {
+      if (query.data) {
         return query.data.asset
       } else {
         throw new Error(`Could not find asset with ID: ${params.assetId}`)

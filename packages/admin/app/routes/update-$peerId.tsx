@@ -16,7 +16,7 @@ import type {
   Peer,
   UpdatePeerInput,
   UpdatePeerMutationResponse
-} from '../../../backend/src/graphql/generated/graphql'
+} from '../generated/graphql'
 import { apolloClient } from '../lib/apolloClient'
 
 function UpdatePeer({ peer }: { peer: Peer }) {
@@ -160,7 +160,7 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): UpdatePeerMutationResponse => {
-      if (query.data.updatePeer.peer.id) {
+      if (query.data) {
         return query.data.updatePeer.peer.id
       } else {
         let errorMessage, status
@@ -220,7 +220,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Peer => {
-      if (query.data.peer) {
+      if (query.data) {
         return query.data.peer
       } else {
         throw new Error(`Could not find peer with ID ${params.peerId}`)

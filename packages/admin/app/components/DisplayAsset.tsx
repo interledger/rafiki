@@ -1,5 +1,5 @@
 import styles from '../styles/dist/DisplayItem.css'
-import type { Asset } from '../../../backend/src/graphql/generated/graphql'
+import type { Asset } from '../generated/graphql'
 
 function DisplayAsset({ asset }: { asset: Asset }) {
   return (

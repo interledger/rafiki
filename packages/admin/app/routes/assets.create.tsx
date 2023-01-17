@@ -14,7 +14,7 @@ import { gql } from '@apollo/client'
 import type {
   CreateAssetInput,
   AssetMutationResponse
-} from '../../../backend/src/graphql/generated/graphql'
+} from '../generated/graphql'
 import { apolloClient } from '../lib/apolloClient'
 
 function NewAsset() {
@@ -151,7 +151,7 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): AssetMutationResponse => {
-      if (query.data.createAsset.asset.id) {
+      if (query.data) {
         return query.data.createAsset.asset.id
       } else {
         let errorMessage, status

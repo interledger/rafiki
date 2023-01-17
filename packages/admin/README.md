@@ -24,3 +24,5 @@ To format and lint code:
 ```sh
 npm run format
 ```
+
+Types are generated automatically for this project and stored in the `generated` folder. They are generated using CodeGen which is configured as part of the Rafiki backend.

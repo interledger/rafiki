@@ -1,6 +1,6 @@
 import styles from '../styles/dist/DisplayItem.css'
 import { Link } from '@remix-run/react'
-import type { Peer } from '../../../backend/src/graphql/generated/graphql'
+import type { Peer } from '../generated/graphql'
 
 function DisplayPeer({ peer }: { peer: Peer }) {
   return (

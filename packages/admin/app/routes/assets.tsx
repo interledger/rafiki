@@ -9,7 +9,7 @@ import { apolloClient } from '../lib/apolloClient'
 import type {
   AssetEdge,
   Asset
-} from '../../../backend/src/graphql/generated/graphql'
+} from '../generated/graphql'
 
 function DisplayAssets({ assets }: { assets: Asset[] }) {
   return (
@@ -100,7 +100,7 @@ export async function loader() {
       `
     })
     .then((query): Asset[] => {
-      if (query.data.assets.edges) {
+      if (query.data) {
         return query.data.assets.edges.map((element: AssetEdge) => element.node)
       } else {
         throw new Error(`No assets were found`)

@@ -10,7 +10,7 @@ import { apolloClient } from '../lib/apolloClient'
 import type {
   PeerEdge,
   Peer
-} from '../../../backend/src/graphql/generated/graphql'
+} from '../generated/graphql'
 
 function DisplayPeers({ peers }: { peers: Peer[] }) {
   return (
@@ -106,7 +106,7 @@ export async function loader() {
       `
     })
     .then((query): Peer[] => {
-      if (query.data.peers.edges) {
+      if (query.data) {
         return query.data.peers.edges.map((element: PeerEdge) => element.node)
       } else {
         throw new Error(`No peers were found`)
