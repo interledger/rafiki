@@ -1,13 +1,13 @@
 import DisplayAsset, {
   links as DisplayItemsLinks
-} from '../../components/DisplayAsset'
+} from '../components/DisplayAsset'
 import { json, redirect } from '@remix-run/node'
 import { Link, useLoaderData, Form, useParams } from '@remix-run/react'
 import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../../lib/apolloClient'
-import type { Asset } from '../../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../lib/apolloClient'
+import type { Asset } from '../../../backend/src/graphql/generated/graphql'
 
 export default function ViewAssetsPage() {
   const { asset }: { asset: Asset } = useLoaderData<typeof loader>()

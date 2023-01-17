@@ -1,4 +1,4 @@
-import formStyles from '../../styles/dist/Form.css'
+import formStyles from '../styles/dist/Form.css'
 import {
   Form,
   Link,
@@ -15,13 +15,13 @@ import {
   validateIlpAddress,
   validatePositiveInt,
   validateId
-} from '../../lib/validate.server'
+} from '../lib/validate.server'
 import { gql } from '@apollo/client'
 import type {
   CreatePeerInput,
   CreatePeerMutationResponse
-} from '../../../../backend/src/graphql/generated/graphql'
-import { apolloClient } from '../../lib/apolloClient'
+} from '../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../lib/apolloClient'
 
 function NewPeer() {
   const navigation = useNavigation()

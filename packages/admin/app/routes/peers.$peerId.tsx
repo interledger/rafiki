@@ -1,13 +1,13 @@
 import DisplayPeer, {
   links as DisplayItemsLinks
-} from '../../components/DisplayPeer'
+} from '../components/DisplayPeer'
 import { json, redirect } from '@remix-run/node'
 import { Link, useParams, Form, useLoaderData } from '@remix-run/react'
 import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../../lib/apolloClient'
-import type { Peer } from '../../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../lib/apolloClient'
+import type { Peer } from '../../../backend/src/graphql/generated/graphql'
 
 export default function ViewPeersPage() {
   const { peer }: { peer: Peer } = useLoaderData<typeof loader>()

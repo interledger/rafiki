@@ -1,68 +1,61 @@
-import formStyles from '../../styles/dist/Form.css'
 import {
   Form,
   Link,
-  useCatch,
   useActionData,
+  useCatch,
   useTransition as useNavigation
 } from '@remix-run/react'
+import formStyles from '../styles/dist/Form.css'
 import { redirect, json } from '@remix-run/node'
 import * as R from 'ramda'
-import type { ActionArgs, LoaderArgs } from '@remix-run/node'
-import invariant from 'tiny-invariant'
-import { validatePositiveInt, validateId } from '../../lib/validate.server'
+import type { ActionArgs } from '@remix-run/node'
+import { validateString, validatePositiveInt } from '../lib/validate.server'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../../lib/apolloClient'
 import type {
-  Asset,
-  UpdateAssetInput,
+  CreateAssetInput,
   AssetMutationResponse
-} from '../../../../backend/src/graphql/generated/graphql'
-import { useLoaderData } from '@remix-run/react'
+} from '../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../lib/apolloClient'
 
-function UpdateAsset({ asset }: { asset: Asset }) {
+function NewAsset() {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const actionData = useActionData()
   return (
     <Form method='post' id='asset-form'>
       <span>
-        {actionData?.formErrors?.assetId ? (
-          <label htmlFor='asset-id'>Asset ID</label>
-        ) : null}
+        <label htmlFor='asset-code'>Asset code</label>
         <div>
-          {/* hidden form field to pass back asset id */}
           <input
             className={
-              actionData?.formErrors?.assetId ? 'input-error' : 'input'
+              actionData?.formErrors?.assetCode ? 'input-error' : 'input'
             }
-            type={actionData?.formErrors?.assetId ? 'text' : 'hidden'}
-            id='asset-id'
-            name='assetId'
-            value={asset.id}
+            type='text'
+            id='asset-code'
+            name='assetCode'
+            required
           />
-          {actionData?.formErrors?.assetId ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetId}</p>
+          {actionData?.formErrors?.assetCode ? (
+            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetCode}</p>
           ) : null}
         </div>
       </span>
-      <span
-        style={
-          actionData?.formErrors?.assetId
-            ? { display: 'none' }
-            : { display: 'in-line' }
-        }
-      >
-        <label htmlFor='asset-id'>Asset ID</label>
-        <p>{asset.id}</p>
-      </span>
-      <span>
-        <label htmlFor='asset-code'>Asset code</label>
-        <p>{asset.code}</p>
-      </span>
       <span>
         <label htmlFor='asset-scale'>Asset scale</label>
-        <p>{asset.scale}</p>
+        <div>
+          <input
+            className={
+              actionData?.formErrors?.assetScale ? 'input-error' : 'input'
+            }
+            type='number'
+            id='asset-scale'
+            name='assetScale'
+            required
+          />
+          {actionData?.formErrors?.assetScale ? (
+            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetScale}</p>
+          ) : null}
+        </div>
       </span>
       <span>
         <label htmlFor='withdrawal-threshold'>Withdrawl threshold</label>
@@ -76,7 +69,6 @@ function UpdateAsset({ asset }: { asset: Asset }) {
             type='number'
             id='withdrawal-threshold'
             name='withdrawalThreshold'
-            defaultValue={asset.withdrawalThreshold}
           />
           {actionData?.formErrors?.withdrawalThreshold ? (
             <p style={{ color: 'red' }}>
@@ -96,22 +88,21 @@ function UpdateAsset({ asset }: { asset: Asset }) {
           disabled={isSubmitting}
           className='basic-button right'
         >
-          {isSubmitting ? 'Updating...' : 'Update'}
+          {isSubmitting ? 'Creating...' : 'Create'}
         </button>
       </div>
     </Form>
   )
 }
 
-export default function UpdateAssetPage() {
-  const { asset }: { asset: Asset } = useLoaderData()
+export default function CreateAssetPage() {
   return (
     <main>
       <div className='header-row'>
-        <h1>Update Asset</h1>
+        <h1>Create Asset</h1>
       </div>
       <div className='main-content'>
-        <UpdateAsset asset={asset} />
+        <NewAsset />
       </div>
     </main>
   )
@@ -121,7 +112,8 @@ export async function action({ request }: ActionArgs) {
   const formData = Object.fromEntries(await request.formData())
 
   const formErrors = {
-    assetId: validateId(formData.assetId, 'asset ID'),
+    assetCode: validateString(formData.assetCode, 'asset code'),
+    assetScale: validatePositiveInt(formData.assetScale, 'asset scale'),
     withdrawalThreshold: validatePositiveInt(
       formData.withdrawalThreshold,
       'withdrawal threshold',
@@ -132,9 +124,10 @@ export async function action({ request }: ActionArgs) {
   // If there are errors, return the form errors object
   if (Object.values(formErrors).some(Boolean)) return { formErrors }
 
-  const variables: { input: UpdateAssetInput } = {
+  const variables: { input: CreateAssetInput } = {
     input: {
-      id: formData.assetId,
+      code: formData.assetCode,
+      scale: parseInt(formData.assetScale as string, 10),
       withdrawalThreshold: formData.withdrawalThreshold
         ? parseInt(formData.withdrawalThreshold as string, 10)
         : null
@@ -144,8 +137,8 @@ export async function action({ request }: ActionArgs) {
   const assetId = await apolloClient
     .mutate({
       mutation: gql`
-        mutation UpdateAssetWithdrawalThreshold($input: UpdateAssetInput!) {
-          updateAssetWithdrawalThreshold(input: $input) {
+        mutation Mutation($input: CreateAssetInput!) {
+          createAsset(input: $input) {
             asset {
               id
             }
@@ -158,8 +151,8 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): AssetMutationResponse => {
-      if (query.data.updateAssetWithdrawalThreshold.asset.id) {
-        return query.data.updateAssetWithdrawalThreshold.asset.id
+      if (query.data.createAsset.asset.id) {
+        return query.data.createAsset.asset.id
       } else {
         let errorMessage, status
         // In the case when GraphQL returns an error.
@@ -167,18 +160,12 @@ export async function action({ request }: ActionArgs) {
           errorMessage = R.path(['errors', 0, 'message'], query)
           status = parseInt(R.path(['errors', 0, 'code'], query), 10)
           // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
-        } else if (R.path(['data', 'updateAssetWithdrawalThreshold'], query)) {
-          errorMessage = R.path(
-            ['data', 'updateAssetWithdrawalThreshold', 'message'],
-            query
-          )
-          status = parseInt(
-            R.path(['data', 'updateAssetWithdrawalThreshold', 'code'], query),
-            10
-          )
+        } else if (R.path(['data', 'createAsset'], query)) {
+          errorMessage = R.path(['data', 'createAsset', 'message'], query)
+          status = parseInt(R.path(['data', 'createAsset', 'code'], query), 10)
           // In the case where no error message could be found.
         } else {
-          errorMessage = 'Asset was not successfully updated.'
+          errorMessage = 'Asset was not successfully created.'
         }
         throw json(
           {
@@ -192,38 +179,6 @@ export async function action({ request }: ActionArgs) {
     })
 
   return redirect('/assets/' + assetId)
-}
-
-export async function loader({ params }: LoaderArgs) {
-  invariant(params.assetId, `params.assetId is required`)
-  const variables: { assetId: string } = {
-    assetId: params.assetId
-  }
-
-  const asset = await apolloClient
-    .query({
-      query: gql`
-        query Asset($assetId: String!) {
-          asset(id: $assetId) {
-            code
-            id
-            scale
-            withdrawalThreshold
-            createdAt
-          }
-        }
-      `,
-      variables: variables
-    })
-    .then((query): Asset => {
-      if (query.data.asset) {
-        return query.data.asset
-      } else {
-        throw new Error(`Could not find asset with ID: ${params.assetId}`)
-      }
-    })
-
-  return json({ asset: asset })
 }
 
 export function CatchBoundary() {

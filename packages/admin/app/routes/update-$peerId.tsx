@@ -1,6 +1,12 @@
 // TODO: This file is still a very rough work in progress
-import formStyles from '../../styles/dist/Form.css'
-import { Form, Link, useLoaderData, useCatch, useTransition as useNavigation } from '@remix-run/react'
+import formStyles from '../styles/dist/Form.css'
+import {
+  Form,
+  Link,
+  useLoaderData,
+  useCatch,
+  useTransition as useNavigation
+} from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
 import * as R from 'ramda'
 import type { ActionArgs, LoaderArgs } from '@remix-run/node'
@@ -10,8 +16,8 @@ import type {
   Peer,
   UpdatePeerInput,
   UpdatePeerMutationResponse
-} from '../../../../backend/src/graphql/generated/graphql'
-import { apolloClient } from '../../lib/apolloClient'
+} from '../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../lib/apolloClient'
 
 function UpdatePeer({ peer }: { peer: Peer }) {
   const navigation = useNavigation()
