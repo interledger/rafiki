@@ -1,10 +1,11 @@
 import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
-  isNonInteractiveGrant
+  isNonInteractiveGrant,
+  AccessType,
+  AccessAction
 } from 'open-payments'
-
-import { AccessType, AccessAction, Grant } from '../../grant/model'
+import { Grant } from '../../grant/model'
 import { GrantService } from '../../grant/service'
 import { BaseService } from '../../../shared/baseService'
 import { Amount, serializeAmount } from '../../amount'
@@ -57,7 +58,7 @@ async function create(
 
   if (!grant?.accessToken) {
     const errorMessage = 'Grant has undefined accessToken'
-    deps.logger.warn({ grantId: grant.id }, errorMessage)
+    deps.logger.warn({ grantId: grant?.id, paymentPointerUrl }, errorMessage)
     throw new Error(errorMessage)
   }
 

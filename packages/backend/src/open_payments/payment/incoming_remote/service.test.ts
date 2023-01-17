@@ -7,9 +7,8 @@ import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { Amount, serializeAmount } from '../../amount'
-import { AuthenticatedClient as OpenPaymentsClient } from 'open-payments'
+import { AuthenticatedClient as OpenPaymentsClient,AccessAction, AccessType } from 'open-payments'
 import { GrantService } from '../../grant/service'
-import { AccessAction, AccessType } from '../../grant/model'
 import {
   mockIncomingPayment,
   mockInteractiveGrant,
