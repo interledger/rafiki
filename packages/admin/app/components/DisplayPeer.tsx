@@ -2,7 +2,7 @@ import styles from '../styles/dist/DisplayItem.css'
 import { Link } from '@remix-run/react'
 import type { Peer } from '../../../backend/src/graphql/generated/graphql'
 
-function DisplayPeer({peer}: {peer: Peer}) {
+function DisplayPeer({ peer }: { peer: Peer }) {
   return (
     <table>
       <tbody>

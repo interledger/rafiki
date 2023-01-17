@@ -1,15 +1,10 @@
 import styles from '../styles/dist/Form.css'
-import {
-  Form,
-  Link,
-  useLoaderData,
-  useTransition as useNavigation
-} from '@remix-run/react'
+import { Form, Link, useTransition as useNavigation } from '@remix-run/react'
+import type { Peer } from '../../../backend/src/graphql/generated/graphql'
 
-function UpdatePeer() {
+function UpdatePeer({ peer }: { peer: Peer }) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const { peer } = useLoaderData()
   return (
     <Form method='post' id='peer-form'>
       {/* hidden form field to pass back peer id */}

@@ -4,15 +4,18 @@ import DisplayAssets, {
   links as DisplayItemsLinks
 } from '../../components/DisplayAssets'
 import { useLoaderData, Form } from '@remix-run/react'
-import * as R from 'ramda'
-import fetch from '../../fetch'
 import { redirect, json } from '@remix-run/node'
 import type { ActionArgs } from '@remix-run/node'
-import invariant from 'tiny-invariant'
+import { gql } from '@apollo/client'
+import { apolloClient } from '../../lib/apolloClient'
+import type {
+  AssetEdge,
+  Asset
+} from '../../../../backend/src/graphql/generated/graphql'
 
 // TODO: add a message if there are no assets to display
 export default function AssetsPage() {
-  const { assets } = useLoaderData<typeof loader>()
+  const { assets }: { assets: Asset[] } = useLoaderData<typeof loader>()
 
   return (
     <main>
@@ -48,23 +51,30 @@ export default function AssetsPage() {
 }
 
 export async function loader() {
-  const query = `
-    {
-        assets {
+  const assets = await apolloClient
+    .query({
+      query: gql`
+        query Assets {
+          assets {
             edges {
-                node {
-                    code
-                    id
-                    scale
-                    withdrawalThreshold
-                }
+              node {
+                code
+                id
+                scale
+                withdrawalThreshold
+              }
             }
+          }
         }
-    }
-    `
-  const result = await fetch({ query })
-  const assets = R.path(['data', 'assets', 'edges'], result)
-  invariant(assets, `No assets were found`)
+      `
+    })
+    .then((query): Asset[] => {
+      if (query.data.assets.edges) {
+        return query.data.assets.edges.map((element: AssetEdge) => element.node)
+      } else {
+        throw new Error(`No assets were found`)
+      }
+    })
 
   return json({ assets: assets })
 }

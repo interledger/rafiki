@@ -10,7 +10,7 @@ function NewPeer() {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const actionData = useActionData()
-  console.log(actionData)
+
   return (
     <Form method='post' id='peer-form'>
       <span>
@@ -45,7 +45,9 @@ function NewPeer() {
             id='incoming-auth-tokens'
             name='incomingAuthTokens'
           />
-          <p style={{color: 'grey'}}>Accepts a comma separated list of tokens</p>
+          <p style={{ color: 'grey' }}>
+            Accepts a comma separated list of tokens
+          </p>
           {actionData?.formErrors?.incomingAuthTokens ? (
             <p style={{ color: 'red' }}>
               {actionData?.formErrors?.incomingAuthTokens}

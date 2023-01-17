@@ -8,11 +8,14 @@ import type { ActionArgs } from '@remix-run/node'
 import { redirect, json } from '@remix-run/node'
 import { gql } from '@apollo/client'
 import { apolloClient } from '../../lib/apolloClient'
-import type { PeerEdge, Peer } from '../../../../backend/src/graphql/generated/graphql'
+import type {
+  PeerEdge,
+  Peer
+} from '../../../../backend/src/graphql/generated/graphql'
 
 // TODO: add a message if there are no peers to display
 export default function PeersPage() {
-  const { peers }: {peers: Peer[]} = useLoaderData<typeof loader>()
+  const { peers }: { peers: Peer[] } = useLoaderData<typeof loader>()
 
   return (
     <main>
@@ -49,38 +52,38 @@ export default function PeersPage() {
 
 export async function loader() {
   const peers = await apolloClient
-  .query({
-    query: gql`
-    query Peers {
-      peers {
-        edges {
-          node {
-            id
-            staticIlpAddress
-            http {
-              outgoing {
-                endpoint
+    .query({
+      query: gql`
+        query Peers {
+          peers {
+            edges {
+              node {
+                id
+                staticIlpAddress
+                http {
+                  outgoing {
+                    endpoint
+                  }
+                }
+                asset {
+                  code
+                  scale
+                }
               }
-            }
-            asset {
-              code
-              scale
             }
           }
         }
+      `
+    })
+    .then((query): Peer[] => {
+      if (query.data.peers.edges) {
+        return query.data.peers.edges.map((element: PeerEdge) => element.node)
+      } else {
+        throw new Error(`No peers were found`)
       }
-    }
-    `
-  })
-  .then((query): Peer[] => {
-    if (query.data) {
-      return query.data.peers.edges.map((element: PeerEdge) => element.node)
-    } else {
-      throw new Error(`No peers were found`)
-    }
-  })
+    })
 
-return json({ peers: peers })
+  return json({ peers: peers })
 }
 
 export async function action({ request }: ActionArgs) {

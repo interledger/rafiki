@@ -37,7 +37,7 @@ export default function ViewPeersPage() {
         </Link>
       </div>
       <div className='main-content'>
-        <DisplayPeer peer={peer}/>
+        <DisplayPeer peer={peer} />
       </div>
       <div className='bottom-buttons'>
         <button className='basic-button left' disabled={true}>
@@ -53,6 +53,9 @@ export default function ViewPeersPage() {
 
 export async function loader({ params }: LoaderArgs) {
   invariant(params.peerId, `params.peerId is required`)
+  const variables: { peerId: string } = {
+    peerId: params.peerId
+  }
   // TODO: validation on peerId
 
   const peer = await apolloClient
@@ -75,12 +78,10 @@ export async function loader({ params }: LoaderArgs) {
           }
         }
       `,
-      variables: {
-        peerId: params.peerId
-      }
+      variables: variables
     })
     .then((query): Peer => {
-      if (query.data) {
+      if (query.data.peer) {
         return query.data.peer
       } else {
         throw new Error(`Could not find peer with ID ${params.peerId}`)

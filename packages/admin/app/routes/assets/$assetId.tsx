@@ -1,15 +1,16 @@
 import DisplayAsset, {
   links as DisplayItemsLinks
 } from '../../components/DisplayAsset'
-import * as R from 'ramda'
-import fetch from '../../fetch'
 import { json, redirect } from '@remix-run/node'
 import { Link, useLoaderData, Form, useParams } from '@remix-run/react'
 import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
+import { gql } from '@apollo/client'
+import { apolloClient } from '../../lib/apolloClient'
+import type { Asset } from '../../../../backend/src/graphql/generated/graphql'
 
 export default function ViewAssetsPage() {
-  const { asset } = useLoaderData()
+  const { asset }: { asset: Asset } = useLoaderData<typeof loader>()
   return (
     <main>
       <div className='header-row'>
@@ -35,7 +36,7 @@ export default function ViewAssetsPage() {
         </Link>
       </div>
       <div className='main-content'>
-        <DisplayAsset />
+        <DisplayAsset asset={asset} />
       </div>
       <div className='bottom-buttons'>
         <button className='basic-button left' disabled={true}>
@@ -51,27 +52,33 @@ export default function ViewAssetsPage() {
 
 export async function loader({ params }: LoaderArgs) {
   invariant(params.assetId, `params.assetId is required`)
-  const variables = {
+
+  const variables: { assetId: string } = {
     assetId: params.assetId
   }
 
-  const query = `
-    query Asset($assetId: String!) {
-      asset(id: $assetId) {
-        code
-        id
-        scale
-        withdrawalThreshold
-        createdAt
+  const asset = await apolloClient
+    .query({
+      query: gql`
+        query Asset($assetId: String!) {
+          asset(id: $assetId) {
+            code
+            id
+            scale
+            withdrawalThreshold
+            createdAt
+          }
+        }
+      `,
+      variables: variables
+    })
+    .then((query): Asset => {
+      if (query.data.asset) {
+        return query.data.asset
+      } else {
+        throw new Error(`Could not find asset with ID: ${params.assetId}`)
       }
-    }
-  `
-
-  const result = await fetch({ query, variables })
-
-  const asset = R.path(['data', 'asset'], result)
-
-  invariant(asset, `Could not find asset with ID: ${params.assetId}`)
+    })
 
   return json({ asset: asset })
 }

@@ -1,8 +1,8 @@
 import styles from '../styles/dist/DisplayItems.css'
 import { Link } from '@remix-run/react'
-import * as R from 'ramda'
+import type { Asset } from '../../../backend/src/graphql/generated/graphql'
 
-function DisplayAssets({ assets }) {
+function DisplayAssets({ assets }: { assets: Asset[] }) {
   return (
     <table>
       <thead>
@@ -16,17 +16,15 @@ function DisplayAssets({ assets }) {
       <tbody>
         {assets.length
           ? assets.map((asset) => (
-              <tr key={R.path(['node', 'id'], asset)}>
+              <tr key={asset.id}>
                 <td>
-                  <Link to={R.path(['node', 'id'], asset)}>
-                    {R.path(['node', 'id'], asset)}
-                  </Link>
+                  <Link to={asset.id}>{asset.id}</Link>
                 </td>
-                <td>{R.path(['node', 'code'], asset)}</td>
-                <td>{R.path(['node', 'scale'], asset)}</td>
+                <td>{asset.code}</td>
+                <td>{asset.scale}</td>
                 <td>
-                  {R.path(['node', 'withdrawalThreshold'], asset)
-                    ? R.path(['node', 'withdrawalThreshold'], asset)
+                  {asset.withdrawalThreshold
+                    ? asset.withdrawalThreshold
                     : 'null'}
                 </td>
               </tr>

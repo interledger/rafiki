@@ -1,10 +1,15 @@
 import NewAsset, { links as NewAssetLinks } from '../../components/NewAsset'
 import { redirect, json } from '@remix-run/node'
-import fetch from '../../fetch'
 import * as R from 'ramda'
 import type { ActionArgs } from '@remix-run/node'
 import { Link, useCatch } from '@remix-run/react'
 import { validateString, validatePositiveInt } from '../../lib/validate.server'
+import { gql } from '@apollo/client'
+import type {
+  CreateAssetInput,
+  AssetMutationResponse
+} from '../../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../../lib/apolloClient'
 
 export default function CreateAssetPage() {
   return (
@@ -35,7 +40,7 @@ export async function action({ request }: ActionArgs) {
   // If there are errors, return the form errors object
   if (Object.values(formErrors).some(Boolean)) return { formErrors }
 
-  const variables = {
+  const variables: { input: CreateAssetInput } = {
     input: {
       code: formData.assetCode,
       scale: parseInt(formData.assetScale as string, 10),
@@ -45,45 +50,50 @@ export async function action({ request }: ActionArgs) {
     }
   }
 
-  const query = `
-    mutation Mutation($input: CreateAssetInput!){
-        createAsset(input: $input) {
+  const assetId = await apolloClient
+    .mutate({
+      mutation: gql`
+        mutation Mutation($input: CreateAssetInput!) {
+          createAsset(input: $input) {
             asset {
-                id
+              id
             }
             code
             message
             success
+          }
         }
-    }
-    `
-
-  const result = await fetch({ query, variables })
-
-  const assetId = R.path(['data', 'createAsset', 'asset', 'id'], result)
-  if (!assetId) {
-    let errorMessage, status
-    // In the case when GraphQL returns an error.
-    if (R.path(['errors', 0, 'message'], result)) {
-      errorMessage = R.path(['errors', 0, 'message'], result)
-      status = parseInt(R.path(['errors', 0, 'code'], result), 10)
-      // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
-    } else if (R.path(['data', 'createAsset'], result)) {
-      errorMessage = R.path(['data', 'createAsset', 'message'], result)
-      status = parseInt(R.path(['data', 'createAsset', 'code'], result), 10)
-      // In the case where no error message could be found.
-    } else {
-      errorMessage = 'Asset was not successfully created.'
-    }
-    throw json(
-      {
-        message: errorMessage
-      },
-      {
-        status: status
+      `,
+      variables: variables
+    })
+    .then((query): AssetMutationResponse => {
+      if (query.data.createAsset.asset.id) {
+        return query.data.createAsset.asset.id
+      } else {
+        let errorMessage, status
+        // In the case when GraphQL returns an error.
+        if (R.path(['errors', 0, 'message'], query)) {
+          errorMessage = R.path(['errors', 0, 'message'], query)
+          status = parseInt(R.path(['errors', 0, 'code'], query), 10)
+          // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
+        } else if (R.path(['data', 'createAsset'], query)) {
+          errorMessage = R.path(['data', 'createAsset', 'message'], query)
+          status = parseInt(R.path(['data', 'createAsset', 'code'], query), 10)
+          // In the case where no error message could be found.
+        } else {
+          errorMessage = 'Asset was not successfully created.'
+        }
+        throw json(
+          {
+            message: errorMessage
+          },
+          {
+            status: status
+          }
+        )
       }
-    )
-  }
+    })
+
   return redirect('/assets/' + assetId)
 }
 

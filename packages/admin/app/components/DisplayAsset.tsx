@@ -1,8 +1,7 @@
 import styles from '../styles/dist/DisplayItem.css'
-import { useLoaderData } from '@remix-run/react'
+import type { Asset } from '../../../backend/src/graphql/generated/graphql'
 
-function DisplayAsset() {
-  const { asset } = useLoaderData()
+function DisplayAsset({ asset }: { asset: Asset }) {
   return (
     <table>
       <tbody>

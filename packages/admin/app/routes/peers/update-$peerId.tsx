@@ -3,120 +3,142 @@ import UpdatePeer, {
   links as UpdatedPeerLinks
 } from '../../components/UpdatePeer'
 import { redirect, json } from '@remix-run/node'
-import fetch from '../../fetch'
 import * as R from 'ramda'
 import type { ActionArgs, LoaderArgs } from '@remix-run/node'
-import { Link, useCatch } from '@remix-run/react'
+import { Link, useLoaderData, useCatch } from '@remix-run/react'
 import invariant from 'tiny-invariant'
+import { gql } from '@apollo/client'
+import type {
+  Peer,
+  UpdatePeerInput,
+  UpdatePeerMutationResponse
+} from '../../../../backend/src/graphql/generated/graphql'
+import { apolloClient } from '../../lib/apolloClient'
 
 export default function UpdatePeerPage() {
+  const { peer }: { peer: Peer } = useLoaderData()
   return (
     <main>
       <div className='header-row'>
         <h1>Update Peer</h1>
       </div>
       <div className='main-content'>
-        <UpdatePeer />
+        <UpdatePeer peer={peer} />
       </div>
     </main>
   )
 }
 
 export async function action({ request }: ActionArgs) {
-  const formData = await request.formData()
+  const formData = Object.fromEntries(await request.formData())
+  const incomingAuthTokens = formData.incomingAuthTokens
+    ? (formData.incomingAuthTokens as string)
+    : null
 
   // TODO: Add validation
   // TODO: no fields are required here except ID
-  const variables = {
+  const variables: { input: UpdatePeerInput } = {
     input: {
-      id: formData.get('peerId'),
+      id: formData.peerId,
       http: {
         incoming: {
-          authTokens: formData.get('incomingAuthTokens').split(', ') // TODO: consider how best to handle string[]
+          authTokens: incomingAuthTokens?.replace(/ /g, '').split(',')
         },
         outgoing: {
-          authToken: formData.get('outgoingAuthToken'),
-          endpoint: formData.get('outgoingEndpoint')
+          authToken: formData.outgoingAuthToken,
+          endpoint: formData.outgoingEndpoint
         }
       },
-      maxPacketAmount: formData.get('maxPacketAmount')
-        ? parseInt(formData.get('maxPacketAmount'), 10)
+      maxPacketAmount: formData.maxPacketAmount
+        ? parseInt(formData.maxPacketAmount, 10)
         : null,
-      staticIlpAddress: formData.get('staticIlpAddress')
+      staticIlpAddress: formData.staticIlpAddress
     }
   }
 
-  const query = `
-    mutation UpdatePeer($input: UpdatePeerInput!) {
-        updatePeer(input: $input) {
+  const peerId = await apolloClient
+    .mutate({
+      mutation: gql`
+        mutation UpdatePeer($input: UpdatePeerInput!) {
+          updatePeer(input: $input) {
             code
             message
             success
             peer {
-                id
+              id
             }
+          }
         }
-    }
-    `
-
-  const result = await fetch({ query, variables })
-
-  const peerId = R.path(['data', 'updatePeer', 'peer', 'id'], result)
-  if (!peerId) {
-    let errorMessage, status
-    // In the case when GraphQL returns an error.
-    if (R.path(['errors', 0, 'message'], result)) {
-      errorMessage = R.path(['errors', 0, 'message'], result)
-      status = parseInt(R.path(['errors', 0, 'code'], result), 10)
-      // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
-    } else if (R.path(['data', 'updatePeer'], result)) {
-      errorMessage = R.path(['data', 'updatePeer', 'message'], result)
-      status = parseInt(R.path(['data', 'updatePeer', 'code'], result), 10)
-      // In the case where no error message could be found.
-    } else {
-      errorMessage = 'Peer was not successfully updated.'
-    }
-    throw json(
-      {
-        message: errorMessage
-      },
-      {
-        status: status
+      `,
+      variables: variables
+    })
+    .then((query): UpdatePeerMutationResponse => {
+      if (query.data.updatePeer.peer.id) {
+        return query.data.updatePeer.peer.id
+      } else {
+        let errorMessage, status
+        // In the case when GraphQL returns an error.
+        if (R.path(['errors', 0, 'message'], query)) {
+          errorMessage = R.path(['errors', 0, 'message'], query)
+          status = parseInt(R.path(['errors', 0, 'code'], query), 10)
+          // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
+        } else if (R.path(['data', 'updatePeer'], query)) {
+          errorMessage = R.path(['data', 'updatePeer', 'message'], query)
+          status = parseInt(R.path(['data', 'updatePeer', 'code'], query), 10)
+          // In the case where no error message could be found.
+        } else {
+          errorMessage = 'Peer was not successfully updated.'
+        }
+        throw json(
+          {
+            message: errorMessage
+          },
+          {
+            status: status
+          }
+        )
       }
-    )
-  }
+    })
+
   return redirect('/peers/' + peerId)
 }
 
 export async function loader({ params }: LoaderArgs) {
   invariant(params.peerId, `params.peerId is required`)
-  const variables = {
+  const variables: { peerId: string } = {
     peerId: params.peerId
   }
+  // TODO: validation on peerId
 
-  const query = `
-      query Peer($peerId: String!) {
-        peer(id: $peerId) {
-          id
-          staticIlpAddress
-          http {
-            outgoing {
-              endpoint
+  const peer = await apolloClient
+    .query({
+      query: gql`
+        query Peer($peerId: String!) {
+          peer(id: $peerId) {
+            id
+            staticIlpAddress
+            createdAt
+            asset {
+              scale
+              code
+            }
+            http {
+              outgoing {
+                endpoint
+              }
             }
           }
-          asset {
-            code
-            scale
-          }
-          maxPacketAmount
         }
+      `,
+      variables: variables
+    })
+    .then((query): Peer => {
+      if (query.data.peer) {
+        return query.data.peer
+      } else {
+        throw new Error(`Could not find peer with ID ${params.peerId}`)
       }
-      `
-  const result = await fetch({ query, variables })
-
-  const peer = R.path(['data', 'peer'], result)
-
-  invariant(peer, `Could not find peer with ID ${params.peerId}`)
+    })
 
   return json({ peer: peer })
 }

@@ -2,15 +2,14 @@ import styles from '../styles/dist/Form.css'
 import {
   Form,
   Link,
-  useLoaderData,
   useActionData,
   useTransition as useNavigation
 } from '@remix-run/react'
+import type { Asset } from '../../../backend/src/graphql/generated/graphql'
 
-function UpdateAsset() {
+function UpdateAsset({ asset }: { asset: Asset }) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const { asset } = useLoaderData()
   const actionData = useActionData()
   return (
     <Form method='post' id='asset-form'>

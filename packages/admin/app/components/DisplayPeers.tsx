@@ -2,7 +2,7 @@ import styles from '../styles/dist/DisplayItems.css'
 import { Link } from '@remix-run/react'
 import type { Peer } from '../../../backend/src/graphql/generated/graphql'
 
-function DisplayPeers({ peers }: {peers: Peer[]}) {
+function DisplayPeers({ peers }: { peers: Peer[] }) {
   return (
     <table>
       <thead>
@@ -19,16 +19,12 @@ function DisplayPeers({ peers }: {peers: Peer[]}) {
           ? peers.map((peer) => (
               <tr key={peer.id}>
                 <td>
-                  <Link to={peer.id}>
-                    {peer.id}
-                  </Link>
+                  <Link to={peer.id}>{peer.id}</Link>
                 </td>
                 <td>{peer.staticIlpAddress}</td>
                 <td>{peer.asset.code}</td>
                 <td>{peer.asset.scale}</td>
-                <td>
-                  {peer.http.outgoing.endpoint}
-                </td>
+                <td>{peer.http.outgoing.endpoint}</td>
               </tr>
             ))
           : ''}
