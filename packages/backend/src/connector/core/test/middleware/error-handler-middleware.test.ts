@@ -8,9 +8,7 @@ describe('Error Handler Middleware', () => {
 
   test('catches errors and converts into ilp reject', async () => {
     const ctx = createILPContext({ services })
-    const errorToBeThrown = new Error(
-      JSON.stringify({ code: 'FOO', message: 'Test Error' })
-    )
+    const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
     })
@@ -30,9 +28,7 @@ describe('Error Handler Middleware', () => {
 
   test('sets triggeredBy to own address if error is thrown in next', async () => {
     const ctx = createILPContext({ services })
-    const errorToBeThrown = new Error(
-      JSON.stringify({ code: 'FOO', message: 'Test Error' })
-    )
+    const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown
     })
@@ -64,9 +60,7 @@ describe('Error Handler Middleware', () => {
 
   test('reverts stream connection total received amount', async () => {
     const ctx = createILPContext({ services })
-    const errorToBeThrown = new Error(
-      JSON.stringify({ code: 'FOO', message: 'Test Error' })
-    )
+    const errorToBeThrown = new Error('Test Error')
     const next = jest.fn().mockImplementation(() => {
       ctx.revertTotalReceived = jest.fn().mockResolvedValueOnce('0')
       throw errorToBeThrown

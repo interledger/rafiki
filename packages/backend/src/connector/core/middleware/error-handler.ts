@@ -1,4 +1,4 @@
-import { errorToIlpReject, isIlpError } from 'ilp-packet'
+import { errorToIlpReject, isIlpError, IlpErrorCode } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 
 /**
@@ -28,6 +28,12 @@ export function createIncomingErrorHandlerMiddleware(
       }
       if (isIlpError(err)) {
         ctx.response.reject = errorToIlpReject(serverAddress, err)
+      } else {
+        ctx.response.reject = errorToIlpReject(serverAddress, {
+          message: err.message,
+          ilpErrorCode: IlpErrorCode.F00_BAD_REQUEST,
+          name: ''
+        })
       }
     }
   }
