@@ -49,6 +49,7 @@ import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { AccessType, AuthenticatedClient } from 'open-payments'
+import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 
 export interface AppContextData {
   logger: Logger
@@ -150,6 +151,7 @@ export interface AppServices {
   paymentPointerKeyRoutes: Promise<PaymentPointerKeyRoutes>
   paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
+  remoteIncomingPaymentService: Promise<RemoteIncomingPaymentService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   quoteService: Promise<QuoteService>
