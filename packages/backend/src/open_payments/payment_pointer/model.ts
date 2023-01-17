@@ -39,6 +39,8 @@ export class PaymentPointer
   public url!: string
   public publicName?: string
 
+  public credentialId?: string
+
   public readonly assetId!: string
   public asset!: Asset
 

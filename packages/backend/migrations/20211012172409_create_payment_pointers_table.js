@@ -7,6 +7,7 @@ exports.up = function (knex) {
 
     table.string('publicName').nullable()
 
+    table.string('credentialId').nullable()
     // The cumulative received amount tracked by
     // `payment_pointer.web_monetization` webhook events.
     // The value should be equivalent to the following query:
