@@ -91,11 +91,45 @@ export const triggerPaymentPointerEvents: MutationResolvers<ApolloContext>['trig
     }
   }
 
+export const updatePaymentPointerCredential: MutationResolvers<ApolloContext>['updatePaymentPointerCredential'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['UpdatePaymentPointerCredentialResponse']> => {
+    try {
+      const paymentPointerService = await ctx.container.use(
+        'paymentPointerService'
+      )
+      const paymentPointer = await paymentPointerService.updateCredential({
+        paymentPointerId: args.input.paymentPointerId,
+        credentialId: args.input.credentialId
+      })
+      return {
+        code: '200',
+        success: true,
+        message: 'Payment pointer credential is updated.',
+        paymentPointer: paymentPointerToGraphql(paymentPointer)
+      }
+    } catch (error) {
+      ctx.logger.error(
+        error,
+        'error trying to update payment pointer credential'
+      )
+      return {
+        code: '500',
+        message: 'Error trying to update payment pointer credential',
+        success: false
+      }
+    }
+  }
+
 export const paymentPointerToGraphql = (
   paymentPointer: PaymentPointer
 ): SchemaPaymentPointer => ({
   id: paymentPointer.id,
   url: paymentPointer.url,
+  credentialId: paymentPointer.credentialId,
   asset: assetToGraphql(paymentPointer.asset),
   publicName: paymentPointer.publicName ?? undefined,
   createdAt: new Date(+paymentPointer.createdAt).toISOString()

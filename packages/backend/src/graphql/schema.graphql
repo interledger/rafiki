@@ -38,6 +38,10 @@ type Mutation {
     input: CreatePaymentPointerInput!
   ): CreatePaymentPointerMutationResponse!
 
+  updatePaymentPointerCredential(
+    input: UpdatePaymentPointerCredentialInput!
+  ): UpdatePaymentPointerCredentialResponse!
+
   triggerPaymentPointerEvents(
     limit: Int!
   ): TriggerPaymentPointerEventsMutationResponse!
@@ -125,6 +129,11 @@ type PageInfo {
   hasPreviousPage: Boolean!
   "Paginating backwards: the cursor to continue."
   startCursor: String
+}
+
+input UpdatePaymentPointerCredentialInput {
+  paymentPointerId: String!
+  credentialId: String!
 }
 
 type AssetsConnection {
@@ -296,6 +305,7 @@ type PaymentPointer implements Model {
   asset: Asset!
   url: String!
   publicName: String
+  credentialId: String
   incomingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -556,6 +566,13 @@ type UpdatePeerMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   peer: Peer
+}
+
+type UpdatePaymentPointerCredentialResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  paymentPointer: PaymentPointer
 }
 
 type DeletePeerMutationResponse implements MutationResponse {

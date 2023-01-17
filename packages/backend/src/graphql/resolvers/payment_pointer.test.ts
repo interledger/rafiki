@@ -28,7 +28,9 @@ import {
   CreatePaymentPointerInput,
   CreatePaymentPointerMutationResponse,
   TriggerPaymentPointerEventsMutationResponse,
-  PaymentPointer
+  PaymentPointer,
+  UpdatePaymentPointerCredentialInput,
+  UpdatePaymentPointerCredentialResponse
 } from '../generated/graphql'
 
 describe('Payment Pointer Resolvers', (): void => {
@@ -395,6 +397,53 @@ describe('Payment Pointer Resolvers', (): void => {
         'Error trying to trigger payment pointer events'
       )
       expect(response.count).toBeNull()
+    })
+  })
+
+  describe('Update Payment Pointer Credential', (): void => {
+    test('200', async () => {
+      const paymentPointer = await createPaymentPointer(deps)
+
+      const input: UpdatePaymentPointerCredentialInput = {
+        paymentPointerId: paymentPointer.id,
+        credentialId: 'example-credential'
+      }
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdatePaymentPointerCredential(
+              $input: UpdatePaymentPointerCredentialInput!
+            ) {
+              updatePaymentPointerCredential(input: $input) {
+                code
+                success
+                message
+                paymentPointer {
+                  id
+                  url
+                  asset {
+                    id
+                  }
+                  publicName
+                  createdAt
+                }
+              }
+            }
+          `,
+          variables: {
+            input: input
+          }
+        })
+        .then((query): UpdatePaymentPointerCredentialResponse => {
+          if (query.data) {
+            return query.data.updatePaymentPointerCredential
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.code).toEqual('200')
     })
   })
 })
