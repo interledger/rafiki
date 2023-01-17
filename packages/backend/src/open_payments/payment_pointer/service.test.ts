@@ -422,4 +422,17 @@ describe('Open Payments Payment Pointer Service', (): void => {
       }
     )
   })
+
+  describe('updatePaymentPointerCredential', (): void => {
+    test('Add credential id to payment pointer', async () => {
+      const paymentPointer = await createPaymentPointer(deps)
+
+      const ppWithCredential = await paymentPointerService.updateCredential({
+        paymentPointerId: paymentPointer.id,
+        credentialId: 'example-credential'
+      })
+
+      expect(ppWithCredential.credentialId).toEqual('example-credential')
+    })
+  })
 })

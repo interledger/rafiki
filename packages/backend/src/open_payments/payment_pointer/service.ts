@@ -21,6 +21,7 @@ export interface CreateOptions {
 
 export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
+  updateCredential(options: UpdateCredentialOptions): Promise<PaymentPointer>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
   processNext(): Promise<string | undefined>
@@ -48,6 +49,8 @@ export async function createPaymentPointerService({
   return {
     create: (options) => createPaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
+    updateCredential: (options) =>
+      updatePaymentPointerCredential(deps, options),
     getByUrl: (url) => getPaymentPointerByUrl(deps, url),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
@@ -75,6 +78,25 @@ function isValidPaymentPointerUrl(paymentPointerUrl: string): boolean {
   } catch (_) {
     return false
   }
+}
+
+interface UpdateCredentialOptions {
+  paymentPointerId: string
+  credentialId: string
+}
+
+async function updatePaymentPointerCredential(
+  deps: ServiceDependencies,
+  opts: UpdateCredentialOptions
+) {
+  const paymentPointer = await getPaymentPointer(deps, opts.paymentPointerId)
+
+  return await paymentPointer
+    .$query()
+    .patchAndFetch({
+      credentialId: opts.credentialId
+    })
+    .withGraphFetched('asset')
 }
 
 async function createPaymentPointer(
