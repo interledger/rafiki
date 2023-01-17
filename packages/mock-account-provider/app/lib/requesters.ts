@@ -6,7 +6,8 @@ import type {
   PaymentPointer,
   CreatePaymentPointerKeyMutationResponse,
   CreatePaymentPointerKeyInput,
-  CreatePaymentPointerInput
+  CreatePaymentPointerInput,
+  UpdatePaymentPointerCredentialResponse
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 
@@ -21,6 +22,44 @@ export interface GraphqlResponseElement {
   data: {
     [key: string]: { code: string }
   }
+}
+
+export async function updateCredential(
+  paymentPointerId: string,
+  credentialId: string
+): Promise<UpdatePaymentPointerCredentialResponse> {
+  const updateCredentialMutation = gql`
+    mutation UpdatePaymentPointerCredential(
+      $input: UpdatePaymentPointerCredentialInput!
+    ) {
+      updatePaymentPointerCredential(input: $input) {
+        code
+        success
+        message
+        paymentPointer {
+          id
+        }
+      }
+    }
+  `
+  const updateCredentialInput = {
+    input: {
+      paymentPointerId,
+      credentialId
+    }
+  }
+  return apolloClient
+    .mutate({
+      mutation: updateCredentialMutation,
+      variables: updateCredentialInput
+    })
+    .then(({ data }): UpdatePaymentPointerCredentialResponse => {
+      console.log(data)
+      if (!data.updatePaymentPointerCredential.success) {
+        throw new Error('Data was empty')
+      }
+      return data.updatePaymentPointerCredential
+    })
 }
 
 export async function createAsset(
