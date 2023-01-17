@@ -126,7 +126,7 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.13
       '@graphql-tools/load': ^7.8.8
       '@graphql-tools/schema': ^9.0.12
-      '@interledger/pay': 0.4.0-alpha.8
+      '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': ^0.3.3-alpha.1
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
@@ -191,7 +191,7 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.13_graphql@16.6.0
       '@graphql-tools/load': 7.8.8_graphql@16.6.0
       '@graphql-tools/schema': 9.0.12_graphql@16.6.0
-      '@interledger/pay': 0.4.0-alpha.8
+      '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': 0.3.3-alpha.1
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
@@ -3156,16 +3156,17 @@ packages:
     resolution: {integrity: sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==}
     dev: true
 
-  /@interledger/pay/0.4.0-alpha.8:
-    resolution: {integrity: sha512-6BmIP8KvmZ48E6vYB9Fc2hfr0Su3Lc/ntB3hOEc+dANOCf7VA8hNz9PCBZMCAYyocXFJN4pxhEAvPJSVJjuvyA==}
+  /@interledger/pay/0.4.0-alpha.9:
+    resolution: {integrity: sha512-ScT+hsAFBjpSy68VncSa6wW+VidgviKQE9W9lyiOBCrXfnrwrTdycEXWOG9ShoAYXpA3/FG/dYO9eImAPO5Pzg==}
     dependencies:
       abort-controller: 3.0.0
-      ilp-logger: 1.4.5-alpha.1
+      ilp-logger: 1.4.5-alpha.2
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-stream: 2.7.2-alpha.2
       long: 4.0.0
-      node-fetch: 2.6.1
+      node-fetch: 2.6.7
     transitivePeerDependencies:
+      - encoding
       - supports-color
     dev: false
 
@@ -6419,6 +6420,19 @@ packages:
       ms: 2.1.2
       supports-color: 7.2.0
 
+  /debug/4.3.4_supports-color@9.3.1:
+    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
+    engines: {node: '>=6.0'}
+    peerDependencies:
+      supports-color: '*'
+    peerDependenciesMeta:
+      supports-color:
+        optional: true
+    dependencies:
+      ms: 2.1.2
+      supports-color: 9.3.1
+    dev: false
+
   /decamelize-keys/1.1.0:
     resolution: {integrity: sha512-ocLWuYzRPoS9bfiSdDd3cxvrzovVMZnRDVEzAs+hWIVXGDbHxWMECij2OBuyB/An0FFW/nLuq6Kv1i/YC5Qfzg==}
     engines: {node: '>=0.10.0'}
@@ -8341,6 +8355,14 @@ packages:
       '@types/debug': 4.1.7
       debug: 4.3.4_supports-color@7.2.0
       supports-color: 7.2.0
+    dev: false
+
+  /ilp-logger/1.4.5-alpha.2:
+    resolution: {integrity: sha512-WtbscdjUUPVseRkDpRlfb/YUpsq4zfoOz6PlJSkx+aqJot1P5N+YGd4YKW1g9wm6O8muo5e/xBotyJqCQs0g+Q==}
+    dependencies:
+      '@types/debug': 4.1.7
+      debug: 4.3.4_supports-color@9.3.1
+      supports-color: 9.3.1
     dev: false
 
   /ilp-packet/3.1.3:
@@ -10824,11 +10846,6 @@ packages:
     engines: {node: '>=10.5.0'}
     dev: true
 
-  /node-fetch/2.6.1:
-    resolution: {integrity: sha512-V4aYg89jEoVRxRb2fJdAg8FHvI7cEyYdVAh94HH0UIK8oJxUfkjlDQN9RbMx+bEjP7+ggMiFRprSti032Oipxw==}
-    engines: {node: 4.x || >=6.0.0}
-    dev: false
-
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
     engines: {node: 4.x || >=6.0.0}
@@ -12927,6 +12944,11 @@ packages:
     dependencies:
       has-flag: 4.0.0
     dev: true
+
+  /supports-color/9.3.1:
+    resolution: {integrity: sha512-knBY82pjmnIzK3NifMo3RxEIRD9E0kIzV4BKcyTZ9+9kWgLMxd4PrsTSMoFQUabgRBbF8KOLRDCyKgNV+iK44Q==}
+    engines: {node: '>=12'}
+    dev: false
 
   /supports-hyperlinks/2.2.0:
     resolution: {integrity: sha512-6sXEzV5+I5j8Bmq9/vUphGRM/RJNT9SCURJLjwfOg51heRtguGWDzcaBlgAzKhQa0EVNpPEKzQuBwZ8S8WaCeQ==}

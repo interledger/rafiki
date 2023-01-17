@@ -13,13 +13,13 @@ import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import { GrantRoutes, GrantChoices } from './routes'
-import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
 import { ClientService } from '../client/service'
+import { AccessAction, AccessType } from 'open-payments'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -31,7 +31,7 @@ const CLIENT_KEY_ID = v4()
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
-  actions: [Action.Create, Action.Read, Action.List],
+  actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
   identifier: `https://example.com/${v4()}`
 }
 
@@ -40,7 +40,7 @@ const BASE_GRANT_REQUEST = {
     access: [
       {
         type: AccessType.OutgoingPayment,
-        actions: [Action.Create, Action.Read, Action.List],
+        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
         identifier: `https://example.com/${v4()}`
       }
     ]
@@ -186,7 +186,11 @@ describe('Grant Routes', (): void => {
             access: [
               {
                 type: AccessType.IncomingPayment,
-                actions: [Action.Create, Action.Read, Action.List],
+                actions: [
+                  AccessAction.Create,
+                  AccessAction.Read,
+                  AccessAction.List
+                ],
                 identifier: `https://example.com/${v4()}`
               }
             ]
@@ -234,7 +238,11 @@ describe('Grant Routes', (): void => {
             access: [
               {
                 type: AccessType.IncomingPayment,
-                actions: [Action.Create, Action.Read, Action.List],
+                actions: [
+                  AccessAction.Create,
+                  AccessAction.Read,
+                  AccessAction.List
+                ],
                 identifier: `https://example.com/${v4()}`
               }
             ]

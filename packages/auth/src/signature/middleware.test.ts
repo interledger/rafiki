@@ -15,13 +15,13 @@ import { createContext, createContextWithSigHeaders } from '../tests/context'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
-import { AccessType, Action } from '../access/types'
 import {
   tokenHttpsigMiddleware,
   grantContinueHttpsigMiddleware,
   grantInitiationHttpsigMiddleware
 } from './middleware'
 import { AccessTokenService } from '../accessToken/service'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -68,7 +68,7 @@ describe('Signature Service', (): void => {
 
     const BASE_ACCESS = {
       type: AccessType.OutgoingPayment,
-      actions: [Action.Read, Action.Create],
+      actions: [AccessAction.Read, AccessAction.Create],
       identifier: `https://example.com/${v4()}`,
       limits: {
         receiver: 'https://wallet.com/alice',

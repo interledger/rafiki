@@ -1,6 +1,7 @@
-import { AccessType, AccessAction, Grant } from './model'
+import { Grant } from './model'
 import { AuthServerService } from '../authServer/service'
 import { BaseService } from '../../shared/baseService'
+import { AccessAction, AccessType } from 'open-payments'
 
 export interface GrantService {
   create(options: CreateOptions): Promise<Grant>

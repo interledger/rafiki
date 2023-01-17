@@ -1,13 +1,16 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
-import { AccessType, AccessAction } from '../grant/model'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
+import { AccessAction, AccessType } from 'open-payments'
 
-export type RequestAction = Exclude<
-  AccessAction,
-  AccessAction.ReadAll | AccessAction.ListAll
->
+export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
+export const RequestAction: Record<string, RequestAction> = Object.freeze({
+  Create: 'create',
+  Read: 'read',
+  Complete: 'complete',
+  List: 'list'
+})
 
 export interface Grant {
   id: string
