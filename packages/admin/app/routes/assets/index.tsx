@@ -1,8 +1,6 @@
 import { Link, useCatch } from '@remix-run/react'
-import styles from '../../styles/dist/Form.css'
-import DisplayAssets, {
-  links as DisplayItemsLinks
-} from '../../components/DisplayAssets'
+import formStyles from '../../styles/dist/Form.css'
+import displayItemsStyles from '../../styles/dist/DisplayItems.css'
 import { useLoaderData, Form } from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
 import type { ActionArgs } from '@remix-run/node'
@@ -12,6 +10,39 @@ import type {
   AssetEdge,
   Asset
 } from '../../../../backend/src/graphql/generated/graphql'
+
+function DisplayAssets({ assets }: { assets: Asset[] }) {
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Asset ID</th>
+          <th>Code</th>
+          <th>Scale</th>
+          <th>Withdrawl threshold</th>
+        </tr>
+      </thead>
+      <tbody>
+        {assets.length
+          ? assets.map((asset) => (
+              <tr key={asset.id}>
+                <td>
+                  <Link to={asset.id}>{asset.id}</Link>
+                </td>
+                <td>{asset.code}</td>
+                <td>{asset.scale}</td>
+                <td>
+                  {asset.withdrawalThreshold
+                    ? asset.withdrawalThreshold
+                    : 'null'}
+                </td>
+              </tr>
+            ))
+          : ''}
+      </tbody>
+    </table>
+  )
+}
 
 // TODO: add a message if there are no assets to display
 export default function AssetsPage() {
@@ -128,5 +159,8 @@ export function ErrorBoundary({ error }: { error: Error }) {
 }
 
 export function links() {
-  return [{ rel: 'stylesheet', href: styles }, ...DisplayItemsLinks()]
+  return [
+    { rel: 'stylesheet', href: formStyles },
+    { rel: 'stylesheet', href: displayItemsStyles }
+  ]
 }

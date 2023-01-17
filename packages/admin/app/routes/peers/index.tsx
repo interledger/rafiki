@@ -1,8 +1,6 @@
 import { useCatch, Link, Form } from '@remix-run/react'
-import styles from '../../styles/dist/Form.css'
-import DisplayPeers, {
-  links as DisplayItemsLinks
-} from '../../components/DisplayPeers'
+import formStyles from '../../styles/dist/Form.css'
+import displayItemsStyles from '../../styles/dist/DisplayItems.css'
 import { useLoaderData } from '@remix-run/react'
 import type { ActionArgs } from '@remix-run/node'
 import { redirect, json } from '@remix-run/node'
@@ -12,6 +10,37 @@ import type {
   PeerEdge,
   Peer
 } from '../../../../backend/src/graphql/generated/graphql'
+
+function DisplayPeers({ peers }: { peers: Peer[] }) {
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Peer ID</th>
+          <th>Static ILP address</th>
+          <th>Asset code</th>
+          <th>Asset scale</th>
+          <th>Outgoing endpoint</th>
+        </tr>
+      </thead>
+      <tbody>
+        {peers.length
+          ? peers.map((peer) => (
+              <tr key={peer.id}>
+                <td>
+                  <Link to={peer.id}>{peer.id}</Link>
+                </td>
+                <td>{peer.staticIlpAddress}</td>
+                <td>{peer.asset.code}</td>
+                <td>{peer.asset.scale}</td>
+                <td>{peer.http.outgoing.endpoint}</td>
+              </tr>
+            ))
+          : ''}
+      </tbody>
+    </table>
+  )
+}
 
 // TODO: add a message if there are no peers to display
 export default function PeersPage() {
@@ -135,5 +164,8 @@ export function ErrorBoundary({ error }: { error: Error }) {
 }
 
 export function links() {
-  return [{ rel: 'stylesheet', href: styles }, ...DisplayItemsLinks()]
+  return [
+    { rel: 'stylesheet', href: formStyles },
+    { rel: 'stylesheet', href: displayItemsStyles }
+  ]
 }

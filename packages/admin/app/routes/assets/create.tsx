@@ -1,8 +1,14 @@
-import NewAsset, { links as NewAssetLinks } from '../../components/NewAsset'
+import {
+  Form,
+  Link,
+  useActionData,
+  useCatch,
+  useTransition as useNavigation
+} from '@remix-run/react'
+import formStyles from '../../styles/dist/Form.css'
 import { redirect, json } from '@remix-run/node'
 import * as R from 'ramda'
 import type { ActionArgs } from '@remix-run/node'
-import { Link, useCatch } from '@remix-run/react'
 import { validateString, validatePositiveInt } from '../../lib/validate.server'
 import { gql } from '@apollo/client'
 import type {
@@ -10,6 +16,84 @@ import type {
   AssetMutationResponse
 } from '../../../../backend/src/graphql/generated/graphql'
 import { apolloClient } from '../../lib/apolloClient'
+
+function NewAsset() {
+  const navigation = useNavigation()
+  const isSubmitting = navigation.state === 'submitting'
+  const actionData = useActionData()
+  return (
+    <Form method='post' id='asset-form'>
+      <span>
+        <label htmlFor='asset-code'>Asset code</label>
+        <div>
+          <input
+            className={
+              actionData?.formErrors?.assetCode ? 'input-error' : 'input'
+            }
+            type='text'
+            id='asset-code'
+            name='assetCode'
+            required
+          />
+          {actionData?.formErrors?.assetCode ? (
+            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetCode}</p>
+          ) : null}
+        </div>
+      </span>
+      <span>
+        <label htmlFor='asset-scale'>Asset scale</label>
+        <div>
+          <input
+            className={
+              actionData?.formErrors?.assetScale ? 'input-error' : 'input'
+            }
+            type='number'
+            id='asset-scale'
+            name='assetScale'
+            required
+          />
+          {actionData?.formErrors?.assetScale ? (
+            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetScale}</p>
+          ) : null}
+        </div>
+      </span>
+      <span>
+        <label htmlFor='withdrawal-threshold'>Withdrawl threshold</label>
+        <div>
+          <input
+            className={
+              actionData?.formErrors?.withdrawalThreshold
+                ? 'input-error'
+                : 'input'
+            }
+            type='number'
+            id='withdrawal-threshold'
+            name='withdrawalThreshold'
+          />
+          {actionData?.formErrors?.withdrawalThreshold ? (
+            <p style={{ color: 'red' }}>
+              {actionData?.formErrors?.withdrawalThreshold}
+            </p>
+          ) : null}
+        </div>
+      </span>
+      <div className='bottom-buttons form-actions'>
+        <Link to='/assets'>
+          <button type='button' className='basic-button left'>
+            Cancel
+          </button>
+        </Link>
+        <button
+          type='submit'
+          disabled={isSubmitting}
+          className='basic-button right'
+        >
+          {isSubmitting ? 'Creating...' : 'Create'}
+        </button>
+      </div>
+    </Form>
+  )
+}
 
 export default function CreateAssetPage() {
   return (
@@ -115,5 +199,5 @@ export function CatchBoundary() {
 }
 
 export function links() {
-  return [...NewAssetLinks()]
+  return [{ rel: 'stylesheet', href: formStyles }]
 }
