@@ -10,8 +10,11 @@ import {
   NonInteractiveGrant,
   OutgoingPayment,
   OutgoingPaymentPaginationResult,
-  IncomingPaymentPaginationResult,
-  AccessToken
+  PaymentPointer,
+  JWK,
+  AccessToken,
+  Quote,
+  IncomingPaymentPaginationResult
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -29,6 +32,23 @@ export const defaultAxiosInstance = createAxiosInstance({
   privateKey: generateKeyPairSync('ed25519').privateKey
 })
 
+export const withEnvVariableOverride = (
+  override: Record<string, string>,
+  testCallback: () => Promise<void>
+): (() => Promise<void>) => {
+  return async () => {
+    const savedEnvVars = Object.assign({}, process.env)
+
+    Object.assign(process.env, override)
+
+    try {
+      await testCallback()
+    } finally {
+      process.env = savedEnvVars
+    }
+  }
+}
+
 export const mockOpenApiResponseValidators = () => ({
   successfulValidator: ((data: unknown): data is unknown =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,6 +57,25 @@ export const mockOpenApiResponseValidators = () => ({
     throw new Error('Failed to validate response')
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as ResponseValidator<any>
+})
+
+export const mockJwk = (overrides?: Partial<JWK>): JWK => ({
+  x: uuid(),
+  kid: uuid(),
+  alg: 'EdDSA',
+  kty: 'OKP',
+  crv: 'Ed25519',
+  ...overrides
+})
+
+export const mockPaymentPointer = (
+  overrides?: Partial<PaymentPointer>
+): PaymentPointer => ({
+  id: 'https://example.com/.well-known/pay',
+  authServer: 'https://auth.wallet.example/authorize',
+  assetScale: 2,
+  assetCode: 'USD',
+  ...overrides
 })
 
 export const mockILPStreamConnection = (
@@ -226,5 +265,24 @@ export const mockAccessToken = (
     ],
     expires_in: 600
   },
+  ...overrides
+})
+
+export const mockQuote = (overrides?: Partial<Quote>): Quote => ({
+  id: uuid(),
+  receiver: `receiver`,
+  paymentPointer: 'paymentPointer',
+  sendAmount: {
+    value: '100',
+    assetCode: 'USD',
+    assetScale: 2
+  },
+  receiveAmount: {
+    value: '90',
+    assetCode: 'USD',
+    assetScale: 2
+  },
+  createdAt: new Date().toISOString(),
+  expiresAt: new Date(Date.now() + 60_000).toISOString(),
   ...overrides
 })

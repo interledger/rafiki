@@ -16,6 +16,15 @@ import {
 import nock from 'nock'
 import path from 'path'
 import { v4 as uuid } from 'uuid'
+import * as requestors from './requests'
+
+jest.mock('./requests', () => {
+  return {
+    // https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options
+    __esModule: true,
+    ...jest.requireActual('./requests')
+  }
+})
 
 describe('outgoing-payment', (): void => {
   let openApi: OpenAPI
@@ -28,71 +37,27 @@ describe('outgoing-payment', (): void => {
 
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
-  const baseUrl = 'http://localhost:1000'
+  const paymentPointer = `http://localhost:1000/.well-known/pay`
   const openApiValidators = mockOpenApiResponseValidators()
-
-  describe('createOutgoingPaymentRoutes', (): void => {
-    test('creates getOutgoingPaymentOpenApiValidator properly', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-
-      createOutgoingPaymentRoutes({
-        axiosInstance,
-        openApi,
-        logger
-      })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/outgoing-payments/{id}',
-        method: HttpMethod.GET
-      })
-    })
-
-    test('creates listOutgoingPaymentOpenApiValidator properly', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-
-      createOutgoingPaymentRoutes({
-        axiosInstance,
-        openApi,
-        logger
-      })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/outgoing-payments',
-        method: HttpMethod.GET
-      })
-    })
-
-    test('creates createOutgoingPaymentOpenApiValidator properly', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
-
-      createOutgoingPaymentRoutes({
-        axiosInstance,
-        openApi,
-        logger
-      })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/outgoing-payments',
-        method: HttpMethod.POST
-      })
-    })
-  })
 
   describe('getOutgoingPayment', (): void => {
     test('returns outgoing payment if passes validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
+      const scope = nock(paymentPointer)
+        .get('/outgoing-payments/1')
+        .reply(200, outgoingPayment)
 
       const result = await getOutgoingPayment(
+        { axiosInstance, logger },
         {
-          axiosInstance,
-          logger
-        },
-        {
-          url: `${baseUrl}/outgoing-payments`,
+          url: `${paymentPointer}/outgoing-payments/1`,
           accessToken: 'accessToken'
         },
         openApiValidators.successfulValidator
       )
       expect(result).toStrictEqual(outgoingPayment)
+      scope.done()
     })
 
     test('throws if outgoing payment does not pass validation', async (): Promise<void> => {
@@ -109,47 +74,45 @@ describe('outgoing-payment', (): void => {
         }
       })
 
-      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
+      const scope = nock(paymentPointer)
+        .get('/outgoing-payments/1')
+        .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         getOutgoingPayment(
+          { axiosInstance, logger },
           {
-            axiosInstance,
-            logger
-          },
-          {
-            url: `${baseUrl}/outgoing-payments`,
+            url: `${paymentPointer}/outgoing-payments/1`,
             accessToken: 'accessToken'
           },
           openApiValidators.successfulValidator
         )
       ).rejects.toThrowError()
+      scope.done()
     })
 
     test('throws if outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      nock(baseUrl).get('/outgoing-payments').reply(200, outgoingPayment)
+      const scope = nock(paymentPointer)
+        .get('/outgoing-payments/1')
+        .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         getOutgoingPayment(
+          { axiosInstance, logger },
           {
-            axiosInstance,
-            logger
-          },
-          {
-            url: `${baseUrl}/outgoing-payments`,
+            url: `${paymentPointer}/outgoing-payments/1`,
             accessToken: 'accessToken'
           },
           openApiValidators.failedValidator
         )
       ).rejects.toThrowError()
+      scope.done()
     })
   })
 
   describe('listOutgoingPayment', (): void => {
-    const paymentPointer = 'http://localhost:1000/.well-known/pay'
-
     describe('forward pagination', (): void => {
       test.each`
         first        | cursor
@@ -173,10 +136,7 @@ describe('outgoing-payment', (): void => {
             .reply(200, outgoingPaymentPaginationResult)
 
           const result = await listOutgoingPayments(
-            {
-              axiosInstance,
-              logger
-            },
+            { axiosInstance, logger },
             {
               paymentPointer,
               accessToken: 'accessToken'
@@ -255,7 +215,7 @@ describe('outgoing-payment', (): void => {
         .get('/outgoing-payments')
         .reply(200, outgoingPaymentPaginationResult)
 
-      await expect(() =>
+      await expect(
         listOutgoingPayments(
           {
             axiosInstance,
@@ -279,7 +239,7 @@ describe('outgoing-payment', (): void => {
         .get('/outgoing-payments')
         .reply(200, outgoingPaymentPaginationResult)
 
-      await expect(() =>
+      await expect(
         listOutgoingPayments(
           {
             axiosInstance,
@@ -297,7 +257,7 @@ describe('outgoing-payment', (): void => {
   })
 
   describe('createOutgoingPayment', (): void => {
-    const quoteId = `${baseUrl}/quotes/${uuid()}`
+    const quoteId = `${paymentPointer}/quotes/${uuid()}`
 
     test.each`
       description           | externalRef
@@ -312,25 +272,22 @@ describe('outgoing-payment', (): void => {
           externalRef
         })
 
-        const scope = nock(baseUrl)
+        const scope = nock(paymentPointer)
           .post('/outgoing-payments')
           .reply(200, outgoingPayment)
 
         const result = await createOutgoingPayment(
+          { axiosInstance, logger },
           {
-            axiosInstance,
-            logger
+            paymentPointer,
+            accessToken: 'accessToken'
           },
+          openApiValidators.successfulValidator,
           {
-            url: `${baseUrl}/outgoing-payments`,
-            accessToken: 'accessToken',
-            body: {
-              quoteId,
-              description,
-              externalRef
-            }
-          },
-          openApiValidators.successfulValidator
+            quoteId,
+            description,
+            externalRef
+          }
         )
         expect(result).toEqual(outgoingPayment)
         scope.done()
@@ -351,24 +308,21 @@ describe('outgoing-payment', (): void => {
         }
       })
 
-      const scope = nock(baseUrl)
+      const scope = nock(paymentPointer)
         .post('/outgoing-payments')
         .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         createOutgoingPayment(
+          { axiosInstance, logger },
           {
-            axiosInstance,
-            logger
+            paymentPointer,
+            accessToken: 'accessToken'
           },
+          openApiValidators.successfulValidator,
           {
-            url: `${baseUrl}/outgoing-payments`,
-            accessToken: 'accessToken',
-            body: {
-              quoteId: uuid()
-            }
-          },
-          openApiValidators.successfulValidator
+            quoteId: uuid()
+          }
         )
       ).rejects.toThrowError()
       scope.done()
@@ -377,24 +331,24 @@ describe('outgoing-payment', (): void => {
     test('throws if outgoing payment does not pass open api validation', async (): Promise<void> => {
       const outgoingPayment = mockOutgoingPayment()
 
-      const scope = nock(baseUrl)
+      const scope = nock(paymentPointer)
         .post('/outgoing-payments')
         .reply(200, outgoingPayment)
 
-      await expect(() =>
+      await expect(
         createOutgoingPayment(
           {
             axiosInstance,
             logger
           },
           {
-            url: `${baseUrl}/outgoing-payments`,
-            accessToken: 'accessToken',
-            body: {
-              quoteId: uuid()
-            }
+            paymentPointer,
+            accessToken: 'accessToken'
           },
-          openApiValidators.failedValidator
+          openApiValidators.failedValidator,
+          {
+            quoteId: uuid()
+          }
         )
       ).rejects.toThrowError()
       scope.done()
@@ -485,6 +439,117 @@ describe('outgoing-payment', (): void => {
       expect(() => validateOutgoingPayment(outgoingPayment)).toThrow(
         'Amount to send matches sent amount but payment failed'
       )
+    })
+  })
+
+  describe('routes', (): void => {
+    describe('get', (): void => {
+      test('calls get method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/outgoing-payments/{id}' && method === HttpMethod.GET
+
+        const url = `${paymentPointer}/outgoing-payments/1`
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .mockImplementation(mockResponseValidator as any)
+
+        const getSpy = jest
+          .spyOn(requestors, 'get')
+          .mockResolvedValueOnce(mockOutgoingPayment())
+
+        await createOutgoingPaymentRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).get({ url, accessToken: 'accessToken' })
+
+        expect(getSpy).toHaveBeenCalledWith(
+          {
+            axiosInstance,
+            logger
+          },
+          { url, accessToken: 'accessToken' },
+          true
+        )
+      })
+    })
+
+    describe('list', (): void => {
+      test('calls get method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/outgoing-payments' && method === HttpMethod.GET
+
+        const outgoingPaymentPaginationResult =
+          mockOutgoingPaymentPaginationResult({
+            result: [mockOutgoingPayment()]
+          })
+        const url = `${paymentPointer}/outgoing-payments`
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .mockImplementation(mockResponseValidator as any)
+
+        const getSpy = jest
+          .spyOn(requestors, 'get')
+          .mockResolvedValueOnce(outgoingPaymentPaginationResult)
+
+        await createOutgoingPaymentRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).list({ paymentPointer, accessToken: 'accessToken' })
+
+        expect(getSpy).toHaveBeenCalledWith(
+          {
+            axiosInstance,
+            logger
+          },
+          { url, accessToken: 'accessToken' },
+          true
+        )
+      })
+    })
+
+    describe('create', (): void => {
+      test('calls post method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/outgoing-payments' && method === HttpMethod.POST
+
+        const url = `${paymentPointer}/outgoing-payments`
+        const outgoingPaymentCreateArgs = {
+          quoteId: uuid()
+        }
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .mockImplementation(mockResponseValidator as any)
+
+        const postSpy = jest
+          .spyOn(requestors, 'post')
+          .mockResolvedValueOnce(mockOutgoingPayment(outgoingPaymentCreateArgs))
+
+        await createOutgoingPaymentRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).create(
+          { paymentPointer, accessToken: 'accessToken' },
+          outgoingPaymentCreateArgs
+        )
+
+        expect(postSpy).toHaveBeenCalledWith(
+          {
+            axiosInstance,
+            logger
+          },
+          { url, accessToken: 'accessToken', body: outgoingPaymentCreateArgs },
+          true
+        )
+      })
     })
   })
 })

@@ -10,9 +10,9 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { GrantService, GrantRequest } from '../grant/service'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
-import { Action, AccessType } from '../access/types'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -62,7 +62,7 @@ describe('Grant Service', (): void => {
   })
 
   const BASE_GRANT_ACCESS = {
-    actions: [Action.Create, Action.Read, Action.List],
+    actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
     identifier: `https://example.com/${v4()}`
   }
 

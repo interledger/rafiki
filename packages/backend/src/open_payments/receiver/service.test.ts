@@ -18,11 +18,11 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
-import { AccessAction, AccessType } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { IncomingPayment } from '../payment/incoming/model'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>

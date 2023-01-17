@@ -1,15 +1,11 @@
 import { HttpMethod } from 'openapi'
-import { RouteDeps } from '.'
+import { RouteDeps, UnauthenticatedResourceRequestArgs } from '.'
 import { JWKS, PaymentPointer, getRSPath } from '../types'
 import { get } from './requests'
 
-interface GetArgs {
-  url: string
-}
-
 export interface PaymentPointerRoutes {
-  get(args: GetArgs): Promise<PaymentPointer>
-  getKeys(args: GetArgs): Promise<JWKS>
+  get(args: UnauthenticatedResourceRequestArgs): Promise<PaymentPointer>
+  getKeys(args: UnauthenticatedResourceRequestArgs): Promise<JWKS>
 }
 
 export const createPaymentPointerRoutes = (
@@ -29,9 +25,9 @@ export const createPaymentPointerRoutes = (
   })
 
   return {
-    get: (args: GetArgs) =>
+    get: (args: UnauthenticatedResourceRequestArgs) =>
       get({ axiosInstance, logger }, args, getPaymentPaymentValidator),
-    getKeys: (args: GetArgs) =>
+    getKeys: (args: UnauthenticatedResourceRequestArgs) =>
       get(
         { axiosInstance, logger },
         {

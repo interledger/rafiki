@@ -41,6 +41,21 @@ export interface RouteDeps extends BaseDeps {
   logger: Logger
 }
 
+export interface UnauthenticatedResourceRequestArgs {
+  url: string
+}
+
+interface AuthenticatedRequestArgs {
+  accessToken: string
+}
+export interface ResourceRequestArgs
+  extends UnauthenticatedResourceRequestArgs,
+    AuthenticatedRequestArgs {}
+
+export interface CollectionRequestArgs extends AuthenticatedRequestArgs {
+  paymentPointer: string
+}
+
 const createDeps = async (
   args: Partial<CreateAuthenticatedClientArgs>
 ): Promise<ClientDeps> => {

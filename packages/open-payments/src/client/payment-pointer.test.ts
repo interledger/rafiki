@@ -1,7 +1,21 @@
 import { createPaymentPointerRoutes } from './payment-pointer'
 import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
 import path from 'path'
-import { defaultAxiosInstance, silentLogger } from '../test/helpers'
+import {
+  defaultAxiosInstance,
+  mockJwk,
+  mockPaymentPointer,
+  silentLogger
+} from '../test/helpers'
+import * as requestors from './requests'
+
+jest.mock('./requests', () => {
+  return {
+    // https://jestjs.io/docs/jest-object#jestmockmodulename-factory-options
+    __esModule: true,
+    ...jest.requireActual('./requests')
+  }
+})
 
 describe('payment-pointer', (): void => {
   let openApi: OpenAPI
@@ -15,22 +29,65 @@ describe('payment-pointer', (): void => {
   const axiosInstance = defaultAxiosInstance
   const logger = silentLogger
 
-  describe('createPaymentPointerRoutes', (): void => {
-    test('calls createResponseValidator properly', async (): Promise<void> => {
-      jest.spyOn(openApi, 'createResponseValidator')
+  describe('routes', (): void => {
+    const paymentPointer = mockPaymentPointer()
 
-      createPaymentPointerRoutes({
-        axiosInstance,
-        openApi,
-        logger
+    describe('get', (): void => {
+      test('calls get method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/' && method === HttpMethod.GET
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .mockImplementation(mockResponseValidator as any)
+
+        const getSpy = jest
+          .spyOn(requestors, 'get')
+          .mockResolvedValueOnce(paymentPointer)
+
+        await createPaymentPointerRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).get({ url: paymentPointer.id })
+
+        expect(getSpy).toHaveBeenCalledWith(
+          { axiosInstance, logger },
+          { url: paymentPointer.id },
+          true
+        )
       })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/',
-        method: HttpMethod.GET
-      })
-      expect(openApi.createResponseValidator).toHaveBeenCalledWith({
-        path: '/jwks.json',
-        method: HttpMethod.GET
+    })
+
+    describe('getKeys', (): void => {
+      test('calls get method with correct validator', async (): Promise<void> => {
+        const mockResponseValidator = ({ path, method }) =>
+          path === '/jwks.json' && method === HttpMethod.GET
+
+        jest
+          .spyOn(openApi, 'createResponseValidator')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .mockImplementation(mockResponseValidator as any)
+
+        const getSpy = jest
+          .spyOn(requestors, 'get')
+          .mockResolvedValueOnce([mockJwk()])
+
+        await createPaymentPointerRoutes({
+          openApi,
+          axiosInstance,
+          logger
+        }).getKeys({ url: paymentPointer.id })
+
+        expect(getSpy).toHaveBeenCalledWith(
+          {
+            axiosInstance,
+            logger
+          },
+          { url: `${paymentPointer.id}/jwks.json` },
+          true
+        )
       })
     })
   })

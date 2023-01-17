@@ -12,7 +12,6 @@ import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
-import { AccessType, AccessAction } from '../grant/model'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
@@ -22,6 +21,7 @@ import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { setup } from '../payment_pointer/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
+import { AccessAction, AccessType } from 'open-payments'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,
@@ -43,7 +43,7 @@ describe('Auth Middleware', (): void => {
   }
 
   const type = AccessType.IncomingPayment
-  const action = AccessAction.Create
+  const action: AccessAction = 'create'
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
