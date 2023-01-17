@@ -39,9 +39,13 @@ export const setup = <T extends PaymentPointerContext>(
   return ctx
 }
 
+interface TestGetOptions extends GetOptions {
+  paymentPointerId: NonNullable<GetOptions['paymentPointerId']>
+}
+
 interface BaseTestsOptions<M> {
   createModel: (options: { clientId?: string }) => Promise<M>
-  testGet: (options: GetOptions, expectedMatch?: M) => void
+  testGet: (options: TestGetOptions, expectedMatch?: M) => void
   testList?: (options: ListOptions, expectedMatch?: M) => void
 }
 
@@ -235,7 +239,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
     createModel,
     testGet: async ({ id, paymentPointerId, clientId }, expectedMatch) => {
       const paymentPointer = await getPaymentPointer()
-      paymentPointer.id = paymentPointerId as string
+      paymentPointer.id = paymentPointerId
       const ctx = setup<ReadContext>({
         reqOpts: {
           headers: { Accept: 'application/json' },
