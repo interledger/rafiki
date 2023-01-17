@@ -4,13 +4,13 @@ import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { AuthService, TokenInfo } from './service'
-import { AccessType, AccessAction } from '../grant/model'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { HttpMethod, RequestValidator } from 'openapi'
 import { createTestApp, TestContainer } from '../../tests/app'
+import { AccessType, AccessAction } from 'open-payments'
 
 type IntrospectionBody = {
   access_token: string

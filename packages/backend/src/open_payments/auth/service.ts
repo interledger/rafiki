@@ -1,10 +1,10 @@
 import axios from 'axios'
 import { Logger } from 'pino'
 
-import { AccessAction, AccessType } from '../grant/model'
 import { OpenAPI, HttpMethod, ResponseValidator } from 'openapi'
 import { JWK } from 'http-signature-utils'
 import { AmountJSON } from '../amount'
+import { AccessAction, AccessType } from 'open-payments'
 
 export interface KeyInfo {
   proof: string

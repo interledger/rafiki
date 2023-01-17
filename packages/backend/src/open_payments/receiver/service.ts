@@ -6,13 +6,14 @@ import {
 } from 'open-payments'
 
 import { ConnectionService } from '../connection/service'
-import { AccessType, AccessAction, Grant } from '../grant/model'
+import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
+import { AccessType, AccessAction } from 'open-payments'
 
 // A receiver is resolved from an incoming payment or a connection
 export interface ReceiverService {

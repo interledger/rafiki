@@ -25,7 +25,6 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { AccessType, AccessAction } from './open_payments/grant/model'
 import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware,
@@ -49,7 +48,7 @@ import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AuthenticatedClient } from 'open-payments'
+import { AccessType, AuthenticatedClient } from 'open-payments'
 
 export interface AppContextData {
   logger: Logger
@@ -272,11 +271,11 @@ export class App {
     }): RequestAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('{id}') ? RequestAction.Read : RequestAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
-            ? AccessAction.Complete
-            : AccessAction.Create
+            ? RequestAction.Complete
+            : RequestAction.Create
         default:
           return undefined
       }
@@ -285,10 +284,10 @@ export class App {
     const actionToRoute: {
       [key in RequestAction]: string
     } = {
-      [AccessAction.Create]: 'create',
-      [AccessAction.Read]: 'get',
-      [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list'
+      create: 'create',
+      read: 'get',
+      complete: 'complete',
+      list: 'list'
     }
 
     for (const path in resourceServerSpec.paths) {
