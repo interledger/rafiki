@@ -2,7 +2,6 @@ import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   isNonInteractiveGrant,
-  AccessType,
   AccessAction
 } from 'open-payments'
 import { Grant } from '../../grant/model'
@@ -101,7 +100,7 @@ async function getGrant(
 
   const grantOptions = {
     authServer: paymentPointer.authServer,
-    accessType: AccessType.IncomingPayment,
+    accessType: 'incoming-payment' as const,
     accessActions
   }
 
@@ -123,7 +122,7 @@ async function getGrant(
       access_token: {
         access: [
           {
-            type: grantOptions.accessType as 'incoming-payment',
+            type: grantOptions.accessType,
             actions: grantOptions.accessActions
           }
         ]
