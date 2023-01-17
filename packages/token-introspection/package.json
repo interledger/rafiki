@@ -1,0 +1,30 @@
+{
+  "name": "token-introspection",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build:deps": "pnpm --filter openapi build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "clean": "rm -fr dist/",
+    "copy-files": "cp -r ./src/openapi ./dist/",
+    "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
+    "prepack": "pnpm build",
+    "test": "jest --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "^18.7.12",
+    "nock": "^13.2.9",
+    "openapi-typescript": "^4.5.0",
+    "typescript": "^4.3.0",
+    "uuid": "^8.3.2"
+  },
+  "dependencies": {
+    "axios": "^1.1.2",
+    "openapi": "workspace:../openapi",
+    "pino": "^8.4.2"
+  }
+}

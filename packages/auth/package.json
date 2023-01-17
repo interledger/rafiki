@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "knex": "knex",
-    "build:deps": "pnpm --filter open-payments build",
-    "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
+    "build:deps": "pnpm --filter open-payments build && pnpm --filter token-introspection build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build",
@@ -35,6 +35,7 @@
     "pino": "^8.8.0",
     "pino-pretty": "^9.1.1",
     "testcontainers": "^8.16.0",
+    "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
