@@ -30,7 +30,7 @@ export function createIncomingErrorHandlerMiddleware(
         ctx.response.reject = errorToIlpReject(serverAddress, err)
       } else {
         ctx.response.reject = errorToIlpReject(serverAddress, {
-          message: err.message,
+          message: err && err['message'],
           ilpErrorCode: IlpErrorCode.F00_BAD_REQUEST,
           name: ''
         })
