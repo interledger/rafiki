@@ -169,7 +169,7 @@ importers:
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
-      oer-utils: 5.1.3-alpha.1
+      oer-utils: 5.1.3-alpha.2
       open-payments: workspace:../open-payments
       openapi: workspace:../openapi
       openapi-types: ^12.1.0
@@ -219,7 +219,7 @@ importers:
       luxon: 3.2.1
       objection: 3.0.1_knex@0.95.15
       objection-db-errors: 1.1.2_objection@3.0.1
-      oer-utils: 5.1.3-alpha.1
+      oer-utils: 5.1.3-alpha.2
       open-payments: link:../open-payments
       openapi: link:../openapi
       pg: 8.8.0
@@ -11019,13 +11019,6 @@ packages:
     dependencies:
       '@types/long': 4.0.1
       long: 4.0.0
-
-  /oer-utils/5.1.3-alpha.1:
-    resolution: {integrity: sha512-/mADI/Gto5D931jip/jJejPwZaljjUYLkFjGdkMg/3GDAE6nG2yAJHJIO5C2rb5ls7opPAeYlR5pltW2vRgPjA==}
-    dependencies:
-      '@types/long': 4.0.1
-      long: 4.0.0
-    dev: false
 
   /oer-utils/5.1.3-alpha.2:
     resolution: {integrity: sha512-BX/8xcb+TXGTRtu97a/ZvcrWSyMd8wt8GSQMD7MvKxPEFqN4lX9w+Pk/Wm4HxwfHQQO9EhTYryR5hosTgWxP+A==}
