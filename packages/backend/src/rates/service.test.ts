@@ -17,11 +17,13 @@ describe('Rates service', function () {
   koa.use(function (ctx) {
     requestCount++
     ctx.body = {
-      USD: 1.0, // base
-      XRP: 0.5,
-      NEGATIVE: -0.5,
-      ZERO: 0.0,
-      STRING: '123'
+      base: 'USD',
+      rates: {
+        XRP: 0.5,
+        NEGATIVE: -0.5,
+        ZERO: 0.0,
+        STRING: '123'
+      }
     }
   })
   const server = koa.listen(3210)
@@ -176,6 +178,17 @@ describe('Rates service', function () {
         expect(service['prefetchRequest']).toBeUndefined()
         expect(requestCount).toBe(2)
       })
+    })
+  })
+
+  describe('checkBaseAsset', (): void => {
+    it.each`
+      asset        | description
+      ${undefined} | ${'is not provided'}
+      ${['USD']}   | ${'is not a string'}
+      ${''}        | ${'is an empty string'}
+    `(`throws if base asset $description`, ({ asset }): void => {
+      expect(() => service['checkBaseAsset'](asset)).toThrow()
     })
   })
 })
