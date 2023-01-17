@@ -73,8 +73,8 @@ export interface TransferOptions {
 }
 
 export interface Transaction {
-  commit: () => Promise<void | TransferError>
-  rollback: () => Promise<void | TransferError>
+  post: () => Promise<void | TransferError>
+  void: () => Promise<void | TransferError>
 }
 
 export interface AccountingService {
@@ -358,7 +358,7 @@ export async function createTransfer(
   }
 
   const trx: Transaction = {
-    commit: async (): Promise<void | TransferError> => {
+    post: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
         transfers.map((transfer) => {
@@ -390,7 +390,7 @@ export async function createTransfer(
         })
       }
     },
-    rollback: async (): Promise<void | TransferError> => {
+    void: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
         transfers.map((transfer) => {

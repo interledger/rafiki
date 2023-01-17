@@ -207,7 +207,7 @@ describe('Accounting Service', (): void => {
             timeout: 0n
           })
           assert.ok(!isTransferError(transfer))
-          await transfer.commit()
+          await transfer.post()
         })
       )
       await expect(
@@ -342,9 +342,9 @@ describe('Accounting Service', (): void => {
           ).resolves.toEqual(BigInt(0))
 
           if (commit) {
-            await expect(trxOrError.commit()).resolves.toBeUndefined()
+            await expect(trxOrError.post()).resolves.toBeUndefined()
           } else {
-            await expect(trxOrError.rollback()).resolves.toBeUndefined()
+            await expect(trxOrError.void()).resolves.toBeUndefined()
           }
 
           await expect(
@@ -381,12 +381,12 @@ describe('Accounting Service', (): void => {
             accountingService.getBalance(destinationAccount.id)
           ).resolves.toEqual(commit ? destinationAmount : BigInt(0))
 
-          await expect(trxOrError.commit()).resolves.toEqual(
+          await expect(trxOrError.post()).resolves.toEqual(
             commit
               ? TransferError.AlreadyCommitted
               : TransferError.AlreadyRolledBack
           )
-          await expect(trxOrError.rollback()).resolves.toEqual(
+          await expect(trxOrError.void()).resolves.toEqual(
             commit
               ? TransferError.AlreadyCommitted
               : TransferError.AlreadyRolledBack

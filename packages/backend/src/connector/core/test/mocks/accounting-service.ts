@@ -107,10 +107,10 @@ export class MockAccountingService implements AccountingService {
     }
     sourceAccount.balance -= sourceAmount
     return {
-      commit: async () => {
+      post: async () => {
         destinationAccount.balance += destinationAmount
       },
-      rollback: async () => {
+      void: async () => {
         sourceAccount.balance += sourceAmount
       }
     }
