@@ -180,6 +180,14 @@ export type CreateQuoteInput = {
   sendAmount?: InputMaybe<AmountInput>;
 };
 
+export type CreateRemoteIncomingPaymentInput = {
+  description?: InputMaybe<Scalars['String']>;
+  expiresAt?: InputMaybe<Scalars['String']>;
+  externalRef?: InputMaybe<Scalars['String']>;
+  incomingAmount?: InputMaybe<AmountInput>;
+  paymentPointerUrl: Scalars['String'];
+};
+
 export enum Crv {
   Ed25519 = 'Ed25519'
 }
@@ -331,6 +339,7 @@ export type Mutation = {
   /** Create liquidity withdrawal from peer */
   createPeerLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   createQuote: QuoteResponse;
+  createRemoteIncomingPayment: RemoteIncomingPaymentResponse;
   /** Delete peer */
   deletePeer: DeletePeerMutationResponse;
   /** Deposit webhook event liquidity */
@@ -407,6 +416,11 @@ export type MutationCreatePeerLiquidityWithdrawalArgs = {
 
 export type MutationCreateQuoteArgs = {
   input: CreateQuoteInput;
+};
+
+
+export type MutationCreateRemoteIncomingPaymentArgs = {
+  input: CreateRemoteIncomingPaymentInput;
 };
 
 
@@ -693,6 +707,28 @@ export type QuoteResponse = {
   success: Scalars['Boolean'];
 };
 
+export type RemoteIncomingPayment = {
+  __typename?: 'RemoteIncomingPayment';
+  completed: Scalars['Boolean'];
+  createdAt: Scalars['String'];
+  description?: Maybe<Scalars['String']>;
+  expiresAt?: Maybe<Scalars['String']>;
+  externalRef?: Maybe<Scalars['String']>;
+  id: Scalars['ID'];
+  incomingAmount?: Maybe<Amount>;
+  paymentPointerUrl: Scalars['String'];
+  receivedAmount: Amount;
+  updatedAt: Scalars['String'];
+};
+
+export type RemoteIncomingPaymentResponse = {
+  __typename?: 'RemoteIncomingPaymentResponse';
+  code: Scalars['String'];
+  message?: Maybe<Scalars['String']>;
+  payment?: Maybe<RemoteIncomingPayment>;
+  success: Scalars['Boolean'];
+};
+
 export type RevokePaymentPointerKeyMutationResponse = MutationResponse & {
   __typename?: 'RevokePaymentPointerKeyMutationResponse';
   code: Scalars['String'];
@@ -830,6 +866,7 @@ export type ResolversTypes = {
   CreatePeerLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<CreatePeerLiquidityWithdrawalInput>>;
   CreatePeerMutationResponse: ResolverTypeWrapper<Partial<CreatePeerMutationResponse>>;
   CreateQuoteInput: ResolverTypeWrapper<Partial<CreateQuoteInput>>;
+  CreateRemoteIncomingPaymentInput: ResolverTypeWrapper<Partial<CreateRemoteIncomingPaymentInput>>;
   Crv: ResolverTypeWrapper<Partial<Crv>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
@@ -871,6 +908,8 @@ export type ResolversTypes = {
   QuoteConnection: ResolverTypeWrapper<Partial<QuoteConnection>>;
   QuoteEdge: ResolverTypeWrapper<Partial<QuoteEdge>>;
   QuoteResponse: ResolverTypeWrapper<Partial<QuoteResponse>>;
+  RemoteIncomingPayment: ResolverTypeWrapper<Partial<RemoteIncomingPayment>>;
+  RemoteIncomingPaymentResponse: ResolverTypeWrapper<Partial<RemoteIncomingPaymentResponse>>;
   RevokePaymentPointerKeyMutationResponse: ResolverTypeWrapper<Partial<RevokePaymentPointerKeyMutationResponse>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
@@ -906,6 +945,7 @@ export type ResolversParentTypes = {
   CreatePeerLiquidityWithdrawalInput: Partial<CreatePeerLiquidityWithdrawalInput>;
   CreatePeerMutationResponse: Partial<CreatePeerMutationResponse>;
   CreateQuoteInput: Partial<CreateQuoteInput>;
+  CreateRemoteIncomingPaymentInput: Partial<CreateRemoteIncomingPaymentInput>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
   Float: Partial<Scalars['Float']>;
   Http: Partial<Http>;
@@ -942,6 +982,8 @@ export type ResolversParentTypes = {
   QuoteConnection: Partial<QuoteConnection>;
   QuoteEdge: Partial<QuoteEdge>;
   QuoteResponse: Partial<QuoteResponse>;
+  RemoteIncomingPayment: Partial<RemoteIncomingPayment>;
+  RemoteIncomingPaymentResponse: Partial<RemoteIncomingPaymentResponse>;
   RevokePaymentPointerKeyMutationResponse: Partial<RevokePaymentPointerKeyMutationResponse>;
   String: Partial<Scalars['String']>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
@@ -1099,6 +1141,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createPeer?: Resolver<ResolversTypes['CreatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationCreatePeerArgs, 'input'>>;
   createPeerLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreatePeerLiquidityWithdrawalArgs, 'input'>>;
   createQuote?: Resolver<ResolversTypes['QuoteResponse'], ParentType, ContextType, RequireFields<MutationCreateQuoteArgs, 'input'>>;
+  createRemoteIncomingPayment?: Resolver<ResolversTypes['RemoteIncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateRemoteIncomingPaymentArgs, 'input'>>;
   deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'id'>>;
   depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'eventId'>>;
   finalizeLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationFinalizeLiquidityWithdrawalArgs, 'withdrawalId'>>;
@@ -1267,6 +1310,28 @@ export type QuoteResponseResolvers<ContextType = any, ParentType extends Resolve
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type RemoteIncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemoteIncomingPayment'] = ResolversParentTypes['RemoteIncomingPayment']> = {
+  completed?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
+  paymentPointerUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type RemoteIncomingPaymentResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RemoteIncomingPaymentResponse'] = ResolversParentTypes['RemoteIncomingPaymentResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  message?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  payment?: Resolver<Maybe<ResolversTypes['RemoteIncomingPayment']>, ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type RevokePaymentPointerKeyMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokePaymentPointerKeyMutationResponse'] = ResolversParentTypes['RevokePaymentPointerKeyMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1340,6 +1405,8 @@ export type Resolvers<ContextType = any> = {
   QuoteConnection?: QuoteConnectionResolvers<ContextType>;
   QuoteEdge?: QuoteEdgeResolvers<ContextType>;
   QuoteResponse?: QuoteResponseResolvers<ContextType>;
+  RemoteIncomingPayment?: RemoteIncomingPaymentResolvers<ContextType>;
+  RemoteIncomingPaymentResponse?: RemoteIncomingPaymentResponseResolvers<ContextType>;
   RevokePaymentPointerKeyMutationResponse?: RevokePaymentPointerKeyMutationResponseResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   TriggerPaymentPointerEventsMutationResponse?: TriggerPaymentPointerEventsMutationResponseResolvers<ContextType>;
