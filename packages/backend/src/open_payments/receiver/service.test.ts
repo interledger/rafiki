@@ -23,6 +23,12 @@ import { IncomingPayment } from '../payment/incoming/model'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { AccessType, AccessAction } from 'open-payments'
+import { Amount, parseAmount } from '../amount'
+import {
+  mockIncomingPayment,
+  mockPaymentPointer
+} from '../../tests/openPaymentsMocks'
+import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -33,15 +39,19 @@ describe('Receiver Service', (): void => {
   let connectionService: ConnectionService
   let paymentPointerService: PaymentPointerService
   let grantService: GrantService
+  let remoteIncomingPaymentService: RemoteIncomingPaymentService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
-    appContainer = await createTestApp(deps)
+    appContainer = await createTestApp(deps, { silentLogging: true })
     receiverService = await deps.use('receiverService')
     openPaymentsClient = await deps.use('openPaymentsClient')
     connectionService = await deps.use('connectionService')
     paymentPointerService = await deps.use('paymentPointerService')
     grantService = await deps.use('grantService')
+    remoteIncomingPaymentService = await deps.use(
+      'remoteIncomingPaymentService'
+    )
     knex = appContainer.knex
   })
 
@@ -192,13 +202,20 @@ describe('Receiver Service', (): void => {
 
         await expect(receiverService.get(incomingPayment.url)).resolves.toEqual(
           {
-            assetCode: paymentPointer.asset.code,
-            assetScale: paymentPointer.asset.scale,
-            incomingAmountValue: incomingPayment.incomingAmount.value,
-            receivedAmountValue: incomingPayment.receivedAmount.value,
+            assetCode: incomingPayment.receivedAmount.assetCode,
+            assetScale: incomingPayment.receivedAmount.assetScale,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
-            expiresAt: expect.any(Date)
+            incomingPayment: {
+              id: incomingPayment.id,
+              paymentPointer: incomingPayment.paymentPointer.url,
+              updatedAt: new Date(incomingPayment.updatedAt),
+              createdAt: new Date(incomingPayment.createdAt),
+              completed: incomingPayment.completed,
+              receivedAmount: incomingPayment.receivedAmount,
+              incomingAmount: incomingPayment.incomingAmount,
+              expiresAt: incomingPayment.expiresAt
+            }
           }
         )
         expect(clientGetIncomingPaymentSpy).not.toHaveBeenCalled()
@@ -294,13 +311,20 @@ describe('Receiver Service', (): void => {
           await expect(
             receiverService.get(incomingPayment.url)
           ).resolves.toEqual({
-            assetCode: paymentPointer.asset.code,
-            assetScale: paymentPointer.asset.scale,
-            incomingAmountValue: incomingPayment.incomingAmount.value,
-            receivedAmountValue: incomingPayment.receivedAmount.value,
+            assetCode: incomingPayment.receivedAmount.assetCode,
+            assetScale: incomingPayment.receivedAmount.assetScale,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
-            expiresAt: expect.any(Date)
+            incomingPayment: {
+              id: incomingPayment.id,
+              paymentPointer: incomingPayment.paymentPointer.url,
+              updatedAt: new Date(incomingPayment.updatedAt),
+              createdAt: new Date(incomingPayment.createdAt),
+              completed: incomingPayment.completed,
+              receivedAmount: incomingPayment.receivedAmount,
+              incomingAmount: incomingPayment.incomingAmount,
+              expiresAt: incomingPayment.expiresAt
+            }
           })
           expect(clientGetPaymentPointerSpy).toHaveBeenCalledWith({
             url: paymentPointer.url
@@ -430,6 +454,91 @@ describe('Receiver Service', (): void => {
           })
         })
       })
+    })
+  })
+
+  describe('create', () => {
+    const amount: Amount = {
+      value: BigInt(123),
+      assetCode: 'USD',
+      assetScale: 2
+    }
+    const paymentPointer = mockPaymentPointer()
+
+    test.each`
+      incomingAmount | expiresAt                        | description                | externalRef
+      ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
+      ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+    `(
+      'creates receiver from remote incoming payment ($#)',
+      async ({
+        description,
+        externalRef,
+        expiresAt,
+        incomingAmount
+      }): Promise<void> => {
+        const incomingPayment = mockIncomingPayment({
+          description,
+          externalRef,
+          expiresAt,
+          incomingAmount
+        })
+        const remoteIncomingPaymentServiceSpy = jest
+          .spyOn(remoteIncomingPaymentService, 'create')
+          .mockResolvedValueOnce(incomingPayment)
+
+        const receiver = await receiverService.create({
+          paymentPointerUrl: paymentPointer.id,
+          incomingAmount,
+          expiresAt,
+          description,
+          externalRef
+        })
+
+        expect(receiver).toEqual({
+          assetCode: incomingPayment.receivedAmount.assetCode,
+          assetScale: incomingPayment.receivedAmount.assetScale,
+          ilpAddress: incomingPayment.ilpStreamConnection.ilpAddress,
+          sharedSecret: expect.any(Buffer),
+          incomingPayment: {
+            id: incomingPayment.id,
+            paymentPointer: incomingPayment.paymentPointer,
+            updatedAt: new Date(incomingPayment.updatedAt),
+            createdAt: new Date(incomingPayment.createdAt),
+            completed: incomingPayment.completed,
+            receivedAmount: parseAmount(incomingPayment.receivedAmount),
+            incomingAmount:
+              incomingPayment.incomingAmount &&
+              parseAmount(incomingPayment.incomingAmount),
+            expiresAt:
+              incomingPayment.expiresAt && new Date(incomingPayment.expiresAt)
+          }
+        })
+
+        expect(remoteIncomingPaymentServiceSpy).toHaveBeenCalledWith({
+          paymentPointerUrl: paymentPointer.id,
+          incomingAmount,
+          expiresAt,
+          description,
+          externalRef
+        })
+      }
+    )
+
+    test('throws if could not create remote incoming payment', async (): Promise<void> => {
+      jest.spyOn(remoteIncomingPaymentService, 'create').mockResolvedValueOnce(
+        mockIncomingPayment({
+          completed: true
+        })
+      )
+
+      await expect(
+        receiverService.create({
+          paymentPointerUrl: paymentPointer.id
+        })
+      ).rejects.toThrow(
+        'Could not create receiver from remote incoming payment'
+      )
     })
   })
 })

@@ -14,10 +14,21 @@ import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
 import { AccessType, AccessAction } from 'open-payments'
+import { Amount } from '../amount'
+import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
+
+interface CreateReceiverArgs {
+  paymentPointerUrl: string
+  description?: string
+  expiresAt?: Date
+  incomingAmount?: Amount
+  externalRef?: string
+}
 
 // A receiver is resolved from an incoming payment or a connection
 export interface ReceiverService {
   get(url: string): Promise<Receiver | undefined>
+  create(args: CreateReceiverArgs): Promise<Receiver>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -27,6 +38,7 @@ interface ServiceDependencies extends BaseService {
   openPaymentsUrl: string
   paymentPointerService: PaymentPointerService
   openPaymentsClient: AuthenticatedClient
+  remoteIncomingPaymentService: RemoteIncomingPaymentService
 }
 
 const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
@@ -45,8 +57,30 @@ export async function createReceiverService(
   }
 
   return {
-    get: (url) => getReceiver(deps, url)
+    get: (url) => getReceiver(deps, url),
+    create: (url) => createReceiver(deps, url)
   }
+}
+
+async function createReceiver(
+  deps: ServiceDependencies,
+  args: CreateReceiverArgs
+): Promise<Receiver> {
+  const remoteIncomingPayment = await deps.remoteIncomingPaymentService.create(
+    args
+  )
+
+  const receiver = Receiver.fromIncomingPayment(remoteIncomingPayment)
+
+  if (!receiver) {
+    const errorMessage =
+      'Could not create receiver from remote incoming payment'
+    deps.logger.error({ remoteIncomingPayment }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+
+  return receiver
 }
 
 async function getReceiver(
