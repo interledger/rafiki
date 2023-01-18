@@ -1,4 +1,4 @@
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { StreamServer } from '@interledger/stream-receiver'
 
 import {
