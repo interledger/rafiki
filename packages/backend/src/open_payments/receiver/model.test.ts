@@ -49,7 +49,7 @@ describe('Receiver Model', (): void => {
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
-          id: incomingPayment.id,
+          id: incomingPayment.url,
           paymentPointer: incomingPayment.paymentPointer.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,

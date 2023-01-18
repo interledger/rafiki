@@ -6,20 +6,19 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import { mockIncomingPayment, mockPaymentPointer } from 'open-payments'
-import { RemoteIncomingPaymentService } from '../../open_payments/payment/incoming_remote/service'
 import { CreateReceiverResponse } from '../generated/graphql'
+import { ReceiverService } from '../../open_payments/receiver/service'
+import { Receiver } from '../../open_payments/receiver/model'
 
-describe('Remote Incoming Payment Resolver', (): void => {
+describe('Receiver Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let remoteIncomingPaymentService: RemoteIncomingPaymentService
+  let receiverService: ReceiverService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    remoteIncomingPaymentService = await deps.use(
-      'remoteIncomingPaymentService'
-    )
+    receiverService = await deps.use('receiverService')
   })
 
   afterAll(async (): Promise<void> => {
@@ -27,7 +26,7 @@ describe('Remote Incoming Payment Resolver', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Mutation.createRemoteIncomingPayment', (): void => {
+  describe('Mutation.createReceiver', (): void => {
     const amount: Amount = {
       value: BigInt(123),
       assetCode: 'USD',
@@ -58,8 +57,8 @@ describe('Remote Incoming Payment Resolver', (): void => {
         })
 
         const createSpy = jest
-          .spyOn(remoteIncomingPaymentService, 'create')
-          .mockResolvedValueOnce(payment)
+          .spyOn(receiverService, 'create')
+          .mockResolvedValueOnce(Receiver.fromIncomingPayment(payment))
 
         const input = {
           paymentPointerUrl: paymentPointer.id,
@@ -72,14 +71,12 @@ describe('Remote Incoming Payment Resolver', (): void => {
         const query = await appContainer.apolloClient
           .query({
             query: gql`
-              mutation CreateRemoteIncomingPayment(
-                $input: CreateRemoteIncomingPaymentInput!
-              ) {
-                createRemoteIncomingPayment(input: $input) {
+              mutation CreateReceiver($input: CreateReceiverInput!) {
+                createReceiver(input: $input) {
                   code
                   success
                   message
-                  payment {
+                  receiver {
                     id
                     paymentPointerUrl
                     completed
@@ -104,10 +101,7 @@ describe('Remote Incoming Payment Resolver', (): void => {
             `,
             variables: { input }
           })
-          .then(
-            (query): CreateReceiverResponse =>
-              query.data?.createRemoteIncomingPayment
-          )
+          .then((query): CreateReceiverResponse => query.data?.createReceiver)
 
         expect(createSpy).toHaveBeenCalledWith(input)
         expect(query).toEqual({
@@ -115,8 +109,8 @@ describe('Remote Incoming Payment Resolver', (): void => {
           code: '200',
           success: true,
           message: null,
-          payment: {
-            __typename: 'RemoteIncomingPayment',
+          receiver: {
+            __typename: 'Receiver',
             id: payment.id,
             paymentPointerUrl: payment.paymentPointer,
             completed: false,
@@ -141,11 +135,11 @@ describe('Remote Incoming Payment Resolver', (): void => {
       }
     )
 
-    test('returns 500 if cannot create remote incoming payment', async (): Promise<void> => {
+    test('returns 500 if cannot create receiver', async (): Promise<void> => {
       const createSpy = jest
-        .spyOn(remoteIncomingPaymentService, 'create')
+        .spyOn(receiverService, 'create')
         .mockImplementationOnce(() => {
-          throw new Error('Cannot create incoming payment')
+          throw new Error('Cannot create receiver')
         })
 
       const input = {
@@ -155,14 +149,12 @@ describe('Remote Incoming Payment Resolver', (): void => {
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            mutation CreateRemoteIncomingPayment(
-              $input: CreateRemoteIncomingPaymentInput!
-            ) {
-              createRemoteIncomingPayment(input: $input) {
+            mutation CreateReceiver($input: CreateReceiverInput!) {
+              createReceiver(input: $input) {
                 code
                 success
                 message
-                payment {
+                receiver {
                   id
                   paymentPointerUrl
                   completed
@@ -187,18 +179,15 @@ describe('Remote Incoming Payment Resolver', (): void => {
           `,
           variables: { input }
         })
-        .then(
-          (query): CreateReceiverResponse =>
-            query.data?.createRemoteIncomingPayment
-        )
+        .then((query): CreateReceiverResponse => query.data?.createReceiver)
 
       expect(createSpy).toHaveBeenCalledWith(input)
       expect(query).toEqual({
         __typename: 'CreateReceiverResponse',
         code: '500',
         success: false,
-        message: 'Error trying to create remote incoming payment',
-        payment: null
+        message: 'Error trying to create receiver',
+        receiver: null
       })
     })
   })
