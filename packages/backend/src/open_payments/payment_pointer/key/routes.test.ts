@@ -12,8 +12,16 @@ import { truncateTables } from '../../../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerKeyService } from './service'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
+import { PaymentPointer } from '../model'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
+
+type PaymentPointerKeysContext = Omit<
+  PaymentPointerContext,
+  'paymentPointer'
+> & {
+  paymentPointer?: PaymentPointer
+}
 
 describe('Payment Pointer Keys Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -108,6 +116,18 @@ describe('Payment Pointer Keys Routes', (): void => {
       expect(ctx.body).toEqual({
         keys: [jwk]
       })
+    })
+
+    test('returns 404 if payment pointer does not exist', async (): Promise<void> => {
+      const ctx = createContext<PaymentPointerKeysContext>({
+        headers: { Accept: 'application/json' },
+        url: `/jwks.json`
+      })
+      ctx.paymentPointer = undefined
+
+      await expect(
+        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      ).rejects.toHaveProperty('status', 404)
     })
   })
 })
