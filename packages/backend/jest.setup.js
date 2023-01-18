@@ -23,11 +23,15 @@ module.exports = async (globalConfig) => {
     if (!process.env.DATABASE_URL) {
       const postgresContainer = await new GenericContainer('postgres:15')
         .withExposedPorts(POSTGRES_PORT)
-        .withBindMount(
-          __dirname + '/scripts/init.sh',
-          '/docker-entrypoint-initdb.d/init.sh'
-        )
-        .withEnv('POSTGRES_PASSWORD', 'password')
+        .withBindMounts([
+          {
+            source: __dirname + '/scripts/init.sh',
+            target: '/docker-entrypoint-initdb.d/init.sh'
+          }
+        ])
+        .withEnvironment({
+          POSTGRES_PASSWORD: 'password'
+        })
         .start()
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
@@ -77,9 +81,14 @@ module.exports = async (globalConfig) => {
         'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
       )
         .withExposedPorts(TIGERBEETLE_PORT)
-        .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+        .withBindMounts([
+          {
+            source: tigerbeetleDir,
+            target: TIGERBEETLE_DIR
+          }
+        ])
         .withAddedCapabilities('IPC_LOCK')
-        .withCmd([
+        .withCommand([
           'init',
           '--cluster=' + TIGERBEETLE_CLUSTER_ID,
           '--replica=0',
@@ -104,8 +113,13 @@ module.exports = async (globalConfig) => {
       )
         .withExposedPorts(TIGERBEETLE_PORT)
         .withAddedCapabilities('IPC_LOCK')
-        .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
-        .withCmd([
+        .withBindMounts([
+          {
+            source: tigerbeetleDir,
+            target: TIGERBEETLE_DIR
+          }
+        ])
+        .withCommand([
           'start',
           '--cluster=' + TIGERBEETLE_CLUSTER_ID,
           '--replica=0',
