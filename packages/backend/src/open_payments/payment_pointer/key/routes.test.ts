@@ -7,21 +7,17 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, PaymentPointerContext } from '../../../app'
+import {
+  AppServices,
+  PaymentPointerContext,
+  PaymentPointerKeysContext
+} from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerKeyService } from './service'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
-import { PaymentPointer } from '../model'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
-
-type PaymentPointerKeysContext = Omit<
-  PaymentPointerContext,
-  'paymentPointer'
-> & {
-  paymentPointer?: PaymentPointer
-}
 
 describe('Payment Pointer Keys Routes', (): void => {
   let deps: IocContract<AppServices>

@@ -1,6 +1,6 @@
 import { generateJwk, JWK } from 'http-signature-utils'
 
-import { PaymentPointerContext } from '../../../app'
+import { PaymentPointerContext, PaymentPointerKeysContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { PaymentPointerService } from '../service'
 import { PaymentPointerKeyService } from './service'
@@ -13,7 +13,7 @@ interface ServiceDependencies {
 }
 
 export interface PaymentPointerKeyRoutes {
-  getKeysByPaymentPointerId(ctx: PaymentPointerContext): Promise<void>
+  getKeysByPaymentPointerId(ctx: PaymentPointerKeysContext): Promise<void>
 }
 
 export function createPaymentPointerKeyRoutes(
