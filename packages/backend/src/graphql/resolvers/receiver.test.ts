@@ -10,7 +10,7 @@ import {
   mockPaymentPointer
 } from '../../tests/openPaymentsMocks'
 import { RemoteIncomingPaymentService } from '../../open_payments/payment/incoming_remote/service'
-import { RemoteIncomingPaymentResponse } from '../generated/graphql'
+import { CreateReceiverResponse } from '../generated/graphql'
 
 describe('Remote Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -108,13 +108,13 @@ describe('Remote Incoming Payment Resolver', (): void => {
             variables: { input }
           })
           .then(
-            (query): RemoteIncomingPaymentResponse =>
+            (query): CreateReceiverResponse =>
               query.data?.createRemoteIncomingPayment
           )
 
         expect(createSpy).toHaveBeenCalledWith(input)
         expect(query).toEqual({
-          __typename: 'RemoteIncomingPaymentResponse',
+          __typename: 'CreateReceiverResponse',
           code: '200',
           success: true,
           message: null,
@@ -191,13 +191,13 @@ describe('Remote Incoming Payment Resolver', (): void => {
           variables: { input }
         })
         .then(
-          (query): RemoteIncomingPaymentResponse =>
+          (query): CreateReceiverResponse =>
             query.data?.createRemoteIncomingPayment
         )
 
       expect(createSpy).toHaveBeenCalledWith(input)
       expect(query).toEqual({
-        __typename: 'RemoteIncomingPaymentResponse',
+        __typename: 'CreateReceiverResponse',
         code: '500',
         success: false,
         message: 'Error trying to create remote incoming payment',

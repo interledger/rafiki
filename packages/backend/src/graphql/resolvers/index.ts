@@ -37,7 +37,7 @@ import {
   createPaymentPointerKey,
   revokePaymentPointerKey
 } from './paymentPointerKey'
-import { createRemoteIncomingPayment } from './incoming_payment_remote'
+import { createReceiver } from './receiver'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -65,7 +65,7 @@ export const resolvers: Resolvers = {
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,
-    createRemoteIncomingPayment,
+    createReceiver,
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,

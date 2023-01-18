@@ -102,9 +102,7 @@ type Mutation {
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
-  createRemoteIncomingPayment(
-    input: CreateRemoteIncomingPaymentInput!
-  ): RemoteIncomingPaymentResponse!
+  createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
@@ -355,7 +353,7 @@ type IncomingPayment implements Model {
   createdAt: String!
 }
 
-type RemoteIncomingPayment {
+type Receiver {
   id: ID!
   paymentPointerUrl: String!
   completed: Boolean!
@@ -481,7 +479,7 @@ input CreateIncomingPaymentInput {
   externalRef: String
 }
 
-input CreateRemoteIncomingPaymentInput {
+input CreateReceiverInput {
   paymentPointerUrl: String!
   expiresAt: String
   description: String
@@ -503,11 +501,11 @@ type IncomingPaymentResponse {
   payment: IncomingPayment
 }
 
-type RemoteIncomingPaymentResponse {
+type CreateReceiverResponse {
   code: String!
   success: Boolean!
   message: String
-  payment: RemoteIncomingPayment
+  receiver: Receiver
 }
 
 input CreatePaymentPointerInput {
