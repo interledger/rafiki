@@ -7,17 +7,14 @@ import type { ActionArgs } from '@remix-run/node'
 import { redirect, json } from '@remix-run/node'
 import { gql } from '@apollo/client'
 import { apolloClient } from '../lib/apolloClient'
-import type {
-  PeerEdge,
-  Peer
-} from '../generated/graphql'
+import type { PeerEdge, Peer } from '../../generated/graphql'
 
 function DisplayPeers({ peers }: { peers: Peer[] }) {
   return (
     <table>
       <thead>
         <tr>
-          <th>Peer ID</th>
+          <th>Peer name / ID</th>
           <th>Static ILP address</th>
           <th>Asset code</th>
           <th>Asset scale</th>
@@ -29,7 +26,7 @@ function DisplayPeers({ peers }: { peers: Peer[] }) {
           ? peers.map((peer) => (
               <tr key={peer.id}>
                 <td>
-                  <Link to={peer.id}>{peer.id}</Link>
+                  <Link to={peer.id}>{peer.name ? peer.name : peer.id}</Link>
                 </td>
                 <td>{peer.staticIlpAddress}</td>
                 <td>{peer.asset.code}</td>
@@ -89,6 +86,7 @@ export async function loader() {
             edges {
               node {
                 id
+                name
                 staticIlpAddress
                 http {
                   outgoing {

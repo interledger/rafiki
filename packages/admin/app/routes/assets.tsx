@@ -6,10 +6,7 @@ import { redirect, json } from '@remix-run/node'
 import type { ActionArgs } from '@remix-run/node'
 import { gql } from '@apollo/client'
 import { apolloClient } from '../lib/apolloClient'
-import type {
-  AssetEdge,
-  Asset
-} from '../generated/graphql'
+import type { AssetEdge, Asset } from '../../generated/graphql'
 
 function DisplayAssets({ assets }: { assets: Asset[] }) {
   return (
@@ -33,7 +30,7 @@ function DisplayAssets({ assets }: { assets: Asset[] }) {
                 <td>{asset.scale}</td>
                 <td>
                   {asset.withdrawalThreshold
-                    ? asset.withdrawalThreshold
+                    ? asset.withdrawalThreshold.toString()
                     : 'null'}
                 </td>
               </tr>

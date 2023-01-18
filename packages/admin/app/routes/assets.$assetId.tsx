@@ -7,7 +7,7 @@ import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
 import { apolloClient } from '../lib/apolloClient'
-import type { Asset } from '../generated/graphql'
+import type { Asset } from '../../generated/graphql'
 
 export default function ViewAssetsPage() {
   const { asset }: { asset: Asset } = useLoaderData<typeof loader>()
@@ -74,8 +74,10 @@ export async function loader({ params }: LoaderArgs) {
     })
     .then((query): Asset => {
       if (query.data) {
-        const formattedAsset: Asset = {...query.data.asset}
-        formattedAsset.createdAt = new Date(formattedAsset.createdAt).toLocaleString()
+        const formattedAsset: Asset = { ...query.data.asset }
+        formattedAsset.createdAt = new Date(
+          formattedAsset.createdAt
+        ).toLocaleString()
         return formattedAsset
       } else {
         throw new Error(`Could not find asset with ID: ${params.assetId}`)

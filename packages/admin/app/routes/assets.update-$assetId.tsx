@@ -17,7 +17,7 @@ import type {
   Asset,
   UpdateAssetInput,
   AssetMutationResponse
-} from '../generated/graphql'
+} from '../../generated/graphql'
 import { useLoaderData } from '@remix-run/react'
 
 function UpdateAsset({ asset }: { asset: Asset }) {

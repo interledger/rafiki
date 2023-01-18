@@ -24,7 +24,7 @@ generates:
   src/graphql/generated/graphql.schema.json:
     plugins:
       - 'introspection'
-  ../admin/app/generated/graphql.ts:
+  ../admin/generated/graphql.ts:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'

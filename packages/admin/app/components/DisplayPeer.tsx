@@ -1,11 +1,17 @@
 import styles from '../styles/dist/DisplayItem.css'
 import { Link } from '@remix-run/react'
-import type { Peer } from '../generated/graphql'
+import type { Peer } from '../../generated/graphql'
 
 function DisplayPeer({ peer }: { peer: Peer }) {
   return (
     <table>
       <tbody>
+        {peer.name ? (
+          <tr>
+            <th>Name</th>
+            <td>{peer.name}</td>
+          </tr>
+        ) : null}
         <tr>
           <th>ID</th>
           <td>{peer.id}</td>

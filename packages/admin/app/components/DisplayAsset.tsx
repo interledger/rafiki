@@ -1,5 +1,5 @@
 import styles from '../styles/dist/DisplayItem.css'
-import type { Asset } from '../generated/graphql'
+import type { Asset } from '../../generated/graphql'
 
 function DisplayAsset({ asset }: { asset: Asset }) {
   return (
@@ -20,7 +20,9 @@ function DisplayAsset({ asset }: { asset: Asset }) {
         <tr>
           <th>Withdrawl threshold</th>
           <td>
-            {asset.withdrawalThreshold ? asset.withdrawalThreshold.toString() : 'null'}
+            {asset.withdrawalThreshold
+              ? asset.withdrawalThreshold.toString()
+              : 'null'}
           </td>
         </tr>
         <tr>

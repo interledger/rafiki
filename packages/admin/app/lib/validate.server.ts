@@ -36,8 +36,10 @@ export function validateId(input: any, fieldName: string) {
   }
 }
 
-export function validateIlpAddress(input: any) {
-  if (!input) {
+export function validateIlpAddress(input: any, required = true) {
+  if (!required && !input) {
+    return
+  } else if (!input) {
     return 'The static ILP address is required'
   } else if (!isValidIlpAddress(input)) {
     return 'Invalid ILP address'

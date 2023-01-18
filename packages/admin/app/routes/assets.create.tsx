@@ -14,7 +14,7 @@ import { gql } from '@apollo/client'
 import type {
   CreateAssetInput,
   AssetMutationResponse
-} from '../generated/graphql'
+} from '../../generated/graphql'
 import { apolloClient } from '../lib/apolloClient'
 
 function NewAsset() {

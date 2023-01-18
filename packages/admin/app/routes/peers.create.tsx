@@ -20,7 +20,7 @@ import { gql } from '@apollo/client'
 import type {
   CreatePeerInput,
   CreatePeerMutationResponse
-} from '../generated/graphql'
+} from '../../generated/graphql'
 import { apolloClient } from '../lib/apolloClient'
 
 function NewPeer() {
@@ -30,6 +30,20 @@ function NewPeer() {
 
   return (
     <Form method='post' id='peer-form'>
+      <span>
+        <label htmlFor='name'>Name</label>
+        <div>
+          <input
+            className={actionData?.formErrors?.name ? 'input-error' : 'input'}
+            type='text'
+            id='name'
+            name='name'
+          />
+          {actionData?.formErrors?.name ? (
+            <p style={{ color: 'red' }}>{actionData?.formErrors?.name}</p>
+          ) : null}
+        </div>
+      </span>
       <span>
         <label htmlFor='ilp-address'>Static ILP address</label>
         <div>
@@ -186,6 +200,7 @@ export async function action({ request }: ActionArgs) {
     : null
 
   const formErrors = {
+    name: validateString(formData.name, 'name', false),
     assetId: validateId(formData.assetId, 'asset ID'),
     incomingAuthTokens: validateString(
       incomingAuthTokens,
@@ -214,6 +229,7 @@ export async function action({ request }: ActionArgs) {
 
   const variables: { input: CreatePeerInput } = {
     input: {
+      name: formData.name,
       assetId: formData.assetId,
       http: {
         incoming: incomingAuthTokens
