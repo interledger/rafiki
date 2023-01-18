@@ -21,7 +21,7 @@
   "devDependencies": {
     "@types/node": "^18.7.12",
     "base64url": "^3.0.1",
-    "nock": "^13.2.9",
+    "nock": "^13.3.0",
     "openapi-typescript": "^4.5.0",
     "typescript": "^4.9.4",
     "uuid": "^9.0.0"

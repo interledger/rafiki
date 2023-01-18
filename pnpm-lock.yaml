@@ -65,7 +65,7 @@ importers:
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-session: ^6.3.1
-      nock: ^13.2.9
+      nock: ^13.3.0
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
@@ -112,7 +112,7 @@ importers:
       '@types/koa__router': 12.0.0
       '@types/uuid': 9.0.0
       jest-openapi: 0.14.2
-      nock: 13.2.9
+      nock: 13.3.0
       openapi-types: 12.1.0
       typescript: 4.9.4
 
@@ -167,7 +167,7 @@ importers:
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       luxon: ^3.2.1
-      nock: ^13.2.9
+      nock: ^13.3.0
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
@@ -250,7 +250,7 @@ importers:
       cross-fetch: 3.1.5
       ilp-protocol-stream: 2.7.1
       jest-openapi: 0.14.2
-      nock: 13.2.9
+      nock: 13.3.0
       node-mocks-http: 1.12.1
       openapi-types: 12.1.0
       react: 18.2.0
@@ -353,7 +353,7 @@ importers:
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
       http-signature-utils: workspace:../http-signature-utils
-      nock: ^13.2.9
+      nock: ^13.3.0
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.8.0
@@ -368,7 +368,7 @@ importers:
     devDependencies:
       '@types/node': 18.7.13
       base64url: 3.0.1
-      nock: 13.2.9
+      nock: 13.3.0
       openapi-typescript: 4.5.0
       typescript: 4.9.4
       uuid: 9.0.0
@@ -412,7 +412,7 @@ importers:
     specifiers:
       '@types/node': ^18.7.12
       axios: ^1.2.3
-      nock: ^13.2.9
+      nock: ^13.3.0
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.4.2
@@ -424,7 +424,7 @@ importers:
       pino: 8.8.0
     devDependencies:
       '@types/node': 18.11.9
-      nock: 13.2.9
+      nock: 13.3.0
       openapi-typescript: 4.5.0
       typescript: 4.9.4
       uuid: 8.3.2
@@ -10759,8 +10759,8 @@ packages:
       lower-case: 2.0.2
       tslib: 2.4.1
 
-  /nock/13.2.9:
-    resolution: {integrity: sha512-1+XfJNYF1cjGB+TKMWi29eZ0b82QOvQs2YoLNzbpWGqFMtRQHTa57osqdGj4FrFPgkO4D4AZinzUJR9VvW3QUA==}
+  /nock/13.3.0:
+    resolution: {integrity: sha512-HHqYQ6mBeiMc+N038w8LkMpDCRquCHWeNmN3v6645P3NhN2+qXOBqvPqo7Rt1VyCMzKhJ733wZqw5B7cQVFNPg==}
     engines: {node: '>= 10.13'}
     dependencies:
       debug: 4.3.4
