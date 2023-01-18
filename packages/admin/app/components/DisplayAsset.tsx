@@ -20,12 +20,12 @@ function DisplayAsset({ asset }: { asset: Asset }) {
         <tr>
           <th>Withdrawl threshold</th>
           <td>
-            {asset.withdrawalThreshold ? asset.withdrawalThreshold : 'null'}
+            {asset.withdrawalThreshold ? asset.withdrawalThreshold.toString() : 'null'}
           </td>
         </tr>
         <tr>
           <th>Created at</th>
-          <td>{new Date(asset.createdAt).toLocaleString()}</td>
+          <td>{asset.createdAt}</td>
         </tr>
       </tbody>
     </table>

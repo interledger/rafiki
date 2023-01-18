@@ -27,7 +27,7 @@ export default function ViewPeersPage() {
             />
             <div className='form-actions'>
               <button className='search-button'>
-                <img alt='Search' src={require('../../../public/search.svg')} />
+                <img alt='Search' src={require('../../public/search.svg')} />
               </button>
             </div>
           </span>
@@ -82,7 +82,9 @@ export async function loader({ params }: LoaderArgs) {
     })
     .then((query): Peer => {
       if (query.data) {
-        return query.data.peer
+        const formattedPeer: Peer = {...query.data.peer}
+        formattedPeer.createdAt = new Date(formattedPeer.createdAt).toLocaleString()
+        return formattedPeer
       } else {
         throw new Error(`Could not find peer with ID ${params.peerId}`)
       }

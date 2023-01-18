@@ -26,7 +26,7 @@ export default function ViewAssetsPage() {
             />
             <div className='form-actions'>
               <button className='search-button'>
-                <img alt='Search' src={require('../../../public/search.svg')} />
+                <img alt='Search' src={require('../../public/search.svg')} />
               </button>
             </div>
           </span>
@@ -74,7 +74,9 @@ export async function loader({ params }: LoaderArgs) {
     })
     .then((query): Asset => {
       if (query.data) {
-        return query.data.asset
+        const formattedAsset: Asset = {...query.data.asset}
+        formattedAsset.createdAt = new Date(formattedAsset.createdAt).toLocaleString()
+        return formattedAsset
       } else {
         throw new Error(`Could not find asset with ID: ${params.assetId}`)
       }

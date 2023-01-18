@@ -40,7 +40,7 @@ function DisplayPeer({ peer }: { peer: Peer }) {
         </tr>
         <tr>
           <th>Created at</th>
-          <td>{new Date(peer.createdAt).toLocaleString()}</td>
+          <td>{peer.createdAt}</td>
         </tr>
       </tbody>
     </table>

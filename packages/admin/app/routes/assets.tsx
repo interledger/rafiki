@@ -57,7 +57,7 @@ export default function AssetsPage() {
             <input type='search' id='asset-id' name='assetId' required />
             <div className='form-actions'>
               <button className='search-button'>
-                <img alt='Search' src={require('../../../public/search.svg')} />
+                <img alt='Search' src={require('../../public/search.svg')} />
               </button>
             </div>
           </span>

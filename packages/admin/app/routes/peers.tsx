@@ -1,7 +1,7 @@
 import { useCatch, Link, Form } from '@remix-run/react'
 import styles from '../styles/dist/main.css'
 import formStyles from '../styles/dist/Form.css'
-import displayItemsStyles from '../../styles/dist/DisplayItems.css'
+import displayItemsStyles from '../styles/dist/DisplayItems.css'
 import { useLoaderData } from '@remix-run/react'
 import type { ActionArgs } from '@remix-run/node'
 import { redirect, json } from '@remix-run/node'
@@ -56,7 +56,7 @@ export default function PeersPage() {
             <input type='search' id='peer-id' name='peerId' required />
             <div className='form-actions'>
               <button className='search-button'>
-                <img alt='Search' src={require('../../../public/search.svg')} />
+                <img alt='Search' src={require('../../public/search.svg')} />
               </button>
             </div>
           </span>
