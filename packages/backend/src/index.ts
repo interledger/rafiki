@@ -5,7 +5,7 @@ import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
