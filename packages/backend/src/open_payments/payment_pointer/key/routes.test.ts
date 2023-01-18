@@ -7,11 +7,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import {
-  AppServices,
-  PaymentPointerContext,
-  PaymentPointerKeysContext
-} from '../../../app'
+import { AppServices, PaymentPointerKeysContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { PaymentPointerKeyRoutes } from './routes'
 import { PaymentPointerKeyService } from './service'
@@ -59,7 +55,7 @@ describe('Payment Pointer Keys Routes', (): void => {
       }
       const key = await paymentPointerKeyService.create(keyOption)
 
-      const ctx = createContext<PaymentPointerContext>({
+      const ctx = createContext<PaymentPointerKeysContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
@@ -78,7 +74,7 @@ describe('Payment Pointer Keys Routes', (): void => {
     test('returns 200 with empty array if no keys for a payment pointer', async (): Promise<void> => {
       const paymentPointer = await createPaymentPointer(deps)
 
-      const ctx = createContext<PaymentPointerContext>({
+      const ctx = createContext<PaymentPointerKeysContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
@@ -100,7 +96,7 @@ describe('Payment Pointer Keys Routes', (): void => {
         keyId: config.keyId
       })
 
-      const ctx = createContext<PaymentPointerContext>({
+      const ctx = createContext<PaymentPointerKeysContext>({
         headers: { Accept: 'application/json' },
         url: '/jwks.json'
       })
