@@ -1,4 +1,8 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosRequestHeaders
+} from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
@@ -213,7 +217,7 @@ export const createAxiosInstance = (args: {
           privateKey,
           keyId
         })
-        if (!config.headers) config.headers = {}
+        if (!config.headers) config.headers = {} as AxiosRequestHeaders
         if (config.data) {
           config.headers['Content-Digest'] =
             contentAndSigHeaders['Content-Digest']

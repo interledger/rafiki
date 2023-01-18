@@ -3,6 +3,8 @@ import Koa from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
 import { AccessAction, AccessType } from 'open-payments'
+import { TokenInfo } from 'token-introspection'
+import { isActiveTokenInfo } from 'token-introspection'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({
@@ -15,6 +17,12 @@ export const RequestAction: Record<string, RequestAction> = Object.freeze({
 export interface Grant {
   id: string
   limits?: Limits
+}
+
+export interface Access {
+  type: string
+  actions: AccessAction[]
+  identifier?: string
 }
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
@@ -43,9 +51,16 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(401, 'Unauthorized')
       }
       const token = parts[1]
-      const authService = await ctx.container.use('authService')
-      const tokenInfo = await authService.introspect(token)
-      if (!tokenInfo) {
+      const tokenIntrospectionClient = await ctx.container.use(
+        'tokenIntrospectionClient'
+      )
+      let tokenInfo: TokenInfo
+      try {
+        tokenInfo = await tokenIntrospectionClient.introspect(token)
+      } catch (err) {
+        ctx.throw(401, 'Invalid Token')
+      }
+      if (!tokenInfo.active) {
         ctx.throw(401, 'Invalid Token')
       }
       ctx.clientKey = tokenInfo.key.jwk
@@ -56,7 +71,7 @@ export function createTokenIntrospectionMiddleware({
       }
       // TODO
       // https://github.com/interledger/rafiki/issues/835
-      const access = tokenInfo.access.find((access) => {
+      const access = tokenInfo.access.find((access: Access) => {
         if (
           access.type !== requestType ||
           (access.identifier && access.identifier !== ctx.paymentPointer.url)
@@ -75,8 +90,8 @@ export function createTokenIntrospectionMiddleware({
         ) {
           return true
         }
-        return access.actions.find((tokenAction) => {
-          if (tokenAction === requestAction) {
+        return access.actions.find((tokenAction: AccessAction) => {
+          if (tokenAction === requestAction && isActiveTokenInfo(tokenInfo)) {
             // Unless the relevant token action is ReadAll/ListAll add the
             // clientId to ctx for Read/List filtering
             ctx.clientId = tokenInfo.client_id
@@ -85,6 +100,7 @@ export function createTokenIntrospectionMiddleware({
           return false
         })
       })
+
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }

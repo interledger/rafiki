@@ -1,4 +1,3 @@
-import * as crypto from 'crypto'
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
 import { JWK } from 'http-signature-utils'
@@ -31,10 +30,9 @@ export interface KeyInfo {
   jwk: JWK
 }
 
-export interface Introspection extends Partial<Grant> {
-  active: boolean
-  key?: KeyInfo
-  clientId?: string
+export interface Introspection {
+  grant: Grant
+  jwk: JWK
 }
 
 interface AccessTokenOpts {
@@ -113,35 +111,24 @@ async function introspect(
 
   if (!token) return
   if (isTokenExpired(token)) {
-    return { active: false }
+    return undefined
   } else {
-    if (!token.grant) {
-      return
-    } else {
-      if (token.grant.state === GrantState.Revoked) {
-        return { active: false }
-      }
+    if (!token.grant || token.grant.state === GrantState.Revoked) {
+      return undefined
+    }
 
-      const jwk = await deps.clientService.getKey({
-        client: token.grant.client,
-        keyId: token.grant.clientKeyId
-      })
+    const jwk = await deps.clientService.getKey({
+      client: token.grant.client,
+      keyId: token.grant.clientKeyId
+    })
 
-      if (!jwk) {
-        return { active: false }
-      }
+    if (!jwk) {
+      return undefined
+    }
 
-      const clientId = crypto
-        .createHash('sha256')
-        .update(token.grant.client)
-        .digest('hex')
-
-      return {
-        active: true,
-        ...token.grant,
-        key: { proof: 'httpsig', jwk },
-        clientId
-      }
+    return {
+      grant: token.grant,
+      jwk
     }
   }
 }

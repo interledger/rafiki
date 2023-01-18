@@ -268,7 +268,7 @@ export class App {
       createValidatorMiddleware<IntrospectContext>(
         openApi.tokenIntrospectionSpec,
         {
-          path: '/introspect',
+          path: '/',
           method: HttpMethod.POST
         }
       ),
