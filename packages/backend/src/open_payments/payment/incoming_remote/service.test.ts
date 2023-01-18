@@ -10,15 +10,13 @@ import { Amount, serializeAmount } from '../../amount'
 import {
   AuthenticatedClient as OpenPaymentsClient,
   AccessAction,
-  AccessType
-} from 'open-payments'
-import { GrantService } from '../../grant/service'
-import {
+  AccessType,
   mockIncomingPayment,
   mockInteractiveGrant,
   mockNonInteractiveGrant,
   mockPaymentPointer
-} from '../../../tests/openPaymentsMocks'
+} from 'open-payments'
+import { GrantService } from '../../grant/service'
 
 describe('Remote Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
