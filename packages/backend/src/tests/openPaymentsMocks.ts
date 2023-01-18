@@ -13,7 +13,7 @@ export const mockILPStreamConnection = (
 ): ILPStreamConnection => ({
   id: uuid(),
   sharedSecret: base64url('sharedSecret'),
-  ilpAddress: 'ilpAddress',
+  ilpAddress: 'test.ilpAdress',
   assetCode: 'USD',
   assetScale: 2,
   ...overrides

@@ -19,10 +19,13 @@ import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
 import { GrantService } from '../grant/service'
-import { IncomingPayment } from '../payment/incoming/model'
-import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
-import { AccessType, AccessAction } from 'open-payments'
+import {
+  AccessType,
+  AccessAction,
+  IncomingPayment as OpenPaymentsIncomingPayment,
+  PaymentPointer as OpenPaymentsPaymentPointer
+} from 'open-payments'
 import { Amount, parseAmount } from '../amount'
 import {
   mockIncomingPayment,
@@ -207,7 +210,7 @@ describe('Receiver Service', (): void => {
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
             incomingPayment: {
-              id: incomingPayment.id,
+              id: incomingPayment.url,
               paymentPointer: incomingPayment.paymentPointer.url,
               updatedAt: new Date(incomingPayment.updatedAt),
               createdAt: new Date(incomingPayment.createdAt),
@@ -226,8 +229,8 @@ describe('Receiver Service', (): void => {
         ${false}      | ${'no grant'}
         ${true}       | ${'existing grant'}
       `('remote ($description)', ({ existingGrant }): void => {
-        let paymentPointer: PaymentPointer
-        let incomingPayment: IncomingPayment
+        let paymentPointer: OpenPaymentsPaymentPointer
+        let incomingPayment: OpenPaymentsIncomingPayment
         const authServer = faker.internet.url()
         const INCOMING_PAYMENT_PATH = 'incoming-payments'
         const grantOptions = {
@@ -265,14 +268,12 @@ describe('Receiver Service', (): void => {
         }
 
         beforeEach(async (): Promise<void> => {
-          paymentPointer = await createPaymentPointer(deps)
-          incomingPayment = await createIncomingPayment(deps, {
-            paymentPointerId: paymentPointer.id,
-            incomingAmount: {
-              value: BigInt(5),
-              assetCode: paymentPointer.asset.code,
-              assetScale: paymentPointer.asset.scale
-            }
+          paymentPointer = mockPaymentPointer({
+            authServer
+          })
+          incomingPayment = mockIncomingPayment({
+            id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
+            paymentPointer: paymentPointer.id
           })
           if (existingGrant) {
             await expect(
@@ -290,11 +291,7 @@ describe('Receiver Service', (): void => {
         test('resolves incoming payment', async () => {
           const clientGetPaymentPointerSpy = jest
             .spyOn(openPaymentsClient.paymentPointer, 'get')
-            .mockResolvedValueOnce(
-              paymentPointer.toOpenPaymentsType({
-                authServer
-              })
-            )
+            .mockResolvedValueOnce(paymentPointer)
 
           const clientRequestGrantSpy = jest
             .spyOn(openPaymentsClient.grant, 'request')
@@ -302,14 +299,10 @@ describe('Receiver Service', (): void => {
 
           const clientGetIncomingPaymentSpy = jest
             .spyOn(openPaymentsClient.incomingPayment, 'get')
-            .mockResolvedValueOnce(
-              incomingPayment.toOpenPaymentsType({
-                ilpStreamConnection: connectionService.get(incomingPayment)
-              })
-            )
+            .mockResolvedValueOnce(incomingPayment)
 
           await expect(
-            receiverService.get(incomingPayment.url)
+            receiverService.get(incomingPayment.id)
           ).resolves.toEqual({
             assetCode: incomingPayment.receivedAmount.assetCode,
             assetScale: incomingPayment.receivedAmount.assetScale,
@@ -317,17 +310,21 @@ describe('Receiver Service', (): void => {
             sharedSecret: expect.any(Buffer),
             incomingPayment: {
               id: incomingPayment.id,
-              paymentPointer: incomingPayment.paymentPointer.url,
+              paymentPointer: incomingPayment.paymentPointer,
               updatedAt: new Date(incomingPayment.updatedAt),
               createdAt: new Date(incomingPayment.createdAt),
               completed: incomingPayment.completed,
-              receivedAmount: incomingPayment.receivedAmount,
-              incomingAmount: incomingPayment.incomingAmount,
+              receivedAmount:
+                incomingPayment.receivedAmount &&
+                parseAmount(incomingPayment.receivedAmount),
+              incomingAmount:
+                incomingPayment.incomingAmount &&
+                parseAmount(incomingPayment.incomingAmount),
               expiresAt: incomingPayment.expiresAt
             }
           })
           expect(clientGetPaymentPointerSpy).toHaveBeenCalledWith({
-            url: paymentPointer.url
+            url: paymentPointer.id
           })
           if (!existingGrant) {
             expect(clientRequestGrantSpy).toHaveBeenCalledWith(
@@ -336,7 +333,7 @@ describe('Receiver Service', (): void => {
             )
           }
           expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
-            url: incomingPayment.url,
+            url: incomingPayment.id,
             accessToken: grantOptions.accessToken
           })
         })
@@ -348,11 +345,11 @@ describe('Receiver Service', (): void => {
 
           await expect(
             receiverService.get(
-              `${paymentPointer.url}/${INCOMING_PAYMENT_PATH}/${uuid()}`
+              `${paymentPointer.id}/${INCOMING_PAYMENT_PATH}/${uuid()}`
             )
           ).resolves.toBeUndefined()
           expect(clientGetPaymentPointerSpy).toHaveBeenCalledWith({
-            url: paymentPointer.url
+            url: paymentPointer.id
           })
         })
 
@@ -365,18 +362,14 @@ describe('Receiver Service', (): void => {
             await grant.$query(knex).patch({ expiresAt: new Date() })
             jest
               .spyOn(openPaymentsClient.paymentPointer, 'get')
-              .mockResolvedValueOnce(
-                paymentPointer.toOpenPaymentsType({
-                  authServer
-                })
-              )
+              .mockResolvedValueOnce(paymentPointer)
             const clientRequestGrantSpy = jest.spyOn(
               openPaymentsClient.grant,
               'request'
             )
 
             await expect(
-              receiverService.get(incomingPayment.url)
+              receiverService.get(incomingPayment.id)
             ).resolves.toBeUndefined()
             expect(clientRequestGrantSpy).not.toHaveBeenCalled()
           })
@@ -384,17 +377,13 @@ describe('Receiver Service', (): void => {
           test('returns undefined for invalid grant', async (): Promise<void> => {
             jest
               .spyOn(openPaymentsClient.paymentPointer, 'get')
-              .mockResolvedValueOnce(
-                paymentPointer.toOpenPaymentsType({
-                  authServer
-                })
-              )
+              .mockResolvedValueOnce(paymentPointer)
             const clientRequestGrantSpy = jest
               .spyOn(openPaymentsClient.grant, 'request')
               .mockRejectedValueOnce(new Error('Could not request grant'))
 
             await expect(
-              receiverService.get(incomingPayment.url)
+              receiverService.get(incomingPayment.id)
             ).resolves.toBeUndefined()
             expect(clientRequestGrantSpy).toHaveBeenCalledWith(
               { url: authServer },
@@ -405,11 +394,7 @@ describe('Receiver Service', (): void => {
           test('returns undefined for interactive grant', async (): Promise<void> => {
             jest
               .spyOn(openPaymentsClient.paymentPointer, 'get')
-              .mockResolvedValueOnce(
-                paymentPointer.toOpenPaymentsType({
-                  authServer
-                })
-              )
+              .mockResolvedValueOnce(paymentPointer)
             const clientRequestGrantSpy = jest
               .spyOn(openPaymentsClient.grant, 'request')
               .mockResolvedValueOnce({
@@ -421,7 +406,7 @@ describe('Receiver Service', (): void => {
               })
 
             await expect(
-              receiverService.get(incomingPayment.url)
+              receiverService.get(incomingPayment.id)
             ).resolves.toBeUndefined()
             expect(clientRequestGrantSpy).toHaveBeenCalledWith(
               { url: authServer },
@@ -433,11 +418,7 @@ describe('Receiver Service', (): void => {
         test('returns undefined when fetching remote incoming payment throws', async (): Promise<void> => {
           jest
             .spyOn(openPaymentsClient.paymentPointer, 'get')
-            .mockResolvedValueOnce(
-              paymentPointer.toOpenPaymentsType({
-                authServer
-              })
-            )
+            .mockResolvedValueOnce(paymentPointer)
           jest
             .spyOn(openPaymentsClient.grant, 'request')
             .mockResolvedValueOnce(grant)
@@ -446,10 +427,10 @@ describe('Receiver Service', (): void => {
             .mockRejectedValueOnce(new Error('Could not get incoming payment'))
 
           await expect(
-            receiverService.get(incomingPayment.url)
+            receiverService.get(incomingPayment.id)
           ).resolves.toBeUndefined()
           expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
-            url: incomingPayment.url,
+            url: incomingPayment.id,
             accessToken: expect.any(String)
           })
         })
