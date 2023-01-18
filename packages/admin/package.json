@@ -2,13 +2,13 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "remix build",
+    "build": "pnpm scss && remix build",
     "dev": "PORT=3005 remix dev",
     "start": "PORT=3005 remix-serve build",
     "scss": "node-sass app/styles -o app/styles/dist && node-sass app/components -o app/styles/dist",
     "lint": "npx eslint --fix app/",
-    "format": "prettier --write app/ && npm run lint",
-    "checks": "npm run check:prettier && npm run check:lint",
+    "format": "prettier --write app/ && pnpm lint",
+    "checks": "pnpm check:prettier && pnpm check:lint",
     "check:lint": "npx eslint app/",
     "check:prettier": "prettier --check app/"
   },
