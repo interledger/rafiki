@@ -5,10 +5,7 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { Amount, serializeAmount } from '../../open_payments/amount'
-import {
-  mockIncomingPayment,
-  mockPaymentPointer
-} from '../../tests/openPaymentsMocks'
+import { mockIncomingPayment, mockPaymentPointer } from 'open-payments'
 import { RemoteIncomingPaymentService } from '../../open_payments/payment/incoming_remote/service'
 import { RemoteIncomingPaymentResponse } from '../generated/graphql'
 
