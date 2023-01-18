@@ -74,7 +74,7 @@ module.exports = async (globalConfig) => {
       const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
 
       const tbContFormat = await new GenericContainer(
-        'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
+        'ghcr.io/tigerbeetledb/tigerbeetle@sha256:834d82a83d60ace236d93a724b303029bf935219409fd57dfdd05b57d3a68252'
       )
         .withExposedPorts(TIGERBEETLE_PORT)
         .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
