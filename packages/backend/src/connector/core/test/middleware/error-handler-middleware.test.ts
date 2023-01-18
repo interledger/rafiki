@@ -26,6 +26,28 @@ describe('Error Handler Middleware', () => {
     expect(ctx.revertTotalReceived).toBeUndefined()
   })
 
+  test('catches ilp error and converts into ilp reject', async () => {
+    const ctx = createILPContext({ services })
+    const errorToBeThrown = new Error('Test Error')
+    errorToBeThrown['ilpErrorCode'] = 'T00'
+
+    const next = jest.fn().mockImplementation(() => {
+      throw errorToBeThrown
+    })
+    const middleware = createIncomingErrorHandlerMiddleware(ADDRESS)
+
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+
+    expect(ctx.response.reject).toBeDefined()
+    expect(ctx.services.logger.debug).toHaveBeenCalledWith(
+      {
+        err: errorToBeThrown
+      },
+      'Error thrown in incoming pipeline'
+    )
+    expect(ctx.revertTotalReceived).toBeUndefined()
+  })
+
   test('sets triggeredBy to own address if error is thrown in next', async () => {
     const ctx = createILPContext({ services })
     const errorToBeThrown = new Error('Test Error')
