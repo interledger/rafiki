@@ -24,13 +24,11 @@ import {
   AccessType,
   AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,
-  PaymentPointer as OpenPaymentsPaymentPointer
-} from 'open-payments'
-import { Amount, parseAmount } from '../amount'
-import {
+  PaymentPointer as OpenPaymentsPaymentPointer,
   mockIncomingPayment,
   mockPaymentPointer
-} from '../../tests/openPaymentsMocks'
+} from 'open-payments'
+import { Amount, parseAmount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
 
 describe('Receiver Service', (): void => {
