@@ -2,7 +2,7 @@
 
 ## Development
 
-This project assumes that you have a local Rafiki backend instance up and running. See the Environment Setup and Local Development sections in the main [README](../../README.md).
+This project assumes that you have a local Rafiki backend instance up and running. See the `Environment Setup` and `Local Development` sections in the main [README](../../README.md) and the `Local Playground` section in the infrastructure/local [README](../../infrastructure/local/README.md).
 
 To start the project in development mode:
 
@@ -24,4 +24,4 @@ To format and lint code:
 pnpm format
 ```
 
-Types are generated automatically for this project and stored in the `generated` folder. They are generated using CodeGen which is configured as part of the Rafiki backend.
+Types are generated automatically for this project and stored in the `generated` folder. They are generated using CodeGen which is configured as part of the Rafiki backend. To regenerate the types file run `pnpm generate` from the `packages/backend` folder.

@@ -4,5 +4,4 @@ node_modules
 /build
 /public/build
 app/styles/dist
-generated
 .env
