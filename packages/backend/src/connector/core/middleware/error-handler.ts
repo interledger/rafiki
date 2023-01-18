@@ -29,9 +29,10 @@ export function createIncomingErrorHandlerMiddleware(
       if (isIlpError(err)) {
         ctx.response.reject = errorToIlpReject(serverAddress, err)
       } else {
+        ctx.services.logger.error(err && err['message'])
         ctx.response.reject = errorToIlpReject(serverAddress, {
-          message: err && err['message'],
-          ilpErrorCode: IlpErrorCode.F00_BAD_REQUEST,
+          message: 'unexpected internal error',
+          ilpErrorCode: IlpErrorCode.T00_INTERNAL_ERROR,
           name: ''
         })
       }
