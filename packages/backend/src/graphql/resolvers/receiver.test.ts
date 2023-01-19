@@ -39,7 +39,7 @@ describe('Receiver Resolver', (): void => {
       ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
       ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
     `(
-      'creates remote incoming payment ($#)',
+      'creates receiver ($#)',
       async ({
         description,
         externalRef,
