@@ -29,7 +29,8 @@ export interface TestContainer {
 }
 
 export const createTestApp = async (
-  container: IocContract<AppServices>
+  container: IocContract<AppServices>,
+  options?: { silentLogging?: boolean }
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.adminPort = 0
@@ -47,7 +48,7 @@ export const createTestApp = async (
         ignore: 'pid,hostname'
       }
     },
-    level: process.env.LOG_LEVEL || 'error',
+    level: options?.silentLogging ? 'silent' : process.env.LOG_LEVEL || 'error',
     name: 'test-logger'
   })
 

@@ -49,11 +49,18 @@ describe('Receiver Model', (): void => {
       expect(receiver).toEqual({
         assetCode: incomingPayment.asset.code,
         assetScale: incomingPayment.asset.scale,
-        incomingAmountValue: undefined,
-        receivedAmountValue: BigInt(0),
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
-        expiresAt: incomingPayment.expiresAt
+        incomingPayment: {
+          id: incomingPayment.url,
+          paymentPointer: incomingPayment.paymentPointer.url,
+          updatedAt: incomingPayment.updatedAt,
+          createdAt: incomingPayment.createdAt,
+          completed: incomingPayment.completed,
+          receivedAmount: incomingPayment.receivedAmount,
+          incomingAmount: incomingPayment.incomingAmount,
+          expiresAt: incomingPayment.expiresAt
+        }
       })
     })
 

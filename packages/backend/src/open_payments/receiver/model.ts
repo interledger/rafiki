@@ -15,11 +15,39 @@ interface OpenPaymentsConnectionWithIlpAddress
   ilpAddress: IlpAddress
 }
 
+type ReceiverIncomingPayment = Readonly<
+  Omit<
+    OpenPaymentsIncomingPayment,
+    | 'ilpStreamConnection'
+    | 'expiresAt'
+    | 'receivedAmount'
+    | 'incomingAmount'
+    | 'createdAt'
+    | 'updatedAt'
+  > & {
+    expiresAt?: Date
+    createdAt: Date
+    updatedAt: Date
+    receivedAmount: Amount
+    incomingAmount?: Amount
+  }
+>
+
 export class Receiver extends ConnectionBase {
   static fromConnection(
     connection: OpenPaymentsConnection
   ): Receiver | undefined {
-    return this.fromOpenPaymentsConnection(connection)
+    if (!isValidIlpAddress(connection.ilpAddress)) {
+      return undefined
+    }
+
+    return new this({
+      id: connection.id,
+      assetCode: connection.assetCode,
+      assetScale: connection.assetScale,
+      sharedSecret: connection.sharedSecret,
+      ilpAddress: connection.ilpAddress
+    })
   }
 
   static fromIncomingPayment(
@@ -42,45 +70,33 @@ export class Receiver extends ConnectionBase {
       : undefined
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
-    return this.fromOpenPaymentsConnection(
-      incomingPayment.ilpStreamConnection,
-      incomingAmount?.value,
-      receivedAmount.value,
-      expiresAt
-    )
-  }
-
-  private static fromOpenPaymentsConnection(
-    connection: OpenPaymentsConnection,
-    incomingAmountValue?: bigint,
-    receivedAmountValue?: bigint,
-    expiresAt?: Date
-  ): Receiver | undefined {
-    const ilpAddress = connection.ilpAddress
-
-    if (!isValidIlpAddress(ilpAddress)) {
+    if (!isValidIlpAddress(incomingPayment.ilpStreamConnection.ilpAddress)) {
       return undefined
     }
 
     return new this(
       {
-        id: connection.id,
-        assetCode: connection.assetCode,
-        assetScale: connection.assetScale,
-        sharedSecret: connection.sharedSecret,
-        ilpAddress
+        ...incomingPayment.ilpStreamConnection,
+        ilpAddress: incomingPayment.ilpStreamConnection.ilpAddress
       },
-      incomingAmountValue,
-      receivedAmountValue,
-      expiresAt
+      {
+        id: incomingPayment.id,
+        completed: incomingPayment.completed,
+        paymentPointer: incomingPayment.paymentPointer,
+        expiresAt,
+        receivedAmount,
+        incomingAmount,
+        description: incomingPayment.description,
+        externalRef: incomingPayment.externalRef,
+        createdAt: new Date(incomingPayment.createdAt),
+        updatedAt: new Date(incomingPayment.updatedAt)
+      }
     )
   }
 
   private constructor(
     connection: OpenPaymentsConnectionWithIlpAddress,
-    private readonly incomingAmountValue?: bigint,
-    private readonly receivedAmountValue?: bigint,
-    public readonly expiresAt?: Date
+    public incomingPayment?: ReceiverIncomingPayment
   ) {
     super(
       connection.ilpAddress,
@@ -98,9 +114,9 @@ export class Receiver extends ConnectionBase {
   }
 
   public get incomingAmount(): Amount | undefined {
-    if (this.incomingAmountValue) {
+    if (this.incomingPayment?.incomingAmount) {
       return {
-        value: this.incomingAmountValue,
+        value: this.incomingPayment.incomingAmount.value,
         assetCode: this.assetCode,
         assetScale: this.assetScale
       }
@@ -109,9 +125,9 @@ export class Receiver extends ConnectionBase {
   }
 
   public get receivedAmount(): Amount | undefined {
-    if (this.receivedAmountValue !== undefined) {
+    if (this.incomingPayment?.receivedAmount) {
       return {
-        value: this.receivedAmountValue,
+        value: this.incomingPayment.receivedAmount.value,
         assetCode: this.assetCode,
         assetScale: this.assetScale
       }
