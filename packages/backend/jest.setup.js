@@ -10,7 +10,8 @@ const POSTGRES_PORT = 5432
 const TIGERBEETLE_CLUSTER_ID = 0
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
-const TIGERBEETLE_CONTAINER_LOG = false
+const TIGERBEETLE_CONTAINER_LOG =
+  process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 //TODO @jason: https://github.com/interledger/rafiki/issues/518
 //TODO @jason const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
 
