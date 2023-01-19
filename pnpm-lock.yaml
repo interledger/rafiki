@@ -51,10 +51,10 @@ importers:
       '@koa/router': ^12.0.0
       '@types/jest': ^29.2.6
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.10
-      '@types/koa-session': ^5.10.6
       '@types/koa__cors': ^3.3.0
       '@types/koa__router': ^12.0.0
+      '@types/koa-bodyparser': ^4.3.10
+      '@types/koa-session': ^5.10.6
       '@types/uuid': ^9.0.0
       ajv: ^8.12.0
       axios: ^1.2.3
@@ -106,10 +106,10 @@ importers:
       '@faker-js/faker': 7.6.0
       '@types/jest': 29.2.6
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.10
-      '@types/koa-session': 5.10.6
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 12.0.0
+      '@types/koa-bodyparser': 4.3.10
+      '@types/koa-session': 5.10.6
       '@types/uuid': 9.0.0
       jest-openapi: 0.14.2
       nock: 13.3.0
@@ -135,9 +135,9 @@ importers:
       '@poppinss/file-generator': ^1.0.2
       '@types/jest': ^29.2.6
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.10
       '@types/koa__cors': ^3.3.0
       '@types/koa__router': ^12.0.0
+      '@types/koa-bodyparser': ^4.3.10
       '@types/luxon': ^3.2.0
       '@types/react': ^18.0.27
       '@types/rosie': ^0.0.40
@@ -239,9 +239,9 @@ importers:
       '@graphql-codegen/typescript-resolvers': 2.7.12_graphql@16.6.0
       '@types/jest': 29.2.6
       '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.10
       '@types/koa__cors': 3.3.0
       '@types/koa__router': 12.0.0
+      '@types/koa-bodyparser': 4.3.10
       '@types/luxon': 3.2.0
       '@types/react': 18.0.27
       '@types/rosie': 0.0.40
@@ -349,6 +349,7 @@ importers:
   packages/open-payments:
     specifiers:
       '@types/node': ^18.7.12
+      '@types/uuid': ^9.0.0
       axios: ^1.2.3
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
@@ -365,13 +366,14 @@ importers:
       http-signature-utils: link:../http-signature-utils
       openapi: link:../openapi
       pino: 8.8.0
+      uuid: 9.0.0
     devDependencies:
       '@types/node': 18.7.13
+      '@types/uuid': 9.0.0
       base64url: 3.0.1
       nock: 13.3.0
       openapi-typescript: 4.5.0
       typescript: 4.9.4
-      uuid: 9.0.0
 
   packages/openapi:
     specifiers:
@@ -393,7 +395,7 @@ importers:
     dependencies:
       '@apidevtools/json-schema-ref-parser': 9.1.0
       ajv: 8.12.0
-      ajv-formats: 2.1.1_ajv@8.12.0
+      ajv-formats: 2.1.1
       openapi-default-setter: 12.1.0
       openapi-request-coercer: 12.1.0
       openapi-request-validator: 12.1.0
@@ -3762,7 +3764,7 @@ packages:
       eslint: 8.32.0
       eslint-import-resolver-node: 0.3.6
       eslint-import-resolver-typescript: 3.5.2_kornzrmzxylufiu5zotgc4cisa
-      eslint-plugin-import: 2.26.0_2l6piu6guil2f63lj3qmhzbnn4
+      eslint-plugin-import: 2.26.0_anoc6aiadrrjoh5wuzips7vvmq
       eslint-plugin-jest: 26.9.0_rjpbdoflvuixsozdbd4eqx6o5m
       eslint-plugin-jest-dom: 4.0.2_eslint@8.32.0
       eslint-plugin-jsx-a11y: 6.6.1_eslint@8.32.0
@@ -4910,10 +4912,8 @@ packages:
     resolution: {integrity: sha512-hCOfMzbFx5IDutmWLAt6MZwOUjIfSM9G9FyVxytmE4Rs/5YDPWQrD/+IR1w+FweD9H2oOZEnv36TmkjhNURBVA==}
     dev: true
 
-  /ajv-formats/2.1.1_ajv@8.12.0:
+  /ajv-formats/2.1.1:
     resolution: {integrity: sha512-Wx0Kx52hxE7C18hkMEggYlEifqWZtYaRgouJor+WMdPnQyEK13vgEWyVNup7SoeeoLMsr4kf5h6dOW11I15MUA==}
-    peerDependencies:
-      ajv: ^8.0.0
     peerDependenciesMeta:
       ajv:
         optional: true
@@ -5059,9 +5059,9 @@ packages:
       '@koa/cors': 3.4.3
       '@types/accepts': 1.3.5
       '@types/koa': 2.13.5
+      '@types/koa__cors': 3.3.0
       '@types/koa-bodyparser': 4.3.10
       '@types/koa-compose': 3.2.5
-      '@types/koa__cors': 3.3.0
       accepts: 1.3.8
       apollo-server-core: 3.11.1_graphql@16.6.0
       apollo-server-types: 3.7.1_graphql@16.6.0
@@ -6181,8 +6181,8 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
     dependencies:
-      JSONStream: 1.3.5
       is-text-path: 1.0.1
+      JSONStream: 1.3.5
       lodash: 4.17.21
       meow: 8.1.2
       split2: 3.2.2
@@ -6277,7 +6277,7 @@ packages:
     dependencies:
       '@types/node': 18.11.9
       cosmiconfig: 8.0.0
-      ts-node: 10.9.1_xurywthbbrjt4i6rf23onsialm
+      ts-node: 10.9.1_3v2cms72gsblw7jmali7btb3pu
       typescript: 4.9.4
     dev: true
 
@@ -6924,7 +6924,7 @@ packages:
       debug: 4.3.4
       enhanced-resolve: 5.12.0
       eslint: 8.32.0
-      eslint-plugin-import: 2.26.0_2l6piu6guil2f63lj3qmhzbnn4
+      eslint-plugin-import: 2.26.0_anoc6aiadrrjoh5wuzips7vvmq
       get-tsconfig: 4.2.0
       globby: 13.1.3
       is-core-module: 2.10.0
@@ -6934,7 +6934,7 @@ packages:
       - supports-color
     dev: true
 
-  /eslint-module-utils/2.7.4_whphnv3xbr2fd5qrl3vf5jwhzq:
+  /eslint-module-utils/2.7.4_cq7sa6n5nd5vslxucnjee62qoy:
     resolution: {integrity: sha512-j4GT+rqzCoRKHwURX7pddtIPGySnX9Si/cgMI5ztrcqOPtk5dDEeZ34CQVPphnqkJytlc97Vuk05Um2mJ3gEQA==}
     engines: {node: '>=4'}
     peerDependencies:
@@ -6959,6 +6959,7 @@ packages:
       debug: 3.2.7
       eslint: 8.32.0
       eslint-import-resolver-node: 0.3.6
+      eslint-import-resolver-typescript: 3.5.2_kornzrmzxylufiu5zotgc4cisa
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -6974,7 +6975,7 @@ packages:
       regexpp: 3.2.0
     dev: true
 
-  /eslint-plugin-import/2.26.0_2l6piu6guil2f63lj3qmhzbnn4:
+  /eslint-plugin-import/2.26.0_anoc6aiadrrjoh5wuzips7vvmq:
     resolution: {integrity: sha512-hYfi3FXaM8WPLf4S1cikh/r4IxnO6zrhZbEGz2b660EJRbuxgpDS5gkCuYgGWg2xxh2rBuIr4Pvhve/7c31koA==}
     engines: {node: '>=4'}
     peerDependencies:
@@ -6991,7 +6992,7 @@ packages:
       doctrine: 2.1.0
       eslint: 8.32.0
       eslint-import-resolver-node: 0.3.6
-      eslint-module-utils: 2.7.4_whphnv3xbr2fd5qrl3vf5jwhzq
+      eslint-module-utils: 2.7.4_cq7sa6n5nd5vslxucnjee62qoy
       has: 1.0.3
       is-core-module: 2.10.0
       is-glob: 4.0.3
@@ -11171,7 +11172,7 @@ packages:
     resolution: {integrity: sha512-WbcX/mrRGq0GBOqf/Rv4X0vY2WUO1ZmOjrWsnRByEIIJ/6LDWVUqlgEnpVEzpDN8Z2/XoK+YPcFnqIalFmn3sA==}
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1_ajv@8.12.0
+      ajv-formats: 2.1.1
       content-type: 1.0.4
       openapi-jsonschema-parameters: 12.1.0
       openapi-types: 12.1.0
@@ -11196,7 +11197,7 @@ packages:
     resolution: {integrity: sha512-5wpFKMoEbUcjiqo16jIen3Cb2+oApSnYZpWn8WQdRO2q/dNQZZl8Pz6ESwCriiyU5AK4i5ZI6+7O3bHQr6+6+g==}
     dependencies:
       ajv: 8.12.0
-      ajv-formats: 2.1.1_ajv@8.12.0
+      ajv-formats: 2.1.1
       lodash.merge: 4.6.2
       openapi-types: 9.3.1
     dev: true
