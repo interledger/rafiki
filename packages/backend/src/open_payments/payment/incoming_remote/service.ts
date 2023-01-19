@@ -56,7 +56,7 @@ async function create(
     AccessAction.ReadAll
   ])
 
-  if (!grant?.accessToken) {
+  if (!grant.accessToken) {
     const errorMessage = 'Grant has undefined accessToken'
     deps.logger.warn({ grantId: grant?.id, paymentPointerUrl }, errorMessage)
     throw new Error(errorMessage)
