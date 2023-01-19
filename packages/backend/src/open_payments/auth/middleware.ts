@@ -60,15 +60,12 @@ export function createTokenIntrospectionMiddleware({
       } catch (err) {
         ctx.throw(401, 'Invalid Token')
       }
-      if (!tokenInfo.active) {
-        ctx.throw(401, 'Invalid Token')
+      if (!isActiveTokenInfo(tokenInfo)) {
+        ctx.throw(403, 'Inactive Token')
       }
+
       ctx.clientKey = tokenInfo.key.jwk
 
-      if (!tokenInfo.access) {
-        await next()
-        return
-      }
       // TODO
       // https://github.com/interledger/rafiki/issues/835
       const access = tokenInfo.access.find((access: Access) => {
@@ -91,7 +88,7 @@ export function createTokenIntrospectionMiddleware({
           return true
         }
         return access.actions.find((tokenAction: AccessAction) => {
-          if (tokenAction === requestAction && isActiveTokenInfo(tokenInfo)) {
+          if (isActiveTokenInfo(tokenInfo) && tokenAction === requestAction) {
             // Unless the relevant token action is ReadAll/ListAll add the
             // clientId to ctx for Read/List filtering
             ctx.clientId = tokenInfo.client_id

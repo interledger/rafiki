@@ -94,32 +94,34 @@ describe('Auth Middleware', (): void => {
     }
   )
 
-  test.each`
-    active
-    ${true}
-    ${false}
-  `(
-    'returns 401 for unsuccessful token introspection active: $active',
-    async ({ active }): Promise<void> => {
-      const introspectSpy = active
-        ? jest
-            .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockImplementation(() => {
-              throw new Error('test error')
-            })
-        : jest
-            .spyOn(tokenIntrospectionClient, 'introspect')
-            .mockResolvedValueOnce({ active })
-      await expect(middleware(ctx, next)).resolves.toBeUndefined()
-      expect(introspectSpy).toHaveBeenCalledWith(token)
-      expect(ctx.status).toBe(401)
-      expect(ctx.message).toEqual('Invalid Token')
-      expect(ctx.response.get('WWW-Authenticate')).toBe(
-        `GNAP as_uri=${Config.authServerGrantUrl}`
-      )
-      expect(next).not.toHaveBeenCalled()
-    }
-  )
+  test('returns 401 for unsuccessful token introspection', async (): Promise<void> => {
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockImplementation(() => {
+        throw new Error('test error')
+      })
+    await expect(middleware(ctx, next)).resolves.toBeUndefined()
+    expect(introspectSpy).toHaveBeenCalledWith(token)
+    expect(ctx.status).toBe(401)
+    expect(ctx.message).toEqual('Invalid Token')
+    expect(ctx.response.get('WWW-Authenticate')).toBe(
+      `GNAP as_uri=${Config.authServerGrantUrl}`
+    )
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  test('rejects with 403 for inactive token', async (): Promise<void> => {
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockResolvedValueOnce({ active: false })
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 403,
+      message: 'Inactive Token'
+    })
+    expect(introspectSpy).toHaveBeenCalledWith(token)
+    expect(next).not.toHaveBeenCalled()
+  })
 
   enum IdentifierOption {
     Matching = 'matching',
