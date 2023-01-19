@@ -56,7 +56,9 @@ export function createTokenIntrospectionMiddleware({
       )
       let tokenInfo: TokenInfo
       try {
-        tokenInfo = await tokenIntrospectionClient.introspect(token)
+        tokenInfo = await tokenIntrospectionClient.introspect({
+          access_token: token
+        })
       } catch (err) {
         ctx.throw(401, 'Invalid Token')
       }

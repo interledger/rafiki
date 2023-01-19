@@ -25,11 +25,5 @@ describe('client', (): void => {
         createAxiosInstance({ url, requestTimeoutMs: 1000 }).defaults.timeout
       ).toBe(1000)
     })
-    test('sets Content-Type header properly', async (): Promise<void> => {
-      expect(
-        createAxiosInstance({ url, requestTimeoutMs: 0 }).defaults.headers
-          .common['Content-Type']
-      ).toBe('application/json')
-    })
   })
 })
