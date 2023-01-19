@@ -34,13 +34,13 @@
     "pg": "^8.8.0",
     "pino": "^8.8.0",
     "pino-pretty": "^9.1.1",
-    "testcontainers": "^8.16.0",
+    "testcontainers": "^9.1.1",
     "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@types/jest": "^28.1.8",
+    "@types/jest": "^29.2.6",
     "@types/koa": "2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-session": "^5.10.6",

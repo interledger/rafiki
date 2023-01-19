@@ -100,7 +100,7 @@ export function paymentToGraphql(
     id: payment.id,
     paymentPointerId: payment.paymentPointerId,
     state: payment.state,
-    error: payment.error ?? undefined,
+    error: payment.error,
     stateAttempts: payment.stateAttempts,
     receiver: payment.receiver,
     sendAmount: payment.sendAmount,
