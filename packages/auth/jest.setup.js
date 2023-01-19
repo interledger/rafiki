@@ -11,11 +11,15 @@ module.exports = async (globalConfig) => {
   if (!process.env.AUTH_DATABASE_URL) {
     const postgresContainer = await new GenericContainer('postgres:15')
       .withExposedPorts(POSTGRES_PORT)
-      .withBindMount(
-        __dirname + '/scripts/init.sh',
-        '/docker-entrypoint-initdb.d/init.sh'
-      )
-      .withEnv('POSTGRES_PASSWORD', 'password')
+      .withBindMounts([
+        {
+          source: __dirname + '/scripts/init.sh',
+          target: '/docker-entrypoint-initdb.d/init.sh'
+        }
+      ])
+      .withEnvironment({
+        POSTGRES_PASSWORD: 'password'
+      })
       .start()
 
     process.env.AUTH_DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(

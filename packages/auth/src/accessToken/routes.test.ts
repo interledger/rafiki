@@ -89,7 +89,7 @@ describe('Access Token Routes', (): void => {
     let access: Access
     let token: AccessToken
 
-    const url = '/introspect'
+    const url = '/'
     const method = 'POST'
 
     beforeEach(async (): Promise<void> => {
@@ -121,13 +121,16 @@ describe('Access Token Routes', (): void => {
         {}
       )
       ctx.request.body = {
-        access_token: v4(),
-        resource_server: 'test'
+        access_token: v4()
       }
-      await expect(accessTokenRoutes.introspect(ctx)).rejects.toMatchObject({
-        status: 404,
-        error: 'invalid_request',
-        message: 'token not found'
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.status).toBe(200)
+      expect(ctx.response.get('Content-Type')).toBe(
+        'application/json; charset=utf-8'
+      )
+      expect(ctx.body).toEqual({
+        active: false
       })
     })
 
@@ -145,15 +148,14 @@ describe('Access Token Routes', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: '/introspect',
+          url: '/',
           method: 'POST'
         },
         {}
       )
 
       ctx.request.body = {
-        access_token: token.value,
-        resource_server: 'test'
+        access_token: token.value
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
@@ -194,15 +196,14 @@ describe('Access Token Routes', (): void => {
           headers: {
             Accept: 'application/json'
           },
-          url: '/introspect',
+          url: '/',
           method: 'POST'
         },
         {}
       )
 
       ctx.request.body = {
-        access_token: token.value,
-        resource_server: 'test'
+        access_token: token.value
       }
       await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
@@ -285,11 +286,6 @@ describe('Access Token Routes', (): void => {
         { id: managementId }
       )
 
-      ctx.request.body = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
@@ -308,11 +304,6 @@ describe('Access Token Routes', (): void => {
         { id: managementId }
       )
 
-      ctx.request.body = {
-        access_token: token.value,
-        proof: 'httpsig',
-        resource_server: 'test'
-      }
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
