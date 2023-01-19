@@ -210,12 +210,14 @@ describe('Receiver Service', (): void => {
             incomingPayment: {
               id: incomingPayment.url,
               paymentPointer: incomingPayment.paymentPointer.url,
-              updatedAt: new Date(incomingPayment.updatedAt),
-              createdAt: new Date(incomingPayment.createdAt),
               completed: incomingPayment.completed,
               receivedAmount: incomingPayment.receivedAmount,
               incomingAmount: incomingPayment.incomingAmount,
-              expiresAt: incomingPayment.expiresAt
+              description: incomingPayment.description || undefined,
+              externalRef: incomingPayment.externalRef || undefined,
+              expiresAt: incomingPayment.expiresAt,
+              updatedAt: new Date(incomingPayment.updatedAt),
+              createdAt: new Date(incomingPayment.createdAt)
             }
           }
         )
@@ -482,13 +484,15 @@ describe('Receiver Service', (): void => {
           incomingPayment: {
             id: incomingPayment.id,
             paymentPointer: incomingPayment.paymentPointer,
-            updatedAt: new Date(incomingPayment.updatedAt),
-            createdAt: new Date(incomingPayment.createdAt),
             completed: incomingPayment.completed,
             receivedAmount: parseAmount(incomingPayment.receivedAmount),
             incomingAmount:
               incomingPayment.incomingAmount &&
               parseAmount(incomingPayment.incomingAmount),
+            description: incomingPayment.description || undefined,
+            externalRef: incomingPayment.externalRef || undefined,
+            updatedAt: new Date(incomingPayment.updatedAt),
+            createdAt: new Date(incomingPayment.createdAt),
             expiresAt:
               incomingPayment.expiresAt && new Date(incomingPayment.expiresAt)
           }
