@@ -2,9 +2,10 @@ import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   ILPStreamConnection as OpenPaymentsConnection,
-  isNonInteractiveGrant
+  isNonInteractiveGrant,
+  AccessType,
+  AccessAction
 } from 'open-payments'
-
 import { ConnectionService } from '../connection/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
@@ -13,7 +14,6 @@ import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
-import { AccessType, AccessAction } from 'open-payments'
 import { Amount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
 

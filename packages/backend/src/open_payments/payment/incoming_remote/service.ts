@@ -2,7 +2,8 @@ import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   isNonInteractiveGrant,
-  AccessAction
+  AccessAction,
+  PaymentPointer as OpenPaymentsPaymentPointer
 } from 'open-payments'
 import { Grant } from '../../grant/model'
 import { GrantService } from '../../grant/service'
@@ -88,13 +89,15 @@ async function getGrant(
   paymentPointerUrl: string,
   accessActions: AccessAction[]
 ): Promise<Grant> {
-  const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
-    url: paymentPointerUrl
-  })
+  let paymentPointer: OpenPaymentsPaymentPointer
 
-  if (!paymentPointer) {
+  try {
+    paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
+      url: paymentPointerUrl
+    })
+  } catch (error) {
     const errorMessage = 'Could not get payment pointer'
-    deps.logger.error({ paymentPointerUrl }, errorMessage)
+    deps.logger.error({ paymentPointerUrl, error }, errorMessage)
     throw new Error(errorMessage)
   }
 

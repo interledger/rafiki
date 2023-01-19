@@ -63,7 +63,9 @@ describe('Remote Incoming Payment Service', (): void => {
     test('throws if payment pointer not found', async () => {
       const clientGetPaymentPointerSpy = jest
         .spyOn(openPaymentsClient.paymentPointer, 'get')
-        .mockResolvedValueOnce(undefined)
+        .mockImplementationOnce(() => {
+          throw new Error('No payment pointer')
+        })
 
       await expect(
         remoteIncomingPaymentService.create({

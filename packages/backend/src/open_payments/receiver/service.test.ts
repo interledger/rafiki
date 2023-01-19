@@ -459,7 +459,7 @@ describe('Receiver Service', (): void => {
         expect(receiver).toEqual({
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
-          ilpAddress: incomingPayment.ilpStreamConnection.ilpAddress,
+          ilpAddress: incomingPayment.ilpStreamConnection?.ilpAddress,
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
             id: incomingPayment.id,
