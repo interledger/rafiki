@@ -9,7 +9,7 @@ declare global {
 
 if (!global.__apolloClient) {
   global.__apolloClient = new ApolloClient({
-    cache: new InMemoryCache({ resultCaching: false }),
+    cache: new InMemoryCache({}),
     defaultOptions: {
       query: {
         fetchPolicy: 'no-cache'

@@ -210,7 +210,7 @@ export async function action({ request }: ActionArgs) {
     outgoingAuthToken: validateString(
       formData.outgoingAuthToken,
       'outgoing auth token'
-    ), // TODO: Add validation for string[]
+    ),
     outgoingEndpoint: validateUrl(
       formData.outgoingEndpoint,
       'outgoing endpoint'
