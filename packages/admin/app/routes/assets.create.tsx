@@ -15,7 +15,7 @@ import type {
   CreateAssetInput,
   AssetMutationResponse
 } from '../../generated/graphql'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 
 function NewAsset() {
   const navigation = useNavigation()

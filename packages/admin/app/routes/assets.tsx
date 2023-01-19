@@ -5,7 +5,7 @@ import { useLoaderData, Form } from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
 import type { ActionArgs } from '@remix-run/node'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 import type { AssetEdge, Asset } from '../../generated/graphql'
 
 function DisplayAssets({ assets }: { assets: Asset[] }) {

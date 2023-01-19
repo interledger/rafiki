@@ -6,7 +6,7 @@ import { Link, useLoaderData, Form, useParams } from '@remix-run/react'
 import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 import type { Asset } from '../../generated/graphql'
 
 export default function ViewAssetsPage() {
@@ -31,7 +31,7 @@ export default function ViewAssetsPage() {
             </div>
           </span>
         </Form>
-        <Link to={'/assets/update-' + asset.id}>
+        <Link to={'/assets/update/' + asset.id}>
           <button className='basic-button'>Update</button>
         </Link>
       </div>

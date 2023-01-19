@@ -12,7 +12,7 @@ import type { ActionArgs, LoaderArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { validatePositiveInt, validateId } from '../lib/validate.server'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 import type {
   Asset,
   UpdateAssetInput,

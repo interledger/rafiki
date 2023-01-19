@@ -1,4 +1,3 @@
-// TODO: This file is still a very rough work in progress
 import formStyles from '../styles/dist/Form.css'
 import {
   Form,
@@ -18,7 +17,7 @@ import type {
   UpdatePeerInput,
   UpdatePeerMutationResponse
 } from '../../generated/graphql'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 import {
   validatePositiveInt,
   validateId,
@@ -26,11 +25,13 @@ import {
   validateIlpAddress,
   validateUrl
 } from '../lib/validate.server'
+import { obscureAuthToken } from '../lib/utils.server'
 
 function UpdatePeer({ peer }: { peer: Peer }) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const actionData = useActionData()
+
   return (
     <Form method='post' id='peer-form'>
       <span>
@@ -87,6 +88,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             id='ilp-address'
             name='staticIlpAddress'
             defaultValue={peer.staticIlpAddress}
+            placeholder={peer.staticIlpAddress}
           />
           {actionData?.formErrors?.staticIlpAddress ? (
             <p style={{ color: 'red' }}>
@@ -107,6 +109,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             type='text'
             id='incoming-auth-tokens'
             name='incomingAuthTokens'
+            placeholder='*****'
           />
           {actionData?.formErrors?.incomingAuthTokens ? (
             <p style={{ color: 'red' }}>
@@ -127,6 +130,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             type='text'
             id='outgoing-auth-token'
             name='outgoingAuthToken'
+            placeholder={peer.http.outgoing.authToken}
           />
           {actionData?.formErrors?.outgoingAuthToken ? (
             <p style={{ color: 'red' }}>
@@ -145,7 +149,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             type='text'
             id='outgoing-endpoint'
             name='outgoingEndpoint'
-            defaultValue={peer.http.outgoing.endpoint}
+            placeholder={peer.http.outgoing.endpoint}
           />
           {actionData?.formErrors?.outgoingEndpoint ? (
             <p style={{ color: 'red' }}>
@@ -246,28 +250,56 @@ export async function action({ request }: ActionArgs) {
     staticIlpAddress: validateIlpAddress(formData.staticIlpAddress, false)
   }
 
+  // If any of the HTTP fields are filled then then both the outgoing auth token and endpoint become required
+  // TODO: at a future point in time there is discussion to make either the incoming or the outgoing http fields required
+  if (
+    formData.incomingAuthTokens ||
+    formData.outgoingAuthToken ||
+    formData.outgoingEndpoint
+  ) {
+    if (!formData.outgoingAuthToken) {
+      formErrors.outgoingAuthToken =
+        'The outgoing auth token is required for this update'
+    }
+    if (!formData.outgoingEndpoint) {
+      formErrors.outgoingEndpoint =
+        'The outgoing endpoint is required for this update'
+    }
+  }
+
   // If there are errors, return the form errors object
   if (Object.values(formErrors).some(Boolean)) return { formErrors }
 
-  // TODO: only add http field if it has a value filled in. If either outgoing field is filled in then both need to be filled in.
-  // if fill in outgoing you must fill in endpoint and authtoken - in this case we need access to that token if they don't fill it in again
-  // using the spread operator to conditionally add fields to the variables object results in limited type information
+  // Constructing an http object if any of the incoming or outgoing fields have been filled in
+  const incoming = formData.incomingAuthTokens
+    ? { authTokens: incomingAuthTokens?.replace(/ /g, '').split(',') }
+    : null
+  const outgoing =
+    formData.outgoingEndpoint || formData.outgoingAuthToken
+      ? {
+          ...(formData.outgoingAuthToken && {
+            endpoint: formData.outgoingEndpoint
+          }),
+          ...(formData.outgoingAuthToken && {
+            authToken: formData.outgoingAuthToken
+          })
+        }
+      : null
+  const http =
+    incoming || outgoing
+      ? {
+          ...(incoming && { incoming: { ...incoming } }),
+          ...(outgoing && { outgoing: { ...outgoing } })
+        }
+      : null
+
+  // Fields that are required in the Peer type cannot be passed as null in the updatePeer mutation. Instead they must be left out of the mutation variables.
   const variables: { input: UpdatePeerInput } = {
     input: {
       id: formData.peerId,
-      ...(formData.name && { name: formData.name }),
-      http: {
-        incoming: {
-          authTokens: incomingAuthTokens?.replace(/ /g, '').split(',')
-        },
-        outgoing: {
-          authToken: formData.outgoingAuthToken,
-          endpoint: formData.outgoingEndpoint
-        }
-      },
-      ...(formData.maxPacketAmount && {
-        maxPacketAmount: parseInt(formData.maxPacketAmount, 10)
-      }),
+      name: formData.name,
+      ...(http && { http: { ...http } }),
+      maxPacketAmount: parseInt(formData.maxPacketAmount, 10),
       ...(formData.staticIlpAddress && {
         staticIlpAddress: formData.staticIlpAddress
       })
@@ -336,6 +368,7 @@ export async function loader({ params }: LoaderArgs) {
             id
             name
             staticIlpAddress
+            maxPacketAmount
             createdAt
             asset {
               scale
@@ -343,6 +376,7 @@ export async function loader({ params }: LoaderArgs) {
             }
             http {
               outgoing {
+                authToken
                 endpoint
               }
             }
@@ -353,7 +387,20 @@ export async function loader({ params }: LoaderArgs) {
     })
     .then((query): Peer => {
       if (query.data) {
-        return query.data.peer
+        // Spread operator is required to copy data before obscuring the authToken since ApolloQueryResult is read-only
+        const formattedPeer: Peer = {
+          ...query.data.peer,
+          http: {
+            ...query.data.peer.http,
+            outgoing: {
+              ...query.data.peer.http.outgoing,
+              authToken: obscureAuthToken(
+                query.data.peer.http.outgoing.authToken
+              )
+            }
+          }
+        }
+        return formattedPeer
       } else {
         throw new Error(`Could not find peer with ID ${params.peerId}`)
       }

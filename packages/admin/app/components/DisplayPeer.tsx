@@ -41,8 +41,20 @@ function DisplayPeer({ peer }: { peer: Peer }) {
           </td>
         </tr>
         <tr>
-          <th>Outgoing endpoint</th>
-          <td>{peer.http.outgoing.endpoint}</td>
+          <th>
+            Outgoing
+            <ul>
+              <li>HTTP endpoint</li>
+              <li>HTTP auth token</li>
+            </ul>
+          </th>
+          <td>
+            <br></br>
+            <ul className='values'>
+              <li>{peer.http.outgoing.endpoint}</li>
+              <li>{peer.http.outgoing.authToken}</li>
+            </ul>
+          </td>
         </tr>
         <tr>
           <th>Created at</th>

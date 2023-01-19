@@ -6,7 +6,7 @@ import { useLoaderData } from '@remix-run/react'
 import type { ActionArgs } from '@remix-run/node'
 import { redirect, json } from '@remix-run/node'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 import type { PeerEdge, Peer } from '../../generated/graphql'
 
 function DisplayPeers({ peers }: { peers: Peer[] }) {

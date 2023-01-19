@@ -6,8 +6,9 @@ import { Link, useParams, Form, useLoaderData } from '@remix-run/react'
 import type { LoaderArgs, ActionArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 import type { Peer } from '../../generated/graphql'
+import { obscureAuthToken } from '../lib/utils.server'
 
 export default function ViewPeersPage() {
   const { peer }: { peer: Peer } = useLoaderData<typeof loader>()
@@ -32,7 +33,7 @@ export default function ViewPeersPage() {
             </div>
           </span>
         </Form>
-        <Link to={'/peers/update-' + peer.id}>
+        <Link to={'/peers/update/' + peer.id}>
           <button className='basic-button'>Update</button>
         </Link>
       </div>
@@ -74,6 +75,7 @@ export async function loader({ params }: LoaderArgs) {
             http {
               outgoing {
                 endpoint
+                authToken
               }
             }
           }
@@ -83,10 +85,20 @@ export async function loader({ params }: LoaderArgs) {
     })
     .then((query): Peer => {
       if (query.data) {
-        const formattedPeer: Peer = { ...query.data.peer }
-        formattedPeer.createdAt = new Date(
-          formattedPeer.createdAt
-        ).toLocaleString()
+        // Spread operator is required to copy data before obscuring the authToken since ApolloQueryResult is read-only
+        const formattedPeer: Peer = {
+          ...query.data.peer,
+          createdAt: new Date(query.data.peer.createdAt).toLocaleString(),
+          http: {
+            ...query.data.peer.http,
+            outgoing: {
+              ...query.data.peer.http.outgoing,
+              authToken: obscureAuthToken(
+                query.data.peer.http.outgoing.authToken
+              )
+            }
+          }
+        }
         return formattedPeer
       } else {
         throw new Error(`Could not find peer with ID ${params.peerId}`)

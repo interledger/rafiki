@@ -21,7 +21,7 @@ import type {
   CreatePeerInput,
   CreatePeerMutationResponse
 } from '../../generated/graphql'
-import { apolloClient } from '../lib/apolloClient'
+import { apolloClient } from '../lib/apolloClient.server'
 
 function NewPeer() {
   const navigation = useNavigation()
