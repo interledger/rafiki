@@ -1,5 +1,3 @@
-import { UniqueViolationError } from 'objection'
-
 import { AuthServer } from './model'
 import { BaseService } from '../../shared/baseService'
 
@@ -27,14 +25,11 @@ async function getOrCreateAuthServer(
   deps: ServiceDependencies,
   url: string
 ): Promise<AuthServer> {
-  try {
-    return await AuthServer.query(deps.knex).insertAndFetch({
+  let authServer = await AuthServer.query(deps.knex).findOne({ url })
+  if (!authServer) {
+    authServer = await AuthServer.query(deps.knex).insertAndFetch({
       url
     })
-  } catch (err) {
-    if (err instanceof UniqueViolationError) {
-      return await AuthServer.query(deps.knex).findOne({ url })
-    }
-    throw err
   }
+  return authServer
 }

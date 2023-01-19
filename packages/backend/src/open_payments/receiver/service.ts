@@ -135,7 +135,7 @@ async function getConnection(
     })
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get connection'
     )
 
@@ -182,13 +182,17 @@ async function getIncomingPayment(
       deps,
       urlParseResult.paymentPointerUrl
     )
-    return await deps.openPaymentsClient.incomingPayment.get({
-      url,
-      accessToken: grant.accessToken
-    })
+    if (!grant) {
+      throw new Error('Could not find grant')
+    } else {
+      return await deps.openPaymentsClient.incomingPayment.get({
+        url,
+        accessToken: grant.accessToken || ''
+      })
+    }
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get incoming payment'
     )
     return undefined
@@ -203,7 +207,7 @@ async function getLocalIncomingPayment({
   deps: ServiceDependencies
   id: string
   paymentPointer: PaymentPointer
-}): Promise<OpenPaymentsIncomingPayment> {
+}): Promise<OpenPaymentsIncomingPayment | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id,
     paymentPointerId: paymentPointer.id

@@ -1,4 +1,4 @@
-import { errorToIlpReject } from 'ilp-packet'
+import { errorToIlpReject, isIlpError, IlpErrorCode } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 
 /**
@@ -26,7 +26,16 @@ export function createIncomingErrorHandlerMiddleware(
       if (ctx.revertTotalReceived) {
         await ctx.revertTotalReceived()
       }
-      ctx.response.reject = errorToIlpReject(serverAddress, err)
+      if (isIlpError(err)) {
+        ctx.response.reject = errorToIlpReject(serverAddress, err)
+      } else {
+        ctx.services.logger.error(err && err['message'])
+        ctx.response.reject = errorToIlpReject(serverAddress, {
+          message: 'unexpected internal error',
+          ilpErrorCode: IlpErrorCode.T00_INTERNAL_ERROR,
+          name: ''
+        })
+      }
     }
   }
 }

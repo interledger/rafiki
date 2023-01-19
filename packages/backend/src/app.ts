@@ -81,6 +81,13 @@ export interface PaymentPointerContext extends AppContext {
   clientKey?: JWK
 }
 
+export type PaymentPointerKeysContext = Omit<
+  PaymentPointerContext,
+  'paymentPointer'
+> & {
+  paymentPointer?: PaymentPointer
+}
+
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
 
 type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {

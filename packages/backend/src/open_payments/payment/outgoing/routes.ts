@@ -5,6 +5,7 @@ import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { listSubresource } from '../../payment_pointer/routes'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -48,8 +49,7 @@ async function getOutgoingPayment(
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
   if (!outgoingPayment) return ctx.throw(404)
-  outgoingPayment.paymentPointer = ctx.paymentPointer
-  const body = outgoingPaymentToBody(deps, outgoingPayment)
+  const body = outgoingPaymentToBody(deps, outgoingPayment, ctx.paymentPointer)
   ctx.body = body
 }
 
@@ -83,9 +83,8 @@ async function createOutgoingPayment(
   if (isOutgoingPaymentError(paymentOrErr)) {
     return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
   }
-  paymentOrErr.paymentPointer = ctx.paymentPointer
   ctx.status = 201
-  const res = outgoingPaymentToBody(deps, paymentOrErr)
+  const res = outgoingPaymentToBody(deps, paymentOrErr, ctx.paymentPointer)
   ctx.body = res
 }
 
@@ -97,7 +96,8 @@ async function listOutgoingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
-      toBody: (payment) => outgoingPaymentToBody(deps, payment)
+      toBody: (payment) =>
+        outgoingPaymentToBody(deps, payment, ctx.paymentPointer)
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')
@@ -106,13 +106,14 @@ async function listOutgoingPayments(
 
 function outgoingPaymentToBody(
   deps: ServiceDependencies,
-  outgoingPayment: OutgoingPayment
+  outgoingPayment: OutgoingPayment,
+  paymentPointer: PaymentPointer
 ) {
   return Object.fromEntries(
     Object.entries({
       ...outgoingPayment.toJSON(),
-      id: `${outgoingPayment.paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
-      paymentPointer: outgoingPayment.paymentPointer.url,
+      id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
+      paymentPointer: paymentPointer.url,
       state: null,
       failed: outgoingPayment.state === OutgoingPaymentState.Failed
     }).filter(([_, v]) => v != null)
