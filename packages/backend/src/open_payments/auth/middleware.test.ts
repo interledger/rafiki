@@ -101,7 +101,9 @@ describe('Auth Middleware', (): void => {
         throw new Error('test error')
       })
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(introspectSpy).toHaveBeenCalledWith(token)
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token
+    })
     expect(ctx.status).toBe(401)
     expect(ctx.message).toEqual('Invalid Token')
     expect(ctx.response.get('WWW-Authenticate')).toBe(
@@ -119,7 +121,9 @@ describe('Auth Middleware', (): void => {
       status: 403,
       message: 'Inactive Token'
     })
-    expect(introspectSpy).toHaveBeenCalledWith(token)
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token
+    })
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -184,7 +188,9 @@ describe('Auth Middleware', (): void => {
             status: 403,
             message: 'Insufficient Grant'
           })
-          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(introspectSpy).toHaveBeenCalledWith({
+            access_token: token
+          })
           expect(next).not.toHaveBeenCalled()
         }
       )
@@ -197,7 +203,9 @@ describe('Auth Middleware', (): void => {
             .mockResolvedValueOnce(tokenInfo)
 
           await expect(middleware(ctx, next)).resolves.toBeUndefined()
-          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(introspectSpy).toHaveBeenCalledWith({
+            access_token: token
+          })
           expect(next).toHaveBeenCalled()
           expect(ctx.clientId).toEqual(tokenInfo.client_id)
           expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
@@ -226,7 +234,9 @@ describe('Auth Middleware', (): void => {
               .mockResolvedValueOnce(tokenInfo)
 
             await expect(middleware(ctx, next)).resolves.toBeUndefined()
-            expect(introspectSpy).toHaveBeenCalledWith(token)
+            expect(introspectSpy).toHaveBeenCalledWith({
+              access_token: token
+            })
             expect(next).toHaveBeenCalled()
             expect(ctx.clientId).toBeUndefined()
             expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
@@ -252,7 +262,9 @@ describe('Auth Middleware', (): void => {
               status: 403,
               message: 'Insufficient Grant'
             })
-            expect(introspectSpy).toHaveBeenCalledWith(token)
+            expect(introspectSpy).toHaveBeenCalledWith({
+              access_token: token
+            })
             expect(next).not.toHaveBeenCalled()
           })
 
@@ -304,7 +316,9 @@ describe('Auth Middleware', (): void => {
                 .mockResolvedValueOnce(tokenInfo)
 
               await expect(middleware(ctx, next)).resolves.toBeUndefined()
-              expect(introspectSpy).toHaveBeenCalledWith(token)
+              expect(introspectSpy).toHaveBeenCalledWith({
+                access_token: token
+              })
               expect(next).toHaveBeenCalled()
               expect(ctx.clientId).toEqual(tokenInfo.client_id)
               expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
@@ -329,7 +343,9 @@ describe('Auth Middleware', (): void => {
             status: 403,
             message: 'Insufficient Grant'
           })
-          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(introspectSpy).toHaveBeenCalledWith({
+            access_token: token
+          })
           expect(next).not.toHaveBeenCalled()
         })
       }

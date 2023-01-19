@@ -49,7 +49,6 @@ export const createAxiosInstance = (args: {
     method: 'post',
     timeout: args.requestTimeoutMs
   })
-  axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
 
   return axiosInstance
 }
