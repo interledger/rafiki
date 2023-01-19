@@ -302,8 +302,8 @@ describe('Accounting Service', (): void => {
       `('$description', ({ sourceAmount, destinationAmount }): void => {
         test.each`
           commit   | description
-          ${true}  | ${'commit'}
-          ${false} | ${'rollback'}
+          ${true}  | ${'post'}
+          ${false} | ${'void'}
         `('$description', async ({ commit }): Promise<void> => {
           const trxOrError = await accountingService.createTransfer({
             sourceAccount,
