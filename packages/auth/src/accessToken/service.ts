@@ -11,8 +11,8 @@ import { IAppConfig } from '../config/app'
 import { Access } from '../access/model'
 
 export interface AccessTokenService {
-  get(token: string): Promise<AccessToken>
-  getByManagementId(managementId: string): Promise<AccessToken>
+  get(token: string): Promise<AccessToken | undefined>
+  getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(token: string): Promise<Introspection | undefined>
   revoke(id: string, tokenValue: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
@@ -89,34 +89,37 @@ function isTokenExpired(token: AccessToken): boolean {
   return expiresAt < now.getTime()
 }
 
-async function get(token: string): Promise<AccessToken> {
+async function get(token: string): Promise<AccessToken | undefined> {
   return AccessToken.query().findOne('value', token)
 }
 
-async function getByManagementId(managementId: string): Promise<AccessToken> {
-  return AccessToken.query().findOne('managementId', managementId)
+async function getByManagementId(
+  managementId: string
+): Promise<AccessToken | undefined> {
+  return AccessToken.query()
+    .findOne('managementId', managementId)
+    .withGraphFetched('grant')
 }
 
 async function introspect(
   deps: ServiceDependencies,
   value: string
 ): Promise<Introspection | undefined> {
-  const token = await AccessToken.query(deps.knex).findOne({ value })
+  const token = await AccessToken.query(deps.knex)
+    .findOne({ value })
+    .withGraphFetched('grant.access')
 
   if (!token) return
   if (isTokenExpired(token)) {
     return undefined
   } else {
-    const grant = await Grant.query(deps.knex)
-      .findById(token.grantId)
-      .withGraphFetched('access')
-    if (grant.state === GrantState.Revoked) {
+    if (!token.grant || token.grant.state === GrantState.Revoked) {
       return undefined
     }
 
     const jwk = await deps.clientService.getKey({
-      client: grant.client,
-      keyId: grant.clientKeyId
+      client: token.grant.client,
+      keyId: token.grant.clientKeyId
     })
 
     if (!jwk) {
@@ -124,7 +127,7 @@ async function introspect(
     }
 
     return {
-      grant,
+      grant: token.grant,
       jwk
     }
   }
@@ -198,7 +201,7 @@ async function rotate(
   } catch (error) {
     return {
       success: false,
-      error
+      error: new Error(error && error['message'])
     }
   }
 }

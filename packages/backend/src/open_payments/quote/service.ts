@@ -149,9 +149,10 @@ async function createQuote(
 
       let maxReceiveAmountValue: bigint | undefined
       if (options.sendAmount) {
-        const receivingPaymentValue = receiver.incomingAmount
-          ? receiver.incomingAmount.value - receiver.receivedAmount.value
-          : undefined
+        const receivingPaymentValue =
+          receiver.incomingAmount && receiver.receivedAmount
+            ? receiver.incomingAmount.value - receiver.receivedAmount.value
+            : undefined
         maxReceiveAmountValue =
           receivingPaymentValue &&
           receivingPaymentValue < quote.receiveAmount.value
@@ -192,7 +193,7 @@ export async function resolveReceiver(
     ) {
       throw QuoteError.InvalidAmount
     }
-    if (receiver.incomingAmount) {
+    if (receiver.incomingAmount && receiver.receivedAmount) {
       const receivingPaymentValue =
         receiver.incomingAmount.value - receiver.receivedAmount.value
       if (receivingPaymentValue < options.receiveAmount.value) {
@@ -239,7 +240,7 @@ export async function startQuote(
       quoteOptions.amountToSend = options.sendAmount.value
     } else {
       quoteOptions.amountToDeliver =
-        options.receiveAmount?.value || options.receiver.incomingAmount.value
+        options.receiveAmount?.value || options.receiver.incomingAmount?.value
     }
     const quote = await Pay.startQuote({
       ...quoteOptions,

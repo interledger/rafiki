@@ -191,6 +191,41 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.interactId).toEqual(grant.interactId)
     })
+    test('Cannot fetch non-existing grant', async () => {
+      await expect(grantService.get(v4())).resolves.toBeUndefined()
+      await expect(grantService.getByInteraction(v4())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getByInteractiveSession', (): void => {
+    test('Can fetch a grant by interact id and nonce', async () => {
+      assert.ok(grant.interactId)
+      assert.ok(grant.interactNonce)
+      const fetchedGrant = await grantService.getByInteractionSession(
+        grant.interactId,
+        grant.interactNonce
+      )
+      expect(fetchedGrant?.id).toEqual(grant.id)
+    })
+    test.each`
+      interactId | interactNonce | description
+      ${true}    | ${false}      | ${'interactId'}
+      ${false}   | ${true}       | ${'interactNonce'}
+      ${false}   | ${false}      | ${'interactId and interactNonce'}
+    `(
+      'Cannot fetch a grant by unknown $description',
+      async ({ interactId, interactNonce }): Promise<void> => {
+        assert.ok(grant.interactId)
+        assert.ok(grant.interactNonce)
+
+        await expect(
+          grantService.getByInteractionSession(
+            interactId ? grant.interactId : v4(),
+            interactNonce ? grant.interactNonce : v4()
+          )
+        ).resolves.toBeUndefined()
+      }
+    )
   })
 
   describe('reject', (): void => {

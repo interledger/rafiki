@@ -39,9 +39,13 @@ export const setup = <T extends PaymentPointerContext>(
   return ctx
 }
 
+interface TestGetOptions extends GetOptions {
+  paymentPointerId: NonNullable<GetOptions['paymentPointerId']>
+}
+
 interface BaseTestsOptions<M> {
   createModel: (options: { clientId?: string }) => Promise<M>
-  testGet: (options: GetOptions, expectedMatch?: M) => void
+  testGet: (options: TestGetOptions, expectedMatch?: M) => void
   testList?: (options: ListOptions, expectedMatch?: M) => void
 }
 
@@ -98,7 +102,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
                   paymentPointerId = uuid()
                   break
                 case GetOption.Unspecified:
-                  paymentPointerId = undefined
+                  paymentPointerId = ''
                   break
               }
             })
@@ -199,7 +203,10 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   list,
   urlPath
 }: RouteTestsOptions<M>): void => {
-  const testList = async ({ paymentPointerId, clientId }, expectedMatch) => {
+  const testList = async (
+    { paymentPointerId, clientId }: ListOptions,
+    expectedMatch?: M
+  ) => {
     const paymentPointer = await getPaymentPointer()
     paymentPointer.id = paymentPointerId
     const ctx = setup<ListContext>({
@@ -211,7 +218,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
       paymentPointer,
       clientId
     })
-    await expect(list(ctx)).resolves.toBeUndefined()
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await expect(list!(ctx)).resolves.toBeUndefined()
     if (expectedMatch) {
       // TODO: https://github.com/interledger/open-payments/issues/191
       expect(ctx.response).toSatisfyApiSpec()

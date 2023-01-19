@@ -86,7 +86,9 @@ describe('Incoming Payment Routes', (): void => {
         id: incomingPayment.url,
         paymentPointer: paymentPointer.url,
         completed: false,
-        incomingAmount: serializeAmount(incomingPayment.incomingAmount),
+        incomingAmount:
+          incomingPayment.incomingAmount &&
+          serializeAmount(incomingPayment.incomingAmount),
         description: incomingPayment.description,
         expiresAt: incomingPayment.expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
@@ -101,8 +103,8 @@ describe('Incoming Payment Routes', (): void => {
                 /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
               ),
               sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
-              assetCode: incomingPayment.incomingAmount.assetCode,
-              assetScale: incomingPayment.incomingAmount.assetScale
+              assetCode: incomingPayment.receivedAmount.assetCode,
+              assetScale: incomingPayment.receivedAmount.assetScale
             }
       }),
       list: (ctx) => incomingPaymentRoutes.list(ctx),
@@ -154,8 +156,8 @@ describe('Incoming Payment Routes', (): void => {
 
     test.each`
       clientId     | incomingAmount | description  | externalRef  | expiresAt
-      ${uuid()}    | ${amount}      | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined} | ${undefined}   | ${undefined} | ${undefined} | ${undefined}
+      ${uuid()}    | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
+      ${undefined} | ${false}       | ${undefined} | ${undefined} | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
@@ -168,7 +170,7 @@ describe('Incoming Payment Routes', (): void => {
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: {
             body: {
-              incomingAmount,
+              incomingAmount: incomingAmount ? amount : undefined,
               description,
               externalRef,
               expiresAt
@@ -184,9 +186,7 @@ describe('Incoming Payment Routes', (): void => {
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
-          incomingAmount: incomingAmount
-            ? parseAmount(incomingAmount)
-            : undefined,
+          incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           description,
           externalRef,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
@@ -210,7 +210,7 @@ describe('Incoming Payment Routes', (): void => {
         expect(ctx.response.body).toEqual({
           id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
           paymentPointer: paymentPointer.url,
-          incomingAmount,
+          incomingAmount: incomingAmount ? amount : undefined,
           description,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),

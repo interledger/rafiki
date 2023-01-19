@@ -65,14 +65,14 @@ describe('Grant Service', (): void => {
       afterEach(async (): Promise<void> => {
         jest.useRealTimers()
         if (existingAuthServer) {
-          expect(grant.authServerId).toEqual(authServerId)
+          expect(grant?.authServerId).toEqual(authServerId)
         } else {
           await expect(
             AuthServer.query(knex).findOne({
               url: authServerUrl
             })
           ).resolves.toMatchObject({
-            id: grant.authServerId
+            id: grant?.authServerId
           })
         }
       })

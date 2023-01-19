@@ -71,10 +71,12 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         const paymentPointer = await paymentPointers.get(
           ctx.state.streamDestination
         )
-        if (!paymentPointer.totalEventsAmount) {
-          await createLiquidityAccount(paymentPointer)
+        if (paymentPointer) {
+          if (!paymentPointer.totalEventsAmount) {
+            await createLiquidityAccount(paymentPointer)
+          }
+          return paymentPointer
         }
-        return paymentPointer
       }
       const address = ctx.request.prepare.destination
       const peer = await peers.getByDestinationAddress(address)
