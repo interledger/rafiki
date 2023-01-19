@@ -48,6 +48,7 @@ import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { AccessType, AuthenticatedClient } from 'open-payments'
+import { Client as TokenIntrospectionClient } from 'token-introspection'
 
 export interface AppContextData {
   logger: Logger
@@ -163,6 +164,7 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   openPaymentsClient: Promise<AuthenticatedClient>
+  tokenIntrospectionClient: Promise<TokenIntrospectionClient>
 }
 
 export type AppContainer = IocContract<AppServices>
