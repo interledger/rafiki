@@ -142,9 +142,9 @@ describe('OutgoingPaymentService', (): void => {
         amount
       })
     ).resolves.toBeUndefined()
-    const totalReceived = (await accountingService.getTotalReceived(
+    const totalReceived = await accountingService.getTotalReceived(
       incomingPayment.id
-    )) as bigint
+    )
     assert.ok(totalReceived)
     await incomingPayment.onCredit({
       totalReceived
