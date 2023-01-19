@@ -722,7 +722,7 @@ export type Receiver = {
   description?: Maybe<Scalars['String']>;
   expiresAt?: Maybe<Scalars['String']>;
   externalRef?: Maybe<Scalars['String']>;
-  id: Scalars['ID'];
+  id: Scalars['String'];
   incomingAmount?: Maybe<Amount>;
   paymentPointerUrl: Scalars['String'];
   receivedAmount: Amount;
@@ -1324,7 +1324,7 @@ export type ReceiverResolvers<ContextType = any, ParentType extends ResolversPar
   description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
   paymentPointerUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;

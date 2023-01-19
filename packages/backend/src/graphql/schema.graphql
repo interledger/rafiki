@@ -354,7 +354,7 @@ type IncomingPayment implements Model {
 }
 
 type Receiver {
-  id: ID!
+  id: String!
   paymentPointerUrl: String!
   completed: Boolean!
   incomingAmount: Amount

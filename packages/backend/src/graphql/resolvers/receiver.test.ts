@@ -1,4 +1,5 @@
 import { gql } from 'apollo-server-koa'
+import { v4 as uuid } from 'uuid'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
@@ -48,6 +49,7 @@ describe('Receiver Resolver', (): void => {
       }): Promise<void> => {
         const receiver = Receiver.fromIncomingPayment(
           mockIncomingPayment({
+            id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
             paymentPointer: paymentPointer.id,
             description,
             externalRef,

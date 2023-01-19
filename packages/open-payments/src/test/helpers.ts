@@ -92,7 +92,7 @@ export const mockILPStreamConnection = (
 export const mockIncomingPayment = (
   overrides?: Partial<IncomingPayment>
 ): IncomingPayment => ({
-  id: uuid(),
+  id: `https://example.com/.well-known/pay/incoming-payments/${uuid()}`,
   paymentPointer: 'paymentPointer',
   completed: false,
   incomingAmount: {
