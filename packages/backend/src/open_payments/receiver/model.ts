@@ -16,16 +16,19 @@ interface OpenPaymentsConnectionWithIlpAddress
 }
 
 export class Receiver extends ConnectionBase {
-  static fromConnection(connection: OpenPaymentsConnection): Receiver {
+  static fromConnection(
+    connection: OpenPaymentsConnection
+  ): Receiver | undefined {
     return this.fromOpenPaymentsConnection(connection)
   }
 
   static fromIncomingPayment(
     incomingPayment: OpenPaymentsIncomingPayment
   ): Receiver | undefined {
-    if (incomingPayment.completed) {
+    if (!incomingPayment.ilpStreamConnection || incomingPayment.completed) {
       return undefined
     }
+
     const expiresAt = incomingPayment.expiresAt
       ? new Date(incomingPayment.expiresAt)
       : undefined
@@ -121,7 +124,7 @@ export class Receiver extends ConnectionBase {
       destinationAsset: this.asset,
       destinationAddress: this.ilpAddress,
       sharedSecret: this.sharedSecret,
-      requestCounter: Counter.from(0)
+      requestCounter: Counter.from(0) as Counter
     }
   }
 }

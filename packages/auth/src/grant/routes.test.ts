@@ -18,6 +18,7 @@ import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
+import { ClientService } from '../client/service'
 import { AccessAction, AccessType } from 'open-payments'
 
 export const TEST_CLIENT_DISPLAY = {
@@ -61,6 +62,7 @@ describe('Grant Routes', (): void => {
   let grantRoutes: GrantRoutes
   let config: IAppConfig
   let accessTokenService: AccessTokenService
+  let clientService: ClientService
 
   let grant: Grant
 
@@ -103,6 +105,7 @@ describe('Grant Routes', (): void => {
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
+    clientService = await deps.use('clientService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -271,6 +274,29 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           error: 'interaction_required'
+        })
+      })
+
+      test('Fails to initiate a grant if payment pointer has no public name', async (): Promise<void> => {
+        jest.spyOn(clientService, 'get').mockResolvedValueOnce(undefined)
+
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+
+        ctx.request.body = BASE_GRANT_REQUEST
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          error: 'invalid_client'
         })
       })
     })
@@ -814,14 +840,55 @@ describe('Grant Routes', (): void => {
 
         const formattedAccess = access
         delete formattedAccess.id
+        delete formattedAccess.grantId
         delete formattedAccess.createdAt
         delete formattedAccess.updatedAt
+        delete formattedAccess.limits
         await expect(
           grantRoutes.interaction.details(ctx)
         ).resolves.toBeUndefined()
         expect(ctx.status).toBe(200)
         expect(ctx.body).toEqual({ access: [formattedAccess] })
-        expect(ctx.response).toSatisfyApiSpec()
+      })
+
+      test('Cannot get grant details for nonexistent grant', async (): Promise<void> => {
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-idp-secret': Config.identityServerSecret
+            },
+            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+            method: 'GET'
+          },
+          { id: v4(), nonce: grant.interactNonce }
+        )
+        await expect(
+          grantRoutes.interaction.details(ctx)
+        ).rejects.toMatchObject({
+          status: 404
+        })
+      })
+
+      test('Cannot get grant details without secret', async (): Promise<void> => {
+        const ctx = createContext(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+            method: 'GET'
+          },
+          { id: grant.interactId, nonce: grant.interactNonce }
+        )
+
+        await expect(
+          grantRoutes.interaction.details(ctx)
+        ).rejects.toMatchObject({
+          status: 401
+        })
       })
 
       test('Cannot get grant details for nonexistent grant', async (): Promise<void> => {

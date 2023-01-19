@@ -3,18 +3,25 @@ import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { generateNonce, generateToken } from '../shared/utils'
-import { Grant, GrantState, StartMethod, FinishMethod } from './model'
+import {
+  Grant,
+  GrantState,
+  StartMethod,
+  FinishMethod,
+  InteractiveGrant,
+  isInteractiveGrant
+} from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 
 export interface GrantService {
-  get(grantId: string): Promise<Grant>
+  get(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteraction(interactId: string): Promise<Grant>
+  getByInteraction(interactId: string): Promise<InteractiveGrant | undefined>
   getByInteractionSession(
     interactId: string,
     interactNonce: string
-  ): Promise<Grant>
+  ): Promise<InteractiveGrant | undefined>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
@@ -92,7 +99,7 @@ export async function createGrantService({
   }
 }
 
-async function get(grantId: string): Promise<Grant> {
+async function get(grantId: string): Promise<Grant | undefined> {
   return Grant.query().findById(grantId)
 }
 
@@ -176,17 +183,29 @@ async function create(
   }
 }
 
-async function getByInteraction(interactId: string): Promise<Grant> {
-  return Grant.query().findOne({ interactId })
+async function getByInteraction(
+  interactId: string
+): Promise<InteractiveGrant | undefined> {
+  const grant = await Grant.query().findOne({ interactId })
+  if (!grant || !isInteractiveGrant(grant)) {
+    return undefined
+  } else {
+    return grant
+  }
 }
 
 async function getByInteractionSession(
   interactId: string,
   interactNonce: string
-): Promise<Grant> {
-  return Grant.query()
+): Promise<InteractiveGrant | undefined> {
+  const grant = await Grant.query()
     .findOne({ interactId, interactNonce })
     .withGraphFetched('access')
+  if (!grant || !isInteractiveGrant(grant)) {
+    return undefined
+  } else {
+    return grant
+  }
 }
 
 async function getByContinue(

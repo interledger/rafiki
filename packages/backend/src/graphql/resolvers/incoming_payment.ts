@@ -62,7 +62,9 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
     return incomingPaymentService
       .create({
         paymentPointerId: args.input.paymentPointerId,
-        expiresAt: args.input.expiresAt && new Date(args.input.expiresAt),
+        expiresAt: !args.input.expiresAt
+          ? undefined
+          : new Date(args.input.expiresAt),
         description: args.input.description,
         incomingAmount: args.input.incomingAmount,
         externalRef: args.input.externalRef

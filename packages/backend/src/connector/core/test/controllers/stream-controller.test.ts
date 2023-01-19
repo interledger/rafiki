@@ -91,7 +91,9 @@ describe('Stream Controller', function () {
     expect(+replyPacket.prepareAmount).toBe(+ctx.request.prepare.amount)
     expect(replyPacket.frames.length).toBe(0) // No `StreamReceipt` frame
     expect(ctx.revertTotalReceived).toEqual(expect.any(Function))
-    await expect(ctx.revertTotalReceived()).resolves.toEqual('0')
+    await expect(
+      ctx.revertTotalReceived && ctx.revertTotalReceived()
+    ).resolves.toEqual('0')
     await expect(services.redis.get(connectionKey)).resolves.toBe('0')
   })
 

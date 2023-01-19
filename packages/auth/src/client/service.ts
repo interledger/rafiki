@@ -49,12 +49,16 @@ export async function createClientService(
 async function getClient(
   deps: ServiceDependencies,
   client: string
-): Promise<ClientDetails> {
+): Promise<ClientDetails | undefined> {
   try {
     const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
       url: client
     })
     // TODO: https://github.com/interledger/rafiki/issues/734
+    if (!paymentPointer.publicName) {
+      deps.logger.debug('Payment pointer does not have a public name.')
+      return
+    }
     return {
       name: paymentPointer.publicName,
       uri: client
@@ -73,14 +77,14 @@ async function getClient(
 
 async function getClientKey(
   deps: ServiceDependencies,
-  { client, keyId }
+  { client, keyId }: KeyOptions
 ): Promise<JWK | undefined> {
   try {
     const { keys } = await deps.openPaymentsClient.paymentPointer.getKeys({
       url: client
     })
 
-    return keys.find((key) => key.kid === keyId)
+    return keys.find((key: JWK) => key.kid === keyId)
   } catch (error) {
     deps.logger.debug(
       {

@@ -97,7 +97,9 @@ describe('Auth Middleware', (): void => {
   test('returns 401 for unsuccessful token introspection', async (): Promise<void> => {
     const introspectSpy = jest
       .spyOn(tokenIntrospectionClient, 'introspect')
-      .mockResolvedValueOnce(undefined)
+      .mockImplementation(() => {
+        throw new Error('test error')
+      })
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(introspectSpy).toHaveBeenCalledWith(token)
     expect(ctx.status).toBe(401)
@@ -105,6 +107,19 @@ describe('Auth Middleware', (): void => {
     expect(ctx.response.get('WWW-Authenticate')).toBe(
       `GNAP as_uri=${Config.authServerGrantUrl}`
     )
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  test('rejects with 403 for inactive token', async (): Promise<void> => {
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockResolvedValueOnce({ active: false })
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 403,
+      message: 'Inactive Token'
+    })
+    expect(introspectSpy).toHaveBeenCalledWith(token)
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -140,7 +155,7 @@ describe('Auth Middleware', (): void => {
         client_id: uuid(),
         access: access ?? [
           {
-            type,
+            type: 'incoming-payment',
             actions: [action],
             identifier
           }
@@ -203,7 +218,7 @@ describe('Auth Middleware', (): void => {
               {
                 type,
                 actions: [superAction],
-                identifier
+                identifier: identifier as string
               }
             ])
             const introspectSpy = jest
@@ -227,7 +242,7 @@ describe('Auth Middleware', (): void => {
               {
                 type,
                 actions: [subAction],
-                identifier
+                identifier: identifier as string
               }
             ])
             const introspectSpy = jest

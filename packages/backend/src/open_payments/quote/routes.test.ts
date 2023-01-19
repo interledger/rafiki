@@ -42,7 +42,7 @@ describe('Quote Routes', (): void => {
     clientId
   }: {
     paymentPointerId: string
-    clientId: string
+    clientId?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
       paymentPointerId,

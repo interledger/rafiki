@@ -98,7 +98,7 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', undefined)),
+  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
 
   /** Frontend **/
   frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')

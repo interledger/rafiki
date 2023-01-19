@@ -50,7 +50,7 @@ export const introspectToken = async (
       logger.error(
         {
           data: JSON.stringify(data),
-          validationError: error?.message
+          validationError: error && error['message']
         },
         errorMessage
       )
@@ -61,7 +61,7 @@ export const introspectToken = async (
     return validateTokenInfo(data)
   } catch (error) {
     const errorMessage = `Error when making introspection request: ${
-      error?.message ? error.message : 'Unknown error'
+      error && error['message'] ? error['message'] : 'Unknown error'
     }`
     logger.error({ args }, errorMessage)
 

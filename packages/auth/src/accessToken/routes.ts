@@ -8,11 +8,11 @@ import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
-type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body?: BodyT
+type TokenRequest<BodyT> = Omit<AppContext['request'], 'body'> & {
+  body: BodyT
 }
 
-type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
+type TokenContext<BodyT> = Omit<AppContext, 'request'> & {
   request: TokenRequest<BodyT>
 }
 
@@ -64,6 +64,7 @@ async function introspectToken(
 ): Promise<void> {
   const { body } = ctx.request
   const introspectionResult = await deps.accessTokenService.introspect(
+    // body.access_token exists since it is checked for by the request validation
     body['access_token']
   )
   ctx.body = introspectionToBody(introspectionResult)
