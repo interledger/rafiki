@@ -1,4 +1,3 @@
-import * as crypto from 'crypto'
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
 import { JWK } from 'http-signature-utils'
@@ -31,10 +30,9 @@ export interface KeyInfo {
   jwk: JWK
 }
 
-export interface Introspection extends Partial<Grant> {
-  active: boolean
-  key?: KeyInfo
-  clientId?: string
+export interface Introspection {
+  grant: Grant
+  jwk: JWK
 }
 
 interface AccessTokenOpts {
@@ -107,13 +105,13 @@ async function introspect(
 
   if (!token) return
   if (isTokenExpired(token)) {
-    return { active: false }
+    return undefined
   } else {
     const grant = await Grant.query(deps.knex)
       .findById(token.grantId)
       .withGraphFetched('access')
     if (grant.state === GrantState.Revoked) {
-      return { active: false }
+      return undefined
     }
 
     const jwk = await deps.clientService.getKey({
@@ -122,19 +120,12 @@ async function introspect(
     })
 
     if (!jwk) {
-      return { active: false }
+      return undefined
     }
 
-    const clientId = crypto
-      .createHash('sha256')
-      .update(grant.client)
-      .digest('hex')
-
     return {
-      active: true,
-      ...grant,
-      key: { proof: 'httpsig', jwk },
-      clientId
+      grant,
+      jwk
     }
   }
 }

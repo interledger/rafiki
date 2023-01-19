@@ -43,8 +43,10 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(401, 'Unauthorized')
       }
       const token = parts[1]
-      const authService = await ctx.container.use('authService')
-      const tokenInfo = await authService.introspect(token)
+      const tokenIntrospectionClient = await ctx.container.use(
+        'tokenIntrospectionClient'
+      )
+      const tokenInfo = await tokenIntrospectionClient.introspect(token)
       if (!tokenInfo) {
         ctx.throw(401, 'Invalid Token')
       }
@@ -79,6 +81,7 @@ export function createTokenIntrospectionMiddleware({
           return false
         })
       })
+
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }

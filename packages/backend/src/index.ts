@@ -5,8 +5,9 @@ import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
+import { createClient as createIntrospectionClient } from 'token-introspection'
 
 import { App, AppServices } from './app'
 import { Config } from './config/app'
@@ -24,7 +25,6 @@ import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
 import { createAccountingService } from './accounting/service'
 import { createPeerService } from './peer/service'
-import { createAuthService } from './open_payments/auth/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
@@ -110,15 +110,11 @@ export function initIocContainer(
     })
   })
   container.singleton('openApi', async () => {
-    const tokenIntrospectionSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/token-introspection.yaml')
-    )
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
     )
     return {
-      resourceServerSpec,
-      tokenIntrospectionSpec
+      resourceServerSpec
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {
@@ -129,6 +125,13 @@ export function initIocContainer(
       keyId: config.keyId,
       privateKey: config.privateKey,
       paymentPointerUrl: config.paymentPointerUrl
+    })
+  })
+  container.singleton('tokenIntrospectionClient', async (deps) => {
+    const config = await deps.use('config')
+    return await createIntrospectionClient({
+      logger: await deps.use('logger'),
+      url: config.authServerIntrospectionUrl
     })
   })
 
@@ -170,15 +173,6 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       assetService: await deps.use('assetService'),
       httpTokenService: await deps.use('httpTokenService')
-    })
-  })
-  container.singleton('authService', async (deps) => {
-    const config = await deps.use('config')
-    const { tokenIntrospectionSpec } = await deps.use('openApi')
-    return await createAuthService({
-      logger: await deps.use('logger'),
-      authServerIntrospectionUrl: config.authServerIntrospectionUrl,
-      tokenIntrospectionSpec
     })
   })
   container.singleton('authServerService', async (deps) => {
