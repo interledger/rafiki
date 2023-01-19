@@ -21,7 +21,10 @@ import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import {
+  createPaymentPointer,
+  MockPaymentPointer
+} from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
 import { GrantService } from '../grant/service'
@@ -29,11 +32,15 @@ import { PaymentPointerService } from '../payment_pointer/service'
 import { Amount, parseAmount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
 import { Connection } from '../connection/model'
+import { IncomingPaymentError } from '../payment/incoming/errors'
+import { IncomingPaymentService } from '../payment/incoming/service'
+import { createAsset } from '../../tests/asset'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let receiverService: ReceiverService
+  let incomingPaymentService: IncomingPaymentService
   let openPaymentsClient: AuthenticatedClient
   let knex: Knex
   let connectionService: ConnectionService
@@ -45,6 +52,7 @@ describe('Receiver Service', (): void => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps, { silentLogging: true })
     receiverService = await deps.use('receiverService')
+    incomingPaymentService = await deps.use('incomingPaymentService')
     openPaymentsClient = await deps.use('openPaymentsClient')
     connectionService = await deps.use('connectionService')
     paymentPointerService = await deps.use('paymentPointerService')
@@ -419,89 +427,202 @@ describe('Receiver Service', (): void => {
   })
 
   describe('create', () => {
-    const amount: Amount = {
-      value: BigInt(123),
-      assetCode: 'USD',
-      assetScale: 2
-    }
-    const paymentPointer = mockPaymentPointer()
+    describe('remote incoming payment', () => {
+      const paymentPointer = mockPaymentPointer({
+        assetCode: 'USD',
+        assetScale: 2
+      })
 
-    test.each`
-      incomingAmount | expiresAt                        | description                | externalRef
-      ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
-      ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
-    `(
-      'creates receiver from remote incoming payment ($#)',
-      async ({
-        description,
-        externalRef,
-        expiresAt,
-        incomingAmount
-      }): Promise<void> => {
-        const incomingPayment = mockIncomingPayment({
+      const amount: Amount = {
+        value: BigInt(123),
+        assetCode: 'USD',
+        assetScale: 2
+      }
+
+      test.each`
+        incomingAmount | expiresAt                        | description                | externalRef
+        ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      `(
+        'creates receiver from remote incoming payment ($#)',
+        async ({
           description,
           externalRef,
           expiresAt,
           incomingAmount
-        })
-        const remoteIncomingPaymentServiceSpy = jest
+        }): Promise<void> => {
+          const incomingPayment = mockIncomingPayment({
+            description,
+            externalRef,
+            expiresAt,
+            incomingAmount
+          })
+          const remoteIncomingPaymentServiceSpy = jest
+            .spyOn(remoteIncomingPaymentService, 'create')
+            .mockResolvedValueOnce(incomingPayment)
+
+          const localIncomingPaymentCreateSpy = jest.spyOn(
+            incomingPaymentService,
+            'create'
+          )
+
+          const receiver = await receiverService.create({
+            paymentPointerUrl: paymentPointer.id,
+            incomingAmount,
+            expiresAt,
+            description,
+            externalRef
+          })
+
+          expect(receiver).toEqual({
+            assetCode: incomingPayment.receivedAmount.assetCode,
+            assetScale: incomingPayment.receivedAmount.assetScale,
+            ilpAddress: incomingPayment.ilpStreamConnection?.ilpAddress,
+            sharedSecret: expect.any(Buffer),
+            incomingPayment: {
+              id: incomingPayment.id,
+              paymentPointer: incomingPayment.paymentPointer,
+              completed: incomingPayment.completed,
+              receivedAmount: parseAmount(incomingPayment.receivedAmount),
+              incomingAmount:
+                incomingPayment.incomingAmount &&
+                parseAmount(incomingPayment.incomingAmount),
+              description: incomingPayment.description || undefined,
+              externalRef: incomingPayment.externalRef || undefined,
+              updatedAt: new Date(incomingPayment.updatedAt),
+              createdAt: new Date(incomingPayment.createdAt),
+              expiresAt:
+                incomingPayment.expiresAt && new Date(incomingPayment.expiresAt)
+            }
+          })
+
+          expect(remoteIncomingPaymentServiceSpy).toHaveBeenCalledWith({
+            paymentPointerUrl: paymentPointer.id,
+            incomingAmount,
+            expiresAt,
+            description,
+            externalRef
+          })
+          expect(localIncomingPaymentCreateSpy).not.toHaveBeenCalled()
+        }
+      )
+
+      test('throws if could not create remote incoming payment', async (): Promise<void> => {
+        jest
           .spyOn(remoteIncomingPaymentService, 'create')
-          .mockResolvedValueOnce(incomingPayment)
+          .mockResolvedValueOnce(
+            mockIncomingPayment({
+              completed: true
+            })
+          )
 
-        const receiver = await receiverService.create({
-          paymentPointerUrl: paymentPointer.id,
-          incomingAmount,
-          expiresAt,
-          description,
-          externalRef
-        })
+        await expect(
+          receiverService.create({
+            paymentPointerUrl: paymentPointer.id
+          })
+        ).rejects.toThrow('Could not create receiver from incoming payment')
+      })
+    })
 
-        expect(receiver).toEqual({
-          assetCode: incomingPayment.receivedAmount.assetCode,
-          assetScale: incomingPayment.receivedAmount.assetScale,
-          ilpAddress: incomingPayment.ilpStreamConnection?.ilpAddress,
-          sharedSecret: expect.any(Buffer),
-          incomingPayment: {
-            id: incomingPayment.id,
-            paymentPointer: incomingPayment.paymentPointer,
-            completed: incomingPayment.completed,
-            receivedAmount: parseAmount(incomingPayment.receivedAmount),
-            incomingAmount:
-              incomingPayment.incomingAmount &&
-              parseAmount(incomingPayment.incomingAmount),
-            description: incomingPayment.description || undefined,
-            externalRef: incomingPayment.externalRef || undefined,
-            updatedAt: new Date(incomingPayment.updatedAt),
-            createdAt: new Date(incomingPayment.createdAt),
-            expiresAt:
-              incomingPayment.expiresAt && new Date(incomingPayment.expiresAt)
-          }
-        })
-
-        expect(remoteIncomingPaymentServiceSpy).toHaveBeenCalledWith({
-          paymentPointerUrl: paymentPointer.id,
-          incomingAmount,
-          expiresAt,
-          description,
-          externalRef
-        })
+    describe('local incoming payment', () => {
+      let paymentPointer: MockPaymentPointer
+      const amount: Amount = {
+        value: BigInt(123),
+        assetCode: 'USD',
+        assetScale: 2
       }
-    )
 
-    test('throws if could not create remote incoming payment', async (): Promise<void> => {
-      jest.spyOn(remoteIncomingPaymentService, 'create').mockResolvedValueOnce(
-        mockIncomingPayment({
-          completed: true
+      beforeEach(async () => {
+        const asset = await createAsset(deps, {
+          code: 'USD',
+          scale: 2
         })
+
+        paymentPointer = await createPaymentPointer(deps, {
+          mockServerPort: Config.openPaymentsPort,
+          assetId: asset.id
+        })
+      })
+
+      test.each`
+        incomingAmount | expiresAt                        | description                | externalRef
+        ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      `(
+        'creates receiver from local incoming payment ($#)',
+        async ({
+          description,
+          externalRef,
+          expiresAt,
+          incomingAmount
+        }): Promise<void> => {
+          const incomingPaymentCreateSpy = jest.spyOn(
+            incomingPaymentService,
+            'create'
+          )
+          const remoteIncomingPaymentCreateSpy = jest.spyOn(
+            remoteIncomingPaymentService,
+            'create'
+          )
+          const receiver = await receiverService.create({
+            paymentPointerUrl: paymentPointer.url,
+            incomingAmount,
+            expiresAt,
+            description,
+            externalRef
+          })
+
+          expect(receiver).toEqual({
+            assetCode: paymentPointer.asset.code,
+            assetScale: paymentPointer.asset.scale,
+            ilpAddress: receiver.ilpAddress,
+            sharedSecret: expect.any(Buffer),
+            incomingPayment: {
+              id: receiver.incomingPayment?.id,
+              paymentPointer: receiver.incomingPayment?.paymentPointer,
+              completed: receiver.incomingPayment?.completed,
+              receivedAmount: receiver.incomingPayment?.receivedAmount,
+              incomingAmount: receiver.incomingPayment?.incomingAmount,
+              description: receiver.incomingPayment?.description || undefined,
+              externalRef: receiver.incomingPayment?.externalRef || undefined,
+              updatedAt: receiver.incomingPayment?.updatedAt,
+              createdAt: receiver.incomingPayment?.createdAt,
+              expiresAt: receiver.incomingPayment?.expiresAt
+            }
+          })
+
+          expect(incomingPaymentCreateSpy).toHaveBeenCalledWith({
+            paymentPointerId: paymentPointer.id,
+            incomingAmount,
+            expiresAt,
+            description,
+            externalRef
+          })
+          expect(remoteIncomingPaymentCreateSpy).not.toHaveBeenCalled()
+        }
       )
 
-      await expect(
-        receiverService.create({
-          paymentPointerUrl: paymentPointer.id
-        })
-      ).rejects.toThrow(
-        'Could not create receiver from remote incoming payment'
-      )
+      test('throws if error when creating local incoming payment', async (): Promise<void> => {
+        jest
+          .spyOn(incomingPaymentService, 'create')
+          .mockResolvedValueOnce(IncomingPaymentError.InvalidAmount)
+
+        await expect(
+          receiverService.create({
+            paymentPointerUrl: paymentPointer.url
+          })
+        ).rejects.toThrow('Could not create local incoming payment')
+      })
+
+      test('throws if error when getting connection for local incoming payment', async (): Promise<void> => {
+        jest.spyOn(connectionService, 'get').mockReturnValueOnce(undefined)
+
+        await expect(
+          receiverService.create({
+            paymentPointerUrl: paymentPointer.url
+          })
+        ).rejects.toThrow('Could not get connection for local incoming payment')
+      })
     })
   })
 })
