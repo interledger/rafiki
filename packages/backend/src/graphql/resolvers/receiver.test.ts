@@ -125,9 +125,10 @@ describe('Receiver Resolver', (): void => {
                     __typename: 'Amount',
                     ...serializeAmount(receiver.incomingPayment?.incomingAmount)
                   },
-            receivedAmount:
-              receiver.incomingPayment &&
-              serializeAmount(receiver.incomingPayment.receivedAmount),
+            receivedAmount: receiver.incomingPayment && {
+              __typename: 'Amount',
+              ...serializeAmount(receiver.incomingPayment.receivedAmount)
+            },
             description: receiver.incomingPayment?.description || null,
             externalRef: receiver.incomingPayment?.externalRef || null,
             createdAt: receiver.incomingPayment?.createdAt.toISOString(),
