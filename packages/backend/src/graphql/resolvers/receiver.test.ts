@@ -46,19 +46,21 @@ describe('Receiver Resolver', (): void => {
         expiresAt,
         incomingAmount
       }): Promise<void> => {
-        const payment = mockIncomingPayment({
-          paymentPointer: paymentPointer.id,
-          description,
-          externalRef,
-          expiresAt: expiresAt?.toISOString(),
-          incomingAmount: incomingAmount
-            ? serializeAmount(incomingAmount)
-            : undefined
-        })
+        const receiver = Receiver.fromIncomingPayment(
+          mockIncomingPayment({
+            paymentPointer: paymentPointer.id,
+            description,
+            externalRef,
+            expiresAt: expiresAt?.toISOString(),
+            incomingAmount: incomingAmount
+              ? serializeAmount(incomingAmount)
+              : undefined
+          })
+        )
 
         const createSpy = jest
           .spyOn(receiverService, 'create')
-          .mockResolvedValueOnce(Receiver.fromIncomingPayment(payment))
+          .mockResolvedValueOnce(receiver)
 
         const input = {
           paymentPointerUrl: paymentPointer.id,
@@ -111,25 +113,26 @@ describe('Receiver Resolver', (): void => {
           message: null,
           receiver: {
             __typename: 'Receiver',
-            id: payment.id,
-            paymentPointerUrl: payment.paymentPointer,
+            id: receiver.incomingPayment?.id,
+            paymentPointerUrl: receiver.incomingPayment?.paymentPointer,
             completed: false,
-            expiresAt: payment.expiresAt || null,
+            expiresAt:
+              receiver.incomingPayment?.expiresAt?.toISOString() || null,
             incomingAmount:
-              incomingAmount === undefined
+              receiver.incomingPayment?.incomingAmount === undefined
                 ? null
                 : {
                     __typename: 'Amount',
-                    ...payment.incomingAmount
+                    ...serializeAmount(receiver.incomingPayment?.incomingAmount)
                   },
             receivedAmount: {
               __typename: 'Amount',
-              ...payment.receivedAmount
+              ...serializeAmount(receiver.incomingPayment?.receivedAmount)
             },
-            description: payment.description || null,
-            externalRef: payment.externalRef || null,
-            createdAt: payment.createdAt,
-            updatedAt: payment.updatedAt
+            description: receiver.incomingPayment?.description || null,
+            externalRef: receiver.incomingPayment?.externalRef || null,
+            createdAt: receiver.incomingPayment?.createdAt.toISOString(),
+            updatedAt: receiver.incomingPayment?.updatedAt.toISOString()
           }
         })
       }

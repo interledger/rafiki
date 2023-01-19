@@ -46,7 +46,7 @@ export function receiverToGraphql(receiver: Receiver): SchemaReceiver {
   return {
     id: receiver.incomingPayment.id,
     paymentPointerUrl: receiver.incomingPayment.paymentPointer,
-    expiresAt: receiver.incomingPayment.expiresAt.toISOString(),
+    expiresAt: receiver.incomingPayment.expiresAt?.toISOString(),
     description: receiver.incomingPayment.description,
     incomingAmount: receiver.incomingPayment.incomingAmount,
     receivedAmount: receiver.incomingPayment.receivedAmount,

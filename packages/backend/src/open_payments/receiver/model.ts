@@ -80,11 +80,13 @@ export class Receiver extends ConnectionBase {
         id: incomingPayment.id,
         completed: incomingPayment.completed,
         paymentPointer: incomingPayment.paymentPointer,
-        createdAt: new Date(incomingPayment.createdAt),
-        updatedAt: new Date(incomingPayment.updatedAt),
         expiresAt,
         receivedAmount,
-        incomingAmount
+        incomingAmount,
+        description: incomingPayment.description,
+        externalRef: incomingPayment.externalRef,
+        createdAt: new Date(incomingPayment.createdAt),
+        updatedAt: new Date(incomingPayment.updatedAt)
       }
     )
   }
