@@ -1234,7 +1234,7 @@ describe('Liquidity Resolvers', (): void => {
 
       test("Can't finalize finalized withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawalId)
+          accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1268,7 +1268,7 @@ describe('Liquidity Resolvers', (): void => {
 
       test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawalId)
+          accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1422,7 +1422,7 @@ describe('Liquidity Resolvers', (): void => {
 
       test("Can't rollback finalized withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawalId)
+          accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
@@ -1456,7 +1456,7 @@ describe('Liquidity Resolvers', (): void => {
 
       test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawalId)
+          accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({

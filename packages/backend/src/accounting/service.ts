@@ -92,8 +92,8 @@ export interface AccountingService {
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
-  commitWithdrawal(id: string): Promise<void | TransferError>
-  rollbackWithdrawal(id: string): Promise<void | TransferError>
+  postWithdrawal(id: string): Promise<void | TransferError>
+  voidWithdrawal(id: string): Promise<void | TransferError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -121,8 +121,8 @@ export function createAccountingService(
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    commitWithdrawal: (options) => commitAccountWithdrawal(deps, options),
-    rollbackWithdrawal: (options) => rollbackAccountWithdrawal(deps, options)
+    postWithdrawal: (options) => postAccountWithdrawal(deps, options),
+    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
   }
 }
 
@@ -369,7 +369,7 @@ export async function createTransfer(
             pendingId: transfer.id
           }
         }),
-        true // <- commit
+        true // <- post
       )
       if (error) {
         return error.error
@@ -400,7 +400,7 @@ export async function createTransfer(
             pendingId: transfer.id
           }
         }),
-        false // <- rollback
+        false // <- void
       )
       if (error) {
         return error.error
@@ -453,7 +453,7 @@ async function createAccountWithdrawal(
   }
 }
 
-async function rollbackAccountWithdrawal(
+async function voidAccountWithdrawal(
   deps: ServiceDependencies,
   withdrawalId: string
 ): Promise<void | TransferError> {
@@ -485,7 +485,7 @@ async function rollbackAccountWithdrawal(
   }
 }
 
-async function commitAccountWithdrawal(
+async function postAccountWithdrawal(
   deps: ServiceDependencies,
   withdrawalId: string
 ): Promise<void | TransferError> {

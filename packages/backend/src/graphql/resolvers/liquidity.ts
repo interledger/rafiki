@@ -271,7 +271,7 @@ export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['fina
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.commitWithdrawal(args.withdrawalId)
+    const error = await accountingService.postWithdrawal(args.withdrawalId)
     if (error) {
       return errorToResponse(error)
     }
@@ -289,7 +289,7 @@ export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['roll
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.rollbackWithdrawal(args.withdrawalId)
+    const error = await accountingService.voidWithdrawal(args.withdrawalId)
     if (error) {
       return errorToResponse(error)
     }

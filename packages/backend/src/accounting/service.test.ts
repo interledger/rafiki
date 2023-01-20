@@ -654,16 +654,16 @@ describe('Accounting Service', (): void => {
       })
     })
 
-    describe('Commit', (): void => {
+    describe('Post', (): void => {
       beforeEach(async (): Promise<void> => {
         await expect(
           accountingService.createWithdrawal(withdrawal)
         ).resolves.toBeUndefined()
       })
 
-      test('A withdrawal can be committed', async (): Promise<void> => {
+      test('A withdrawal can be posted', async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawal.id)
+          accountingService.postWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
           accountingService.getBalance(withdrawal.account.id)
@@ -675,37 +675,37 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(startingBalance - withdrawal.amount)
       })
 
-      test('Cannot commit unknown withdrawal', async (): Promise<void> => {
+      test('Cannot post unknown withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(uuid())
+          accountingService.postWithdrawal(uuid())
         ).resolves.toEqual(TransferError.UnknownTransfer)
       })
 
-      test('Cannot commit invalid withdrawal id', async (): Promise<void> => {
+      test('Cannot post invalid withdrawal id', async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal('not a uuid')
+          accountingService.postWithdrawal('not a uuid')
         ).resolves.toEqual(TransferError.InvalidId)
       })
 
-      test('Cannot commit committed withdrawal', async (): Promise<void> => {
+      test('Cannot post posted withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawal.id)
+          accountingService.postWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.commitWithdrawal(withdrawal.id)
+          accountingService.postWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyCommitted)
       })
 
-      test('Cannot commit rolled back withdrawal', async (): Promise<void> => {
+      test('Cannot post voided withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawal.id)
+          accountingService.voidWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.commitWithdrawal(withdrawal.id)
+          accountingService.postWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyRolledBack)
       })
 
-      test('Cannot commit expired withdrawal', async (): Promise<void> => {
+      test('Cannot post expired withdrawal', async (): Promise<void> => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
@@ -716,21 +716,21 @@ describe('Accounting Service', (): void => {
         ).resolves.toBeUndefined()
         await new Promise((resolve) => setImmediate(resolve))
         await expect(
-          accountingService.commitWithdrawal(expiringWithdrawal.id)
+          accountingService.postWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
       })
     })
 
-    describe('Rollback', (): void => {
+    describe('Void', (): void => {
       beforeEach(async (): Promise<void> => {
         await expect(
           accountingService.createWithdrawal(withdrawal)
         ).resolves.toBeUndefined()
       })
 
-      test('A withdrawal can be rolled back', async (): Promise<void> => {
+      test('A withdrawal can be voided', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawal.id)
+          accountingService.voidWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
           accountingService.getBalance(withdrawal.account.id)
@@ -742,37 +742,37 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(startingBalance)
       })
 
-      test('Cannot rollback unknown withdrawal', async (): Promise<void> => {
+      test('Cannot void unknown withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(uuid())
+          accountingService.voidWithdrawal(uuid())
         ).resolves.toEqual(TransferError.UnknownTransfer)
       })
 
-      test('Cannot commit invalid withdrawal id', async (): Promise<void> => {
+      test('Cannot post invalid withdrawal id', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal('not a uuid')
+          accountingService.voidWithdrawal('not a uuid')
         ).resolves.toEqual(TransferError.InvalidId)
       })
 
-      test('Cannot rollback committed withdrawal', async (): Promise<void> => {
+      test('Cannot void posted withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawal.id)
+          accountingService.postWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.rollbackWithdrawal(withdrawal.id)
+          accountingService.voidWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyCommitted)
       })
 
-      test('Cannot rollback rolled back withdrawal', async (): Promise<void> => {
+      test('Cannot void voided withdrawal', async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawal.id)
+          accountingService.voidWithdrawal(withdrawal.id)
         ).resolves.toBeUndefined()
         await expect(
-          accountingService.rollbackWithdrawal(withdrawal.id)
+          accountingService.voidWithdrawal(withdrawal.id)
         ).resolves.toEqual(TransferError.AlreadyRolledBack)
       })
 
-      test('Cannot rollback expired withdrawal', async (): Promise<void> => {
+      test('Cannot void expired withdrawal', async (): Promise<void> => {
         const expiringWithdrawal = {
           ...withdrawal,
           id: uuid(),
@@ -783,7 +783,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toBeUndefined()
         await new Promise((resolve) => setImmediate(resolve))
         await expect(
-          accountingService.rollbackWithdrawal(expiringWithdrawal.id)
+          accountingService.voidWithdrawal(expiringWithdrawal.id)
         ).resolves.toEqual(TransferError.TransferExpired)
       })
     })
