@@ -19,7 +19,6 @@ type TransfersError = {
 export interface CreateTransferOptionsBase {
   sourceAccountId: AccountId
   destinationAccountId: AccountId
-  amount: bigint
   ledger: number
   timeout?: bigint
 }
@@ -28,19 +27,46 @@ export interface NewTransferOptions extends CreateTransferOptionsBase {
   id: string | bigint
   postId?: never
   voidId?: never
+  amount: bigint
 }
 
 export interface PostTransferOptions extends CreateTransferOptionsBase {
   id?: never
   postId: string | bigint
   voidId?: never
+  amount?: never
 }
 
 export interface VoidTransferOptions extends CreateTransferOptionsBase {
   id?: never
   postId?: never
   voidId: string | bigint
+  amount?: never
 }
+
+function isNewTransferOptions(
+  options: CreateTransferOptions
+): options is NewTransferOptions {
+  return options.id !== undefined
+}
+
+export const toPostTransferOptions = (
+  options: NewTransferOptions
+): PostTransferOptions => ({
+  postId: options.id,
+  sourceAccountId: options.sourceAccountId,
+  destinationAccountId: options.destinationAccountId,
+  ledger: options.ledger
+})
+
+export const toVoidTransferOptions = (
+  options: NewTransferOptions
+): VoidTransferOptions => ({
+  voidId: options.id,
+  sourceAccountId: options.sourceAccountId,
+  destinationAccountId: options.destinationAccountId,
+  ledger: options.ledger
+})
 
 export type CreateTransferOptions =
   | NewTransferOptions
@@ -54,15 +80,16 @@ export async function createTransfers(
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
     const transfer = transfers[i]
-    if (transfer.amount <= BigInt(0)) {
-      return { index: i, error: TransferError.InvalidAmount }
-    }
     let flags = 0
     let pendingId: string | bigint | undefined
-    if (transfer.timeout) {
-      flags |= TransferFlags.pending
-    }
-    if (transfer.postId) {
+    if (isNewTransferOptions(transfer)) {
+      if (transfer.amount <= BigInt(0)) {
+        return { index: i, error: TransferError.InvalidAmount }
+      }
+      if (transfer.timeout) {
+        flags |= TransferFlags.pending
+      }
+    } else if (transfer.postId) {
       flags |= TransferFlags.post_pending_transfer
       pendingId = transfer.postId
     } else if (transfer.voidId) {
@@ -83,7 +110,7 @@ export async function createTransfers(
       ledger: transfer.ledger,
       code: ACCOUNT_TYPE,
       flags,
-      amount: transfer.amount,
+      amount: transfer.amount || 0n,
       timestamp: 0n
     })
   }

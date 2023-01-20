@@ -14,7 +14,12 @@ import {
   TransferError,
   UnknownAccountError
 } from './errors'
-import { NewTransferOptions, createTransfers } from './transfers'
+import {
+  NewTransferOptions,
+  createTransfers,
+  toPostTransferOptions,
+  toVoidTransferOptions
+} from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
@@ -360,14 +365,7 @@ export async function createTransfer(
     post: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => {
-          return {
-            ...transfer,
-            timeout: undefined,
-            id: undefined,
-            postId: transfer.id
-          }
-        })
+        transfers.map((transfer) => toPostTransferOptions(transfer))
       )
       if (error) {
         return error.error
@@ -391,14 +389,7 @@ export async function createTransfer(
     void: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => {
-          return {
-            ...transfer,
-            timeout: undefined,
-            id: undefined,
-            voidId: transfer.id
-          }
-        })
+        transfers.map((transfer) => toVoidTransferOptions(transfer))
       )
       if (error) {
         return error.error
@@ -470,7 +461,6 @@ async function voidAccountWithdrawal(
       voidId: transfers[0].id,
       sourceAccountId: transfers[0].debit_account_id,
       destinationAccountId: transfers[0].credit_account_id,
-      amount: transfers[0].amount,
       ledger: transfers[0].ledger
     }
   ])
@@ -498,7 +488,6 @@ async function postAccountWithdrawal(
       postId: transfers[0].id,
       sourceAccountId: transfers[0].debit_account_id,
       destinationAccountId: transfers[0].credit_account_id,
-      amount: transfers[0].amount,
       ledger: transfers[0].ledger
     }
   ])
