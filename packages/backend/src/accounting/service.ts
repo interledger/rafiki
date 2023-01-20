@@ -14,12 +14,7 @@ import {
   TransferError,
   UnknownAccountError
 } from './errors'
-import {
-  NewTransferOptions,
-  createTransfers,
-  toPostTransferOptions,
-  toVoidTransferOptions
-} from './transfers'
+import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
@@ -365,7 +360,7 @@ export async function createTransfer(
     post: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => toPostTransferOptions(transfer))
+        transfers.map((transfer) => ({ postId: transfer.id }))
       )
       if (error) {
         return error.error
@@ -389,7 +384,7 @@ export async function createTransfer(
     void: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => toVoidTransferOptions(transfer))
+        transfers.map((transfer) => ({ voidId: transfer.id }))
       )
       if (error) {
         return error.error
@@ -449,17 +444,9 @@ async function voidAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const transfers = await deps.tigerbeetle.lookupTransfers([
-    toTigerbeetleId(withdrawalId)
-  ])
-  if (!transfers.length) {
-    return TransferError.UnknownTransfer
-  }
-
   const error = await createTransfers(deps, [
     {
-      voidId: transfers[0].id,
-      ledger: transfers[0].ledger
+      voidId: withdrawalId
     }
   ])
   if (error) {
@@ -474,17 +461,9 @@ async function postAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const transfers = await deps.tigerbeetle.lookupTransfers([
-    toTigerbeetleId(withdrawalId)
-  ])
-  if (!transfers.length) {
-    return TransferError.UnknownTransfer
-  }
-
   const error = await createTransfers(deps, [
     {
-      postId: transfers[0].id,
-      ledger: transfers[0].ledger
+      postId: withdrawalId
     }
   ])
   if (error) {

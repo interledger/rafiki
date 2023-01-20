@@ -16,32 +16,27 @@ type TransfersError = {
   error: TransferError
 }
 
-export interface CreateTransferOptionsBase {
-  ledger: number
-}
-
-export interface NewTransferOptions extends CreateTransferOptionsBase {
+export interface NewTransferOptions {
   id: string | bigint
   sourceAccountId: AccountId
   destinationAccountId: AccountId
   amount: bigint
+  ledger: number
   timeout?: bigint
   postId?: never
   voidId?: never
 }
 
-export interface PostTransferOptions extends CreateTransferOptionsBase {
+export interface PostTransferOptions {
   id?: never
   postId: string | bigint
   voidId?: never
-  amount?: never
 }
 
-export interface VoidTransferOptions extends CreateTransferOptionsBase {
+export interface VoidTransferOptions {
   id?: never
   postId?: never
   voidId: string | bigint
-  amount?: never
 }
 
 function isNewTransferOptions(
@@ -49,20 +44,6 @@ function isNewTransferOptions(
 ): options is NewTransferOptions {
   return options.id !== undefined
 }
-
-export const toPostTransferOptions = (
-  options: NewTransferOptions
-): PostTransferOptions => ({
-  postId: options.id,
-  ledger: options.ledger
-})
-
-export const toVoidTransferOptions = (
-  options: NewTransferOptions
-): VoidTransferOptions => ({
-  voidId: options.id,
-  ledger: options.ledger
-})
 
 export type CreateTransferOptions =
   | NewTransferOptions
@@ -84,7 +65,7 @@ export async function createTransfers(
       reserved: 0n,
       pending_id: 0n,
       timeout: 0n,
-      ledger: transfer.ledger,
+      ledger: 0,
       code: ACCOUNT_TYPE,
       flags: 0,
       amount: 0n,
@@ -96,6 +77,7 @@ export async function createTransfers(
       }
       tbTransfer.id = toTigerbeetleId(transfer.id)
       tbTransfer.amount = transfer.amount
+      tbTransfer.ledger = transfer.ledger
       tbTransfer.debit_account_id = toTigerbeetleId(transfer.sourceAccountId)
       tbTransfer.credit_account_id = toTigerbeetleId(
         transfer.destinationAccountId
