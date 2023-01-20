@@ -2990,35 +2990,6 @@
             "deprecationReason": null
           },
           {
-            "name": "rollbackLiquidityWithdrawal",
-            "description": "Rollback liquidity withdrawal",
-            "args": [
-              {
-                "name": "withdrawalId",
-                "description": "The id of the liquidity withdrawal to rollback.",
-                "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "String",
-                    "ofType": null
-                  }
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              }
-            ],
-            "type": {
-              "kind": "OBJECT",
-              "name": "LiquidityMutationResponse",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "triggerPaymentPointerEvents",
             "description": null,
             "args": [
@@ -3113,6 +3084,35 @@
                 "name": "UpdatePeerMutationResponse",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "voidLiquidityWithdrawal",
+            "description": "Void liquidity withdrawal",
+            "args": [
+              {
+                "name": "withdrawalId",
+                "description": "The id of the liquidity withdrawal to void.",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LiquidityMutationResponse",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

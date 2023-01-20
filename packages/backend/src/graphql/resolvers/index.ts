@@ -28,7 +28,7 @@ import {
   createPeerLiquidityWithdrawal,
   createPaymentPointerWithdrawal,
   finalizeLiquidityWithdrawal,
-  rollbackLiquidityWithdrawal,
+  voidLiquidityWithdrawal,
   depositEventLiquidity,
   withdrawEventLiquidity
 } from './liquidity'
@@ -73,7 +73,7 @@ export const resolvers: Resolvers = {
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     createPaymentPointerWithdrawal,
     finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
-    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal,
+    voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
     withdrawEventLiquidity
   }

@@ -282,7 +282,7 @@ export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['fina
     }
   }
 
-export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['rollbackLiquidityWithdrawal'] =
+export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiquidityWithdrawal'] =
   async (
     parent,
     args,

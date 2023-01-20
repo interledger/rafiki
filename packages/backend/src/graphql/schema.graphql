@@ -86,9 +86,9 @@ type Mutation {
     withdrawalId: String!
   ): LiquidityMutationResponse
 
-  "Rollback liquidity withdrawal"
-  rollbackLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to rollback."
+  "Void liquidity withdrawal"
+  voidLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to void."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
