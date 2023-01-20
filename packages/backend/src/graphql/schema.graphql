@@ -258,8 +258,8 @@ type Asset implements Model {
 }
 
 enum LiquidityError {
-  AlreadyCommitted
-  AlreadyRolledBack
+  AlreadyPosted
+  AlreadyVoided
   AmountZero
   InsufficientBalance
   InvalidId

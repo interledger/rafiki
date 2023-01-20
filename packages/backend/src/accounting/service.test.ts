@@ -383,13 +383,13 @@ describe('Accounting Service', (): void => {
 
           await expect(trxOrError.post()).resolves.toEqual(
             post
-              ? TransferError.AlreadyCommitted
-              : TransferError.AlreadyRolledBack
+              ? TransferError.AlreadyPosted
+              : TransferError.AlreadyVoided
           )
           await expect(trxOrError.void()).resolves.toEqual(
             post
-              ? TransferError.AlreadyCommitted
-              : TransferError.AlreadyRolledBack
+              ? TransferError.AlreadyPosted
+              : TransferError.AlreadyVoided
           )
         })
       })
@@ -693,7 +693,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toBeUndefined()
         await expect(
           accountingService.postWithdrawal(withdrawal.id)
-        ).resolves.toEqual(TransferError.AlreadyCommitted)
+        ).resolves.toEqual(TransferError.AlreadyPosted)
       })
 
       test('Cannot post voided withdrawal', async (): Promise<void> => {
@@ -702,7 +702,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toBeUndefined()
         await expect(
           accountingService.postWithdrawal(withdrawal.id)
-        ).resolves.toEqual(TransferError.AlreadyRolledBack)
+        ).resolves.toEqual(TransferError.AlreadyVoided)
       })
 
       test('Cannot post expired withdrawal', async (): Promise<void> => {
@@ -760,7 +760,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toBeUndefined()
         await expect(
           accountingService.voidWithdrawal(withdrawal.id)
-        ).resolves.toEqual(TransferError.AlreadyCommitted)
+        ).resolves.toEqual(TransferError.AlreadyPosted)
       })
 
       test('Cannot void voided withdrawal', async (): Promise<void> => {
@@ -769,7 +769,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toBeUndefined()
         await expect(
           accountingService.voidWithdrawal(withdrawal.id)
-        ).resolves.toEqual(TransferError.AlreadyRolledBack)
+        ).resolves.toEqual(TransferError.AlreadyVoided)
       })
 
       test('Cannot void expired withdrawal', async (): Promise<void> => {

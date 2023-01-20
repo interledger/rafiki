@@ -1263,10 +1263,10 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
         expect(response.message).toEqual('Withdrawal already finalized')
-        expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
+        expect(response.error).toEqual(LiquidityError.AlreadyPosted)
       })
 
-      test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
+      test("Can't finalize voided withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
@@ -1296,8 +1296,8 @@ describe('Liquidity Resolvers', (): void => {
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
-        expect(response.message).toEqual('Withdrawal already rolled back')
-        expect(response.error).toEqual(LiquidityError.AlreadyRolledBack)
+        expect(response.message).toEqual('Withdrawal already voided')
+        expect(response.error).toEqual(LiquidityError.AlreadyVoided)
       })
     }
   )
@@ -1451,10 +1451,10 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
         expect(response.message).toEqual('Withdrawal already finalized')
-        expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
+        expect(response.error).toEqual(LiquidityError.AlreadyPosted)
       })
 
-      test("Can't void rolled back withdrawal", async (): Promise<void> => {
+      test("Can't void voided withdrawal", async (): Promise<void> => {
         await expect(
           accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
@@ -1484,8 +1484,8 @@ describe('Liquidity Resolvers', (): void => {
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
-        expect(response.message).toEqual('Withdrawal already rolled back')
-        expect(response.error).toEqual(LiquidityError.AlreadyRolledBack)
+        expect(response.message).toEqual('Withdrawal already voided')
+        expect(response.error).toEqual(LiquidityError.AlreadyVoided)
       })
     }
   )

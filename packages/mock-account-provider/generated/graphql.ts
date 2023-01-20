@@ -282,8 +282,8 @@ export enum Kty {
 }
 
 export enum LiquidityError {
-  AlreadyCommitted = 'AlreadyCommitted',
-  AlreadyRolledBack = 'AlreadyRolledBack',
+  AlreadyPosted = 'AlreadyPosted',
+  AlreadyVoided = 'AlreadyVoided',
   AmountZero = 'AmountZero',
   InsufficientBalance = 'InsufficientBalance',
   InvalidId = 'InvalidId',

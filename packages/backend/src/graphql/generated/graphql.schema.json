@@ -2267,13 +2267,13 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "AlreadyCommitted",
+            "name": "AlreadyPosted",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "AlreadyRolledBack",
+            "name": "AlreadyVoided",
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null

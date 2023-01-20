@@ -119,13 +119,13 @@ export async function createTransfers(
         return {
           index,
           error: post
-            ? TransferError.AlreadyCommitted
-            : TransferError.AlreadyRolledBack
+            ? TransferError.AlreadyPosted
+            : TransferError.AlreadyVoided
         }
       case CreateTransferErrorCode.pending_transfer_already_posted:
-        return { index, error: TransferError.AlreadyCommitted }
+        return { index, error: TransferError.AlreadyPosted }
       case CreateTransferErrorCode.pending_transfer_already_voided:
-        return { index, error: TransferError.AlreadyRolledBack }
+        return { index, error: TransferError.AlreadyVoided }
       default:
         // TODO @jason: This needs to be removed: =========>
         switch (code) {
@@ -135,13 +135,13 @@ export async function createTransfers(
             return {
               index,
               error: post
-                ? TransferError.AlreadyCommitted
-                : TransferError.AlreadyRolledBack
+                ? TransferError.AlreadyPosted
+                : TransferError.AlreadyVoided
             }
           case 47: //pending_transfer_already_posted,
-            return { index, error: TransferError.AlreadyCommitted }
+            return { index, error: TransferError.AlreadyPosted }
           case 48: //pending_transfer_already_voided,
-            return { index, error: TransferError.AlreadyRolledBack }
+            return { index, error: TransferError.AlreadyVoided }
           case 49: //pending_transfer_expired,
             return { index, error: TransferError.TransferExpired }
         }

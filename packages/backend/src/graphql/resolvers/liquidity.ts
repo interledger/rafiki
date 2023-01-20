@@ -296,7 +296,7 @@ export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiqu
     return {
       code: '200',
       success: true,
-      message: 'Rolled Back Withdrawal'
+      message: 'Voided Withdrawal'
     }
   }
 
@@ -419,17 +419,17 @@ const errorToResponse = (error: FundingError): LiquidityMutationResponse => {
 const responses: {
   [key in LiquidityError]: LiquidityMutationResponse
 } = {
-  [LiquidityError.AlreadyCommitted]: {
+  [LiquidityError.AlreadyPosted]: {
     code: '409',
     message: 'Withdrawal already finalized',
     success: false,
-    error: LiquidityError.AlreadyCommitted
+    error: LiquidityError.AlreadyPosted
   },
-  [LiquidityError.AlreadyRolledBack]: {
+  [LiquidityError.AlreadyVoided]: {
     code: '409',
-    message: 'Withdrawal already rolled back',
+    message: 'Withdrawal already voided',
     success: false,
-    error: LiquidityError.AlreadyRolledBack
+    error: LiquidityError.AlreadyVoided
   },
   [LiquidityError.AmountZero]: {
     code: '400',
