@@ -459,8 +459,6 @@ async function voidAccountWithdrawal(
   const error = await createTransfers(deps, [
     {
       voidId: transfers[0].id,
-      sourceAccountId: transfers[0].debit_account_id,
-      destinationAccountId: transfers[0].credit_account_id,
       ledger: transfers[0].ledger
     }
   ])
@@ -486,8 +484,6 @@ async function postAccountWithdrawal(
   const error = await createTransfers(deps, [
     {
       postId: transfers[0].id,
-      sourceAccountId: transfers[0].debit_account_id,
-      destinationAccountId: transfers[0].credit_account_id,
       ledger: transfers[0].ledger
     }
   ])

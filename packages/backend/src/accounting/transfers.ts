@@ -17,17 +17,17 @@ type TransfersError = {
 }
 
 export interface CreateTransferOptionsBase {
-  sourceAccountId: AccountId
-  destinationAccountId: AccountId
   ledger: number
-  timeout?: bigint
 }
 
 export interface NewTransferOptions extends CreateTransferOptionsBase {
   id: string | bigint
+  sourceAccountId: AccountId
+  destinationAccountId: AccountId
+  amount: bigint
+  timeout?: bigint
   postId?: never
   voidId?: never
-  amount: bigint
 }
 
 export interface PostTransferOptions extends CreateTransferOptionsBase {
@@ -54,8 +54,6 @@ export const toPostTransferOptions = (
   options: NewTransferOptions
 ): PostTransferOptions => ({
   postId: options.id,
-  sourceAccountId: options.sourceAccountId,
-  destinationAccountId: options.destinationAccountId,
   ledger: options.ledger
 })
 
@@ -63,8 +61,6 @@ export const toVoidTransferOptions = (
   options: NewTransferOptions
 ): VoidTransferOptions => ({
   voidId: options.id,
-  sourceAccountId: options.sourceAccountId,
-  destinationAccountId: options.destinationAccountId,
   ledger: options.ledger
 })
 
@@ -80,39 +76,48 @@ export async function createTransfers(
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
     const transfer = transfers[i]
-    let flags = 0
-    let pendingId: string | bigint | undefined
+    const tbTransfer: TbTransfer = {
+      id: 0n,
+      debit_account_id: 0n,
+      credit_account_id: 0n,
+      user_data: 0n,
+      reserved: 0n,
+      pending_id: 0n,
+      timeout: 0n,
+      ledger: transfer.ledger,
+      code: ACCOUNT_TYPE,
+      flags: 0,
+      amount: 0n,
+      timestamp: 0n
+    }
     if (isNewTransferOptions(transfer)) {
       if (transfer.amount <= BigInt(0)) {
         return { index: i, error: TransferError.InvalidAmount }
       }
+      tbTransfer.id = toTigerbeetleId(transfer.id)
+      tbTransfer.amount = transfer.amount
+      tbTransfer.debit_account_id = toTigerbeetleId(transfer.sourceAccountId)
+      tbTransfer.credit_account_id = toTigerbeetleId(
+        transfer.destinationAccountId
+      )
       if (transfer.timeout) {
-        flags |= TransferFlags.pending
+        tbTransfer.flags |= TransferFlags.pending
+        tbTransfer.timeout = transfer.timeout * BigInt(10e6) // ms -> ns
       }
-    } else if (transfer.postId) {
-      flags |= TransferFlags.post_pending_transfer
-      pendingId = transfer.postId
-    } else if (transfer.voidId) {
-      flags |= TransferFlags.void_pending_transfer
-      pendingId = transfer.voidId
+    } else {
+      tbTransfer.id = toTigerbeetleId(uuid())
+      if (transfer.postId) {
+        tbTransfer.flags |= TransferFlags.post_pending_transfer
+        tbTransfer.pending_id = toTigerbeetleId(transfer.postId)
+      } else if (transfer.voidId) {
+        tbTransfer.flags |= TransferFlags.void_pending_transfer
+        tbTransfer.pending_id = toTigerbeetleId(transfer.voidId)
+      }
     }
     if (i < transfers.length - 1) {
-      flags |= TransferFlags.linked
+      tbTransfer.flags |= TransferFlags.linked
     }
-    tbTransfers.push({
-      id: toTigerbeetleId(transfers[i].id || uuid()),
-      debit_account_id: toTigerbeetleId(transfer.sourceAccountId),
-      credit_account_id: toTigerbeetleId(transfer.destinationAccountId),
-      user_data: 0n,
-      reserved: 0n,
-      pending_id: pendingId ? toTigerbeetleId(pendingId) : 0n,
-      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
-      ledger: transfer.ledger,
-      code: ACCOUNT_TYPE,
-      flags,
-      amount: transfer.amount || 0n,
-      timestamp: 0n
-    })
+    tbTransfers.push(tbTransfer)
   }
   const res = await deps.tigerbeetle.createTransfers(tbTransfers)
   for (const { index, code } of res) {
