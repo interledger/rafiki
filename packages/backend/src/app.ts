@@ -76,7 +76,8 @@ export type AppRequest<ParamsT extends string = string> = Omit<
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
-  clientId?: string
+  client?: string
+  filterClient?: boolean
   clientKey?: JWK
 }
 
@@ -98,7 +99,8 @@ export type HttpSigContext = AppContext & {
   headers: HttpSigHeaders
   grant: Grant
   clientKey: JWK
-  clientId?: string
+  client: string
+  filterClient?: boolean
 }
 
 // Payment pointer subresources

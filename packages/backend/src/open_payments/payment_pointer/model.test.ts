@@ -35,7 +35,7 @@ export const setup = <T extends PaymentPointerContext>(
   )
   ctx.paymentPointer = options.paymentPointer
   ctx.grant = options.grant
-  ctx.clientId = options.clientId
+  ctx.client = options.clientId
   return ctx
 }
 

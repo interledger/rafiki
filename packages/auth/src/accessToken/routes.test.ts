@@ -1,7 +1,6 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
-import crypto from 'crypto'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
 
@@ -135,14 +134,6 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects valid token', async (): Promise<void> => {
-      const clientId = crypto.createHash('sha256').update(CLIENT).digest('hex')
-
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       const ctx = createContext(
         {
           headers: {
@@ -175,13 +166,8 @@ describe('Access Token Routes', (): void => {
             identifier: access.identifier
           }
         ],
-        key: {
-          proof: 'httpsig',
-          jwk: testClientKey
-        },
-        client_id: clientId
+        client: CLIENT
       })
-      scope.done()
     })
 
     test('Successfully introspects expired token', async (): Promise<void> => {

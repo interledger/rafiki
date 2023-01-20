@@ -145,19 +145,9 @@ describe('Access Token Service', (): void => {
 
   describe('Introspect', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       await expect(accessTokenService.introspect(token.value)).resolves.toEqual(
-        {
-          grant,
-          jwk: testClientKey
-        }
+        grant
       )
-      scope.done()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
@@ -180,12 +170,6 @@ describe('Access Token Service', (): void => {
 
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
-    })
-
-    test('Cannot introspect with non-existing key', async (): Promise<void> => {
-      await expect(
-        accessTokenService.introspect(token.value)
-      ).resolves.toBeUndefined()
     })
   })
 

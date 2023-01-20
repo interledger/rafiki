@@ -1,8 +1,8 @@
-import { RequestLike, validateSignature } from 'http-signature-utils'
+import { getKeyId, RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType, JWKS } from 'open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
 
@@ -66,8 +66,7 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(403, 'Inactive Token')
       }
 
-      ctx.clientKey = tokenInfo.key.jwk
-
+      ctx.filterClient = false
       // TODO
       // https://github.com/interledger/rafiki/issues/835
       const access = tokenInfo.access.find((access: Access) => {
@@ -92,8 +91,8 @@ export function createTokenIntrospectionMiddleware({
         return access.actions.find((tokenAction: AccessAction) => {
           if (isActiveTokenInfo(tokenInfo) && tokenAction === requestAction) {
             // Unless the relevant token action is ReadAll/ListAll add the
-            // clientId to ctx for Read/List filtering
-            ctx.clientId = tokenInfo.client_id
+            // filter by client for Read/List
+            ctx.filterClient = true
             return true
           }
           return false
@@ -103,6 +102,7 @@ export function createTokenIntrospectionMiddleware({
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
+      ctx.client = tokenInfo.client
       if (
         requestType === AccessType.OutgoingPayment &&
         requestAction === AccessAction.Create
@@ -129,20 +129,34 @@ export const httpsigMiddleware = async (
   ctx: HttpSigContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
-  // TODO: look up client jwks.json
-  // https://github.com/interledger/rafiki/issues/737
-  if (!ctx.clientKey) {
+  const keyId = getKeyId(ctx.request.headers['signature-input'])
+  if (!keyId) {
+    ctx.throw(401, 'Invalid signature input')
+  }
+  // TODO
+  // cache client key(s)
+  let jwks: JWKS | undefined
+  try {
+    const openPaymentsClient = await ctx.container.use('openPaymentsClient')
+    jwks = await openPaymentsClient.paymentPointer.getKeys({
+      url: ctx.client
+    })
+  } catch (error) {
     const logger = await ctx.container.use('logger')
-    logger.warn(
+    logger.debug(
       {
-        grant: ctx.grant
+        error,
+        client: ctx.client
       },
-      'missing grant key'
+      'retrieving client key'
     )
-    ctx.throw(500)
+  }
+  const key = jwks?.keys.find((key) => key.kid === keyId)
+  if (!key) {
+    ctx.throw(401, 'Invalid signature input')
   }
   try {
-    if (!(await validateSignature(ctx.clientKey, contextToRequestLike(ctx)))) {
+    if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
       ctx.throw(401, 'Invalid signature')
     }
   } catch (err) {
