@@ -335,8 +335,8 @@ export type Mutation = {
   deletePeer: DeletePeerMutationResponse;
   /** Deposit webhook event liquidity */
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
-  /** Finalize liquidity withdrawal */
-  finalizeLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
+  /** Posts liquidity withdrawal */
+  postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   revokePaymentPointerKey?: Maybe<RevokePaymentPointerKeyMutationResponse>;
   triggerPaymentPointerEvents: TriggerPaymentPointerEventsMutationResponse;
   /** Update asset withdrawal threshold */
@@ -420,7 +420,7 @@ export type MutationDepositEventLiquidityArgs = {
 };
 
 
-export type MutationFinalizeLiquidityWithdrawalArgs = {
+export type MutationPostLiquidityWithdrawalArgs = {
   withdrawalId: Scalars['String'];
 };
 
@@ -1101,7 +1101,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createQuote?: Resolver<ResolversTypes['QuoteResponse'], ParentType, ContextType, RequireFields<MutationCreateQuoteArgs, 'input'>>;
   deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'id'>>;
   depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'eventId'>>;
-  finalizeLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationFinalizeLiquidityWithdrawalArgs, 'withdrawalId'>>;
+  postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'withdrawalId'>>;
   revokePaymentPointerKey?: Resolver<Maybe<ResolversTypes['RevokePaymentPointerKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokePaymentPointerKeyArgs, 'id'>>;
   triggerPaymentPointerEvents?: Resolver<ResolversTypes['TriggerPaymentPointerEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerPaymentPointerEventsArgs, 'limit'>>;
   updateAssetWithdrawalThreshold?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetWithdrawalThresholdArgs, 'input'>>;

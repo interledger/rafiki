@@ -2932,12 +2932,12 @@
             "deprecationReason": null
           },
           {
-            "name": "finalizeLiquidityWithdrawal",
-            "description": "Finalize liquidity withdrawal",
+            "name": "postLiquidityWithdrawal",
+            "description": "Posts liquidity withdrawal",
             "args": [
               {
                 "name": "withdrawalId",
-                "description": "The id of the liquidity withdrawal to finalize.",
+                "description": "The id of the liquidity withdrawal to post.",
                 "type": {
                   "kind": "NON_NULL",
                   "name": null,

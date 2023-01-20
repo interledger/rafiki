@@ -80,9 +80,9 @@ type Mutation {
     input: CreatePaymentPointerWithdrawalInput!
   ): PaymentPointerWithdrawalMutationResponse
 
-  "Finalize liquidity withdrawal"
-  finalizeLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to finalize."
+  "Posts liquidity withdrawal"
+  postLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to post."
     withdrawalId: String!
   ): LiquidityMutationResponse
 

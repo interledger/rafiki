@@ -264,7 +264,7 @@ export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['c
     }
   }
 
-export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['finalizeLiquidityWithdrawal'] =
+export const postLiquidityWithdrawal: MutationResolvers<ApolloContext>['postLiquidityWithdrawal'] =
   async (
     parent,
     args,
@@ -278,7 +278,7 @@ export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['fina
     return {
       code: '200',
       success: true,
-      message: 'Finalized Withdrawal'
+      message: 'Posted Withdrawal'
     }
   }
 
@@ -421,7 +421,7 @@ const responses: {
 } = {
   [LiquidityError.AlreadyPosted]: {
     code: '409',
-    message: 'Withdrawal already finalized',
+    message: 'Withdrawal already posted',
     success: false,
     error: LiquidityError.AlreadyPosted
   },
