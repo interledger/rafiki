@@ -15,7 +15,6 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes } from './routes'
 import { createContext } from '../tests/context'
-import { generateTestKeys, JWK } from 'http-signature-utils'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
 
@@ -24,7 +23,6 @@ describe('Access Token Routes', (): void => {
   let appContainer: TestContainer
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
-  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -32,8 +30,6 @@ describe('Access Token Routes', (): void => {
     accessTokenRoutes = await deps.use('accessTokenRoutes')
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
-
-    testClientKey = generateTestKeys().publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -92,10 +88,7 @@ describe('Access Token Routes', (): void => {
     const method = 'POST'
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        clientKeyId: testClientKey.kid
-      })
+      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
@@ -212,10 +205,7 @@ describe('Access Token Routes', (): void => {
     const method = 'DELETE'
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        clientKeyId: testClientKey.kid
-      })
+      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
@@ -303,10 +293,7 @@ describe('Access Token Routes', (): void => {
     let managementId: string
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        clientKeyId: testClientKey.kid
-      })
+      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
       access = await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS

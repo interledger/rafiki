@@ -13,7 +13,6 @@ import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import { generateTestKeys, JWK } from 'http-signature-utils'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
 
@@ -22,14 +21,11 @@ describe('Access Token Service', (): void => {
   let appContainer: TestContainer
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
-  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
-
-    testClientKey = generateTestKeys().publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -76,7 +72,6 @@ describe('Access Token Service', (): void => {
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
-      clientKeyId: testClientKey.kid,
       continueToken: generateToken(),
       continueId: v4(),
       interactId: v4(),
@@ -179,7 +174,6 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testClientKey.kid,
         continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
@@ -232,7 +226,6 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testClientKey.kid,
         continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
