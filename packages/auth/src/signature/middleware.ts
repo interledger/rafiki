@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  getKeyId,
   validateSignature,
   validateSignatureHeaders,
   RequestLike
@@ -41,22 +42,12 @@ async function verifySigFromBoundKey(
   ctx: AppContext
 ): Promise<boolean> {
   const sigInput = ctx.headers['signature-input'] as string
-  ctx.clientKeyId = getSigInputKeyId(sigInput)
+  ctx.clientKeyId = getKeyId(sigInput)
   if (ctx.clientKeyId !== grant.clientKeyId) {
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
 
   return verifySigFromClient(grant.client, ctx.clientKeyId, ctx)
-}
-
-const KEY_ID_PREFIX = 'keyid="'
-
-function getSigInputKeyId(sigInput: string): string | undefined {
-  const keyIdParam = sigInput
-    .split(';')
-    .find((param) => param.startsWith(KEY_ID_PREFIX))
-  // Trim prefix and quotes
-  return keyIdParam?.slice(KEY_ID_PREFIX.length, -1)
 }
 
 export async function grantContinueHttpsigMiddleware(
@@ -119,7 +110,7 @@ export async function grantInitiationHttpsigMiddleware(
   const { body } = ctx.request
 
   const sigInput = ctx.headers['signature-input'] as string
-  const clientKeyId = getSigInputKeyId(sigInput)
+  const clientKeyId = getKeyId(sigInput)
   if (!clientKeyId) {
     ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
   }
