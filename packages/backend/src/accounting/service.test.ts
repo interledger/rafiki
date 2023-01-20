@@ -301,10 +301,10 @@ describe('Accounting Service', (): void => {
         ${BigInt(2)} | ${BigInt(1)}      | ${'destination < source'}
       `('$description', ({ sourceAmount, destinationAmount }): void => {
         test.each`
-          commit   | description
+          post   | description
           ${true}  | ${'post'}
           ${false} | ${'void'}
-        `('$description', async ({ commit }): Promise<void> => {
+        `('$description', async ({ post }): Promise<void> => {
           const trxOrError = await accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
@@ -341,7 +341,7 @@ describe('Accounting Service', (): void => {
             accountingService.getBalance(destinationAccount.id)
           ).resolves.toEqual(BigInt(0))
 
-          if (commit) {
+          if (post) {
             await expect(trxOrError.post()).resolves.toBeUndefined()
           } else {
             await expect(trxOrError.void()).resolves.toBeUndefined()
@@ -350,7 +350,7 @@ describe('Accounting Service', (): void => {
           await expect(
             accountingService.getBalance(sourceAccount.id)
           ).resolves.toEqual(
-            commit
+            post
               ? startingSourceBalance - sourceAmount
               : startingSourceBalance
           )
@@ -359,19 +359,19 @@ describe('Accounting Service', (): void => {
             await expect(
               accountingService.getBalance(sourceAccount.asset.id)
             ).resolves.toEqual(
-              commit
+              post
                 ? startingDestinationLiquidity - amountDiff
                 : startingDestinationLiquidity
             )
           } else {
             await expect(
               accountingService.getBalance(sourceAccount.asset.id)
-            ).resolves.toEqual(commit ? sourceAmount : BigInt(0))
+            ).resolves.toEqual(post ? sourceAmount : BigInt(0))
 
             await expect(
               accountingService.getBalance(destinationAccount.asset.id)
             ).resolves.toEqual(
-              commit
+              post
                 ? startingDestinationLiquidity - destinationAmount
                 : startingDestinationLiquidity
             )
@@ -379,15 +379,15 @@ describe('Accounting Service', (): void => {
 
           await expect(
             accountingService.getBalance(destinationAccount.id)
-          ).resolves.toEqual(commit ? destinationAmount : BigInt(0))
+          ).resolves.toEqual(post ? destinationAmount : BigInt(0))
 
           await expect(trxOrError.post()).resolves.toEqual(
-            commit
+            post
               ? TransferError.AlreadyCommitted
               : TransferError.AlreadyRolledBack
           )
           await expect(trxOrError.void()).resolves.toEqual(
-            commit
+            post
               ? TransferError.AlreadyCommitted
               : TransferError.AlreadyRolledBack
           )

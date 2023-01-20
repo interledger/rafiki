@@ -29,7 +29,7 @@ export interface CreateTransferOptions {
 export async function createTransfers(
   deps: ServiceDependencies,
   transfers: CreateTransferOptions[],
-  commit?: boolean
+  post?: boolean
 ): Promise<void | TransfersError> {
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
@@ -41,10 +41,10 @@ export async function createTransfers(
     if (transfer.timeout) {
       flags |= TransferFlags.pending
     }
-    if (transfer.pendingId && commit === true) {
+    if (transfer.pendingId && post === true) {
       flags |= TransferFlags.post_pending_transfer
       transfer.id = uuid()
-    } else if (transfer.pendingId && commit === false) {
+    } else if (transfer.pendingId && post === false) {
       flags |= TransferFlags.void_pending_transfer
       transfer.id = uuid()
     } else {
@@ -118,7 +118,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_not_pending:
         return {
           index,
-          error: commit
+          error: post
             ? TransferError.AlreadyCommitted
             : TransferError.AlreadyRolledBack
         }
@@ -134,7 +134,7 @@ export async function createTransfers(
           case 40: //pending_transfer_not_pending
             return {
               index,
-              error: commit
+              error: post
                 ? TransferError.AlreadyCommitted
                 : TransferError.AlreadyRolledBack
             }
