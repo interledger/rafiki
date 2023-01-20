@@ -82,7 +82,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         await next()
       }
 
-      if(trx) {
+      if (trx) {
         if (response.fulfill) {
           await trx.post()
         } else {

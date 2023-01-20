@@ -301,7 +301,7 @@ describe('Accounting Service', (): void => {
         ${BigInt(2)} | ${BigInt(1)}      | ${'destination < source'}
       `('$description', ({ sourceAmount, destinationAmount }): void => {
         test.each`
-          post   | description
+          post     | description
           ${true}  | ${'post'}
           ${false} | ${'void'}
         `('$description', async ({ post }): Promise<void> => {
@@ -350,9 +350,7 @@ describe('Accounting Service', (): void => {
           await expect(
             accountingService.getBalance(sourceAccount.id)
           ).resolves.toEqual(
-            post
-              ? startingSourceBalance - sourceAmount
-              : startingSourceBalance
+            post ? startingSourceBalance - sourceAmount : startingSourceBalance
           )
 
           if (sameAsset) {
@@ -382,14 +380,10 @@ describe('Accounting Service', (): void => {
           ).resolves.toEqual(post ? destinationAmount : BigInt(0))
 
           await expect(trxOrError.post()).resolves.toEqual(
-            post
-              ? TransferError.AlreadyPosted
-              : TransferError.AlreadyVoided
+            post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
           )
           await expect(trxOrError.void()).resolves.toEqual(
-            post
-              ? TransferError.AlreadyPosted
-              : TransferError.AlreadyVoided
+            post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
           )
         })
       })
@@ -676,9 +670,9 @@ describe('Accounting Service', (): void => {
       })
 
       test('Cannot post unknown withdrawal', async (): Promise<void> => {
-        await expect(
-          accountingService.postWithdrawal(uuid())
-        ).resolves.toEqual(TransferError.UnknownTransfer)
+        await expect(accountingService.postWithdrawal(uuid())).resolves.toEqual(
+          TransferError.UnknownTransfer
+        )
       })
 
       test('Cannot post invalid withdrawal id', async (): Promise<void> => {
@@ -743,9 +737,9 @@ describe('Accounting Service', (): void => {
       })
 
       test('Cannot void unknown withdrawal', async (): Promise<void> => {
-        await expect(
-          accountingService.voidWithdrawal(uuid())
-        ).resolves.toEqual(TransferError.UnknownTransfer)
+        await expect(accountingService.voidWithdrawal(uuid())).resolves.toEqual(
+          TransferError.UnknownTransfer
+        )
       })
 
       test('Cannot post invalid withdrawal id', async (): Promise<void> => {
