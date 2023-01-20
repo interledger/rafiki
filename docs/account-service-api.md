@@ -5,6 +5,7 @@
 See [Update Account Services API Docs](https://github.com/interledger/rafiki/issues/550)
 
 - [Rafiki Account Service API](#rafiki-account-service-api)
+- [OUTDATED Needs to be updated](#outdated-needs-to-be-updated)
 - [Parties](#parties)
   - [**Permissioning**](#permissioning)
 - [Encoding](#encoding)
@@ -14,12 +15,12 @@ See [Update Account Services API Docs](https://github.com/interledger/rafiki/iss
   - [Server behavior](#server-behavior)
 - [Errors](#errors)
 - [Interledger accounts](#interledger-accounts)
-  - [Permissioning](#permissioning)
+  - [Permissioning](#permissioning-1)
     - [InterledgerAccount resource](#interledgeraccount-resource)
   - [Fetch all Interledger accounts](#fetch-all-interledger-accounts)
   - [Get Interledger account](#get-interledger-account)
     - [InterledgerBalance resource](#interledgerbalance-resource)
-    - [Get Interledger balance](#get-interledger-balance)
+  - [Get Interledger balance](#get-interledger-balance)
   - [Create Interledger account](#create-interledger-account)
   - [Update Interledger account](#update-interledger-account)
   - [Delete Interledger account](#delete-interledger-account)
@@ -44,16 +45,16 @@ See [Update Account Services API Docs](https://github.com/interledger/rafiki/iss
   - [Deposits](#deposits)
     - [Deposit resource](#deposit-resource)
     - [Execute deposit](#execute-deposit)
-      - [Parameters](#parameters-5)
+      - [Parameters](#parameters-1)
     - [Lookup deposit](#lookup-deposit)
   - [Withdrawals](#withdrawals)
     - [Crash recovery](#crash-recovery)
       - [Withdrawal resource](#withdrawal-resource)
     - [Request withdrawal](#request-withdrawal)
   - [`POST /liquidity-accounts/{accountId}/withdrawals`](#post-liquidity-accountsaccountidwithdrawals)
-    - [Parameters](#parameters-6)
-    - [Finalize pending withdrawal](#finalize-pending-withdrawal)
-    - [Rollback pending withdrawal](#rollback-pending-withdrawal)
+    - [Parameters](#parameters-2)
+    - [Post pending withdrawal](#post-pending-withdrawal)
+    - [Void pending withdrawal](#void-pending-withdrawal)
     - [Lookup withdrawal](#lookup-withdrawal)
 
 # Parties
@@ -255,7 +256,7 @@ TODO: Then, does this also need an API to apply the Fulfill?
 | originAmount         | No       | String    | UInt64  | TODO                                                                                                                       |
 | destinationAccountId | No       | String    | V4 UUID |                                                                                                                            |
 | destinationAmount    | Yes      | String    | UInt64  | If omitted, defaults to the origin amount (but requires both accounts to be the same asset & denomination, or else fails). |
-| autoCommit           | Yes      | Boolean   |         | Defaults to two-phase commit? If true, transfer is irrevocable                                                             |
+| autoPost             | Yes      | Boolean   |         | Defaults to two-phase transfer? If true, transfer is irrevocable                                                           |
 
 **Response**
 
@@ -473,7 +474,7 @@ To safely integrate this functionality:
 
 1. Provider applies a balance reduction in its ledger corresponding to funds the counterparty sent to them, initiating the deposit.
 2. Provider executes the deposit within Rafiki, performing the request with the same idempotency key until it gets an acknowledgement Rafiki credited the balance.
-3. Provider finalizes or rolls back the deposit within its own system, depending upon if Rafiki successfully applied the deposit.
+3. Provider posts or voids the deposit within its own system, depending upon if Rafiki successfully applied the deposit.
 
 #### Deposit resource
 
@@ -525,30 +526,30 @@ To safely integrate withdrawals:
 2. Provider requests a withdrawal from Rafiki, which reduces the balance and places a hold on the funds, or fails if there's insufficient funds.
    - If the account has insufficient funds, the provider cancels the withdrawal within their system.
 3. Provider credits the balance in their external system or performs a (potentially irrevocable) settlement.
-   - If this fails, the provider may rollback the withdrawal with Rafiki.
-4. After the settlement is applied, the provider finalizes the withdrawal within Rafiki, commiting the balance reduction.
-5. Provider finalizes the withdrawal in its system.
+   - If this fails, the provider may void the withdrawal with Rafiki.
+4. After the settlement is applied, the provider posts the withdrawal within Rafiki, posting the balance reduction.
+5. Provider posts the withdrawal in its system.
 
 ### Crash recovery
 
 If the provider's withdrawal system crashes between steps 1 and 3, it may not know whether it already initiated the withdrawal and reserved funds within Rafiki. At this stage, it may choose to either:
 
 1. **Retry.** Safely retry initiating the withdrawal in Rafiki. Since this is an idempotent request, it will only debit funds if they have not already been reserved for that withdrawal.
-2. **Rollback.** Safely rollback the withdrawal within Rafiki. Since this is also an idempotent request, this only lifts the hold on funds if the same withdrawal was already initiated.
-   - If the provider encounters a technical issue preventing them from settling or crediting the balance within their own system, they may decide to rollback the withdrawal.
-   - Rollbacks are not performed automatically, and only the provider's system initiates rollbacks. For example, if the provider's system credited the withdrawal within its own system, then crashed, Rafiki might rollback the withdrawal before the operator's system recovered. This dangerous behavior might overdraw users, or enable them to steal money from the operator.
-   - Operators may implement their own functionality to rollback withdrawals after a period of time.
+2. **Void.** Safely void the withdrawal within Rafiki. Since this is also an idempotent request, this only lifts the hold on funds if the same withdrawal was already initiated.
+   - If the provider encounters a technical issue preventing them from settling or crediting the balance within their own system, they may decide to void the withdrawal.
+   - Voids are not performed automatically, and only the provider's system initiates voids. For example, if the provider's system credited the withdrawal within its own system, then crashed, Rafiki might void the withdrawal before the operator's system recovered. This dangerous behavior might overdraw users, or enable them to steal money from the operator.
+   - Operators may implement their own functionality to void withdrawals after a period of time.
 
-If the provider's withdrawal system crashes between steps 3 and 5, the system knows Rafiki reserved the withdrawal amount, but it may not have finalized the withdrawal. So, the provider may safely retry finalizing the withdrawal within Rafiki as an idempotent request after they perform the settlement.
+If the provider's withdrawal system crashes between steps 3 and 5, the system knows Rafiki reserved the withdrawal amount, but it may not have posted the withdrawal. So, the provider may safely retry posting the withdrawal within Rafiki as an idempotent request after they perform the settlement.
 
 #### Withdrawal resource
 
-| ﻿Name         | Optional | JSON type | Type    | Description                                                                                                                                              |
-| :------------ | :------- | :-------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| id            | No       | String    | V4 UUID | Unique ID for this withdrawal, randomly generated by Rafiki.                                                                                             |
-| amount        | No       | String    | UInt64  | Amount debited from the corresponding account, or amount on hold if the withdrawal is not yet finalized.                                                 |
-| createdTime   | No       | String    | UInt64  | UNIX nanosecond timestamp when the withdrawal is initiated and funds were reserved, assigned by TigerBeetle as a sequence number.                        |
-| finalizedTime | Yes      | String    | UInt64  | UNIX nanosecond timestamp of the finalized transfer, assigned by TigerBeetle as a sequence number. Excluded until the provider finalizes the withdrawal. |
+| ﻿Name       | Optional | JSON type | Type    | Description                                                                                                                                       |
+| :---------- | :------- | :-------- | :------ | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| id          | No       | String    | V4 UUID | Unique ID for this withdrawal, randomly generated by Rafiki.                                                                                      |
+| amount      | No       | String    | UInt64  | Amount debited from the corresponding account, or amount on hold if the withdrawal is not yet posted.                                             |
+| createdTime | No       | String    | UInt64  | UNIX nanosecond timestamp when the withdrawal is initiated and funds were reserved, assigned by TigerBeetle as a sequence number.                 |
+| postedTime  | Yes      | String    | UInt64  | UNIX nanosecond timestamp of the posted transfer, assigned by TigerBeetle as a sequence number. Excluded until the provider posts the withdrawal. |
 
 ### Request withdrawal
 
@@ -574,31 +575,31 @@ A successful response indicates the provider may safely and irrevocably credit t
 
 #### Parameters
 
-| ﻿Name  | Optional | JSON type | Type   | Description                                                                                                |
-| :----- | :------- | :-------- | :----- | :--------------------------------------------------------------------------------------------------------- |
-| amount | No       | String    | UInt64 | Amount to debit from the corresponding account, if available, as a hold until the withdrawal is finalized. |
+| ﻿Name  | Optional | JSON type | Type   | Description                                                                                             |
+| :----- | :------- | :-------- | :----- | :------------------------------------------------------------------------------------------------------ |
+| amount | No       | String    | UInt64 | Amount to debit from the corresponding account, if available, as a hold until the withdrawal is posted. |
 
 **Response**
 
 If successful, returns `201 Created` with the new `**Withdrawal**` resource. If the account balance is insufficient to perform the withdrawal, returns a `400 Bad Request` error.
 
-### Finalize pending withdrawal
+### Post pending withdrawal
 
-Commits the transfer debiting funds the given account, so funds may no longer be rolled back, marking the withdrawal as complete.
+Posts the transfer debiting funds the given account, so funds may no longer be voided, marking the withdrawal as complete.
 
-The finalization step exists so clients of Rafiki may differentiate pending withdrawals—which may be reverted—from withdrawals fully credited within the provider's external settlement system.
+The posting step exists so clients of Rafiki may differentiate pending withdrawals—which may be reverted—from withdrawals fully credited within the provider's external settlement system.
 
 **Request**
 
-`POST /ilp-accounts/{accountId}/withdrawals/{withdrawalId}/finalize`
+`POST /ilp-accounts/{accountId}/withdrawals/{withdrawalId}/post`
 
-`POST /liquidity-accounts/{accountId}/withdrawals/{withdrawalId}/finalize`
+`POST /liquidity-accounts/{accountId}/withdrawals/{withdrawalId}/post`
 
 **Response**
 
 If successful, returns a `204 No Content` response.
 
-### Rollback pending withdrawal
+### Void pending withdrawal
 
 Deletes the withdrawal resource and releases the hold on the account's funds.
 
@@ -610,7 +611,7 @@ Deletes the withdrawal resource and releases the hold on the account's funds.
 
 **Response**
 
-If successful, returns a `204 No Content` response. If already rolled back, may return a `404 Not Found` error.
+If successful, returns a `204 No Content` response. If the pending withdrawal was already voided, may return a `404 Not Found` error.
 
 ### Lookup withdrawal
 
