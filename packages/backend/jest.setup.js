@@ -1,9 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { knex } = require('knex')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const { GenericContainer, Wait } = require('testcontainers')
+const { GenericContainer } = require('testcontainers')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const tmp = require('tmp')
+const tigerbeetle = require('./dist/tests/tigerbeetle')
 
 const POSTGRES_PORT = 5432
 
@@ -76,67 +76,7 @@ module.exports = async (globalConfig) => {
 
   const setupTigerbeetle = async () => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
-
-      const tbContFormat = await new GenericContainer(
-        'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
-      )
-        .withExposedPorts(TIGERBEETLE_PORT)
-        .withBindMounts([
-          {
-            source: tigerbeetleDir,
-            target: TIGERBEETLE_DIR
-          }
-        ])
-        .withAddedCapabilities('IPC_LOCK')
-        .withCommand([
-          'init',
-          '--cluster=' + TIGERBEETLE_CLUSTER_ID,
-          '--replica=0',
-          '--directory=' + TIGERBEETLE_DIR
-        ])
-        .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
-        .start()
-
-      const streamTbFormat = await tbContFormat.logs()
-      if (TIGERBEETLE_CONTAINER_LOG) {
-        streamTbFormat
-          .on('data', (line) => console.log(line))
-          .on('err', (line) => console.error(line))
-          .on('end', () => console.log('Stream closed for [tb-format]'))
-      }
-
-      // Give TB a chance to startup (no message currently to notify allocation is complete):
-      await new Promise((f) => setTimeout(f, 1000))
-
-      const tbContStart = await new GenericContainer(
-        'ghcr.io/coilhq/tigerbeetle:dj-request-dirty-prepare@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
-      )
-        .withExposedPorts(TIGERBEETLE_PORT)
-        .withAddedCapabilities('IPC_LOCK')
-        .withBindMounts([
-          {
-            source: tigerbeetleDir,
-            target: TIGERBEETLE_DIR
-          }
-        ])
-        .withCommand([
-          'start',
-          '--cluster=' + TIGERBEETLE_CLUSTER_ID,
-          '--replica=0',
-          '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
-          '--directory=' + TIGERBEETLE_DIR
-        ])
-        .withWaitStrategy(Wait.forLogMessage(/listening on/))
-        .start()
-
-      const streamTbStart = await tbContStart.logs()
-      if (TIGERBEETLE_CONTAINER_LOG) {
-        streamTbStart
-          .on('data', (line) => console.log(line))
-          .on('err', (line) => console.error(line))
-          .on('end', () => console.log('Stream closed for [tb-start]'))
-      }
+      const tbContStart = await tigerbeetle.startTigerbeetleContainer(TIGERBEETLE_DIR, TIGERBEETLE_PORT, TIGERBEETLE_CLUSTER_ID, TIGERBEETLE_CONTAINER_LOG)
 
       process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID
       process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tbContStart.getMappedPort(

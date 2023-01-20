@@ -9,10 +9,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import {
-  startTigerbeetleContainer,
-  TIGERBEETLE_PORT
-} from '../tests/tigerbeetle'
+import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -28,7 +25,7 @@ describe('Asset Service', (): void => {
   beforeAll(async (): Promise<void> => {
     tigerbeetleContainer = await startTigerbeetleContainer()
     Config.tigerbeetleReplicaAddresses = [
-      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
+      tigerbeetleContainer.getMappedPort(Config.tigerbeetlePort)
     ]
 
     deps = await initIocContainer(Config)

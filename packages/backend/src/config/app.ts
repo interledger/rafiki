@@ -18,6 +18,11 @@ function envFloat(name: string, value: number): number {
   return envValue == null ? value : +envValue
 }
 
+function envBool(name: string, value: boolean): boolean {
+  const envValue = process.env[name]
+  return envValue == null ? value : envValue === 'true'
+}
+
 export type IAppConfig = typeof Config
 
 export const Config = {
@@ -57,6 +62,9 @@ export const Config = {
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
     : ['3004'],
+  tigerbeetleContainerLogs: envBool('TIGERBEETLE_CONTAINER_LOG', false),
+  tigerbeetleDir: envString('TIGERBEETLE_DIR', '/var/lib/tigerbeetle'),
+  tigerbeetlePort: envInt('TIGERBEETLE_PORT', 3004),
 
   pricesUrl: process.env.PRICES_URL, // optional
   pricesLifetime: +(process.env.PRICES_LIFETIME || 15_000),
