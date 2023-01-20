@@ -45,7 +45,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
     }
 
     // Update balances on prepare
-    const createPendingTransfer = async (): Promise<Transaction> => {
+    const createPendingTransfer = async (): Promise<
+      Transaction | undefined
+    > => {
       const trxOrError = await services.accounting.createTransfer({
         sourceAccount: accounts.incoming,
         destinationAccount: accounts.outgoing,
@@ -80,10 +82,12 @@ export function createBalanceMiddleware(): ILPMiddleware {
         await next()
       }
 
-      if (response.fulfill) {
-        await trx.post()
-      } else {
-        await trx.void()
+      if(trx) {
+        if (response.fulfill) {
+          await trx.post()
+        } else {
+          await trx.void()
+        }
       }
     }
   }

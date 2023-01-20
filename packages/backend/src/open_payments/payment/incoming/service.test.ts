@@ -69,12 +69,13 @@ describe('Incoming Payment Service', (): void => {
 
     test.each`
       clientId     | incomingAmount | expiresAt                        | description                | externalRef
-      ${undefined} | ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
-      ${uuid()}    | ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      ${undefined} | ${false}       | ${undefined}                     | ${undefined}               | ${undefined}
+      ${uuid()}    | ${true}        | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
     `('An incoming payment can be created', async (options): Promise<void> => {
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
-        ...options
+        ...options,
+        incomingAmount: options.incomingAmount ? amount : undefined
       })
       assert.ok(!isIncomingPaymentError(incomingPayment))
       expect(incomingPayment).toMatchObject({
@@ -594,7 +595,8 @@ describe('Incoming Payment Service', (): void => {
     })
     test('returns incoming payment id on correct connectionId', async (): Promise<void> => {
       await expect(
-        incomingPaymentService.getByConnection(incomingPayment.connectionId)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        incomingPaymentService.getByConnection(incomingPayment.connectionId!)
       ).resolves.toEqual(incomingPayment)
     })
     test('returns undefined on incorrect connectionId', async (): Promise<void> => {

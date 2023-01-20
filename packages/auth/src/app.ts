@@ -268,7 +268,7 @@ export class App {
       createValidatorMiddleware<IntrospectContext>(
         openApi.tokenIntrospectionSpec,
         {
-          path: '/introspect',
+          path: '/',
           method: HttpMethod.POST
         }
       ),
@@ -344,7 +344,7 @@ export class App {
             .del()
         } catch (err) {
           this.logger.warn(
-            { error: err.message, tableName },
+            { error: err && err['message'], tableName },
             'processDatabaseCleanup error'
           )
         }

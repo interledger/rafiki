@@ -1,17 +1,28 @@
 import { RequestLike, validateSignature } from 'http-signature-utils'
 import Koa from 'koa'
-import { AccessType, AccessAction } from '../grant/model'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
+import { AccessAction, AccessType } from 'open-payments'
+import { TokenInfo } from 'token-introspection'
+import { isActiveTokenInfo } from 'token-introspection'
 
-export type RequestAction = Exclude<
-  AccessAction,
-  AccessAction.ReadAll | AccessAction.ListAll
->
+export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
+export const RequestAction: Record<string, RequestAction> = Object.freeze({
+  Create: 'create',
+  Read: 'read',
+  Complete: 'complete',
+  List: 'list'
+})
 
 export interface Grant {
   id: string
   limits?: Limits
+}
+
+export interface Access {
+  type: string
+  actions: AccessAction[]
+  identifier?: string
 }
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
@@ -40,14 +51,26 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(401, 'Unauthorized')
       }
       const token = parts[1]
-      const authService = await ctx.container.use('authService')
-      const tokenInfo = await authService.introspect(token)
-      if (!tokenInfo) {
+      const tokenIntrospectionClient = await ctx.container.use(
+        'tokenIntrospectionClient'
+      )
+      let tokenInfo: TokenInfo
+      try {
+        tokenInfo = await tokenIntrospectionClient.introspect({
+          access_token: token
+        })
+      } catch (err) {
         ctx.throw(401, 'Invalid Token')
       }
+      if (!isActiveTokenInfo(tokenInfo)) {
+        ctx.throw(403, 'Inactive Token')
+      }
+
+      ctx.clientKey = tokenInfo.key.jwk
+
       // TODO
       // https://github.com/interledger/rafiki/issues/835
-      const access = tokenInfo.access.find((access) => {
+      const access = tokenInfo.access.find((access: Access) => {
         if (
           access.type !== requestType ||
           (access.identifier && access.identifier !== ctx.paymentPointer.url)
@@ -66,8 +89,8 @@ export function createTokenIntrospectionMiddleware({
         ) {
           return true
         }
-        return access.actions.find((tokenAction) => {
-          if (tokenAction === requestAction) {
+        return access.actions.find((tokenAction: AccessAction) => {
+          if (isActiveTokenInfo(tokenInfo) && tokenAction === requestAction) {
             // Unless the relevant token action is ReadAll/ListAll add the
             // clientId to ctx for Read/List filtering
             ctx.clientId = tokenInfo.client_id
@@ -76,10 +99,10 @@ export function createTokenIntrospectionMiddleware({
           return false
         })
       })
+
       if (!access) {
         ctx.throw(403, 'Insufficient Grant')
       }
-      ctx.clientKey = tokenInfo.key.jwk
       if (
         requestType === AccessType.OutgoingPayment &&
         requestAction === AccessAction.Create
@@ -91,9 +114,9 @@ export function createTokenIntrospectionMiddleware({
       }
       await next()
     } catch (err) {
-      if (err.status === 401) {
+      if (err && err['status'] === 401) {
         ctx.status = 401
-        ctx.message = err.message
+        ctx.message = err['message']
         ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
       } else {
         throw err

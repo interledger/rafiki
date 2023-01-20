@@ -16,9 +16,14 @@ export async function startTigerbeetleContainer(
     'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
-    .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+    .withBindMounts([
+      {
+        source: tigerbeetleDir,
+        target: TIGERBEETLE_DIR
+      }
+    ])
     .withAddedCapabilities('IPC_LOCK')
-    .withCmd([
+    .withCommand([
       'init',
       '--cluster=' + clusterId,
       '--replica=0',
@@ -34,9 +39,14 @@ export async function startTigerbeetleContainer(
     'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
-    .withBindMount(tigerbeetleDir, TIGERBEETLE_DIR)
+    .withBindMounts([
+      {
+        source: tigerbeetleDir,
+        target: TIGERBEETLE_DIR
+      }
+    ])
     .withAddedCapabilities('IPC_LOCK')
-    .withCmd([
+    .withCommand([
       'start',
       '--cluster=' + clusterId,
       '--replica=0',

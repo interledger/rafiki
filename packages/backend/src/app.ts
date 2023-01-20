@@ -25,14 +25,12 @@ import { PeerService } from './peer/service'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import { AccessType, AccessAction } from './open_payments/grant/model'
 import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware,
   Grant,
   RequestAction
 } from './open_payments/auth/middleware'
-import { AuthService } from './open_payments/auth/service'
 import { RatesService } from './rates/service'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
@@ -49,7 +47,8 @@ import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AuthenticatedClient } from 'open-payments'
+import { AccessType, AuthenticatedClient } from 'open-payments'
+import { Client as TokenIntrospectionClient } from 'token-introspection'
 
 export interface AppContextData {
   logger: Logger
@@ -79,6 +78,13 @@ export interface PaymentPointerContext extends AppContext {
   grant?: Grant
   clientId?: string
   clientKey?: JWK
+}
+
+export type PaymentPointerKeysContext = Omit<
+  PaymentPointerContext,
+  'paymentPointer'
+> & {
+  paymentPointer?: PaymentPointer
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -142,7 +148,6 @@ export interface AppServices {
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
-  authService: Promise<AuthService>
   paymentPointerService: Promise<PaymentPointerService>
   spspRoutes: Promise<SPSPRoutes>
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
@@ -159,6 +164,7 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   openPaymentsClient: Promise<AuthenticatedClient>
+  tokenIntrospectionClient: Promise<TokenIntrospectionClient>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -272,11 +278,11 @@ export class App {
     }): RequestAction | undefined => {
       switch (method) {
         case HttpMethod.GET:
-          return path.endsWith('{id}') ? AccessAction.Read : AccessAction.List
+          return path.endsWith('{id}') ? RequestAction.Read : RequestAction.List
         case HttpMethod.POST:
           return path.endsWith('/complete')
-            ? AccessAction.Complete
-            : AccessAction.Create
+            ? RequestAction.Complete
+            : RequestAction.Create
         default:
           return undefined
       }
@@ -285,10 +291,10 @@ export class App {
     const actionToRoute: {
       [key in RequestAction]: string
     } = {
-      [AccessAction.Create]: 'create',
-      [AccessAction.Read]: 'get',
-      [AccessAction.Complete]: 'complete',
-      [AccessAction.List]: 'list'
+      create: 'create',
+      read: 'get',
+      complete: 'complete',
+      list: 'list'
     }
 
     for (const path in resourceServerSpec.paths) {

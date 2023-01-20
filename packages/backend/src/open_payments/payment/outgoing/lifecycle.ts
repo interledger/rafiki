@@ -51,7 +51,7 @@ export async function handleSending(
   )
   let newAmountToDeliver = payment.receiveAmount.value - amountDelivered
 
-  if (receiver.incomingAmount) {
+  if (receiver.incomingAmount && receiver.receivedAmount) {
     const maxAmountToDeliver =
       receiver.incomingAmount.value - receiver.receivedAmount.value
     if (maxAmountToDeliver < newAmountToDeliver) {

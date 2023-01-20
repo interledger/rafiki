@@ -6,13 +6,14 @@ import {
 } from 'open-payments'
 
 import { ConnectionService } from '../connection/service'
-import { AccessType, AccessAction, Grant } from '../grant/model'
+import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { PaymentPointerService } from '../payment_pointer/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
+import { AccessType, AccessAction } from 'open-payments'
 
 // A receiver is resolved from an incoming payment or a connection
 export interface ReceiverService {
@@ -100,7 +101,7 @@ async function getConnection(
     })
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get connection'
     )
 
@@ -147,13 +148,17 @@ async function getIncomingPayment(
       deps,
       urlParseResult.paymentPointerUrl
     )
-    return await deps.openPaymentsClient.incomingPayment.get({
-      url,
-      accessToken: grant.accessToken
-    })
+    if (!grant) {
+      throw new Error('Could not find grant')
+    } else {
+      return await deps.openPaymentsClient.incomingPayment.get({
+        url,
+        accessToken: grant.accessToken || ''
+      })
+    }
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get incoming payment'
     )
     return undefined
@@ -168,7 +173,7 @@ async function getLocalIncomingPayment({
   deps: ServiceDependencies
   id: string
   paymentPointer: PaymentPointer
-}): Promise<OpenPaymentsIncomingPayment> {
+}): Promise<OpenPaymentsIncomingPayment | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id,
     paymentPointerId: paymentPointer.id

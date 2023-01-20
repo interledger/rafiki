@@ -2,22 +2,7 @@ import { Model, QueryContext } from 'objection'
 
 import { AuthServer } from '../authServer/model'
 import { BaseModel } from '../../shared/baseModel'
-
-// TODO: replace with open-payments generated types
-export enum AccessType {
-  IncomingPayment = 'incoming-payment',
-  OutgoingPayment = 'outgoing-payment',
-  Quote = 'quote'
-}
-
-export enum AccessAction {
-  Create = 'create',
-  Read = 'read',
-  ReadAll = 'read-all',
-  Complete = 'complete',
-  List = 'list',
-  ListAll = 'list-all'
-}
+import { AccessType, AccessAction } from 'open-payments'
 
 export class Grant extends BaseModel {
   public static get tableName(): string {

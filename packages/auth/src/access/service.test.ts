@@ -10,8 +10,9 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
-import { Action, AccessType, AccessRequest } from './types'
+import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
@@ -54,9 +55,9 @@ describe('Access Service', (): void => {
       ...BASE_GRANT
     })
 
-    const incomingPaymentAccess: AccessRequest = {
-      type: AccessType.IncomingPayment,
-      actions: [Action.Create, Action.Read, Action.List]
+    const incomingPaymentAccess: IncomingPaymentRequest = {
+      type: 'incoming-payment',
+      actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
     }
 
     const access = await accessService.createAccess(grant.id, [
@@ -84,9 +85,9 @@ describe('Access Service', (): void => {
       receiver: 'https://wallet.com/alice'
     }
 
-    const outgoingPaymentAccess: AccessRequest = {
-      type: AccessType.OutgoingPayment,
-      actions: [Action.Create, Action.Read, Action.List],
+    const outgoingPaymentAccess: OutgoingPaymentRequest = {
+      type: 'outgoing-payment',
+      actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
       limits: outgoingPaymentLimit
     }
 
