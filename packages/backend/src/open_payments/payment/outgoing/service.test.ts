@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
 import * as Pay from '@interledger/pay'
@@ -282,10 +283,10 @@ describe('OutgoingPaymentService', (): void => {
 
   describe('get/getPaymentPointerPage', (): void => {
     getTests({
-      createModel: ({ clientId }) =>
+      createModel: ({ client }) =>
         createOutgoingPayment(deps, {
           paymentPointerId,
-          clientId,
+          client,
           receiver,
           sendAmount,
           validDestination: false
@@ -309,14 +310,14 @@ describe('OutgoingPaymentService', (): void => {
       ${GrantOption.None}
     `('$grantOption grant', ({ grantOption }): void => {
       let grant: Grant | undefined
-      let clientId: string | undefined
+      let client: string | undefined
 
       beforeEach(async (): Promise<void> => {
         if (grantOption !== GrantOption.None) {
           grant = {
             id: uuid()
           }
-          clientId = uuid()
+          client = faker.internet.url()
           if (grantOption === GrantOption.Existing) {
             await OutgoingPaymentGrant.query(knex).insertAndFetch({
               id: grant.id
@@ -564,7 +565,7 @@ describe('OutgoingPaymentService', (): void => {
               quoteId: quote.id,
               description: 'rent',
               externalRef: '202201',
-              clientId
+              client
             }
             const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
             interval = `R0/${start.toISOString()}/P1M`
@@ -747,7 +748,7 @@ describe('OutgoingPaymentService', (): void => {
                   }/${uuid()}/incoming-payments/${uuid()}`,
                   sendAmount: sendAmount ? paymentAmount : undefined,
                   receiveAmount: sendAmount ? undefined : paymentAmount,
-                  clientId,
+                  client,
                   grant,
                   validDestination: false
                 })

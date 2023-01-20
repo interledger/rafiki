@@ -64,7 +64,7 @@ async function getQuote(
 interface QuoteOptionsBase {
   paymentPointerId: string
   receiver: string
-  clientId?: string
+  client?: string
 }
 
 interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
@@ -143,7 +143,7 @@ async function createQuote(
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
           expiresAt: new Date(0),
-          clientId: options.clientId
+          client: options.client
         })
         .withGraphFetched('asset')
 

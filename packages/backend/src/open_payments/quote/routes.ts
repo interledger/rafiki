@@ -35,7 +35,7 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get({
     id: ctx.params.id,
-    clientId: ctx.filterClient ? ctx.client : undefined,
+    client: ctx.filterClient ? ctx.client : undefined,
     paymentPointerId: ctx.paymentPointer.id
   })
   if (!quote) return ctx.throw(404)
@@ -67,7 +67,7 @@ async function createQuote(
   const options: CreateQuoteOptions = {
     paymentPointerId: ctx.paymentPointer.id,
     receiver: body.receiver,
-    clientId: ctx.client
+    client: ctx.client
   }
   if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
   if (body.receiveAmount)
