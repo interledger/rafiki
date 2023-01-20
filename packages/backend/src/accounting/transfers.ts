@@ -16,20 +16,40 @@ type TransfersError = {
   error: TransferError
 }
 
-export interface CreateTransferOptions {
-  id?: string | bigint
+export interface CreateTransferOptionsBase {
   sourceAccountId: AccountId
   destinationAccountId: AccountId
   amount: bigint
   ledger: number
   timeout?: bigint
-  pendingId?: string | bigint
 }
+
+export interface NewTransferOptions extends CreateTransferOptionsBase {
+  id: string | bigint
+  postId?: never
+  voidId?: never
+}
+
+export interface PostTransferOptions extends CreateTransferOptionsBase {
+  id?: never
+  postId: string | bigint
+  voidId?: never
+}
+
+export interface VoidTransferOptions extends CreateTransferOptionsBase {
+  id?: never
+  postId?: never
+  voidId: string | bigint
+}
+
+export type CreateTransferOptions =
+  | NewTransferOptions
+  | PostTransferOptions
+  | VoidTransferOptions
 
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateTransferOptions[],
-  post?: boolean
+  transfers: CreateTransferOptions[]
 ): Promise<void | TransfersError> {
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
@@ -38,17 +58,16 @@ export async function createTransfers(
       return { index: i, error: TransferError.InvalidAmount }
     }
     let flags = 0
+    let pendingId: string | bigint | undefined
     if (transfer.timeout) {
       flags |= TransferFlags.pending
     }
-    if (transfer.pendingId && post === true) {
+    if (transfer.postId) {
       flags |= TransferFlags.post_pending_transfer
-      transfer.id = uuid()
-    } else if (transfer.pendingId && post === false) {
+      pendingId = transfer.postId
+    } else if (transfer.voidId) {
       flags |= TransferFlags.void_pending_transfer
-      transfer.id = uuid()
-    } else {
-      transfer.pendingId = 0n
+      pendingId = transfer.voidId
     }
     if (i < transfers.length - 1) {
       flags |= TransferFlags.linked
@@ -59,7 +78,7 @@ export async function createTransfers(
       credit_account_id: toTigerbeetleId(transfer.destinationAccountId),
       user_data: 0n,
       reserved: 0n,
-      pending_id: transfer.pendingId ? toTigerbeetleId(transfer.pendingId) : 0n,
+      pending_id: pendingId ? toTigerbeetleId(pendingId) : 0n,
       timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
       ledger: transfer.ledger,
       code: ACCOUNT_TYPE,
@@ -118,7 +137,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_not_pending:
         return {
           index,
-          error: post
+          error: transfers[index].postId
             ? TransferError.AlreadyPosted
             : TransferError.AlreadyVoided
         }
@@ -134,7 +153,7 @@ export async function createTransfers(
           case 40: //pending_transfer_not_pending
             return {
               index,
-              error: post
+              error: transfers[index].postId
                 ? TransferError.AlreadyPosted
                 : TransferError.AlreadyVoided
             }

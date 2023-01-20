@@ -14,7 +14,7 @@ import {
   TransferError,
   UnknownAccountError
 } from './errors'
-import { CreateTransferOptions, createTransfers } from './transfers'
+import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
@@ -260,7 +260,7 @@ export async function createTransfer(
   if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
     return TransferError.InvalidDestinationAmount
   }
-  const transfers: Required<CreateTransferOptions>[] = []
+  const transfers: NewTransferOptions[] = []
 
   const addTransfer = ({
     sourceAccountId,
@@ -275,7 +275,6 @@ export async function createTransfer(
   }) => {
     transfers.push({
       id: uuid(),
-      pendingId: '0',
       sourceAccountId,
       destinationAccountId,
       amount,
@@ -366,10 +365,9 @@ export async function createTransfer(
             ...transfer,
             timeout: undefined,
             id: undefined,
-            pendingId: transfer.id
+            postId: transfer.id
           }
-        }),
-        true // <- post
+        })
       )
       if (error) {
         return error.error
@@ -397,10 +395,10 @@ export async function createTransfer(
           return {
             ...transfer,
             timeout: undefined,
-            pendingId: transfer.id
+            id: undefined,
+            voidId: transfer.id
           }
-        }),
-        false // <- void
+        })
       )
       if (error) {
         return error.error
@@ -467,19 +465,15 @@ async function voidAccountWithdrawal(
     return TransferError.UnknownTransfer
   }
 
-  const error = await createTransfers(
-    deps,
-    [
-      {
-        pendingId: transfers[0].id,
-        sourceAccountId: transfers[0].debit_account_id,
-        destinationAccountId: transfers[0].credit_account_id,
-        amount: transfers[0].amount,
-        ledger: transfers[0].ledger
-      }
-    ],
-    false
-  )
+  const error = await createTransfers(deps, [
+    {
+      voidId: transfers[0].id,
+      sourceAccountId: transfers[0].debit_account_id,
+      destinationAccountId: transfers[0].credit_account_id,
+      amount: transfers[0].amount,
+      ledger: transfers[0].ledger
+    }
+  ])
   if (error) {
     return error.error
   }
@@ -499,19 +493,15 @@ async function postAccountWithdrawal(
     return TransferError.UnknownTransfer
   }
 
-  const error = await createTransfers(
-    deps,
-    [
-      {
-        pendingId: transfers[0].id,
-        sourceAccountId: transfers[0].debit_account_id,
-        destinationAccountId: transfers[0].credit_account_id,
-        amount: transfers[0].amount,
-        ledger: transfers[0].ledger
-      }
-    ],
-    true
-  )
+  const error = await createTransfers(deps, [
+    {
+      postId: transfers[0].id,
+      sourceAccountId: transfers[0].debit_account_id,
+      destinationAccountId: transfers[0].credit_account_id,
+      amount: transfers[0].amount,
+      ledger: transfers[0].ledger
+    }
+  ])
   if (error) {
     return error.error
   }
