@@ -225,7 +225,8 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
-  app.listen(config.port)
+  await app.startAuthServer(config.authPort)
+  await app.startAdminServer(config.adminPort)
   logger.info(`Auth server listening on ${app.getPort()}`)
 }
 

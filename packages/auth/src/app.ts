@@ -1,3 +1,4 @@
+import { join } from 'path'
 import { Server } from 'http'
 import { EventEmitter } from 'events'
 
@@ -9,8 +10,13 @@ import session from 'koa-session'
 import cors from '@koa/cors'
 import { Logger } from 'pino'
 import Router from '@koa/router'
+import { ApolloServer } from 'apollo-server-koa'
 
 import { IAppConfig } from './config/app'
+import { addResolversToSchema } from '@graphql-tools/schema'
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
+import { loadSchemaSync } from '@graphql-tools/load'
+import { resolvers } from './graphql/resolvers'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
 import {
@@ -51,6 +57,11 @@ export interface AppContextData extends DefaultContext {
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>
 
+export interface ApolloContext {
+  container: IocContract<AppServices>
+  logger: Logger
+}
+
 export interface DatabaseCleanupRule {
   /**
    * the name of the column containing the starting time from which the age will be computed
@@ -83,9 +94,10 @@ export interface AppServices {
 export type AppContainer = IocContract<AppServices>
 
 export class App {
-  private koa!: Koa<DefaultState, AppContext>
   private publicRouter!: Router<DefaultState, AppContext>
   private server!: Server
+  private adminServer!: Server
+  public apolloServer!: ApolloServer
   private closeEmitter!: EventEmitter
   private logger!: Logger
   private config!: IAppConfig
@@ -94,7 +106,7 @@ export class App {
   }
   public isShuttingDown = false
 
-  public constructor(private container: IocContract<AppServices>) {}
+  public constructor(private container: IocContract<AppServices>) { }
 
   /**
    * The boot function exists because the functions that we register on the container with the `bind` method are async.
@@ -104,12 +116,8 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.koa = new Koa<DefaultState, AppContext>()
     this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
-    this.koa.context.container = this.container
-    this.koa.context.logger = await this.container.use('logger')
-    this.koa.context.closeEmitter = await this.container.use('closeEmitter')
     this.publicRouter = new Router<DefaultState, AppContext>()
     this.databaseCleanupRules = {
       accessTokens: {
@@ -119,9 +127,52 @@ export class App {
       }
     }
 
-    this.koa.use(cors())
-    this.koa.keys = [this.config.cookieKey]
-    this.koa.use(
+    await this._setupRoutes()
+
+    if (this.config.env !== 'test') {
+      for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
+        process.nextTick(() => this.processDatabaseCleanup())
+      }
+    }
+  }
+
+  public async startAdminServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    // Load schema from the file
+    const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
+      loaders: [new GraphQLFileLoader()]
+    })
+
+    // Add resolvers to the schema
+    const schemaWithResolvers = addResolversToSchema({
+      schema,
+      resolvers
+    })
+
+    // Setup Apollo on graphql endpoint
+    this.apolloServer = new ApolloServer({
+      schema: schemaWithResolvers,
+      context: async (): Promise<ApolloContext> => {
+        return {
+          container: this.container,
+          logger: await this.container.use('logger')
+        }
+      }
+    })
+
+    await this.apolloServer.start()
+    koa.use(this.apolloServer.getMiddleware())
+
+    this.adminServer = koa.listen(port)
+  }
+
+  public async startAuthServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    koa.use(cors())
+    koa.keys = [this.config.cookieKey]
+    koa.use(
       session(
         {
           key: 'sessionId',
@@ -130,10 +181,23 @@ export class App {
         },
         // Only accepts Middleware<DefaultState, DefaultContext> for some reason, this.koa is Middleware<DefaultState, AppContext>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.koa as any
+        koa as any
       )
     )
-    this.koa.use(
+
+    koa.use(this.publicRouter.middleware())
+    
+    this.server = koa.listen(port)
+  }
+
+  private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
+    const koa = new Koa<DefaultState, AppContext>()
+
+    koa.context.container = this.container
+    koa.context.closeEmitter = await this.container.use('closeEmitter')
+    koa.context.logger = await this.container.use('logger')
+
+    koa.use(
       async (
         ctx: {
           status: number
@@ -152,17 +216,7 @@ export class App {
       }
     )
 
-    await this._setupRoutes()
-
-    if (this.config.env !== 'test') {
-      for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
-        process.nextTick(() => this.processDatabaseCleanup())
-      }
-    }
-  }
-
-  public listen(port: number | string): void {
-    this.server = this.koa.listen(port)
+    return koa
   }
 
   public async shutdown(): Promise<void> {
@@ -170,6 +224,9 @@ export class App {
       if (this.server) {
         this.isShuttingDown = true
         this.closeEmitter.emit('shutdown')
+        this.adminServer.close((): void => {
+          resolve()
+        })
         this.server.close((): void => {
           resolve()
         })
@@ -177,6 +234,14 @@ export class App {
         resolve()
       }
     })
+  }
+
+  public getAdminPort(): number {
+    const address = this.adminServer?.address()
+    if (address && !(typeof address == 'string')) {
+      return address.port
+    }
+    return 0
   }
 
   public getPort(): number {
@@ -316,8 +381,6 @@ export class App {
       }),
       grantRoutes.interaction.acceptOrReject
     )
-
-    this.koa.use(this.publicRouter.middleware())
   }
 
   private async processDatabaseCleanup(): Promise<void> {

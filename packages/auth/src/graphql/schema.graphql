@@ -1,0 +1,36 @@
+type Query {
+    grants: [Grant!]!
+}
+
+type Mutation {
+    "Revoke Grant"
+    revokeGrant(
+        identifier: String!
+    ): RevokeGrantMutationResponse!
+}
+
+type Grant {
+    identifier: String!
+    state: GrantState!
+    createdAt: String!
+}
+
+type RevokeGrantMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  grant: Grant
+}
+
+interface MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+}
+
+enum GrantState {
+    Pending
+    Granted
+    Revoked
+    Rejected
+}
