@@ -57,6 +57,12 @@ function DisplayPeer({ peer }: { peer: Peer }) {
           </td>
         </tr>
         <tr>
+          <th>Max packet amount</th>
+          <td>
+            {peer.maxPacketAmount ? peer.maxPacketAmount?.toString() : 'null'}
+          </td>
+        </tr>
+        <tr>
           <th>Created at</th>
           <td>{peer.createdAt}</td>
         </tr>

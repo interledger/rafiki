@@ -50,7 +50,14 @@ export default function PeersPage() {
         <h1>Peers</h1>
         <Form method='post' id='peer-search-form'>
           <span>
-            <input type='search' id='peer-id' name='peerId' required />
+            <input
+              type='search'
+              id='peer-id'
+              name='peerId'
+              // TODO: update placeholder when search bar becomes global
+              placeholder='Search peer by ID'
+              required
+            />
             <div className='form-actions'>
               <button className='search-button'>
                 <img alt='Search' src={require('../../public/search.svg')} />

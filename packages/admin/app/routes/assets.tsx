@@ -51,7 +51,14 @@ export default function AssetsPage() {
         <h1>Assets</h1>
         <Form method='post' id='asset-search-form'>
           <span>
-            <input type='search' id='asset-id' name='assetId' required />
+            <input
+              type='search'
+              id='asset-id'
+              name='assetId'
+              // TODO: update placeholder when search bar becomes global
+              placeholder='Search asset by ID'
+              required
+            />
             <div className='form-actions'>
               <button className='search-button'>
                 <img alt='Search' src={require('../../public/search.svg')} />

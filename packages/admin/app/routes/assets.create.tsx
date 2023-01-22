@@ -24,7 +24,7 @@ function NewAsset() {
   return (
     <Form method='post' id='asset-form'>
       <span>
-        <label htmlFor='asset-code'>Asset code</label>
+        <label htmlFor='asset-code'>Asset code *</label>
         <div>
           <input
             className={
@@ -41,7 +41,7 @@ function NewAsset() {
         </div>
       </span>
       <span>
-        <label htmlFor='asset-scale'>Asset scale</label>
+        <label htmlFor='asset-scale'>Asset scale *</label>
         <div>
           <input
             className={

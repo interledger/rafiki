@@ -27,42 +27,51 @@ function UpdateAsset({ asset }: { asset: Asset }) {
   return (
     <Form method='post' id='asset-form'>
       <span>
-        {actionData?.formErrors?.assetId ? (
-          <label htmlFor='asset-id'>Asset ID</label>
-        ) : null}
-        <div>
-          {/* hidden form field to pass back asset id */}
+        <label htmlFor='asset-id'>Asset ID</label>
+        <div className='tooltip'>
           <input
             className={
-              actionData?.formErrors?.assetId ? 'input-error' : 'input'
+              actionData?.formErrors?.assetId ? 'input-error' : 'input fixed'
             }
-            type={actionData?.formErrors?.assetId ? 'text' : 'hidden'}
+            type='text'
             id='asset-id'
             name='assetId'
-            value={asset.id}
+            defaultValue={asset.id}
+            readOnly={actionData?.formErrors?.assetId ? false : true}
           />
+          <span className='tooltiptext'>This field cannot be changed</span>
           {actionData?.formErrors?.assetId ? (
             <p style={{ color: 'red' }}>{actionData?.formErrors?.assetId}</p>
           ) : null}
         </div>
       </span>
-      <span
-        style={
-          actionData?.formErrors?.assetId
-            ? { display: 'none' }
-            : { display: 'in-line' }
-        }
-      >
-        <label htmlFor='asset-id'>Asset ID</label>
-        <p>{asset.id}</p>
-      </span>
       <span>
         <label htmlFor='asset-code'>Asset code</label>
-        <p>{asset.code}</p>
+        <div className='tooltip'>
+          <input
+            className='input fixed'
+            type='text'
+            id='asset-code'
+            name='assetCode'
+            defaultValue={asset.code}
+            readOnly={true}
+          />
+          <span className='tooltiptext'>This field cannot be changed</span>
+        </div>
       </span>
       <span>
         <label htmlFor='asset-scale'>Asset scale</label>
-        <p>{asset.scale}</p>
+        <div className='tooltip'>
+          <input
+            className='input fixed'
+            type='number'
+            id='asset-scale'
+            name='assetScale'
+            defaultValue={asset.scale}
+            readOnly={true}
+          />
+          <span className='tooltiptext'>This field cannot be changed</span>
+        </div>
       </span>
       <span>
         <label htmlFor='withdrawal-threshold'>Withdrawl threshold</label>

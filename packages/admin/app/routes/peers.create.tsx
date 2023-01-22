@@ -45,7 +45,7 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='ilp-address'>Static ILP address</label>
+        <label htmlFor='ilp-address'>Static ILP address *</label>
         <div>
           <input
             className={
@@ -64,7 +64,9 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='incoming-auth-tokens'>Incoming HTTP auth tokens</label>
+        <label htmlFor='incoming-auth-tokens'>
+          Incoming HTTP auth tokens *
+        </label>
         <div>
           <input
             className={
@@ -87,7 +89,7 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='outgoing-auth-token'>Outgoing HTTP auth token</label>
+        <label htmlFor='outgoing-auth-token'>Outgoing HTTP auth token *</label>
         <div>
           {/* TODO: soon it will only be required for either incoming HTTP fields or outgoing HTTP fileds to be filled */}
           <input
@@ -109,7 +111,7 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='outgoing-endpoint'>Outgoing HTTP endpoint</label>
+        <label htmlFor='outgoing-endpoint'>Outgoing HTTP endpoint *</label>
         <div>
           <input
             className={
@@ -128,7 +130,7 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='asset-code'>Asset ID</label>
+        <label htmlFor='asset-code'>Asset ID *</label>
         <div>
           <input
             className={

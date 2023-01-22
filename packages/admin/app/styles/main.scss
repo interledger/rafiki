@@ -78,14 +78,14 @@ main {
   justify-content: space-between;
 
   .header-row {
-    flex-basis: 5%;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    margin: 5px 5px 25px 5px;
+    margin: 5px;
     h1 {
       flex-basis: 25%;
-      margin: 0px 5px;
+      margin: 0px 5px 10px 0px;
+      white-space: nowrap;
     }
 
     form {
@@ -96,12 +96,14 @@ main {
     a {
       flex-basis: 25%;
       text-align: right;
-      margin: 0px 0px 0px 5px;
+      margin: 0px 0px 0px 10px;
+      white-space: nowrap;
     }
   }
 
   .main-content {
     margin: 5px;
+    padding-top: 2rem;
     flex-basis: 90%;
     overflow: auto;
   }
@@ -186,16 +188,13 @@ button.search-button {
 // For tablets and mobile devices
 @media (max-width: 1000px) {
   body {
-    background: none;
-    background-color: $admin-panel-background;
-    background-size: cover;
+    min-width: 100vh;
 
     .admin-panel {
       .admin-panel-background {
         flex-direction: column;
         padding: 0px;
-        margin: 0px;
-        border-radius: 0px;
+        margin: 25px;
 
         .admin-menu {
           padding: 25px 0px 0px 25px;
@@ -213,8 +212,20 @@ button.search-button {
           padding: 0px;
           border-radius: 0px;
 
+          main,
+          .main-content {
+            overflow: visible;
+          }
+
           .header-row {
             justify-content: flex-start;
+            flex-wrap: wrap;
+            h1 {
+              flex-basis: 15%;
+            }
+            a {
+              text-align: center;
+            }
           }
 
           .bottom-buttons {

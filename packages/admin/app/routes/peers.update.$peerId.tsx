@@ -35,32 +35,23 @@ function UpdatePeer({ peer }: { peer: Peer }) {
   return (
     <Form method='post' id='peer-form'>
       <span>
-        {actionData?.formErrors?.peerId ? (
-          <label htmlFor='peer-id'>Peer ID</label>
-        ) : null}
-        <div>
-          {/* hidden form field to pass back peer id */}
+        <label htmlFor='peer-id'>Peer ID</label>
+        <div className='tooltip'>
           <input
-            className={actionData?.formErrors?.peerId ? 'input-error' : 'input'}
-            type={actionData?.formErrors?.peerId ? 'text' : 'hidden'}
+            className={
+              actionData?.formErrors?.peerId ? 'input-error' : 'input fixed'
+            }
+            type='text'
             id='peer-id'
             name='peerId'
-            value={peer.id}
+            defaultValue={peer.id}
+            readOnly={actionData?.formErrors?.peerId ? false : true}
           />
+          <span className='tooltiptext'>This field cannot be changed</span>
           {actionData?.formErrors?.peerId ? (
             <p style={{ color: 'red' }}>{actionData?.formErrors?.peerId}</p>
           ) : null}
         </div>
-      </span>
-      <span
-        style={
-          actionData?.formErrors?.peerId
-            ? { display: 'none' }
-            : { display: 'in-line' }
-        }
-      >
-        <label htmlFor='peer-id'>Peer ID</label>
-        <p>{peer.id}</p>
       </span>
       <span>
         <label htmlFor='name'>Name</label>
@@ -111,6 +102,9 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             name='incomingAuthTokens'
             placeholder='*****'
           />
+          <p style={{ color: 'grey' }}>
+            Accepts a comma separated list of tokens
+          </p>
           {actionData?.formErrors?.incomingAuthTokens ? (
             <p style={{ color: 'red' }}>
               {actionData?.formErrors?.incomingAuthTokens}
@@ -150,6 +144,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             id='outgoing-endpoint'
             name='outgoingEndpoint'
             placeholder={peer.http.outgoing.endpoint}
+            defaultValue={peer.http.outgoing.endpoint}
           />
           {actionData?.formErrors?.outgoingEndpoint ? (
             <p style={{ color: 'red' }}>
@@ -160,11 +155,31 @@ function UpdatePeer({ peer }: { peer: Peer }) {
       </span>
       <span>
         <label htmlFor='asset-code'>Asset code</label>
-        <p>{peer.asset.code}</p>
+        <div className='tooltip'>
+          <input
+            className='input fixed'
+            type='text'
+            id='asset-code'
+            name='assetCode'
+            defaultValue={peer.asset.code}
+            readOnly={true}
+          />
+          <span className='tooltiptext'>This field cannot be changed</span>
+        </div>
       </span>
       <span>
         <label htmlFor='asset-scale'>Asset scale</label>
-        <p>{peer.asset.scale}</p>
+        <div className='tooltip'>
+          <input
+            className='input fixed'
+            type='text'
+            id='asset-scale'
+            name='assetScale'
+            defaultValue={peer.asset.scale}
+            readOnly={true}
+          />
+          <span className='tooltiptext'>This field cannot be changed</span>
+        </div>
       </span>
       <span>
         <label htmlFor='max-pckt-amount'>Max packet amount</label>
@@ -250,55 +265,71 @@ export async function action({ request }: ActionArgs) {
     staticIlpAddress: validateIlpAddress(formData.staticIlpAddress, false)
   }
 
-  // If any of the HTTP fields are filled then then both the outgoing auth token and endpoint become required
-  // TODO: at a future point in time there is discussion to make either the incoming or the outgoing http fields required
-  if (
-    formData.incomingAuthTokens ||
-    formData.outgoingAuthToken ||
-    formData.outgoingEndpoint
-  ) {
-    if (!formData.outgoingAuthToken) {
-      formErrors.outgoingAuthToken =
-        'The outgoing auth token is required for this update'
-    }
-    if (!formData.outgoingEndpoint) {
-      formErrors.outgoingEndpoint =
-        'The outgoing endpoint is required for this update'
-    }
-  }
-
   // If there are errors, return the form errors object
   if (Object.values(formErrors).some(Boolean)) return { formErrors }
 
-  // Constructing an http object if any of the incoming or outgoing fields have been filled in
+  // Fields that are required in the Peer type cannot be passed as null in the updatePeer mutation.
+  // They must either be left out of the mutation variables or the original values must be included.
+  // Since the HTTP outgoing endpoint is a required field in the Peer object and has complex UI implications it is always included in the mutation
+  // This way if a user updates one or the other both values can be included in the update mutation without them needing to enter both on the form
+  // If the user updates the HTTP incoming auth tokens both of the outgoing fields would have become required and now can be filled automatically
+  // All of this can be done without exposing the outgoing auth token on the frontend as long as a second query is made in the action function.
+  // TODO: at a future point in time there is discussion to make either the incoming or the outgoing http fields required.
+  const peer_query_variables: { peerId: string } = {
+    peerId: formData.peerId
+  }
+  const originalPeer: Peer = await apolloClient
+    .query({
+      query: gql`
+        query Peer($peerId: String!) {
+          peer(id: $peerId) {
+            http {
+              outgoing {
+                endpoint
+                authToken
+              }
+            }
+          }
+        }
+      `,
+      variables: peer_query_variables
+    })
+    .then((query): Peer => {
+      if (query.data) {
+        return query.data.peer
+      } else {
+        throw new Error(`Could not find peer with ID ${formData.peerId}`)
+      }
+    })
+
+  invariant(
+    originalPeer.http.outgoing.authToken,
+    `Could find the outgoing HTTP auth token`
+  )
+  invariant(
+    originalPeer.http.outgoing.endpoint,
+    `Could find the outgoing HTTP endpoint`
+  )
+
   const incoming = formData.incomingAuthTokens
     ? { authTokens: incomingAuthTokens?.replace(/ /g, '').split(',') }
     : null
-  const outgoing =
-    formData.outgoingEndpoint || formData.outgoingAuthToken
-      ? {
-          ...(formData.outgoingAuthToken && {
-            endpoint: formData.outgoingEndpoint
-          }),
-          ...(formData.outgoingAuthToken && {
-            authToken: formData.outgoingAuthToken
-          })
-        }
-      : null
-  const http =
-    incoming || outgoing
-      ? {
-          ...(incoming && { incoming: { ...incoming } }),
-          ...(outgoing && { outgoing: { ...outgoing } })
-        }
-      : null
 
-  // Fields that are required in the Peer type cannot be passed as null in the updatePeer mutation. Instead they must be left out of the mutation variables.
   const variables: { input: UpdatePeerInput } = {
     input: {
       id: formData.peerId,
       name: formData.name,
-      ...(http && { http: { ...http } }),
+      http: {
+        ...(incoming && { incoming: { ...incoming } }),
+        outgoing: {
+          authToken: formData.outgoingAuthToken
+            ? formData.outgoingAuthToken
+            : originalPeer.http.outgoing.authToken,
+          endpoint: formData.outgoingEndpoint
+            ? formData.outgoingEndpoint
+            : originalPeer.http.outgoing.endpoint
+        }
+      },
       maxPacketAmount: parseInt(formData.maxPacketAmount, 10),
       ...(formData.staticIlpAddress && {
         staticIlpAddress: formData.staticIlpAddress

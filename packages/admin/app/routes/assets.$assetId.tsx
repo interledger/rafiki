@@ -22,6 +22,8 @@ export default function ViewAssetsPage() {
               id='asset-id'
               name='assetId'
               defaultValue={asset.id}
+              // TODO: update placeholder when search bar becomes global
+              placeholder='Search asset by ID'
               required
             />
             <div className='form-actions'>

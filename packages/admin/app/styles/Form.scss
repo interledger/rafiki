@@ -2,7 +2,7 @@
 
 #peer-form,
 #asset-form {
-  margin: 50px 50px 50px 0px;
+  margin: 0px 50px 50px 0px;
 
   span {
     display: flex;
@@ -34,12 +34,21 @@
     max-width: 500px;
   }
 
+  input.input.fixed {
+    border-color: $gray;
+    color: $gray;
+  }
+
   input.input-error {
     border-color: $red;
   }
 
   .input-error:focus {
     outline-color: $red;
+  }
+
+  .input.fixed:focus {
+    outline-color: $gray;
   }
 
   input.input {
@@ -50,13 +59,49 @@
     padding: 0.5rem 1rem;
     margin: 0;
   }
+
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip .tooltiptext {
+    visibility: hidden;
+    background-color: $tooltip-background;
+    color: $white;
+    text-align: center;
+    border-radius: 6px;
+    margin: 0px;
+    padding: 10px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .tooltip .tooltiptext::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: $tooltip-background transparent transparent transparent;
+  }
 }
 
 // For tablets and mobile devices
 @media (max-width: 1000px) {
   #peer-form,
   #asset-form {
-    margin: 25px 0px 0px 0px;
+    margin: 0px;
 
     span {
       margin: 1rem 0 1rem 0;
@@ -67,6 +112,15 @@
       flex-basis: 100%;
       max-width: 400px;
       min-width: 200px;
+    }
+
+    input.input.fixed {
+      border-style: none;
+      color: $black;
+    }
+
+    .tooltip .tooltiptext {
+      margin-left: 100px;
     }
   }
 

@@ -24,6 +24,8 @@ export default function ViewPeersPage() {
               id='peer-id'
               name='peerId'
               defaultValue={peer.id}
+              // TODO: update placeholder when search bar becomes global
+              placeholder='Search peer by ID'
               required
             />
             <div className='form-actions'>
@@ -67,6 +69,7 @@ export async function loader({ params }: LoaderArgs) {
             id
             name
             staticIlpAddress
+            maxPacketAmount
             createdAt
             asset {
               scale
