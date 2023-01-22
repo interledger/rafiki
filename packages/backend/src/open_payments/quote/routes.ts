@@ -1,10 +1,11 @@
 import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
-import { QuoteService } from './service'
+import { CreateQuoteOptions, QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
+import { PaymentPointer } from '../payment_pointer/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -38,54 +39,68 @@ async function getQuote(
     paymentPointerId: ctx.paymentPointer.id
   })
   if (!quote) return ctx.throw(404)
-  quote.paymentPointer = ctx.paymentPointer
-  const body = quoteToBody(deps, quote)
+  const body = quoteToBody(deps, quote, ctx.paymentPointer)
   ctx.body = body
 }
 
-export type CreateBody = {
+interface CreateBodyBase {
   receiver: string
+}
+
+interface CreateBodyWithSendAmount extends CreateBodyBase {
   sendAmount?: AmountJSON
+  receiveAmount?: never
+}
+
+interface CreateBodyWithReceiveAmount extends CreateBodyBase {
+  sendAmount?: never
   receiveAmount?: AmountJSON
 }
+
+export type CreateBody = CreateBodyWithSendAmount | CreateBodyWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
   ctx: CreateContext<CreateBody>
 ): Promise<void> {
   const { body } = ctx.request
+  const options: CreateQuoteOptions = {
+    paymentPointerId: ctx.paymentPointer.id,
+    receiver: body.receiver,
+    clientId: ctx.clientId
+  }
+  if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
+  if (body.receiveAmount)
+    options.receiveAmount = parseAmount(body.receiveAmount)
   try {
-    const quoteOrErr = await deps.quoteService.create({
-      paymentPointerId: ctx.paymentPointer.id,
-      receiver: body.receiver,
-      sendAmount: body.sendAmount && parseAmount(body.sendAmount),
-      receiveAmount: body.receiveAmount && parseAmount(body.receiveAmount),
-      clientId: ctx.clientId
-    })
+    const quoteOrErr = await deps.quoteService.create(options)
 
     if (isQuoteError(quoteOrErr)) {
       throw quoteOrErr
     }
 
     ctx.status = 201
-    quoteOrErr.paymentPointer = ctx.paymentPointer
-    const res = quoteToBody(deps, quoteOrErr)
+    const res = quoteToBody(deps, quoteOrErr, ctx.paymentPointer)
     ctx.body = res
   } catch (err) {
     if (isQuoteError(err)) {
       return ctx.throw(errorToCode[err], errorToMessage[err])
     }
-    deps.logger.debug({ error: err.message })
+    deps.logger.debug({ error: err && err['message'] })
     ctx.throw(500, 'Error trying to create quote')
   }
 }
 
-function quoteToBody(deps: ServiceDependencies, quote: Quote) {
+function quoteToBody(
+  deps: ServiceDependencies,
+  quote: Quote,
+  paymentPointer: PaymentPointer
+) {
   return Object.fromEntries(
     Object.entries({
       ...quote.toJSON(),
-      id: `${quote.paymentPointer.url}/quotes/${quote.id}`,
-      paymentPointer: quote.paymentPointer.url,
+      id: `${paymentPointer.url}/quotes/${quote.id}`,
+      paymentPointer: paymentPointer.url,
       paymentPointerId: undefined
     }).filter(([_, v]) => v != null)
   )

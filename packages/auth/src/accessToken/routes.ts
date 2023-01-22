@@ -1,4 +1,6 @@
+import { createHash } from 'crypto'
 import { Logger } from 'pino'
+import { ActiveTokenInfo, TokenInfo } from 'token-introspection'
 import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
@@ -6,11 +8,11 @@ import { AccessTokenService, Introspection } from './service'
 import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 
-type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body?: BodyT
+type TokenRequest<BodyT> = Omit<AppContext['request'], 'body'> & {
+  body: BodyT
 }
 
-type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
+type TokenContext<BodyT> = Omit<AppContext, 'request'> & {
   request: TokenRequest<BodyT>
 }
 
@@ -62,28 +64,30 @@ async function introspectToken(
 ): Promise<void> {
   const { body } = ctx.request
   const introspectionResult = await deps.accessTokenService.introspect(
+    // body.access_token exists since it is checked for by the request validation
     body['access_token']
   )
-  if (introspectionResult) {
-    ctx.body = introspectionToBody(introspectionResult)
-  } else {
-    ctx.throw(404, {
-      error: 'invalid_request',
-      message: 'token not found'
-    })
-  }
+  ctx.body = introspectionToBody(introspectionResult)
 }
 
-function introspectionToBody(result: Introspection) {
-  if (!result.active) return { active: result.active }
-  else {
+function introspectionToBody(introspection?: Introspection): TokenInfo {
+  if (!introspection) {
     return {
-      active: result.active,
-      grant: result.id,
-      access: result.access?.map((a: Access) => accessToBody(a)),
-      key: result.key,
-      client_id: result.clientId
+      active: false
     }
+  }
+  const { grant, jwk } = introspection
+  return {
+    active: true,
+    grant: grant.id,
+    access: grant.access.map((a: Access) =>
+      accessToBody(a)
+    ) as ActiveTokenInfo['access'],
+    key: {
+      proof: 'httpsig',
+      jwk
+    },
+    client_id: createHash('sha256').update(grant.client).digest('hex')
   }
 }
 

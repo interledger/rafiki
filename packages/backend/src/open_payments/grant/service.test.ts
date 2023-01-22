@@ -2,7 +2,7 @@ import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 
-import { AccessType, AccessAction, Grant } from './model'
+import { Grant } from './model'
 import { GrantOptions, GrantService } from './service'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
@@ -10,6 +10,7 @@ import { AppServices } from '../../app'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -64,14 +65,14 @@ describe('Grant Service', (): void => {
       afterEach(async (): Promise<void> => {
         jest.useRealTimers()
         if (existingAuthServer) {
-          expect(grant.authServerId).toEqual(authServerId)
+          expect(grant?.authServerId).toEqual(authServerId)
         } else {
           await expect(
             AuthServer.query(knex).findOne({
               url: authServerUrl
             })
           ).resolves.toMatchObject({
-            id: grant.authServerId
+            id: grant?.authServerId
           })
         }
       })

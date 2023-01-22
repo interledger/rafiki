@@ -10,7 +10,9 @@ export {
   isNonInteractiveGrant,
   JWK,
   JWKS,
-  PaymentPointer
+  PaymentPointer,
+  AccessType,
+  AccessAction
 } from './types'
 
 export {

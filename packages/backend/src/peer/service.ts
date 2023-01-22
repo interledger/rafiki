@@ -2,7 +2,8 @@ import {
   ForeignKeyViolationError,
   NotFoundError,
   raw,
-  Transaction
+  Transaction,
+  TransactionOrKnex
 } from 'objection'
 import { isValidIlpAddress } from 'ilp-packet'
 
@@ -53,6 +54,7 @@ interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   assetService: AssetService
   httpTokenService: HttpTokenService
+  knex: TransactionOrKnex
 }
 
 export async function createPeerService({

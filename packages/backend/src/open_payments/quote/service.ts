@@ -61,13 +61,25 @@ async function getQuote(
   return Quote.query(deps.knex).get(options).withGraphFetched('asset')
 }
 
-export interface CreateQuoteOptions {
+interface QuoteOptionsBase {
   paymentPointerId: string
-  sendAmount?: Amount
-  receiveAmount?: Amount
   receiver: string
   clientId?: string
 }
+
+interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
+  receiveAmount?: never
+  sendAmount?: Amount
+}
+
+interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
+  receiveAmount?: Amount
+  sendAmount?: never
+}
+
+export type CreateQuoteOptions =
+  | QuoteOptionsWithSendAmount
+  | QuoteOptionsWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
@@ -90,7 +102,8 @@ async function createQuote(
     ) {
       return QuoteError.InvalidAmount
     }
-  } else if (options.receiveAmount) {
+  }
+  if (options.receiveAmount) {
     if (options.receiveAmount.value <= BigInt(0)) {
       return QuoteError.InvalidAmount
     }
@@ -136,9 +149,10 @@ async function createQuote(
 
       let maxReceiveAmountValue: bigint | undefined
       if (options.sendAmount) {
-        const receivingPaymentValue = receiver.incomingAmount
-          ? receiver.incomingAmount.value - receiver.receivedAmount.value
-          : undefined
+        const receivingPaymentValue =
+          receiver.incomingAmount && receiver.receivedAmount
+            ? receiver.incomingAmount.value - receiver.receivedAmount.value
+            : undefined
         maxReceiveAmountValue =
           receivingPaymentValue &&
           receivingPaymentValue < quote.receiveAmount.value
@@ -179,7 +193,7 @@ export async function resolveReceiver(
     ) {
       throw QuoteError.InvalidAmount
     }
-    if (receiver.incomingAmount) {
+    if (receiver.incomingAmount && receiver.receivedAmount) {
       const receivingPaymentValue =
         receiver.incomingAmount.value - receiver.receivedAmount.value
       if (receivingPaymentValue < options.receiveAmount.value) {
@@ -226,7 +240,7 @@ export async function startQuote(
       quoteOptions.amountToSend = options.sendAmount.value
     } else {
       quoteOptions.amountToDeliver =
-        options.receiveAmount?.value || options.receiver.incomingAmount.value
+        options.receiveAmount?.value || options.receiver.incomingAmount?.value
     }
     const quote = await Pay.startQuote({
       ...quoteOptions,

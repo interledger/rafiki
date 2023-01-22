@@ -70,6 +70,21 @@ describe('Client Service', (): void => {
 
       scope.done()
     })
+
+    test('cannot retrieve display if missing public name', async (): Promise<void> => {
+      const scope = nock(TEST_CLIENT_DISPLAY.uri).get('/').reply(200, {
+        id: TEST_CLIENT_DISPLAY.uri,
+        assetCode: 'USD',
+        assetScale: 9,
+        authServer: faker.internet.url()
+      })
+
+      await expect(
+        clientService.get(TEST_CLIENT_DISPLAY.uri)
+      ).resolves.toBeUndefined()
+
+      scope.done()
+    })
   })
 
   describe('getKeys', (): void => {

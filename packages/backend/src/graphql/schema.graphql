@@ -80,15 +80,15 @@ type Mutation {
     input: CreatePaymentPointerWithdrawalInput!
   ): PaymentPointerWithdrawalMutationResponse
 
-  "Finalize liquidity withdrawal"
-  finalizeLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to finalize."
+  "Posts liquidity withdrawal"
+  postLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to post."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
-  "Rollback liquidity withdrawal"
-  rollbackLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to rollback."
+  "Void liquidity withdrawal"
+  voidLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to void."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
@@ -258,8 +258,8 @@ type Asset implements Model {
 }
 
 enum LiquidityError {
-  AlreadyCommitted
-  AlreadyRolledBack
+  AlreadyPosted
+  AlreadyVoided
   AmountZero
   InsufficientBalance
   InvalidId

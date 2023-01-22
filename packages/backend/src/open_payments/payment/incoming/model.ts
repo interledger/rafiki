@@ -195,7 +195,7 @@ export class IncomingPayment
     return data
   }
 
-  public $beforeInsert(context): void {
+  public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
     this.connectionId = this.connectionId || uuid()
   }

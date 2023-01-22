@@ -7,8 +7,8 @@
   ],
   "scripts": {
     "knex": "knex",
-    "build:deps": "pnpm --filter open-payments build",
-    "build": "pnpm build:deps && tsc --build tsconfig.json && pnpm copy-files",
+    "build:deps": "pnpm --filter open-payments build && pnpm --filter token-introspection build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build",
@@ -19,10 +19,10 @@
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "ajv": "^8.12.0",
-    "axios": "^1.2.1",
+    "axios": "^1.2.3",
     "http-signature-utils": "workspace:../http-signature-utils",
     "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
-    "knex": "^0.95",
+    "knex": "^2.4",
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0",
     "koa-session": "^6.3.1",
@@ -34,12 +34,13 @@
     "pg": "^8.8.0",
     "pino": "^8.8.0",
     "pino-pretty": "^9.1.1",
-    "testcontainers": "^8.16.0",
+    "testcontainers": "^9.1.1",
+    "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@types/jest": "^28.1.8",
+    "@types/jest": "^29.2.6",
     "@types/koa": "2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-session": "^5.10.6",
@@ -47,7 +48,7 @@
     "@types/koa__router": "^12.0.0",
     "@types/uuid": "^9.0.0",
     "jest-openapi": "^0.14.2",
-    "nock": "^13.2.9",
+    "nock": "^13.3.0",
     "openapi-types": "^12.1.0",
     "typescript": "^4.9.4"
   }

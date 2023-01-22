@@ -1,21 +1,16 @@
 import { HttpMethod, ResponseValidator } from 'openapi'
-import { RouteDeps } from '.'
+import { ResourceRequestArgs, RouteDeps } from '.'
 import { getASPath, AccessToken } from '../types'
 import { deleteRequest, post } from './requests'
 
-interface TokenRequestArgs {
-  url: string
-  accessToken: string
-}
-
 export interface TokenRoutes {
-  rotate(args: TokenRequestArgs): Promise<AccessToken>
-  revoke(args: TokenRequestArgs): Promise<void>
+  rotate(args: ResourceRequestArgs): Promise<AccessToken>
+  revoke(args: ResourceRequestArgs): Promise<void>
 }
 
 export const rotateToken = async (
   deps: RouteDeps,
-  args: TokenRequestArgs,
+  args: ResourceRequestArgs,
   validateOpenApiResponse: ResponseValidator<AccessToken>
 ) => {
   const { axiosInstance, logger } = deps
@@ -36,7 +31,7 @@ export const rotateToken = async (
 
 export const revokeToken = async (
   deps: RouteDeps,
-  args: TokenRequestArgs,
+  args: ResourceRequestArgs,
   validateOpenApiResponse: ResponseValidator<void>
 ) => {
   const { axiosInstance, logger } = deps
@@ -68,9 +63,9 @@ export const createTokenRoutes = (deps: RouteDeps): TokenRoutes => {
   })
 
   return {
-    rotate: (args: TokenRequestArgs) =>
+    rotate: (args: ResourceRequestArgs) =>
       rotateToken(deps, args, rotateTokenValidator),
-    revoke: (args: TokenRequestArgs) =>
+    revoke: (args: ResourceRequestArgs) =>
       revokeToken(deps, args, revokeTokenValidator)
   }
 }

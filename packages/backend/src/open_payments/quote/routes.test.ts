@@ -42,7 +42,7 @@ describe('Quote Routes', (): void => {
     clientId
   }: {
     paymentPointerId: string
-    clientId: string
+    clientId?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
       paymentPointerId,
@@ -166,22 +166,20 @@ describe('Quote Routes', (): void => {
         '$description',
         async ({ sendAmount, receiveAmount }): Promise<void> => {
           options = {
-            receiver,
-            sendAmount: sendAmount
-              ? {
-                  value: sendAmount,
-                  assetCode: asset.code,
-                  assetScale: asset.scale
-                }
-              : undefined,
-            receiveAmount: receiveAmount
-              ? {
-                  value: receiveAmount,
-                  assetCode: asset.code,
-                  assetScale: asset.scale
-                }
-              : undefined
+            receiver
           }
+          if (sendAmount)
+            options.sendAmount = {
+              value: sendAmount,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
+          if (receiveAmount)
+            options.receiveAmount = {
+              value: receiveAmount,
+              assetCode: asset.code,
+              assetScale: asset.scale
+            }
           const ctx = setup({ clientId })
           let quote: Quote | undefined
           const quoteSpy = jest

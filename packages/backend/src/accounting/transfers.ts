@@ -29,7 +29,7 @@ export interface CreateTransferOptions {
 export async function createTransfers(
   deps: ServiceDependencies,
   transfers: CreateTransferOptions[],
-  commit?: boolean
+  post?: boolean
 ): Promise<void | TransfersError> {
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
@@ -41,10 +41,10 @@ export async function createTransfers(
     if (transfer.timeout) {
       flags |= TransferFlags.pending
     }
-    if (transfer.pendingId && commit === true) {
+    if (transfer.pendingId && post === true) {
       flags |= TransferFlags.post_pending_transfer
       transfer.id = uuid()
-    } else if (transfer.pendingId && commit === false) {
+    } else if (transfer.pendingId && post === false) {
       flags |= TransferFlags.void_pending_transfer
       transfer.id = uuid()
     } else {
@@ -118,14 +118,14 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_not_pending:
         return {
           index,
-          error: commit
-            ? TransferError.AlreadyCommitted
-            : TransferError.AlreadyRolledBack
+          error: post
+            ? TransferError.AlreadyPosted
+            : TransferError.AlreadyVoided
         }
       case CreateTransferErrorCode.pending_transfer_already_posted:
-        return { index, error: TransferError.AlreadyCommitted }
+        return { index, error: TransferError.AlreadyPosted }
       case CreateTransferErrorCode.pending_transfer_already_voided:
-        return { index, error: TransferError.AlreadyRolledBack }
+        return { index, error: TransferError.AlreadyVoided }
       default:
         // TODO @jason: This needs to be removed: =========>
         switch (code) {
@@ -134,14 +134,14 @@ export async function createTransfers(
           case 40: //pending_transfer_not_pending
             return {
               index,
-              error: commit
-                ? TransferError.AlreadyCommitted
-                : TransferError.AlreadyRolledBack
+              error: post
+                ? TransferError.AlreadyPosted
+                : TransferError.AlreadyVoided
             }
           case 47: //pending_transfer_already_posted,
-            return { index, error: TransferError.AlreadyCommitted }
+            return { index, error: TransferError.AlreadyPosted }
           case 48: //pending_transfer_already_voided,
-            return { index, error: TransferError.AlreadyRolledBack }
+            return { index, error: TransferError.AlreadyVoided }
           case 49: //pending_transfer_expired,
             return { index, error: TransferError.TransferExpired }
         }

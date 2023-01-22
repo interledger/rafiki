@@ -1,14 +1,10 @@
 import { HttpMethod } from 'openapi'
-import { RouteDeps } from '.'
+import { RouteDeps, UnauthenticatedResourceRequestArgs } from '.'
 import { getRSPath, ILPStreamConnection } from '../types'
 import { get } from './requests'
 
-interface GetArgs {
-  url: string
-}
-
 export interface ILPStreamConnectionRoutes {
-  get(args: GetArgs): Promise<ILPStreamConnection>
+  get(args: UnauthenticatedResourceRequestArgs): Promise<ILPStreamConnection>
 }
 
 export const createILPStreamConnectionRoutes = (
@@ -23,7 +19,7 @@ export const createILPStreamConnectionRoutes = (
     })
 
   return {
-    get: (args: GetArgs) =>
+    get: (args: UnauthenticatedResourceRequestArgs) =>
       get({ axiosInstance, logger }, args, getILPStreamConnectionValidator)
   }
 }

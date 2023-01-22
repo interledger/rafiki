@@ -18,11 +18,12 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
-import { AccessAction, AccessType } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { IncomingPayment } from '../payment/incoming/model'
 import { PaymentPointer } from '../payment_pointer/model'
 import { PaymentPointerService } from '../payment_pointer/service'
+import { Connection } from '../connection/model'
+import { AccessType, AccessAction } from 'open-payments'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -98,7 +99,9 @@ describe('Receiver Service', (): void => {
         const clientGetConnectionSpy = jest
           .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
           .mockImplementationOnce(async () =>
-            connectionService.get(incomingPayment).toOpenPaymentsType()
+            (
+              connectionService.get(incomingPayment) as Connection
+            ).toOpenPaymentsType()
           )
 
         await expect(receiverService.get(remoteUrl.href)).resolves.toEqual({
@@ -123,27 +126,6 @@ describe('Receiver Service', (): void => {
             `${paymentPointer.url}/${CONNECTION_PATH}/${uuid()}`
           )
         ).resolves.toBeUndefined()
-      })
-
-      test('returns undefined for unknown remote connection', async (): Promise<void> => {
-        const paymentPointer = await createPaymentPointer(deps)
-        const incomingPayment = await createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id
-        })
-        const remoteUrl = new URL(
-          `${paymentPointer.url}/${CONNECTION_PATH}/${incomingPayment.connectionId}`
-        )
-
-        const clientGetConnectionSpy = jest
-          .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
-          .mockResolvedValueOnce(undefined)
-
-        await expect(
-          receiverService.get(remoteUrl.href)
-        ).resolves.toBeUndefined()
-        expect(clientGetConnectionSpy).toHaveBeenCalledWith({
-          url: remoteUrl.href
-        })
       })
 
       test('returns undefined when fetching remote connection throws', async (): Promise<void> => {
@@ -194,7 +176,7 @@ describe('Receiver Service', (): void => {
           {
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale,
-            incomingAmountValue: incomingPayment.incomingAmount.value,
+            incomingAmountValue: incomingPayment.incomingAmount?.value,
             receivedAmountValue: incomingPayment.receivedAmount.value,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
@@ -287,7 +269,9 @@ describe('Receiver Service', (): void => {
             .spyOn(openPaymentsClient.incomingPayment, 'get')
             .mockResolvedValueOnce(
               incomingPayment.toOpenPaymentsType({
-                ilpStreamConnection: connectionService.get(incomingPayment)
+                ilpStreamConnection: connectionService.get(
+                  incomingPayment
+                ) as Connection
               })
             )
 
@@ -296,7 +280,7 @@ describe('Receiver Service', (): void => {
           ).resolves.toEqual({
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale,
-            incomingAmountValue: incomingPayment.incomingAmount.value,
+            incomingAmountValue: incomingPayment.incomingAmount?.value,
             receivedAmountValue: incomingPayment.receivedAmount.value,
             ilpAddress: expect.any(String),
             sharedSecret: expect.any(Buffer),
@@ -338,7 +322,7 @@ describe('Receiver Service', (): void => {
               ...grantOptions,
               authServer
             })
-            await grant.$query(knex).patch({ expiresAt: new Date() })
+            await grant?.$query(knex).patch({ expiresAt: new Date() })
             jest
               .spyOn(openPaymentsClient.paymentPointer, 'get')
               .mockResolvedValueOnce(

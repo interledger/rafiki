@@ -2,7 +2,11 @@
 import { createAxiosInstance, deleteRequest, get, post } from './requests'
 import { generateKeyPairSync } from 'crypto'
 import nock from 'nock'
-import { mockOpenApiResponseValidators, silentLogger } from '../test/helpers'
+import {
+  mockOpenApiResponseValidators,
+  silentLogger,
+  withEnvVariableOverride
+} from '../test/helpers'
 
 describe('requests', (): void => {
   const logger = silentLogger
@@ -194,6 +198,51 @@ describe('requests', (): void => {
         )
       ).rejects.toThrow(/Failed to validate OpenApi response/)
     })
+
+    test(
+      'keeps https protocol for request if non-development environment',
+      withEnvVariableOverride(
+        { NODE_ENV: 'production' },
+        async (): Promise<void> => {
+          const httpsUrl = 'https://localhost:1000/'
+          const scope = nock(httpsUrl).get('/').reply(200)
+
+          await get(
+            { axiosInstance, logger },
+            { url: httpsUrl },
+            responseValidators.successfulValidator
+          )
+
+          expect(axiosInstance.get).toHaveBeenCalledWith(httpsUrl, {
+            headers: {}
+          })
+          scope.done()
+        }
+      )
+    )
+
+    test(
+      'uses http protocol for request if development environment',
+      withEnvVariableOverride(
+        { NODE_ENV: 'development' },
+        async (): Promise<void> => {
+          const httpsUrl = 'https://localhost:1000/'
+          const httpUrl = httpsUrl.replace('https', 'http')
+          const scope = nock(httpUrl).get('/').reply(200)
+
+          await get(
+            { axiosInstance, logger },
+            { url: httpsUrl },
+            responseValidators.successfulValidator
+          )
+
+          expect(axiosInstance.get).toHaveBeenCalledWith(httpUrl, {
+            headers: {}
+          })
+          scope.done()
+        }
+      )
+    )
   })
 
   describe('post', (): void => {
@@ -364,6 +413,51 @@ describe('requests', (): void => {
         )
       ).rejects.toThrow(/Failed to validate OpenApi response/)
     })
+
+    test(
+      'keeps https protocol for request if non-development environment',
+      withEnvVariableOverride(
+        { NODE_ENV: 'production' },
+        async (): Promise<void> => {
+          const httpsUrl = 'https://localhost:1000/'
+          const scope = nock(httpsUrl).post('/').reply(200)
+
+          await post(
+            { axiosInstance, logger },
+            { url: httpsUrl },
+            responseValidators.successfulValidator
+          )
+
+          expect(axiosInstance.post).toHaveBeenCalledWith(httpsUrl, undefined, {
+            headers: {}
+          })
+          scope.done()
+        }
+      )
+    )
+
+    test(
+      'uses http protocol for request if development environment',
+      withEnvVariableOverride(
+        { NODE_ENV: 'development' },
+        async (): Promise<void> => {
+          const httpsUrl = 'https://localhost:1000/'
+          const httpUrl = httpsUrl.replace('https', 'http')
+          const scope = nock(httpUrl).post('/').reply(200)
+
+          await post(
+            { axiosInstance, logger },
+            { url: httpsUrl },
+            responseValidators.successfulValidator
+          )
+
+          expect(axiosInstance.post).toHaveBeenCalledWith(httpUrl, undefined, {
+            headers: {}
+          })
+          scope.done()
+        }
+      )
+    )
   })
 
   describe('delete', (): void => {
@@ -501,5 +595,50 @@ describe('requests', (): void => {
         )
       ).rejects.toThrow(/Failed to validate OpenApi response/)
     })
+
+    test(
+      'keeps https protocol for request if non-development environment',
+      withEnvVariableOverride(
+        { NODE_ENV: 'production' },
+        async (): Promise<void> => {
+          const httpsUrl = 'https://localhost:1000/'
+          const scope = nock(httpsUrl).delete('/').reply(200)
+
+          await deleteRequest(
+            { axiosInstance, logger },
+            { url: httpsUrl },
+            responseValidators.successfulValidator
+          )
+
+          expect(axiosInstance.delete).toHaveBeenCalledWith(httpsUrl, {
+            headers: {}
+          })
+          scope.done()
+        }
+      )
+    )
+
+    test(
+      'uses http protocol for request if development environment',
+      withEnvVariableOverride(
+        { NODE_ENV: 'development' },
+        async (): Promise<void> => {
+          const httpsUrl = 'https://localhost:1000/'
+          const httpUrl = httpsUrl.replace('https', 'http')
+          const scope = nock(httpUrl).delete('/').reply(200)
+
+          await deleteRequest(
+            { axiosInstance, logger },
+            { url: httpsUrl },
+            responseValidators.successfulValidator
+          )
+
+          expect(axiosInstance.delete).toHaveBeenCalledWith(httpUrl, {
+            headers: {}
+          })
+          scope.done()
+        }
+      )
+    )
   })
 })
