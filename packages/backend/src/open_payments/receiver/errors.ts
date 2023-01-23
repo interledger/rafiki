@@ -20,12 +20,12 @@ export const ReceiverError = {
 export const isReceiverError = (o: any): o is ReceiverError =>
   Object.values(ReceiverError).includes(o)
 
-export const receiverErrorToCode = (error: ReceiverError): number =>
+export const errorToCode = (error: ReceiverError): number =>
   isIncomingPaymentError(error)
     ? incomingPaymentErrorToCode[error]
     : remoteIncomingPaymentErrorToCode[error]
 
-export const receiverErrorToMessage = (error: ReceiverError): string =>
+export const errorToMessage = (error: ReceiverError): string =>
   isIncomingPaymentError(error)
     ? incomingPaymentErrorToMessage[error]
     : remoteIncomingPaymentErrorToMessage[error]

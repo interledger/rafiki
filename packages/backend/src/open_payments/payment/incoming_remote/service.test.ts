@@ -68,11 +68,11 @@ describe('Remote Incoming Payment Service', (): void => {
           throw new Error('No payment pointer')
         })
 
-      expect(
-        await remoteIncomingPaymentService.create({
+      await expect(
+        remoteIncomingPaymentService.create({
           paymentPointerUrl: paymentPointer.id
         })
-      ).toBe(RemoteIncomingPaymentError.UnknownPaymentPointer)
+      ).resolves.toEqual(RemoteIncomingPaymentError.UnknownPaymentPointer)
       expect(clientGetPaymentPointerSpy).toHaveBeenCalledWith({
         url: paymentPointer.id
       })
@@ -130,11 +130,11 @@ describe('Remote Incoming Payment Service', (): void => {
           expiresIn: -10
         })
 
-        expect(
-          await remoteIncomingPaymentService.create({
+        await expect(
+          remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).toBe(RemoteIncomingPaymentError.ExpiredGrant)
+        ).resolves.toEqual(RemoteIncomingPaymentError.ExpiredGrant)
       })
 
       test('returns error if grant does not have accessToken', async () => {
@@ -143,11 +143,11 @@ describe('Remote Incoming Payment Service', (): void => {
           accessToken: undefined
         })
 
-        expect(
-          await remoteIncomingPaymentService.create({
+        await expect(
+          remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).toBe(RemoteIncomingPaymentError.InvalidGrant)
+        ).resolves.toEqual(RemoteIncomingPaymentError.InvalidGrant)
       })
 
       test('returns error if fails to create the incoming payment', async () => {
@@ -158,11 +158,11 @@ describe('Remote Incoming Payment Service', (): void => {
             throw new Error('Error in client')
           })
 
-        expect(
-          await remoteIncomingPaymentService.create({
+        await expect(
+          remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).toBe(RemoteIncomingPaymentError.InvalidRequest)
+        ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
       })
     })
 
@@ -243,11 +243,11 @@ describe('Remote Incoming Payment Service', (): void => {
           .spyOn(openPaymentsClient.grant, 'request')
           .mockResolvedValueOnce(mockInteractiveGrant())
 
-        expect(
-          await remoteIncomingPaymentService.create({
+        await expect(
+          remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).toBe(RemoteIncomingPaymentError.InvalidGrant)
+        ).resolves.toEqual(RemoteIncomingPaymentError.InvalidGrant)
       })
     })
   })

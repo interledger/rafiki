@@ -20,7 +20,7 @@ import { isIncomingPaymentError } from '../payment/incoming/errors'
 import {
   isReceiverError,
   ReceiverError,
-  receiverErrorToMessage
+  errorToMessage as receiverErrorToMessage
 } from './errors'
 
 interface CreateReceiverArgs {

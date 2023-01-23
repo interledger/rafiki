@@ -517,11 +517,11 @@ describe('Receiver Service', (): void => {
             RemoteIncomingPaymentError.UnknownPaymentPointer
           )
 
-        expect(
-          await receiverService.create({
+        await expect(
+          receiverService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).toBe(ReceiverError.UnknownPaymentPointer)
+        ).resolves.toEqual(ReceiverError.UnknownPaymentPointer)
       })
     })
 
@@ -608,11 +608,11 @@ describe('Receiver Service', (): void => {
           .spyOn(incomingPaymentService, 'create')
           .mockResolvedValueOnce(IncomingPaymentError.InvalidAmount)
 
-        expect(
-          await receiverService.create({
+        await expect(
+          receiverService.create({
             paymentPointerUrl: paymentPointer.url
           })
-        ).toBe(ReceiverError.InvalidAmount)
+        ).resolves.toEqual(ReceiverError.InvalidAmount)
       })
 
       test('throws if error when getting connection for local incoming payment', async (): Promise<void> => {
