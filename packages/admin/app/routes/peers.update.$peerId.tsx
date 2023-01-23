@@ -30,7 +30,7 @@ import { obscureAuthToken } from '../lib/utils.server'
 function UpdatePeer({ peer }: { peer: Peer }) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const actionData = useActionData()
+  const formErrors = useActionData<typeof action>()
 
   return (
     <Form method='post' id='peer-form'>
@@ -38,33 +38,32 @@ function UpdatePeer({ peer }: { peer: Peer }) {
         <label htmlFor='peer-id'>Peer ID</label>
         <div className='tooltip'>
           <input
-            className={
-              actionData?.formErrors?.peerId ? 'input-error' : 'input fixed'
-            }
+            className={formErrors?.peerId ? 'input-error' : 'input fixed'}
             type='text'
             id='peer-id'
             name='peerId'
             defaultValue={peer.id}
-            readOnly={actionData?.formErrors?.peerId ? false : true}
+            readOnly={formErrors?.peerId ? false : true}
           />
-          <span className='tooltiptext'>This field cannot be changed</span>
-          {actionData?.formErrors?.peerId ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.peerId}</p>
-          ) : null}
+          {formErrors?.peerId ? (
+            <p style={{ color: 'red' }}>{formErrors?.peerId}</p>
+          ) : (
+            <span className='tooltiptext'>This field cannot be changed</span>
+          )}
         </div>
       </span>
       <span>
         <label htmlFor='name'>Name</label>
         <div>
           <input
-            className={actionData?.formErrors?.name ? 'input-error' : 'input'}
+            className={formErrors?.name ? 'input-error' : 'input'}
             type='text'
             id='name'
             name='name'
-            defaultValue={peer.name}
+            defaultValue={peer.name ? peer.name : ''}
           />
-          {actionData?.formErrors?.name ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.name}</p>
+          {formErrors?.name ? (
+            <p style={{ color: 'red' }}>{formErrors?.name}</p>
           ) : null}
         </div>
       </span>
@@ -72,19 +71,15 @@ function UpdatePeer({ peer }: { peer: Peer }) {
         <label htmlFor='ilp-address'>Static ILP address</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.staticIlpAddress ? 'input-error' : 'input'
-            }
+            className={formErrors?.staticIlpAddress ? 'input-error' : 'input'}
             type='text'
             id='ilp-address'
             name='staticIlpAddress'
             defaultValue={peer.staticIlpAddress}
             placeholder={peer.staticIlpAddress}
           />
-          {actionData?.formErrors?.staticIlpAddress ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.staticIlpAddress}
-            </p>
+          {formErrors?.staticIlpAddress ? (
+            <p style={{ color: 'red' }}>{formErrors?.staticIlpAddress}</p>
           ) : null}
         </div>
       </span>
@@ -92,11 +87,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
         <label htmlFor='incoming-auth-tokens'>Incoming HTTP auth tokens</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.incomingAuthTokens
-                ? 'input-error'
-                : 'input'
-            }
+            className={formErrors?.incomingAuthTokens ? 'input-error' : 'input'}
             type='text'
             id='incoming-auth-tokens'
             name='incomingAuthTokens'
@@ -105,10 +96,8 @@ function UpdatePeer({ peer }: { peer: Peer }) {
           <p style={{ color: 'grey' }}>
             Accepts a comma separated list of tokens
           </p>
-          {actionData?.formErrors?.incomingAuthTokens ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.incomingAuthTokens}
-            </p>
+          {formErrors?.incomingAuthTokens ? (
+            <p style={{ color: 'red' }}>{formErrors?.incomingAuthTokens}</p>
           ) : null}
         </div>
       </span>
@@ -116,20 +105,14 @@ function UpdatePeer({ peer }: { peer: Peer }) {
         <label htmlFor='outgoing-auth-token'>Outgoing HTTP auth token</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.outgoingAuthToken
-                ? 'input-error'
-                : 'input'
-            }
+            className={formErrors?.outgoingAuthToken ? 'input-error' : 'input'}
             type='text'
             id='outgoing-auth-token'
             name='outgoingAuthToken'
             placeholder={peer.http.outgoing.authToken}
           />
-          {actionData?.formErrors?.outgoingAuthToken ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.outgoingAuthToken}
-            </p>
+          {formErrors?.outgoingAuthToken ? (
+            <p style={{ color: 'red' }}>{formErrors?.outgoingAuthToken}</p>
           ) : null}
         </div>
       </span>
@@ -137,19 +120,15 @@ function UpdatePeer({ peer }: { peer: Peer }) {
         <label htmlFor='outgoing-endpoint'>Outgoing HTTP endpoint</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.outgoingEndpoint ? 'input-error' : 'input'
-            }
+            className={formErrors?.outgoingEndpoint ? 'input-error' : 'input'}
             type='text'
             id='outgoing-endpoint'
             name='outgoingEndpoint'
             placeholder={peer.http.outgoing.endpoint}
             defaultValue={peer.http.outgoing.endpoint}
           />
-          {actionData?.formErrors?.outgoingEndpoint ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.outgoingEndpoint}
-            </p>
+          {formErrors?.outgoingEndpoint ? (
+            <p style={{ color: 'red' }}>{formErrors?.outgoingEndpoint}</p>
           ) : null}
         </div>
       </span>
@@ -185,18 +164,16 @@ function UpdatePeer({ peer }: { peer: Peer }) {
         <label htmlFor='max-pckt-amount'>Max packet amount</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.maxPacketAmount ? 'input-error' : 'input'
-            }
+            className={formErrors?.maxPacketAmount ? 'input-error' : 'input'}
             type='number'
             id='max-pckt-amount'
             name='maxPacketAmount'
-            defaultValue={peer.maxPacketAmount}
+            defaultValue={
+              peer.maxPacketAmount ? peer.maxPacketAmount.toString() : ''
+            }
           />
-          {actionData?.formErrors?.maxPacketAmount ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.maxPacketAmount}
-            </p>
+          {formErrors?.maxPacketAmount ? (
+            <p style={{ color: 'red' }}>{formErrors?.maxPacketAmount}</p>
           ) : null}
         </div>
       </span>
@@ -219,7 +196,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
 }
 
 export default function UpdatePeerPage() {
-  const { peer }: { peer: Peer } = useLoaderData()
+  const { peer }: { peer: Peer } = useLoaderData<typeof loader>()
   return (
     <main>
       <div className='header-row'>
@@ -266,7 +243,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   // If there are errors, return the form errors object
-  if (Object.values(formErrors).some(Boolean)) return { formErrors }
+  if (Object.values(formErrors).some(Boolean)) return json({ ...formErrors })
 
   // Fields that are required in the Peer type cannot be passed as null in the updatePeer mutation.
   // They must either be left out of the mutation variables or the original values must be included.
@@ -276,7 +253,7 @@ export async function action({ request }: ActionArgs) {
   // All of this can be done without exposing the outgoing auth token on the frontend as long as a second query is made in the action function.
   // TODO: at a future point in time there is discussion to make either the incoming or the outgoing http fields required.
   const peer_query_variables: { peerId: string } = {
-    peerId: formData.peerId
+    peerId: formData.peerId as string
   }
   const originalPeer: Peer = await apolloClient
     .query({
@@ -317,20 +294,22 @@ export async function action({ request }: ActionArgs) {
 
   const variables: { input: UpdatePeerInput } = {
     input: {
-      id: formData.peerId,
-      name: formData.name,
+      id: formData.peerId as string,
+      name: formData.name as string,
       http: {
         ...(incoming && { incoming: { ...incoming } }),
         outgoing: {
           authToken: formData.outgoingAuthToken
-            ? formData.outgoingAuthToken
+            ? (formData.outgoingAuthToken as string)
             : originalPeer.http.outgoing.authToken,
           endpoint: formData.outgoingEndpoint
-            ? formData.outgoingEndpoint
+            ? (formData.outgoingEndpoint as string)
             : originalPeer.http.outgoing.endpoint
         }
       },
-      maxPacketAmount: parseInt(formData.maxPacketAmount, 10),
+      maxPacketAmount: formData.maxPacketAmount
+        ? parseInt(formData.maxPacketAmount as string, 10)
+        : null,
       ...(formData.staticIlpAddress && {
         staticIlpAddress: formData.staticIlpAddress
       })

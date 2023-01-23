@@ -153,6 +153,7 @@ export function CatchBoundary() {
 export function ErrorBoundary({ error }: { error: Error }) {
   return (
     <div>
+      <h1>Error</h1>
       <p>There was an error loading the assets.</p>
       {error.message.length > 0 && <p>Error: {error.message}</p>}
       <Link to='/assets'>

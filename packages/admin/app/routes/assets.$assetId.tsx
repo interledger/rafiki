@@ -116,6 +116,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
   if (assetId) {
     return (
       <div>
+        <h1>Error</h1>
         <p>There was an error loading the asset with ID {assetId}.</p>
         {error.message.length > 0 && <p>Error: {error.message}</p>}
         <Link to='/assets'>

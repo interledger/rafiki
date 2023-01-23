@@ -23,26 +23,25 @@ import { useLoaderData } from '@remix-run/react'
 function UpdateAsset({ asset }: { asset: Asset }) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const actionData = useActionData()
+  const formErrors = useActionData<typeof action>()
   return (
     <Form method='post' id='asset-form'>
       <span>
         <label htmlFor='asset-id'>Asset ID</label>
         <div className='tooltip'>
           <input
-            className={
-              actionData?.formErrors?.assetId ? 'input-error' : 'input fixed'
-            }
+            className={formErrors?.assetId ? 'input-error' : 'input fixed'}
             type='text'
             id='asset-id'
             name='assetId'
             defaultValue={asset.id}
-            readOnly={actionData?.formErrors?.assetId ? false : true}
+            readOnly={formErrors?.assetId ? false : true}
           />
-          <span className='tooltiptext'>This field cannot be changed</span>
-          {actionData?.formErrors?.assetId ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetId}</p>
-          ) : null}
+          {formErrors?.assetId ? (
+            <p style={{ color: 'red' }}>{formErrors?.assetId}</p>
+          ) : (
+            <span className='tooltiptext'>This field cannot be changed</span>
+          )}
         </div>
       </span>
       <span>
@@ -78,19 +77,19 @@ function UpdateAsset({ asset }: { asset: Asset }) {
         <div>
           <input
             className={
-              actionData?.formErrors?.withdrawalThreshold
-                ? 'input-error'
-                : 'input'
+              formErrors?.withdrawalThreshold ? 'input-error' : 'input'
             }
             type='number'
             id='withdrawal-threshold'
             name='withdrawalThreshold'
-            defaultValue={asset.withdrawalThreshold}
+            defaultValue={
+              asset.withdrawalThreshold
+                ? asset.withdrawalThreshold.toString()
+                : ''
+            }
           />
-          {actionData?.formErrors?.withdrawalThreshold ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.withdrawalThreshold}
-            </p>
+          {formErrors?.withdrawalThreshold ? (
+            <p style={{ color: 'red' }}>{formErrors?.withdrawalThreshold}</p>
           ) : null}
         </div>
       </span>
@@ -113,7 +112,7 @@ function UpdateAsset({ asset }: { asset: Asset }) {
 }
 
 export default function UpdateAssetPage() {
-  const { asset }: { asset: Asset } = useLoaderData()
+  const { asset }: { asset: Asset } = useLoaderData<typeof loader>()
   return (
     <main>
       <div className='header-row'>
@@ -139,11 +138,11 @@ export async function action({ request }: ActionArgs) {
   }
 
   // If there are errors, return the form errors object
-  if (Object.values(formErrors).some(Boolean)) return { formErrors }
+  if (Object.values(formErrors).some(Boolean)) return json({ ...formErrors })
 
   const variables: { input: UpdateAssetInput } = {
     input: {
-      id: formData.assetId,
+      id: formData.assetId as string,
       withdrawalThreshold: formData.withdrawalThreshold
         ? parseInt(formData.withdrawalThreshold as string, 10)
         : null

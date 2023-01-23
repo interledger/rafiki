@@ -26,7 +26,7 @@ import { apolloClient } from '../lib/apolloClient.server'
 function NewPeer() {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const actionData = useActionData()
+  const formErrors = useActionData<typeof action>()
 
   return (
     <Form method='post' id='peer-form'>
@@ -34,13 +34,13 @@ function NewPeer() {
         <label htmlFor='name'>Name</label>
         <div>
           <input
-            className={actionData?.formErrors?.name ? 'input-error' : 'input'}
+            className={formErrors?.name ? 'input-error' : 'input'}
             type='text'
             id='name'
             name='name'
           />
-          {actionData?.formErrors?.name ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.name}</p>
+          {formErrors?.name ? (
+            <p style={{ color: 'red' }}>{formErrors?.name}</p>
           ) : null}
         </div>
       </span>
@@ -48,18 +48,14 @@ function NewPeer() {
         <label htmlFor='ilp-address'>Static ILP address *</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.staticIlpAddress ? 'input-error' : 'input'
-            }
+            className={formErrors?.staticIlpAddress ? 'input-error' : 'input'}
             type='text'
             id='ilp-address'
             name='staticIlpAddress'
             required
           />
-          {actionData?.formErrors?.staticIlpAddress ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.staticIlpAddress}
-            </p>
+          {formErrors?.staticIlpAddress ? (
+            <p style={{ color: 'red' }}>{formErrors?.staticIlpAddress}</p>
           ) : null}
         </div>
       </span>
@@ -69,11 +65,7 @@ function NewPeer() {
         </label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.incomingAuthTokens
-                ? 'input-error'
-                : 'input'
-            }
+            className={formErrors?.incomingAuthTokens ? 'input-error' : 'input'}
             type='text'
             id='incoming-auth-tokens'
             name='incomingAuthTokens'
@@ -81,10 +73,8 @@ function NewPeer() {
           <p style={{ color: 'grey' }}>
             Accepts a comma separated list of tokens
           </p>
-          {actionData?.formErrors?.incomingAuthTokens ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.incomingAuthTokens}
-            </p>
+          {formErrors?.incomingAuthTokens ? (
+            <p style={{ color: 'red' }}>{formErrors?.incomingAuthTokens}</p>
           ) : null}
         </div>
       </span>
@@ -93,20 +83,14 @@ function NewPeer() {
         <div>
           {/* TODO: soon it will only be required for either incoming HTTP fields or outgoing HTTP fileds to be filled */}
           <input
-            className={
-              actionData?.formErrors?.outgoingAuthToken
-                ? 'input-error'
-                : 'input'
-            }
+            className={formErrors?.outgoingAuthToken ? 'input-error' : 'input'}
             type='text'
             id='outgoing-auth-token'
             name='outgoingAuthToken'
             required
           />
-          {actionData?.formErrors?.outgoingAuthToken ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.outgoingAuthToken}
-            </p>
+          {formErrors?.outgoingAuthToken ? (
+            <p style={{ color: 'red' }}>{formErrors?.outgoingAuthToken}</p>
           ) : null}
         </div>
       </span>
@@ -114,18 +98,14 @@ function NewPeer() {
         <label htmlFor='outgoing-endpoint'>Outgoing HTTP endpoint *</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.outgoingEndpoint ? 'input-error' : 'input'
-            }
+            className={formErrors?.outgoingEndpoint ? 'input-error' : 'input'}
             type='text'
             id='outgoing-endpoint'
             name='outgoingEndpoint'
             required
           />
-          {actionData?.formErrors?.outgoingEndpoint ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.outgoingEndpoint}
-            </p>
+          {formErrors?.outgoingEndpoint ? (
+            <p style={{ color: 'red' }}>{formErrors?.outgoingEndpoint}</p>
           ) : null}
         </div>
       </span>
@@ -133,16 +113,14 @@ function NewPeer() {
         <label htmlFor='asset-code'>Asset ID *</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.assetId ? 'input-error' : 'input'
-            }
+            className={formErrors?.assetId ? 'input-error' : 'input'}
             type='text'
             id='asset-id'
             name='assetId'
             required
           />
-          {actionData?.formErrors?.assetId ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetId}</p>
+          {formErrors?.assetId ? (
+            <p style={{ color: 'red' }}>{formErrors?.assetId}</p>
           ) : null}
         </div>
       </span>
@@ -150,17 +128,13 @@ function NewPeer() {
         <label htmlFor='max-pckt-amount'>Max packet amount</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.maxPacketAmount ? 'input-error' : 'input'
-            }
+            className={formErrors?.maxPacketAmount ? 'input-error' : 'input'}
             type='number'
             id='max-pckt-amount'
             name='maxPacketAmount'
           />
-          {actionData?.formErrors?.maxPacketAmount ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.maxPacketAmount}
-            </p>
+          {formErrors?.maxPacketAmount ? (
+            <p style={{ color: 'red' }}>{formErrors?.maxPacketAmount}</p>
           ) : null}
         </div>
       </span>
@@ -227,12 +201,12 @@ export async function action({ request }: ActionArgs) {
   }
 
   // If there are errors, return the form errors object
-  if (Object.values(formErrors).some(Boolean)) return { formErrors }
+  if (Object.values(formErrors).some(Boolean)) return json({ ...formErrors })
 
   const variables: { input: CreatePeerInput } = {
     input: {
-      name: formData.name,
-      assetId: formData.assetId,
+      name: formData.name as string,
+      assetId: formData.assetId as string,
       http: {
         incoming: incomingAuthTokens
           ? {
@@ -240,14 +214,14 @@ export async function action({ request }: ActionArgs) {
             }
           : null,
         outgoing: {
-          authToken: formData.outgoingAuthToken,
-          endpoint: formData.outgoingEndpoint
+          authToken: formData.outgoingAuthToken as string,
+          endpoint: formData.outgoingEndpoint as string
         }
       },
       maxPacketAmount: formData.maxPacketAmount
         ? parseInt(formData.maxPacketAmount as string, 10)
         : null,
-      staticIlpAddress: formData.staticIlpAddress
+      staticIlpAddress: formData.staticIlpAddress as string
     }
   }
 

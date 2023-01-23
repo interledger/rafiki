@@ -74,6 +74,7 @@ export async function loader({ params }: LoaderArgs) {
             asset {
               scale
               code
+              id
             }
             http {
               outgoing {
@@ -138,6 +139,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
   if (peerId) {
     return (
       <div>
+        <h1>Error</h1>
         <p>There was an error loading the peer with ID {peerId}.</p>
         {error.message.length > 0 && <p>Error: {error.message}</p>}
         <Link to='/peers'>

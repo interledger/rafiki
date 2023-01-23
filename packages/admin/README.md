@@ -13,13 +13,14 @@ pnpm dev
 
 This starts your app in development mode, rebuilding assets on file changes. You can access your app on [http://localhost:3005](http://localhost:3005).
 
-
 Currently you need to also manually build your CSS assets whenever you make changes:
+
 ```sh
 pnpm scss
 ```
 
 To format and lint code:
+
 ```sh
 pnpm format
 ```

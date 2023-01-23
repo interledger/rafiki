@@ -20,23 +20,21 @@ import { apolloClient } from '../lib/apolloClient.server'
 function NewAsset() {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
-  const actionData = useActionData()
+  const formErrors = useActionData<typeof action>()
   return (
     <Form method='post' id='asset-form'>
       <span>
         <label htmlFor='asset-code'>Asset code *</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.assetCode ? 'input-error' : 'input'
-            }
+            className={formErrors?.assetCode ? 'input-error' : 'input'}
             type='text'
             id='asset-code'
             name='assetCode'
             required
           />
-          {actionData?.formErrors?.assetCode ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetCode}</p>
+          {formErrors?.assetCode ? (
+            <p style={{ color: 'red' }}>{formErrors?.assetCode}</p>
           ) : null}
         </div>
       </span>
@@ -44,16 +42,14 @@ function NewAsset() {
         <label htmlFor='asset-scale'>Asset scale *</label>
         <div>
           <input
-            className={
-              actionData?.formErrors?.assetScale ? 'input-error' : 'input'
-            }
+            className={formErrors?.assetScale ? 'input-error' : 'input'}
             type='number'
             id='asset-scale'
             name='assetScale'
             required
           />
-          {actionData?.formErrors?.assetScale ? (
-            <p style={{ color: 'red' }}>{actionData?.formErrors?.assetScale}</p>
+          {formErrors?.assetScale ? (
+            <p style={{ color: 'red' }}>{formErrors?.assetScale}</p>
           ) : null}
         </div>
       </span>
@@ -62,18 +58,14 @@ function NewAsset() {
         <div>
           <input
             className={
-              actionData?.formErrors?.withdrawalThreshold
-                ? 'input-error'
-                : 'input'
+              formErrors?.withdrawalThreshold ? 'input-error' : 'input'
             }
             type='number'
             id='withdrawal-threshold'
             name='withdrawalThreshold'
           />
-          {actionData?.formErrors?.withdrawalThreshold ? (
-            <p style={{ color: 'red' }}>
-              {actionData?.formErrors?.withdrawalThreshold}
-            </p>
+          {formErrors?.withdrawalThreshold ? (
+            <p style={{ color: 'red' }}>{formErrors?.withdrawalThreshold}</p>
           ) : null}
         </div>
       </span>
@@ -122,11 +114,11 @@ export async function action({ request }: ActionArgs) {
   }
 
   // If there are errors, return the form errors object
-  if (Object.values(formErrors).some(Boolean)) return { formErrors }
+  if (Object.values(formErrors).some(Boolean)) return json({ ...formErrors })
 
   const variables: { input: CreateAssetInput } = {
     input: {
-      code: formData.assetCode,
+      code: formData.assetCode as string,
       scale: parseInt(formData.assetScale as string, 10),
       withdrawalThreshold: formData.withdrawalThreshold
         ? parseInt(formData.withdrawalThreshold as string, 10)
