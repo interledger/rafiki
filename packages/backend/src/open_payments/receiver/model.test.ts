@@ -64,7 +64,7 @@ describe('Receiver Model', (): void => {
       })
     })
 
-    test('fails to create receiver if payment completed', async () => {
+    test('throws if incoming payment is completed', async () => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id
@@ -72,18 +72,18 @@ describe('Receiver Model', (): void => {
 
       incomingPayment.state = IncomingPaymentState.Completed
 
-      const receiver = Receiver.fromIncomingPayment(
-        incomingPayment.toOpenPaymentsType({
-          ilpStreamConnection: connectionService.get(
-            incomingPayment
-          ) as Connection
-        })
-      )
-
-      expect(receiver).toBeUndefined()
+      expect(() =>
+        Receiver.fromIncomingPayment(
+          incomingPayment.toOpenPaymentsType({
+            ilpStreamConnection: connectionService.get(
+              incomingPayment
+            ) as Connection
+          })
+        )
+      ).toThrow('Cannot create receiver from completed incoming payment')
     })
 
-    test('fails to create receiver if payment expired', async () => {
+    test('throws if incoming payment is expired', async () => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id
@@ -91,15 +91,34 @@ describe('Receiver Model', (): void => {
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
 
-      const receiver = Receiver.fromIncomingPayment(
-        incomingPayment.toOpenPaymentsType({
-          ilpStreamConnection: connectionService.get(
-            incomingPayment
-          ) as Connection
-        })
-      )
+      expect(() =>
+        Receiver.fromIncomingPayment(
+          incomingPayment.toOpenPaymentsType({
+            ilpStreamConnection: connectionService.get(
+              incomingPayment
+            ) as Connection
+          })
+        )
+      ).toThrow('Cannot create receiver from expired incoming payment')
+    })
 
-      expect(receiver).toBeUndefined()
+    test('throws if stream connection has invalid ILP address', async () => {
+      const paymentPointer = await createPaymentPointer(deps)
+      const incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId: paymentPointer.id
+      })
+
+      const connection = connectionService.get(incomingPayment) as Connection
+
+      ;(connection.ilpAddress as string) = 'not base 64 encoded'
+
+      expect(() =>
+        Receiver.fromIncomingPayment(
+          incomingPayment.toOpenPaymentsType({
+            ilpStreamConnection: connection
+          })
+        )
+      ).toThrow('Invalid ILP address on stream connection')
     })
   })
 
@@ -139,7 +158,9 @@ describe('Receiver Model', (): void => {
 
       connection.ilpAddress = 'not base 64 encoded'
 
-      expect(Receiver.fromConnection(connection)).toBeUndefined()
+      expect(() => Receiver.fromConnection(connection)).toThrow(
+        'Invalid ILP address on stream connection'
+      )
     })
   })
 })

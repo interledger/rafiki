@@ -38,7 +38,7 @@ export class Receiver extends ConnectionBase {
     connection: OpenPaymentsConnection
   ): Receiver | undefined {
     if (!isValidIlpAddress(connection.ilpAddress)) {
-      return undefined
+      throw new Error('Invalid ILP address on stream connection')
     }
 
     return new this({
@@ -52,9 +52,13 @@ export class Receiver extends ConnectionBase {
 
   static fromIncomingPayment(
     incomingPayment: OpenPaymentsIncomingPayment
-  ): Receiver | undefined {
-    if (!incomingPayment.ilpStreamConnection || incomingPayment.completed) {
-      return undefined
+  ): Receiver {
+    if (!incomingPayment.ilpStreamConnection) {
+      throw new Error('Missing stream connection on incoming payment')
+    }
+
+    if (incomingPayment.completed) {
+      throw new Error('Cannot create receiver from completed incoming payment')
     }
 
     const expiresAt = incomingPayment.expiresAt
@@ -62,7 +66,7 @@ export class Receiver extends ConnectionBase {
       : undefined
 
     if (expiresAt && expiresAt.getTime() <= Date.now()) {
-      return undefined
+      throw new Error('Cannot create receiver from expired incoming payment')
     }
 
     const incomingAmount = incomingPayment.incomingAmount
@@ -71,7 +75,7 @@ export class Receiver extends ConnectionBase {
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
     if (!isValidIlpAddress(incomingPayment.ilpStreamConnection.ilpAddress)) {
-      return undefined
+      throw new Error('Invalid ILP address on stream connection')
     }
 
     return new this(

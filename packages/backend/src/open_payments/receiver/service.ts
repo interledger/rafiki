@@ -84,16 +84,17 @@ async function createReceiver(
     return incomingPaymentOrError
   }
 
-  const receiver = Receiver.fromIncomingPayment(incomingPaymentOrError)
-
-  if (!receiver) {
+  try {
+    return Receiver.fromIncomingPayment(incomingPaymentOrError)
+  } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
-    deps.logger.error({ incomingPayment: incomingPaymentOrError }, errorMessage)
+    deps.logger.error(
+      { error: error && error['message'] ? error['message'] : 'Unknown error' },
+      errorMessage
+    )
 
-    throw new Error(errorMessage)
+    throw new Error(errorMessage, { cause: error })
   }
-
-  return receiver
 }
 
 async function createLocalIncomingPayment(
