@@ -5,8 +5,8 @@ export enum RemoteIncomingPaymentError {
   ExpiredGrant = 'ExpiredGrant'
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isRemoteIncomingPaymentError = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   o: any
 ): o is RemoteIncomingPaymentError =>
   Object.values(RemoteIncomingPaymentError).includes(o)
