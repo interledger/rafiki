@@ -35,9 +35,10 @@ import { Connection } from '../connection/model'
 import { IncomingPaymentError } from '../payment/incoming/errors'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { createAsset } from '../../tests/asset'
-import { Receiver } from './model'
 import { ReceiverError } from './errors'
 import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
+import assert from 'assert'
+import { Receiver } from './model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -116,13 +117,13 @@ describe('Receiver Service', (): void => {
           `${paymentPointer.url}/${CONNECTION_PATH}/${incomingPayment.connectionId}`
         )
 
+        const connection = connectionService.get(incomingPayment)
+
+        assert(connection instanceof Connection)
+
         const clientGetConnectionSpy = jest
           .spyOn(openPaymentsClient.ilpStreamConnection, 'get')
-          .mockImplementationOnce(async () =>
-            (
-              connectionService.get(incomingPayment) as Connection
-            ).toOpenPaymentsType()
-          )
+          .mockImplementationOnce(async () => connection.toOpenPaymentsType())
 
         await expect(receiverService.get(remoteUrl.href)).resolves.toEqual({
           assetCode: paymentPointer.asset.code,
@@ -573,6 +574,7 @@ describe('Receiver Service', (): void => {
             externalRef
           })
 
+          assert(receiver instanceof Receiver)
           expect(receiver).toEqual({
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale,
