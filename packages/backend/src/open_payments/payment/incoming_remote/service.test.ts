@@ -17,6 +17,7 @@ import {
   mockPaymentPointer
 } from 'open-payments'
 import { GrantService } from '../../grant/service'
+import { RemoteIncomingPaymentError } from './errors'
 
 describe('Remote Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -67,11 +68,11 @@ describe('Remote Incoming Payment Service', (): void => {
           throw new Error('No payment pointer')
         })
 
-      await expect(
-        remoteIncomingPaymentService.create({
+      expect(
+        await remoteIncomingPaymentService.create({
           paymentPointerUrl: paymentPointer.id
         })
-      ).rejects.toThrow('Could not get payment pointer')
+      ).toBe(RemoteIncomingPaymentError.UnknownPaymentPointer)
       expect(clientGetPaymentPointerSpy).toHaveBeenCalledWith({
         url: paymentPointer.id
       })
@@ -123,33 +124,33 @@ describe('Remote Incoming Payment Service', (): void => {
         )
       })
 
-      test('throws if grant expired', async () => {
+      test('returns error if grant expired', async () => {
         await grantService.create({
           ...grantOptions,
           expiresIn: -10
         })
 
-        await expect(
-          remoteIncomingPaymentService.create({
+        expect(
+          await remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).rejects.toThrow('Grant access token expired')
+        ).toBe(RemoteIncomingPaymentError.ExpiredGrant)
       })
 
-      test('throws if grant does not have accessToken', async () => {
+      test('returns error if grant does not have accessToken', async () => {
         await grantService.create({
           ...grantOptions,
           accessToken: undefined
         })
 
-        await expect(
-          remoteIncomingPaymentService.create({
+        expect(
+          await remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).rejects.toThrow('Grant has undefined accessToken')
+        ).toBe(RemoteIncomingPaymentError.InvalidGrant)
       })
 
-      test('throws if error when creating the incoming payment', async () => {
+      test('returns error if fails to create the incoming payment', async () => {
         await grantService.create(grantOptions)
         jest
           .spyOn(openPaymentsClient.incomingPayment, 'create')
@@ -157,11 +158,11 @@ describe('Remote Incoming Payment Service', (): void => {
             throw new Error('Error in client')
           })
 
-        await expect(
-          remoteIncomingPaymentService.create({
+        expect(
+          await remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).rejects.toThrow('Error creating remote incoming payment')
+        ).toBe(RemoteIncomingPaymentError.InvalidRequest)
       })
     })
 
@@ -237,16 +238,16 @@ describe('Remote Incoming Payment Service', (): void => {
         )
       })
 
-      test('throws if created grant is interactive', async () => {
+      test('returns error if created grant is interactive', async () => {
         jest
           .spyOn(openPaymentsClient.grant, 'request')
           .mockResolvedValueOnce(mockInteractiveGrant())
 
-        await expect(
-          remoteIncomingPaymentService.create({
+        expect(
+          await remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).rejects.toThrow('Grant request required interaction')
+        ).toBe(RemoteIncomingPaymentError.InvalidGrant)
       })
     })
   })

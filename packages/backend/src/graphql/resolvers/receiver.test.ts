@@ -10,6 +10,7 @@ import { mockIncomingPayment, mockPaymentPointer } from 'open-payments'
 import { CreateReceiverResponse } from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
 import { Receiver } from '../../open_payments/receiver/model'
+import { ReceiverError } from '../../open_payments/receiver/errors'
 
 describe('Receiver Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -140,10 +141,64 @@ describe('Receiver Resolver', (): void => {
       }
     )
 
-    test('returns 500 if cannot create receiver', async (): Promise<void> => {
+    test('returns error if error returned when creating receiver', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(receiverService, 'create')
-        .mockImplementationOnce(() => {
+        .mockResolvedValueOnce(ReceiverError.UnknownPaymentPointer)
+
+      const input = {
+        paymentPointerUrl: paymentPointer.id
+      }
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CreateReceiver($input: CreateReceiverInput!) {
+              createReceiver(input: $input) {
+                code
+                success
+                message
+                receiver {
+                  id
+                  paymentPointerUrl
+                  completed
+                  expiresAt
+                  incomingAmount {
+                    value
+                    assetCode
+                    assetScale
+                  }
+                  receivedAmount {
+                    value
+                    assetCode
+                    assetScale
+                  }
+                  description
+                  externalRef
+                  createdAt
+                  updatedAt
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then((query): CreateReceiverResponse => query.data?.createReceiver)
+
+      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(query).toEqual({
+        __typename: 'CreateReceiverResponse',
+        code: '404',
+        success: false,
+        message: 'unknown payment pointer',
+        receiver: null
+      })
+    })
+
+    test('returns error if error thrown when creating receiver', async (): Promise<void> => {
+      const createSpy = jest
+        .spyOn(receiverService, 'create')
+        .mockImplementationOnce((_) => {
           throw new Error('Cannot create receiver')
         })
 

@@ -9,6 +9,10 @@ import { Grant } from '../../grant/model'
 import { GrantService } from '../../grant/service'
 import { BaseService } from '../../../shared/baseService'
 import { Amount, serializeAmount } from '../../amount'
+import {
+  isRemoteIncomingPaymentError,
+  RemoteIncomingPaymentError
+} from './errors'
 
 interface CreateRemoteIncomingPaymentArgs {
   paymentPointerUrl: string
@@ -21,7 +25,7 @@ interface CreateRemoteIncomingPaymentArgs {
 export interface RemoteIncomingPaymentService {
   create(
     args: CreateRemoteIncomingPaymentArgs
-  ): Promise<OpenPaymentsIncomingPayment>
+  ): Promise<OpenPaymentsIncomingPayment | RemoteIncomingPaymentError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -49,24 +53,29 @@ export async function createRemoteIncomingPaymentService(
 async function create(
   deps: ServiceDependencies,
   args: CreateRemoteIncomingPaymentArgs
-): Promise<OpenPaymentsIncomingPayment> {
+): Promise<OpenPaymentsIncomingPayment | RemoteIncomingPaymentError> {
   const { paymentPointerUrl } = args
-  const grant = await getGrant(deps, paymentPointerUrl, [
+  const grantOrError = await getGrant(deps, paymentPointerUrl, [
     AccessAction.Create,
     AccessAction.ReadAll
   ])
 
-  if (!grant.accessToken) {
-    const errorMessage = 'Grant has undefined accessToken'
-    deps.logger.warn({ grantId: grant?.id, paymentPointerUrl }, errorMessage)
-    throw new Error(errorMessage)
+  if (isRemoteIncomingPaymentError(grantOrError)) {
+    return grantOrError
+  }
+
+  if (!grantOrError.accessToken) {
+    const errorMessage =
+      'Grant for remote incoming payment is missing access token'
+    deps.logger.warn({ grant: grantOrError }, errorMessage)
+    return RemoteIncomingPaymentError.InvalidGrant
   }
 
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
         paymentPointer: paymentPointerUrl,
-        accessToken: grant.accessToken
+        accessToken: grantOrError.accessToken
       },
       {
         incomingAmount: args.incomingAmount
@@ -80,7 +89,7 @@ async function create(
   } catch (error) {
     const errorMessage = 'Error creating remote incoming payment'
     deps.logger.error({ error, paymentPointerUrl }, errorMessage)
-    throw new Error(errorMessage, { cause: error })
+    return RemoteIncomingPaymentError.InvalidRequest
   }
 }
 
@@ -88,7 +97,7 @@ async function getGrant(
   deps: ServiceDependencies,
   paymentPointerUrl: string,
   accessActions: AccessAction[]
-): Promise<Grant> {
+): Promise<Grant | RemoteIncomingPaymentError> {
   let paymentPointer: OpenPaymentsPaymentPointer
 
   try {
@@ -98,7 +107,7 @@ async function getGrant(
   } catch (error) {
     const errorMessage = 'Could not get payment pointer'
     deps.logger.error({ paymentPointerUrl, error }, errorMessage)
-    throw new Error(errorMessage)
+    return RemoteIncomingPaymentError.UnknownPaymentPointer
   }
 
   const grantOptions = {
@@ -114,7 +123,7 @@ async function getGrant(
       // TODO https://github.com/interledger/rafiki/issues/795
       const errorMessage = 'Grant access token expired'
       deps.logger.error({ grantOptions }, errorMessage)
-      throw new Error(errorMessage)
+      return RemoteIncomingPaymentError.ExpiredGrant
     }
     return existingGrant
   }
@@ -144,7 +153,7 @@ async function getGrant(
     })
   }
 
-  const errorMessage = 'Grant request required interaction'
+  const errorMessage = 'Grant request requires interaction'
   deps.logger.warn({ grantOptions }, errorMessage)
-  throw new Error(errorMessage)
+  return RemoteIncomingPaymentError.InvalidGrant
 }

@@ -16,10 +16,12 @@ import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
 import { Amount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
+import { isIncomingPaymentError } from '../payment/incoming/errors'
 import {
-  errorToMessage as incomingPaymentErrorMessageMap,
-  isIncomingPaymentError
-} from '../payment/incoming/errors'
+  isReceiverError,
+  ReceiverError,
+  receiverErrorToMessage
+} from './errors'
 
 interface CreateReceiverArgs {
   paymentPointerUrl: string
@@ -32,7 +34,7 @@ interface CreateReceiverArgs {
 // A receiver is resolved from an incoming payment or a connection
 export interface ReceiverService {
   get(url: string): Promise<Receiver | undefined>
-  create(args: CreateReceiverArgs): Promise<Receiver>
+  create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -69,20 +71,24 @@ export async function createReceiverService(
 async function createReceiver(
   deps: ServiceDependencies,
   args: CreateReceiverArgs
-): Promise<Receiver> {
+): Promise<Receiver | ReceiverError> {
   const localPaymentPointer = await deps.paymentPointerService.getByUrl(
     args.paymentPointerUrl
   )
 
-  const incomingPayment = localPaymentPointer
+  const incomingPaymentOrError = localPaymentPointer
     ? await createLocalIncomingPayment(deps, args, localPaymentPointer)
     : await deps.remoteIncomingPaymentService.create(args)
 
-  const receiver = Receiver.fromIncomingPayment(incomingPayment)
+  if (isReceiverError(incomingPaymentOrError)) {
+    return incomingPaymentOrError
+  }
+
+  const receiver = Receiver.fromIncomingPayment(incomingPaymentOrError)
 
   if (!receiver) {
     const errorMessage = 'Could not create receiver from incoming payment'
-    deps.logger.error({ incomingPayment }, errorMessage)
+    deps.logger.error({ incomingPayment: incomingPaymentOrError }, errorMessage)
 
     throw new Error(errorMessage)
   }
@@ -94,7 +100,7 @@ async function createLocalIncomingPayment(
   deps: ServiceDependencies,
   args: CreateReceiverArgs,
   paymentPointer: PaymentPointer
-): Promise<OpenPaymentsIncomingPayment> {
+): Promise<OpenPaymentsIncomingPayment | ReceiverError> {
   const { description, expiresAt, incomingAmount, externalRef } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
@@ -108,11 +114,11 @@ async function createLocalIncomingPayment(
   if (isIncomingPaymentError(incomingPaymentOrError)) {
     const errorMessage = 'Could not create local incoming payment'
     deps.logger.error(
-      { error: incomingPaymentErrorMessageMap[incomingPaymentOrError] },
+      { error: receiverErrorToMessage(incomingPaymentOrError) },
       errorMessage
     )
 
-    throw new Error(errorMessage)
+    return incomingPaymentOrError
   }
 
   const connection = deps.connectionService.get(incomingPaymentOrError)

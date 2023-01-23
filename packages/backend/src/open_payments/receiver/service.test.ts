@@ -35,6 +35,9 @@ import { Connection } from '../connection/model'
 import { IncomingPaymentError } from '../payment/incoming/errors'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { createAsset } from '../../tests/asset'
+import { Receiver } from './model'
+import { ReceiverError } from './errors'
+import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -507,20 +510,18 @@ describe('Receiver Service', (): void => {
         }
       )
 
-      test('throws if could not create remote incoming payment', async (): Promise<void> => {
+      test('returns error if could not create remote incoming payment', async (): Promise<void> => {
         jest
           .spyOn(remoteIncomingPaymentService, 'create')
           .mockResolvedValueOnce(
-            mockIncomingPayment({
-              completed: true
-            })
+            RemoteIncomingPaymentError.UnknownPaymentPointer
           )
 
-        await expect(
-          receiverService.create({
+        expect(
+          await receiverService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).rejects.toThrow('Could not create receiver from incoming payment')
+        ).toBe(ReceiverError.UnknownPaymentPointer)
       })
     })
 
@@ -564,13 +565,13 @@ describe('Receiver Service', (): void => {
             remoteIncomingPaymentService,
             'create'
           )
-          const receiver = await receiverService.create({
+          const receiver = (await receiverService.create({
             paymentPointerUrl: paymentPointer.url,
             incomingAmount,
             expiresAt,
             description,
             externalRef
-          })
+          })) as Receiver
 
           expect(receiver).toEqual({
             assetCode: paymentPointer.asset.code,
@@ -602,16 +603,16 @@ describe('Receiver Service', (): void => {
         }
       )
 
-      test('throws if error when creating local incoming payment', async (): Promise<void> => {
+      test('returns error if could not create local incoming payment', async (): Promise<void> => {
         jest
           .spyOn(incomingPaymentService, 'create')
           .mockResolvedValueOnce(IncomingPaymentError.InvalidAmount)
 
-        await expect(
-          receiverService.create({
+        expect(
+          await receiverService.create({
             paymentPointerUrl: paymentPointer.url
           })
-        ).rejects.toThrow('Could not create local incoming payment')
+        ).toBe(ReceiverError.InvalidAmount)
       })
 
       test('throws if error when getting connection for local incoming payment', async (): Promise<void> => {
