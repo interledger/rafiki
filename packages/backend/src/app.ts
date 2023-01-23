@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { Server } from 'http'
+import http, { Server } from 'http'
 import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
@@ -10,7 +10,9 @@ import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
-import { ApolloServer } from 'apollo-server-koa'
+import { ApolloServer } from '@apollo/server'
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { koaMiddleware } from '@as-integrations/koa'
 
 import { IAppConfig } from './config/app'
 import { addResolversToSchema } from '@graphql-tools/schema'
@@ -212,6 +214,8 @@ export class App {
 
   public async startAdminServer(port: number | string): Promise<void> {
     const koa = await this.createKoaServer()
+    const httpServer = http.createServer(koa.callback())
+    const router = new Router()
 
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
@@ -224,21 +228,31 @@ export class App {
       resolvers
     })
 
-    // Setup Apollo on graphql endpoint
+    // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
-      context: async (): Promise<ApolloContext> => {
-        return {
-          container: this.container,
-          logger: await this.container.use('logger')
-        }
-      }
+      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
 
     await this.apolloServer.start()
-    koa.use(this.apolloServer.getMiddleware())
 
-    this.adminServer = koa.listen(port)
+    koa.use(bodyParser())
+
+    router.post(
+      '/graphql',
+      koaMiddleware(this.apolloServer, {
+        context: async (): Promise<ApolloContext> => {
+          return {
+            container: this.container,
+            logger: await this.container.use('logger')
+          }
+        }
+      })
+    )
+
+    koa.use(router.routes()).use(router.allowedMethods())
+
+    this.adminServer = httpServer.listen(port)
   }
 
   public async startOpenPaymentsServer(port: number | string): Promise<void> {

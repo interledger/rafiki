@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import assert from 'assert'
 import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'

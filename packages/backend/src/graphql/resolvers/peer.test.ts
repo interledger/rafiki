@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker'
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import assert from 'assert'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'

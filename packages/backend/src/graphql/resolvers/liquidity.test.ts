@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
