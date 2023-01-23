@@ -7,8 +7,8 @@ import { ApolloContext } from '../../app'
 import { Receiver } from '../../open_payments/receiver/model'
 import {
   isReceiverError,
-  receiverErrorToCode,
-  receiverErrorToMessage
+  errorToCode as receiverErrorToCode,
+  errorToMessage as receiverErrorToMessage
 } from '../../open_payments/receiver/errors'
 
 export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] =
