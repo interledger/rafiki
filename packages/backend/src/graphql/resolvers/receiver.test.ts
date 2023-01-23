@@ -59,7 +59,7 @@ describe('Receiver Resolver', (): void => {
               ? serializeAmount(incomingAmount)
               : undefined
           })
-        ) as Receiver
+        )
 
         const createSpy = jest
           .spyOn(receiverService, 'create')

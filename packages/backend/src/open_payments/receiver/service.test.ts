@@ -565,13 +565,13 @@ describe('Receiver Service', (): void => {
             remoteIncomingPaymentService,
             'create'
           )
-          const receiver = (await receiverService.create({
+          const receiver = await receiverService.create({
             paymentPointerUrl: paymentPointer.url,
             incomingAmount,
             expiresAt,
             description,
             externalRef
-          })) as Receiver
+          })
 
           expect(receiver).toEqual({
             assetCode: paymentPointer.asset.code,
