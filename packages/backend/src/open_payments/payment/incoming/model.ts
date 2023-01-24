@@ -275,7 +275,7 @@ export class IncomingPayment
 
     return {
       ...baseIncomingPayment,
-      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType().id
+      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
     }
   }
 }
