@@ -15,18 +15,50 @@ interface OpenPaymentsConnectionWithIlpAddress
   ilpAddress: IlpAddress
 }
 
+type ReceiverIncomingPayment = Readonly<
+  Omit<
+    OpenPaymentsIncomingPayment,
+    | 'ilpStreamConnection'
+    | 'expiresAt'
+    | 'receivedAmount'
+    | 'incomingAmount'
+    | 'createdAt'
+    | 'updatedAt'
+  > & {
+    expiresAt?: Date
+    createdAt: Date
+    updatedAt: Date
+    receivedAmount: Amount
+    incomingAmount?: Amount
+  }
+>
+
 export class Receiver extends ConnectionBase {
   static fromConnection(
     connection: OpenPaymentsConnection
   ): Receiver | undefined {
-    return this.fromOpenPaymentsConnection(connection)
+    if (!isValidIlpAddress(connection.ilpAddress)) {
+      throw new Error('Invalid ILP address on stream connection')
+    }
+
+    return new this({
+      id: connection.id,
+      assetCode: connection.assetCode,
+      assetScale: connection.assetScale,
+      sharedSecret: connection.sharedSecret,
+      ilpAddress: connection.ilpAddress
+    })
   }
 
   static fromIncomingPayment(
     incomingPayment: OpenPaymentsIncomingPayment
-  ): Receiver | undefined {
-    if (!incomingPayment.ilpStreamConnection || incomingPayment.completed) {
-      return undefined
+  ): Receiver {
+    if (!incomingPayment.ilpStreamConnection) {
+      throw new Error('Missing stream connection on incoming payment')
+    }
+
+    if (incomingPayment.completed) {
+      throw new Error('Cannot create receiver from completed incoming payment')
     }
 
     const expiresAt = incomingPayment.expiresAt
@@ -34,7 +66,7 @@ export class Receiver extends ConnectionBase {
       : undefined
 
     if (expiresAt && expiresAt.getTime() <= Date.now()) {
-      return undefined
+      throw new Error('Cannot create receiver from expired incoming payment')
     }
 
     const incomingAmount = incomingPayment.incomingAmount
@@ -42,45 +74,33 @@ export class Receiver extends ConnectionBase {
       : undefined
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
-    return this.fromOpenPaymentsConnection(
-      incomingPayment.ilpStreamConnection,
-      incomingAmount?.value,
-      receivedAmount.value,
-      expiresAt
-    )
-  }
-
-  private static fromOpenPaymentsConnection(
-    connection: OpenPaymentsConnection,
-    incomingAmountValue?: bigint,
-    receivedAmountValue?: bigint,
-    expiresAt?: Date
-  ): Receiver | undefined {
-    const ilpAddress = connection.ilpAddress
-
-    if (!isValidIlpAddress(ilpAddress)) {
-      return undefined
+    if (!isValidIlpAddress(incomingPayment.ilpStreamConnection.ilpAddress)) {
+      throw new Error('Invalid ILP address on stream connection')
     }
 
     return new this(
       {
-        id: connection.id,
-        assetCode: connection.assetCode,
-        assetScale: connection.assetScale,
-        sharedSecret: connection.sharedSecret,
-        ilpAddress
+        ...incomingPayment.ilpStreamConnection,
+        ilpAddress: incomingPayment.ilpStreamConnection.ilpAddress
       },
-      incomingAmountValue,
-      receivedAmountValue,
-      expiresAt
+      {
+        id: incomingPayment.id,
+        completed: incomingPayment.completed,
+        paymentPointer: incomingPayment.paymentPointer,
+        expiresAt,
+        receivedAmount,
+        incomingAmount,
+        description: incomingPayment.description,
+        externalRef: incomingPayment.externalRef,
+        createdAt: new Date(incomingPayment.createdAt),
+        updatedAt: new Date(incomingPayment.updatedAt)
+      }
     )
   }
 
   private constructor(
     connection: OpenPaymentsConnectionWithIlpAddress,
-    private readonly incomingAmountValue?: bigint,
-    private readonly receivedAmountValue?: bigint,
-    public readonly expiresAt?: Date
+    public incomingPayment?: ReceiverIncomingPayment
   ) {
     super(
       connection.ilpAddress,
@@ -98,9 +118,9 @@ export class Receiver extends ConnectionBase {
   }
 
   public get incomingAmount(): Amount | undefined {
-    if (this.incomingAmountValue) {
+    if (this.incomingPayment?.incomingAmount) {
       return {
-        value: this.incomingAmountValue,
+        value: this.incomingPayment.incomingAmount.value,
         assetCode: this.assetCode,
         assetScale: this.assetScale
       }
@@ -109,9 +129,9 @@ export class Receiver extends ConnectionBase {
   }
 
   public get receivedAmount(): Amount | undefined {
-    if (this.receivedAmountValue !== undefined) {
+    if (this.incomingPayment?.receivedAmount) {
       return {
-        value: this.receivedAmountValue,
+        value: this.incomingPayment.receivedAmount.value,
         assetCode: this.assetCode,
         assetScale: this.assetScale
       }
