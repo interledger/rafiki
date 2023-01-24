@@ -7,7 +7,7 @@ import {
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
-import { IncomingPayment, IncomingPaymentJSON } from './model'
+import { IncomingPayment } from './model'
 import {
   errorToCode,
   errorToMessage,
@@ -16,8 +16,13 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../payment_pointer/routes'
-import { ConnectionJSON } from '../../connection/model'
+import { Connection } from '../../connection/model'
 import { ConnectionService } from '../../connection/service'
+import {
+  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
+  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+} from 'open-payments'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -69,7 +74,7 @@ async function getIncomingPayment(
   }
   if (!incomingPayment) return ctx.throw(404)
   const connection = deps.connectionService.get(incomingPayment)
-  ctx.body = incomingPaymentToBody(deps, incomingPayment, connection?.toJSON())
+  ctx.body = incomingPaymentToBody(incomingPayment, connection)
 }
 
 export type CreateBody = {
@@ -110,11 +115,7 @@ async function createIncomingPayment(
 
   ctx.status = 201
   const connection = deps.connectionService.get(incomingPaymentOrError)
-  ctx.body = incomingPaymentToBody(
-    deps,
-    incomingPaymentOrError,
-    connection?.toJSON()
-  )
+  ctx.body = incomingPaymentToBody(incomingPaymentOrError, connection)
 }
 
 async function completeIncomingPayment(
@@ -136,7 +137,7 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(deps, incomingPaymentOrError)
+  ctx.body = incomingPaymentToBody(incomingPaymentOrError)
 }
 
 async function listIncomingPayments(
@@ -148,29 +149,18 @@ async function listIncomingPayments(
       ctx,
       getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
       toBody: (payment) =>
-        incomingPaymentToBody(
-          deps,
-          payment,
-          deps.connectionService.getUrl(payment)
-        )
+        incomingPaymentToBody(payment, deps.connectionService.getUrl(payment))
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list incoming payments')
   }
 }
-
 function incomingPaymentToBody(
-  deps: ServiceDependencies,
   incomingPayment: IncomingPayment,
-  ilpStreamConnection?: ConnectionJSON | string
-): IncomingPaymentJSON {
-  const body = {
-    ...incomingPayment.toJSON(),
-    id: incomingPayment.url,
-    paymentPointer: incomingPayment.paymentPointer.url
-  } as unknown as IncomingPaymentJSON
-  if (ilpStreamConnection) {
-    body.ilpStreamConnection = ilpStreamConnection
-  }
-  return body
+  ilpStreamConnection?: Connection | string
+):
+  | OpenPaymentsIncomingPayment
+  | OpenPaymentsIncomingPaymentWithConnection
+  | OpenPaymentsIncomingPaymentWithConnectionUrl {
+  return incomingPayment.toOpenPaymentsType(ilpStreamConnection)
 }

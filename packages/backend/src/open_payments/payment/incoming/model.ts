@@ -2,7 +2,7 @@ import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { Connection, ConnectionJSON } from '../../connection/model'
+import { Connection } from '../../connection/model'
 import {
   PaymentPointer,
   PaymentPointerSubresource
@@ -11,7 +11,11 @@ import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { WebhookEvent } from '../../../webhook/model'
-import { IncomingPayment as OpenPaymentsIncomingPayment } from 'open-payments'
+import {
+  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
+  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+} from 'open-payments'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
@@ -239,12 +243,13 @@ export class IncomingPayment
     return payment
   }
 
-  public toOpenPaymentsType({
-    ilpStreamConnection
-  }: {
-    ilpStreamConnection: Connection
-  }): OpenPaymentsIncomingPayment {
-    return {
+  public toOpenPaymentsType(
+    ilpStreamConnection: Connection | string | undefined
+  ):
+    | OpenPaymentsIncomingPayment
+    | OpenPaymentsIncomingPaymentWithConnection
+    | OpenPaymentsIncomingPaymentWithConnectionUrl {
+    const baseIncomingPayment: OpenPaymentsIncomingPayment = {
       id: this.url,
       paymentPointer: this.paymentPointer.url,
       incomingAmount: this.incomingAmount
@@ -254,24 +259,23 @@ export class IncomingPayment
       completed: this.completed,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
-      expiresAt: this.expiresAt.toISOString(),
-      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
+      expiresAt: this.expiresAt.toISOString()
+    }
+
+    if (!ilpStreamConnection) {
+      return baseIncomingPayment
+    }
+
+    if (typeof ilpStreamConnection === 'string') {
+      return {
+        ...baseIncomingPayment,
+        ilpStreamConnection
+      }
+    }
+
+    return {
+      ...baseIncomingPayment,
+      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType().id
     }
   }
-}
-
-// TODO: disallow undefined
-// https://github.com/interledger/rafiki/issues/594
-export type IncomingPaymentJSON = {
-  id: string
-  paymentPointer: string
-  incomingAmount?: AmountJSON
-  receivedAmount: AmountJSON
-  completed: boolean
-  description?: string
-  externalRef?: string
-  createdAt: string
-  updatedAt: string
-  expiresAt?: string
-  ilpStreamConnection?: ConnectionJSON | string
 }
