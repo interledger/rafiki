@@ -21,3 +21,19 @@ export {
   AuthenticatedClient,
   UnauthenticatedClient
 } from './client'
+
+export {
+  mockILPStreamConnection,
+  mockPaymentPointer,
+  mockIncomingPayment,
+  mockOutgoingPayment,
+  mockIncomingPaymentPaginationResult,
+  mockOutgoingPaymentPaginationResult,
+  mockQuote,
+  mockJwk,
+  mockAccessToken,
+  mockContinuationRequest,
+  mockGrantRequest,
+  mockInteractiveGrant,
+  mockNonInteractiveGrant
+} from './test/helpers'

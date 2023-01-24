@@ -83,7 +83,7 @@ export const mockILPStreamConnection = (
 ): ILPStreamConnection => ({
   id: uuid(),
   sharedSecret: base64url('sharedSecret'),
-  ilpAddress: 'ilpAddress',
+  ilpAddress: 'test.ilpAddress',
   assetCode: 'USD',
   assetScale: 2,
   ...overrides
@@ -92,7 +92,7 @@ export const mockILPStreamConnection = (
 export const mockIncomingPayment = (
   overrides?: Partial<IncomingPayment>
 ): IncomingPayment => ({
-  id: uuid(),
+  id: `https://example.com/.well-known/pay/incoming-payments/${uuid()}`,
   paymentPointer: 'paymentPointer',
   completed: false,
   incomingAmount: {
