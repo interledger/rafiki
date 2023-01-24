@@ -17,16 +17,9 @@ export type Scalars = {
 export type Grant = {
   __typename?: 'Grant';
   createdAt: Scalars['String'];
-  identifier: Scalars['String'];
-  state: GrantState;
+  id: Scalars['String'];
+  state: Scalars['String'];
 };
-
-export enum GrantState {
-  Granted = 'Granted',
-  Pending = 'Pending',
-  Rejected = 'Rejected',
-  Revoked = 'Revoked'
-}
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -36,7 +29,7 @@ export type Mutation = {
 
 
 export type MutationRevokeGrantArgs = {
-  identifier: Scalars['String'];
+  input: RevokeGrantInput;
 };
 
 export type MutationResponse = {
@@ -48,6 +41,10 @@ export type MutationResponse = {
 export type Query = {
   __typename?: 'Query';
   grants: Array<Grant>;
+};
+
+export type RevokeGrantInput = {
+  id: Scalars['String'];
 };
 
 export type RevokeGrantMutationResponse = MutationResponse & {
@@ -129,10 +126,10 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
-  GrantState: ResolverTypeWrapper<Partial<GrantState>>;
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['RevokeGrantMutationResponse'];
   Query: ResolverTypeWrapper<{}>;
+  RevokeGrantInput: ResolverTypeWrapper<Partial<RevokeGrantInput>>;
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
 };
@@ -144,19 +141,20 @@ export type ResolversParentTypes = {
   Mutation: {};
   MutationResponse: ResolversParentTypes['RevokeGrantMutationResponse'];
   Query: {};
+  RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;
   String: Partial<Scalars['String']>;
 };
 
 export type GrantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Grant'] = ResolversParentTypes['Grant']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  identifier?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  state?: Resolver<ResolversTypes['GrantState'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
-  revokeGrant?: Resolver<ResolversTypes['RevokeGrantMutationResponse'], ParentType, ContextType, RequireFields<MutationRevokeGrantArgs, 'identifier'>>;
+  revokeGrant?: Resolver<ResolversTypes['RevokeGrantMutationResponse'], ParentType, ContextType, RequireFields<MutationRevokeGrantArgs, 'input'>>;
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {

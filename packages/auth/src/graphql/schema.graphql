@@ -1,22 +1,20 @@
 type Query {
-    grants: [Grant!]!
+  grants: [Grant!]!
 }
 
 type Mutation {
-    "Revoke Grant"
-    revokeGrant(
-        input: RevokeGrantInput!
-    ): RevokeGrantMutationResponse!
+  "Revoke Grant"
+  revokeGrant(input: RevokeGrantInput!): RevokeGrantMutationResponse!
 }
 
 input RevokeGrantInput {
-    identifier: String!
+  id: String!
 }
 
 type Grant {
-    identifier: String!
-    state: GrantState!
-    createdAt: String!
+  id: String!
+  state: String!
+  createdAt: String!
 }
 
 type RevokeGrantMutationResponse implements MutationResponse {
@@ -30,11 +28,4 @@ interface MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-}
-
-enum GrantState {
-    Pending
-    Granted
-    Revoked
-    Rejected
 }

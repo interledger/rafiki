@@ -11,7 +11,7 @@
     "build:deps": "pnpm --filter open-payments build && pnpm --filter token-introspection build",
     "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "test": "jest --passWithNoTests --maxWorkers=50%",
+    "test": "jest --passWithNoTests --maxWorkers=50% --detectOpenHandles",
     "prepack": "pnpm build",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/"
   },

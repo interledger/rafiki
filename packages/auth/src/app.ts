@@ -106,7 +106,7 @@ export class App {
   }
   public isShuttingDown = false
 
-  public constructor(private container: IocContract<AppServices>) { }
+  public constructor(private container: IocContract<AppServices>) {}
 
   /**
    * The boot function exists because the functions that we register on the container with the `bind` method are async.
@@ -118,7 +118,7 @@ export class App {
     this.config = await this.container.use('config')
     this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
-    this.publicRouter = new Router<DefaultState, AppContext>()
+
     this.databaseCleanupRules = {
       accessTokens: {
         absoluteStartTimeColumnName: 'createdAt',
@@ -126,8 +126,6 @@ export class App {
         defaultExpirationOffsetDays: this.config.accessTokenDeletionDays
       }
     }
-
-    await this._setupRoutes()
 
     if (this.config.env !== 'test') {
       for (let i = 0; i < this.config.databaseCleanupWorkers; i++) {
@@ -170,6 +168,136 @@ export class App {
   public async startAuthServer(port: number | string): Promise<void> {
     const koa = await this.createKoaServer()
 
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+    router.get('/healthz', (ctx: AppContext): void => {
+      ctx.status = 200
+    })
+
+    router.get('/discovery', (ctx: AppContext): void => {
+      ctx.body = {
+        grant_request_endpoint: '/',
+        interaction_start_modes_supported: ['redirect'],
+        interaction_finish_modes_supported: ['redirect']
+      }
+    })
+
+    const accessTokenRoutes = await this.container.use('accessTokenRoutes')
+    const grantRoutes = await this.container.use('grantRoutes')
+
+    const openApi = await this.container.use('openApi')
+    /* Back-channel GNAP Routes */
+    // Grant Initiation
+    router.post<DefaultState, CreateContext>(
+      '/',
+      createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
+        path: '/',
+        method: HttpMethod.POST
+      }),
+      grantInitiationHttpsigMiddleware,
+      grantRoutes.create
+    )
+
+    // Grant Continue
+    router.post<DefaultState, ContinueContext>(
+      '/continue/:id',
+      createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
+        path: '/continue/{id}',
+        method: HttpMethod.POST
+      }),
+      grantContinueHttpsigMiddleware,
+      grantRoutes.continue
+    )
+
+    // Grant Cancel
+    router.delete<DefaultState, DeleteContext>(
+      '/continue/:id',
+      createValidatorMiddleware<DeleteContext>(openApi.authServerSpec, {
+        path: '/continue/{id}',
+        method: HttpMethod.DELETE
+      }),
+      grantContinueHttpsigMiddleware,
+      grantRoutes.delete
+    )
+
+    // Token Rotation
+    router.post(
+      '/token/:id',
+      createValidatorMiddleware<RotateContext>(openApi.authServerSpec, {
+        path: '/token/{id}',
+        method: HttpMethod.POST
+      }),
+      tokenHttpsigMiddleware,
+      accessTokenRoutes.rotate
+    )
+
+    // Token Revocation
+    router.delete(
+      '/token/:id',
+      createValidatorMiddleware<RevokeContext>(openApi.authServerSpec, {
+        path: '/token/{id}',
+        method: HttpMethod.DELETE
+      }),
+      tokenHttpsigMiddleware,
+      accessTokenRoutes.revoke
+    )
+
+    /* AS <-> RS Routes */
+    // Token Introspection
+    router.post<DefaultState, IntrospectContext>(
+      '/introspect',
+      createValidatorMiddleware<IntrospectContext>(
+        openApi.tokenIntrospectionSpec,
+        {
+          path: '/',
+          method: HttpMethod.POST
+        }
+      ),
+      accessTokenRoutes.introspect
+    )
+
+    /* Front Channel Routes */
+
+    // Interaction start
+    router.get<DefaultState, StartContext>(
+      '/interact/:id/:nonce',
+      createValidatorMiddleware<StartContext>(openApi.idpSpec, {
+        path: '/interact/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.start
+    )
+
+    // Interaction finish
+    router.get<DefaultState, FinishContext>(
+      '/interact/:id/:nonce/finish',
+      createValidatorMiddleware<FinishContext>(openApi.idpSpec, {
+        path: '/interact/{id}/{nonce}/finish',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.finish
+    )
+
+    // Grant lookup
+    router.get<DefaultState, GetContext>(
+      '/grant/:id/:nonce',
+      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}',
+        method: HttpMethod.GET
+      }),
+      grantRoutes.interaction.details
+    )
+
+    // Grant accept/reject
+    router.post<DefaultState, ChooseContext>(
+      '/grant/:id/:nonce/:choice',
+      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
+        path: '/grant/{id}/{nonce}/{choice}',
+        method: HttpMethod.POST
+      }),
+      grantRoutes.interaction.acceptOrReject
+    )
+
     koa.use(cors())
     koa.keys = [this.config.cookieKey]
     koa.use(
@@ -185,8 +313,9 @@ export class App {
       )
     )
 
-    koa.use(this.publicRouter.middleware())
-    
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
     this.server = koa.listen(port)
   }
 
@@ -221,18 +350,22 @@ export class App {
 
   public async shutdown(): Promise<void> {
     return new Promise((resolve): void => {
-      if (this.server) {
-        this.isShuttingDown = true
-        this.closeEmitter.emit('shutdown')
+      this.isShuttingDown = true
+      this.closeEmitter.emit('shutdown')
+
+      if (this.adminServer) {
         this.adminServer.close((): void => {
           resolve()
         })
+      }
+
+      if (this.server) {
         this.server.close((): void => {
           resolve()
         })
-      } else {
-        resolve()
       }
+
+      resolve()
     })
   }
 
@@ -250,137 +383,6 @@ export class App {
       return address.port
     }
     return 0
-  }
-
-  private async _setupRoutes(): Promise<void> {
-    this.publicRouter.use(bodyParser())
-    this.publicRouter.get('/healthz', (ctx: AppContext): void => {
-      ctx.status = 200
-    })
-
-    this.publicRouter.get('/discovery', (ctx: AppContext): void => {
-      ctx.body = {
-        grant_request_endpoint: '/',
-        interaction_start_modes_supported: ['redirect'],
-        interaction_finish_modes_supported: ['redirect']
-      }
-    })
-
-    const accessTokenRoutes = await this.container.use('accessTokenRoutes')
-    const grantRoutes = await this.container.use('grantRoutes')
-
-    const openApi = await this.container.use('openApi')
-    /* Back-channel GNAP Routes */
-    // Grant Initiation
-    this.publicRouter.post<DefaultState, CreateContext>(
-      '/',
-      createValidatorMiddleware<CreateContext>(openApi.authServerSpec, {
-        path: '/',
-        method: HttpMethod.POST
-      }),
-      grantInitiationHttpsigMiddleware,
-      grantRoutes.create
-    )
-
-    // Grant Continue
-    this.publicRouter.post<DefaultState, ContinueContext>(
-      '/continue/:id',
-      createValidatorMiddleware<ContinueContext>(openApi.authServerSpec, {
-        path: '/continue/{id}',
-        method: HttpMethod.POST
-      }),
-      grantContinueHttpsigMiddleware,
-      grantRoutes.continue
-    )
-
-    // Grant Cancel
-    this.publicRouter.delete<DefaultState, DeleteContext>(
-      '/continue/:id',
-      createValidatorMiddleware<DeleteContext>(openApi.authServerSpec, {
-        path: '/continue/{id}',
-        method: HttpMethod.DELETE
-      }),
-      grantContinueHttpsigMiddleware,
-      grantRoutes.delete
-    )
-
-    // Token Rotation
-    this.publicRouter.post(
-      '/token/:id',
-      createValidatorMiddleware<RotateContext>(openApi.authServerSpec, {
-        path: '/token/{id}',
-        method: HttpMethod.POST
-      }),
-      tokenHttpsigMiddleware,
-      accessTokenRoutes.rotate
-    )
-
-    // Token Revocation
-    this.publicRouter.delete(
-      '/token/:id',
-      createValidatorMiddleware<RevokeContext>(openApi.authServerSpec, {
-        path: '/token/{id}',
-        method: HttpMethod.DELETE
-      }),
-      tokenHttpsigMiddleware,
-      accessTokenRoutes.revoke
-    )
-
-    /* AS <-> RS Routes */
-    // Token Introspection
-    this.publicRouter.post<DefaultState, IntrospectContext>(
-      '/introspect',
-      createValidatorMiddleware<IntrospectContext>(
-        openApi.tokenIntrospectionSpec,
-        {
-          path: '/',
-          method: HttpMethod.POST
-        }
-      ),
-      accessTokenRoutes.introspect
-    )
-
-    /* Front Channel Routes */
-
-    // Interaction start
-    this.publicRouter.get<DefaultState, StartContext>(
-      '/interact/:id/:nonce',
-      createValidatorMiddleware<StartContext>(openApi.idpSpec, {
-        path: '/interact/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
-      grantRoutes.interaction.start
-    )
-
-    // Interaction finish
-    this.publicRouter.get<DefaultState, FinishContext>(
-      '/interact/:id/:nonce/finish',
-      createValidatorMiddleware<FinishContext>(openApi.idpSpec, {
-        path: '/interact/{id}/{nonce}/finish',
-        method: HttpMethod.GET
-      }),
-      grantRoutes.interaction.finish
-    )
-
-    // Grant lookup
-    this.publicRouter.get<DefaultState, GetContext>(
-      '/grant/:id/:nonce',
-      createValidatorMiddleware<GetContext>(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}',
-        method: HttpMethod.GET
-      }),
-      grantRoutes.interaction.details
-    )
-
-    // Grant accept/reject
-    this.publicRouter.post<DefaultState, ChooseContext>(
-      '/grant/:id/:nonce/:choice',
-      createValidatorMiddleware<ChooseContext>(openApi.idpSpec, {
-        path: '/grant/{id}/{nonce}/{choice}',
-        method: HttpMethod.POST
-      }),
-      grantRoutes.interaction.acceptOrReject
-    )
   }
 
   private async processDatabaseCleanup(): Promise<void> {

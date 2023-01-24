@@ -17,6 +17,7 @@ import { App, AppServices } from '../app'
 
 export interface TestContainer {
   port: number
+  adminPort: number
   app: App
   knex: Knex
   apolloClient: ApolloClient<NormalizedCacheObject>
@@ -29,7 +30,7 @@ export const createTestApp = async (
   container: IocContract<AppServices>
 ): Promise<TestContainer> => {
   const config = await container.use('config')
-  config.port = 0
+  config.authPort = 0
 
   const logger = createLogger({
     transport: {
@@ -95,6 +96,7 @@ export const createTestApp = async (
   return {
     app,
     port: app.getPort(),
+    adminPort: app.getAdminPort(),
     knex,
     apolloClient: client,
     connectionUrl: config.databaseUrl,
