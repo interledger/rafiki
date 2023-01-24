@@ -6,8 +6,9 @@ import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { PaymentPointerSubresource } from '../../payment_pointer/model'
 import { Quote } from '../../quote/model'
-import { Amount, AmountJSON } from '../../amount'
+import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
+import { OutgoingPayment as OpenPaymentsOutgoingPayment } from 'open-payments'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -70,6 +71,14 @@ export class OutgoingPayment
 
   public get asset(): Asset {
     return this.quote.asset
+  }
+
+  public get url(): string {
+    return `${this.paymentPointerId}${OutgoingPayment.urlPath}/${this.id}`
+  }
+
+  public get failed(): boolean {
+    return this.state === OutgoingPaymentState.Failed
   }
 
   // Outgoing peer
@@ -168,6 +177,23 @@ export class OutgoingPayment
       updatedAt: json.updatedAt
     }
   }
+
+  public toOpenPaymentsType(): OpenPaymentsOutgoingPayment {
+    return {
+      id: this.url,
+      paymentPointer: this.paymentPointerId,
+      quoteId: this.quote.id,
+      receiveAmount: serializeAmount(this.receiveAmount),
+      sendAmount: serializeAmount(this.sendAmount),
+      sentAmount: serializeAmount(this.sentAmount),
+      receiver: this.receiver,
+      failed: this.failed,
+      externalRef: this.externalRef,
+      description: this.description,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString(),
+    }
+  }
 }
 
 export enum OutgoingPaymentState {
@@ -235,17 +261,4 @@ export const isPaymentEvent = (o: any): o is PaymentEvent =>
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
-}
-
-export type OutgoingPaymentJSON = {
-  id: string
-  paymentPointer: string
-  receiver: string
-  sendAmount: AmountJSON
-  sentAmount: AmountJSON
-  receiveAmount: AmountJSON
-  description: string | null
-  externalRef: string | null
-  createdAt: string
-  updatedAt: string
 }
