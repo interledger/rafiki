@@ -191,7 +191,7 @@ export class OutgoingPayment
       externalRef: this.externalRef,
       description: this.description,
       createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString()
     }
   }
 }

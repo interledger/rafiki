@@ -162,7 +162,7 @@ export class Quote extends PaymentPointerSubresource {
       sendAmount: serializeAmount(this.sendAmount),
       receiver: this.receiver,
       expiresAt: this.expiresAt.toISOString(),
-      createdAt: this.createdAt.toISOString(),
+      createdAt: this.createdAt.toISOString()
     }
   }
 }
