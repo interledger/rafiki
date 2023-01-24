@@ -53,5 +53,5 @@ export const grantToGraphql = (
 ): SchemaGrant => ({
     identifier: grant.identifier,
     state: grant.state,
-    createdAt: new Date(+grant.createdAt).toISOString()
+    createdAt: grant.createdAt.toISOString()
 })
