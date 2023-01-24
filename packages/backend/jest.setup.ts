@@ -75,12 +75,12 @@ const setup = async (globalConfig): Promise<void> => {
 
   const setupTigerbeetle = async () => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const tbContStart = await startTigerbeetleContainer(
-        TIGERBEETLE_DIR,
-        TIGERBEETLE_PORT,
-        TIGERBEETLE_CLUSTER_ID,
-        TIGERBEETLE_CONTAINER_LOG
-      )
+      const tbContStart = await startTigerbeetleContainer({
+        dir: TIGERBEETLE_DIR,
+        port: TIGERBEETLE_PORT,
+        clusterId: TIGERBEETLE_CLUSTER_ID,
+        logsOn: TIGERBEETLE_CONTAINER_LOG
+      })
 
       process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID.toString()
       process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tbContStart.getMappedPort(

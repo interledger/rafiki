@@ -33,7 +33,7 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    tigerbeetleContainer = await startTigerbeetleContainer()
+    tigerbeetleContainer = await startTigerbeetleContainer({})
     Config.tigerbeetleReplicaAddresses = [
       tigerbeetleContainer.getMappedPort(Config.tigerbeetlePort)
     ]

@@ -3,12 +3,20 @@ import tmp from 'tmp'
 
 import { Config } from '../config/app'
 
+type TigerbeetleContainerOptions = {
+  dir?: string
+  port?: number
+  clusterId?: number
+  logsOn?: boolean
+}
+
 export async function startTigerbeetleContainer(
-  dir: string = Config.tigerbeetleDir,
-  port: number = Config.tigerbeetlePort,
-  clusterId: number = Config.tigerbeetleClusterId,
-  logsOn: boolean = Config.tigerbeetleContainerLogs
+  options: TigerbeetleContainerOptions
 ): Promise<StartedTestContainer> {
+  const dir = options.dir || Config.tigerbeetleDir
+  const port = options.port || Config.tigerbeetlePort
+  const clusterId = options.clusterId || Config.tigerbeetleClusterId
+  const logsOn = options.logsOn || Config.tigerbeetleContainerLogs
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
   // TODO const @jason (waiting for TB 0.10.0): tigerBeetleFile = `${TIGERBEETLE_DIR}/cluster_${clusterId}_replica_0_test.tigerbeetle`
 
