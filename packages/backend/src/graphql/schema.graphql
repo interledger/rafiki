@@ -80,15 +80,15 @@ type Mutation {
     input: CreatePaymentPointerWithdrawalInput!
   ): PaymentPointerWithdrawalMutationResponse
 
-  "Finalize liquidity withdrawal"
-  finalizeLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to finalize."
+  "Posts liquidity withdrawal"
+  postLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to post."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
-  "Rollback liquidity withdrawal"
-  rollbackLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to rollback."
+  "Void liquidity withdrawal"
+  voidLiquidityWithdrawal(
+    "The id of the liquidity withdrawal to void."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
@@ -101,6 +101,8 @@ type Mutation {
   createIncomingPayment(
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
+
+  createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
@@ -258,8 +260,8 @@ type Asset implements Model {
 }
 
 enum LiquidityError {
-  AlreadyCommitted
-  AlreadyRolledBack
+  AlreadyPosted
+  AlreadyVoided
   AmountZero
   InsufficientBalance
   InvalidId
@@ -349,6 +351,19 @@ type IncomingPayment implements Model {
   description: String
   externalRef: String
   createdAt: String!
+}
+
+type Receiver {
+  id: String!
+  paymentPointerUrl: String!
+  completed: Boolean!
+  incomingAmount: Amount
+  receivedAmount: Amount!
+  expiresAt: String
+  description: String
+  externalRef: String
+  createdAt: String!
+  updatedAt: String!
 }
 
 enum IncomingPaymentState {
@@ -464,6 +479,14 @@ input CreateIncomingPaymentInput {
   externalRef: String
 }
 
+input CreateReceiverInput {
+  paymentPointerUrl: String!
+  expiresAt: String
+  description: String
+  incomingAmount: AmountInput
+  externalRef: String
+}
+
 type OutgoingPaymentResponse {
   code: String!
   success: Boolean!
@@ -476,6 +499,13 @@ type IncomingPaymentResponse {
   success: Boolean!
   message: String
   payment: IncomingPayment
+}
+
+type CreateReceiverResponse {
+  code: String!
+  success: Boolean!
+  message: String
+  receiver: Receiver
 }
 
 input CreatePaymentPointerInput {

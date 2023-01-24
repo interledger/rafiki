@@ -163,15 +163,15 @@ describe('OutgoingPaymentService', (): void => {
           options.sourceAccount.id === sourcePaymentPointerId
         ) {
           return {
-            commit: async (): Promise<void | TransferError> => {
-              const err = await trxOrError.commit()
+            post: async (): Promise<void | TransferError> => {
+              const err = await trxOrError.post()
               if (!err) {
                 amtDelivered +=
                   options.destinationAmount || options.sourceAmount
               }
               return err
             },
-            rollback: trxOrError.rollback
+            void: trxOrError.void
           }
         }
         return trxOrError

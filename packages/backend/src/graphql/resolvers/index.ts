@@ -27,8 +27,8 @@ import {
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
   createPaymentPointerWithdrawal,
-  finalizeLiquidityWithdrawal,
-  rollbackLiquidityWithdrawal,
+  postLiquidityWithdrawal,
+  voidLiquidityWithdrawal,
   depositEventLiquidity,
   withdrawEventLiquidity
 } from './liquidity'
@@ -37,6 +37,7 @@ import {
   createPaymentPointerKey,
   revokePaymentPointerKey
 } from './paymentPointerKey'
+import { createReceiver } from './receiver'
 
 export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
@@ -64,6 +65,7 @@ export const resolvers: Resolvers = {
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,
+    createReceiver,
     createPeer: createPeer,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
@@ -72,8 +74,8 @@ export const resolvers: Resolvers = {
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
     createPaymentPointerWithdrawal,
-    finalizeLiquidityWithdrawal: finalizeLiquidityWithdrawal,
-    rollbackLiquidityWithdrawal: rollbackLiquidityWithdrawal,
+    postLiquidityWithdrawal: postLiquidityWithdrawal,
+    voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
     withdrawEventLiquidity
   }

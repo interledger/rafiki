@@ -264,39 +264,39 @@ export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['c
     }
   }
 
-export const finalizeLiquidityWithdrawal: MutationResolvers<ApolloContext>['finalizeLiquidityWithdrawal'] =
+export const postLiquidityWithdrawal: MutationResolvers<ApolloContext>['postLiquidityWithdrawal'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.commitWithdrawal(args.withdrawalId)
+    const error = await accountingService.postWithdrawal(args.withdrawalId)
     if (error) {
       return errorToResponse(error)
     }
     return {
       code: '200',
       success: true,
-      message: 'Finalized Withdrawal'
+      message: 'Posted Withdrawal'
     }
   }
 
-export const rollbackLiquidityWithdrawal: MutationResolvers<ApolloContext>['rollbackLiquidityWithdrawal'] =
+export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiquidityWithdrawal'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.rollbackWithdrawal(args.withdrawalId)
+    const error = await accountingService.voidWithdrawal(args.withdrawalId)
     if (error) {
       return errorToResponse(error)
     }
     return {
       code: '200',
       success: true,
-      message: 'Rolled Back Withdrawal'
+      message: 'Voided Withdrawal'
     }
   }
 
@@ -419,17 +419,17 @@ const errorToResponse = (error: FundingError): LiquidityMutationResponse => {
 const responses: {
   [key in LiquidityError]: LiquidityMutationResponse
 } = {
-  [LiquidityError.AlreadyCommitted]: {
+  [LiquidityError.AlreadyPosted]: {
     code: '409',
-    message: 'Withdrawal already finalized',
+    message: 'Withdrawal already posted',
     success: false,
-    error: LiquidityError.AlreadyCommitted
+    error: LiquidityError.AlreadyPosted
   },
-  [LiquidityError.AlreadyRolledBack]: {
+  [LiquidityError.AlreadyVoided]: {
     code: '409',
-    message: 'Withdrawal already rolled back',
+    message: 'Withdrawal already voided',
     success: false,
-    error: LiquidityError.AlreadyRolledBack
+    error: LiquidityError.AlreadyVoided
   },
   [LiquidityError.AmountZero]: {
     code: '400',

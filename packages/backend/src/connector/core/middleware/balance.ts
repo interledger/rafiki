@@ -84,9 +84,9 @@ export function createBalanceMiddleware(): ILPMiddleware {
 
       if (trx) {
         if (response.fulfill) {
-          await trx.commit()
+          await trx.post()
         } else {
-          await trx.rollback()
+          await trx.void()
         }
       }
     }
