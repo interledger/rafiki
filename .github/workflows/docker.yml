@@ -5,20 +5,21 @@ on:
     tags:
     - '*'
 
-name: Build / Release Backend Docker Image
+name: Build / Release Docker Images
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        package: [auth, backend]
         platform: [linux/amd64, linux/arm64]
     steps:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/rafiki-backend
+          images: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}
           tags: |
             type=raw,enable={{is_default_branch}},value=latest
             type=raw,enable=true,value={{ sha }}
@@ -34,13 +35,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push backend
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          file: packages/backend/Dockerfile
+          file: packages/${{ matrix.package }}/Dockerfile
           platforms: ${{ matrix.platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
