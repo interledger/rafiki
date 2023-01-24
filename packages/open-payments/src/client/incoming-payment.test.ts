@@ -14,6 +14,7 @@ import {
   mockILPStreamConnection,
   mockIncomingPayment,
   mockIncomingPaymentPaginationResult,
+  mockIncomingPaymentWithConnection,
   mockOpenApiResponseValidators,
   silentLogger
 } from '../test/helpers'
@@ -531,7 +532,7 @@ describe('incoming-payment', (): void => {
         assetCode: 'CAD'
       })
 
-      const incomingPayment = mockIncomingPayment({
+      const incomingPayment = mockIncomingPaymentWithConnection({
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -556,7 +557,7 @@ describe('incoming-payment', (): void => {
         assetScale: 1
       })
 
-      const incomingPayment = mockIncomingPayment({
+      const incomingPayment = mockIncomingPaymentWithConnection({
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
