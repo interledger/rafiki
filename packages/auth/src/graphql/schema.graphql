@@ -5,8 +5,12 @@ type Query {
 type Mutation {
     "Revoke Grant"
     revokeGrant(
-        identifier: String!
+        input: RevokeGrantInput!
     ): RevokeGrantMutationResponse!
+}
+
+input RevokeGrantInput {
+    identifier: String!
 }
 
 type Grant {

@@ -37,7 +37,7 @@ describe('Grant Resolvers', (): void => {
     })
 
     describe('Revoke key', (): void => {
-        test('Can revoke a key', async (): Promise<void> => {
+        test('Can revoke a grant', async (): Promise<void> => {
             const grant: Grant = {
                 identifier: uuid(),
                 state: GrantState.Granted,
