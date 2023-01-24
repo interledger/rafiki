@@ -1,9 +1,8 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { knex } = require('knex')
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { GenericContainer } = require('testcontainers')
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const tigerbeetle = require('./dist/tests/tigerbeetle')
+require('ts-node/register')
+
+import { knex } from 'knex'
+import { GenericContainer } from 'testcontainers'
+import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
 
@@ -17,7 +16,7 @@ const TIGERBEETLE_CONTAINER_LOG =
 
 const REDIS_PORT = 6379
 
-module.exports = async (globalConfig) => {
+const setup = async (globalConfig): Promise<void> => {
   const workers = globalConfig.maxWorkers
 
   const setupDatabase = async () => {
@@ -76,14 +75,14 @@ module.exports = async (globalConfig) => {
 
   const setupTigerbeetle = async () => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const tbContStart = await tigerbeetle.startTigerbeetleContainer(
+      const tbContStart = await startTigerbeetleContainer(
         TIGERBEETLE_DIR,
         TIGERBEETLE_PORT,
         TIGERBEETLE_CLUSTER_ID,
         TIGERBEETLE_CONTAINER_LOG
       )
 
-      process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID
+      process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID.toString()
       process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${tbContStart.getMappedPort(
         TIGERBEETLE_PORT
       )}]`
@@ -106,3 +105,5 @@ module.exports = async (globalConfig) => {
 
   await Promise.all([setupDatabase(), setupTigerbeetle(), setupRedis()])
 }
+
+export default setup

@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter backend build
+      - run: pnpm --filter backend build:deps
       - run: pnpm --filter backend test
 
   frontend:
