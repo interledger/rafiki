@@ -1,9 +1,10 @@
 import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
-import { Amount, AmountJSON } from '../amount'
+import { Amount, AmountJSON, serializeAmount } from '../amount'
 import { PaymentPointerSubresource } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
+import { Quote as OpenPaymentsQuote } from 'open-payments'
 
 export class Quote extends PaymentPointerSubresource {
   public static readonly tableName = 'quotes'
@@ -42,6 +43,10 @@ export class Quote extends PaymentPointerSubresource {
   public receiver!: string
 
   private sendAmountValue!: bigint
+
+  public get url(): string {
+    return `${this.paymentPointerId}${Quote.urlPath}/${this.id}`
+  }
 
   public get sendAmount(): Amount {
     return {
@@ -146,6 +151,18 @@ export class Quote extends PaymentPointerSubresource {
       },
       createdAt: json.createdAt,
       expiresAt: json.expiresAt.toISOString()
+    }
+  }
+
+  public toOpenPaymentsType(): OpenPaymentsQuote {
+    return {
+      id: this.url,
+      paymentPointer: this.paymentPointerId,
+      receiveAmount: serializeAmount(this.receiveAmount),
+      sendAmount: serializeAmount(this.sendAmount),
+      receiver: this.receiver,
+      expiresAt: this.expiresAt.toISOString(),
+      createdAt: this.createdAt.toISOString(),
     }
   }
 }

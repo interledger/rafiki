@@ -5,7 +5,7 @@ import { CreateQuoteOptions, QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
-import { PaymentPointer } from '../payment_pointer/model'
+import { Quote as OpenPaymentsQuote } from 'open-payments'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -39,8 +39,7 @@ async function getQuote(
     paymentPointerId: ctx.paymentPointer.id
   })
   if (!quote) return ctx.throw(404)
-  const body = quoteToBody(deps, quote, ctx.paymentPointer)
-  ctx.body = body
+  ctx.body = quoteToBody(quote)
 }
 
 interface CreateBodyBase {
@@ -80,8 +79,7 @@ async function createQuote(
     }
 
     ctx.status = 201
-    const res = quoteToBody(deps, quoteOrErr, ctx.paymentPointer)
-    ctx.body = res
+    ctx.body = quoteToBody(quoteOrErr)
   } catch (err) {
     if (isQuoteError(err)) {
       return ctx.throw(errorToCode[err], errorToMessage[err])
@@ -91,17 +89,6 @@ async function createQuote(
   }
 }
 
-function quoteToBody(
-  deps: ServiceDependencies,
-  quote: Quote,
-  paymentPointer: PaymentPointer
-) {
-  return Object.fromEntries(
-    Object.entries({
-      ...quote.toJSON(),
-      id: `${paymentPointer.url}/quotes/${quote.id}`,
-      paymentPointer: paymentPointer.url,
-      paymentPointerId: undefined
-    }).filter(([_, v]) => v != null)
-  )
+function quoteToBody(quote: Quote): OpenPaymentsQuote {
+  return quote.toOpenPaymentsType()
 }
