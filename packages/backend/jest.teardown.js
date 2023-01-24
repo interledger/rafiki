@@ -1,6 +1,4 @@
-require('ts-node/register')
-
-const teardown = async (): Promise<void> => {
+module.exports = async () => {
   await global.__BACKEND_KNEX__.migrate.rollback(
     { directory: __dirname + '/migrations' },
     true
@@ -16,5 +14,3 @@ const teardown = async (): Promise<void> => {
     await global.__BACKEND_REDIS__.stop()
   }
 }
-
-export default teardown

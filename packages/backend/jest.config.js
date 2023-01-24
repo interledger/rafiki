@@ -10,7 +10,7 @@ module.exports = {
   testTimeout: 15000,
   roots: [`<rootDir>/packages/${packageName}`],
   globalSetup: `<rootDir>/packages/${packageName}/jest.setup.ts`,
-  globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.ts`,
+  globalTeardown: `<rootDir>/packages/${packageName}/jest.teardown.js`,
   testRegex: `(packages/${packageName}/.*/__tests__/.*|\\.(test|spec))\\.tsx?$`,
   moduleDirectories: [
     `node_modules`,
