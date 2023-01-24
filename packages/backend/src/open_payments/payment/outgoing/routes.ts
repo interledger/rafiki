@@ -1,3 +1,4 @@
+import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
@@ -42,7 +43,7 @@ async function getOutgoingPayment(
   try {
     outgoingPayment = await deps.outgoingPaymentService.get({
       id: ctx.params.id,
-      client: ctx.filterClient ? ctx.client : undefined,
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
       paymentPointerId: ctx.paymentPointer.id
     })
   } catch (_) {

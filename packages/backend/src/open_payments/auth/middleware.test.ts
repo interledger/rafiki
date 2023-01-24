@@ -230,7 +230,7 @@ describe('Auth Middleware', (): void => {
             })
             expect(next).toHaveBeenCalled()
             expect(ctx.client).toEqual(tokenInfo.client)
-            expect(ctx.filterClient).toBe(false)
+            expect(ctx.accessAction).toBe(superAction)
             expect(ctx.grant).toBeUndefined()
           })
 
@@ -312,7 +312,7 @@ describe('Auth Middleware', (): void => {
               })
               expect(next).toHaveBeenCalled()
               expect(ctx.client).toEqual(tokenInfo.client)
-              expect(ctx.filterClient).toBe(true)
+              expect(ctx.accessAction).toBe(action)
               expect(ctx.grant).toEqual(
                 ctxGrant
                   ? {

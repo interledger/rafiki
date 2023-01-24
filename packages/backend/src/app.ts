@@ -4,7 +4,6 @@ import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
-import { JWK } from 'http-signature-utils'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
@@ -47,7 +46,7 @@ import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AccessType, AuthenticatedClient } from 'open-payments'
+import { AccessAction, AccessType, AuthenticatedClient } from 'open-payments'
 import { Client as TokenIntrospectionClient } from 'token-introspection'
 
 export interface AppContextData {
@@ -77,8 +76,7 @@ export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
   client?: string
-  filterClient?: boolean
-  clientKey?: JWK
+  accessAction?: AccessAction
 }
 
 export type PaymentPointerKeysContext = Omit<
@@ -97,10 +95,7 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  grant: Grant
-  clientKey: JWK
   client: string
-  filterClient?: boolean
 }
 
 // Payment pointer subresources
@@ -114,17 +109,24 @@ type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
 
 type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   PaymentPointerContext,
-  'request'
+  'request' | 'client' | 'accessAction'
 > & {
   request: CollectionRequest<BodyT, QueryT>
+  client: NonNullable<PaymentPointerContext['client']>
+  accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
 type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
   params: Record<'id', string>
 }
 
-type SubresourceContext = Omit<PaymentPointerContext, 'request'> & {
+type SubresourceContext = Omit<
+  PaymentPointerContext,
+  'request' | 'grant' | 'client' | 'accessAction'
+> & {
   request: SubresourceRequest
+  client: NonNullable<PaymentPointerContext['client']>
+  accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
 export type CreateContext<BodyT> = CollectionContext<BodyT>
@@ -364,11 +366,11 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
+      createValidatorMiddleware<PaymentPointerKeysContext>(resourceServerSpec, {
         path: '/jwks.json',
         method: HttpMethod.GET
       }),
-      async (ctx: PaymentPointerContext): Promise<void> =>
+      async (ctx: PaymentPointerKeysContext): Promise<void> =>
         await paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
     )
 

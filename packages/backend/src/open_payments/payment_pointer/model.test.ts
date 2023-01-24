@@ -1,5 +1,6 @@
 import { faker } from '@faker-js/faker'
 import * as httpMocks from 'node-mocks-http'
+import { AccessAction } from 'open-payments'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -19,6 +20,7 @@ export interface SetupOptions {
   paymentPointer: PaymentPointer
   grant?: Grant
   client?: string
+  accessAction?: AccessAction
 }
 
 export const setup = <T extends PaymentPointerContext>(
@@ -37,7 +39,7 @@ export const setup = <T extends PaymentPointerContext>(
   ctx.paymentPointer = options.paymentPointer
   ctx.grant = options.grant
   ctx.client = options.client
-  ctx.filterClient = !!options.client
+  ctx.accessAction = options.accessAction
   return ctx
 }
 
@@ -218,7 +220,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
         url: urlPath
       },
       paymentPointer,
-      client
+      client,
+      accessAction: client ? AccessAction.List : AccessAction.ListAll
     })
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await expect(list!(ctx)).resolves.toBeUndefined()
@@ -252,7 +255,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
           id
         },
         paymentPointer,
-        client
+        client,
+        accessAction: client ? AccessAction.Read : AccessAction.ReadAll
       })
       if (expectedMatch) {
         await expect(get(ctx)).resolves.toBeUndefined()
@@ -308,7 +312,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
               query,
               url: urlPath
             },
-            paymentPointer: await getPaymentPointer()
+            paymentPointer: await getPaymentPointer(),
+            accessAction: AccessAction.ListAll
           })
           await expect(list(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()

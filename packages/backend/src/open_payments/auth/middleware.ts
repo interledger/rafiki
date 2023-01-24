@@ -66,7 +66,6 @@ export function createTokenIntrospectionMiddleware({
         ctx.throw(403, 'Inactive Token')
       }
 
-      ctx.filterClient = false
       // TODO
       // https://github.com/interledger/rafiki/issues/835
       const access = tokenInfo.access.find((access: Access) => {
@@ -80,19 +79,19 @@ export function createTokenIntrospectionMiddleware({
           requestAction === AccessAction.Read &&
           access.actions.includes(AccessAction.ReadAll)
         ) {
+          ctx.accessAction = AccessAction.ReadAll
           return true
         }
         if (
           requestAction === AccessAction.List &&
           access.actions.includes(AccessAction.ListAll)
         ) {
+          ctx.accessAction = AccessAction.ListAll
           return true
         }
         return access.actions.find((tokenAction: AccessAction) => {
           if (isActiveTokenInfo(tokenInfo) && tokenAction === requestAction) {
-            // Unless the relevant token action is ReadAll/ListAll add the
-            // filter by client for Read/List
-            ctx.filterClient = true
+            ctx.accessAction = requestAction
             return true
           }
           return false
