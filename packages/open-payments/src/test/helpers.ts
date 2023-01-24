@@ -95,7 +95,7 @@ export const mockIncomingPayment = (
   overrides?: Partial<IncomingPayment>
 ): IncomingPayment => ({
   id: `https://example.com/.well-known/pay/incoming-payments/${uuid()}`,
-  paymentPointer: 'paymentPointer',
+  paymentPointer: 'https://example.com/.well-known/pay',
   completed: false,
   incomingAmount: {
     assetCode: 'USD',
@@ -151,8 +151,8 @@ export const mockIncomingPaymentPaginationResult = (
 export const mockOutgoingPayment = (
   overrides?: Partial<OutgoingPayment>
 ): OutgoingPayment => ({
-  id: uuid(),
-  paymentPointer: 'paymentPointer',
+  id: `https://example.com/.well-known/pay/outgoing-payments/${uuid()}`,
+  paymentPointer: 'https://example.com/.well-known/pay',
   failed: false,
   sendAmount: {
     assetCode: 'USD',
@@ -286,9 +286,9 @@ export const mockAccessToken = (
 })
 
 export const mockQuote = (overrides?: Partial<Quote>): Quote => ({
-  id: uuid(),
-  receiver: `receiver`,
-  paymentPointer: 'paymentPointer',
+  id: `https://example.com/.well-known/pay/quotes/${uuid()}`,
+  receiver: 'https://example.com/.well-known/peer',
+  paymentPointer: 'https://example.com/.well-known/pay',
   sendAmount: {
     value: '100',
     assetCode: 'USD',
