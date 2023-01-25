@@ -1,7 +1,7 @@
 import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
-import { Amount, AmountJSON, serializeAmount } from '../amount'
+import { Amount, serializeAmount } from '../amount'
 import { PaymentPointerSubresource } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from 'open-payments'
@@ -165,14 +165,4 @@ export class Quote extends PaymentPointerSubresource {
       createdAt: this.createdAt.toISOString()
     }
   }
-}
-
-export type QuoteJSON = {
-  id: string
-  paymentPointerId: string
-  receiver: string
-  sendAmount: AmountJSON
-  receiveAmount: AmountJSON
-  createdAt: string
-  expiresAt: string
 }
