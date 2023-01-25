@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
-    "@types/jest": "^29.2.6",
+    "@types/jest": "^29.4.0",
     "@types/koa": "2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-session": "^5.10.6",
