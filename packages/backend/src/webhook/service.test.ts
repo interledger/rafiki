@@ -127,7 +127,7 @@ describe('Webhook Service', (): void => {
     test('Sends webhook event', async (): Promise<void> => {
       const scope = mockWebhookServer()
       await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(scope.isDone()).toBe(true)
+      scope.done()
       await expect(webhookService.getEvent(event.id)).resolves.toMatchObject({
         attempts: 1,
         statusCode: 200,
@@ -140,7 +140,7 @@ describe('Webhook Service', (): void => {
       async (status): Promise<void> => {
         const scope = mockWebhookServer(status)
         await expect(webhookService.processNext()).resolves.toEqual(event.id)
-        expect(scope.isDone()).toBe(true)
+        scope.done()
         const updatedEvent = await webhookService.getEvent(event.id)
         assert.ok(updatedEvent?.processAt)
         expect(updatedEvent).toMatchObject({
@@ -159,7 +159,7 @@ describe('Webhook Service', (): void => {
         .delayConnection(Config.webhookTimeout + 1)
         .reply(200)
       await expect(webhookService.processNext()).resolves.toEqual(event.id)
-      expect(scope.isDone()).toBe(true)
+      scope.done()
       const updatedEvent = await webhookService.getEvent(event.id)
       assert.ok(updatedEvent?.processAt)
       expect(updatedEvent).toMatchObject({

@@ -1,6 +1,5 @@
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
-import { JWK } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
 import { generateToken } from '../shared/utils'
@@ -13,7 +12,7 @@ import { Access } from '../access/model'
 export interface AccessTokenService {
   get(token: string): Promise<AccessToken | undefined>
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
-  introspect(token: string): Promise<Introspection | undefined>
+  introspect(token: string): Promise<Grant | undefined>
   revoke(id: string, tokenValue: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
   rotate(managementId: string, tokenValue: string): Promise<Rotation>
@@ -23,16 +22,6 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   clientService: ClientService
   config: IAppConfig
-}
-
-export interface KeyInfo {
-  proof: string
-  jwk: JWK
-}
-
-export interface Introspection {
-  grant: Grant
-  jwk: JWK
 }
 
 interface AccessTokenOpts {
@@ -104,7 +93,7 @@ async function getByManagementId(
 async function introspect(
   deps: ServiceDependencies,
   value: string
-): Promise<Introspection | undefined> {
+): Promise<Grant | undefined> {
   const token = await AccessToken.query(deps.knex)
     .findOne({ value })
     .withGraphFetched('grant.access')
@@ -117,19 +106,7 @@ async function introspect(
       return undefined
     }
 
-    const jwk = await deps.clientService.getKey({
-      client: token.grant.client,
-      keyId: token.grant.clientKeyId
-    })
-
-    if (!jwk) {
-      return undefined
-    }
-
-    return {
-      grant: token.grant,
-      jwk
-    }
+    return token.grant
   }
 }
 

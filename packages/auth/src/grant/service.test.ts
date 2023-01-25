@@ -28,7 +28,6 @@ describe('Grant Service', (): void => {
   })
 
   const CLIENT = faker.internet.url()
-  const CLIENT_KEY_ID = v4()
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert({
@@ -40,7 +39,6 @@ describe('Grant Service', (): void => {
       finishUri: 'https://example.com',
       clientNonce: generateNonce(),
       client: CLIENT,
-      clientKeyId: CLIENT_KEY_ID,
       interactId: v4(),
       interactRef: v4(),
       interactNonce: generateNonce()
@@ -82,7 +80,6 @@ describe('Grant Service', (): void => {
     test('Can initiate a grant', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
-        clientKeyId: CLIENT_KEY_ID,
         access_token: {
           access: [
             {
@@ -106,7 +103,6 @@ describe('Grant Service', (): void => {
         finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
         clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
         client: CLIENT,
-        clientKeyId: CLIENT_KEY_ID,
         startMethod: expect.arrayContaining([StartMethod.Redirect])
       })
 
@@ -123,7 +119,6 @@ describe('Grant Service', (): void => {
     test('Can issue a grant without interaction', async (): Promise<void> => {
       const grantRequest: GrantRequest = {
         ...BASE_GRANT_REQUEST,
-        clientKeyId: CLIENT_KEY_ID,
         access_token: {
           access: [
             {
@@ -140,8 +135,7 @@ describe('Grant Service', (): void => {
       expect(grant).toMatchObject({
         state: GrantState.Granted,
         continueId: expect.any(String),
-        continueToken: expect.any(String),
-        clientKeyId: CLIENT_KEY_ID
+        continueToken: expect.any(String)
       })
 
       await expect(

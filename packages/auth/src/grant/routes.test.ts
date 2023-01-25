@@ -27,7 +27,6 @@ export const TEST_CLIENT_DISPLAY = {
 }
 
 const CLIENT = faker.internet.url()
-const CLIENT_KEY_ID = v4()
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
@@ -75,7 +74,6 @@ describe('Grant Routes', (): void => {
     finishUri: 'https://example.com',
     clientNonce: generateNonce(),
     client: CLIENT,
-    clientKeyId: CLIENT_KEY_ID,
     interactId: v4(),
     interactRef: v4(),
     interactNonce: generateNonce()
@@ -84,11 +82,7 @@ describe('Grant Routes', (): void => {
   const createContext = (
     reqOpts: httpMocks.RequestOptions,
     params: Record<string, unknown>
-  ) => {
-    const ctx = createAppContext(reqOpts, params)
-    ctx.clientKeyId = CLIENT_KEY_ID
-    return ctx
-  }
+  ) => createAppContext(reqOpts, params)
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert(generateBaseGrant())

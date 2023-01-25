@@ -83,7 +83,7 @@ async function getOutgoingPayment(
 export interface CreateOutgoingPaymentOptions {
   paymentPointerId: string
   quoteId: string
-  clientId?: string
+  client?: string
   grant?: Grant
   description?: string
   externalRef?: string
@@ -112,7 +112,7 @@ async function createOutgoingPayment(
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
-          clientId: options.clientId,
+          client: options.client,
           grantId
         })
         .withGraphFetched('[quote.asset]')
