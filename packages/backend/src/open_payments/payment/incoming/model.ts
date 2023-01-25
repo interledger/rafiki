@@ -245,7 +245,7 @@ export class IncomingPayment
     ilpStreamConnection: Connection
   }): OpenPaymentsIncomingPayment {
     return {
-      id: this.id,
+      id: this.url,
       paymentPointer: this.paymentPointer.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
