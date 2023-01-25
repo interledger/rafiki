@@ -7,10 +7,6 @@ import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 const POSTGRES_PORT = 5432
 
 const TIGERBEETLE_CLUSTER_ID = 0
-const TIGERBEETLE_PORT = 3004
-const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
-const TIGERBEETLE_CONTAINER_LOG =
-  process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 //TODO @jason: https://github.com/interledger/rafiki/issues/518
 //TODO @jason const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
 
@@ -75,12 +71,9 @@ const setup = async (globalConfig): Promise<void> => {
 
   const setupTigerbeetle = async () => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const { container, port } = await startTigerbeetleContainer({
-        dir: TIGERBEETLE_DIR,
-        port: TIGERBEETLE_PORT,
-        clusterId: TIGERBEETLE_CLUSTER_ID,
-        logsOn: TIGERBEETLE_CONTAINER_LOG
-      })
+      const { container, port } = await startTigerbeetleContainer(
+        TIGERBEETLE_CLUSTER_ID
+      )
 
       process.env.TIGERBEETLE_CLUSTER_ID = TIGERBEETLE_CLUSTER_ID.toString()
       process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${port}]`

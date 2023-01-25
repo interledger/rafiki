@@ -23,7 +23,7 @@ describe('Asset Service', (): void => {
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer({})
+    const { container, port } = await startTigerbeetleContainer()
     tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
 
