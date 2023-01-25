@@ -15,6 +15,7 @@ import {
   mockIncomingPayment,
   mockIncomingPaymentPaginationResult,
   mockIncomingPaymentWithConnection,
+  mockIncomingPaymentWithConnectionUrl,
   mockOpenApiResponseValidators,
   silentLogger
 } from '../test/helpers'
@@ -49,7 +50,7 @@ describe('incoming-payment', (): void => {
 
   describe('getIncomingPayment', (): void => {
     test('returns incoming payment if passes validation', async (): Promise<void> => {
-      const incomingPayment = mockIncomingPayment()
+      const incomingPayment = mockIncomingPaymentWithConnection()
 
       nock(paymentPointer)
         .get('/incoming-payments/1')
@@ -67,7 +68,7 @@ describe('incoming-payment', (): void => {
     })
 
     test('throws if incoming payment does not pass validation', async (): Promise<void> => {
-      const incomingPayment = mockIncomingPayment({
+      const incomingPayment = mockIncomingPaymentWithConnection({
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -100,7 +101,7 @@ describe('incoming-payment', (): void => {
     })
 
     test('throws if incoming payment does not pass open api validation', async (): Promise<void> => {
-      const incomingPayment = mockIncomingPayment()
+      const incomingPayment = mockIncomingPaymentWithConnection()
 
       nock(paymentPointer)
         .get('/incoming-payments/1')
@@ -135,7 +136,7 @@ describe('incoming-payment', (): void => {
         description,
         externalRef
       }): Promise<void> => {
-        const incomingPayment = mockIncomingPayment({
+        const incomingPayment = mockIncomingPaymentWithConnection({
           incomingAmount,
           expiresAt,
           description,
@@ -170,7 +171,7 @@ describe('incoming-payment', (): void => {
         value: '10'
       }
 
-      const incomingPayment = mockIncomingPayment({
+      const incomingPayment = mockIncomingPaymentWithConnection({
         incomingAmount: amount,
         receivedAmount: amount,
         completed: false
@@ -192,7 +193,7 @@ describe('incoming-payment', (): void => {
     })
 
     test('throws if the created incoming payment does not pass open api validation', async (): Promise<void> => {
-      const incomingPayment = mockIncomingPayment()
+      const incomingPayment = mockIncomingPaymentWithConnection()
 
       const scope = nock(paymentPointer)
         .post('/incoming-payments')
@@ -293,7 +294,7 @@ describe('incoming-payment', (): void => {
         async ({ first, cursor }): Promise<void> => {
           const incomingPaymentPaginationResult =
             mockIncomingPaymentPaginationResult({
-              result: Array(first).fill(mockIncomingPayment())
+              result: Array(first).fill(mockIncomingPaymentWithConnectionUrl())
             })
 
           const scope = nock(paymentPointer)
@@ -336,7 +337,7 @@ describe('incoming-payment', (): void => {
         async ({ last, cursor }): Promise<void> => {
           const incomingPaymentPaginationResult =
             mockIncomingPaymentPaginationResult({
-              result: Array(last).fill(mockIncomingPayment())
+              result: Array(last).fill(mockIncomingPaymentWithConnectionUrl())
             })
 
           const scope = nock(paymentPointer)
@@ -370,7 +371,7 @@ describe('incoming-payment', (): void => {
     })
 
     test('throws if an incoming payment does not pass validation', async (): Promise<void> => {
-      const incomingPayment = mockIncomingPayment({
+      const incomingPayment = mockIncomingPaymentWithConnectionUrl({
         incomingAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -659,7 +660,7 @@ describe('incoming-payment', (): void => {
 
         const getSpy = jest
           .spyOn(requestors, 'get')
-          .mockResolvedValueOnce(mockIncomingPayment())
+          .mockResolvedValueOnce(mockIncomingPaymentWithConnection())
 
         await createIncomingPaymentRoutes({
           openApi,
@@ -685,7 +686,7 @@ describe('incoming-payment', (): void => {
 
         const incomingPaymentPaginationResult =
           mockIncomingPaymentPaginationResult({
-            result: [mockIncomingPayment()]
+            result: [mockIncomingPaymentWithConnectionUrl()]
           })
         const url = `${paymentPointer}${getRSPath('/incoming-payments')}`
 
@@ -733,7 +734,9 @@ describe('incoming-payment', (): void => {
 
         const postSpy = jest
           .spyOn(requestors, 'post')
-          .mockResolvedValueOnce(mockIncomingPayment(incomingPaymentCreateArgs))
+          .mockResolvedValueOnce(
+            mockIncomingPaymentWithConnection(incomingPaymentCreateArgs)
+          )
 
         await createIncomingPaymentRoutes({
           openApi,
