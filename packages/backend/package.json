@@ -64,7 +64,7 @@
     "ilp-packet": "3.1.4-alpha.2",
     "ilp-protocol-ccp": "^1.2.3",
     "ilp-protocol-ildcp": "^2.2.3",
-    "ioredis": "^5.2.5",
+    "ioredis": "^5.2.6",
     "iso8601-duration": "^2.1.1",
     "json-canonicalize": "^1.0.4",
     "knex": "^2.4",
