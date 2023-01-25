@@ -12,7 +12,7 @@ type TigerbeetleContainerOptions = {
 
 export async function startTigerbeetleContainer(
   options: TigerbeetleContainerOptions
-): Promise<StartedTestContainer> {
+): Promise<{ container: StartedTestContainer; port: number }> {
   const dir = options.dir || Config.tigerbeetleDir
   const port = options.port || Config.tigerbeetlePort
   const clusterId = options.clusterId || Config.tigerbeetleClusterId
@@ -79,5 +79,5 @@ export async function startTigerbeetleContainer(
       .on('err', (line) => console.error(line))
       .on('end', () => console.log('Stream closed for [tb-start]'))
   }
-  return tbContStart
+  return { container: tbContStart, port: tbContStart.getMappedPort(port) }
 }
