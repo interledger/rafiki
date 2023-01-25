@@ -385,18 +385,22 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH,
       createPaymentPointerMiddleware(),
+      async (
+        ctx: PaymentPointerContext,
+        next: () => Promise<unknown>
+      ): Promise<void> => {
+        // Fall back to legacy protocols if client doesn't support Open Payments.
+        if (ctx.accepts('application/spsp4+json')) {
+          await spspRoutes.get(ctx)
+        } else {
+          await next()
+        }
+      },
       createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),
-      async (ctx: PaymentPointerContext): Promise<void> => {
-        // Fall back to legacy protocols if client doesn't support Open Payments.
-        if (ctx.accepts('application/json')) await paymentPointerRoutes.get(ctx)
-        //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
-        else if (ctx.accepts('application/spsp4+json'))
-          await spspRoutes.get(ctx)
-        else ctx.throw(406, 'no accepted Content-Type available')
-      }
+      paymentPointerRoutes.get
     )
 
     koa.use(router.routes())
