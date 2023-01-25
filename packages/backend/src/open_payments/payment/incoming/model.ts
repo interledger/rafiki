@@ -243,8 +243,15 @@ export class IncomingPayment
     return payment
   }
 
+  public toOpenPaymentsType(): OpenPaymentsIncomingPayment
   public toOpenPaymentsType(
-    ilpStreamConnection: Connection | string | undefined
+    ilpStreamConnection: Connection
+  ): OpenPaymentsIncomingPaymentWithConnection
+  public toOpenPaymentsType(
+    ilpStreamConnection: string
+  ): OpenPaymentsIncomingPaymentWithConnectionUrl
+  public toOpenPaymentsType(
+    ilpStreamConnection?: Connection | string
   ):
     | OpenPaymentsIncomingPayment
     | OpenPaymentsIncomingPaymentWithConnection
