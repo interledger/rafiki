@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 
 import { Grant } from './model'
-import { GrantOptions, GrantService } from './service'
+import { CreateOptions, GrantOptions, GrantService } from './service'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
@@ -11,6 +11,7 @@ import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AccessType, AccessAction } from 'open-payments'
+import { uuid } from '../../connector/ilp-routing/lib/utils'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -131,6 +132,44 @@ describe('Grant Service', (): void => {
           accessActions: [AccessAction.Read]
         })
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Update Grant', (): void => {
+    let options: CreateOptions
+    let grant: Grant
+    let authServerId: string
+    beforeEach(async (): Promise<void> => {
+      options = {
+        authServer: faker.internet.url(),
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll],
+        accessToken: uuid(),
+        managementUrl: faker.internet.url(),
+        expiresIn: 3000
+      }
+      grant = await grantService.create(options)
+      const authServerService = await deps.use('authServerService')
+      authServerId = (await authServerService.getOrCreate(options.authServer))
+        .id
+    })
+
+    test('can update grant', async (): Promise<void> => {
+      const updateOptions = {
+        accessToken: uuid(),
+        managementUrl: faker.internet.url(),
+        expiresIn: 3000
+      }
+      const updatedGrant = await grantService.update(grant, updateOptions)
+      console.log(grant)
+      console.log(updatedGrant)
+      expect(updatedGrant).toMatchObject({
+        authServerId,
+        accessType: options.accessType,
+        accessActions: options.accessActions,
+        accessToken: updateOptions.accessToken,
+        managementUrl: updateOptions.managementUrl
+      })
     })
   })
 })

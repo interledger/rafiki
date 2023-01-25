@@ -28,6 +28,7 @@ export class Grant extends BaseModel {
   public continueId?: string
   public continueToken?: string
   public accessToken?: string
+  public managementUrl?: string
   public accessType!: AccessType
   public accessActions!: AccessAction[]
   public expiresAt?: Date

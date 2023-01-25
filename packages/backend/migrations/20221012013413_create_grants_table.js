@@ -6,6 +6,7 @@ exports.up = function (knex) {
     table.string('continueId').nullable()
     table.string('continueToken').nullable()
     table.string('accessToken').nullable().unique()
+    table.string('managementUrl').nullable()
     table.string('accessType').notNullable()
     table.specificType('accessActions', 'text[]')
 
