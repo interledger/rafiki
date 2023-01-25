@@ -215,7 +215,6 @@ export class App {
   public async startAdminServer(port: number | string): Promise<void> {
     const koa = await this.createKoaServer()
     const httpServer = http.createServer(koa.callback())
-    const router = new Router()
 
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
@@ -238,8 +237,23 @@ export class App {
 
     koa.use(bodyParser())
 
-    router.post(
-      '/graphql',
+    koa.use(
+      async (
+        ctx: {
+          path: string
+          status: number
+        },
+        next: Koa.Next
+      ): Promise<void> => {
+        if (ctx.path !== '/graphql') {
+          ctx.status = 404
+        } else {
+          return next()
+        }
+      }
+    )
+
+    koa.use(
       koaMiddleware(this.apolloServer, {
         context: async (): Promise<ApolloContext> => {
           return {
@@ -249,8 +263,6 @@ export class App {
         }
       })
     )
-
-    koa.use(router.routes()).use(router.allowedMethods())
 
     this.adminServer = httpServer.listen(port)
   }
