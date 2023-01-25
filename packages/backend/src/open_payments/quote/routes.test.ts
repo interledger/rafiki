@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
@@ -39,10 +40,10 @@ describe('Quote Routes', (): void => {
 
   const createPaymentPointerQuote = async ({
     paymentPointerId,
-    clientId
+    client
   }: {
     paymentPointerId: string
-    clientId?: string
+    client?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
       paymentPointerId,
@@ -52,7 +53,7 @@ describe('Quote Routes', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale
       },
-      clientId,
+      client,
       validDestination: false
     })
   }
@@ -89,10 +90,10 @@ describe('Quote Routes', (): void => {
   describe('get', (): void => {
     getRouteTests({
       getPaymentPointer: async () => paymentPointer,
-      createModel: async ({ clientId }) =>
+      createModel: async ({ client }) =>
         createPaymentPointerQuote({
           paymentPointerId: paymentPointer.id,
-          clientId
+          client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
       getBody: (quote) => ({
@@ -112,9 +113,9 @@ describe('Quote Routes', (): void => {
     let options: CreateBody
 
     const setup = ({
-      clientId
+      client
     }: {
-      clientId?: string
+      client?: string
     }): CreateContext<CreateBody> =>
       setupContext<CreateContext<CreateBody>>({
         reqOpts: {
@@ -123,7 +124,7 @@ describe('Quote Routes', (): void => {
           url: `/quotes`
         },
         paymentPointer,
-        clientId
+        client
       })
 
     test('returns error on invalid sendAmount asset', async (): Promise<void> => {
@@ -154,10 +155,10 @@ describe('Quote Routes', (): void => {
     })
 
     describe.each`
-      clientId     | description
-      ${uuid()}    | ${'clientId'}
-      ${undefined} | ${'no clientId'}
-    `('returns the quote on success ($description)', ({ clientId }): void => {
+      client                  | description
+      ${faker.internet.url()} | ${'client'}
+      ${undefined}            | ${'no client'}
+    `('returns the quote on success ($description)', ({ client }): void => {
       test.each`
         sendAmount   | receiveAmount | description
         ${'123'}     | ${undefined}  | ${'sendAmount'}
@@ -180,7 +181,7 @@ describe('Quote Routes', (): void => {
               assetCode: asset.code,
               assetScale: asset.scale
             }
-          const ctx = setup({ clientId })
+          const ctx = setup({ client })
           let quote: Quote | undefined
           const quoteSpy = jest
             .spyOn(quoteService, 'create')
@@ -188,7 +189,7 @@ describe('Quote Routes', (): void => {
               quote = await createQuote(deps, {
                 ...opts,
                 validDestination: false,
-                clientId
+                client
               })
               return quote
             })
@@ -204,7 +205,7 @@ describe('Quote Routes', (): void => {
               ...options.receiveAmount,
               value: BigInt(options.receiveAmount.value)
             },
-            clientId
+            client
           })
           expect(ctx.response).toSatisfyApiSpec()
           const quoteId = (
@@ -235,7 +236,7 @@ describe('Quote Routes', (): void => {
         options = {
           receiver
         }
-        const ctx = setup({ clientId })
+        const ctx = setup({ client })
         let quote: Quote | undefined
         const quoteSpy = jest
           .spyOn(quoteService, 'create')
@@ -243,7 +244,7 @@ describe('Quote Routes', (): void => {
             quote = await createQuote(deps, {
               ...opts,
               validDestination: false,
-              clientId
+              client
             })
             return quote
           })
@@ -251,7 +252,7 @@ describe('Quote Routes', (): void => {
         expect(quoteSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
           receiver,
-          clientId
+          client
         })
         expect(ctx.response).toSatisfyApiSpec()
         const quoteId = (

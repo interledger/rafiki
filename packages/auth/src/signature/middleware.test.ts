@@ -91,10 +91,7 @@ describe('Signature Service', (): void => {
     })
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        clientKeyId: testKeys.publicKey.kid
-      })
+      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
@@ -144,7 +141,6 @@ describe('Signature Service', (): void => {
       await grantInitiationHttpsigMiddleware(ctx, next)
 
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
       expect(next).toHaveBeenCalled()
 
       scope.done()
@@ -175,7 +171,6 @@ describe('Signature Service', (): void => {
 
       await grantContinueHttpsigMiddleware(ctx, next)
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
       expect(next).toHaveBeenCalled()
 
       scope.done()
@@ -211,7 +206,6 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.clientKeyId).toEqual(testKeys.publicKey.kid)
 
       scope.done()
     })

@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { faker } from '@faker-js/faker'
 import nock, { Definition } from 'nock'
 import { Knex } from 'knex'
 import * as Pay from '@interledger/pay'
@@ -122,7 +123,7 @@ describe('QuoteService', (): void => {
 
   describe('get/getPaymentPointerPage', (): void => {
     getTests({
-      createModel: ({ clientId }) =>
+      createModel: ({ client }) =>
         createQuote(deps, {
           paymentPointerId,
           receiver: `${
@@ -133,7 +134,7 @@ describe('QuoteService', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          clientId,
+          client,
           validDestination: false
         }),
       get: (options) => quoteService.get(options),
@@ -234,7 +235,7 @@ describe('QuoteService', (): void => {
         let options: CreateQuoteOptions
         let incomingPayment: IncomingPayment
         let expected: ExpectedQuote
-        const clientId = uuid()
+        const client = faker.internet.url()
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
@@ -265,18 +266,18 @@ describe('QuoteService', (): void => {
         } else {
           if (sendAmount || receiveAmount) {
             it.each`
-              clientId     | description
-              ${clientId}  | ${'with a clientId'}
-              ${undefined} | ${'without a clientId'}
+              client       | description
+              ${client}    | ${'with a client'}
+              ${undefined} | ${'without a client'}
             `(
               'creates a Quote $description',
-              async ({ clientId }): Promise<void> => {
+              async ({ client }): Promise<void> => {
                 const walletScope = mockWalletQuote({
                   expected
                 })
                 const quote = await quoteService.create({
                   ...options,
-                  clientId
+                  client
                 })
                 assert.ok(!isQuoteError(quote))
                 walletScope.done()
@@ -309,7 +310,7 @@ describe('QuoteService', (): void => {
                   expiresAt: new Date(
                     quote.createdAt.getTime() + config.quoteLifespan
                   ),
-                  clientId: clientId || null
+                  client: client || null
                 })
                 expect(quote.minExchangeRate.valueOf()).toBe(
                   0.5 * (1 - config.slippage)
@@ -350,18 +351,18 @@ describe('QuoteService', (): void => {
           } else {
             if (incomingAmount) {
               it.each`
-                clientId     | description
-                ${clientId}  | ${'with a clientId'}
-                ${undefined} | ${'without a clientId'}
+                client       | description
+                ${client}    | ${'with a client'}
+                ${undefined} | ${'without a client'}
               `(
                 'creates a Quote $description',
-                async ({ clientId }): Promise<void> => {
+                async ({ client }): Promise<void> => {
                   const scope = mockWalletQuote({
                     expected
                   })
                   const quote = await quoteService.create({
                     ...options,
-                    clientId
+                    client
                   })
                   scope.done()
                   assert.ok(!isQuoteError(quote))
@@ -384,7 +385,7 @@ describe('QuoteService', (): void => {
                     expiresAt: new Date(
                       quote.createdAt.getTime() + config.quoteLifespan
                     ),
-                    clientId: clientId || null
+                    client: client || null
                   })
                   expect(quote.minExchangeRate.valueOf()).toBe(
                     0.5 * (1 - config.slippage)

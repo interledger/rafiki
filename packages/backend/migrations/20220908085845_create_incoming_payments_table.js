@@ -12,7 +12,7 @@ exports.up = function (knex) {
     table.string('externalRef').nullable()
     table.uuid('connectionId').nullable()
 
-    table.string('clientId').nullable()
+    table.string('client').nullable()
 
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
