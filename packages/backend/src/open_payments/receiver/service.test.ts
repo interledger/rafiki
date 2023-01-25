@@ -7,10 +7,10 @@ import {
   AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,
   PaymentPointer as OpenPaymentsPaymentPointer,
-  mockIncomingPayment,
   mockPaymentPointer,
   NonInteractiveGrant,
-  GrantRequest
+  GrantRequest,
+  mockIncomingPaymentWithConnection
 } from 'open-payments'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -263,7 +263,7 @@ describe('Receiver Service', (): void => {
           paymentPointer = mockPaymentPointer({
             authServer
           })
-          incomingPayment = mockIncomingPayment({
+          incomingPayment = mockIncomingPaymentWithConnection({
             id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
             paymentPointer: paymentPointer.id
           })
@@ -455,7 +455,7 @@ describe('Receiver Service', (): void => {
           expiresAt,
           incomingAmount
         }): Promise<void> => {
-          const incomingPayment = mockIncomingPayment({
+          const incomingPayment = mockIncomingPaymentWithConnection({
             description,
             externalRef,
             expiresAt,
