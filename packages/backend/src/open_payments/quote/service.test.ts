@@ -279,7 +279,7 @@ describe('QuoteService', (): void => {
                   clientId
                 })
                 assert.ok(!isQuoteError(quote))
-                walletScope.isDone()
+                walletScope.done()
                 expect(quote).toMatchObject({
                   paymentPointerId,
                   receiver: options.receiver,
@@ -344,7 +344,7 @@ describe('QuoteService', (): void => {
                 await expect(quoteService.create(options)).resolves.toEqual(
                   QuoteError.InvalidAmount
                 )
-                scope?.isDone()
+                scope?.done()
               })
             }
           } else {
@@ -363,7 +363,7 @@ describe('QuoteService', (): void => {
                     ...options,
                     clientId
                   })
-                  scope.isDone()
+                  scope.done()
                   assert.ok(!isQuoteError(quote))
                   expect(quote).toMatchObject({
                     ...options,
@@ -416,7 +416,7 @@ describe('QuoteService', (): void => {
               })
               const quote = await quoteService.create(options)
               assert.ok(!isQuoteError(quote))
-              walletScope.isDone()
+              walletScope.done()
               expect(quote).toMatchObject({
                 ...options,
                 receiveAmount,
@@ -458,7 +458,7 @@ describe('QuoteService', (): void => {
                 await expect(quoteService.create(options)).resolves.toEqual(
                   QuoteError.InvalidAmount
                 )
-                walletScope.isDone()
+                walletScope.done()
               }
             )
           } else if (receiveAmount || incomingAmount) {
@@ -475,7 +475,7 @@ describe('QuoteService', (): void => {
               })
               const quote = await quoteService.create(options)
               assert.ok(!isQuoteError(quote))
-              walletScope.isDone()
+              walletScope.done()
               expect(quote).toMatchObject({
                 paymentPointerId,
                 receiver: options.receiver,
@@ -519,7 +519,7 @@ describe('QuoteService', (): void => {
                 await expect(quoteService.create(options)).resolves.toEqual(
                   QuoteError.InvalidAmount
                 )
-                walletScope.isDone()
+                walletScope.done()
               }
             )
           }
@@ -532,7 +532,7 @@ describe('QuoteService', (): void => {
             await expect(quoteService.create(options)).rejects.toThrowError(
               'Request failed with status code 403'
             )
-            walletScope.isDone()
+            walletScope.done()
           })
 
           if (!toConnection) {
@@ -587,7 +587,7 @@ describe('QuoteService', (): void => {
         })
         const quote = await quoteService.create(options)
         assert.ok(!isQuoteError(quote))
-        walletScope.isDone()
+        walletScope.done()
         const maxExpiration = new Date(
           quote.createdAt.getTime() + config.quoteLifespan
         )
