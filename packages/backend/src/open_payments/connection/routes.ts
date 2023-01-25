@@ -1,5 +1,5 @@
 import { Logger } from 'pino'
-import { ReadContext } from '../../app'
+import { AppContext } from '../../app'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { ConnectionService } from './service'
 
@@ -10,7 +10,7 @@ interface ServiceDependencies {
 }
 
 export interface ConnectionRoutes {
-  get(ctx: ReadContext): Promise<void>
+  get(ctx: AppContext): Promise<void>
 }
 
 export function createConnectionRoutes(
@@ -21,13 +21,13 @@ export function createConnectionRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    get: (ctx: ReadContext) => getConnection(deps, ctx)
+    get: (ctx: AppContext) => getConnection(deps, ctx)
   }
 }
 
 async function getConnection(
   deps: ServiceDependencies,
-  ctx: ReadContext
+  ctx: AppContext
 ): Promise<void> {
   const incomingPayment = await deps.incomingPaymentService.getByConnection(
     ctx.params.id

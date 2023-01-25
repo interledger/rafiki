@@ -1,17 +1,17 @@
 import * as crypto from 'crypto'
-import { AppServices } from '../app'
+import { v4 as uuid } from 'uuid'
 
+import { AppServices, SPSPContext } from '../app'
 import { SPSPRoutes } from './routes'
 import { createTestApp, TestContainer } from '../tests/app'
 import { initIocContainer } from '../'
+import { AssetOptions } from '../asset/service'
 import { Config } from '../config/app'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
-import { setup } from '../open_payments/payment_pointer/model.test'
 
 import { IocContract } from '@adonisjs/fold'
 import { StreamServer } from '@interledger/stream-receiver'
-import { createAsset } from '../tests/asset'
-import { createPaymentPointer } from '../tests/paymentPointer'
+import { randomAsset } from '../tests/asset'
+import { createContext } from '../tests/context'
 import { truncateTables } from '../tests/tableManager'
 
 describe('SPSP Routes', (): void => {
@@ -38,126 +38,100 @@ describe('SPSP Routes', (): void => {
   })
 
   describe('GET /:id handler', (): void => {
-    let paymentPointer: PaymentPointer
-
-    beforeEach(async (): Promise<void> => {
-      const { id: assetId } = await createAsset(deps)
-      paymentPointer = await createPaymentPointer(deps, {
-        assetId
+    const setup = ({
+      paymentTag,
+      asset,
+      nonce,
+      secret
+    }: {
+      paymentTag?: string
+      asset?: AssetOptions
+      nonce?: string
+      secret?: string
+    } = {}): SPSPContext => {
+      const headers = {
+        Accept: 'application/spsp4+json'
+      }
+      if (nonce) {
+        headers['Receipt-Nonce'] = nonce
+      }
+      if (secret) {
+        headers['Receipt-Secret'] = secret
+      }
+      const ctx = createContext<SPSPContext>({
+        headers
       })
-    })
+      ctx.paymentTag = paymentTag || uuid()
+      ctx.asset = asset || randomAsset()
+      return ctx
+    }
 
     test('wrong Accept; returns 406', async () => {
-      const ctx = setup({
-        reqOpts: {
-          headers: { Accept: 'application/json' }
-        },
-        paymentPointer
+      const ctx = createContext<SPSPContext>({
+        headers: { Accept: 'application/json' }
       })
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 406)
     })
 
     test('nonce, no secret; returns 400', async () => {
-      const ctx = setup({
-        reqOpts: {
-          headers: { Accept: 'application/spsp4+json', 'Receipt-Nonce': nonce }
-        },
-        paymentPointer
-      })
+      const ctx = setup({ nonce })
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
     test('secret; no nonce; returns 400', async () => {
-      const ctx = setup({
-        reqOpts: {
-          headers: {
-            Accept: 'application/spsp4+json',
-            'Receipt-Secret': secret
-          }
-        },
-        paymentPointer
-      })
+      const ctx = setup({ secret })
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
     test('malformed nonce; returns 400', async () => {
       const ctx = setup({
-        reqOpts: {
-          headers: {
-            Accept: 'application/spsp4+json',
-            'Receipt-Nonce': Buffer.alloc(15).toString('base64'),
-            'Receipt-Secret': secret
-          }
-        },
-        paymentPointer
+        nonce: Buffer.alloc(15).toString('base64'),
+        secret
       })
       await expect(spspRoutes.get(ctx)).rejects.toHaveProperty('status', 400)
     })
 
-    test('receipts disabled', async () => {
-      const ctx = setup({
-        reqOpts: {
-          headers: { Accept: 'application/spsp4+json' }
-        },
-        paymentPointer
-      })
-      await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
+    const receiptSetup = {
+      nonce: Buffer.from(nonce, 'base64'),
+      secret: Buffer.from(secret, 'base64')
+    }
 
-      const res = JSON.parse(ctx.body as string)
-      expect(res.destination_account).toEqual(
-        expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/)
-      )
-      expect(Buffer.from(res.shared_secret, 'base64')).toHaveLength(32)
-      expect(res.receipts_enabled).toBe(false)
-      const connectionDetails = await decryptConnectionDetails(
-        res.destination_account
-      )
-      expect(connectionDetails).toEqual({
-        paymentTag: paymentPointer.id,
-        asset: {
-          code: paymentPointer.asset.code,
-          scale: paymentPointer.asset.scale
-        }
-      })
-    })
+    test.each`
+      nonce        | secret       | addressLength | receiptSetup    | description
+      ${undefined} | ${undefined} | ${95}         | ${undefined}    | ${'receipts disabled'}
+      ${nonce}     | ${secret}    | ${159}        | ${receiptSetup} | ${'receipts enabled'}
+    `(
+      'generates payment details ($description)',
+      async ({ nonce, secret, addressLength, receiptSetup }): Promise<void> => {
+        const paymentTag = uuid()
+        const asset = randomAsset()
+        const ctx = setup({
+          paymentTag,
+          asset,
+          nonce,
+          secret
+        })
+        await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
+        expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
 
-    test('receipts enabled', async () => {
-      const ctx = setup({
-        reqOpts: {
-          headers: {
-            Accept: 'application/spsp4+json',
-            'Receipt-Nonce': nonce,
-            'Receipt-Secret': secret
-          }
-        },
-        paymentPointer
-      })
-      await expect(spspRoutes.get(ctx)).resolves.toBeUndefined()
-      expect(ctx.response.get('Content-Type')).toBe('application/spsp4+json')
+        const res = JSON.parse(ctx.body as string)
+        const regex = new RegExp(
+          `^test.rafiki.[a-zA-Z0-9_-]{${addressLength}}$`
+        )
 
-      const res = JSON.parse(ctx.body as string)
-      expect(ctx.status).toBe(200)
-      expect(res.destination_account).toEqual(
-        expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{159}$/)
-      )
-      expect(Buffer.from(res.shared_secret, 'base64')).toHaveLength(32)
-      expect(res.receipts_enabled).toBe(true)
-      const connectionDetails = await decryptConnectionDetails(
-        res.destination_account
-      )
-      expect(connectionDetails).toEqual({
-        paymentTag: paymentPointer.id,
-        asset: {
-          code: paymentPointer.asset.code,
-          scale: paymentPointer.asset.scale
-        },
-        receiptSetup: {
-          nonce: Buffer.from(nonce, 'base64'),
-          secret: Buffer.from(secret, 'base64')
-        }
-      })
-    })
+        expect(res.destination_account).toEqual(expect.stringMatching(regex))
+        expect(Buffer.from(res.shared_secret, 'base64')).toHaveLength(32)
+        expect(res.receipts_enabled).toBe(!!receiptSetup)
+        const connectionDetails = await decryptConnectionDetails(
+          res.destination_account
+        )
+        expect(connectionDetails).toEqual({
+          paymentTag,
+          asset,
+          receiptSetup
+        })
+      }
+    )
 
     /**
      * Utility functions
