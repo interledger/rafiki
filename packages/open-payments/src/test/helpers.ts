@@ -116,16 +116,16 @@ export const mockIncomingPaymentWithConnection = (
   overrides?: Partial<IncomingPaymentWithConnection>
 ): IncomingPaymentWithConnection => ({
   ...mockIncomingPayment(),
-  ...overrides,
-  ilpStreamConnection: mockILPStreamConnection()
+  ilpStreamConnection: mockILPStreamConnection(),
+  ...overrides
 })
 
 export const mockIncomingPaymentWithConnectionUrl = (
   overrides?: Partial<IncomingPaymentWithConnectionUrl>
 ): IncomingPaymentWithConnectionUrl => ({
   ...mockIncomingPayment(),
-  ...overrides,
-  ilpStreamConnection: mockILPStreamConnection().id
+  ilpStreamConnection: mockILPStreamConnection().id,
+  ...overrides
 })
 
 export const mockIncomingPaymentPaginationResult = (
