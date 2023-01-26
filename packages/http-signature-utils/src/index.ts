@@ -1,4 +1,4 @@
-export { createHeaders, Headers } from './utils/headers'
+export { createHeaders, getKeyId, Headers } from './utils/headers'
 export { generateJwk, JWK } from './utils/jwk'
 export { parseOrProvisionKey } from './utils/key'
 export { createSignatureHeaders } from './utils/signatures'

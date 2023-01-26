@@ -39,7 +39,6 @@ type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
   'request'
 > & {
   request: GrantRequest<BodyT, QueryT>
-  clientKeyId: string
 }
 
 export type CreateContext = GrantContext<GrantRequestBody>
@@ -145,7 +144,6 @@ async function createGrantInitiation(
 ): Promise<void> {
   const { body } = ctx.request
   const { grantService, config } = deps
-  const clientKeyId = ctx.clientKeyId
 
   if (
     !deps.config.incomingPaymentInteraction &&
@@ -159,13 +157,7 @@ async function createGrantInitiation(
     let grant: Grant
     let accessToken: AccessToken
     try {
-      grant = await grantService.create(
-        {
-          ...body,
-          clientKeyId
-        },
-        trx
-      )
+      grant = await grantService.create(body, trx)
       accessToken = await deps.accessTokenService.create(grant.id, {
         trx
       })
@@ -194,10 +186,7 @@ async function createGrantInitiation(
   if (!client) {
     ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
   } else {
-    const grant = await grantService.create({
-      ...body,
-      clientKeyId
-    })
+    const grant = await grantService.create(body)
     ctx.status = 200
 
     const redirectUri = new URL(

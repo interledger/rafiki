@@ -1,5 +1,5 @@
+import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
-import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, parseAmount, serializeAmount } from '../../amount'
 import { PaymentPointer } from '../../payment_pointer/model'
@@ -72,10 +72,10 @@ describe('Incoming Payment Routes', (): void => {
   describe('get/list', (): void => {
     getRouteTests({
       getPaymentPointer: async () => paymentPointer,
-      createModel: async ({ clientId }) =>
+      createModel: async ({ client }) =>
         createIncomingPayment(deps, {
           paymentPointerId: paymentPointer.id,
-          clientId,
+          client,
           description,
           expiresAt,
           incomingAmount,
@@ -155,13 +155,13 @@ describe('Incoming Payment Routes', (): void => {
     })
 
     test.each`
-      clientId     | incomingAmount | description  | externalRef  | expiresAt
-      ${uuid()}    | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined} | ${false}       | ${undefined} | ${undefined} | ${undefined}
+      client                  | incomingAmount | description  | externalRef  | expiresAt
+      ${faker.internet.url()} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
+      ${undefined}            | ${false}       | ${undefined} | ${undefined} | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
-        clientId,
+        client,
         incomingAmount,
         description,
         externalRef,
@@ -179,7 +179,7 @@ describe('Incoming Payment Routes', (): void => {
             url: `/incoming-payments`
           },
           paymentPointer,
-          clientId
+          client
         })
         const incomingPaymentService = await deps.use('incomingPaymentService')
         const createSpy = jest.spyOn(incomingPaymentService, 'create')
@@ -190,7 +190,7 @@ describe('Incoming Payment Routes', (): void => {
           description,
           externalRef,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-          clientId
+          client
         })
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (

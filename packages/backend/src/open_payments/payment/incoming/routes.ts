@@ -1,3 +1,4 @@
+import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import {
   ReadContext,
@@ -61,7 +62,7 @@ async function getIncomingPayment(
   try {
     incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
-      clientId: ctx.clientId,
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
       paymentPointerId: ctx.paymentPointer.id
     })
   } catch (err) {
@@ -94,7 +95,7 @@ async function createIncomingPayment(
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     paymentPointerId: ctx.paymentPointer.id,
-    clientId: ctx.clientId,
+    client: ctx.client,
     description: body.description,
     externalRef: body.externalRef,
     expiresAt,

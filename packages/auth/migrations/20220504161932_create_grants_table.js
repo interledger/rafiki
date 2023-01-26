@@ -13,7 +13,6 @@ exports.up = function (knex) {
     table.string('finishUri')
     table.string('clientNonce')
     table.string('client').notNullable()
-    table.string('clientKeyId').notNullable()
 
     table.string('interactId').unique()
     table.string('interactRef').unique()
