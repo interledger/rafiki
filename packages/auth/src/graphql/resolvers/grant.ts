@@ -13,18 +13,36 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
     ctx
   ): Promise<ResolversTypes['RevokeGrantMutationResponse']> => {
     try {
+      const {continueId, continueToken} = args.input
+      if (!continueId || !continueToken) {
+        return {
+          code: '401',
+          success: false,
+          message: 'Grant Id or token is not provided'
+        }
+      }
+
       const grantService = await ctx.container.use('grantService')
-      const grant = await grantService.rejectGrant(args.input.id)
+      const grant = await grantService.getByContinue(continueId, continueToken)
       if (!grant) {
         return {
           code: '404',
           success: false,
-          message: 'Grant id not found'
+          message: 'There is not grant with this parameters'
+        }
+      }
+
+      const deletion = await grantService.deleteGrant(continueId)
+      if (!deletion) {
+        return {
+          code: '404',
+          success: false,
+          message: 'Delete grant was not successful'
         }
       }
 
       return {
-        code: '200',
+        code: '204',
         success: true,
         message: 'Grant revoked',
         grant: grantToGraphql(grant)
@@ -32,7 +50,7 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
     } catch (error) {
       ctx.logger.error(
         {
-          options: args.input.id,
+          options: args.input.continueId,
           error
         },
         'error revoking grant'

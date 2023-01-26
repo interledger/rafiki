@@ -14,7 +14,7 @@ import {
   TransferError,
   UnknownAccountError
 } from './errors'
-import { CreateTransferOptions, createTransfers } from './transfers'
+import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
@@ -260,7 +260,7 @@ export async function createTransfer(
   if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
     return TransferError.InvalidDestinationAmount
   }
-  const transfers: Required<CreateTransferOptions>[] = []
+  const transfers: NewTransferOptions[] = []
 
   const addTransfer = ({
     sourceAccountId,
@@ -275,7 +275,6 @@ export async function createTransfer(
   }) => {
     transfers.push({
       id: uuid(),
-      pendingId: '0',
       sourceAccountId,
       destinationAccountId,
       amount,
@@ -361,15 +360,7 @@ export async function createTransfer(
     post: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => {
-          return {
-            ...transfer,
-            timeout: undefined,
-            id: undefined,
-            pendingId: transfer.id
-          }
-        }),
-        true // <- post
+        transfers.map((transfer) => ({ postId: transfer.id }))
       )
       if (error) {
         return error.error
@@ -393,14 +384,7 @@ export async function createTransfer(
     void: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => {
-          return {
-            ...transfer,
-            timeout: undefined,
-            pendingId: transfer.id
-          }
-        }),
-        false // <- void
+        transfers.map((transfer) => ({ voidId: transfer.id }))
       )
       if (error) {
         return error.error
@@ -460,26 +444,11 @@ async function voidAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const transfers = await deps.tigerbeetle.lookupTransfers([
-    toTigerbeetleId(withdrawalId)
+  const error = await createTransfers(deps, [
+    {
+      voidId: withdrawalId
+    }
   ])
-  if (!transfers.length) {
-    return TransferError.UnknownTransfer
-  }
-
-  const error = await createTransfers(
-    deps,
-    [
-      {
-        pendingId: transfers[0].id,
-        sourceAccountId: transfers[0].debit_account_id,
-        destinationAccountId: transfers[0].credit_account_id,
-        amount: transfers[0].amount,
-        ledger: transfers[0].ledger
-      }
-    ],
-    false
-  )
   if (error) {
     return error.error
   }
@@ -492,26 +461,11 @@ async function postAccountWithdrawal(
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const transfers = await deps.tigerbeetle.lookupTransfers([
-    toTigerbeetleId(withdrawalId)
+  const error = await createTransfers(deps, [
+    {
+      postId: withdrawalId
+    }
   ])
-  if (!transfers.length) {
-    return TransferError.UnknownTransfer
-  }
-
-  const error = await createTransfers(
-    deps,
-    [
-      {
-        pendingId: transfers[0].id,
-        sourceAccountId: transfers[0].debit_account_id,
-        destinationAccountId: transfers[0].credit_account_id,
-        amount: transfers[0].amount,
-        ledger: transfers[0].ledger
-      }
-    ],
-    true
-  )
   if (error) {
     return error.error
   }

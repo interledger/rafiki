@@ -44,7 +44,8 @@ export type Query = {
 };
 
 export type RevokeGrantInput = {
-  id: Scalars['String'];
+  continueId: Scalars['String'];
+  continueToken: Scalars['String'];
 };
 
 export type RevokeGrantMutationResponse = MutationResponse & {

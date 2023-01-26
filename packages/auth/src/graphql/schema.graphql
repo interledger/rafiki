@@ -8,7 +8,11 @@ type Mutation {
 }
 
 input RevokeGrantInput {
-  id: String!
+  continueId: String!
+  continueToken: String!
+  # identifier: String!
+  # client: String!
+  # access: Access!
 }
 
 type Grant {

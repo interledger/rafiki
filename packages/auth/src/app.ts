@@ -51,8 +51,6 @@ export interface AppContextData extends DefaultContext {
   params: { [key: string]: string }
   // Set by koa-generic-session
   session: { [key: string]: string }
-  // TODO: define separate Context used in routes that include httpsig
-  clientKeyId?: string
 }
 
 export type AppContext = Koa.ParameterizedContext<DefaultState, AppContextData>

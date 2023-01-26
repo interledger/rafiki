@@ -47,3 +47,13 @@ export const createHeaders = async ({
     ...signatureHeaders
   }
 }
+
+const KEY_ID_PREFIX = 'keyid="'
+
+export const getKeyId = (signatureInput: string): string | undefined => {
+  const keyIdParam = signatureInput
+    .split(';')
+    .find((param) => param.startsWith(KEY_ID_PREFIX))
+  // Trim prefix and quotes
+  return keyIdParam?.slice(KEY_ID_PREFIX.length, -1)
+}

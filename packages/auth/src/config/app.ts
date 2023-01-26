@@ -19,7 +19,7 @@ export type IAppConfig = typeof Config
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   authPort: envInt('PORT', 3006),
-  adminPort: envInt('ADMIN_PORT', 3002),
+  adminPort: envInt('ADMIN_PORT', 3003),
   env: envString('NODE_ENV', 'development'),
   databaseUrl:
     process.env.NODE_ENV === 'test'

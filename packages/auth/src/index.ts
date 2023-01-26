@@ -16,7 +16,6 @@ import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
 import { createUnauthenticatedClient as createOpenPaymentsClient } from 'open-payments'
 
-export { KeyInfo } from './accessToken/service'
 const container = initIocContainer(Config)
 const app = new App(container)
 

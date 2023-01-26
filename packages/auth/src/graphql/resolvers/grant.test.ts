@@ -34,7 +34,6 @@ describe('Grant Resolvers', (): void => {
   })
 
   const CLIENT = faker.internet.url()
-  const CLIENT_KEY_ID = uuid()
   const BASE_GRANT_ACCESS = {
     actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
     identifier: `https://example.com/${uuid()}`
@@ -50,7 +49,6 @@ describe('Grant Resolvers', (): void => {
       finishUri: 'https://example.com',
       clientNonce: generateNonce(),
       client: CLIENT,
-      clientKeyId: CLIENT_KEY_ID,
       interactId: uuid(),
       interactRef: uuid(),
       interactNonce: generateNonce()
@@ -75,7 +73,8 @@ describe('Grant Resolvers', (): void => {
   describe('Revoke key', (): void => {
     test('Can revoke a grant', async (): Promise<void> => {
       const input: RevokeGrantInput = {
-        id: grant.id
+        continueId: grant.continueId,
+        continueToken: grant.continueToken
       }
 
       const response = await appContainer.apolloClient
@@ -106,18 +105,14 @@ describe('Grant Resolvers', (): void => {
         })
 
       expect(response.success).toBe(true)
-      expect(response.code).toBe('200')
+      expect(response.code).toBe('204')
       assert.ok(response.grant)
-      expect(response.grant).toMatchObject({
-        __typename: 'Grant',
-        id: grant.id,
-        state: 'rejected'
-      })
     })
 
     test('Returns 404 if id does not exist', async (): Promise<void> => {
       const input: RevokeGrantInput = {
-        id: uuid()
+        continueId: uuid(),
+        continueToken: generateToken()
       }
 
       const response = await appContainer.apolloClient
@@ -149,7 +144,7 @@ describe('Grant Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toBe('404')
-      expect(response.message).toBe('Grant id not found')
+      expect(response.message).toBe('There is not grant with this parameters')
       expect(response.grant).toBeNull()
     })
   })
