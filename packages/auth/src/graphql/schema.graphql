@@ -1,5 +1,15 @@
 type Query {
-  grants: [Grant!]!
+  "Fetch a page of grants."
+  grants(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): GrantsConnection!
 }
 
 type Mutation {
