@@ -15,10 +15,7 @@ import { isAssetError } from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
-import {
-  startTigerbeetleContainer,
-  TIGERBEETLE_PORT
-} from '../../tests/tigerbeetle'
+import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import {
   AssetMutationResponse,
   Asset,
@@ -33,10 +30,9 @@ describe('Asset Resolvers', (): void => {
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    tigerbeetleContainer = await startTigerbeetleContainer()
-    Config.tigerbeetleReplicaAddresses = [
-      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-    ]
+    const { container, port } = await startTigerbeetleContainer()
+    tigerbeetleContainer = container
+    Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
