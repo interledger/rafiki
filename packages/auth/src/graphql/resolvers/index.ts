@@ -1,9 +1,11 @@
 import { Resolvers } from '../generated/graphql'
 
-import { revokeGrant } from './grant'
+import { getGrants, revokeGrant } from './grant'
 
 export const resolvers: Resolvers = {
-  Query: {},
+  Query: {
+    grants: getGrants
+  },
   Mutation: {
     revokeGrant
   }

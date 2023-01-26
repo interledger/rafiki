@@ -119,6 +119,10 @@ importers:
       uuid: 9.0.0
     devDependencies:
       '@faker-js/faker': 7.6.0
+      '@graphql-codegen/cli': 2.16.4_hdccurqdjqnuoumros2fq24fs4
+      '@graphql-codegen/introspection': 2.2.3_graphql@16.6.0
+      '@graphql-codegen/typescript': 2.8.7_graphql@16.6.0
+      '@graphql-codegen/typescript-resolvers': 2.7.12_graphql@16.6.0
       '@types/jest': 29.4.0
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10

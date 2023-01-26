@@ -13,6 +13,7 @@ import {
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
+import { Pagination } from '../shared/baseModel'
 
 export interface GrantService {
   get(grantId: string): Promise<Grant | undefined>
@@ -30,6 +31,7 @@ export interface GrantService {
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
   deleteGrant(continueId: string): Promise<boolean>
+  getPage(pagination?: Pagination): Promise<Grant[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -94,7 +96,8 @@ export async function createGrantService({
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
-    deleteGrant: (continueId: string) => deleteGrant(deps, continueId)
+    deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
+    getPage: (pagination?) => getGrantsPage(deps, pagination)
   }
 }
 
@@ -217,4 +220,11 @@ async function getByContinue(
   )
     return null
   return grant
+}
+
+async function getGrantsPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination
+): Promise<Grant[]> {
+  return await Grant.query(deps.knex).getPage(pagination)
 }

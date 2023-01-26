@@ -17,6 +17,27 @@ type Mutation {
   revokeGrant(input: RevokeGrantInput!): RevokeGrantMutationResponse!
 }
 
+type PageInfo {
+  "Paginating forwards: the cursor to continue."
+  endCursor: String
+  "Paginating forwards: Are there more pages?"
+  hasNextPage: Boolean!
+  "Paginating backwards: Are there more pages?"
+  hasPreviousPage: Boolean!
+  "Paginating backwards: the cursor to continue."
+  startCursor: String
+}
+
+type GrantsConnection {
+  pageInfo: PageInfo!
+  edges: [GrantEdge!]!
+}
+
+type GrantEdge {
+  node: Grant!
+  cursor: String!
+}
+
 input RevokeGrantInput {
   continueId: String!
   continueToken: String!
@@ -25,8 +46,13 @@ input RevokeGrantInput {
   # access: Access!
 }
 
-type Grant {
-  id: String!
+interface Model {
+  id: ID!
+  createdAt: String!
+}
+
+type Grant implements Model {
+  id: ID!
   state: String!
   createdAt: String!
 }

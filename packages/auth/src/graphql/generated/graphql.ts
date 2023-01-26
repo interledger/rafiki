@@ -14,11 +14,28 @@ export type Scalars = {
   Float: number;
 };
 
-export type Grant = {
+export type Grant = Model & {
   __typename?: 'Grant';
   createdAt: Scalars['String'];
-  id: Scalars['String'];
+  id: Scalars['ID'];
   state: Scalars['String'];
+};
+
+export type GrantEdge = {
+  __typename?: 'GrantEdge';
+  cursor: Scalars['String'];
+  node: Grant;
+};
+
+export type GrantsConnection = {
+  __typename?: 'GrantsConnection';
+  edges: Array<GrantEdge>;
+  pageInfo: PageInfo;
+};
+
+export type Model = {
+  createdAt: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 export type Mutation = {
@@ -38,9 +55,30 @@ export type MutationResponse = {
   success: Scalars['Boolean'];
 };
 
+export type PageInfo = {
+  __typename?: 'PageInfo';
+  /** Paginating forwards: the cursor to continue. */
+  endCursor?: Maybe<Scalars['String']>;
+  /** Paginating forwards: Are there more pages? */
+  hasNextPage: Scalars['Boolean'];
+  /** Paginating backwards: Are there more pages? */
+  hasPreviousPage: Scalars['Boolean'];
+  /** Paginating backwards: the cursor to continue. */
+  startCursor?: Maybe<Scalars['String']>;
+};
+
 export type Query = {
   __typename?: 'Query';
-  grants: Array<Grant>;
+  /** Fetch a page of grants. */
+  grants: GrantsConnection;
+};
+
+
+export type QueryGrantsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
 };
 
 export type RevokeGrantInput = {
@@ -127,8 +165,14 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
+  GrantEdge: ResolverTypeWrapper<Partial<GrantEdge>>;
+  GrantsConnection: ResolverTypeWrapper<Partial<GrantsConnection>>;
+  ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
+  Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
+  Model: ResolversTypes['Grant'];
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['RevokeGrantMutationResponse'];
+  PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   Query: ResolverTypeWrapper<{}>;
   RevokeGrantInput: ResolverTypeWrapper<Partial<RevokeGrantInput>>;
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
@@ -139,8 +183,14 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Boolean: Partial<Scalars['Boolean']>;
   Grant: Partial<Grant>;
+  GrantEdge: Partial<GrantEdge>;
+  GrantsConnection: Partial<GrantsConnection>;
+  ID: Partial<Scalars['ID']>;
+  Int: Partial<Scalars['Int']>;
+  Model: ResolversParentTypes['Grant'];
   Mutation: {};
   MutationResponse: ResolversParentTypes['RevokeGrantMutationResponse'];
+  PageInfo: Partial<PageInfo>;
   Query: {};
   RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;
@@ -149,9 +199,27 @@ export type ResolversParentTypes = {
 
 export type GrantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Grant'] = ResolversParentTypes['Grant']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type GrantEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['GrantEdge'] = ResolversParentTypes['GrantEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['Grant'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type GrantsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['GrantsConnection'] = ResolversParentTypes['GrantsConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['GrantEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
+  __resolveType: TypeResolveFn<'Grant', ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
@@ -165,8 +233,16 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
 };
 
+export type PageInfoResolvers<ContextType = any, ParentType extends ResolversParentTypes['PageInfo'] = ResolversParentTypes['PageInfo']> = {
+  endCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  hasNextPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  hasPreviousPage?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  startCursor?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  grants?: Resolver<Array<ResolversTypes['Grant']>, ParentType, ContextType>;
+  grants?: Resolver<ResolversTypes['GrantsConnection'], ParentType, ContextType, Partial<QueryGrantsArgs>>;
 };
 
 export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokeGrantMutationResponse'] = ResolversParentTypes['RevokeGrantMutationResponse']> = {
@@ -179,8 +255,12 @@ export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType e
 
 export type Resolvers<ContextType = any> = {
   Grant?: GrantResolvers<ContextType>;
+  GrantEdge?: GrantEdgeResolvers<ContextType>;
+  GrantsConnection?: GrantsConnectionResolvers<ContextType>;
+  Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   MutationResponse?: MutationResponseResolvers<ContextType>;
+  PageInfo?: PageInfoResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RevokeGrantMutationResponse?: RevokeGrantMutationResponseResolvers<ContextType>;
 };
