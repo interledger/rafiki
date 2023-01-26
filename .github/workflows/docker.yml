@@ -5,18 +5,26 @@ on:
     tags:
     - '*'
 
-name: Build / Release Auth Docker Image
+name: Build / Release Docker Images
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    strategy:
+      matrix:
+        package: [auth, backend]
+        platform: [linux/amd64, linux/arm64]
+        push:
+          - ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
+        exclude:
+          - platform: linux/arm64
+            push: false
     steps:
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ghcr.io/${{ github.repository_owner }}/rafiki-auth
+          images: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}
           tags: |
             type=raw,enable={{is_default_branch}},value=latest
             type=raw,enable=true,value={{ sha }}
@@ -32,13 +40,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push auth
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          push: ${{ github.event_name != 'pull_request' }}
+          push: ${{ matrix.push }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          file: packages/auth/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          file: packages/${{ matrix.package }}/Dockerfile
+          platforms: ${{ matrix.platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
