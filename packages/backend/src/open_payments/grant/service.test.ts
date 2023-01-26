@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 
 import { Grant } from './model'
-import { CreateOptions, GrantOptions, GrantService } from './service'
+import { CreateOptions, GrantService } from './service'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
@@ -85,7 +85,9 @@ describe('Grant Service', (): void => {
       `(
         'Grant can be created and fetched ($description)',
         async ({ expiresIn }): Promise<void> => {
-          const options: GrantOptions = {
+          const options: CreateOptions = {
+            accessToken: 'aq1sw2de3fr4',
+            managementId: 'gt5hy6ju7ki8',
             authServer: authServerUrl,
             accessType: AccessType.IncomingPayment,
             accessActions: [AccessAction.ReadAll]
@@ -108,7 +110,9 @@ describe('Grant Service', (): void => {
     })
 
     test('cannot fetch non-existing grant', async (): Promise<void> => {
-      const options: GrantOptions = {
+      const options: CreateOptions = {
+        accessToken: 'aq1sw2de3fr4',
+        managementId: 'gt5hy6ju7ki8',
         authServer: faker.internet.url(),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll]
@@ -145,7 +149,7 @@ describe('Grant Service', (): void => {
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll],
         accessToken: uuid(),
-        managementUrl: faker.internet.url(),
+        managementId: 'gt5hy6ju7ki8',
         expiresIn: 3000
       }
       grant = await grantService.create(options)
@@ -157,7 +161,7 @@ describe('Grant Service', (): void => {
     test('can update grant', async (): Promise<void> => {
       const updateOptions = {
         accessToken: uuid(),
-        managementUrl: faker.internet.url(),
+        managementId: 'gt5hy6ju7ki8',
         expiresIn: 3000
       }
       const updatedGrant = await grantService.update(grant, updateOptions)
@@ -168,7 +172,7 @@ describe('Grant Service', (): void => {
         accessType: options.accessType,
         accessActions: options.accessActions,
         accessToken: updateOptions.accessToken,
-        managementUrl: updateOptions.managementUrl
+        managementId: updateOptions.managementId
       })
     })
   })

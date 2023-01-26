@@ -5,8 +5,8 @@ exports.up = function (knex) {
     table.foreign('authServerId').references('authServers.id')
     table.string('continueId').nullable()
     table.string('continueToken').nullable()
-    table.string('accessToken').nullable().unique()
-    table.string('managementUrl').nullable()
+    table.string('accessToken').notNullable().unique()
+    table.string('managementId').notNullable()
     table.string('accessType').notNullable()
     table.specificType('accessActions', 'text[]')
 

@@ -1,4 +1,4 @@
-import { Model, QueryContext } from 'objection'
+import { Model } from 'objection'
 
 import { AuthServer } from '../authServer/model'
 import { BaseModel } from '../../shared/baseModel'
@@ -10,7 +10,7 @@ export class Grant extends BaseModel {
   }
 
   static get virtualAttributes(): string[] {
-    return ['expired']
+    return ['expired', 'managementUrl']
   }
 
   static relationMappings = {
@@ -25,10 +25,11 @@ export class Grant extends BaseModel {
   }
 
   public authServerId!: string
+  public authServer!: AuthServer
   public continueId?: string
   public continueToken?: string
-  public accessToken?: string
-  public managementUrl?: string
+  public accessToken!: string
+  public managementId!: string
   public accessType!: AccessType
   public accessActions!: AccessAction[]
   public expiresAt?: Date
@@ -37,8 +38,7 @@ export class Grant extends BaseModel {
     return !!this.expiresAt && this.expiresAt <= new Date()
   }
 
-  $afterFind(queryContext: QueryContext): void {
-    super.$afterFind(queryContext)
-    delete this['authServer']
+  public get managementUrl(): string {
+    return `${this.authServer?.url}/token/${this.managementId}`
   }
 }

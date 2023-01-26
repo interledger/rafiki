@@ -229,7 +229,7 @@ describe('Receiver Service', (): void => {
           accessType: AccessType.IncomingPayment,
           accessActions: [AccessAction.ReadAll],
           accessToken: 'OZB8CDFONP219RP1LT0OS9M2PMHKUR64TB8N6BW7',
-          managementUrl: `${authServer}/token/8f69de01-5bf9-4603-91ed-eeca101081f1`
+          managementId: '8f69de01-5bf9-4603-91ed-eeca101081f1'
         }
         const grantRequest: GrantRequest = {
           access_token: {
@@ -247,7 +247,7 @@ describe('Receiver Service', (): void => {
         const grant: NonInteractiveGrant = {
           access_token: {
             value: grantOptions.accessToken,
-            manage: grantOptions.managementUrl,
+            manage: `${authServer}/token/${grantOptions.managementId}`,
             expires_in: 3600,
             access: grantRequest.access_token.access
           },
@@ -429,6 +429,29 @@ describe('Receiver Service', (): void => {
                   redirect: `${authServer}/4CF492MLVMSW9MKMXKHQ`,
                   finish: 'MBDOFXG4Y5CVJCX821LH'
                 }
+              })
+
+            await expect(
+              receiverService.get(incomingPayment.id)
+            ).resolves.toBeUndefined()
+            expect(clientRequestGrantSpy).toHaveBeenCalledWith(
+              { url: authServer },
+              grantRequest
+            )
+          })
+
+          test('returns undefined for misformatted management url', async (): Promise<void> => {
+            jest
+              .spyOn(openPaymentsClient.paymentPointer, 'get')
+              .mockResolvedValueOnce(paymentPointer)
+            const clientRequestGrantSpy = jest
+              .spyOn(openPaymentsClient.grant, 'request')
+              .mockResolvedValueOnce({
+                access_token: {
+                  ...grant.access_token,
+                  manage: 'thisisnotaurl1234'
+                },
+                continue: grant.continue
               })
 
             await expect(

@@ -37,8 +37,8 @@ export interface GrantOptions {
 }
 
 export interface UpdateOptions {
-  accessToken?: string
-  managementUrl?: string
+  accessToken: string
+  managementId: string
   expiresIn?: number
 }
 
@@ -52,7 +52,7 @@ async function createGrant(deps: ServiceDependencies, options: CreateOptions) {
     accessType: options.accessType,
     accessActions: options.accessActions,
     accessToken: options.accessToken,
-    managementUrl: options.managementUrl,
+    managementId: options.managementId,
     authServerId,
     expiresAt: options.expiresIn
       ? new Date(Date.now() + options.expiresIn * 1000)
@@ -77,7 +77,7 @@ async function updateGrant(
 ) {
   return grant.$query(deps.knex).updateAndFetch({
     accessToken: options.accessToken,
-    managementUrl: options.managementUrl,
+    managementId: options.managementId,
     expiresAt: options.expiresIn
       ? new Date(Date.now() + options.expiresIn * 1000)
       : undefined
