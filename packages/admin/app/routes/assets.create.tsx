@@ -121,8 +121,8 @@ export async function action({ request }: ActionArgs) {
       code: formData.assetCode as string,
       scale: parseInt(formData.assetScale as string, 10),
       withdrawalThreshold: formData.withdrawalThreshold
-        ? parseInt(formData.withdrawalThreshold as string, 10)
-        : null
+        ? BigInt(formData.withdrawalThreshold as string)
+        : undefined
     }
   }
 

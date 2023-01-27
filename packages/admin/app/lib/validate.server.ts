@@ -1,6 +1,11 @@
 import { isValidIlpAddress } from 'ilp-packet'
 
-export function validateString(input: any, fieldName: string, required = true) {
+// TODO: Rather use a type guard. There might be a built in type guard for strings
+export function validateString(
+  input: FormDataEntryValue,
+  fieldName: string,
+  required = true
+) {
   if (!required && !input) {
     return
   } else if (!input) {
@@ -10,18 +15,7 @@ export function validateString(input: any, fieldName: string, required = true) {
   }
 }
 
-export function validateUrl(input: any, fieldName: string, required = true) {
-  if (!required && !input) {
-    return
-  } else if (!input) {
-    return `The ${fieldName} is required`
-  } else if (typeof input !== 'string') {
-    return `Expected the ${fieldName} to be a string`
-  }
-  // TODO: use regex here to check URL
-}
-
-export function validateId(input: any, fieldName: string) {
+export function validateId(input: FormDataEntryValue, fieldName: string) {
   if (!input) {
     return `The ${fieldName} is required`
   } else if (typeof input !== 'string') {
@@ -36,7 +30,7 @@ export function validateId(input: any, fieldName: string) {
   }
 }
 
-export function validateIlpAddress(input: any, required = true) {
+export function validateIlpAddress(input: FormDataEntryValue, required = true) {
   if (!required && !input) {
     return
   } else if (!input) {
@@ -47,7 +41,7 @@ export function validateIlpAddress(input: any, required = true) {
 }
 
 export function validatePositiveInt(
-  input: any,
+  input: FormDataEntryValue,
   fieldName: string,
   required = true,
   canBeZero = true
@@ -57,14 +51,17 @@ export function validatePositiveInt(
   } else if (!input) {
     return `The ${fieldName} is required`
   }
-  const num = parseInt(input as string, 10)
-  const isNan = isNaN(num)
-  const isInt = num.toString() === (input as string)
-  const isNegative = num < 0
-  if (isNan || !isInt || isNegative) {
+
+  let num: bigint
+  try {
+    num = BigInt(input as string)
+  } catch {
     return `Expected the ${fieldName} to be a positive integer`
   }
-  if (!canBeZero && num === 0) {
+  if (num < 0) {
+    return `Expected the ${fieldName} to be a positive integer`
+  }
+  if (!canBeZero && num === BigInt(0)) {
     return 'Field cannot have a value of zero'
   }
 }

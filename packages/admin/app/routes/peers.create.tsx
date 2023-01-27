@@ -11,7 +11,6 @@ import * as R from 'ramda'
 import type { ActionArgs } from '@remix-run/node'
 import {
   validateString,
-  validateUrl,
   validateIlpAddress,
   validatePositiveInt,
   validateId
@@ -171,15 +170,12 @@ export default function CreatePeerPage() {
 
 export async function action({ request }: ActionArgs) {
   const formData = Object.fromEntries(await request.formData())
-  const incomingAuthTokens = formData.incomingAuthTokens
-    ? (formData.incomingAuthTokens as string)
-    : null
 
   const formErrors = {
     name: validateString(formData.name, 'name', false),
     assetId: validateId(formData.assetId, 'asset ID'),
     incomingAuthTokens: validateString(
-      incomingAuthTokens,
+      formData.incomingAuthTokens,
       'incoming auth tokens',
       false
     ), // TODO: soon it will only be required for either incoming HTTP fields or outgoing HTTP fileds to be filled (or both)
@@ -187,7 +183,7 @@ export async function action({ request }: ActionArgs) {
       formData.outgoingAuthToken,
       'outgoing auth token'
     ),
-    outgoingEndpoint: validateUrl(
+    outgoingEndpoint: validateString(
       formData.outgoingEndpoint,
       'outgoing endpoint'
     ),
@@ -203,6 +199,10 @@ export async function action({ request }: ActionArgs) {
   // If there are errors, return the form errors object
   if (Object.values(formErrors).some(Boolean)) return json({ ...formErrors })
 
+  const incomingAuthTokens = formData.incomingAuthTokens
+    ? (formData.incomingAuthTokens as string)
+    : null
+
   const variables: { input: CreatePeerInput } = {
     input: {
       name: formData.name as string,
@@ -212,15 +212,15 @@ export async function action({ request }: ActionArgs) {
           ? {
               authTokens: incomingAuthTokens?.replace(/ /g, '').split(',')
             }
-          : null,
+          : undefined,
         outgoing: {
           authToken: formData.outgoingAuthToken as string,
           endpoint: formData.outgoingEndpoint as string
         }
       },
       maxPacketAmount: formData.maxPacketAmount
-        ? parseInt(formData.maxPacketAmount as string, 10)
-        : null,
+        ? BigInt(formData.maxPacketAmount as string)
+        : undefined,
       staticIlpAddress: formData.staticIlpAddress as string
     }
   }

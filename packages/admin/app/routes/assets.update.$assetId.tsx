@@ -28,7 +28,7 @@ function UpdateAsset({ asset }: { asset: Asset }) {
     <Form method='post' id='asset-form'>
       <span>
         <label htmlFor='asset-id'>Asset ID</label>
-        <div className='tooltip'>
+        <div>
           <input
             className={formErrors?.assetId ? 'input-error' : 'input fixed'}
             type='text'
@@ -39,14 +39,12 @@ function UpdateAsset({ asset }: { asset: Asset }) {
           />
           {formErrors?.assetId ? (
             <p style={{ color: 'red' }}>{formErrors?.assetId}</p>
-          ) : (
-            <span className='tooltiptext'>This field cannot be changed</span>
-          )}
+          ) : null}
         </div>
       </span>
       <span>
         <label htmlFor='asset-code'>Asset code</label>
-        <div className='tooltip'>
+        <div>
           <input
             className='input fixed'
             type='text'
@@ -55,12 +53,11 @@ function UpdateAsset({ asset }: { asset: Asset }) {
             defaultValue={asset.code}
             readOnly={true}
           />
-          <span className='tooltiptext'>This field cannot be changed</span>
         </div>
       </span>
       <span>
         <label htmlFor='asset-scale'>Asset scale</label>
-        <div className='tooltip'>
+        <div>
           <input
             className='input fixed'
             type='number'
@@ -69,7 +66,6 @@ function UpdateAsset({ asset }: { asset: Asset }) {
             defaultValue={asset.scale}
             readOnly={true}
           />
-          <span className='tooltiptext'>This field cannot be changed</span>
         </div>
       </span>
       <span>
@@ -144,8 +140,8 @@ export async function action({ request }: ActionArgs) {
     input: {
       id: formData.assetId as string,
       withdrawalThreshold: formData.withdrawalThreshold
-        ? parseInt(formData.withdrawalThreshold as string, 10)
-        : null
+        ? BigInt(formData.withdrawalThreshold as string)
+        : undefined
     }
   }
 

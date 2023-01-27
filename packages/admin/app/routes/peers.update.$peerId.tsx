@@ -22,8 +22,7 @@ import {
   validatePositiveInt,
   validateId,
   validateString,
-  validateIlpAddress,
-  validateUrl
+  validateIlpAddress
 } from '../lib/validate.server'
 import { obscureAuthToken } from '../lib/utils.server'
 
@@ -36,7 +35,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
     <Form method='post' id='peer-form'>
       <span>
         <label htmlFor='peer-id'>Peer ID</label>
-        <div className='tooltip'>
+        <div>
           <input
             className={formErrors?.peerId ? 'input-error' : 'input fixed'}
             type='text'
@@ -47,9 +46,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
           />
           {formErrors?.peerId ? (
             <p style={{ color: 'red' }}>{formErrors?.peerId}</p>
-          ) : (
-            <span className='tooltiptext'>This field cannot be changed</span>
-          )}
+          ) : null}
         </div>
       </span>
       <span>
@@ -134,7 +131,7 @@ function UpdatePeer({ peer }: { peer: Peer }) {
       </span>
       <span>
         <label htmlFor='asset-code'>Asset code</label>
-        <div className='tooltip'>
+        <div>
           <input
             className='input fixed'
             type='text'
@@ -143,12 +140,11 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             defaultValue={peer.asset.code}
             readOnly={true}
           />
-          <span className='tooltiptext'>This field cannot be changed</span>
         </div>
       </span>
       <span>
         <label htmlFor='asset-scale'>Asset scale</label>
-        <div className='tooltip'>
+        <div>
           <input
             className='input fixed'
             type='text'
@@ -157,7 +153,6 @@ function UpdatePeer({ peer }: { peer: Peer }) {
             defaultValue={peer.asset.scale}
             readOnly={true}
           />
-          <span className='tooltiptext'>This field cannot be changed</span>
         </div>
       </span>
       <span>
@@ -228,7 +223,7 @@ export async function action({ request }: ActionArgs) {
       'outgoing auth tokens',
       false
     ),
-    outgoingEndpoint: validateUrl(
+    outgoingEndpoint: validateString(
       formData.outgoingEndpoint,
       'outgoing endpoint',
       false
@@ -308,8 +303,8 @@ export async function action({ request }: ActionArgs) {
         }
       },
       maxPacketAmount: formData.maxPacketAmount
-        ? parseInt(formData.maxPacketAmount as string, 10)
-        : null,
+        ? BigInt(formData.maxPacketAmount as string)
+        : undefined,
       ...(formData.staticIlpAddress && {
         staticIlpAddress: formData.staticIlpAddress
       })
