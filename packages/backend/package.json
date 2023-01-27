@@ -11,6 +11,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
+    "@apollo/client": "^3.7.4",
     "@graphql-codegen/cli": "2.16.4",
     "@graphql-codegen/introspection": "2.2.3",
     "@graphql-codegen/typescript": "2.8.7",
@@ -41,7 +42,8 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
-    "@apollo/client": "^3.7.4",
+    "@apollo/server": "^4.3.1",
+    "@as-integrations/koa": "^0.2.1",
     "@faker-js/faker": "^7.6.0",
     "@graphql-tools/graphql-file-loader": "^7.5.14",
     "@graphql-tools/load": "^7.8.10",
@@ -53,7 +55,6 @@
     "@poppinss/file-generator": "^1.0.2",
     "add": "^2.0.6",
     "ajv": "^8.12.0",
-    "apollo-server-koa": "^3.11.1",
     "axios": "1.2.3",
     "base64url": "^3.0.1",
     "extensible-error": "^1.0.2",
