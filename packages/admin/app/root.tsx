@@ -10,6 +10,7 @@ import {
 } from '@remix-run/react'
 
 import styles from './styles/dist/main.css'
+import favicon from '../public/favicon.svg'
 import MainNavigation from 'app/components/MainNavigation'
 
 export const meta: MetaFunction = () => ({
@@ -114,5 +115,5 @@ export function CatchBoundary() {
 }
 
 export function links() {
-  return [{ rel: 'stylesheet', href: styles }]
+  return [{ rel: 'stylesheet', href: styles }, {rel: 'icon', href: favicon}]
 }
