@@ -72,7 +72,7 @@ importers:
       open-payments: workspace:*
       openapi: workspace:../openapi
       openapi-types: ^12.1.0
-      pg: ^8.8.0
+      pg: ^8.9.0
       pino: ^8.8.0
       pino-pretty: ^9.1.1
       testcontainers: ^9.1.1
@@ -87,7 +87,7 @@ importers:
       axios: 1.2.3
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      knex: 2.4.1_pg@8.8.0
+      knex: 2.4.1_pg@8.9.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-session: 6.3.1
@@ -96,7 +96,7 @@ importers:
       objection-db-errors: 1.1.2_objection@3.0.1
       open-payments: link:../open-payments
       openapi: link:../openapi
-      pg: 8.8.0
+      pg: 8.9.0
       pino: 8.8.0
       pino-pretty: 9.1.1
       testcontainers: 9.1.1
@@ -176,7 +176,7 @@ importers:
       open-payments: workspace:../open-payments
       openapi: workspace:../openapi
       openapi-types: ^12.1.0
-      pg: ^8.8.0
+      pg: ^8.9.0
       pino: ^8.8.0
       pino-pretty: ^9.1.1
       raw-body: ^2.5.1
@@ -218,7 +218,7 @@ importers:
       ioredis: 5.3.0
       iso8601-duration: 2.1.1
       json-canonicalize: 1.0.4
-      knex: 2.4.1_pg@8.8.0
+      knex: 2.4.1_pg@8.9.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       luxon: 3.2.1
@@ -227,7 +227,7 @@ importers:
       oer-utils: 5.1.3-alpha.2
       open-payments: link:../open-payments
       openapi: link:../openapi
-      pg: 8.8.0
+      pg: 8.9.0
       pino: 8.8.0
       pino-pretty: 9.1.1
       raw-body: 2.5.1
@@ -9713,7 +9713,7 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /knex/2.4.1_pg@8.8.0:
+  /knex/2.4.1_pg@8.9.0:
     resolution: {integrity: sha512-5wylehvnTOE8EdypPFakccA1zgo6Lp+TNultncvBUCUD0PasY+PLVa9qPrTFCioxPSPVha1u9ye2niAVVbLM0Q==}
     engines: {node: '>=12'}
     hasBin: true
@@ -9750,7 +9750,7 @@ packages:
       getopts: 2.3.0
       interpret: 2.2.0
       lodash: 4.17.21
-      pg: 8.8.0
+      pg: 8.9.0
       pg-connection-string: 2.5.0
       rechoir: 0.8.0
       resolve-from: 5.0.0
@@ -11053,7 +11053,7 @@ packages:
     dependencies:
       ajv: 8.12.0
       db-errors: 0.2.3
-      knex: 2.4.1_pg@8.8.0
+      knex: 2.4.1_pg@8.9.0
     dev: false
 
   /oer-utils/5.1.2:
@@ -11498,16 +11498,16 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /pg-pool/3.5.2_pg@8.8.0:
+  /pg-pool/3.5.2_pg@8.9.0:
     resolution: {integrity: sha512-His3Fh17Z4eg7oANLob6ZvH8xIVen3phEZh2QuyrIl4dQSDVEabNducv6ysROKpDNPSD+12tONZVWfSgMvDD9w==}
     peerDependencies:
       pg: '>=8.0'
     dependencies:
-      pg: 8.8.0
+      pg: 8.9.0
     dev: false
 
-  /pg-protocol/1.5.0:
-    resolution: {integrity: sha512-muRttij7H8TqRNu/DxrAJQITO4Ac7RmX3Klyr/9mJEOBeIpgnF8f9jAfRz5d3XwQZl5qBjF9gLsUtMPJE0vezQ==}
+  /pg-protocol/1.6.0:
+    resolution: {integrity: sha512-M+PDm637OY5WM307051+bsDia5Xej6d9IR4GwJse1qA1DIhiKlksvrneZOYQq42OM+spubpcNYEo2FcKQrDk+Q==}
     dev: false
 
   /pg-types/2.2.0:
@@ -11521,8 +11521,8 @@ packages:
       postgres-interval: 1.2.0
     dev: false
 
-  /pg/8.8.0:
-    resolution: {integrity: sha512-UXYN0ziKj+AeNNP7VDMwrehpACThH7LUl/p8TDFpEUuSejCUIwGSfxpHsPvtM6/WXFy6SU4E5RG4IJV/TZAGjw==}
+  /pg/8.9.0:
+    resolution: {integrity: sha512-ZJM+qkEbtOHRuXjmvBtOgNOXOtLSbxiMiUVMgE4rV6Zwocy03RicCVvDXgx8l4Biwo8/qORUnEqn2fdQzV7KCg==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -11533,8 +11533,8 @@ packages:
       buffer-writer: 2.0.0
       packet-reader: 1.0.0
       pg-connection-string: 2.5.0
-      pg-pool: 3.5.2_pg@8.8.0
-      pg-protocol: 1.5.0
+      pg-pool: 3.5.2_pg@8.9.0
+      pg-protocol: 1.6.0
       pg-types: 2.2.0
       pgpass: 1.0.5
     dev: false
