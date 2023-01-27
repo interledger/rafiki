@@ -8,7 +8,6 @@ import {
   useTransition as useNavigation
 } from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
-import * as R from 'ramda'
 import type { ActionArgs, LoaderArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { gql } from '@apollo/client'
@@ -267,7 +266,7 @@ export async function action({ request }: ActionArgs) {
       variables: peer_query_variables
     })
     .then((query): Peer => {
-      if (query.data) {
+      if (query?.data?.peer) {
         return query.data.peer
       } else {
         throw new Error(`Could not find peer with ID ${formData.peerId}`)
@@ -328,18 +327,22 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): UpdatePeerMutationResponse => {
-      if (query.data) {
+      if (query?.data?.updatePeer?.peer) {
         return query.data.updatePeer.peer.id
       } else {
-        let errorMessage, status
+        let errorMessage = ''
+        let status
         // In the case when GraphQL returns an error.
-        if (R.path(['errors', 0, 'message'], query)) {
-          errorMessage = R.path(['errors', 0, 'message'], query)
-          status = parseInt(R.path(['errors', 0, 'code'], query), 10)
-          // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
-        } else if (R.path(['data', 'updatePeer'], query)) {
-          errorMessage = R.path(['data', 'updatePeer', 'message'], query)
-          status = parseInt(R.path(['data', 'updatePeer', 'code'], query), 10)
+        if (query?.errors) {
+          query.errors.forEach((error): void => {
+            errorMessage = error.message + ', '
+          })
+          // Remove trailing comma.
+          errorMessage = errorMessage.slice(0, -2)
+          // In the case when the GraphQL returns data with an error message.
+        } else if (query?.data?.updatePeer) {
+          errorMessage = query.data.updatePeer.message
+          status = parseInt(query.data.updatePeer.code, 10)
           // In the case where no error message could be found.
         } else {
           errorMessage = 'Peer was not successfully updated.'
@@ -391,7 +394,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Peer => {
-      if (query.data) {
+      if (query?.data?.peer) {
         // Spread operator is required to copy data before obscuring the authToken since ApolloQueryResult is read-only
         const formattedPeer: Peer = {
           ...query.data.peer,

@@ -104,7 +104,7 @@ export async function loader() {
       `
     })
     .then((query): Asset[] => {
-      if (query.data) {
+      if (query?.data?.assets?.edges) {
         return query.data.assets.edges.map((element: AssetEdge) => element.node)
       } else {
         throw new Error(`No assets were found`)

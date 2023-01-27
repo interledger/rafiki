@@ -75,7 +75,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Asset => {
-      if (query.data) {
+      if (query?.data?.asset) {
         const formattedAsset: Asset = { ...query.data.asset }
         formattedAsset.createdAt = new Date(
           formattedAsset.createdAt

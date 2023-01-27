@@ -115,5 +115,8 @@ export function CatchBoundary() {
 }
 
 export function links() {
-  return [{ rel: 'stylesheet', href: styles }, {rel: 'icon', href: favicon}]
+  return [
+    { rel: 'stylesheet', href: styles },
+    { rel: 'icon', href: favicon }
+  ]
 }

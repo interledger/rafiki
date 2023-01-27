@@ -7,7 +7,6 @@ import {
   useTransition as useNavigation
 } from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
-import * as R from 'ramda'
 import type { ActionArgs, LoaderArgs } from '@remix-run/node'
 import invariant from 'tiny-invariant'
 import { validatePositiveInt, validateId } from '../lib/validate.server'
@@ -162,24 +161,22 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): AssetMutationResponse => {
-      if (query.data) {
+      if (query?.data?.updateAssetWithdrawalThreshold?.asset) {
         return query.data.updateAssetWithdrawalThreshold.asset.id
       } else {
-        let errorMessage, status
+        let errorMessage = ''
+        let status
         // In the case when GraphQL returns an error.
-        if (R.path(['errors', 0, 'message'], query)) {
-          errorMessage = R.path(['errors', 0, 'message'], query)
-          status = parseInt(R.path(['errors', 0, 'code'], query), 10)
-          // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
-        } else if (R.path(['data', 'updateAssetWithdrawalThreshold'], query)) {
-          errorMessage = R.path(
-            ['data', 'updateAssetWithdrawalThreshold', 'message'],
-            query
-          )
-          status = parseInt(
-            R.path(['data', 'updateAssetWithdrawalThreshold', 'code'], query),
-            10
-          )
+        if (query?.errors) {
+          query.errors.forEach((error): void => {
+            errorMessage = error.message + ', '
+          })
+          // Remove trailing comma.
+          errorMessage = errorMessage.slice(0, -2)
+          // In the case when the GraphQL returns data with an error message.
+        } else if (query?.data?.updateAssetWithdrawalThreshold) {
+          errorMessage = query.data.updateAssetWithdrawalThreshold.message
+          status = parseInt(query.data.updateAssetWithdrawalThreshold.code, 10)
           // In the case where no error message could be found.
         } else {
           errorMessage = 'Asset was not successfully updated.'
@@ -220,7 +217,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Asset => {
-      if (query.data) {
+      if (query?.data?.asset) {
         return query.data.asset
       } else {
         throw new Error(`Could not find asset with ID: ${params.assetId}`)

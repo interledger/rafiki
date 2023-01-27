@@ -111,7 +111,7 @@ export async function loader() {
       `
     })
     .then((query): Peer[] => {
-      if (query.data) {
+      if (query?.data?.peers?.edges) {
         return query.data.peers.edges.map((element: PeerEdge) => element.node)
       } else {
         throw new Error(`No peers were found`)

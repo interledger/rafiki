@@ -7,7 +7,6 @@ import {
   useTransition as useNavigation
 } from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
-import * as R from 'ramda'
 import type { ActionArgs } from '@remix-run/node'
 import {
   validateString,
@@ -242,18 +241,22 @@ export async function action({ request }: ActionArgs) {
       variables: variables
     })
     .then((query): CreatePeerMutationResponse => {
-      if (query.data) {
+      if (query?.data?.createPeer?.peer) {
         return query.data.createPeer.peer.id
       } else {
-        let errorMessage, status
+        let errorMessage = ''
+        let status
         // In the case when GraphQL returns an error.
-        if (R.path(['errors', 0, 'message'], query)) {
-          errorMessage = R.path(['errors', 0, 'message'], query)
-          status = parseInt(R.path(['errors', 0, 'code'], query), 10)
-          // In the case when the GraphQL query is correct but the creation fails due to a conflict for instance.
-        } else if (R.path(['data', 'createPeer'], query)) {
-          errorMessage = R.path(['data', 'createPeer', 'message'], query)
-          status = parseInt(R.path(['data', 'createPeer', 'code'], query), 10)
+        if (query?.errors) {
+          query.errors.forEach((error): void => {
+            errorMessage = error.message + ', '
+          })
+          // Remove trailing comma.
+          errorMessage = errorMessage.slice(0, -2)
+          // In the case when the GraphQL returns data with an error message.
+        } else if (query?.data?.createPeer) {
+          errorMessage = query.data.createPeer.message
+          status = parseInt(query.data.createPeer.code, 10)
           // In the case where no error message could be found.
         } else {
           errorMessage = 'Peer was not successfully created.'

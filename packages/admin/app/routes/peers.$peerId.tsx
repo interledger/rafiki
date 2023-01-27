@@ -88,7 +88,7 @@ export async function loader({ params }: LoaderArgs) {
       variables: variables
     })
     .then((query): Peer => {
-      if (query.data) {
+      if (query?.data?.peer) {
         // Spread operator is required to copy data before obscuring the authToken since ApolloQueryResult is read-only
         const formattedPeer: Peer = {
           ...query.data.peer,
