@@ -75,7 +75,7 @@ async function getIncomingPayment(
   }
   if (!incomingPayment) return ctx.throw(404)
   const connection = deps.connectionService.get(incomingPayment)
-  ctx.body = incomingPaymentToBody(incomingPayment, connection)
+  ctx.body = await incomingPaymentToBody(incomingPayment, connection)
 }
 
 export type CreateBody = {
@@ -116,7 +116,7 @@ async function createIncomingPayment(
 
   ctx.status = 201
   const connection = deps.connectionService.get(incomingPaymentOrError)
-  ctx.body = incomingPaymentToBody(incomingPaymentOrError, connection)
+  ctx.body = await incomingPaymentToBody(incomingPaymentOrError, connection)
 }
 
 async function completeIncomingPayment(
@@ -138,7 +138,7 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(incomingPaymentOrError)
+  ctx.body = await incomingPaymentToBody(incomingPaymentOrError)
 }
 
 async function listIncomingPayments(
@@ -149,8 +149,11 @@ async function listIncomingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
-      toBody: (payment) =>
-        incomingPaymentToBody(payment, deps.connectionService.getUrl(payment))
+      toBody: async (payment) =>
+        await incomingPaymentToBody(
+          payment,
+          deps.connectionService.getUrl(payment)
+        )
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list incoming payments')

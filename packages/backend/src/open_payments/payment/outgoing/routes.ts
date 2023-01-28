@@ -1,4 +1,3 @@
-import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
@@ -6,7 +5,10 @@ import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment } from './model'
 import { listSubresource } from '../../payment_pointer/routes'
-import { OutgoingPayment as OpenPaymentsOutgoingPayment } from 'open-payments'
+import {
+  AccessAction,
+  OutgoingPayment as OpenPaymentsOutgoingPayment
+} from 'open-payments'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -95,7 +97,7 @@ async function listOutgoingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
-      toBody: outgoingPaymentToBody
+      toBody: async (payment) => await outgoingPaymentToBody(payment)
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')

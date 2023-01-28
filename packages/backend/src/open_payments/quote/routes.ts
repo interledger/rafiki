@@ -40,7 +40,7 @@ async function getQuote(
     paymentPointerId: ctx.paymentPointer.id
   })
   if (!quote) return ctx.throw(404)
-  ctx.body = quoteToBody(quote)
+  ctx.body = await quoteToBody(quote)
 }
 
 interface CreateBodyBase {
