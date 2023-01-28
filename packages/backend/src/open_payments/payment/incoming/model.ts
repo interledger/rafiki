@@ -278,8 +278,8 @@ export class IncomingPayment
         : undefined,
       receivedAmount: serializeAmount(this.receivedAmount),
       completed: this.completed,
-      description: this.description,
-      externalRef: this.externalRef,
+      description: this.description ?? undefined,
+      externalRef: this.externalRef ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()

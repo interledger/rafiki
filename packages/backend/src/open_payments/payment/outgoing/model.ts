@@ -200,8 +200,8 @@ export class OutgoingPayment
       sentAmount: serializeAmount(this.sentAmount),
       receiver: this.receiver,
       failed: this.failed,
-      externalRef: this.externalRef,
-      description: this.description,
+      externalRef: this.externalRef ?? undefined,
+      description: this.description ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     }
