@@ -41,9 +41,6 @@ type GrantEdge {
 input RevokeGrantInput {
   continueId: String!
   continueToken: String!
-  # identifier: String!
-  # client: String!
-  # access: Access!
 }
 
 interface Model {
@@ -53,6 +50,9 @@ interface Model {
 
 type Grant implements Model {
   id: ID!
+  identifier: String!
+  client: String!
+  access: Access!
   state: String!
   createdAt: String!
 }
