@@ -1,4 +1,3 @@
-import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import {
   ReadContext,
@@ -20,6 +19,7 @@ import { listSubresource } from '../../payment_pointer/routes'
 import { Connection } from '../../connection/model'
 import { ConnectionService } from '../../connection/service'
 import {
+  AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
@@ -156,12 +156,13 @@ async function listIncomingPayments(
     ctx.throw(500, 'Error trying to list incoming payments')
   }
 }
-function incomingPaymentToBody(
+async function incomingPaymentToBody(
   incomingPayment: IncomingPayment,
   ilpStreamConnection?: Connection | string
-):
+): Promise<
   | OpenPaymentsIncomingPayment
   | OpenPaymentsIncomingPaymentWithConnection
-  | OpenPaymentsIncomingPaymentWithConnectionUrl {
+  | OpenPaymentsIncomingPaymentWithConnectionUrl
+> {
   return incomingPayment.toOpenPaymentsType(ilpStreamConnection)
 }

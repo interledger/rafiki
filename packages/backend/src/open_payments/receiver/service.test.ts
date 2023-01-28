@@ -193,26 +193,26 @@ describe('Receiver Service', (): void => {
           'get'
         )
 
-        await expect(receiverService.get(incomingPayment.url)).resolves.toEqual(
-          {
-            assetCode: incomingPayment.receivedAmount.assetCode,
-            assetScale: incomingPayment.receivedAmount.assetScale,
-            ilpAddress: expect.any(String),
-            sharedSecret: expect.any(Buffer),
-            incomingPayment: {
-              id: incomingPayment.url,
-              paymentPointer: incomingPayment.paymentPointer.url,
-              completed: incomingPayment.completed,
-              receivedAmount: incomingPayment.receivedAmount,
-              incomingAmount: incomingPayment.incomingAmount,
-              description: incomingPayment.description || undefined,
-              externalRef: incomingPayment.externalRef || undefined,
-              expiresAt: incomingPayment.expiresAt,
-              updatedAt: new Date(incomingPayment.updatedAt),
-              createdAt: new Date(incomingPayment.createdAt)
-            }
+        await expect(
+          receiverService.get(await incomingPayment.getUrl())
+        ).resolves.toEqual({
+          assetCode: incomingPayment.receivedAmount.assetCode,
+          assetScale: incomingPayment.receivedAmount.assetScale,
+          ilpAddress: expect.any(String),
+          sharedSecret: expect.any(Buffer),
+          incomingPayment: {
+            id: await incomingPayment.getUrl(),
+            paymentPointer: (await incomingPayment.getPaymentPointer()).url,
+            completed: incomingPayment.completed,
+            receivedAmount: incomingPayment.receivedAmount,
+            incomingAmount: incomingPayment.incomingAmount,
+            description: incomingPayment.description || undefined,
+            externalRef: incomingPayment.externalRef || undefined,
+            expiresAt: incomingPayment.expiresAt,
+            updatedAt: new Date(incomingPayment.updatedAt),
+            createdAt: new Date(incomingPayment.createdAt)
           }
-        )
+        })
         expect(clientGetIncomingPaymentSpy).not.toHaveBeenCalled()
       })
 

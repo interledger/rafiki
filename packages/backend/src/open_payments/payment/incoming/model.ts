@@ -259,6 +259,12 @@ export class IncomingPayment
   public async toOpenPaymentsType(
     ilpStreamConnection?: Connection | string
   ): Promise<
+    | OpenPaymentsIncomingPaymentWithConnection
+    | OpenPaymentsIncomingPaymentWithConnectionUrl
+  >
+  public async toOpenPaymentsType(
+    ilpStreamConnection?: Connection | string
+  ): Promise<
     | OpenPaymentsIncomingPayment
     | OpenPaymentsIncomingPaymentWithConnection
     | OpenPaymentsIncomingPaymentWithConnectionUrl
