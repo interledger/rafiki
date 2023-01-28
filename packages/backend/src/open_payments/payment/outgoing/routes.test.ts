@@ -100,19 +100,21 @@ describe('Outgoing Payment Routes', (): void => {
         return outgoingPayment
       },
       get: (ctx) => outgoingPaymentRoutes.get(ctx),
-      getBody: (outgoingPayment) => ({
-        id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
-        paymentPointer: paymentPointer.url,
-        receiver: outgoingPayment.receiver,
-        sendAmount: serializeAmount(outgoingPayment.sendAmount),
-        sentAmount: serializeAmount(outgoingPayment.sentAmount),
-        receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
-        description: outgoingPayment.description,
-        externalRef: outgoingPayment.externalRef,
-        failed,
-        createdAt: outgoingPayment.createdAt.toISOString(),
-        updatedAt: outgoingPayment.updatedAt.toISOString()
-      }),
+      getBody: async (outgoingPayment) => {
+        return {
+          id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
+          paymentPointer: paymentPointer.url,
+          receiver: outgoingPayment.receiver,
+          sendAmount: serializeAmount(outgoingPayment.sendAmount),
+          sentAmount: serializeAmount(outgoingPayment.sentAmount),
+          receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
+          description: outgoingPayment.description,
+          externalRef: outgoingPayment.externalRef,
+          failed,
+          createdAt: outgoingPayment.createdAt.toISOString(),
+          updatedAt: outgoingPayment.updatedAt.toISOString()
+        }
+      },
       list: (ctx) => outgoingPaymentRoutes.list(ctx),
       urlPath: OutgoingPayment.urlPath
     })
