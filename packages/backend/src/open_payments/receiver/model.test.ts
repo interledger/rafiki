@@ -54,7 +54,7 @@ describe('Receiver Model', (): void => {
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
           id: await incomingPayment.getUrl(),
-          paymentPointer: (await incomingPayment.getPaymentPointer()).url,
+          paymentPointer: paymentPointer.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
           completed: incomingPayment.completed,
@@ -75,13 +75,12 @@ describe('Receiver Model', (): void => {
       const connection = connectionService.get(incomingPayment)
 
       assert(connection instanceof Connection)
-      await expect(
-        Receiver.fromIncomingPayment(
-          await incomingPayment.toOpenPaymentsType(connection)
-        )
-      ).rejects.toThrow(
-        'Cannot create receiver from completed incoming payment'
-      )
+      const openPaymentsIncomingPayment =
+        await incomingPayment.toOpenPaymentsType(connection)
+
+      expect(() =>
+        Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
+      ).toThrow('Cannot create receiver from completed incoming payment')
     })
 
     test('throws if incoming payment is expired', async () => {
@@ -94,11 +93,12 @@ describe('Receiver Model', (): void => {
       const connection = connectionService.get(incomingPayment)
 
       assert(connection instanceof Connection)
-      await expect(
-        Receiver.fromIncomingPayment(
-          await incomingPayment.toOpenPaymentsType(connection)
-        )
-      ).rejects.toThrow('Cannot create receiver from expired incoming payment')
+      const openPaymentsIncomingPayment =
+        await incomingPayment.toOpenPaymentsType(connection)
+
+      expect(() =>
+        Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
+      ).toThrow('Cannot create receiver from expired incoming payment')
     })
 
     test('throws if stream connection has invalid ILP address', async () => {
@@ -111,11 +111,12 @@ describe('Receiver Model', (): void => {
       assert(connection instanceof Connection)
       ;(connection.ilpAddress as string) = 'not base 64 encoded'
 
-      await expect(
-        Receiver.fromIncomingPayment(
-          await incomingPayment.toOpenPaymentsType(connection)
-        )
-      ).rejects.toThrow('Invalid ILP address on stream connection')
+      const openPaymentsIncomingPayment =
+        await incomingPayment.toOpenPaymentsType(connection)
+
+      expect(() =>
+        Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
+      ).toThrow('Invalid ILP address on stream connection')
     })
   })
 
