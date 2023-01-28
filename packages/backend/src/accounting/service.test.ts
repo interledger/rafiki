@@ -16,10 +16,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import {
-  startTigerbeetleContainer,
-  TIGERBEETLE_PORT
-} from '../tests/tigerbeetle'
+import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
 describe('Accounting Service', (): void => {
@@ -36,10 +33,10 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    tigerbeetleContainer = await startTigerbeetleContainer()
-    Config.tigerbeetleReplicaAddresses = [
-      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-    ]
+    const { container, port } = await startTigerbeetleContainer()
+    tigerbeetleContainer = container
+    Config.tigerbeetleReplicaAddresses = [port]
+
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accountingService = await deps.use('accountingService')
