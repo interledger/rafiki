@@ -319,9 +319,11 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
           expect(ctx.response).toSatisfyApiSpec()
           expect(ctx.body).toEqual({
             pagination,
-            result: models
-              .slice(startIndex, endIndex + 1)
-              .map(async (model) => await getBody(model, true))
+            result: await Promise.all(
+              models
+                .slice(startIndex, endIndex + 1)
+                .map(async (model) => await getBody(model, true))
+            )
           })
         }
       )

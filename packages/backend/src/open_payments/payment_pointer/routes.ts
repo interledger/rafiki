@@ -68,10 +68,7 @@ export const listSubresource = async <M extends PaymentPointerSubresource>({
   )
   const result = {
     pagination: pageInfo,
-    result: page.map(async (item: M) => {
-      item.paymentPointer = ctx.paymentPointer
-      return await toBody(item)
-    })
+    result: await Promise.all(page.map(async (item: M) => await toBody(item)))
   }
   ctx.body = result
 }
