@@ -193,8 +193,8 @@ export class OutgoingPayment
 
     return {
       id: await this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.id,
-      quoteId: this.quote.id,
+      paymentPointer: paymentPointer.url,
+      quoteId: (await this.quote?.getUrl()) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       sendAmount: serializeAmount(this.sendAmount),
       sentAmount: serializeAmount(this.sentAmount),

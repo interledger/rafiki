@@ -105,6 +105,7 @@ describe('Outgoing Payment Routes', (): void => {
           id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
           paymentPointer: paymentPointer.url,
           receiver: outgoingPayment.receiver,
+          quoteId: await outgoingPayment.quote.getUrl(),
           sendAmount: serializeAmount(outgoingPayment.sendAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
