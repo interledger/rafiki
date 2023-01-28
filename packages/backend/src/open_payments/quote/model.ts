@@ -2,7 +2,10 @@ import { Model, Pojo } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { Amount, serializeAmount } from '../amount'
-import { PaymentPointerSubresource } from '../payment_pointer/model'
+import {
+  PaymentPointer,
+  PaymentPointerSubresource
+} from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from 'open-payments'
 
@@ -44,8 +47,15 @@ export class Quote extends PaymentPointerSubresource {
 
   private sendAmountValue!: bigint
 
-  public get url(): string {
-    return `${this.paymentPointerId}${Quote.urlPath}/${this.id}`
+  public async getPaymentPointer(): Promise<PaymentPointer> {
+    return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
+  }
+
+  public async getUrl(fetchedPaymentPointer?: PaymentPointer): Promise<string> {
+    const paymentPointer =
+      fetchedPaymentPointer || (await this.getPaymentPointer())
+
+    return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
   }
 
   public get sendAmount(): Amount {
@@ -154,10 +164,12 @@ export class Quote extends PaymentPointerSubresource {
     }
   }
 
-  public toOpenPaymentsType(): OpenPaymentsQuote {
+  public async toOpenPaymentsType(): Promise<OpenPaymentsQuote> {
+    const paymentPointer = await this.getPaymentPointer()
+
     return {
-      id: this.url,
-      paymentPointer: this.paymentPointerId,
+      id: await this.getUrl(paymentPointer),
+      paymentPointer: paymentPointer.url,
       receiveAmount: serializeAmount(this.receiveAmount),
       sendAmount: serializeAmount(this.sendAmount),
       receiver: this.receiver,

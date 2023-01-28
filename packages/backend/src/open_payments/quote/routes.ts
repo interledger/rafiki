@@ -80,7 +80,7 @@ async function createQuote(
     }
 
     ctx.status = 201
-    ctx.body = quoteToBody(quoteOrErr)
+    ctx.body = await quoteToBody(quoteOrErr)
   } catch (err) {
     if (isQuoteError(err)) {
       return ctx.throw(errorToCode[err], errorToMessage[err])
@@ -90,6 +90,6 @@ async function createQuote(
   }
 }
 
-function quoteToBody(quote: Quote): OpenPaymentsQuote {
+async function quoteToBody(quote: Quote): Promise<OpenPaymentsQuote> {
   return quote.toOpenPaymentsType()
 }

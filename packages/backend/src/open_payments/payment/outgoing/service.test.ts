@@ -266,7 +266,7 @@ describe('OutgoingPaymentService', (): void => {
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointer.id
     })
-    receiver = incomingPayment.url
+    receiver = await incomingPayment.getUrl()
 
     amtDelivered = BigInt(0)
   })
@@ -858,7 +858,9 @@ describe('OutgoingPaymentService', (): void => {
         const fetchedReceiver = connectionService.getUrl(incomingPayment)
         assert.ok(fetchedReceiver)
         const paymentId = await setup({
-          receiver: toConnection ? fetchedReceiver : incomingPayment.url,
+          receiver: toConnection
+            ? fetchedReceiver
+            : await incomingPayment.getUrl(),
           receiveAmount
         })
 

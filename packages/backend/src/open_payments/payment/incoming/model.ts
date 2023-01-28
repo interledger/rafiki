@@ -84,7 +84,6 @@ export class IncomingPayment
     }
   }
 
-  public paymentPointer!: PaymentPointer
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
@@ -131,8 +130,15 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public get url(): string {
-    return `${this.paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
+  public async getUrl(fetchedPaymentPointer?: PaymentPointer): Promise<string> {
+    const paymentPointer =
+      fetchedPaymentPointer || (await this.getPaymentPointer())
+
+    return `${paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
+  }
+
+  public async getPaymentPointer(): Promise<PaymentPointer> {
+    return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
   }
 
   public async onCredit({
@@ -243,22 +249,24 @@ export class IncomingPayment
     return payment
   }
 
-  public toOpenPaymentsType(): OpenPaymentsIncomingPayment
-  public toOpenPaymentsType(
+  public async toOpenPaymentsType(): Promise<OpenPaymentsIncomingPayment>
+  public async toOpenPaymentsType(
     ilpStreamConnection: Connection
-  ): OpenPaymentsIncomingPaymentWithConnection
-  public toOpenPaymentsType(
+  ): Promise<OpenPaymentsIncomingPaymentWithConnection>
+  public async toOpenPaymentsType(
     ilpStreamConnection: string
-  ): OpenPaymentsIncomingPaymentWithConnectionUrl
-  public toOpenPaymentsType(
+  ): Promise<OpenPaymentsIncomingPaymentWithConnectionUrl>
+  public async toOpenPaymentsType(
     ilpStreamConnection?: Connection | string
-  ):
+  ): Promise<
     | OpenPaymentsIncomingPayment
     | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl {
+    | OpenPaymentsIncomingPaymentWithConnectionUrl
+  > {
+    const paymentPointer = await this.getPaymentPointer()
     const baseIncomingPayment: OpenPaymentsIncomingPayment = {
-      id: this.url,
-      paymentPointer: this.paymentPointer.url,
+      id: await this.getUrl(paymentPointer),
+      paymentPointer: paymentPointer.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,

@@ -50,7 +50,7 @@ async function getOutgoingPayment(
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
   if (!outgoingPayment) return ctx.throw(404)
-  ctx.body = outgoingPaymentToBody(outgoingPayment)
+  ctx.body = await outgoingPaymentToBody(outgoingPayment)
 }
 
 export type CreateBody = {
@@ -84,7 +84,7 @@ async function createOutgoingPayment(
     return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
   }
   ctx.status = 201
-  ctx.body = outgoingPaymentToBody(paymentOrErr)
+  ctx.body = await outgoingPaymentToBody(paymentOrErr)
 }
 
 async function listOutgoingPayments(
@@ -95,15 +95,15 @@ async function listOutgoingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
-      toBody: (payment) => outgoingPaymentToBody(payment)
+      toBody: outgoingPaymentToBody
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')
   }
 }
 
-function outgoingPaymentToBody(
+async function outgoingPaymentToBody(
   outgoingPayment: OutgoingPayment
-): OpenPaymentsOutgoingPayment {
+): Promise<OpenPaymentsOutgoingPayment> {
   return outgoingPayment.toOpenPaymentsType()
 }

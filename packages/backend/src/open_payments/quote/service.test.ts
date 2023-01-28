@@ -247,7 +247,7 @@ describe('QuoteService', (): void => {
             paymentPointerId,
             receiver: toConnection
               ? connectionService.getUrl(incomingPayment)
-              : incomingPayment.url
+              : await incomingPayment.getUrl()
           }
           if (sendAmount) options.sendAmount = sendAmount
           if (receiveAmount) options.receiveAmount = receiveAmount
@@ -575,7 +575,7 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           paymentPointerId,
-          receiver: incomingPayment.url,
+          receiver: await incomingPayment.getUrl(),
           receiveAmount
         }
         const expected: ExpectedQuote = {
@@ -653,11 +653,11 @@ describe('QuoteService', (): void => {
       async ({ sendAmount, receiveAmount }): Promise<void> => {
         const options: CreateQuoteOptions = {
           paymentPointerId,
-          receiver: (
+          receiver: await (
             await createIncomingPayment(deps, {
               paymentPointerId: receivingPaymentPointer.id
             })
-          ).url
+          ).getUrl()
         }
         if (sendAmount) options.sendAmount = sendAmount
         if (receiveAmount) options.receiveAmount = receiveAmount
@@ -675,11 +675,11 @@ describe('QuoteService', (): void => {
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: (
+          receiver: await (
             await createIncomingPayment(deps, {
               paymentPointerId: receivingPaymentPointer.id
             })
-          ).url,
+          ).getUrl(),
           sendAmount
         })
       ).rejects.toThrow('missing prices')

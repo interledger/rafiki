@@ -194,7 +194,10 @@ type RouteTestsOptions<M> = Omit<
 > & {
   getPaymentPointer: () => Promise<PaymentPointer>
   get: (ctx: ReadContext) => Promise<void>
-  getBody: (model: M, list?: boolean) => Record<string, unknown>
+  getBody: (
+    model: M,
+    list?: boolean
+  ) => Record<string, unknown> | Promise<Record<string, unknown>>
   list?: (ctx: ListContext) => Promise<void>
   urlPath: string
 }
@@ -230,7 +233,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
       expect(ctx.response).toSatisfyApiSpec()
     }
     expect(ctx.body).toEqual({
-      result: expectedMatch ? [getBody(expectedMatch, true)] : [],
+      result: expectedMatch ? [await getBody(expectedMatch, true)] : [],
       pagination: {
         hasPreviousPage: false,
         hasNextPage: false,

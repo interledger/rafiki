@@ -4,7 +4,10 @@ import { DbErrors } from 'objection-db-errors'
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
-import { PaymentPointerSubresource } from '../../payment_pointer/model'
+import {
+  PaymentPointerSubresource,
+  PaymentPointer
+} from '../../payment_pointer/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
@@ -71,10 +74,6 @@ export class OutgoingPayment
 
   public get asset(): Asset {
     return this.quote.asset
-  }
-
-  public get url(): string {
-    return `${this.paymentPointerId}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get failed(): boolean {
@@ -178,10 +177,16 @@ export class OutgoingPayment
     }
   }
 
-  public toOpenPaymentsType(): OpenPaymentsOutgoingPayment {
+  public async getPaymentPointer(): Promise<PaymentPointer> {
+    return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
+  }
+
+  public async toOpenPaymentsType(): Promise<OpenPaymentsOutgoingPayment> {
+    const paymentPointer = await this.getPaymentPointer()
+
     return {
-      id: this.url,
-      paymentPointer: this.paymentPointerId,
+      id: `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`,
+      paymentPointer: paymentPointer.id,
       quoteId: this.quote.id,
       receiveAmount: serializeAmount(this.receiveAmount),
       sendAmount: serializeAmount(this.sendAmount),
