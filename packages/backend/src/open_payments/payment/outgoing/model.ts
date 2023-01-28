@@ -72,6 +72,13 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
+  public async getUrl(fetchedPaymentPointer?: PaymentPointer): Promise<string> {
+    const paymentPointer =
+      fetchedPaymentPointer || (await this.getPaymentPointer())
+
+    return `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`
+  }
+
   public get asset(): Asset {
     return this.quote.asset
   }
@@ -185,7 +192,7 @@ export class OutgoingPayment
     const paymentPointer = await this.getPaymentPointer()
 
     return {
-      id: `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`,
+      id: await this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.id,
       quoteId: this.quote.id,
       receiveAmount: serializeAmount(this.receiveAmount),
