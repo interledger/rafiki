@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { Server } from 'http'
+import http, { Server } from 'http'
 import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
@@ -10,7 +10,9 @@ import session from 'koa-session'
 import cors from '@koa/cors'
 import { Logger } from 'pino'
 import Router from '@koa/router'
-import { ApolloServer } from 'apollo-server-koa'
+import { ApolloServer } from '@apollo/server'
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { koaMiddleware } from '@as-integrations/koa'
 
 import { IAppConfig } from './config/app'
 import { addResolversToSchema } from '@graphql-tools/schema'
@@ -134,6 +136,7 @@ export class App {
 
   public async startAdminServer(port: number | string): Promise<void> {
     const koa = await this.createKoaServer()
+    const httpServer = http.createServer(koa.callback())
 
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
@@ -146,21 +149,44 @@ export class App {
       resolvers
     })
 
-    // Setup Apollo on graphql endpoint
+    // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
-      context: async (): Promise<ApolloContext> => {
-        return {
-          container: this.container,
-          logger: await this.container.use('logger')
-        }
-      }
+      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
 
     await this.apolloServer.start()
-    koa.use(this.apolloServer.getMiddleware())
 
-    this.adminServer = koa.listen(port)
+    koa.use(bodyParser())
+
+    koa.use(
+      async (
+        ctx: {
+          path: string
+          status: number
+        },
+        next: Koa.Next
+      ): Promise<void> => {
+        if (ctx.path !== '/graphql') {
+          ctx.status = 404
+        } else {
+          return next()
+        }
+      }
+    )
+
+    koa.use(
+      koaMiddleware(this.apolloServer, {
+        context: async (): Promise<ApolloContext> => {
+          return {
+            container: this.container,
+            logger: await this.container.use('logger')
+          }
+        }
+      })
+    )
+
+    this.adminServer = httpServer.listen(port)
   }
 
   public async startAuthServer(port: number | string): Promise<void> {

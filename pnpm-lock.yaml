@@ -47,6 +47,8 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.4
+      '@apollo/server': ^4.3.1
+      '@as-integrations/koa': ^0.2.1
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 2.16.4
       '@graphql-codegen/introspection': 2.2.3
@@ -65,7 +67,6 @@ importers:
       '@types/koa__router': ^12.0.0
       '@types/uuid': ^9.0.0
       ajv: ^8.12.0
-      apollo-server-koa: ^3.11.1
       axios: ^1.2.3
       cross-fetch: ^3.1.4
       http-signature-utils: workspace:../http-signature-utils
@@ -92,13 +93,14 @@ importers:
     dependencies:
       '@adonisjs/fold': 8.2.0
       '@apollo/client': 3.7.4_graphql@16.6.0
+      '@apollo/server': 4.3.1_graphql@16.6.0
+      '@as-integrations/koa': 0.2.1_3zgyeuwkoz3xkuajpziecknkgu
       '@graphql-tools/graphql-file-loader': 7.5.14_graphql@16.6.0
-      '@graphql-tools/load': 7.8.9_graphql@16.6.0
-      '@graphql-tools/schema': 9.0.13_graphql@16.6.0
+      '@graphql-tools/load': 7.8.10_graphql@16.6.0
+      '@graphql-tools/schema': 9.0.14_graphql@16.6.0
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
-      apollo-server-koa: 3.11.1_graphql@16.6.0+koa@2.14.1
       axios: 1.2.3
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
@@ -3115,15 +3117,6 @@ packages:
 
   /@graphql-tools/utils/8.12.0_graphql@16.6.0:
     resolution: {integrity: sha512-TeO+MJWGXjUTS52qfK4R8HiPoF/R7X+qmgtOYd8DTH0l6b+5Y/tlg5aGeUJefqImRq7nvi93Ms40k/Uz4D5CWw==}
-    peerDependencies:
-      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
-    dependencies:
-      graphql: 16.6.0
-      tslib: 2.4.1
-    dev: true
-
-  /@graphql-tools/utils/8.13.1_graphql@16.6.0:
-    resolution: {integrity: sha512-qIh9yYpdUFmctVqovwMdheVNJqFh+DQNWIhX87FJStfXYnmweBUDATok9fWPleKeFwxnW8IapKmY8m8toJEkAw==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
     dependencies:

@@ -2,20 +2,23 @@ import {
   ResolversTypes,
   MutationResolvers,
   Grant as SchemaGrant,
+  Access as SchemaAccess,
   QueryResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { Grant } from '../../grant/model'
 import { Pagination } from '../../shared/baseModel'
 import { getPageInfo } from '../../shared/pagination'
+import { Access } from '../../access/model'
 
 export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
-  parent,
+  _,
   args,
   ctx
 ): Promise<ResolversTypes['GrantsConnection']> => {
   const grantService = await ctx.container.use('grantService')
   const grants = await grantService.getPage(args)
+
   const pageInfo = await getPageInfo(
     (pagination: Pagination) => grantService.getPage(pagination),
     grants
@@ -37,26 +40,17 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
     ctx
   ): Promise<ResolversTypes['RevokeGrantMutationResponse']> => {
     try {
-      const { continueId, continueToken } = args.input
-      if (!continueId || !continueToken) {
+      const { grantId } = args.input
+      if (!grantId) {
         return {
           code: '401',
           success: false,
-          message: 'Grant Id or token is not provided'
+          message: 'Grant Id is not provided'
         }
       }
 
       const grantService = await ctx.container.use('grantService')
-      const grant = await grantService.getByContinue(continueId, continueToken)
-      if (!grant) {
-        return {
-          code: '404',
-          success: false,
-          message: 'There is not grant with this parameters'
-        }
-      }
-
-      const deletion = await grantService.deleteGrant(continueId)
+      const deletion = await grantService.deleteGrantById(grantId)
       if (!deletion) {
         return {
           code: '404',
@@ -66,15 +60,14 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
       }
 
       return {
-        code: '204',
+        code: '200',
         success: true,
-        message: 'Grant revoked',
-        grant: grantToGraphql(grant)
+        message: 'Grant revoked'
       }
     } catch (error) {
       ctx.logger.error(
         {
-          options: args.input.continueId,
+          options: args.input.grantId,
           error
         },
         'error revoking grant'
@@ -90,6 +83,16 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
 
 export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   id: grant.id,
+  identifier: grant.identifier,
+  client: grant.client,
+  access: grant.access?.map((item) => accessToGraphql(item)),
   state: grant.state,
   createdAt: grant.createdAt.toISOString()
+})
+
+export const accessToGraphql = (access: Access): SchemaAccess => ({
+  id: access.id,
+  grantId: access.grantId,
+  identifier: access.identifier,
+  createdAt: access.createdAt.toISOString()
 })

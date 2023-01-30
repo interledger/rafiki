@@ -14,10 +14,21 @@ export type Scalars = {
   Float: number;
 };
 
+export type Access = Model & {
+  __typename?: 'Access';
+  createdAt: Scalars['String'];
+  grantId: Scalars['String'];
+  id: Scalars['ID'];
+  identifier?: Maybe<Scalars['String']>;
+};
+
 export type Grant = Model & {
   __typename?: 'Grant';
+  access: Array<Access>;
+  client: Scalars['String'];
   createdAt: Scalars['String'];
   id: Scalars['ID'];
+  identifier: Scalars['String'];
   state: Scalars['String'];
 };
 
@@ -82,8 +93,7 @@ export type QueryGrantsArgs = {
 };
 
 export type RevokeGrantInput = {
-  continueId: Scalars['String'];
-  continueToken: Scalars['String'];
+  grantId: Scalars['String'];
 };
 
 export type RevokeGrantMutationResponse = MutationResponse & {
@@ -163,13 +173,14 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  Access: ResolverTypeWrapper<Partial<Access>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
   GrantEdge: ResolverTypeWrapper<Partial<GrantEdge>>;
   GrantsConnection: ResolverTypeWrapper<Partial<GrantsConnection>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
-  Model: ResolversTypes['Grant'];
+  Model: ResolversTypes['Access'] | ResolversTypes['Grant'];
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['RevokeGrantMutationResponse'];
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
@@ -181,13 +192,14 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  Access: Partial<Access>;
   Boolean: Partial<Scalars['Boolean']>;
   Grant: Partial<Grant>;
   GrantEdge: Partial<GrantEdge>;
   GrantsConnection: Partial<GrantsConnection>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
-  Model: ResolversParentTypes['Grant'];
+  Model: ResolversParentTypes['Access'] | ResolversParentTypes['Grant'];
   Mutation: {};
   MutationResponse: ResolversParentTypes['RevokeGrantMutationResponse'];
   PageInfo: Partial<PageInfo>;
@@ -197,9 +209,20 @@ export type ResolversParentTypes = {
   String: Partial<Scalars['String']>;
 };
 
+export type AccessResolvers<ContextType = any, ParentType extends ResolversParentTypes['Access'] = ResolversParentTypes['Access']> = {
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  grantId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  identifier?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type GrantResolvers<ContextType = any, ParentType extends ResolversParentTypes['Grant'] = ResolversParentTypes['Grant']> = {
+  access?: Resolver<Array<ResolversTypes['Access']>, ParentType, ContextType>;
+  client?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  identifier?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -217,7 +240,7 @@ export type GrantsConnectionResolvers<ContextType = any, ParentType extends Reso
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'Grant', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Access' | 'Grant', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
@@ -254,6 +277,7 @@ export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType e
 };
 
 export type Resolvers<ContextType = any> = {
+  Access?: AccessResolvers<ContextType>;
   Grant?: GrantResolvers<ContextType>;
   GrantEdge?: GrantEdgeResolvers<ContextType>;
   GrantsConnection?: GrantsConnectionResolvers<ContextType>;

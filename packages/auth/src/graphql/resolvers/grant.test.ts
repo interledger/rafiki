@@ -1,5 +1,4 @@
-import assert from 'assert'
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -14,29 +13,17 @@ import {
   RevokeGrantMutationResponse
 } from '../generated/graphql'
 import { Grant as GrantModel } from '../../grant/model'
-import { generateToken } from '../../shared/utils'
-import { Access } from '../../access/model'
-import { AccessAction, AccessType } from 'open-payments'
 import { getPageTests } from './page.test'
-import { GrantService } from '../../grant/service'
-import { createGrant, getGrantRequest } from '../../tests/grant'
+import { createGrant } from '../../tests/grant'
 
 describe('Grant Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let grantService: GrantService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-
-    grantService = await deps.use('grantService')
   })
-
-  const BASE_GRANT_ACCESS = {
-    actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
-    identifier: `https://example.com/${uuid()}`
-  }
 
   afterEach(async (): Promise<void> => {
     await truncateTables(appContainer.knex)
@@ -50,15 +37,14 @@ describe('Grant Resolvers', (): void => {
   describe('Grants Queries', (): void => {
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () =>
-        grantService.create(getGrantRequest()) as Promise<GrantModel>,
+      createModel: () => createGrant(deps) as Promise<GrantModel>,
       pagedQuery: 'grants'
     })
 
     test('Can get grants', async (): Promise<void> => {
       const grants: GrantModel[] = []
       for (let i = 0; i < 2; i++) {
-        const grant = await grantService.create(getGrantRequest())
+        const grant = await createGrant(deps)
         grants.push(grant)
       }
       const query = await appContainer.apolloClient
@@ -97,22 +83,15 @@ describe('Grant Resolvers', (): void => {
     })
   })
 
-  describe('Revoke key', (): void => {
+  describe('Revoke grant', (): void => {
     let grant: GrantModel
     beforeEach(async (): Promise<void> => {
-      grant = await createGrant()
-
-      await Access.query().insert({
-        ...BASE_GRANT_ACCESS,
-        type: AccessType.IncomingPayment,
-        grantId: grant.id
-      })
+      grant = await createGrant(deps)
     })
 
     test('Can revoke a grant', async (): Promise<void> => {
       const input: RevokeGrantInput = {
-        continueId: grant.continueId,
-        continueToken: grant.continueToken
+        grantId: grant.id
       }
 
       const response = await appContainer.apolloClient
@@ -143,14 +122,12 @@ describe('Grant Resolvers', (): void => {
         })
 
       expect(response.success).toBe(true)
-      expect(response.code).toBe('204')
-      assert.ok(response.grant)
+      expect(response.code).toBe('200')
     })
 
     test('Returns 404 if id does not exist', async (): Promise<void> => {
       const input: RevokeGrantInput = {
-        continueId: uuid(),
-        continueToken: generateToken()
+        grantId: uuid()
       }
 
       const response = await appContainer.apolloClient
@@ -182,7 +159,7 @@ describe('Grant Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toBe('404')
-      expect(response.message).toBe('There is not grant with this parameters')
+      expect(response.message).toBe('Delete grant was not successful')
       expect(response.grant).toBeNull()
     })
   })

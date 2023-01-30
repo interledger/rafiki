@@ -28,20 +28,17 @@ export async function createGrant(
     }
   }
 
-
-  return await grantService.create(
-      {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment
-            }
-          ]
+  return await grantService.create({
+    ...BASE_GRANT_REQUEST,
+    access_token: {
+      access: [
+        {
+          ...BASE_GRANT_ACCESS,
+          type: AccessType.IncomingPayment
         }
-      }
-    )
+      ]
+    }
+  })
 }
 
 export async function createGrantOld(): Promise<Grant> {
