@@ -57,7 +57,7 @@ importers:
       '@types/koa__router': ^12.0.0
       '@types/uuid': ^9.0.0
       ajv: ^8.12.0
-      axios: ^1.2.5
+      axios: ^1.2.6
       http-signature-utils: workspace:../http-signature-utils
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
@@ -84,7 +84,7 @@ importers:
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
-      axios: 1.2.5
+      axios: 1.2.6
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       knex: 2.4.1_pg@8.9.0
@@ -147,7 +147,7 @@ importers:
       '@types/uuid': ^9.0.0
       add: ^2.0.6
       ajv: ^8.12.0
-      axios: 1.2.5
+      axios: 1.2.6
       base64url: ^3.0.1
       cross-fetch: ^3.1.4
       extensible-error: ^1.0.2
@@ -204,7 +204,7 @@ importers:
       '@poppinss/file-generator': 1.0.2
       add: 2.0.6
       ajv: 8.12.0
-      axios: 1.2.5
+      axios: 1.2.6
       base64url: 3.0.1
       extensible-error: 1.0.2
       fishery: 2.2.2
@@ -319,7 +319,7 @@ importers:
       '@types/react': ^18.0.27
       '@types/react-dom': ^18.0.10
       '@types/uuid': ^9.0.0
-      axios: ^1.2.5
+      axios: ^1.2.6
       eslint: ^8.33.0
       graphql: ^16.6.0
       http-signature-utils: workspace:../http-signature-utils
@@ -335,7 +335,7 @@ importers:
       '@remix-run/serve': 1.11.1_biqbaboplfbrettd7655fr4n2y
       '@types/node': 18.7.12
       '@types/uuid': 9.0.0
-      axios: 1.2.5
+      axios: 1.2.6
       graphql: 16.6.0
       http-signature-utils: link:../http-signature-utils
       react: 18.2.0
@@ -354,7 +354,7 @@ importers:
     specifiers:
       '@types/node': ^18.7.12
       '@types/uuid': ^9.0.0
-      axios: ^1.2.5
+      axios: ^1.2.6
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
       http-signature-utils: workspace:../http-signature-utils
@@ -365,7 +365,7 @@ importers:
       typescript: ^4.9.4
       uuid: ^9.0.0
     dependencies:
-      axios: 1.2.5
+      axios: 1.2.6
       http-message-signatures: 0.1.2
       http-signature-utils: link:../http-signature-utils
       openapi: link:../openapi
@@ -417,7 +417,7 @@ importers:
   packages/token-introspection:
     specifiers:
       '@types/node': ^18.7.12
-      axios: ^1.2.5
+      axios: ^1.2.6
       nock: ^13.3.0
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
@@ -425,7 +425,7 @@ importers:
       typescript: ^4.3.0
       uuid: ^8.3.2
     dependencies:
-      axios: 1.2.5
+      axios: 1.2.6
       openapi: link:../openapi
       pino: 8.8.0
     devDependencies:
@@ -5249,8 +5249,8 @@ packages:
       - debug
     dev: true
 
-  /axios/1.2.5:
-    resolution: {integrity: sha512-9pU/8mmjSSOb4CXVsvGIevN+MlO/t9OWtKadTaLuN85Gge3HGorUckgp8A/2FH4V4hJ7JuQ3LIeI7KAV9ITZrQ==}
+  /axios/1.2.6:
+    resolution: {integrity: sha512-rC/7F08XxZwjMV4iuWv+JpD3E0Ksqg9nac4IIg6RwNuF0JTeWoCo/mBNG54+tNhhI11G3/VDRbdDQTs9hGp4pQ==}
     dependencies:
       follow-redirects: 1.15.1
       form-data: 4.0.0
