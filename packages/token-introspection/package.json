@@ -23,7 +23,7 @@
     "uuid": "^8.3.2"
   },
   "dependencies": {
-    "axios": "^1.2.3",
+    "axios": "^1.2.5",
     "openapi": "workspace:../openapi",
     "pino": "^8.4.2"
   }
