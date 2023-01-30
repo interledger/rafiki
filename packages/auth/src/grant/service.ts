@@ -146,7 +146,7 @@ async function deleteGrantById(
   const deletion = await Grant.query(deps.knex).deleteById(grantId)
   if (deletion === 0) {
     deps.logger.info(
-      `Could not find grant corresponding to grantId: ${grantId}`
+      `Could not delete grant corresponding to grantId: ${grantId}`
     )
     return false
   }
