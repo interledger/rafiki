@@ -40,22 +40,3 @@ export async function createGrant(
     }
   })
 }
-
-export async function createGrantOld(): Promise<Grant> {
-  const CLIENT = faker.internet.url()
-  const grant = await Grant.query().insert({
-    state: GrantState.Pending,
-    startMethod: [StartMethod.Redirect],
-    continueToken: generateToken(),
-    continueId: uuid(),
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com',
-    clientNonce: generateNonce(),
-    client: CLIENT,
-    interactId: uuid(),
-    interactRef: uuid(),
-    interactNonce: generateNonce()
-  })
-
-  return grant
-}
