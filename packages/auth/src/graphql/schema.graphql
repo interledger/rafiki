@@ -58,7 +58,6 @@ type Grant implements Model {
 
 type Access implements Model {
   id: ID!
-  grantId: String!
   identifier: String
   createdAt: String!
 }
