@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
 import * as Pay from '@interledger/pay'
@@ -142,10 +143,12 @@ describe('OutgoingPaymentService', (): void => {
         amount
       })
     ).resolves.toBeUndefined()
+    const totalReceived = await accountingService.getTotalReceived(
+      incomingPayment.id
+    )
+    assert.ok(totalReceived)
     await incomingPayment.onCredit({
-      totalReceived: await accountingService.getTotalReceived(
-        incomingPayment.id
-      )
+      totalReceived
     })
   }
 
@@ -160,15 +163,15 @@ describe('OutgoingPaymentService', (): void => {
           options.sourceAccount.id === sourcePaymentPointerId
         ) {
           return {
-            commit: async (): Promise<void | TransferError> => {
-              const err = await trxOrError.commit()
+            post: async (): Promise<void | TransferError> => {
+              const err = await trxOrError.post()
               if (!err) {
                 amtDelivered +=
                   options.destinationAmount || options.sourceAmount
               }
               return err
             },
-            rollback: trxOrError.rollback
+            void: trxOrError.void
           }
         }
         return trxOrError
@@ -280,10 +283,10 @@ describe('OutgoingPaymentService', (): void => {
 
   describe('get/getPaymentPointerPage', (): void => {
     getTests({
-      createModel: ({ clientId }) =>
+      createModel: ({ client }) =>
         createOutgoingPayment(deps, {
           paymentPointerId,
-          clientId,
+          client,
           receiver,
           sendAmount,
           validDestination: false
@@ -307,14 +310,14 @@ describe('OutgoingPaymentService', (): void => {
       ${GrantOption.None}
     `('$grantOption grant', ({ grantOption }): void => {
       let grant: Grant | undefined
-      let clientId: string | undefined
+      let client: string | undefined
 
       beforeEach(async (): Promise<void> => {
         if (grantOption !== GrantOption.None) {
           grant = {
             id: uuid()
           }
-          clientId = uuid()
+          client = faker.internet.url()
           if (grantOption === GrantOption.Existing) {
             await OutgoingPaymentGrant.query(knex).insertAndFetch({
               id: grant.id
@@ -338,7 +341,9 @@ describe('OutgoingPaymentService', (): void => {
             const peerService = await deps.use('peerService')
             const peer = await createPeer(deps)
             if (toConnection) {
-              receiver = connectionService.getUrl(incomingPayment)
+              const fetchedReceiver = connectionService.getUrl(incomingPayment)
+              assert.ok(fetchedReceiver)
+              receiver = fetchedReceiver
             }
             const quote = await createQuote(deps, {
               paymentPointerId,
@@ -497,6 +502,7 @@ describe('OutgoingPaymentService', (): void => {
 
       if (grantOption !== GrantOption.None) {
         test('fails to create if grant is locked', async () => {
+          assert.ok(grant)
           grant.limits = {
             receiver,
             sendAmount
@@ -559,13 +565,14 @@ describe('OutgoingPaymentService', (): void => {
               quoteId: quote.id,
               description: 'rent',
               externalRef: '202201',
-              clientId
+              client
             }
             const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
             interval = `R0/${start.toISOString()}/P1M`
           })
           test('fails if grant limits interval does not cover now', async (): Promise<void> => {
             const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
+            assert.ok(grant)
             grant.limits = {
               sendAmount,
               interval: `R0/${start.toISOString()}/P1M`
@@ -583,6 +590,7 @@ describe('OutgoingPaymentService', (): void => {
           `(
             'fails if grant limits do not match payment - $description',
             async ({ limits }): Promise<void> => {
+              assert.ok(grant)
               grant.limits = { ...limits, interval }
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
@@ -605,6 +613,7 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+              assert.ok(grant)
               grant.limits = sendAmount
                 ? {
                     sendAmount: amount,
@@ -637,6 +646,7 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
+              assert.ok(grant)
               grant.limits = {
                 sendAmount: sendAmount ? grantAmount : undefined,
                 receiveAmount: sendAmount ? undefined : grantAmount,
@@ -681,6 +691,7 @@ describe('OutgoingPaymentService', (): void => {
           `(
             'succeeds if grant access $description',
             async ({ limits }): Promise<void> => {
+              assert.ok(grant)
               grant.limits = limits
               await expect(
                 outgoingPaymentService.create({ ...options, grant })
@@ -715,7 +726,7 @@ describe('OutgoingPaymentService', (): void => {
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
-
+              assert.ok(grant)
               grant.limits = sendAmount
                 ? {
                     sendAmount: grantAmount,
@@ -737,7 +748,7 @@ describe('OutgoingPaymentService', (): void => {
                   }/${uuid()}/incoming-payments/${uuid()}`,
                   sendAmount: sendAmount ? paymentAmount : undefined,
                   receiveAmount: sendAmount ? undefined : paymentAmount,
-                  clientId,
+                  client,
                   grant,
                   validDestination: false
                 })
@@ -777,7 +788,9 @@ describe('OutgoingPaymentService', (): void => {
 
       beforeEach((): void => {
         if (toConnection) {
-          receiver = connectionService.getUrl(incomingPayment)
+          const fetchedReceiver = connectionService.getUrl(incomingPayment)
+          assert.ok(fetchedReceiver)
+          receiver = fetchedReceiver
         }
       })
 
@@ -842,10 +855,10 @@ describe('OutgoingPaymentService', (): void => {
             assetScale: receiverPaymentPointer.asset.scale
           }
         })
+        const fetchedReceiver = connectionService.getUrl(incomingPayment)
+        assert.ok(fetchedReceiver)
         const paymentId = await setup({
-          receiver: toConnection
-            ? connectionService.getUrl(incomingPayment)
-            : incomingPayment.url,
+          receiver: toConnection ? fetchedReceiver : incomingPayment.url,
           receiveAmount
         })
 

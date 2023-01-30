@@ -2,9 +2,10 @@ import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   ILPStreamConnection as OpenPaymentsConnection,
-  isNonInteractiveGrant
+  isNonInteractiveGrant,
+  AccessType,
+  AccessAction
 } from 'open-payments'
-
 import { ConnectionService } from '../connection/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
@@ -13,11 +14,27 @@ import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Receiver } from './model'
-import { AccessType, AccessAction } from 'open-payments'
+import { Amount } from '../amount'
+import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
+import { isIncomingPaymentError } from '../payment/incoming/errors'
+import {
+  isReceiverError,
+  ReceiverError,
+  errorToMessage as receiverErrorToMessage
+} from './errors'
+
+interface CreateReceiverArgs {
+  paymentPointerUrl: string
+  description?: string
+  expiresAt?: Date
+  incomingAmount?: Amount
+  externalRef?: string
+}
 
 // A receiver is resolved from an incoming payment or a connection
 export interface ReceiverService {
   get(url: string): Promise<Receiver | undefined>
+  create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -27,6 +44,7 @@ interface ServiceDependencies extends BaseService {
   openPaymentsUrl: string
   paymentPointerService: PaymentPointerService
   openPaymentsClient: AuthenticatedClient
+  remoteIncomingPaymentService: RemoteIncomingPaymentService
 }
 
 const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
@@ -45,8 +63,77 @@ export async function createReceiverService(
   }
 
   return {
-    get: (url) => getReceiver(deps, url)
+    get: (url) => getReceiver(deps, url),
+    create: (url) => createReceiver(deps, url)
   }
+}
+
+async function createReceiver(
+  deps: ServiceDependencies,
+  args: CreateReceiverArgs
+): Promise<Receiver | ReceiverError> {
+  const localPaymentPointer = await deps.paymentPointerService.getByUrl(
+    args.paymentPointerUrl
+  )
+
+  const incomingPaymentOrError = localPaymentPointer
+    ? await createLocalIncomingPayment(deps, args, localPaymentPointer)
+    : await deps.remoteIncomingPaymentService.create(args)
+
+  if (isReceiverError(incomingPaymentOrError)) {
+    return incomingPaymentOrError
+  }
+
+  try {
+    return Receiver.fromIncomingPayment(incomingPaymentOrError)
+  } catch (error) {
+    const errorMessage = 'Could not create receiver from incoming payment'
+    deps.logger.error(
+      { error: error && error['message'] ? error['message'] : 'Unknown error' },
+      errorMessage
+    )
+
+    throw new Error(errorMessage, { cause: error })
+  }
+}
+
+async function createLocalIncomingPayment(
+  deps: ServiceDependencies,
+  args: CreateReceiverArgs,
+  paymentPointer: PaymentPointer
+): Promise<OpenPaymentsIncomingPayment | ReceiverError> {
+  const { description, expiresAt, incomingAmount, externalRef } = args
+
+  const incomingPaymentOrError = await deps.incomingPaymentService.create({
+    paymentPointerId: paymentPointer.id,
+    description,
+    expiresAt,
+    incomingAmount,
+    externalRef
+  })
+
+  if (isIncomingPaymentError(incomingPaymentOrError)) {
+    const errorMessage = 'Could not create local incoming payment'
+    deps.logger.error(
+      { error: receiverErrorToMessage(incomingPaymentOrError) },
+      errorMessage
+    )
+
+    return incomingPaymentOrError
+  }
+
+  const connection = deps.connectionService.get(incomingPaymentOrError)
+
+  if (!connection) {
+    const errorMessage = 'Could not get connection for local incoming payment'
+    deps.logger.error({ incomingPaymentOrError }, errorMessage)
+
+    throw new Error(errorMessage)
+  }
+
+  return incomingPaymentOrError.toOpenPaymentsType({
+    ilpStreamConnection: connection
+  })
 }
 
 async function getReceiver(
@@ -101,7 +188,7 @@ async function getConnection(
     })
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get connection'
     )
 
@@ -148,13 +235,17 @@ async function getIncomingPayment(
       deps,
       urlParseResult.paymentPointerUrl
     )
-    return await deps.openPaymentsClient.incomingPayment.get({
-      url,
-      accessToken: grant.accessToken
-    })
+    if (!grant) {
+      throw new Error('Could not find grant')
+    } else {
+      return await deps.openPaymentsClient.incomingPayment.get({
+        url,
+        accessToken: grant.accessToken || ''
+      })
+    }
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error?.message },
+      { errorMessage: error && error['message'] },
       'Could not get incoming payment'
     )
     return undefined
@@ -169,7 +260,7 @@ async function getLocalIncomingPayment({
   deps: ServiceDependencies
   id: string
   paymentPointer: PaymentPointer
-}): Promise<OpenPaymentsIncomingPayment> {
+}): Promise<OpenPaymentsIncomingPayment | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id,
     paymentPointerId: paymentPointer.id

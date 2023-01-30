@@ -1,3 +1,4 @@
+import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
@@ -5,6 +6,7 @@ import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { listSubresource } from '../../payment_pointer/routes'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -41,15 +43,14 @@ async function getOutgoingPayment(
   try {
     outgoingPayment = await deps.outgoingPaymentService.get({
       id: ctx.params.id,
-      clientId: ctx.clientId,
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
       paymentPointerId: ctx.paymentPointer.id
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
   if (!outgoingPayment) return ctx.throw(404)
-  outgoingPayment.paymentPointer = ctx.paymentPointer
-  const body = outgoingPaymentToBody(deps, outgoingPayment)
+  const body = outgoingPaymentToBody(deps, outgoingPayment, ctx.paymentPointer)
   ctx.body = body
 }
 
@@ -76,16 +77,15 @@ async function createOutgoingPayment(
     quoteId,
     description: body.description,
     externalRef: body.externalRef,
-    clientId: ctx.clientId,
+    client: ctx.client,
     grant: ctx.grant
   })
 
   if (isOutgoingPaymentError(paymentOrErr)) {
     return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
   }
-  paymentOrErr.paymentPointer = ctx.paymentPointer
   ctx.status = 201
-  const res = outgoingPaymentToBody(deps, paymentOrErr)
+  const res = outgoingPaymentToBody(deps, paymentOrErr, ctx.paymentPointer)
   ctx.body = res
 }
 
@@ -97,7 +97,8 @@ async function listOutgoingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
-      toBody: (payment) => outgoingPaymentToBody(deps, payment)
+      toBody: (payment) =>
+        outgoingPaymentToBody(deps, payment, ctx.paymentPointer)
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')
@@ -106,13 +107,14 @@ async function listOutgoingPayments(
 
 function outgoingPaymentToBody(
   deps: ServiceDependencies,
-  outgoingPayment: OutgoingPayment
+  outgoingPayment: OutgoingPayment,
+  paymentPointer: PaymentPointer
 ) {
   return Object.fromEntries(
     Object.entries({
       ...outgoingPayment.toJSON(),
-      id: `${outgoingPayment.paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
-      paymentPointer: outgoingPayment.paymentPointer.url,
+      id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
+      paymentPointer: paymentPointer.url,
       state: null,
       failed: outgoingPayment.state === OutgoingPaymentState.Failed
     }).filter(([_, v]) => v != null)

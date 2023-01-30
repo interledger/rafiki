@@ -9,10 +9,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import {
-  startTigerbeetleContainer,
-  TIGERBEETLE_PORT
-} from '../tests/tigerbeetle'
+import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -26,10 +23,9 @@ describe('Asset Service', (): void => {
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    tigerbeetleContainer = await startTigerbeetleContainer()
-    Config.tigerbeetleReplicaAddresses = [
-      tigerbeetleContainer.getMappedPort(TIGERBEETLE_PORT)
-    ]
+    const { container, port } = await startTigerbeetleContainer()
+    tigerbeetleContainer = container
+    Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -187,7 +183,7 @@ describe('Asset Service', (): void => {
   describe('getPage', (): void => {
     getPageTests({
       createModel: () => createAsset(deps),
-      getPage: (pagination: Pagination) => assetService.getPage(pagination)
+      getPage: (pagination?: Pagination) => assetService.getPage(pagination)
     })
   })
 })

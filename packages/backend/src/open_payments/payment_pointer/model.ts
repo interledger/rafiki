@@ -119,13 +119,13 @@ export class PaymentPointerEvent extends WebhookEvent {
 
 export interface GetOptions {
   id: string
-  clientId?: string
+  client?: string
   paymentPointerId?: string
 }
 
 export interface ListOptions {
   paymentPointerId: string
-  clientId?: string
+  client?: string
   pagination?: Pagination
 }
 
@@ -139,21 +139,21 @@ class SubresourceQueryBuilder<
   NumberQueryBuilderType!: SubresourceQueryBuilder<M, number>
   PageQueryBuilderType!: SubresourceQueryBuilder<M, Page<M>>
 
-  get({ id, paymentPointerId, clientId }: GetOptions) {
+  get({ id, paymentPointerId, client }: GetOptions) {
     if (paymentPointerId) {
       this.where(
         `${this.modelClass().tableName}.paymentPointerId`,
         paymentPointerId
       )
     }
-    if (clientId) {
-      this.where({ clientId })
+    if (client) {
+      this.where({ client })
     }
     return this.findById(id)
   }
-  list({ paymentPointerId, clientId, pagination }: ListOptions) {
-    if (clientId) {
-      this.where({ clientId })
+  list({ paymentPointerId, client, pagination }: ListOptions) {
+    if (client) {
+      this.where({ client })
     }
     return this.getPage(pagination).where(
       `${this.modelClass().tableName}.paymentPointerId`,
@@ -171,7 +171,7 @@ export abstract class PaymentPointerSubresource extends BaseModel {
   public abstract readonly assetId: string
   public abstract asset: Asset
 
-  public readonly clientId?: string
+  public readonly client?: string
 
   static get relationMappings() {
     return {

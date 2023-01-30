@@ -1,18 +1,18 @@
-import { createHash } from 'crypto'
 import { Logger } from 'pino'
 import { ActiveTokenInfo, TokenInfo } from 'token-introspection'
 import { Access } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
-import { AccessTokenService, Introspection } from './service'
+import { AccessTokenService } from './service'
 import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
+import { Grant } from '../grant/model'
 
-type TokenRequest<BodyT = never> = Omit<AppContext['request'], 'body'> & {
-  body?: BodyT
+type TokenRequest<BodyT> = Omit<AppContext['request'], 'body'> & {
+  body: BodyT
 }
 
-type TokenContext<BodyT = never> = Omit<AppContext, 'request'> & {
+type TokenContext<BodyT> = Omit<AppContext, 'request'> & {
   request: TokenRequest<BodyT>
 }
 
@@ -63,30 +63,26 @@ async function introspectToken(
   ctx: IntrospectContext
 ): Promise<void> {
   const { body } = ctx.request
-  const introspectionResult = await deps.accessTokenService.introspect(
+  const grant = await deps.accessTokenService.introspect(
+    // body.access_token exists since it is checked for by the request validation
     body['access_token']
   )
-  ctx.body = introspectionToBody(introspectionResult)
+  ctx.body = grantToTokenInfo(grant)
 }
 
-function introspectionToBody(introspection?: Introspection): TokenInfo {
-  if (!introspection) {
+function grantToTokenInfo(grant?: Grant): TokenInfo {
+  if (!grant) {
     return {
       active: false
     }
   }
-  const { grant, jwk } = introspection
   return {
     active: true,
     grant: grant.id,
     access: grant.access.map((a: Access) =>
       accessToBody(a)
     ) as ActiveTokenInfo['access'],
-    key: {
-      proof: 'httpsig',
-      jwk
-    },
-    client_id: createHash('sha256').update(grant.client).digest('hex')
+    client: grant.client
   }
 }
 

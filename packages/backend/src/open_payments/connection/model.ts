@@ -26,7 +26,10 @@ export class Connection extends ConnectionBase {
     payment: IncomingPayment
     credentials: StreamCredentials
     openPaymentsUrl: string
-  }): Connection {
+  }): Connection | undefined {
+    if (!options.payment.connectionId) {
+      return undefined
+    }
     return new this(
       options.payment.connectionId,
       options.openPaymentsUrl,

@@ -55,9 +55,9 @@ More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
 ### Environment Setup
 
 ```sh
-# install node 16
-nvm install lts/gallium
-nvm use lts/gallium
+# install node 18
+nvm install lts/hydrogen
+nvm use lts/hydrogen
 
 # install pnpm
 corepack enable

@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  getKeyId,
   validateSignature,
   validateSignatureHeaders,
   RequestLike
 } from 'http-signature-utils'
 
 import { AppContext } from '../app'
-import { Grant } from '../grant/model'
-import { ContinueContext, CreateContext } from '../grant/routes'
+import { ContinueContext, CreateContext, DeleteContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -23,10 +23,16 @@ async function verifySigFromClient(
   client: string,
   ctx: AppContext
 ): Promise<boolean> {
+  const sigInput = ctx.headers['signature-input'] as string
+  const keyId = getKeyId(sigInput)
+  if (!keyId) {
+    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
+  }
+
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
     client,
-    keyId: ctx.clientKeyId
+    keyId
   })
 
   if (!clientKey) {
@@ -35,34 +41,14 @@ async function verifySigFromClient(
   return validateSignature(clientKey, contextToRequestLike(ctx))
 }
 
-async function verifySigFromBoundKey(
-  grant: Grant,
-  ctx: AppContext
-): Promise<boolean> {
-  const sigInput = ctx.headers['signature-input'] as string
-  ctx.clientKeyId = getSigInputKeyId(sigInput)
-  if (ctx.clientKeyId !== grant.clientKeyId) {
-    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
-  }
-
-  return verifySigFromClient(grant.client, ctx)
-}
-
-const KEY_ID_PREFIX = 'keyid="'
-
-function getSigInputKeyId(sigInput: string): string | undefined {
-  const keyIdParam = sigInput
-    .split(';')
-    .find((param) => param.startsWith(KEY_ID_PREFIX))
-  // Trim prefix and quotes
-  return keyIdParam?.slice(KEY_ID_PREFIX.length, -1)
-}
-
 export async function grantContinueHttpsigMiddleware(
-  ctx: ContinueContext,
+  ctx: ContinueContext | DeleteContext,
   next: () => Promise<any>
 ): Promise<void> {
-  if (!validateSignatureHeaders(contextToRequestLike(ctx))) {
+  if (
+    !validateSignatureHeaders(contextToRequestLike(ctx)) ||
+    !ctx.headers['authorization']
+  ) {
     ctx.throw(400, 'invalid signature headers', { error: 'invalid_request' })
   }
 
@@ -70,7 +56,7 @@ export async function grantContinueHttpsigMiddleware(
     'GNAP ',
     ''
   ) as string
-  const { interact_ref: interactRef } = ctx.request.body
+  const interactRef = ctx.request.body?.interact_ref
 
   const logger = await ctx.container.use('logger')
   logger.info(
@@ -91,13 +77,13 @@ export async function grantContinueHttpsigMiddleware(
   if (!grant) {
     ctx.status = 401
     ctx.body = {
-      error: 'invalid_interaction',
+      error: 'invalid_continuation',
       message: 'invalid grant'
     }
     return
   }
 
-  const sigVerified = await verifySigFromBoundKey(grant, ctx)
+  const sigVerified = await verifySigFromClient(grant.client, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }
@@ -113,12 +99,6 @@ export async function grantInitiationHttpsigMiddleware(
   }
 
   const { body } = ctx.request
-
-  const sigInput = ctx.headers['signature-input'] as string
-  ctx.clientKeyId = getSigInputKeyId(sigInput)
-  if (!ctx.clientKeyId) {
-    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
-  }
 
   const sigVerified = await verifySigFromClient(body.client, ctx)
   if (!sigVerified) {
@@ -148,10 +128,15 @@ export async function tokenHttpsigMiddleware(
     return
   }
 
-  const grantService = await ctx.container.use('grantService')
-  const grant = await grantService.get(accessToken.grantId)
+  if (!accessToken.grant) {
+    const logger = await ctx.container.use('logger')
+    logger.error(
+      `access token with management id ${ctx.params['id']} has no grant associated with it.`
+    )
+    ctx.throw(500, 'internal server error', { error: 'internal_server_error' })
+  }
 
-  const sigVerified = await verifySigFromBoundKey(grant, ctx)
+  const sigVerified = await verifySigFromClient(accessToken.grant.client, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }

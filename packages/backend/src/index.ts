@@ -5,7 +5,7 @@ import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
-import Redis from 'ioredis'
+import { Redis } from 'ioredis'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
@@ -42,6 +42,7 @@ import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
+import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -218,6 +219,15 @@ export function initIocContainer(
       paymentPointerService: await deps.use('paymentPointerService')
     })
   })
+  container.singleton('remoteIncomingPaymentService', async (deps) => {
+    return await createRemoteIncomingPaymentService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      grantService: await deps.use('grantService'),
+      openPaymentsUrl: config.openPaymentsUrl,
+      openPaymentsClient: await deps.use('openPaymentsClient')
+    })
+  })
   container.singleton('incomingPaymentRoutes', async (deps) => {
     return createIncomingPaymentRoutes({
       config: await deps.use('config'),
@@ -263,7 +273,10 @@ export function initIocContainer(
       incomingPaymentService: await deps.use('incomingPaymentService'),
       openPaymentsUrl: config.openPaymentsUrl,
       paymentPointerService: await deps.use('paymentPointerService'),
-      openPaymentsClient: await deps.use('openPaymentsClient')
+      openPaymentsClient: await deps.use('openPaymentsClient'),
+      remoteIncomingPaymentService: await deps.use(
+        'remoteIncomingPaymentService'
+      )
     })
   })
 
@@ -399,7 +412,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo =
-        err && typeof err === 'object' && err.stack ? err.stack : err
+        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -415,7 +428,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo =
-        err && typeof err === 'object' && err.stack ? err.stack : err
+        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -455,8 +468,11 @@ if (!module.parent) {
 }
 
 // Used for running migrations in a try loop with exponential backoff
-const callWithRetry = async (fn, depth = 0) => {
-  const wait = (ms) => new Promise((res) => setTimeout(res, ms))
+const callWithRetry: CallableFunction = async (
+  fn: CallableFunction,
+  depth = 0
+) => {
+  const wait = (ms: number) => new Promise((res) => setTimeout(res, ms))
 
   try {
     return await fn()

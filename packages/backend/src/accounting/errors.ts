@@ -19,8 +19,8 @@ export class CreateTransferError extends Error {
 }
 
 export enum TransferError {
-  AlreadyCommitted = 'AlreadyCommitted',
-  AlreadyRolledBack = 'AlreadyRolledBack',
+  AlreadyPosted = 'AlreadyPosted',
+  AlreadyVoided = 'AlreadyVoided',
   DifferentAssets = 'DifferentAssets',
   InsufficientBalance = 'InsufficientBalance',
   InsufficientDebitBalance = 'InsufficientDebitBalance',

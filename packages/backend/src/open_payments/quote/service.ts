@@ -64,7 +64,7 @@ async function getQuote(
 interface QuoteOptionsBase {
   paymentPointerId: string
   receiver: string
-  clientId?: string
+  client?: string
 }
 
 interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
@@ -143,15 +143,16 @@ async function createQuote(
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
           expiresAt: new Date(0),
-          clientId: options.clientId
+          client: options.client
         })
         .withGraphFetched('asset')
 
       let maxReceiveAmountValue: bigint | undefined
       if (options.sendAmount) {
-        const receivingPaymentValue = receiver.incomingAmount
-          ? receiver.incomingAmount.value - receiver.receivedAmount.value
-          : undefined
+        const receivingPaymentValue =
+          receiver.incomingAmount && receiver.receivedAmount
+            ? receiver.incomingAmount.value - receiver.receivedAmount.value
+            : undefined
         maxReceiveAmountValue =
           receivingPaymentValue &&
           receivingPaymentValue < quote.receiveAmount.value
@@ -192,7 +193,7 @@ export async function resolveReceiver(
     ) {
       throw QuoteError.InvalidAmount
     }
-    if (receiver.incomingAmount) {
+    if (receiver.incomingAmount && receiver.receivedAmount) {
       const receivingPaymentValue =
         receiver.incomingAmount.value - receiver.receivedAmount.value
       if (receivingPaymentValue < options.receiveAmount.value) {
@@ -239,7 +240,7 @@ export async function startQuote(
       quoteOptions.amountToSend = options.sendAmount.value
     } else {
       quoteOptions.amountToDeliver =
-        options.receiveAmount?.value || options.receiver.incomingAmount.value
+        options.receiveAmount?.value || options.receiver.incomingAmount?.value
     }
     const quote = await Pay.startQuote({
       ...quoteOptions,
@@ -348,10 +349,11 @@ export async function finalizeQuote(
   }
   // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
   if (
-    receiver.expiresAt &&
-    receiver.expiresAt.getTime() < patchOptions.expiresAt.getTime()
+    receiver.incomingPayment?.expiresAt &&
+    receiver.incomingPayment?.expiresAt.getTime() <
+      patchOptions.expiresAt.getTime()
   ) {
-    patchOptions.expiresAt = receiver.expiresAt
+    patchOptions.expiresAt = receiver.incomingPayment.expiresAt
   }
 
   await quote.$query(deps.knex).patch(patchOptions)

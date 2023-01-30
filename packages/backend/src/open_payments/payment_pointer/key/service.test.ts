@@ -81,7 +81,8 @@ describe('Payment Pointer Key Service', (): void => {
       expect(revokedKey).toEqual({
         ...key,
         revoked: true,
-        updatedAt: revokedKey.updatedAt
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        updatedAt: revokedKey!.updatedAt
       })
     })
 

@@ -44,7 +44,6 @@ describe('Access Service', (): void => {
     finishUri: 'https://example.com/finish',
     clientNonce: generateNonce(),
     client: faker.internet.url(),
-    clientKeyId: 'test-key',
     interactId: v4(),
     interactRef: generateNonce(),
     interactNonce: generateNonce()

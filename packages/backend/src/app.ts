@@ -1,16 +1,17 @@
 import { join } from 'path'
-import { Server } from 'http'
+import http, { Server } from 'http'
 import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
 
 import { IocContract } from '@adonisjs/fold'
-import { JWK } from 'http-signature-utils'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
 import Router from '@koa/router'
-import { ApolloServer } from 'apollo-server-koa'
+import { ApolloServer } from '@apollo/server'
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { koaMiddleware } from '@as-integrations/koa'
 
 import { IAppConfig } from './config/app'
 import { addResolversToSchema } from '@graphql-tools/schema'
@@ -47,7 +48,10 @@ import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AccessType, AuthenticatedClient } from 'open-payments'
+import { AccessAction, AccessType, AuthenticatedClient } from 'open-payments'
+import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
+import { ReceiverService } from './open_payments/receiver/service'
+import { Client as TokenIntrospectionClient } from 'token-introspection'
 
 export interface AppContextData {
   logger: Logger
@@ -75,8 +79,15 @@ export type AppRequest<ParamsT extends string = string> = Omit<
 export interface PaymentPointerContext extends AppContext {
   paymentPointer: PaymentPointer
   grant?: Grant
-  clientId?: string
-  clientKey?: JWK
+  client?: string
+  accessAction?: AccessAction
+}
+
+export type PaymentPointerKeysContext = Omit<
+  PaymentPointerContext,
+  'paymentPointer'
+> & {
+  paymentPointer?: PaymentPointer
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -88,9 +99,7 @@ type HttpSigRequest = Omit<AppContext['request'], 'headers'> & {
 export type HttpSigContext = AppContext & {
   request: HttpSigRequest
   headers: HttpSigHeaders
-  grant: Grant
-  clientKey: JWK
-  clientId?: string
+  client: string
 }
 
 // Payment pointer subresources
@@ -104,17 +113,24 @@ type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
 
 type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   PaymentPointerContext,
-  'request'
+  'request' | 'client' | 'accessAction'
 > & {
   request: CollectionRequest<BodyT, QueryT>
+  client: NonNullable<PaymentPointerContext['client']>
+  accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
 type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
   params: Record<'id', string>
 }
 
-type SubresourceContext = Omit<PaymentPointerContext, 'request'> & {
+type SubresourceContext = Omit<
+  PaymentPointerContext,
+  'request' | 'grant' | 'client' | 'accessAction'
+> & {
   request: SubresourceRequest
+  client: NonNullable<PaymentPointerContext['client']>
+  accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
 export type CreateContext<BodyT> = CollectionContext<BodyT>
@@ -148,6 +164,8 @@ export interface AppServices {
   paymentPointerKeyRoutes: Promise<PaymentPointerKeyRoutes>
   paymentPointerRoutes: Promise<PaymentPointerRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
+  remoteIncomingPaymentService: Promise<RemoteIncomingPaymentService>
+  receiverService: Promise<ReceiverService>
   streamServer: Promise<StreamServer>
   webhookService: Promise<WebhookService>
   quoteService: Promise<QuoteService>
@@ -156,6 +174,7 @@ export interface AppServices {
   ratesService: Promise<RatesService>
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   openPaymentsClient: Promise<AuthenticatedClient>
+  tokenIntrospectionClient: Promise<TokenIntrospectionClient>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -203,6 +222,7 @@ export class App {
 
   public async startAdminServer(port: number | string): Promise<void> {
     const koa = await this.createKoaServer()
+    const httpServer = http.createServer(koa.callback())
 
     // Load schema from the file
     const schema = loadSchemaSync(join(__dirname, './graphql/schema.graphql'), {
@@ -215,21 +235,44 @@ export class App {
       resolvers
     })
 
-    // Setup Apollo on graphql endpoint
+    // Setup Apollo
     this.apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
-      context: async (): Promise<ApolloContext> => {
-        return {
-          container: this.container,
-          logger: await this.container.use('logger')
-        }
-      }
+      plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
 
     await this.apolloServer.start()
-    koa.use(this.apolloServer.getMiddleware())
 
-    this.adminServer = koa.listen(port)
+    koa.use(bodyParser())
+
+    koa.use(
+      async (
+        ctx: {
+          path: string
+          status: number
+        },
+        next: Koa.Next
+      ): Promise<void> => {
+        if (ctx.path !== '/graphql') {
+          ctx.status = 404
+        } else {
+          return next()
+        }
+      }
+    )
+
+    koa.use(
+      koaMiddleware(this.apolloServer, {
+        context: async (): Promise<ApolloContext> => {
+          return {
+            container: this.container,
+            logger: await this.container.use('logger')
+          }
+        }
+      })
+    )
+
+    this.adminServer = httpServer.listen(port)
   }
 
   public async startOpenPaymentsServer(port: number | string): Promise<void> {
@@ -353,11 +396,11 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH + '/jwks.json',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
+      createValidatorMiddleware<PaymentPointerKeysContext>(resourceServerSpec, {
         path: '/jwks.json',
         method: HttpMethod.GET
       }),
-      async (ctx: PaymentPointerContext): Promise<void> =>
+      async (ctx: PaymentPointerKeysContext): Promise<void> =>
         await paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
     )
 

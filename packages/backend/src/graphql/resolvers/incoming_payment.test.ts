@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { getPageTests } from './page.test'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { IocContract } from '@adonisjs/fold'
@@ -83,19 +83,20 @@ describe('Incoming Payment Resolver', (): void => {
     })
 
     test.each`
-      description  | externalRef  | expiresAt                        | incomingAmount | desc
-      ${'rent'}    | ${undefined} | ${undefined}                     | ${undefined}   | ${'description'}
-      ${undefined} | ${'202201'}  | ${undefined}                     | ${undefined}   | ${'externalRef'}
-      ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${undefined}   | ${'expiresAt'}
-      ${undefined} | ${undefined} | ${undefined}                     | ${amount}      | ${'incomingAmount'}
+      description  | externalRef  | expiresAt                        | withAmount | desc
+      ${'rent'}    | ${undefined} | ${undefined}                     | ${false}   | ${'description'}
+      ${undefined} | ${'202201'}  | ${undefined}                     | ${false}   | ${'externalRef'}
+      ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
+      ${undefined} | ${undefined} | ${undefined}                     | ${true}    | ${'incomingAmount'}
     `(
       '200 ($desc)',
       async ({
         description,
         externalRef,
         expiresAt,
-        incomingAmount
+        withAmount
       }): Promise<void> => {
+        const incomingAmount = withAmount ? amount : undefined
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
           assetId: asset.id
         })

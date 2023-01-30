@@ -1,6 +1,5 @@
 import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
-import { JWK } from 'http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
 import { generateToken } from '../shared/utils'
@@ -11,9 +10,9 @@ import { IAppConfig } from '../config/app'
 import { Access } from '../access/model'
 
 export interface AccessTokenService {
-  get(token: string): Promise<AccessToken>
-  getByManagementId(managementId: string): Promise<AccessToken>
-  introspect(token: string): Promise<Introspection | undefined>
+  get(token: string): Promise<AccessToken | undefined>
+  getByManagementId(managementId: string): Promise<AccessToken | undefined>
+  introspect(token: string): Promise<Grant | undefined>
   revoke(id: string, tokenValue: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
   rotate(managementId: string, tokenValue: string): Promise<Rotation>
@@ -23,16 +22,6 @@ interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   clientService: ClientService
   config: IAppConfig
-}
-
-export interface KeyInfo {
-  proof: string
-  jwk: JWK
-}
-
-export interface Introspection {
-  grant: Grant
-  jwk: JWK
 }
 
 interface AccessTokenOpts {
@@ -89,44 +78,35 @@ function isTokenExpired(token: AccessToken): boolean {
   return expiresAt < now.getTime()
 }
 
-async function get(token: string): Promise<AccessToken> {
+async function get(token: string): Promise<AccessToken | undefined> {
   return AccessToken.query().findOne('value', token)
 }
 
-async function getByManagementId(managementId: string): Promise<AccessToken> {
-  return AccessToken.query().findOne('managementId', managementId)
+async function getByManagementId(
+  managementId: string
+): Promise<AccessToken | undefined> {
+  return AccessToken.query()
+    .findOne('managementId', managementId)
+    .withGraphFetched('grant')
 }
 
 async function introspect(
   deps: ServiceDependencies,
   value: string
-): Promise<Introspection | undefined> {
-  const token = await AccessToken.query(deps.knex).findOne({ value })
+): Promise<Grant | undefined> {
+  const token = await AccessToken.query(deps.knex)
+    .findOne({ value })
+    .withGraphFetched('grant.access')
 
   if (!token) return
   if (isTokenExpired(token)) {
     return undefined
   } else {
-    const grant = await Grant.query(deps.knex)
-      .findById(token.grantId)
-      .withGraphFetched('access')
-    if (grant.state === GrantState.Revoked) {
+    if (!token.grant || token.grant.state === GrantState.Revoked) {
       return undefined
     }
 
-    const jwk = await deps.clientService.getKey({
-      client: grant.client,
-      keyId: grant.clientKeyId
-    })
-
-    if (!jwk) {
-      return undefined
-    }
-
-    return {
-      grant,
-      jwk
-    }
+    return token.grant
   }
 }
 
@@ -198,7 +178,7 @@ async function rotate(
   } catch (error) {
     return {
       success: false,
-      error
+      error: new Error(error && error['message'])
     }
   }
 }

@@ -1,3 +1,4 @@
+import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
@@ -5,6 +6,7 @@ import { CreateQuoteOptions, QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
+import { PaymentPointer } from '../payment_pointer/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -34,12 +36,11 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get({
     id: ctx.params.id,
-    clientId: ctx.clientId,
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
     paymentPointerId: ctx.paymentPointer.id
   })
   if (!quote) return ctx.throw(404)
-  quote.paymentPointer = ctx.paymentPointer
-  const body = quoteToBody(deps, quote)
+  const body = quoteToBody(deps, quote, ctx.paymentPointer)
   ctx.body = body
 }
 
@@ -67,7 +68,7 @@ async function createQuote(
   const options: CreateQuoteOptions = {
     paymentPointerId: ctx.paymentPointer.id,
     receiver: body.receiver,
-    clientId: ctx.clientId
+    client: ctx.client
   }
   if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
   if (body.receiveAmount)
@@ -80,24 +81,27 @@ async function createQuote(
     }
 
     ctx.status = 201
-    quoteOrErr.paymentPointer = ctx.paymentPointer
-    const res = quoteToBody(deps, quoteOrErr)
+    const res = quoteToBody(deps, quoteOrErr, ctx.paymentPointer)
     ctx.body = res
   } catch (err) {
     if (isQuoteError(err)) {
       return ctx.throw(errorToCode[err], errorToMessage[err])
     }
-    deps.logger.debug({ error: err.message })
+    deps.logger.debug({ error: err && err['message'] })
     ctx.throw(500, 'Error trying to create quote')
   }
 }
 
-function quoteToBody(deps: ServiceDependencies, quote: Quote) {
+function quoteToBody(
+  deps: ServiceDependencies,
+  quote: Quote,
+  paymentPointer: PaymentPointer
+) {
   return Object.fromEntries(
     Object.entries({
       ...quote.toJSON(),
-      id: `${quote.paymentPointer.url}/quotes/${quote.id}`,
-      paymentPointer: quote.paymentPointer.url,
+      id: `${paymentPointer.url}/quotes/${quote.id}`,
+      paymentPointer: paymentPointer.url,
       paymentPointerId: undefined
     }).filter(([_, v]) => v != null)
   )

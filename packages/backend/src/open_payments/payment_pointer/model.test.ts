@@ -1,4 +1,6 @@
+import { faker } from '@faker-js/faker'
 import * as httpMocks from 'node-mocks-http'
+import { AccessAction } from 'open-payments'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -17,7 +19,8 @@ export interface SetupOptions {
   params?: Record<string, string>
   paymentPointer: PaymentPointer
   grant?: Grant
-  clientId?: string
+  client?: string
+  accessAction?: AccessAction
 }
 
 export const setup = <T extends PaymentPointerContext>(
@@ -35,13 +38,18 @@ export const setup = <T extends PaymentPointerContext>(
   )
   ctx.paymentPointer = options.paymentPointer
   ctx.grant = options.grant
-  ctx.clientId = options.clientId
+  ctx.client = options.client
+  ctx.accessAction = options.accessAction
   return ctx
 }
 
+interface TestGetOptions extends GetOptions {
+  paymentPointerId: NonNullable<GetOptions['paymentPointerId']>
+}
+
 interface BaseTestsOptions<M> {
-  createModel: (options: { clientId?: string }) => Promise<M>
-  testGet: (options: GetOptions, expectedMatch?: M) => void
+  createModel: (options: { client?: string }) => Promise<M>
+  testGet: (options: TestGetOptions, expectedMatch?: M) => void
   testList?: (options: ListOptions, expectedMatch?: M) => void
 }
 
@@ -57,29 +65,29 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
   }
 
   describe.each`
-    withClientId | description
-    ${true}      | ${'with clientId'}
-    ${false}     | ${'without clientId'}
+    withClient | description
+    ${true}    | ${'with client'}
+    ${false}   | ${'without client'}
   `(
     'Common PaymentPointerSubresource get/getPaymentPointerPage ($description)',
-    ({ withClientId }): void => {
-      const resourceClientId = uuid()
+    ({ withClient }): void => {
+      const resourceClient = faker.internet.url()
 
       describe.each`
-        clientId            | match    | description
-        ${resourceClientId} | ${true}  | ${GetOption.Matching}
-        ${uuid()}           | ${false} | ${GetOption.Conflicting}
-        ${undefined}        | ${true}  | ${GetOption.Unspecified}
-      `('$description clientId', ({ clientId, match, description }): void => {
-        // Do not test matching clientId if model has no clientId
-        if (withClientId || description !== GetOption.Matching) {
+        client                  | match    | description
+        ${resourceClient}       | ${true}  | ${GetOption.Matching}
+        ${faker.internet.url()} | ${false} | ${GetOption.Conflicting}
+        ${undefined}            | ${true}  | ${GetOption.Unspecified}
+      `('$description client', ({ client, match, description }): void => {
+        // Do not test matching client if model has no client
+        if (withClient || description !== GetOption.Matching) {
           let model: M
 
           // This beforeEach needs to be inside the above if statement to avoid:
           // Invalid: beforeEach() may not be used in a describe block containing no tests.
           beforeEach(async (): Promise<void> => {
             model = await createModel({
-              clientId: withClientId ? resourceClientId : undefined
+              client: withClient ? resourceClient : undefined
             })
           })
           describe.each`
@@ -98,7 +106,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
                   paymentPointerId = uuid()
                   break
                 case GetOption.Unspecified:
-                  paymentPointerId = undefined
+                  paymentPointerId = ''
                   break
               }
             })
@@ -118,7 +126,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
                 await testGet(
                   {
                     id,
-                    clientId,
+                    client,
                     paymentPointerId
                   },
                   match ? model : undefined
@@ -132,7 +140,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
                 await testList(
                   {
                     paymentPointerId,
-                    clientId
+                    client
                   },
                   match ? model : undefined
                 )
@@ -159,7 +167,7 @@ export const getTests = <M extends PaymentPointerSubresource>({
     createModel,
     testGet: (options, expectedMatch) =>
       expect(get(options)).resolves.toEqual(expectedMatch),
-    // tests paymentPointerId / clientId filtering
+    // tests paymentPointerId / client filtering
     testList: (options, expectedMatch) =>
       expect(list(options)).resolves.toEqual([expectedMatch])
   })
@@ -199,7 +207,10 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   list,
   urlPath
 }: RouteTestsOptions<M>): void => {
-  const testList = async ({ paymentPointerId, clientId }, expectedMatch) => {
+  const testList = async (
+    { paymentPointerId, client }: ListOptions,
+    expectedMatch?: M
+  ) => {
     const paymentPointer = await getPaymentPointer()
     paymentPointer.id = paymentPointerId
     const ctx = setup<ListContext>({
@@ -209,9 +220,11 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
         url: urlPath
       },
       paymentPointer,
-      clientId
+      client,
+      accessAction: client ? AccessAction.List : AccessAction.ListAll
     })
-    await expect(list(ctx)).resolves.toBeUndefined()
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    await expect(list!(ctx)).resolves.toBeUndefined()
     if (expectedMatch) {
       // TODO: https://github.com/interledger/open-payments/issues/191
       expect(ctx.response).toSatisfyApiSpec()
@@ -229,7 +242,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
 
   baseGetTests({
     createModel,
-    testGet: async ({ id, paymentPointerId, clientId }, expectedMatch) => {
+    testGet: async ({ id, paymentPointerId, client }, expectedMatch) => {
       const paymentPointer = await getPaymentPointer()
       paymentPointer.id = paymentPointerId
       const ctx = setup<ReadContext>({
@@ -242,7 +255,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
           id
         },
         paymentPointer,
-        clientId
+        client,
+        accessAction: client ? AccessAction.Read : AccessAction.ReadAll
       })
       if (expectedMatch) {
         await expect(get(ctx)).resolves.toBeUndefined()
@@ -255,7 +269,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
         })
       }
     },
-    // tests paymentPointerId / clientId filtering
+    // tests paymentPointerId / client filtering
     testList: list && testList
   })
 
@@ -298,7 +312,8 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
               query,
               url: urlPath
             },
-            paymentPointer: await getPaymentPointer()
+            paymentPointer: await getPaymentPointer(),
+            accessAction: AccessAction.ListAll
           })
           await expect(list(ctx)).resolves.toBeUndefined()
           expect(ctx.response).toSatisfyApiSpec()

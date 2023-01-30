@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
@@ -1115,7 +1115,7 @@ describe('Liquidity Resolvers', (): void => {
   })
 
   describe.each(['peer', 'asset'])(
-    'Finalize %s liquidity withdrawal',
+    'Post %s liquidity withdrawal',
     (type): void => {
       let withdrawalId: string
 
@@ -1140,12 +1140,12 @@ describe('Liquidity Resolvers', (): void => {
         ).resolves.toBeUndefined()
       })
 
-      test(`Can finalize a(n) ${type} liquidity withdrawal`, async (): Promise<void> => {
+      test(`Can post a(n) ${type} liquidity withdrawal`, async (): Promise<void> => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation FinalizeLiquidityWithdrawal($withdrawalId: String!) {
-                finalizeLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal($withdrawalId: String!) {
+                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1159,7 +1159,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.finalizeLiquidityWithdrawal
+              return query.data.postLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1170,12 +1170,12 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.error).toBeNull()
       })
 
-      test("Can't finalize non-existent withdrawal", async (): Promise<void> => {
+      test("Can't post non-existent withdrawal", async (): Promise<void> => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation FinalizeLiquidityWithdrawal($withdrawalId: String!) {
-                finalizeLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal($withdrawalId: String!) {
+                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1189,7 +1189,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.finalizeLiquidityWithdrawal
+              return query.data.postLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1201,12 +1201,12 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.error).toEqual(LiquidityError.UnknownTransfer)
       })
 
-      test("Can't finalize invalid withdrawal id", async (): Promise<void> => {
+      test("Can't post invalid withdrawal id", async (): Promise<void> => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation FinalizeLiquidityWithdrawal($withdrawalId: String!) {
-                finalizeLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal($withdrawalId: String!) {
+                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1220,7 +1220,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.finalizeLiquidityWithdrawal
+              return query.data.postLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1232,15 +1232,15 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.error).toEqual(LiquidityError.InvalidId)
       })
 
-      test("Can't finalize finalized withdrawal", async (): Promise<void> => {
+      test("Can't post posted withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawalId)
+          accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation FinalizeLiquidityWithdrawal($withdrawalId: String!) {
-                finalizeLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation postLiquidityWithdrawal($withdrawalId: String!) {
+                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1254,7 +1254,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.finalizeLiquidityWithdrawal
+              return query.data.postLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1262,19 +1262,19 @@ describe('Liquidity Resolvers', (): void => {
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
-        expect(response.message).toEqual('Withdrawal already finalized')
-        expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
+        expect(response.message).toEqual('Withdrawal already posted')
+        expect(response.error).toEqual(LiquidityError.AlreadyPosted)
       })
 
-      test("Can't finalize rolled back withdrawal", async (): Promise<void> => {
+      test("Can't post voided withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawalId)
+          accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation FinalizeLiquidityWithdrawal($withdrawalId: String!) {
-                finalizeLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation postLiquidityWithdrawal($withdrawalId: String!) {
+                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1288,7 +1288,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.finalizeLiquidityWithdrawal
+              return query.data.postLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1296,8 +1296,8 @@ describe('Liquidity Resolvers', (): void => {
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
-        expect(response.message).toEqual('Withdrawal already rolled back')
-        expect(response.error).toEqual(LiquidityError.AlreadyRolledBack)
+        expect(response.message).toEqual('Withdrawal already voided')
+        expect(response.error).toEqual(LiquidityError.AlreadyVoided)
       })
     }
   )
@@ -1328,12 +1328,12 @@ describe('Liquidity Resolvers', (): void => {
         ).resolves.toBeUndefined()
       })
 
-      test(`Can rollback a(n) ${type} liquidity withdrawal`, async (): Promise<void> => {
+      test(`Can void a(n) ${type} liquidity withdrawal`, async (): Promise<void> => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation RollbackLiquidityWithdrawal($withdrawalId: String!) {
-                rollbackLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
+                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1347,7 +1347,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.rollbackLiquidityWithdrawal
+              return query.data.voidLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1358,12 +1358,12 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.error).toBeNull()
       })
 
-      test("Can't rollback non-existent withdrawal", async (): Promise<void> => {
+      test("Can't void non-existent withdrawal", async (): Promise<void> => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation RollbackLiquidityWithdrawal($withdrawalId: String!) {
-                rollbackLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
+                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1377,7 +1377,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.rollbackLiquidityWithdrawal
+              return query.data.voidLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1389,12 +1389,12 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.error).toEqual(LiquidityError.UnknownTransfer)
       })
 
-      test("Can't rollback invalid withdrawal id", async (): Promise<void> => {
+      test("Can't void invalid withdrawal id", async (): Promise<void> => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation RollbackLiquidityWithdrawal($withdrawalId: String!) {
-                rollbackLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
+                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1408,7 +1408,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.rollbackLiquidityWithdrawal
+              return query.data.voidLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1420,15 +1420,15 @@ describe('Liquidity Resolvers', (): void => {
         expect(response.error).toEqual(LiquidityError.InvalidId)
       })
 
-      test("Can't rollback finalized withdrawal", async (): Promise<void> => {
+      test("Can't void posted withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.commitWithdrawal(withdrawalId)
+          accountingService.postWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation RollbackLiquidityWithdrawal($withdrawalId: String!) {
-                rollbackLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
+                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1442,7 +1442,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.rollbackLiquidityWithdrawal
+              return query.data.voidLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1450,19 +1450,19 @@ describe('Liquidity Resolvers', (): void => {
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
-        expect(response.message).toEqual('Withdrawal already finalized')
-        expect(response.error).toEqual(LiquidityError.AlreadyCommitted)
+        expect(response.message).toEqual('Withdrawal already posted')
+        expect(response.error).toEqual(LiquidityError.AlreadyPosted)
       })
 
-      test("Can't rollback rolled back withdrawal", async (): Promise<void> => {
+      test("Can't void voided withdrawal", async (): Promise<void> => {
         await expect(
-          accountingService.rollbackWithdrawal(withdrawalId)
+          accountingService.voidWithdrawal(withdrawalId)
         ).resolves.toBeUndefined()
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation RollbackLiquidityWithdrawal($withdrawalId: String!) {
-                rollbackLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation voidLiquidityWithdrawal($withdrawalId: String!) {
+                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
                   code
                   success
                   message
@@ -1476,7 +1476,7 @@ describe('Liquidity Resolvers', (): void => {
           })
           .then((query): LiquidityMutationResponse => {
             if (query.data) {
-              return query.data.rollbackLiquidityWithdrawal
+              return query.data.voidLiquidityWithdrawal
             } else {
               throw new Error('Data was empty')
             }
@@ -1484,8 +1484,8 @@ describe('Liquidity Resolvers', (): void => {
 
         expect(response.success).toBe(false)
         expect(response.code).toEqual('409')
-        expect(response.message).toEqual('Withdrawal already rolled back')
-        expect(response.error).toEqual(LiquidityError.AlreadyRolledBack)
+        expect(response.message).toEqual('Withdrawal already voided')
+        expect(response.error).toEqual(LiquidityError.AlreadyVoided)
       })
     }
   )

@@ -1,12 +1,9 @@
 import { generateKeyPairSync } from 'crypto'
 import { faker } from '@faker-js/faker'
+import nock from 'nock'
 import { Client, ActiveTokenInfo } from 'token-introspection'
 import { v4 as uuid } from 'uuid'
-import {
-  generateJwk,
-  generateTestKeys,
-  createHeaders
-} from 'http-signature-utils'
+import { generateJwk, createHeaders, JWK } from 'http-signature-utils'
 
 import {
   createTokenIntrospectionMiddleware,
@@ -37,10 +34,6 @@ describe('Auth Middleware', (): void => {
   let middleware: AppMiddleware
   let ctx: PaymentPointerContext
   let tokenIntrospectionClient: Client
-  const key: ActiveTokenInfo['key'] = {
-    jwk: generateTestKeys().publicKey,
-    proof: 'httpsig'
-  }
 
   const type = AccessType.IncomingPayment
   const action: AccessAction = 'create'
@@ -97,14 +90,33 @@ describe('Auth Middleware', (): void => {
   test('returns 401 for unsuccessful token introspection', async (): Promise<void> => {
     const introspectSpy = jest
       .spyOn(tokenIntrospectionClient, 'introspect')
-      .mockResolvedValueOnce(undefined)
+      .mockImplementation(() => {
+        throw new Error('test error')
+      })
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
-    expect(introspectSpy).toHaveBeenCalledWith(token)
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token
+    })
     expect(ctx.status).toBe(401)
     expect(ctx.message).toEqual('Invalid Token')
     expect(ctx.response.get('WWW-Authenticate')).toBe(
       `GNAP as_uri=${Config.authServerGrantUrl}`
     )
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  test('rejects with 403 for inactive token', async (): Promise<void> => {
+    const introspectSpy = jest
+      .spyOn(tokenIntrospectionClient, 'introspect')
+      .mockResolvedValueOnce({ active: false })
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 403,
+      message: 'Inactive Token'
+    })
+    expect(introspectSpy).toHaveBeenCalledWith({
+      access_token: token
+    })
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -137,15 +149,14 @@ describe('Auth Middleware', (): void => {
       ): ActiveTokenInfo => ({
         active: true,
         grant: uuid(),
-        client_id: uuid(),
+        client: faker.internet.url(),
         access: access ?? [
           {
-            type,
+            type: 'incoming-payment',
             actions: [action],
             identifier
           }
-        ],
-        key
+        ]
       })
 
       test.each`
@@ -169,7 +180,9 @@ describe('Auth Middleware', (): void => {
             status: 403,
             message: 'Insufficient Grant'
           })
-          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(introspectSpy).toHaveBeenCalledWith({
+            access_token: token
+          })
           expect(next).not.toHaveBeenCalled()
         }
       )
@@ -182,10 +195,11 @@ describe('Auth Middleware', (): void => {
             .mockResolvedValueOnce(tokenInfo)
 
           await expect(middleware(ctx, next)).resolves.toBeUndefined()
-          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(introspectSpy).toHaveBeenCalledWith({
+            access_token: token
+          })
           expect(next).toHaveBeenCalled()
-          expect(ctx.clientId).toEqual(tokenInfo.client_id)
-          expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
+          expect(ctx.client).toEqual(tokenInfo.client)
           expect(ctx.grant).toBeUndefined()
         })
 
@@ -194,7 +208,7 @@ describe('Auth Middleware', (): void => {
           ${AccessAction.ReadAll} | ${AccessAction.Read}
           ${AccessAction.ListAll} | ${AccessAction.List}
         `('$subAction/$superAction', ({ superAction, subAction }): void => {
-          test("calls next (but doesn't restrict ctx.clientId) for sub-action request", async (): Promise<void> => {
+          test("calls next (but doesn't designate client filtering) for sub-action request", async (): Promise<void> => {
             const middleware = createTokenIntrospectionMiddleware({
               requestType: type,
               requestAction: subAction
@@ -203,7 +217,7 @@ describe('Auth Middleware', (): void => {
               {
                 type,
                 actions: [superAction],
-                identifier
+                identifier: identifier as string
               }
             ])
             const introspectSpy = jest
@@ -211,10 +225,12 @@ describe('Auth Middleware', (): void => {
               .mockResolvedValueOnce(tokenInfo)
 
             await expect(middleware(ctx, next)).resolves.toBeUndefined()
-            expect(introspectSpy).toHaveBeenCalledWith(token)
+            expect(introspectSpy).toHaveBeenCalledWith({
+              access_token: token
+            })
             expect(next).toHaveBeenCalled()
-            expect(ctx.clientId).toBeUndefined()
-            expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
+            expect(ctx.client).toEqual(tokenInfo.client)
+            expect(ctx.accessAction).toBe(superAction)
             expect(ctx.grant).toBeUndefined()
           })
 
@@ -227,7 +243,7 @@ describe('Auth Middleware', (): void => {
               {
                 type,
                 actions: [subAction],
-                identifier
+                identifier: identifier as string
               }
             ])
             const introspectSpy = jest
@@ -237,7 +253,9 @@ describe('Auth Middleware', (): void => {
               status: 403,
               message: 'Insufficient Grant'
             })
-            expect(introspectSpy).toHaveBeenCalledWith(token)
+            expect(introspectSpy).toHaveBeenCalledWith({
+              access_token: token
+            })
             expect(next).not.toHaveBeenCalled()
           })
 
@@ -289,10 +307,12 @@ describe('Auth Middleware', (): void => {
                 .mockResolvedValueOnce(tokenInfo)
 
               await expect(middleware(ctx, next)).resolves.toBeUndefined()
-              expect(introspectSpy).toHaveBeenCalledWith(token)
+              expect(introspectSpy).toHaveBeenCalledWith({
+                access_token: token
+              })
               expect(next).toHaveBeenCalled()
-              expect(ctx.clientId).toEqual(tokenInfo.client_id)
-              expect(ctx.clientKey).toEqual(tokenInfo.key.jwk)
+              expect(ctx.client).toEqual(tokenInfo.client)
+              expect(ctx.accessAction).toBe(action)
               expect(ctx.grant).toEqual(
                 ctxGrant
                   ? {
@@ -314,7 +334,9 @@ describe('Auth Middleware', (): void => {
             status: 403,
             message: 'Insufficient Grant'
           })
-          expect(introspectSpy).toHaveBeenCalledWith(token)
+          expect(introspectSpy).toHaveBeenCalledWith({
+            access_token: token
+          })
           expect(next).not.toHaveBeenCalled()
         })
       }
@@ -326,6 +348,7 @@ describe('HTTP Signature Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let ctx: HttpSigContext
+  let key: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -372,52 +395,85 @@ describe('HTTP Signature Middleware', (): void => {
         url
       })
       ctx.container = deps
-      ctx.clientKey = generateJwk({
+      ctx.client = faker.internet.url()
+      key = generateJwk({
         keyId,
         privateKey
       })
     })
 
     test('calls next with valid http signature', async (): Promise<void> => {
+      const scope = nock(ctx.client)
+        .get('/jwks.json')
+        .reply(200, {
+          keys: [key]
+        })
       await expect(httpsigMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(next).toHaveBeenCalled()
+      scope.done()
+    })
+
+    test('returns 401 for missing keyid', async (): Promise<void> => {
+      ctx.request.headers['signature-input'] = 'aaaaaaaaaa'
+      await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Invalid signature input'
+      })
+      expect(next).not.toHaveBeenCalled()
+    })
+
+    test('returns 401 for failed client key request', async (): Promise<void> => {
+      await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
+        status: 401,
+        message: 'Invalid signature input'
+      })
+      expect(next).not.toHaveBeenCalled()
     })
 
     test('returns 401 for invalid http signature', async (): Promise<void> => {
+      const scope = nock(ctx.client)
+        .get('/jwks.json')
+        .reply(200, {
+          keys: [key]
+        })
       ctx.request.headers['signature'] = 'aaaaaaaaaa='
       await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 401,
         message: 'Invalid signature'
       })
       expect(next).not.toHaveBeenCalled()
+      scope.done()
     })
 
     test('returns 401 for invalid key type', async (): Promise<void> => {
-      ctx.clientKey.kty = 'EC' as 'OKP'
+      key.kty = 'EC' as 'OKP'
+      const scope = nock(ctx.client)
+        .get('/jwks.json')
+        .reply(200, {
+          keys: [key]
+        })
       await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
         status: 401,
-        message: 'Invalid signature'
+        message: 'Invalid signature input'
       })
       expect(next).not.toHaveBeenCalled()
-    })
-
-    // TODO: remove with
-    // https://github.com/interledger/rafiki/issues/737
-    test.skip('returns 401 if any signature keyid does not match the jwk key id', async (): Promise<void> => {
-      ctx.clientKey.kid = 'mismatched-key'
-      await expect(httpsigMiddleware(ctx, next)).resolves.toBeUndefined()
-      expect(ctx.status).toBe(401)
-      expect(next).not.toHaveBeenCalled()
+      scope.done()
     })
 
     if (body) {
       test('returns 401 if content-digest does not match the body', async (): Promise<void> => {
+        const scope = nock(ctx.client)
+          .get('/jwks.json')
+          .reply(200, {
+            keys: [key]
+          })
         ctx.request.headers['content-digest'] = 'aaaaaaaaaa='
         await expect(httpsigMiddleware(ctx, next)).rejects.toMatchObject({
           status: 401,
           message: 'Invalid signature'
         })
         expect(next).not.toHaveBeenCalled()
+        scope.done()
       })
     }
   })

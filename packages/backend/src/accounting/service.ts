@@ -14,7 +14,7 @@ import {
   TransferError,
   UnknownAccountError
 } from './errors'
-import { CreateTransferOptions, createTransfers } from './transfers'
+import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../shared/baseService'
 import { validateId } from '../shared/utils'
 import { toTigerbeetleId } from './utils'
@@ -73,8 +73,8 @@ export interface TransferOptions {
 }
 
 export interface Transaction {
-  commit: () => Promise<void | TransferError>
-  rollback: () => Promise<void | TransferError>
+  post: () => Promise<void | TransferError>
+  void: () => Promise<void | TransferError>
 }
 
 export interface AccountingService {
@@ -92,8 +92,8 @@ export interface AccountingService {
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
-  commitWithdrawal(id: string): Promise<void | TransferError>
-  rollbackWithdrawal(id: string): Promise<void | TransferError>
+  postWithdrawal(id: string): Promise<void | TransferError>
+  voidWithdrawal(id: string): Promise<void | TransferError>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -121,8 +121,8 @@ export function createAccountingService(
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    commitWithdrawal: (options) => commitAccountWithdrawal(deps, options),
-    rollbackWithdrawal: (options) => rollbackAccountWithdrawal(deps, options)
+    postWithdrawal: (options) => postAccountWithdrawal(deps, options),
+    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
   }
 }
 
@@ -260,7 +260,7 @@ export async function createTransfer(
   if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
     return TransferError.InvalidDestinationAmount
   }
-  const transfers: Required<CreateTransferOptions>[] = []
+  const transfers: NewTransferOptions[] = []
 
   const addTransfer = ({
     sourceAccountId,
@@ -275,7 +275,6 @@ export async function createTransfer(
   }) => {
     transfers.push({
       id: uuid(),
-      pendingId: '0',
       sourceAccountId,
       destinationAccountId,
       amount,
@@ -358,18 +357,10 @@ export async function createTransfer(
   }
 
   const trx: Transaction = {
-    commit: async (): Promise<void | TransferError> => {
+    post: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => {
-          return {
-            ...transfer,
-            timeout: undefined,
-            id: undefined,
-            pendingId: transfer.id
-          }
-        }),
-        true // <- commit
+        transfers.map((transfer) => ({ postId: transfer.id }))
       )
       if (error) {
         return error.error
@@ -390,17 +381,10 @@ export async function createTransfer(
         })
       }
     },
-    rollback: async (): Promise<void | TransferError> => {
+    void: async (): Promise<void | TransferError> => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => {
-          return {
-            ...transfer,
-            timeout: undefined,
-            pendingId: transfer.id
-          }
-        }),
-        false // <- rollback
+        transfers.map((transfer) => ({ voidId: transfer.id }))
       )
       if (error) {
         return error.error
@@ -453,65 +437,35 @@ async function createAccountWithdrawal(
   }
 }
 
-async function rollbackAccountWithdrawal(
+async function voidAccountWithdrawal(
   deps: ServiceDependencies,
   withdrawalId: string
 ): Promise<void | TransferError> {
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const transfers = await deps.tigerbeetle.lookupTransfers([
-    toTigerbeetleId(withdrawalId)
+  const error = await createTransfers(deps, [
+    {
+      voidId: withdrawalId
+    }
   ])
-  if (!transfers.length) {
-    return TransferError.UnknownTransfer
-  }
-
-  const error = await createTransfers(
-    deps,
-    [
-      {
-        pendingId: transfers[0].id,
-        sourceAccountId: transfers[0].debit_account_id,
-        destinationAccountId: transfers[0].credit_account_id,
-        amount: transfers[0].amount,
-        ledger: transfers[0].ledger
-      }
-    ],
-    false
-  )
   if (error) {
     return error.error
   }
 }
 
-async function commitAccountWithdrawal(
+async function postAccountWithdrawal(
   deps: ServiceDependencies,
   withdrawalId: string
 ): Promise<void | TransferError> {
   if (!validateId(withdrawalId)) {
     return TransferError.InvalidId
   }
-  const transfers = await deps.tigerbeetle.lookupTransfers([
-    toTigerbeetleId(withdrawalId)
+  const error = await createTransfers(deps, [
+    {
+      postId: withdrawalId
+    }
   ])
-  if (!transfers.length) {
-    return TransferError.UnknownTransfer
-  }
-
-  const error = await createTransfers(
-    deps,
-    [
-      {
-        pendingId: transfers[0].id,
-        sourceAccountId: transfers[0].debit_account_id,
-        destinationAccountId: transfers[0].credit_account_id,
-        amount: transfers[0].amount,
-        ledger: transfers[0].ledger
-      }
-    ],
-    true
-  )
   if (error) {
     return error.error
   }

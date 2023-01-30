@@ -13,7 +13,6 @@ import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import { generateTestKeys, JWK } from 'http-signature-utils'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
 
@@ -22,14 +21,11 @@ describe('Access Token Service', (): void => {
   let appContainer: TestContainer
   let trx: Knex.Transaction
   let accessTokenService: AccessTokenService
-  let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
-
-    testClientKey = generateTestKeys().publicKey
   })
 
   afterEach(async (): Promise<void> => {
@@ -76,7 +72,6 @@ describe('Access Token Service', (): void => {
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
-      clientKeyId: testClientKey.kid,
       continueToken: generateToken(),
       continueId: v4(),
       interactId: v4(),
@@ -134,23 +129,20 @@ describe('Access Token Service', (): void => {
       expect(fetchedToken.managementId).toEqual(accessToken.managementId)
       expect(fetchedToken.grantId).toEqual(accessToken.grantId)
     })
+
+    test('Cannot get an access token that does not exist', async (): Promise<void> => {
+      await expect(accessTokenService.get(v4())).resolves.toBeUndefined()
+      await expect(
+        accessTokenService.getByManagementId(v4())
+      ).resolves.toBeUndefined()
+    })
   })
 
   describe('Introspect', (): void => {
     test('Can introspect active token', async (): Promise<void> => {
-      const scope = nock(CLIENT)
-        .get('/jwks.json')
-        .reply(200, {
-          keys: [testClientKey]
-        })
-
       await expect(accessTokenService.introspect(token.value)).resolves.toEqual(
-        {
-          grant,
-          jwk: testClientKey
-        }
+        grant
       )
-      scope.done()
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
@@ -174,12 +166,6 @@ describe('Access Token Service', (): void => {
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
     })
-
-    test('Cannot introspect with non-existing key', async (): Promise<void> => {
-      await expect(
-        accessTokenService.introspect(token.value)
-      ).resolves.toBeUndefined()
-    })
   })
 
   describe('Revoke', (): void => {
@@ -188,7 +174,6 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testClientKey.kid,
         continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),
@@ -241,7 +226,6 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
-        clientKeyId: testClientKey.kid,
         continueToken: generateToken(),
         continueId: v4(),
         interactId: v4(),

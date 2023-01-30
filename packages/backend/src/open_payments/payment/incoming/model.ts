@@ -195,7 +195,7 @@ export class IncomingPayment
     return data
   }
 
-  public $beforeInsert(context): void {
+  public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
     this.connectionId = this.connectionId || uuid()
   }
@@ -245,7 +245,7 @@ export class IncomingPayment
     ilpStreamConnection: Connection
   }): OpenPaymentsIncomingPayment {
     return {
-      id: this.id,
+      id: this.url,
       paymentPointer: this.paymentPointer.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)

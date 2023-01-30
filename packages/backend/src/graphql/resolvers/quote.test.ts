@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 
 import { getPageTests } from './page.test'
@@ -173,17 +173,18 @@ describe('Quote Resolvers', (): void => {
     })
 
     test.each`
-      sendAmount    | receiveAmount    | type
-      ${sendAmount} | ${undefined}     | ${'fixed send to incoming payment'}
-      ${undefined}  | ${receiveAmount} | ${'fixed receive to incoming payment'}
-      ${undefined}  | ${undefined}     | ${'incoming payment'}
-    `('200 ($type)', async ({ sendAmount, receiveAmount }): Promise<void> => {
+      withAmount | receiveAmount    | type
+      ${true}    | ${undefined}     | ${'fixed send to incoming payment'}
+      ${false}   | ${receiveAmount} | ${'fixed receive to incoming payment'}
+      ${false}   | ${undefined}     | ${'incoming payment'}
+    `('200 ($type)', async ({ withAmount, receiveAmount }): Promise<void> => {
+      const amount = withAmount ? sendAmount : undefined
       const { id: paymentPointerId } = await createPaymentPointer(deps, {
         assetId: asset.id
       })
       const input = {
         paymentPointerId,
-        sendAmount,
+        sendAmount: amount,
         receiveAmount,
         receiver
       }

@@ -1,6 +1,7 @@
 import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { join } from 'path'
+import { Grant } from '../grant/model'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-3.2.1
 export class AccessToken extends BaseModel {
@@ -19,6 +20,7 @@ export class AccessToken extends BaseModel {
     }
   }
 
+  public grant?: Grant
   public value!: string
   public managementId!: string
   public grantId!: string

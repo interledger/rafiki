@@ -1,3 +1,4 @@
+import { AccessAction } from 'open-payments'
 import { PaymentPointerSubresource } from './model'
 import { PaymentPointerSubresourceService } from './service'
 import { PaymentPointerContext, ListContext } from '../../app'
@@ -38,7 +39,7 @@ export async function getPaymentPointer(
 
 interface ListSubresourceOptions<M extends PaymentPointerSubresource> {
   ctx: ListContext
-  getPaymentPointerPage?: PaymentPointerSubresourceService<M>['getPaymentPointerPage']
+  getPaymentPointerPage: PaymentPointerSubresourceService<M>['getPaymentPointerPage']
   toBody: (model: M) => Record<string, unknown>
 }
 
@@ -48,17 +49,18 @@ export const listSubresource = async <M extends PaymentPointerSubresource>({
   toBody
 }: ListSubresourceOptions<M>) => {
   const pagination = parsePaginationQueryParameters(ctx.request.query)
+  const client = ctx.accessAction === AccessAction.List ? ctx.client : undefined
   const page = await getPaymentPointerPage({
     paymentPointerId: ctx.paymentPointer.id,
     pagination,
-    clientId: ctx.clientId
+    client
   })
   const pageInfo = await getPageInfo(
     (pagination) =>
       getPaymentPointerPage({
         paymentPointerId: ctx.paymentPointer.id,
         pagination,
-        clientId: ctx.clientId
+        client
       }),
     page
   )
