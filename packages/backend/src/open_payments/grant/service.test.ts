@@ -27,10 +27,13 @@ describe('Grant Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     grantService = await deps.use('grantService')
+    jest.useFakeTimers()
+    jest.setSystemTime(Date.now())
   })
 
   afterEach(async (): Promise<void> => {
     await truncateTables(knex)
+    jest.useRealTimers()
   })
 
   afterAll(async (): Promise<void> => {
@@ -59,12 +62,9 @@ describe('Grant Service', (): void => {
           ).resolves.toBeUndefined()
           authServerId = undefined
         }
-        jest.useFakeTimers()
-        jest.setSystemTime(Date.now())
       })
 
       afterEach(async (): Promise<void> => {
-        jest.useRealTimers()
         if (existingAuthServer) {
           expect(grant?.authServerId).toEqual(authServerId)
         } else {
@@ -175,7 +175,7 @@ describe('Grant Service', (): void => {
       const updateOptions = {
         accessToken: uuid(),
         managementUrl: `${faker.internet.url()}/${uuid()}`,
-        expiresIn: 3000
+        expiresIn: 6000
       }
       const updatedGrant = await grantService.update(grant, updateOptions)
       expect(updatedGrant).toMatchObject({
@@ -183,7 +183,24 @@ describe('Grant Service', (): void => {
         accessType: options.accessType,
         accessActions: options.accessActions,
         accessToken: updateOptions.accessToken,
-        managementId: updateOptions.managementUrl.split('/').pop()
+        managementId: updateOptions.managementUrl.split('/').pop(),
+        expiresAt: new Date(Date.now() + updateOptions.expiresIn * 1000)
+      })
+    })
+
+    test('can update grant w/o expiry', async (): Promise<void> => {
+      const updateOptions = {
+        accessToken: uuid(),
+        managementUrl: `${faker.internet.url()}/${uuid()}`
+      }
+      const updatedGrant = await grantService.update(grant, updateOptions)
+      expect(updatedGrant).toMatchObject({
+        authServerId,
+        accessType: options.accessType,
+        accessActions: options.accessActions,
+        accessToken: updateOptions.accessToken,
+        managementId: updateOptions.managementUrl.split('/').pop(),
+        expiresAt: null
       })
     })
   })

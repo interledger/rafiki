@@ -84,7 +84,7 @@ async function updateGrant(
       managementId: retrieveManagementId(options.managementUrl),
       expiresAt: options.expiresIn
         ? new Date(Date.now() + options.expiresIn * 1000)
-        : undefined
+        : null
     })
     .withGraphFetched('authServer')
 }
