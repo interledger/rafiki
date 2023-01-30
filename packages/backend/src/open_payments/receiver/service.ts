@@ -305,7 +305,7 @@ async function getIncomingPaymentGrant(
         })
         return deps.grantService.update(existingGrant, {
           accessToken: rotatedToken.access_token.value,
-          managementId: retrieveManagementId(rotatedToken.access_token.manage),
+          managementUrl: rotatedToken.access_token.manage,
           expiresIn: rotatedToken.access_token.expires_in
         })
       } catch (err) {
@@ -338,7 +338,7 @@ async function getIncomingPaymentGrant(
       return await deps.grantService.create({
         ...grantOptions,
         accessToken: grant.access_token.value,
-        managementId: retrieveManagementId(grant.access_token.manage),
+        managementUrl: grant.access_token.manage,
         expiresIn: grant.access_token.expires_in
       })
     } catch (err) {
@@ -348,13 +348,4 @@ async function getIncomingPaymentGrant(
   }
   deps.logger.warn({ grantOptions }, 'Grant request required interaction')
   return undefined
-}
-
-function retrieveManagementId(managementUrl: string): string {
-  const managementUrlParts = managementUrl.split('/')
-  const managementId = managementUrlParts.pop() || managementUrlParts.pop() // handle trailing slash
-  if (!managementId) {
-    throw new Error('invalid management id')
-  }
-  return managementId
 }

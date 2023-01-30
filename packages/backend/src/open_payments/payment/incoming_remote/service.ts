@@ -120,10 +120,20 @@ async function getGrant(
 
   if (existingGrant) {
     if (existingGrant.expired) {
-      // TODO https://github.com/interledger/rafiki/issues/795
-      const errorMessage = 'Grant access token expired'
-      deps.logger.error({ grantOptions }, errorMessage)
-      return RemoteIncomingPaymentError.ExpiredGrant
+      try {
+        const rotatedToken = await deps.openPaymentsClient.token.rotate({
+          url: existingGrant.managementUrl,
+          accessToken: existingGrant.accessToken
+        })
+        return deps.grantService.update(existingGrant, {
+          accessToken: rotatedToken.access_token.value,
+          managementUrl: rotatedToken.access_token.manage,
+          expiresIn: rotatedToken.access_token.expires_in
+        })
+      } catch (err) {
+        deps.logger.error({ grantOptions }, 'Grant token rotation failed.')
+        return RemoteIncomingPaymentError.ExpiredGrant
+      }
     }
     return existingGrant
   }
@@ -149,6 +159,7 @@ async function getGrant(
     return deps.grantService.create({
       ...grantOptions,
       accessToken: grant.access_token.value,
+      managementUrl: grant.access_token.manage,
       expiresIn: grant.access_token.expires_in
     })
   }

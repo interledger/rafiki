@@ -42,7 +42,7 @@ describe('Grant Service', (): void => {
       existingAuthServer | description
       ${false}           | ${'new auth server'}
       ${true}            | ${'existing auth server'}
-    `('$description', ({ existingAuthServer }): void => {
+    `('description', ({ existingAuthServer }): void => {
       let authServerId: string | undefined
       let grant: Grant | undefined
       const authServerUrl = faker.internet.url()
@@ -83,11 +83,11 @@ describe('Grant Service', (): void => {
         ${undefined} | ${'without expiresIn'}
         ${600}       | ${'with expiresIn'}
       `(
-        'Grant can be created and fetched ($description)',
+        'Grant can be created and fetched (description)',
         async ({ expiresIn }): Promise<void> => {
           const options: CreateOptions = {
             accessToken: 'aq1sw2de3fr4',
-            managementId: 'gt5hy6ju7ki8',
+            managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
             authServer: authServerUrl,
             accessType: AccessType.IncomingPayment,
             accessActions: [AccessAction.ReadAll]
@@ -112,7 +112,7 @@ describe('Grant Service', (): void => {
     test('cannot fetch non-existing grant', async (): Promise<void> => {
       const options: CreateOptions = {
         accessToken: 'aq1sw2de3fr4',
-        managementId: 'gt5hy6ju7ki8',
+        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
         authServer: faker.internet.url(),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll]
@@ -137,6 +137,19 @@ describe('Grant Service', (): void => {
         })
       ).resolves.toBeUndefined()
     })
+
+    test('cannot store grant with misformatted management url', async (): Promise<void> => {
+      const options: CreateOptions = {
+        accessToken: 'aq1sw2de3fr4',
+        managementUrl: '',
+        authServer: faker.internet.url(),
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll]
+      }
+      await expect(grantService.create(options)).rejects.toThrow(
+        'invalid management id'
+      )
+    })
   })
 
   describe('Update Grant', (): void => {
@@ -149,7 +162,7 @@ describe('Grant Service', (): void => {
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll],
         accessToken: uuid(),
-        managementId: 'gt5hy6ju7ki8',
+        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
         expiresIn: 3000
       }
       grant = await grantService.create(options)
@@ -161,18 +174,16 @@ describe('Grant Service', (): void => {
     test('can update grant', async (): Promise<void> => {
       const updateOptions = {
         accessToken: uuid(),
-        managementId: 'gt5hy6ju7ki8',
+        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
         expiresIn: 3000
       }
       const updatedGrant = await grantService.update(grant, updateOptions)
-      console.log(grant)
-      console.log(updatedGrant)
       expect(updatedGrant).toMatchObject({
         authServerId,
         accessType: options.accessType,
         accessActions: options.accessActions,
         accessToken: updateOptions.accessToken,
-        managementId: updateOptions.managementId
+        managementId: updateOptions.managementUrl.split('/').pop()
       })
     })
   })

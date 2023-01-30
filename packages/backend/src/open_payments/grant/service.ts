@@ -38,7 +38,7 @@ export interface GrantOptions {
 
 export interface UpdateOptions {
   accessToken: string
-  managementId: string
+  managementUrl: string
   expiresIn?: number
 }
 
@@ -48,16 +48,18 @@ async function createGrant(deps: ServiceDependencies, options: CreateOptions) {
   const { id: authServerId } = await deps.authServerService.getOrCreate(
     options.authServer
   )
-  return Grant.query(deps.knex).insertAndFetch({
-    accessType: options.accessType,
-    accessActions: options.accessActions,
-    accessToken: options.accessToken,
-    managementId: options.managementId,
-    authServerId,
-    expiresAt: options.expiresIn
-      ? new Date(Date.now() + options.expiresIn * 1000)
-      : undefined
-  })
+  return Grant.query(deps.knex)
+    .insertAndFetch({
+      accessType: options.accessType,
+      accessActions: options.accessActions,
+      accessToken: options.accessToken,
+      managementId: retrieveManagementId(options.managementUrl),
+      authServerId,
+      expiresAt: options.expiresIn
+        ? new Date(Date.now() + options.expiresIn * 1000)
+        : undefined
+    })
+    .withGraphFetched('authServer')
 }
 
 async function getGrant(deps: ServiceDependencies, options: GrantOptions) {
@@ -75,11 +77,23 @@ async function updateGrant(
   grant: Grant,
   options: UpdateOptions
 ) {
-  return grant.$query(deps.knex).updateAndFetch({
-    accessToken: options.accessToken,
-    managementId: options.managementId,
-    expiresAt: options.expiresIn
-      ? new Date(Date.now() + options.expiresIn * 1000)
-      : undefined
-  })
+  return grant
+    .$query(deps.knex)
+    .updateAndFetch({
+      accessToken: options.accessToken,
+      managementId: retrieveManagementId(options.managementUrl),
+      expiresAt: options.expiresIn
+        ? new Date(Date.now() + options.expiresIn * 1000)
+        : undefined
+    })
+    .withGraphFetched('authServer')
+}
+
+function retrieveManagementId(managementUrl: string): string {
+  const managementUrlParts = managementUrl.split('/')
+  const managementId = managementUrlParts.pop() || managementUrlParts.pop() // handle trailing slash
+  if (!managementId) {
+    throw new Error('invalid management id')
+  }
+  return managementId
 }
