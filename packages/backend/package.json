@@ -11,7 +11,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
-    "@apollo/client": "^3.7.4",
+    "@apollo/client": "^3.7.5",
     "@graphql-codegen/cli": "2.16.4",
     "@graphql-codegen/introspection": "2.2.3",
     "@graphql-codegen/typescript": "2.8.7",
@@ -42,7 +42,7 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
-    "@apollo/server": "^4.3.1",
+    "@apollo/server": "^4.3.2",
     "@as-integrations/koa": "^0.2.1",
     "@faker-js/faker": "^7.6.0",
     "@graphql-tools/graphql-file-loader": "^7.5.14",
