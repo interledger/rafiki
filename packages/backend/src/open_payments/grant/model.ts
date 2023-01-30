@@ -39,6 +39,6 @@ export class Grant extends BaseModel {
   }
 
   public get managementUrl(): string {
-    return `${this.authServer?.url}/token/${this.managementId}`
+    return `${this.authServer.url}/token/${this.managementId}`
   }
 }

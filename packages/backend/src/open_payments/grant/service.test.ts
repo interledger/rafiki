@@ -11,7 +11,7 @@ import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AccessType, AccessAction } from 'open-payments'
-import { uuid } from '../../connector/ilp-routing/lib/utils'
+import { v4 as uuid } from 'uuid'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -86,8 +86,8 @@ describe('Grant Service', (): void => {
         'Grant can be created and fetched (description)',
         async ({ expiresIn }): Promise<void> => {
           const options: CreateOptions = {
-            accessToken: 'aq1sw2de3fr4',
-            managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
+            accessToken: uuid(),
+            managementUrl: `${faker.internet.url()}/${uuid()}`,
             authServer: authServerUrl,
             accessType: AccessType.IncomingPayment,
             accessActions: [AccessAction.ReadAll]
@@ -111,7 +111,7 @@ describe('Grant Service', (): void => {
 
     test('cannot fetch non-existing grant', async (): Promise<void> => {
       const options: CreateOptions = {
-        accessToken: 'aq1sw2de3fr4',
+        accessToken: uuid(),
         managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
         authServer: faker.internet.url(),
         accessType: AccessType.IncomingPayment,
@@ -140,7 +140,7 @@ describe('Grant Service', (): void => {
 
     test('cannot store grant with misformatted management url', async (): Promise<void> => {
       const options: CreateOptions = {
-        accessToken: 'aq1sw2de3fr4',
+        accessToken: uuid(),
         managementUrl: '',
         authServer: faker.internet.url(),
         accessType: AccessType.IncomingPayment,
@@ -174,7 +174,7 @@ describe('Grant Service', (): void => {
     test('can update grant', async (): Promise<void> => {
       const updateOptions = {
         accessToken: uuid(),
-        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
+        managementUrl: `${faker.internet.url()}/${uuid()}`,
         expiresIn: 3000
       }
       const updatedGrant = await grantService.update(grant, updateOptions)
