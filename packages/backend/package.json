@@ -12,10 +12,10 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.7.5",
-    "@graphql-codegen/cli": "2.16.4",
+    "@graphql-codegen/cli": "2.16.5",
     "@graphql-codegen/introspection": "2.2.3",
-    "@graphql-codegen/typescript": "2.8.7",
-    "@graphql-codegen/typescript-resolvers": "2.7.12",
+    "@graphql-codegen/typescript": "2.8.8",
+    "@graphql-codegen/typescript-resolvers": "2.7.13",
     "@types/jest": "^29.4.0",
     "@types/koa": "2.13.5",
     "@types/koa-bodyparser": "^4.3.10",
