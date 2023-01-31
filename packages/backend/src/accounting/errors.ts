@@ -44,13 +44,7 @@ export const isTransferError = (o: any): o is TransferError =>
 export function areAllAccountExistsErrors(
   errors: CreateAccountErrorCode[]
 ): boolean {
-  return areAllOfTypeAccountErrors(errors, [
-    CreateAccountErrorCode.exists_with_different_debits_pending,
-    CreateAccountErrorCode.exists_with_different_debits_posted,
-    CreateAccountErrorCode.exists_with_different_credits_pending,
-    CreateAccountErrorCode.exists_with_different_credits_posted,
-    CreateAccountErrorCode.exists
-  ])
+  return areAllOfTypeAccountErrors(errors, [CreateAccountErrorCode.exists])
 }
 
 export function areAllOfTypeAccountErrors(
