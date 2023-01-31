@@ -16,7 +16,7 @@ export async function startTigerbeetleContainer(
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:834d82a83d60ace236d93a724b303029bf935219409fd57dfdd05b57d3a68252'
+    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:00cdc510de799161016e01c1236446a855f81ba68d0b8d2a8576750ae41b786a'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
@@ -33,7 +33,9 @@ export async function startTigerbeetleContainer(
       `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
     .withWaitStrategy(
-      Wait.forLogMessage(`info(io): creating "${tigerbeetleFile}"...`)
+      Wait.forLogMessage(
+        `info(main): 0: formatted: cluster=${tigerbeetleClusterId}`
+      )
     )
     .start()
 
@@ -45,11 +47,8 @@ export async function startTigerbeetleContainer(
       .on('end', () => console.log('Stream closed for [tb-format]'))
   }
 
-  // Give TB a chance to startup (no message currently to notify allocation is complete):
-  await new Promise((f) => setTimeout(f, 3000))
-
   const tbContStart = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:834d82a83d60ace236d93a724b303029bf935219409fd57dfdd05b57d3a68252'
+    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:00cdc510de799161016e01c1236446a855f81ba68d0b8d2a8576750ae41b786a'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([

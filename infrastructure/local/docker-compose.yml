@@ -90,7 +90,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
   tigerbeetle:
-    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:834d82a83d60ace236d93a724b303029bf935219409fd57dfdd05b57d3a68252
+    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:00cdc510de799161016e01c1236446a855f81ba68d0b8d2a8576750ae41b786a
     restart: unless-stopped
     privileged: true
     volumes:
