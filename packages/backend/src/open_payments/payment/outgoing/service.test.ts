@@ -245,11 +245,10 @@ describe('OutgoingPaymentService', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const { id: sendAssetId } = await createAsset(deps, asset)
-    paymentPointerId = (
-      await createPaymentPointer(deps, {
-        assetId: sendAssetId
-      })
-    ).id
+    const paymentPointer = await createPaymentPointer(deps, {
+      assetId: sendAssetId
+    })
+    paymentPointerId = paymentPointer.id
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receiverPaymentPointer = await createPaymentPointer(deps, {
       assetId: destinationAssetId,
@@ -266,7 +265,7 @@ describe('OutgoingPaymentService', (): void => {
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointer.id
     })
-    receiver = await incomingPayment.getUrl()
+    receiver = incomingPayment.getUrl(paymentPointer)
 
     amtDelivered = BigInt(0)
   })
@@ -855,12 +854,14 @@ describe('OutgoingPaymentService', (): void => {
             assetScale: receiverPaymentPointer.asset.scale
           }
         })
+
         const fetchedReceiver = connectionService.getUrl(incomingPayment)
         assert.ok(fetchedReceiver)
+        assert.ok(incomingPayment.paymentPointer)
         const paymentId = await setup({
           receiver: toConnection
             ? fetchedReceiver
-            : await incomingPayment.getUrl(),
+            : incomingPayment.getUrl(incomingPayment.paymentPointer),
           receiveAmount
         })
 

@@ -82,9 +82,9 @@ describe('Incoming Payment Routes', (): void => {
           externalRef
         }),
       get: (ctx) => incomingPaymentRoutes.get(ctx),
-      getBody: async (incomingPayment, list) => {
+      getBody: (incomingPayment, list) => {
         return {
-          id: await incomingPayment.getUrl(),
+          id: incomingPayment.getUrl(paymentPointer),
           paymentPointer: paymentPointer.url,
           completed: false,
           incomingAmount:
@@ -265,7 +265,7 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: await incomingPayment.getUrl(),
+        id: incomingPayment.getUrl(paymentPointer),
         paymentPointer: paymentPointer.url,
         incomingAmount: {
           value: '123',

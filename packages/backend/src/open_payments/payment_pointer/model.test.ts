@@ -194,7 +194,7 @@ type RouteTestsOptions<M> = Omit<
 > & {
   getPaymentPointer: () => Promise<PaymentPointer>
   get: (ctx: ReadContext) => Promise<void>
-  getBody: (model: M, list?: boolean) => Promise<Record<string, unknown>>
+  getBody: (model: M, list?: boolean) => Record<string, unknown>
   list?: (ctx: ListContext) => Promise<void>
   urlPath: string
 }

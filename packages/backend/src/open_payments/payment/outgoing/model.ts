@@ -72,10 +72,7 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
-  public async getUrl(fetchedPaymentPointer?: PaymentPointer): Promise<string> {
-    const paymentPointer =
-      fetchedPaymentPointer || (await this.getPaymentPointer())
-
+  public getUrl(paymentPointer: PaymentPointer): string {
     return `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`
   }
 
@@ -188,13 +185,13 @@ export class OutgoingPayment
     return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
   }
 
-  public async toOpenPaymentsType(): Promise<OpenPaymentsOutgoingPayment> {
-    const paymentPointer = await this.getPaymentPointer()
-
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer
+  ): OpenPaymentsOutgoingPayment {
     return {
-      id: await this.getUrl(paymentPointer),
+      id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,
-      quoteId: (await this.quote?.getUrl()) ?? undefined,
+      quoteId: this.quote?.getUrl(paymentPointer) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       sendAmount: serializeAmount(this.sendAmount),
       sentAmount: serializeAmount(this.sentAmount),

@@ -96,7 +96,7 @@ describe('Quote Routes', (): void => {
           client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
-      getBody: async (quote) => {
+      getBody: (quote) => {
         return {
           id: `${paymentPointer.url}/quotes/${quote.id}`,
           paymentPointer: paymentPointer.url,

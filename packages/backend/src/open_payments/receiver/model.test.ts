@@ -44,7 +44,7 @@ describe('Receiver Model', (): void => {
       assert(connection instanceof Connection)
 
       const receiver = Receiver.fromIncomingPayment(
-        await incomingPayment.toOpenPaymentsType(connection)
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
       )
 
       expect(receiver).toEqual({
@@ -53,7 +53,7 @@ describe('Receiver Model', (): void => {
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
-          id: await incomingPayment.getUrl(),
+          id: incomingPayment.getUrl(paymentPointer),
           paymentPointer: paymentPointer.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
@@ -76,7 +76,7 @@ describe('Receiver Model', (): void => {
 
       assert(connection instanceof Connection)
       const openPaymentsIncomingPayment =
-        await incomingPayment.toOpenPaymentsType(connection)
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
 
       expect(() =>
         Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
@@ -94,7 +94,7 @@ describe('Receiver Model', (): void => {
 
       assert(connection instanceof Connection)
       const openPaymentsIncomingPayment =
-        await incomingPayment.toOpenPaymentsType(connection)
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
 
       expect(() =>
         Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
@@ -112,7 +112,7 @@ describe('Receiver Model', (): void => {
       ;(connection.ilpAddress as string) = 'not base 64 encoded'
 
       const openPaymentsIncomingPayment =
-        await incomingPayment.toOpenPaymentsType(connection)
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
 
       expect(() =>
         Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
