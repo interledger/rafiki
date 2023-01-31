@@ -43,6 +43,7 @@ describe('Grant Resolvers', (): void => {
 
     test('Can get grants', async (): Promise<void> => {
       const grants: GrantModel[] = []
+
       for (let i = 0; i < 2; i++) {
         const grant = await createGrant(deps)
         grants.push(grant)
@@ -102,10 +103,6 @@ describe('Grant Resolvers', (): void => {
                 code
                 success
                 message
-                grant {
-                  id
-                  state
-                }
               }
             }
           `,
@@ -138,10 +135,6 @@ describe('Grant Resolvers', (): void => {
                 code
                 success
                 message
-                grant {
-                  id
-                  state
-                }
               }
             }
           `,
@@ -160,7 +153,6 @@ describe('Grant Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toBe('404')
       expect(response.message).toBe('Delete grant was not successful')
-      expect(response.grant).toBeNull()
     })
   })
 })

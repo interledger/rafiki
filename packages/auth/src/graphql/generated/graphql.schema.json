@@ -30,22 +30,6 @@
             "deprecationReason": null
           },
           {
-            "name": "grantId",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "SCALAR",
-                "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "id",
             "description": null,
             "args": [],
@@ -561,6 +545,65 @@
         "possibleTypes": null
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "PaginationInput",
+        "description": null,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "after",
+            "description": "Paginating forwards: the cursor before the the requested page.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "before",
+            "description": "Paginating backwards: the cursor after the the requested page.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "first",
+            "description": "Paginating forwards: The first **n** elements from the page.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "last",
+            "description": "Paginating backwards: The last **n** elements from the page.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "Query",
         "description": null,
@@ -570,47 +613,11 @@
             "description": "Fetch a page of grants.",
             "args": [
               {
-                "name": "after",
-                "description": "Paginating forwards: the cursor before the the requested page.",
+                "name": "input",
+                "description": null,
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "before",
-                "description": "Paginating backwards: the cursor after the the requested page.",
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
-                  "ofType": null
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "first",
-                "description": "Paginating forwards: The first **n** elements from the page.",
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "Int",
-                  "ofType": null
-                },
-                "defaultValue": null,
-                "isDeprecated": false,
-                "deprecationReason": null
-              },
-              {
-                "name": "last",
-                "description": "Paginating backwards: The last **n** elements from the page.",
-                "type": {
-                  "kind": "SCALAR",
-                  "name": "Int",
+                  "kind": "INPUT_OBJECT",
+                  "name": "PaginationInput",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -680,18 +687,6 @@
                 "name": "String",
                 "ofType": null
               }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "grant",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "Grant",
-              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

@@ -17,8 +17,7 @@ export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   ctx
 ): Promise<ResolversTypes['GrantsConnection']> => {
   const grantService = await ctx.container.use('grantService')
-  const grants = await grantService.getPage(args)
-
+  const grants = await grantService.getPage(args.input)
   const pageInfo = await getPageInfo(
     (pagination: Pagination) => grantService.getPage(pagination),
     grants
@@ -92,7 +91,6 @@ export const grantToGraphql = (grant: Grant): SchemaGrant => ({
 
 export const accessToGraphql = (access: Access): SchemaAccess => ({
   id: access.id,
-  grantId: access.grantId,
   identifier: access.identifier,
   createdAt: access.createdAt.toISOString()
 })

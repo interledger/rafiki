@@ -17,7 +17,6 @@ export type Scalars = {
 export type Access = Model & {
   __typename?: 'Access';
   createdAt: Scalars['String'];
-  grantId: Scalars['String'];
   id: Scalars['ID'];
   identifier?: Maybe<Scalars['String']>;
 };
@@ -78,6 +77,17 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']>;
 };
 
+export type PaginationInput = {
+  /** Paginating forwards: the cursor before the the requested page. */
+  after?: InputMaybe<Scalars['String']>;
+  /** Paginating backwards: the cursor after the the requested page. */
+  before?: InputMaybe<Scalars['String']>;
+  /** Paginating forwards: The first **n** elements from the page. */
+  first?: InputMaybe<Scalars['Int']>;
+  /** Paginating backwards: The last **n** elements from the page. */
+  last?: InputMaybe<Scalars['Int']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   /** Fetch a page of grants. */
@@ -86,10 +96,7 @@ export type Query = {
 
 
 export type QueryGrantsArgs = {
-  after?: InputMaybe<Scalars['String']>;
-  before?: InputMaybe<Scalars['String']>;
-  first?: InputMaybe<Scalars['Int']>;
-  last?: InputMaybe<Scalars['Int']>;
+  input?: InputMaybe<PaginationInput>;
 };
 
 export type RevokeGrantInput = {
@@ -99,7 +106,6 @@ export type RevokeGrantInput = {
 export type RevokeGrantMutationResponse = MutationResponse & {
   __typename?: 'RevokeGrantMutationResponse';
   code: Scalars['String'];
-  grant?: Maybe<Grant>;
   message: Scalars['String'];
   success: Scalars['Boolean'];
 };
@@ -184,6 +190,7 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['RevokeGrantMutationResponse'];
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
+  PaginationInput: ResolverTypeWrapper<Partial<PaginationInput>>;
   Query: ResolverTypeWrapper<{}>;
   RevokeGrantInput: ResolverTypeWrapper<Partial<RevokeGrantInput>>;
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
@@ -203,6 +210,7 @@ export type ResolversParentTypes = {
   Mutation: {};
   MutationResponse: ResolversParentTypes['RevokeGrantMutationResponse'];
   PageInfo: Partial<PageInfo>;
+  PaginationInput: Partial<PaginationInput>;
   Query: {};
   RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;
@@ -211,7 +219,6 @@ export type ResolversParentTypes = {
 
 export type AccessResolvers<ContextType = any, ParentType extends ResolversParentTypes['Access'] = ResolversParentTypes['Access']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  grantId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   identifier?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -270,7 +277,6 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['RevokeGrantMutationResponse'] = ResolversParentTypes['RevokeGrantMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  grant?: Resolver<Maybe<ResolversTypes['Grant']>, ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
