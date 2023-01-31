@@ -15,6 +15,9 @@ th {
   border: 1px solid $admin-panel-background;
   text-align: left;
   padding: 8px;
+  a {
+    display: block;
+  }
 }
 
 tr {

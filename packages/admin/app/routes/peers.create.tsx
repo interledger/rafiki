@@ -4,6 +4,7 @@ import {
   Link,
   useCatch,
   useActionData,
+  useLoaderData,
   useTransition as useNavigation
 } from '@remix-run/react'
 import { redirect, json } from '@remix-run/node'
@@ -17,11 +18,13 @@ import {
 import { gql } from '@apollo/client'
 import type {
   CreatePeerInput,
-  CreatePeerMutationResponse
+  CreatePeerMutationResponse,
+  Asset,
+  AssetEdge
 } from '../../generated/graphql'
 import { apolloClient } from '../lib/apolloClient.server'
 
-function NewPeer() {
+function NewPeer({ assets }: { assets: Asset[] }) {
   const navigation = useNavigation()
   const isSubmitting = navigation.state === 'submitting'
   const formErrors = useActionData<typeof action>()
@@ -108,18 +111,25 @@ function NewPeer() {
         </div>
       </span>
       <span>
-        <label htmlFor='asset-code'>Asset ID *</label>
+        <label htmlFor='asset-code'>Asset *</label>
         <div>
-          <input
-            className={formErrors?.assetId ? 'input-error' : 'input'}
-            type='text'
-            id='asset-id'
-            name='assetId'
-            required
-          />
-          {formErrors?.assetId ? (
-            <p style={{ color: 'red' }}>{formErrors?.assetId}</p>
-          ) : null}
+          <select id='asset-id' name='assetId' required>
+            <option value='' disabled selected hidden>
+              {assets.length
+                ? 'Select an asset'
+                : 'Currently no assets available for selection'}
+            </option>
+            {assets.length
+              ? assets.map((asset) => (
+                  <option key={asset.id} value={asset.id}>
+                    {'Code: ' +
+                      asset.code +
+                      ' Scale: ' +
+                      asset.scale.toString()}
+                  </option>
+                ))
+              : ''}
+          </select>
         </div>
       </span>
       <span>
@@ -155,13 +165,14 @@ function NewPeer() {
 }
 
 export default function CreatePeerPage() {
+  const { assets }: { assets: Asset[] } = useLoaderData<typeof loader>()
   return (
     <main>
       <div className='header-row'>
         <h1>Create Peer</h1>
       </div>
       <div className='main-content'>
-        <NewPeer />
+        <NewPeer assets={assets} />
       </div>
     </main>
   )
@@ -273,6 +284,68 @@ export async function action({ request }: ActionArgs) {
     })
 
   return redirect('/peers/' + peerId)
+}
+
+export async function loader() {
+  let assets: Asset[] = []
+  let hasNextPage = true
+  const variables: { after: string | null } = {
+    after: null
+  }
+  // Keeps querying assets as long as there are outstanding pages available.
+  while (hasNextPage) {
+    await apolloClient
+      .query({
+        query: gql`
+          query Assets($after: String) {
+            assets(after: $after) {
+              edges {
+                node {
+                  code
+                  id
+                  scale
+                }
+              }
+              pageInfo {
+                hasNextPage
+              }
+            }
+          }
+        `,
+        variables: variables
+      })
+      .then((query) => {
+        if (query?.data?.assets?.edges) {
+          assets = assets.concat(
+            query.data.assets.edges.map((element: AssetEdge) => element.node)
+          )
+        }
+        if (query?.data?.assets?.pageInfo?.hasNextPage) {
+          hasNextPage = true
+          variables.after = assets[assets.length - 1].id
+        } else {
+          hasNextPage = false
+        }
+      })
+  }
+
+  // Sorts the assets alphabetically and with scale in ascending order
+  assets = assets.sort((a, b) => {
+    const codeA = a.code.toLowerCase(),
+      codeB = b.code.toLowerCase()
+    const scaleA = a.scale,
+      scaleB = b.scale
+
+    if (codeA < codeB) {
+      return -1
+    }
+    if (codeA > codeB) {
+      return 1
+    }
+    return scaleA - scaleB
+  })
+
+  return json({ assets: assets })
 }
 
 export function CatchBoundary() {

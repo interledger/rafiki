@@ -24,7 +24,9 @@
     max-width: 250px;
   }
 
-  input {
+  input,
+  select {
+    background-color: $white;
     display: inline-block;
     text-align: left;
     padding: 0.5rem 1rem;
@@ -32,6 +34,7 @@
     border-width: 0.5px;
     width: 100%;
     max-width: 500px;
+    box-sizing: border-box;
   }
 
   input.input-error {
@@ -71,7 +74,8 @@
       flex-direction: column;
     }
 
-    input {
+    input,
+    select {
       flex-basis: 100%;
       max-width: 400px;
       min-width: 200px;
