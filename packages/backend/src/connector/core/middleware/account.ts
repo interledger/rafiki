@@ -1,8 +1,5 @@
 import { Errors } from 'ilp-packet'
-import {
-  areAllAccountExistsErrors,
-  TigerbeetleCreateAccountError
-} from '../../../accounting/tigerbeetle/errors'
+import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
 import { validateId } from '../../../shared/utils'
 import {
@@ -27,10 +24,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         await ctx.services.accounting.createLiquidityAccount(account)
       } catch (err) {
         // Don't complain if liquidity account already exists.
-        if (
-          err instanceof TigerbeetleCreateAccountError &&
-          areAllAccountExistsErrors([err.code])
-        ) {
+        if (err instanceof AccountAlreadyExistsError) {
           // Do nothing.
         } else {
           throw err

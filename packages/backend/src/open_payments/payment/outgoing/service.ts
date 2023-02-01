@@ -28,10 +28,7 @@ import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
-import {
-  areAllAccountExistsErrors,
-  TigerbeetleCreateAccountError
-} from '../../../accounting/tigerbeetle/errors'
+import { AccountAlreadyExistsError } from '../../../accounting/errors'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -355,10 +352,7 @@ async function fundPayment(
       })
     } catch (err) {
       // Don't complain if liquidity account already exists.
-      if (
-        err instanceof TigerbeetleCreateAccountError &&
-        areAllAccountExistsErrors([err.code])
-      ) {
+      if (err instanceof AccountAlreadyExistsError) {
         // Do nothing.
       } else {
         throw err

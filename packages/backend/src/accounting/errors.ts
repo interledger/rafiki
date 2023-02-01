@@ -7,6 +7,13 @@ export class CreateAccountError extends Error {
   }
 }
 
+export class AccountAlreadyExistsError extends Error {
+  constructor(public message: string) {
+    super(`AccountAlreadyExistsError ${message}`)
+    this.name = 'AccountAlreadyExistsError'
+  }
+}
+
 export enum TransferError {
   AlreadyPosted = 'AlreadyPosted',
   AlreadyVoided = 'AlreadyVoided',

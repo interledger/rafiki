@@ -16,6 +16,7 @@ import { BaseService } from '../../shared/baseService'
 import { validateId } from '../../shared/utils'
 import { toTigerbeetleId } from './utils'
 import {
+  AccountAlreadyExistsError,
   BalanceTransferError,
   TransferError,
   UnknownAccountError
@@ -112,18 +113,27 @@ export async function createLiquidityAccount(
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
   }
-
-  await createAccounts(deps, [
-    {
-      id: account.id,
-      type: TigerbeetleAccountType.Credit,
-      ledger: account.asset.ledger,
-      code: accTypeCode
-        ? convertToTigerbeetleAccountCode[accTypeCode]
-        : convertToTigerbeetleAccountCode[AccountType.LIQUIDITY]
+  try {
+    await createAccounts(deps, [
+      {
+        id: account.id,
+        type: TigerbeetleAccountType.Credit,
+        ledger: account.asset.ledger,
+        code: accTypeCode
+          ? convertToTigerbeetleAccountCode[accTypeCode]
+          : convertToTigerbeetleAccountCode[AccountType.LIQUIDITY]
+      }
+    ])
+    return account
+  } catch (err) {
+    if (
+      err instanceof TigerbeetleCreateAccountError &&
+      areAllAccountExistsErrors([err.code])
+    ) {
+      throw new AccountAlreadyExistsError(`Tigerbeetle error code: ${err.code}`)
     }
-  ])
-  return account
+    throw err
+  }
 }
 
 export async function createSettlementAccount(
