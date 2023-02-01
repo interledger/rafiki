@@ -45,7 +45,7 @@ describe('Grant Service', (): void => {
       existingAuthServer | description
       ${false}           | ${'new auth server'}
       ${true}            | ${'existing auth server'}
-    `('description', ({ existingAuthServer }): void => {
+    `('$description', ({ existingAuthServer }): void => {
       let authServerId: string | undefined
       let grant: Grant | undefined
       const authServerUrl = faker.internet.url()
@@ -83,7 +83,7 @@ describe('Grant Service', (): void => {
         ${undefined} | ${'without expiresIn'}
         ${600}       | ${'with expiresIn'}
       `(
-        'Grant can be created and fetched (description)',
+        'Grant can be created and fetched ($description)',
         async ({ expiresIn }): Promise<void> => {
           const options: CreateOptions = {
             accessToken: uuid(),
