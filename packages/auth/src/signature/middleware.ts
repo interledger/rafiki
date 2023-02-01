@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
+  getKeyId,
   validateSignature,
   validateSignatureHeaders,
   RequestLike
 } from 'http-signature-utils'
 
 import { AppContext } from '../app'
-import { Grant } from '../grant/model'
 import { ContinueContext, CreateContext, DeleteContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
@@ -21,42 +21,24 @@ function contextToRequestLike(ctx: AppContext): RequestLike {
 
 async function verifySigFromClient(
   client: string,
-  clientKeyId: string,
   ctx: AppContext
 ): Promise<boolean> {
+  const sigInput = ctx.headers['signature-input'] as string
+  const keyId = getKeyId(sigInput)
+  if (!keyId) {
+    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
+  }
+
   const clientService = await ctx.container.use('clientService')
   const clientKey = await clientService.getKey({
     client,
-    keyId: clientKeyId
+    keyId
   })
 
   if (!clientKey) {
     ctx.throw(400, 'invalid client', { error: 'invalid_client' })
   }
   return validateSignature(clientKey, contextToRequestLike(ctx))
-}
-
-async function verifySigFromBoundKey(
-  grant: Grant,
-  ctx: AppContext
-): Promise<boolean> {
-  const sigInput = ctx.headers['signature-input'] as string
-  ctx.clientKeyId = getSigInputKeyId(sigInput)
-  if (ctx.clientKeyId !== grant.clientKeyId) {
-    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
-  }
-
-  return verifySigFromClient(grant.client, ctx.clientKeyId, ctx)
-}
-
-const KEY_ID_PREFIX = 'keyid="'
-
-function getSigInputKeyId(sigInput: string): string | undefined {
-  const keyIdParam = sigInput
-    .split(';')
-    .find((param) => param.startsWith(KEY_ID_PREFIX))
-  // Trim prefix and quotes
-  return keyIdParam?.slice(KEY_ID_PREFIX.length, -1)
 }
 
 export async function grantContinueHttpsigMiddleware(
@@ -101,7 +83,7 @@ export async function grantContinueHttpsigMiddleware(
     return
   }
 
-  const sigVerified = await verifySigFromBoundKey(grant, ctx)
+  const sigVerified = await verifySigFromClient(grant.client, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }
@@ -118,18 +100,7 @@ export async function grantInitiationHttpsigMiddleware(
 
   const { body } = ctx.request
 
-  const sigInput = ctx.headers['signature-input'] as string
-  const clientKeyId = getSigInputKeyId(sigInput)
-  if (!clientKeyId) {
-    ctx.throw(401, 'invalid signature input', { error: 'invalid_request' })
-  }
-  ctx.clientKeyId = clientKeyId
-
-  const sigVerified = await verifySigFromClient(
-    body.client,
-    ctx.clientKeyId,
-    ctx
-  )
+  const sigVerified = await verifySigFromClient(body.client, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }
@@ -165,7 +136,7 @@ export async function tokenHttpsigMiddleware(
     ctx.throw(500, 'internal server error', { error: 'internal_server_error' })
   }
 
-  const sigVerified = await verifySigFromBoundKey(accessToken.grant, ctx)
+  const sigVerified = await verifySigFromClient(accessToken.grant.client, ctx)
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }

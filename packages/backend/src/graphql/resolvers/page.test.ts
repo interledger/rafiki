@@ -3,7 +3,7 @@ import {
   NormalizedCacheObject,
   ApolloQueryResult
 } from '@apollo/client'
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 
 import { Model, PageInfo } from '../generated/graphql'
 import { BaseModel } from '../../shared/baseModel'
