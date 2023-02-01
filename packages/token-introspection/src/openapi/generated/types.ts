@@ -13,36 +13,22 @@ export interface paths {
 
 export interface components {
   schemas: {
-    /**
-     * key
-     * @description A key presented by value MUST be a public key.
-     */
-    key: {
-      /** @description The form of proof that the client instance will use when presenting the key. */
-      proof: "httpsig";
-      /**
-       * Ed25519 Public Key
-       * @description A JWK representation of an Ed25519 Public Key
-       */
-      jwk: {
-        kid: string;
-        /** @description The cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
-        alg: "EdDSA";
-        use?: "sig";
-        kty: "OKP";
-        crv: "Ed25519";
-        /** @description The base64 url-encoded public key. */
-        x: string;
-      };
-    };
     /** token-info */
     "token-info": {
       active: true;
       grant: string;
       access: external["schemas.yaml"]["components"]["schemas"]["access"];
-      key: components["schemas"]["key"];
-      /** @description Opaque client identifier. */
-      client_id: string;
+      /**
+       * client
+       * @description Payment pointer of the client instance that is making this request.
+       *
+       * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
+       *
+       * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the payment pointer + `/jwks.json` url.
+       *
+       * If sending a grant initiation request that requires RO interaction, the payment pointer MUST serve necessary client display information.
+       */
+      client: string;
     };
   };
 }

@@ -102,6 +102,8 @@ type Mutation {
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
+  createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
+
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
 
@@ -351,6 +353,19 @@ type IncomingPayment implements Model {
   createdAt: String!
 }
 
+type Receiver {
+  id: String!
+  paymentPointerUrl: String!
+  completed: Boolean!
+  incomingAmount: Amount
+  receivedAmount: Amount!
+  expiresAt: String
+  description: String
+  externalRef: String
+  createdAt: String!
+  updatedAt: String!
+}
+
 enum IncomingPaymentState {
   "The payment has a state of PENDING when it is initially created."
   PENDING
@@ -464,6 +479,14 @@ input CreateIncomingPaymentInput {
   externalRef: String
 }
 
+input CreateReceiverInput {
+  paymentPointerUrl: String!
+  expiresAt: String
+  description: String
+  incomingAmount: AmountInput
+  externalRef: String
+}
+
 type OutgoingPaymentResponse {
   code: String!
   success: Boolean!
@@ -476,6 +499,13 @@ type IncomingPaymentResponse {
   success: Boolean!
   message: String
   payment: IncomingPayment
+}
+
+type CreateReceiverResponse {
+  code: String!
+  success: Boolean!
+  message: String
+  receiver: Receiver
 }
 
 input CreatePaymentPointerInput {

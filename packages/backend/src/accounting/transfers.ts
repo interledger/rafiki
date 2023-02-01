@@ -16,57 +16,90 @@ type TransfersError = {
   error: TransferError
 }
 
-export interface CreateTransferOptions {
-  id?: string | bigint
+export interface NewTransferOptions {
+  id: string | bigint
   sourceAccountId: AccountId
   destinationAccountId: AccountId
   amount: bigint
   ledger: number
   timeout?: bigint
-  pendingId?: string | bigint
+  postId?: never
+  voidId?: never
 }
+
+export interface PostTransferOptions {
+  id?: never
+  postId: string | bigint
+  voidId?: never
+}
+
+export interface VoidTransferOptions {
+  id?: never
+  postId?: never
+  voidId: string | bigint
+}
+
+function isNewTransferOptions(
+  options: CreateTransferOptions
+): options is NewTransferOptions {
+  return options.id !== undefined
+}
+
+export type CreateTransferOptions =
+  | NewTransferOptions
+  | PostTransferOptions
+  | VoidTransferOptions
 
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateTransferOptions[],
-  post?: boolean
+  transfers: CreateTransferOptions[]
 ): Promise<void | TransfersError> {
   const tbTransfers: TbTransfer[] = []
   for (let i = 0; i < transfers.length; i++) {
     const transfer = transfers[i]
-    if (transfer.amount <= BigInt(0)) {
-      return { index: i, error: TransferError.InvalidAmount }
-    }
-    let flags = 0
-    if (transfer.timeout) {
-      flags |= TransferFlags.pending
-    }
-    if (transfer.pendingId && post === true) {
-      flags |= TransferFlags.post_pending_transfer
-      transfer.id = uuid()
-    } else if (transfer.pendingId && post === false) {
-      flags |= TransferFlags.void_pending_transfer
-      transfer.id = uuid()
-    } else {
-      transfer.pendingId = 0n
-    }
-    if (i < transfers.length - 1) {
-      flags |= TransferFlags.linked
-    }
-    tbTransfers.push({
-      id: toTigerbeetleId(transfers[i].id || uuid()),
-      debit_account_id: toTigerbeetleId(transfer.sourceAccountId),
-      credit_account_id: toTigerbeetleId(transfer.destinationAccountId),
+    const tbTransfer: TbTransfer = {
+      id: 0n,
+      debit_account_id: 0n,
+      credit_account_id: 0n,
       user_data: 0n,
       reserved: 0n,
-      pending_id: transfer.pendingId ? toTigerbeetleId(transfer.pendingId) : 0n,
-      timeout: transfer.timeout ? transfer.timeout * BigInt(10e6) : 0n, // ms -> ns
-      ledger: transfer.ledger,
+      pending_id: 0n,
+      timeout: 0n,
+      ledger: 0,
       code: ACCOUNT_TYPE,
-      flags,
-      amount: transfer.amount,
+      flags: 0,
+      amount: 0n,
       timestamp: 0n
-    })
+    }
+    if (isNewTransferOptions(transfer)) {
+      if (transfer.amount <= BigInt(0)) {
+        return { index: i, error: TransferError.InvalidAmount }
+      }
+      tbTransfer.id = toTigerbeetleId(transfer.id)
+      tbTransfer.amount = transfer.amount
+      tbTransfer.ledger = transfer.ledger
+      tbTransfer.debit_account_id = toTigerbeetleId(transfer.sourceAccountId)
+      tbTransfer.credit_account_id = toTigerbeetleId(
+        transfer.destinationAccountId
+      )
+      if (transfer.timeout) {
+        tbTransfer.flags |= TransferFlags.pending
+        tbTransfer.timeout = transfer.timeout * BigInt(10e6) // ms -> ns
+      }
+    } else {
+      tbTransfer.id = toTigerbeetleId(uuid())
+      if (transfer.postId) {
+        tbTransfer.flags |= TransferFlags.post_pending_transfer
+        tbTransfer.pending_id = toTigerbeetleId(transfer.postId)
+      } else if (transfer.voidId) {
+        tbTransfer.flags |= TransferFlags.void_pending_transfer
+        tbTransfer.pending_id = toTigerbeetleId(transfer.voidId)
+      }
+    }
+    if (i < transfers.length - 1) {
+      tbTransfer.flags |= TransferFlags.linked
+    }
+    tbTransfers.push(tbTransfer)
   }
   const res = await deps.tigerbeetle.createTransfers(tbTransfers)
   for (const { index, code } of res) {
@@ -118,7 +151,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_not_pending:
         return {
           index,
-          error: post
+          error: transfers[index].postId
             ? TransferError.AlreadyPosted
             : TransferError.AlreadyVoided
         }
@@ -134,7 +167,7 @@ export async function createTransfers(
           case 40: //pending_transfer_not_pending
             return {
               index,
-              error: post
+              error: transfers[index].postId
                 ? TransferError.AlreadyPosted
                 : TransferError.AlreadyVoided
             }

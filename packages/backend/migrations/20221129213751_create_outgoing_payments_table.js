@@ -9,7 +9,7 @@ exports.up = function (knex) {
     table.string('description').nullable()
     table.string('externalRef').nullable()
 
-    table.string('clientId').nullable()
+    table.string('client').nullable()
 
     table.string('grantId').nullable()
     table.foreign('grantId').references('outgoingPaymentGrants.id')

@@ -1,3 +1,4 @@
+import { AccessAction } from 'open-payments'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
@@ -35,7 +36,7 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get({
     id: ctx.params.id,
-    clientId: ctx.clientId,
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
     paymentPointerId: ctx.paymentPointer.id
   })
   if (!quote) return ctx.throw(404)
@@ -67,7 +68,7 @@ async function createQuote(
   const options: CreateQuoteOptions = {
     paymentPointerId: ctx.paymentPointer.id,
     receiver: body.receiver,
-    clientId: ctx.clientId
+    client: ctx.client
   }
   if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
   if (body.receiveAmount)

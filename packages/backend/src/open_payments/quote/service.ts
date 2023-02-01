@@ -64,7 +64,7 @@ async function getQuote(
 interface QuoteOptionsBase {
   paymentPointerId: string
   receiver: string
-  clientId?: string
+  client?: string
 }
 
 interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
@@ -143,7 +143,7 @@ async function createQuote(
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
           expiresAt: new Date(0),
-          clientId: options.clientId
+          client: options.client
         })
         .withGraphFetched('asset')
 
@@ -349,10 +349,11 @@ export async function finalizeQuote(
   }
   // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
   if (
-    receiver.expiresAt &&
-    receiver.expiresAt.getTime() < patchOptions.expiresAt.getTime()
+    receiver.incomingPayment?.expiresAt &&
+    receiver.incomingPayment?.expiresAt.getTime() <
+      patchOptions.expiresAt.getTime()
   ) {
-    patchOptions.expiresAt = receiver.expiresAt
+    patchOptions.expiresAt = receiver.incomingPayment.expiresAt
   }
 
   await quote.$query(deps.knex).patch(patchOptions)
