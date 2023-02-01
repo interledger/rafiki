@@ -1,8 +1,4 @@
-import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosRequestHeaders
-} from 'axios'
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 import { KeyLike } from 'crypto'
 import { ResponseValidator } from 'openapi'
 import { BaseDeps } from '.'
@@ -203,7 +199,7 @@ export const createAxiosInstance = (args: {
     const privateKey = args.privateKey
     const keyId = args.keyId
     axiosInstance.interceptors.request.use(
-      async (config: AxiosRequestConfig) => {
+      async (config: InternalAxiosRequestConfig) => {
         if (!config.method || !config.url) {
           throw new Error('Cannot intercept request: url or method missing')
         }
@@ -217,7 +213,6 @@ export const createAxiosInstance = (args: {
           privateKey,
           keyId
         })
-        if (!config.headers) config.headers = {} as AxiosRequestHeaders
         if (config.data) {
           config.headers['Content-Digest'] =
             contentAndSigHeaders['Content-Digest']
@@ -232,7 +227,7 @@ export const createAxiosInstance = (args: {
       },
       undefined,
       {
-        runWhen: (config: AxiosRequestConfig) =>
+        runWhen: (config: InternalAxiosRequestConfig) =>
           config.method?.toLowerCase() === 'post' ||
           !!(config.headers && config.headers['Authorization'])
       }

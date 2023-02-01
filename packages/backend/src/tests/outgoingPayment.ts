@@ -17,7 +17,7 @@ export async function createOutgoingPayment(
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
     paymentPointerId: options.paymentPointerId,
-    clientId: options.clientId,
+    client: options.client,
     receiver: options.receiver,
     validDestination: options.validDestination
   }

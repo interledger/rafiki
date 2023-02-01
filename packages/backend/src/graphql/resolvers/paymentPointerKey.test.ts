@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { generateJwk } from 'http-signature-utils'
 import { v4 as uuid } from 'uuid'
 

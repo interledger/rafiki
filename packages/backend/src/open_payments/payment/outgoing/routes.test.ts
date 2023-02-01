@@ -1,3 +1,4 @@
+import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -35,7 +36,7 @@ describe('Outgoing Payment Routes', (): void => {
   const receivingPaymentPointer = `https://wallet.example/${uuid()}`
 
   const createPayment = async (options: {
-    clientId?: string
+    client?: string
     grant?: Grant
     description?: string
     externalRef?: string
@@ -85,9 +86,9 @@ describe('Outgoing Payment Routes', (): void => {
   `('get/list$description outgoing payment', ({ failed }): void => {
     getRouteTests({
       getPaymentPointer: async () => paymentPointer,
-      createModel: async ({ clientId }) => {
+      createModel: async ({ client }) => {
         const outgoingPayment = await createPayment({
-          clientId,
+          client,
           description: 'rent',
           externalRef: '202201'
         })
@@ -146,15 +147,15 @@ describe('Outgoing Payment Routes', (): void => {
           body: options
         },
         paymentPointer,
-        clientId: options.clientId,
+        client: options.client,
         grant: options.grant
       })
 
     describe.each`
-      grant             | clientId     | description
-      ${{ id: uuid() }} | ${uuid()}    | ${'grant'}
-      ${undefined}      | ${undefined} | ${'no grant'}
-    `('create ($description)', ({ grant, clientId }): void => {
+      grant             | client                  | description
+      ${{ id: uuid() }} | ${faker.internet.url()} | ${'grant'}
+      ${undefined}      | ${undefined}            | ${'no grant'}
+    `('create ($description)', ({ grant, client }): void => {
       test.each`
         description  | externalRef  | desc
         ${'rent'}    | ${undefined} | ${'description'}
@@ -163,14 +164,14 @@ describe('Outgoing Payment Routes', (): void => {
         'returns the outgoing payment on success ($desc)',
         async ({ description, externalRef }): Promise<void> => {
           const payment = await createPayment({
-            clientId,
+            client,
             grant,
             description,
             externalRef
           })
           const options = {
             quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
-            clientId,
+            client,
             grant,
             description,
             externalRef
@@ -187,7 +188,7 @@ describe('Outgoing Payment Routes', (): void => {
             quoteId: payment.quote.id,
             description,
             externalRef,
-            clientId,
+            client,
             grant
           })
           expect(ctx.response).toSatisfyApiSpec()

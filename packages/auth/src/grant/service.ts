@@ -43,7 +43,6 @@ export interface GrantRequest {
     access: AccessRequest[]
   }
   client: string
-  clientKeyId: string
   interact?: {
     start: StartMethod[]
     finish?: {
@@ -145,8 +144,7 @@ async function create(
   const {
     access_token: { access },
     interact,
-    client,
-    clientKeyId
+    client
   } = grantRequest
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
@@ -158,7 +156,6 @@ async function create(
       finishUri: interact?.finish?.uri,
       clientNonce: interact?.finish?.nonce,
       client,
-      clientKeyId,
       interactId: interact ? v4() : undefined,
       interactRef: interact ? v4() : undefined,
       interactNonce: interact ? generateNonce() : undefined,
