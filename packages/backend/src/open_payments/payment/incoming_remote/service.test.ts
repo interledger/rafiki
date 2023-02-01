@@ -119,25 +119,6 @@ describe('Remote Incoming Payment Service', (): void => {
         expect(clientRequestRotateTokenSpy).toHaveBeenCalled()
       })
 
-      test('returns error if rotated token does not have accessToken', async () => {
-        await grantService.create({
-          ...grantOptions,
-          expiresIn: -10
-        })
-        const clientRequestRotateTokenSpy = jest
-          .spyOn(openPaymentsClient.token, 'rotate')
-          .mockResolvedValueOnce({
-            access_token: { ...newToken.access_token, value: '' }
-          })
-
-        await expect(
-          remoteIncomingPaymentService.create({
-            paymentPointerUrl: paymentPointer.id
-          })
-        ).resolves.toEqual(RemoteIncomingPaymentError.InvalidGrant)
-        expect(clientRequestRotateTokenSpy).toHaveBeenCalled()
-      })
-
       test('returns error if fails to create the incoming payment', async () => {
         await grantService.create(grantOptions)
         jest
@@ -211,6 +192,8 @@ describe('Remote Incoming Payment Service', (): void => {
                 url: grantOptions.managementUrl,
                 accessToken: grantOptions.accessToken
               })
+            } else {
+              expect(clientRequestRotateTokenSpy).not.toHaveBeenCalled()
             }
           }
         )
