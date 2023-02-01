@@ -1,8 +1,6 @@
 import { Errors } from 'ilp-packet'
-import {
-  areAllAccountExistsErrors,
-  CreateAccountError
-} from '../../../accounting/errors'
+import { CreateAccountError } from '../../../accounting/errors'
+import { areAllAccountExistsErrors } from '../../../accounting/tigerbeetle/errors'
 import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
 import { validateId } from '../../../shared/utils'
 import {

@@ -2,12 +2,15 @@ import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
 import {
-  AccountType,
   calculateBalance,
   createAccounts,
-  getAccounts
+  getAccounts,
+  TigerbeetleAccountType
 } from './accounts'
-import { areAllAccountExistsErrors, CreateAccountError } from './errors'
+import {
+  areAllAccountExistsErrors,
+  TigerbeetleCreateAccountError
+} from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../../shared/baseService'
 import { validateId } from '../../shared/utils'
@@ -17,36 +20,22 @@ import {
   TransferError,
   UnknownAccountError
 } from '../errors'
-import { AccountingService, Transaction } from '../service'
+import {
+  AccountingService,
+  AccountType,
+  LiquidityAccount,
+  Transaction
+} from '../service'
 
-export enum AccountTypeCode {
-  Liquidity = 1,
-  LiquidityAsset = 2,
-  LiquidityPeer = 3,
-  LiquidityIncoming = 4,
-  LiquidityOutgoing = 5,
-  Settlement = 101
-}
-
-// Model classes that have a corresponding Tigerbeetle liquidity
-// account SHOULD implement this LiquidityAccount interface and call
-// createLiquidityAccount for each model instance.
-// The Tigerbeetle account id will be the model id.
-// Such models include:
-//   ../asset/model
-//   ../open_payments/payment_pointer/model
-//   ../open_payments/payment/incoming/model
-//   ../open_payments/payment/outgoing/model
-//   ../peer/model
-// Asset settlement Tigerbeetle accounts are the only exception.
-// Their account id is the corresponding asset's ledger value.
-export interface LiquidityAccount {
-  id: string
-  asset: {
-    id: string
-    ledger: number
-  }
-  onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
+export const convertToTigerbeetleAccountCode: {
+  [key in AccountType]: number
+} = {
+  [AccountType.LIQUIDITY]: 1,
+  [AccountType.LIQUIDITY_ASSET]: 2,
+  [AccountType.LIQUIDITY_PEER]: 3,
+  [AccountType.LIQUIDITY_INCOMING]: 4,
+  [AccountType.LIQUIDITY_OUTGOING]: 5,
+  [AccountType.SETTLEMENT]: 101
 }
 
 export interface OnCreditOptions {
@@ -63,6 +52,19 @@ export interface Deposit {
 export interface Withdrawal extends Deposit {
   timeout?: bigint
 }
+
+// Model classes that have a corresponding Tigerbeetle liquidity
+// account SHOULD implement this LiquidityAccount interface and call
+// createLiquidityAccount for each model instance.
+// The Tigerbeetle account id will be the model id.
+// Such models include:
+//   ../asset/model
+//   ../open_payments/payment_pointer/model
+//   ../open_payments/payment/incoming/model
+//   ../open_payments/payment/outgoing/model
+//   ../peer/model
+// Asset settlement Tigerbeetle accounts are the only exception.
+// Their account id is the corresponding asset's ledger value.
 
 export interface TransferOptions {
   sourceAccount: LiquidityAccount
@@ -105,7 +107,7 @@ export function createAccountingService(
 export async function createLiquidityAccount(
   deps: ServiceDependencies,
   account: LiquidityAccount,
-  accTypeCode?: AccountTypeCode
+  accTypeCode?: AccountType
 ): Promise<LiquidityAccount> {
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
@@ -114,9 +116,11 @@ export async function createLiquidityAccount(
   await createAccounts(deps, [
     {
       id: account.id,
-      type: AccountType.Credit,
+      type: TigerbeetleAccountType.Credit,
       ledger: account.asset.ledger,
-      code: accTypeCode ? accTypeCode : AccountTypeCode.Liquidity
+      code: accTypeCode
+        ? convertToTigerbeetleAccountCode[accTypeCode]
+        : convertToTigerbeetleAccountCode[AccountType.LIQUIDITY]
     }
   ])
   return account
@@ -130,16 +134,16 @@ export async function createSettlementAccount(
     await createAccounts(deps, [
       {
         id: ledger,
-        type: AccountType.Debit,
+        type: TigerbeetleAccountType.Debit,
         ledger,
-        code: AccountTypeCode.Settlement
+        code: convertToTigerbeetleAccountCode[AccountType.SETTLEMENT]
       }
     ])
   } catch (err) {
     // Don't complain if asset settlement account already exists.
     // This could change if TigerBeetle could be reset between tests.
     if (
-      err instanceof CreateAccountError &&
+      err instanceof TigerbeetleCreateAccountError &&
       areAllAccountExistsErrors([err.code])
     ) {
       return

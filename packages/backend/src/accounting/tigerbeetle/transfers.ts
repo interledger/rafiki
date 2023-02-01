@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid'
 import { TransferError } from '../errors'
 import { AccountId } from '../utils'
 
-import { CreateTransferError } from './errors'
+import { TigerbeetleCreateTransferError } from './errors'
 import { ServiceDependencies } from './service'
 import { toTigerbeetleId } from './utils'
 
@@ -183,7 +183,7 @@ export async function createTransfers(
 
         // TODO @jason: stop ==============================>
 
-        throw new CreateTransferError(code)
+        throw new TigerbeetleCreateTransferError(code)
     }
   }
 }

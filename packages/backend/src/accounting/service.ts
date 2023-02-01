@@ -1,26 +1,14 @@
 import { TransferError } from './errors'
 
-export enum AccountTypeCode {
-  Liquidity = 1,
-  LiquidityAsset = 2,
-  LiquidityPeer = 3,
-  LiquidityIncoming = 4,
-  LiquidityOutgoing = 5,
-  Settlement = 101
+export enum AccountType {
+  LIQUIDITY = 'LIQUIDITY',
+  LIQUIDITY_ASSET = 'LIQUIDITY_ASSET',
+  LIQUIDITY_PEER = 'LIQUIDITY_PEER',
+  LIQUIDITY_INCOMING = 'LIQUIDITY_INCOMING',
+  LIQUIDITY_OUTGOING = 'LIQUIDITY_OUTGOING',
+  SETTLEMENT = 'SETTLEMENT'
 }
 
-// Model classes that have a corresponding Tigerbeetle liquidity
-// account SHOULD implement this LiquidityAccount interface and call
-// createLiquidityAccount for each model instance.
-// The Tigerbeetle account id will be the model id.
-// Such models include:
-//   ../asset/model
-//   ../open_payments/payment_pointer/model
-//   ../open_payments/payment/incoming/model
-//   ../open_payments/payment/outgoing/model
-//   ../peer/model
-// Asset settlement Tigerbeetle accounts are the only exception.
-// Their account id is the corresponding asset's ledger value.
 export interface LiquidityAccount {
   id: string
   asset: {
@@ -61,7 +49,7 @@ export interface Transaction {
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
-    accTypeCode?: AccountTypeCode
+    type?: AccountType
   ): Promise<LiquidityAccount>
   createSettlementAccount(ledger: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>

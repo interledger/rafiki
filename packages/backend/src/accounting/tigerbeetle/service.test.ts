@@ -3,8 +3,8 @@ import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { LiquidityAccount, Deposit, Withdrawal } from './service'
-import { CreateAccountError as CreateTBAccountError } from './errors'
+import { Deposit, Withdrawal } from './service'
+import { TigerbeetleCreateAccountError } from './errors'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -14,7 +14,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../../tests/accountFactory'
 import { isTransferError, TransferError } from '../errors'
-import { AccountingService } from '../service'
+import { AccountingService, LiquidityAccount } from '../service'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -96,7 +96,7 @@ describe('Accounting Service', (): void => {
           }
         })
       ).rejects.toThrowError(
-        new CreateTBAccountError(
+        new TigerbeetleCreateAccountError(
           CreateTbAccountError.exists_with_different_ledger
         )
       )

@@ -5,7 +5,7 @@ import {
 } from 'tigerbeetle-node'
 
 import { ServiceDependencies } from './service'
-import { CreateAccountError } from './errors'
+import { TigerbeetleCreateAccountError } from './errors'
 import { toTigerbeetleId } from './utils'
 import { AccountId } from '../utils'
 
@@ -16,14 +16,14 @@ const ACCOUNT_RESERVED = Buffer.alloc(48)
 // In Rafiki transfers:
 // - the source account's debits increase
 // - the destination account's credits increase
-export enum AccountType {
+export enum TigerbeetleAccountType {
   Credit = 'Credit', // debits_must_not_exceed_credits
   Debit = 'Debit' // credits_must_not_exceed_debits
 }
 
 export interface CreateAccountOptions {
   id: AccountId
-  type: AccountType
+  type: TigerbeetleAccountType
   ledger: number
   code: number
 }
@@ -40,7 +40,7 @@ export async function createAccounts(
       ledger: account.ledger,
       code: account.code,
       flags:
-        account.type === AccountType.Debit
+        account.type === TigerbeetleAccountType.Debit
           ? AccountFlags.credits_must_not_exceed_debits
           : AccountFlags.debits_must_not_exceed_credits,
       debits_pending: 0n,
@@ -52,7 +52,7 @@ export async function createAccounts(
   )
   for (const { code } of errors) {
     if (code !== CreateAccountErrorCode.linked_event_failed) {
-      throw new CreateAccountError(code)
+      throw new TigerbeetleCreateAccountError(code)
     }
   }
 }
