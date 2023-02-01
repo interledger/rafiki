@@ -9,9 +9,10 @@ import {
   useCatch
 } from '@remix-run/react'
 
-import styles from './styles/dist/main.css'
+import tailwind from './styles/main.css'
 import favicon from '../public/favicon.svg'
 import MainNavigation from 'app/components/MainNavigation'
+import Menu from './components/Menu'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -26,17 +27,14 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body>
-        <div className='admin-panel'>
-          <div className='admin-panel-background'>
-            <header className='admin-menu'>
-              <h1>Rafiki Admin</h1>
-              <MainNavigation />
-            </header>
-            <div className='admin-panel-inside'>
+      <body className='bg-polkadot bg-cover min-h-screen relative overflow-hidden min-w-screen'>
+        <div className='transition-all m-2 lg:m-10 absolute inset-0 bg-[#fbf7f4] rounded-lg flex flex-col lg:flex-row p-4 lg:p-10'>
+          <Menu />
+          <main className='flex flex-1 bg-white rounded-lg flex-col p-5'>
+            <div className='px-4 sm:px-6 lg:px-8'>
               <Outlet />
             </div>
-          </div>
+          </main>
         </div>
         <ScrollRestoration />
         <Scripts />
@@ -116,7 +114,7 @@ export function CatchBoundary() {
 
 export function links() {
   return [
-    { rel: 'stylesheet', href: styles },
+    { rel: 'stylesheet', href: tailwind },
     { rel: 'icon', href: favicon }
   ]
 }
