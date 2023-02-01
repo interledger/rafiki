@@ -157,9 +157,7 @@ export class Quote extends PaymentPointerSubresource {
     }
   }
 
-  public async toOpenPaymentsType(
-    paymentPointer: PaymentPointer
-  ): Promise<OpenPaymentsQuote> {
+  public toOpenPaymentsType(paymentPointer: PaymentPointer): OpenPaymentsQuote {
     return {
       id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,

@@ -91,9 +91,9 @@ async function createQuote(
   }
 }
 
-async function quoteToBody(
+function quoteToBody(
   paymentPointer: PaymentPointer,
   quote: Quote
-): Promise<OpenPaymentsQuote> {
+): OpenPaymentsQuote {
   return quote.toOpenPaymentsType(paymentPointer)
 }
