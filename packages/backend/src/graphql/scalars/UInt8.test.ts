@@ -62,38 +62,6 @@ describe('UInt8', () => {
     mutation: Mutation
   })
 
-  const validQuery = `{
-        a: mirror(num: 0)
-        b: mirror(num: 1)
-        c: mirror(num: 11)
-        d: mirror(num: 111)
-        e: mirror(num: 255)
-      }`
-
-  const floatQuery = `{
-        k: typeFloatErr
-      }`
-
-  const boolQuery = `{
-        k: typeBoolErr
-      }`
-
-  const validMutation = `mutation test(
-        $input1: MirrorInput!,
-        $input2: MirrorInput!,
-        $input4: MirrorInput!
-      ) {
-        a: mirror(input: $input1) { result }
-        b: mirror(input: $input2) { result }
-        d: mirror(input: $input4) { result }
-      }`
-
-  const validVariables = {
-    input1: { num: 5 },
-    input2: { num: '' },
-    input4: { num: '1' }
-  }
-
   it.each`
     query                      | description
     ${`{a: mirror(num: -1)}`}  | ${'is negative'}
@@ -108,6 +76,9 @@ describe('UInt8', () => {
     expect(data).toBeUndefined()
   })
   it('fails because input is float', async () => {
+    const floatQuery = `{
+      k: typeFloatErr
+    }`
     const { data, errors } = await graphql({ schema, source: floatQuery })
 
     expect(errors).toHaveLength(1)
@@ -117,6 +88,9 @@ describe('UInt8', () => {
     expect(data).toBeNull()
   })
   it('fails because input is bool', async () => {
+    const boolQuery = `{
+        k: typeBoolErr
+      }`
     const { data, errors } = await graphql({ schema, source: boolQuery })
 
     expect(errors).toHaveLength(1)
@@ -126,6 +100,13 @@ describe('UInt8', () => {
     expect(data).toBeNull()
   })
   it('query success', async () => {
+    const validQuery = `{
+      a: mirror(num: 0)
+      b: mirror(num: 1)
+      c: mirror(num: 11)
+      d: mirror(num: 111)
+      e: mirror(num: 255)
+    }`
     const { data, errors } = await graphql({ schema, source: validQuery })
     expect(errors).toEqual(undefined)
     expect(data).toEqual({
@@ -137,6 +118,20 @@ describe('UInt8', () => {
     })
   })
   it('mutation success', async () => {
+    const validMutation = `mutation test(
+      $input1: MirrorInput!,
+      $input2: MirrorInput!,
+      $input4: MirrorInput!
+    ) {
+      a: mirror(input: $input1) { result }
+      b: mirror(input: $input2) { result }
+      d: mirror(input: $input4) { result }
+    }`
+    const validVariables = {
+      input1: { num: 5 },
+      input2: { num: '' },
+      input4: { num: '1' }
+    }
     const { data, errors } = await graphql({
       schema,
       source: validMutation,
