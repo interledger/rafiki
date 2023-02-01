@@ -183,7 +183,7 @@ importers:
       react: ~18.2.0
       rosie: ^2.1.0
       testcontainers: ^9.1.1
-      tigerbeetle-node: ^0.11.9
+      tigerbeetle-node: ^0.11.10
       tmp: ^0.2.1
       token-introspection: workspace:*
       ts-node: ^10.9.1
@@ -231,7 +231,7 @@ importers:
       pino: 8.8.0
       pino-pretty: 9.1.1
       raw-body: 2.5.1
-      tigerbeetle-node: 0.11.9
+      tigerbeetle-node: 0.11.10
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
@@ -539,6 +539,44 @@ packages:
       ts-invariant: 0.10.3
       tslib: 2.4.1
       zen-observable-ts: 1.2.5
+    dev: true
+
+  /@apollo/client/3.7.6_onqnqwb3ubg5opvemcqf7c2qhy:
+    resolution: {integrity: sha512-K0l8+wgcdVDjdgI8O2YuhX1CiQlavGuBp8HR/+PEbc2+jqM/BaVpL0g7YAuXrTW20np/MXHNRDxK20/ujF9hjA==}
+    requiresBuild: true
+    peerDependencies:
+      graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
+      graphql-ws: ^5.5.5
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0
+      subscriptions-transport-ws: ^0.9.0 || ^0.11.0
+    peerDependenciesMeta:
+      graphql-ws:
+        optional: true
+      react:
+        optional: true
+      react-dom:
+        optional: true
+      subscriptions-transport-ws:
+        optional: true
+    dependencies:
+      '@graphql-typed-document-node/core': 3.1.1_graphql@16.6.0
+      '@wry/context': 0.7.0
+      '@wry/equality': 0.5.3
+      '@wry/trie': 0.3.2
+      graphql: 16.6.0
+      graphql-tag: 2.12.6_graphql@16.6.0
+      hoist-non-react-statics: 3.3.2
+      optimism: 0.16.1
+      prop-types: 15.8.1
+      react: 18.2.0
+      response-iterator: 0.2.6
+      symbol-observable: 4.0.0
+      ts-invariant: 0.10.3
+      tslib: 2.4.1
+      zen-observable-ts: 1.2.5
+    dev: false
+    optional: true
 
   /@apollo/protobufjs/1.2.7:
     resolution: {integrity: sha512-Lahx5zntHPZia35myYDBRuF58tlwPskwHc5CWBZC/4bMKB6siTBWwtMrkqXcsNwQiFSzSx5hKdRPUmemrEp3Gg==}
@@ -8182,7 +8220,7 @@ packages:
       graphql: 16.6.0
       tslib: 2.4.1
     optionalDependencies:
-      '@apollo/client': 3.7.5_onqnqwb3ubg5opvemcqf7c2qhy
+      '@apollo/client': 3.7.6_onqnqwb3ubg5opvemcqf7c2qhy
     transitivePeerDependencies:
       - graphql-ws
       - react
@@ -12916,8 +12954,8 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /tigerbeetle-node/0.11.9:
-    resolution: {integrity: sha512-TOExzozu4k55UK/0+S/9OwTObwcAR0eFTZnfkhkUzq+h3gXw00OJDr3TdpgXtZk+PTcYlzM+do//GcoaHiDv2A==}
+  /tigerbeetle-node/0.11.10:
+    resolution: {integrity: sha512-PId09Bpt1/p+b2oRdfVwJzSHEMFA9Sx2k643MZVBxtMlnzjPRQqHGF/Ei1m5Ahj60zsCFv6cuhDILKsBIIbsWA==}
     engines: {node: '>=14.0.0'}
     requiresBuild: true
     dev: false
