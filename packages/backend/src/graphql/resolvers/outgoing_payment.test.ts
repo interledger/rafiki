@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-koa'
+import { gql } from '@apollo/client'
 import { PaymentError } from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 import * as Pay from '@interledger/pay'
