@@ -26,10 +26,12 @@ import { PaymentPointerSubresourceService } from '../../payment_pointer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import { CreateAccountError } from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
-import { areAllAccountExistsErrors } from '../../../accounting/tigerbeetle/errors'
+import {
+  areAllAccountExistsErrors,
+  TigerbeetleCreateAccountError
+} from '../../../accounting/tigerbeetle/errors'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -354,7 +356,7 @@ async function fundPayment(
     } catch (err) {
       // Don't complain if liquidity account already exists.
       if (
-        err instanceof CreateAccountError &&
+        err instanceof TigerbeetleCreateAccountError &&
         areAllAccountExistsErrors([err.code])
       ) {
         // Do nothing.
