@@ -4,10 +4,12 @@ import {
   TransferFlags
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
+import { TransferError } from '../errors'
+import { AccountId } from '../utils'
 
-import { CreateTransferError, TransferError } from './errors'
+import { CreateTransferError } from './errors'
 import { ServiceDependencies } from './service'
-import { AccountId, toTigerbeetleId } from './utils'
+import { toTigerbeetleId } from './utils'
 
 const ACCOUNT_TYPE = 1
 

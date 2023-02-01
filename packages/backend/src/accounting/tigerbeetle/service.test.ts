@@ -3,21 +3,18 @@ import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import {
-  AccountingService,
-  LiquidityAccount,
-  Deposit,
-  Withdrawal
-} from './service'
-import { CreateAccountError, TransferError, isTransferError } from './errors'
-import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
+import { LiquidityAccount, Deposit, Withdrawal } from './service'
+import { CreateAccountError as CreateTBAccountError } from './errors'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
-import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
-import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
+import { initIocContainer } from '../../'
+import { AppServices } from '../../app'
+import { truncateTables } from '../../tests/tableManager'
+import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
+import { AccountFactory, FactoryAccount } from '../../tests/accountFactory'
+import { isTransferError, TransferError } from '../errors'
+import { AccountingService } from '../service'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -99,7 +96,7 @@ describe('Accounting Service', (): void => {
           }
         })
       ).rejects.toThrowError(
-        new CreateAccountError(
+        new CreateTBAccountError(
           CreateTbAccountError.exists_with_different_ledger
         )
       )

@@ -6,7 +6,8 @@ import {
 
 import { ServiceDependencies } from './service'
 import { CreateAccountError } from './errors'
-import { AccountId, toTigerbeetleId } from './utils'
+import { toTigerbeetleId } from './utils'
+import { AccountId } from '../utils'
 
 const ACCOUNT_RESERVED = Buffer.alloc(48)
 
