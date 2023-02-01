@@ -1,9 +1,5 @@
-import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 import { ZeroCopyIlpPrepare } from '../..'
-import {
-  AccountAlreadyExistsError,
-  CreateAccountError
-} from '../../../../accounting/errors'
+import { AccountAlreadyExistsError } from '../../../../accounting/errors'
 import {
   AccountFactory,
   IlpPrepareFactory,
