@@ -9,6 +9,7 @@ import {
   AccessAction,
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from 'open-payments'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -52,7 +53,7 @@ async function getOutgoingPayment(
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
   if (!outgoingPayment) return ctx.throw(404)
-  ctx.body = await outgoingPaymentToBody(outgoingPayment)
+  ctx.body = outgoingPaymentToBody(ctx.paymentPointer, outgoingPayment)
 }
 
 export type CreateBody = {
@@ -86,7 +87,7 @@ async function createOutgoingPayment(
     return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
   }
   ctx.status = 201
-  ctx.body = await outgoingPaymentToBody(paymentOrErr)
+  ctx.body = outgoingPaymentToBody(ctx.paymentPointer, paymentOrErr)
 }
 
 async function listOutgoingPayments(
@@ -97,15 +98,16 @@ async function listOutgoingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
-      toBody: async (payment) => await outgoingPaymentToBody(payment)
+      toBody: (payment) => outgoingPaymentToBody(ctx.paymentPointer, payment)
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to list outgoing payments')
   }
 }
 
-async function outgoingPaymentToBody(
+function outgoingPaymentToBody(
+  paymentPointer: PaymentPointer,
   outgoingPayment: OutgoingPayment
-): Promise<OpenPaymentsOutgoingPayment> {
-  return outgoingPayment.toOpenPaymentsType()
+): OpenPaymentsOutgoingPayment {
+  return outgoingPayment.toOpenPaymentsType(paymentPointer)
 }

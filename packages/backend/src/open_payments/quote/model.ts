@@ -47,14 +47,7 @@ export class Quote extends PaymentPointerSubresource {
 
   private sendAmountValue!: bigint
 
-  public async getPaymentPointer(): Promise<PaymentPointer> {
-    return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
-  }
-
-  public async getUrl(fetchedPaymentPointer?: PaymentPointer): Promise<string> {
-    const paymentPointer =
-      fetchedPaymentPointer || (await this.getPaymentPointer())
-
+  public getUrl(paymentPointer: PaymentPointer): string {
     return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
   }
 
@@ -164,11 +157,9 @@ export class Quote extends PaymentPointerSubresource {
     }
   }
 
-  public async toOpenPaymentsType(): Promise<OpenPaymentsQuote> {
-    const paymentPointer = await this.getPaymentPointer()
-
+  public toOpenPaymentsType(paymentPointer: PaymentPointer): OpenPaymentsQuote {
     return {
-      id: await this.getUrl(paymentPointer),
+      id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,
       receiveAmount: serializeAmount(this.receiveAmount),
       sendAmount: serializeAmount(this.sendAmount),

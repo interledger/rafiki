@@ -24,6 +24,7 @@ import {
   IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
 } from 'open-payments'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
 // TODO what is a good default value for this?
@@ -75,7 +76,11 @@ async function getIncomingPayment(
   }
   if (!incomingPayment) return ctx.throw(404)
   const connection = deps.connectionService.get(incomingPayment)
-  ctx.body = await incomingPaymentToBody(incomingPayment, connection)
+  ctx.body = incomingPaymentToBody(
+    ctx.paymentPointer,
+    incomingPayment,
+    connection
+  )
 }
 
 export type CreateBody = {
@@ -116,7 +121,11 @@ async function createIncomingPayment(
 
   ctx.status = 201
   const connection = deps.connectionService.get(incomingPaymentOrError)
-  ctx.body = await incomingPaymentToBody(incomingPaymentOrError, connection)
+  ctx.body = incomingPaymentToBody(
+    ctx.paymentPointer,
+    incomingPaymentOrError,
+    connection
+  )
 }
 
 async function completeIncomingPayment(
@@ -138,7 +147,7 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = await incomingPaymentToBody(incomingPaymentOrError)
+  ctx.body = incomingPaymentToBody(ctx.paymentPointer, incomingPaymentOrError)
 }
 
 async function listIncomingPayments(
@@ -149,8 +158,9 @@ async function listIncomingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
-      toBody: async (payment) =>
-        await incomingPaymentToBody(
+      toBody: (payment) =>
+        incomingPaymentToBody(
+          ctx.paymentPointer,
           payment,
           deps.connectionService.getUrl(payment)
         )
@@ -159,13 +169,13 @@ async function listIncomingPayments(
     ctx.throw(500, 'Error trying to list incoming payments')
   }
 }
-async function incomingPaymentToBody(
+function incomingPaymentToBody(
+  paymentPointer: PaymentPointer,
   incomingPayment: IncomingPayment,
   ilpStreamConnection?: Connection | string
-): Promise<
+):
   | OpenPaymentsIncomingPayment
   | OpenPaymentsIncomingPaymentWithConnection
-  | OpenPaymentsIncomingPaymentWithConnectionUrl
-> {
-  return incomingPayment.toOpenPaymentsType(ilpStreamConnection)
+  | OpenPaymentsIncomingPaymentWithConnectionUrl {
+  return incomingPayment.toOpenPaymentsType(paymentPointer, ilpStreamConnection)
 }

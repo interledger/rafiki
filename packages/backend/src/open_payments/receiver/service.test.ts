@@ -194,15 +194,15 @@ describe('Receiver Service', (): void => {
         )
 
         await expect(
-          receiverService.get(await incomingPayment.getUrl())
+          receiverService.get(incomingPayment.getUrl(paymentPointer))
         ).resolves.toEqual({
           assetCode: incomingPayment.receivedAmount.assetCode,
           assetScale: incomingPayment.receivedAmount.assetScale,
           ilpAddress: expect.any(String),
           sharedSecret: expect.any(Buffer),
           incomingPayment: {
-            id: await incomingPayment.getUrl(),
-            paymentPointer: (await incomingPayment.getPaymentPointer()).url,
+            id: incomingPayment.getUrl(paymentPointer),
+            paymentPointer: paymentPointer.url,
             completed: incomingPayment.completed,
             receivedAmount: incomingPayment.receivedAmount,
             incomingAmount: incomingPayment.incomingAmount,

@@ -100,12 +100,12 @@ describe('Outgoing Payment Routes', (): void => {
         return outgoingPayment
       },
       get: (ctx) => outgoingPaymentRoutes.get(ctx),
-      getBody: async (outgoingPayment) => {
+      getBody: (outgoingPayment) => {
         return {
           id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
           paymentPointer: paymentPointer.url,
           receiver: outgoingPayment.receiver,
-          quoteId: await outgoingPayment.quote.getUrl(),
+          quoteId: outgoingPayment.quote.getUrl(paymentPointer),
           sendAmount: serializeAmount(outgoingPayment.sendAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),

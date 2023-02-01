@@ -247,7 +247,7 @@ describe('QuoteService', (): void => {
             paymentPointerId,
             receiver: toConnection
               ? connectionService.getUrl(incomingPayment)
-              : await incomingPayment.getUrl()
+              : incomingPayment.getUrl(receivingPaymentPointer)
           }
           if (sendAmount) options.sendAmount = sendAmount
           if (receiveAmount) options.receiveAmount = receiveAmount
@@ -575,7 +575,7 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           paymentPointerId,
-          receiver: await incomingPayment.getUrl(),
+          receiver: incomingPayment.getUrl(receivingPaymentPointer),
           receiveAmount
         }
         const expected: ExpectedQuote = {
@@ -651,13 +651,12 @@ describe('QuoteService', (): void => {
     `(
       'fails to create $description',
       async ({ sendAmount, receiveAmount }): Promise<void> => {
+        const incomingPayment = await createIncomingPayment(deps, {
+          paymentPointerId: receivingPaymentPointer.id
+        })
         const options: CreateQuoteOptions = {
           paymentPointerId,
-          receiver: await (
-            await createIncomingPayment(deps, {
-              paymentPointerId: receivingPaymentPointer.id
-            })
-          ).getUrl()
+          receiver: incomingPayment.getUrl(receivingPaymentPointer)
         }
         if (sendAmount) options.sendAmount = sendAmount
         if (receiveAmount) options.receiveAmount = receiveAmount
@@ -672,14 +671,14 @@ describe('QuoteService', (): void => {
       jest
         .spyOn(ratesService, 'prices')
         .mockImplementation(() => Promise.reject(new Error('fail')))
+      const incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId: receivingPaymentPointer.id
+      })
+
       await expect(
         quoteService.create({
           paymentPointerId,
-          receiver: await (
-            await createIncomingPayment(deps, {
-              paymentPointerId: receivingPaymentPointer.id
-            })
-          ).getUrl(),
+          receiver: incomingPayment.getUrl(receivingPaymentPointer),
           sendAmount
         })
       ).rejects.toThrow('missing prices')

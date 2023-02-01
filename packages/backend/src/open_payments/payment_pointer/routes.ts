@@ -40,9 +40,7 @@ export async function getPaymentPointer(
 interface ListSubresourceOptions<M extends PaymentPointerSubresource> {
   ctx: ListContext
   getPaymentPointerPage: PaymentPointerSubresourceService<M>['getPaymentPointerPage']
-  toBody:
-    | ((model: M) => Record<string, unknown>)
-    | ((model: M) => Promise<Record<string, unknown>>)
+  toBody: (model: M) => Record<string, unknown>
 }
 
 export const listSubresource = async <M extends PaymentPointerSubresource>({
@@ -68,7 +66,7 @@ export const listSubresource = async <M extends PaymentPointerSubresource>({
   )
   const result = {
     pagination: pageInfo,
-    result: await Promise.all(page.map(async (item: M) => await toBody(item)))
+    result: page.map((item: M) => toBody(item))
   }
   ctx.body = result
 }

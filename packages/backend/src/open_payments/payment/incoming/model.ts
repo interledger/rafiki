@@ -130,15 +130,8 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public async getUrl(fetchedPaymentPointer?: PaymentPointer): Promise<string> {
-    const paymentPointer =
-      fetchedPaymentPointer || (await this.getPaymentPointer())
-
+  public getUrl(paymentPointer: PaymentPointer): string {
     return `${paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
-  }
-
-  public async getPaymentPointer(): Promise<PaymentPointer> {
-    return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
   }
 
   public async onCredit({
@@ -249,29 +242,33 @@ export class IncomingPayment
     return payment
   }
 
-  public async toOpenPaymentsType(): Promise<OpenPaymentsIncomingPayment>
-  public async toOpenPaymentsType(
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer
+  ): OpenPaymentsIncomingPayment
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
     ilpStreamConnection: Connection
-  ): Promise<OpenPaymentsIncomingPaymentWithConnection>
-  public async toOpenPaymentsType(
+  ): OpenPaymentsIncomingPaymentWithConnection
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
     ilpStreamConnection: string
-  ): Promise<OpenPaymentsIncomingPaymentWithConnectionUrl>
-  public async toOpenPaymentsType(
+  ): OpenPaymentsIncomingPaymentWithConnectionUrl
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
     ilpStreamConnection?: Connection | string
-  ): Promise<
+  ):
     | OpenPaymentsIncomingPaymentWithConnection
     | OpenPaymentsIncomingPaymentWithConnectionUrl
-  >
-  public async toOpenPaymentsType(
+
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
     ilpStreamConnection?: Connection | string
-  ): Promise<
+  ):
     | OpenPaymentsIncomingPayment
     | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl
-  > {
-    const paymentPointer = await this.getPaymentPointer()
+    | OpenPaymentsIncomingPaymentWithConnectionUrl {
     const baseIncomingPayment: OpenPaymentsIncomingPayment = {
-      id: await this.getUrl(paymentPointer),
+      id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
