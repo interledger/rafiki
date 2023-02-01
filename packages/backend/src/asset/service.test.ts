@@ -9,7 +9,10 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
+import {
+  purgeTigerbeetleData,
+  startTigerbeetleContainer
+} from '../tests/tigerbeetle'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -34,6 +37,7 @@ describe('Asset Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     await truncateTables(appContainer.knex)
+    await purgeTigerbeetleData()
   })
 
   afterAll(async (): Promise<void> => {

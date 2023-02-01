@@ -1,10 +1,12 @@
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import tmp from 'tmp'
+import fs from 'fs'
 
 import { Config } from '../config/app'
 
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
+const { name: TIGERBEETLE_DIR_HOST } = tmp.dirSync({ unsafeCleanup: true })
 const TIGERBEETLE_CONTAINER_LOG =
   process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
@@ -12,7 +14,7 @@ export async function startTigerbeetleContainer(
   clusterId?: number
 ): Promise<{ container: StartedTestContainer; port: number }> {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
-  const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
+
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
@@ -21,7 +23,7 @@ export async function startTigerbeetleContainer(
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
-        source: tigerbeetleDir,
+        source: TIGERBEETLE_DIR_HOST,
         target: TIGERBEETLE_DIR
       }
     ])
@@ -47,13 +49,20 @@ export async function startTigerbeetleContainer(
       .on('end', () => console.log('Stream closed for [tb-format]'))
   }
 
+  //copy formatted data file
+  await fs.promises.copyFile(
+    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`,
+    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}_copy`
+  )
+  console.log(await fs.promises.readdir(TIGERBEETLE_DIR_HOST))
+
   const tbContStart = await new GenericContainer(
     'ghcr.io/tigerbeetledb/tigerbeetle@sha256:00cdc510de799161016e01c1236446a855f81ba68d0b8d2a8576750ae41b786a'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
-        source: tigerbeetleDir,
+        source: TIGERBEETLE_DIR_HOST,
         target: TIGERBEETLE_DIR
       }
     ])
@@ -81,4 +90,18 @@ export async function startTigerbeetleContainer(
     container: tbContStart,
     port: tbContStart.getMappedPort(TIGERBEETLE_PORT)
   }
+}
+
+export async function purgeTigerbeetleData(clusterId?: number): Promise<void> {
+  const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
+  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
+
+  await fs.promises.rm(`${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`)
+  console.log(await fs.promises.readdir(TIGERBEETLE_DIR_HOST))
+
+  await fs.promises.copyFile(
+    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}_copy`,
+    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`
+  )
+  console.log(await fs.promises.readdir(TIGERBEETLE_DIR_HOST))
 }
