@@ -5,7 +5,7 @@ exports.up = function (knex) {
     // TigerBeetle account 2 byte ledger field representing account's asset
     table.specificType('ledger', 'smallserial').notNullable()
     table.string('code').notNullable()
-    table.integer('scale').notNullable()
+    table.tinyint('scale').unsigned().notNullable()
 
     table.bigInteger('withdrawalThreshold').nullable()
 
