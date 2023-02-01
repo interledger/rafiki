@@ -230,7 +230,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
       expect(ctx.response).toSatisfyApiSpec()
     }
     expect(ctx.body).toEqual({
-      result: expectedMatch ? [await getBody(expectedMatch, true)] : [],
+      result: expectedMatch ? [getBody(expectedMatch, true)] : [],
       pagination: {
         hasPreviousPage: false,
         hasNextPage: false,
@@ -261,7 +261,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
       if (expectedMatch) {
         await expect(get(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.body).toEqual(await getBody(expectedMatch))
+        expect(ctx.body).toEqual(getBody(expectedMatch))
       } else {
         await expect(get(ctx)).rejects.toMatchObject({
           status: 404,
@@ -319,11 +319,9 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
           expect(ctx.response).toSatisfyApiSpec()
           expect(ctx.body).toEqual({
             pagination,
-            result: await Promise.all(
-              models
-                .slice(startIndex, endIndex + 1)
-                .map(async (model) => await getBody(model, true))
-            )
+            result: models
+              .slice(startIndex, endIndex + 1)
+              .map((model) => getBody(model, true))
           })
         }
       )
