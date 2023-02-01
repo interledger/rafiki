@@ -158,7 +158,7 @@ async function listIncomingPayments(
     await listSubresource({
       ctx,
       getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
-      toBody: async (payment) =>
+      toBody: (payment) =>
         incomingPaymentToBody(
           ctx.paymentPointer,
           payment,

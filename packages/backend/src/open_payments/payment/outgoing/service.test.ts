@@ -265,7 +265,7 @@ describe('OutgoingPaymentService', (): void => {
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: receiverPaymentPointer.id
     })
-    receiver = incomingPayment.getUrl(paymentPointer)
+    receiver = incomingPayment.getUrl(receiverPaymentPointer)
 
     amtDelivered = BigInt(0)
   })
