@@ -122,6 +122,39 @@ describe('Grant Resolvers', (): void => {
       expect(response.code).toBe('200')
     })
 
+    test('Returns 401 if grant id is not provided', async (): Promise<void> => {
+      const input: RevokeGrantInput = {
+        grantId: ''
+      }
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation revokeGrant($input: RevokeGrantInput!) {
+              revokeGrant(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): RevokeGrantMutationResponse => {
+          if (query.data) {
+            return query.data.revokeGrant
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toBe('401')
+      expect(response.message).toBe('Grant Id is not provided')
+    })
+
     test('Returns 404 if id does not exist', async (): Promise<void> => {
       const input: RevokeGrantInput = {
         grantId: uuid()
@@ -153,6 +186,39 @@ describe('Grant Resolvers', (): void => {
       expect(response.success).toBe(false)
       expect(response.code).toBe('404')
       expect(response.message).toBe('Delete grant was not successful')
+    })
+
+    test('Returns 500 if grant id is in invaild format', async (): Promise<void> => {
+      const input: RevokeGrantInput = {
+        grantId: '123'
+      }
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation revokeGrant($input: RevokeGrantInput!) {
+              revokeGrant(input: $input) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            input
+          }
+        })
+        .then((query): RevokeGrantMutationResponse => {
+          if (query.data) {
+            return query.data.revokeGrant
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toBe('500')
+      expect(response.message).toBe('Error trying to revoke grant')
     })
   })
 })

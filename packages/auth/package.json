@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
-    "@apollo/client": "^3.7.4",
     "@apollo/server": "^4.3.1",
     "@as-integrations/koa": "^0.2.1",
     "graphql": "^16.6.0",
@@ -47,6 +46,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@apollo/client": "^3.7.4",
     "@graphql-codegen/cli": "2.16.4",
     "@graphql-codegen/introspection": "2.2.3",
     "@graphql-codegen/typescript": "2.8.7",
