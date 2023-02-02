@@ -13,7 +13,7 @@ import { truncateTables } from '../tests/tableManager'
 import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
 import { AccessToken } from './model'
 import { Access } from '../access/model'
-import { AccessTokenRoutes } from './routes'
+import { AccessTokenRoutes, IntrospectContext } from './routes'
 import { createContext } from '../tests/context'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
@@ -115,7 +115,9 @@ describe('Access Token Routes', (): void => {
       ctx.request.body = {
         access_token: v4()
       }
-      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      await expect(
+        accessTokenRoutes.introspect(ctx as IntrospectContext)
+      ).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
@@ -141,7 +143,10 @@ describe('Access Token Routes', (): void => {
       ctx.request.body = {
         access_token: token.value
       }
-      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+
+      await expect(
+        accessTokenRoutes.introspect(ctx as IntrospectContext)
+      ).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
@@ -184,7 +189,9 @@ describe('Access Token Routes', (): void => {
       ctx.request.body = {
         access_token: token.value
       }
-      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
+      await expect(
+        accessTokenRoutes.introspect(ctx as IntrospectContext)
+      ).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
@@ -324,7 +331,7 @@ describe('Access Token Routes', (): void => {
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
         status: 404,
-        message: 'token not found'
+        message: 'Token not found'
       })
     })
 
@@ -343,7 +350,7 @@ describe('Access Token Routes', (): void => {
 
       await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
         status: 404,
-        message: 'token not found'
+        message: 'Token not found'
       })
     })
 

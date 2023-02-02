@@ -142,7 +142,8 @@ export function initIocContainer(
         config: await deps.use('config'),
         logger: await deps.use('logger'),
         accessTokenService: await deps.use('accessTokenService'),
-        clientService: await deps.use('clientService')
+        clientService: await deps.use('clientService'),
+        accessService: await deps.use('accessService')
       })
     }
   )

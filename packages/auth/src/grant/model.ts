@@ -2,6 +2,11 @@ import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { Access } from '../access/model'
 import { join } from 'path'
+import {
+  InteractiveGrant as OpenPaymentsInteractiveGrant,
+  NonInteractiveGrant as OpenPaymentsGrant
+} from 'open-payments'
+import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -59,6 +64,70 @@ export class Grant extends BaseModel {
   public interactId?: string
   public interactRef?: string
   public interactNonce?: string // AS-generated nonce for post-interaction hash
+}
+
+interface ToOpenPaymentsInteractiveGrantArgs {
+  authServerUrl: string
+  client: {
+    name: string
+    uri: string
+  }
+  waitTimeSeconds?: number
+}
+
+export function toOpenPaymentsInteractiveGrant(
+  grant: Grant,
+  args: ToOpenPaymentsInteractiveGrantArgs
+): OpenPaymentsInteractiveGrant {
+  if (!isInteractiveGrant(grant)) {
+    throw new Error('Expected interactive grant')
+  }
+
+  const { authServerUrl, client, waitTimeSeconds } = args
+
+  const redirectUri = new URL(
+    authServerUrl + `/interact/${grant.interactId}/${grant.interactNonce}`
+  )
+
+  redirectUri.searchParams.set('clientName', client.name)
+  redirectUri.searchParams.set('clientUri', client.uri)
+
+  return {
+    interact: {
+      redirect: redirectUri.toString(),
+      finish: grant.interactNonce
+    },
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: `${authServerUrl}/auth/continue/${grant.continueId}`,
+      wait: waitTimeSeconds
+    }
+  }
+}
+
+interface ToOpenPaymentsGrantArgs {
+  authServerUrl: string
+}
+
+export function toOpenPaymentsGrant(
+  grant: Grant,
+  args: ToOpenPaymentsGrantArgs,
+  accessToken: AccessToken,
+  accessItems: Access[]
+): OpenPaymentsGrant {
+  return {
+    access_token: toOpenPaymentsAccessToken(accessToken, accessItems, {
+      authServerUrl: args.authServerUrl
+    }),
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: `${args.authServerUrl}/continue/${grant.continueId}`
+    }
+  }
 }
 
 export interface InteractiveGrant extends Grant {

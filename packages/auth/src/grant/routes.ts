@@ -4,8 +4,13 @@ import { ParsedUrlQuery } from 'querystring'
 
 import { AppContext } from '../app'
 import { GrantService, GrantRequest as GrantRequestBody } from './service'
-import { Grant, GrantState } from './model'
-import { Access } from '../access/model'
+import {
+  Grant,
+  GrantState,
+  toOpenPaymentsInteractiveGrant,
+  toOpenPaymentsGrant
+} from './model'
+import { toOpenPaymentsAccess } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import {
@@ -15,7 +20,6 @@ import {
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
-import { accessToBody } from '../shared/utils'
 import { AccessToken } from '../accessToken/model'
 
 interface ServiceDependencies extends BaseService {
@@ -64,7 +68,7 @@ type InteractionRequest<
   params: ParamsT
 }
 
-type InteractionContext<QueryT, ParamsT> = Omit<AppContext, 'request'> & {
+type InteractionContext<QueryT, ParamsT> = Exclude<AppContext, 'request'> & {
   request: InteractionRequest<QueryT, ParamsT>
 }
 
@@ -142,42 +146,54 @@ async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
+  const isOnlyIncomingPaymentRequest = ctx.request.body.access_token.access
+    .map((acc) => {
+      return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
+    })
+    .every((el) => el === true)
+
+  if (isOnlyIncomingPaymentRequest && !deps.config.incomingPaymentInteraction) {
+    createNonInteractiveGrantInitiation(deps, ctx)
+  } else {
+    createInteractiveGrantInitiation(deps, ctx)
+  }
+}
+
+async function createNonInteractiveGrantInitiation(
+  deps: ServiceDependencies,
+  ctx: CreateContext
+): Promise<void> {
   const { body } = ctx.request
   const { grantService, config } = deps
-
-  if (
-    !deps.config.incomingPaymentInteraction &&
-    body.access_token.access
-      .map((acc) => {
-        return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
-      })
-      .every((el) => el === true)
-  ) {
-    const trx = await Grant.startTransaction()
-    let grant: Grant
-    let accessToken: AccessToken
-    try {
-      grant = await grantService.create(body, trx)
-      accessToken = await deps.accessTokenService.create(grant.id, {
-        trx
-      })
-      await trx.commit()
-    } catch (err) {
-      await trx.rollback()
-      ctx.throw(500)
-      return
-    }
-    const access = await deps.accessService.getByGrant(grant.id)
-    ctx.status = 200
-    ctx.body = createGrantBody({
-      domain: deps.config.authServerDomain,
-      grant,
-      access,
-      accessToken
+  const trx = await Grant.startTransaction()
+  let grant: Grant
+  let accessToken: AccessToken
+  try {
+    grant = await grantService.create(body, trx)
+    accessToken = await deps.accessTokenService.create(grant.id, {
+      trx
     })
-    return
+    await trx.commit()
+  } catch (err) {
+    await trx.rollback()
+    ctx.throw(500)
   }
+  const access = await deps.accessService.getByGrant(grant.id)
+  ctx.status = 200
+  ctx.body = toOpenPaymentsGrant(
+    grant,
+    { authServerUrl: config.authServerDomain },
+    accessToken,
+    access
+  )
+}
 
+async function createInteractiveGrantInitiation(
+  deps: ServiceDependencies,
+  ctx: CreateContext
+): Promise<void> {
+  const { body } = ctx.request
+  const { grantService, config } = deps
   if (!body.interact) {
     ctx.throw(400, { error: 'interaction_required' })
   }
@@ -185,31 +201,15 @@ async function createGrantInitiation(
   const client = await deps.clientService.get(body.client)
   if (!client) {
     ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
-  } else {
-    const grant = await grantService.create(body)
-    ctx.status = 200
-
-    const redirectUri = new URL(
-      config.authServerDomain +
-        `/interact/${grant.interactId}/${grant.interactNonce}`
-    )
-
-    redirectUri.searchParams.set('clientName', client.name)
-    redirectUri.searchParams.set('clientUri', client.uri)
-    ctx.body = {
-      interact: {
-        redirect: redirectUri.toString(),
-        finish: grant.interactNonce
-      },
-      continue: {
-        access_token: {
-          value: grant.continueToken
-        },
-        uri: config.authServerDomain + `/auth/continue/${grant.continueId}`,
-        wait: config.waitTimeSeconds
-      }
-    }
   }
+
+  const grant = await grantService.create(body)
+  ctx.status = 200
+  ctx.body = toOpenPaymentsInteractiveGrant(grant, {
+    client,
+    authServerUrl: config.authServerDomain,
+    waitTimeSeconds: config.waitTimeSeconds
+  })
 }
 
 async function getGrantDetails(
@@ -234,7 +234,9 @@ async function getGrantDetails(
     return
   }
 
-  ctx.body = { access: grant.access.map((a: Access) => accessToBody(a)) }
+  ctx.body = {
+    access: grant.access.map(toOpenPaymentsAccess)
+  }
 }
 
 async function startInteraction(
@@ -390,12 +392,12 @@ async function continueGrant(
     const access = await accessService.getByGrant(grant.id)
 
     // TODO: add "continue" to response if additional grant request steps are added
-    ctx.body = createGrantBody({
-      domain: config.authServerDomain,
+    ctx.body = toOpenPaymentsGrant(
       grant,
-      access,
-      accessToken
-    })
+      { authServerUrl: config.authServerDomain },
+      accessToken,
+      access
+    )
   }
 }
 
@@ -420,31 +422,4 @@ async function deleteGrant(
     ctx.throw(404, { error: 'unknown_request' })
   }
   ctx.status = 204
-}
-
-function createGrantBody({
-  domain,
-  grant,
-  access,
-  accessToken
-}: {
-  domain: string
-  grant: Grant
-  access: Access[]
-  accessToken: AccessToken
-}) {
-  return {
-    access_token: {
-      value: accessToken.value,
-      manage: domain + `/token/${accessToken.managementId}`,
-      access: access.map((a: Access) => accessToBody(a)),
-      expires_in: accessToken.expiresIn
-    },
-    continue: {
-      access_token: {
-        value: grant.continueToken
-      },
-      uri: domain + `/continue/${grant.continueId}`
-    }
-  }
 }

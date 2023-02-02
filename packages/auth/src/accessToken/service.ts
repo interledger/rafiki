@@ -7,7 +7,6 @@ import { Grant, GrantState } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 import { IAppConfig } from '../config/app'
-import { Access } from '../access/model'
 
 export interface AccessTokenService {
   get(token: string): Promise<AccessToken | undefined>
@@ -15,7 +14,10 @@ export interface AccessTokenService {
   introspect(token: string): Promise<Grant | undefined>
   revoke(id: string, tokenValue: string): Promise<void>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
-  rotate(managementId: string, tokenValue: string): Promise<Rotation>
+  rotate(
+    managementId: string,
+    tokenValue: string
+  ): Promise<AccessToken | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -28,19 +30,6 @@ interface AccessTokenOpts {
   expiresIn?: number
   trx?: Transaction
 }
-
-export type Rotation =
-  | {
-      success: true
-      access: Array<Access>
-      value: string
-      managementId: string
-      expiresIn?: number
-    }
-  | {
-      success: false
-      error: Error
-    }
 
 export async function createAccessTokenService({
   logger,
@@ -140,45 +129,31 @@ async function rotate(
   deps: ServiceDependencies,
   managementId: string,
   tokenValue: string
-): Promise<Rotation> {
-  try {
-    return await AccessToken.transaction(async (trx) => {
-      const oldToken = await AccessToken.query(trx)
-        .delete()
-        .returning('*')
-        .findOne({
-          managementId,
-          value: tokenValue
-        })
-      if (oldToken) {
-        const token = await AccessToken.query(trx).insertAndFetch({
-          value: generateToken(),
-          grantId: oldToken.grantId,
-          expiresIn: oldToken.expiresIn,
-          managementId: v4()
-        })
-        const access = await Access.query(trx).where({
-          grantId: token.grantId
-        })
+): Promise<AccessToken | undefined> {
+  return await AccessToken.transaction(async (trx) => {
+    const oldToken = await AccessToken.query(trx)
+      .delete()
+      .returning('*')
+      .findOne({
+        managementId,
+        value: tokenValue
+      })
 
-        return {
-          success: true,
-          access,
-          value: token.value,
-          managementId: token.managementId,
-          expiresIn: token.expiresIn
-        }
-      } else {
-        return {
-          success: false,
-          error: new Error('token not found')
-        }
-      }
-    })
-  } catch (error) {
-    return {
-      success: false,
-      error: new Error(error && error['message'])
+    if (!oldToken) {
+      deps.logger.warn(
+        { managementId, tokenValue },
+        'Could not find old token during token rotation'
+      )
+      return
     }
-  }
+
+    const token = await AccessToken.query(trx).insertAndFetch({
+      value: generateToken(),
+      grantId: oldToken.grantId,
+      expiresIn: oldToken.expiresIn,
+      managementId: v4()
+    })
+
+    return token
+  })
 }
