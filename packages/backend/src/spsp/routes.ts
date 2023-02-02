@@ -1,12 +1,12 @@
 import { BaseService } from '../shared/baseService'
-import { PaymentPointerContext } from '../app'
+import { SPSPContext } from '../app'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 
 const CONTENT_TYPE_V4 = 'application/spsp4+json'
 
 export interface SPSPRoutes {
-  get(ctx: PaymentPointerContext): Promise<void>
+  get(ctx: SPSPContext): Promise<void>
 }
 
 interface ServiceDependencies extends Omit<BaseService, 'knex'> {
@@ -26,16 +26,15 @@ export async function createSPSPRoutes({
     streamServer
   }
   return {
-    get: (ctx) => getPay(deps, ctx)
+    get: (ctx) => getSPSP(deps, ctx)
   }
 }
 
-async function getPay(
+async function getSPSP(
   deps: ServiceDependencies,
-  ctx: PaymentPointerContext
+  ctx: SPSPContext
 ): Promise<void> {
   ctx.assert(ctx.accepts(CONTENT_TYPE_V4), 406)
-
   const nonce = ctx.request.headers['receipt-nonce']
   const secret = ctx.request.headers['receipt-secret']
   ctx.assert(
@@ -46,7 +45,7 @@ async function getPay(
 
   try {
     const { ilpAddress, sharedSecret } = deps.streamServer.generateCredentials({
-      paymentTag: ctx.paymentPointer.id,
+      paymentTag: ctx.paymentTag,
       receiptSetup:
         nonce && secret
           ? {
@@ -54,10 +53,7 @@ async function getPay(
               secret: Buffer.from(secret.toString(), 'base64')
             }
           : undefined,
-      asset: {
-        code: ctx.paymentPointer.asset.code,
-        scale: ctx.paymentPointer.asset.scale
-      }
+      asset: ctx.asset
     })
 
     ctx.set('Content-Type', CONTENT_TYPE_V4)
