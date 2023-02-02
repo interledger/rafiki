@@ -42,8 +42,6 @@ describe('Incoming Payment Model', (): void => {
       expect(incomingPayment.toOpenPaymentsType(paymentPointer)).toEqual({
         id: `${paymentPointer.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         paymentPointer: paymentPointer.url,
-        updatedAt: incomingPayment.updatedAt,
-        createdAt: incomingPayment.createdAt,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
@@ -51,7 +49,9 @@ describe('Incoming Payment Model', (): void => {
           : undefined,
         expiresAt: incomingPayment.expiresAt,
         description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined
+        externalRef: incomingPayment.externalRef ?? undefined,
+        updatedAt: incomingPayment.updatedAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString()
       })
     })
 
@@ -69,8 +69,6 @@ describe('Incoming Payment Model', (): void => {
       ).toEqual({
         id: `${paymentPointer.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         paymentPointer: paymentPointer.url,
-        updatedAt: incomingPayment.updatedAt,
-        createdAt: incomingPayment.createdAt,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
@@ -79,6 +77,8 @@ describe('Incoming Payment Model', (): void => {
         expiresAt: incomingPayment.expiresAt,
         description: incomingPayment.description ?? undefined,
         externalRef: incomingPayment.externalRef ?? undefined,
+        updatedAt: incomingPayment.updatedAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
         ilpStreamConnection: connection
       })
     })
@@ -104,16 +104,16 @@ describe('Incoming Payment Model', (): void => {
       ).toEqual({
         id: `${paymentPointer.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         paymentPointer: paymentPointer.url,
-        updatedAt: incomingPayment.updatedAt,
-        createdAt: incomingPayment.createdAt,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
-        expiresAt: incomingPayment.expiresAt,
+        expiresAt: incomingPayment.expiresAt.toISOString(),
         description: incomingPayment.description ?? undefined,
         externalRef: incomingPayment.externalRef ?? undefined,
+        updatedAt: incomingPayment.updatedAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
         ilpStreamConnection: {
           id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
           ilpAddress: 'test.ilp',
