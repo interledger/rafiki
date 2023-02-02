@@ -156,8 +156,8 @@ describe('Account Middleware', () => {
     name                                                              | createThrows                                                               | error
     ${'create TB account for PENDING incoming payment success'}       | ${undefined}                                                               | ${''}
     ${'create TB account for PENDING incoming payment throws exists'} | ${new CreateAccountError(CreateAccountErrorCode.exists)}                   | ${''}
-    ${'create TB account for PENDING incoming payment throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=8'}
-  `('$name', async ({ createThrows, error }): Promise<void> => {
+    ${'create TB account for PENDING incoming payment throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=14'}
+  `('name', async ({ createThrows, error }): Promise<void> => {
     const outgoingAccount = IncomingPaymentAccountFactory.build({
       id: 'tbIncomingPayment',
       state: 'PENDING'
@@ -197,7 +197,7 @@ describe('Account Middleware', () => {
     name                                                     | createThrows                                                               | error
     ${'create TB account for payment pointer success'}       | ${undefined}                                                               | ${''}
     ${'create TB account for payment pointer throws exists'} | ${new CreateAccountError(CreateAccountErrorCode.exists)}                   | ${''}
-    ${'create TB account for payment pointer throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=8'}
+    ${'create TB account for payment pointer throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=14'}
   `('$name', async ({ createThrows, error }): Promise<void> => {
     const outgoingAccount = AccountFactory.build({
       id: 'spspFallback'
