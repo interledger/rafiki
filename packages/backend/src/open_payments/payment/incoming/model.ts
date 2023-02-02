@@ -214,34 +214,6 @@ export class IncomingPayment
     }
   }
 
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
-    const payment: Pojo = {
-      id: json.id,
-      receivedAmount: {
-        ...json.receivedAmount,
-        value: json.receivedAmount.value.toString()
-      },
-      completed: json.completed,
-      createdAt: json.createdAt,
-      updatedAt: json.updatedAt,
-      expiresAt: json.expiresAt.toISOString()
-    }
-    if (json.incomingAmount) {
-      payment.incomingAmount = {
-        ...json.incomingAmount,
-        value: json.incomingAmount.value.toString()
-      }
-    }
-    if (json.description) {
-      payment.description = json.description
-    }
-    if (json.externalRef) {
-      payment.externalRef = json.externalRef
-    }
-    return payment
-  }
-
   public toOpenPaymentsType(
     paymentPointer: PaymentPointer
   ): OpenPaymentsIncomingPayment
