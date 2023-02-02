@@ -10,16 +10,23 @@ import {
   getRSPath,
   CreateIncomingPaymentArgs,
   PaginationArgs,
-  IncomingPaymentPaginationResult
+  IncomingPaymentPaginationResult,
+  IncomingPaymentWithConnectionUrl,
+  IncomingPaymentWithConnection
 } from '../types'
 import { get, post } from './requests'
 
+type AnyIncomingPayment =
+  | IncomingPayment
+  | IncomingPaymentWithConnection
+  | IncomingPaymentWithConnectionUrl
+
 export interface IncomingPaymentRoutes {
-  get(args: ResourceRequestArgs): Promise<IncomingPayment>
+  get(args: ResourceRequestArgs): Promise<IncomingPaymentWithConnection>
   create(
     args: CollectionRequestArgs,
     createArgs: CreateIncomingPaymentArgs
-  ): Promise<IncomingPayment>
+  ): Promise<IncomingPaymentWithConnection>
   complete(args: ResourceRequestArgs): Promise<IncomingPayment>
   list(
     args: CollectionRequestArgs,
@@ -33,7 +40,7 @@ export const createIncomingPaymentRoutes = (
   const { axiosInstance, openApi, logger } = deps
 
   const getIncomingPaymentOpenApiValidator =
-    openApi.createResponseValidator<IncomingPayment>({
+    openApi.createResponseValidator<IncomingPaymentWithConnection>({
       path: getRSPath('/incoming-payments/{id}'),
       method: HttpMethod.GET
     })
@@ -92,7 +99,7 @@ export const createIncomingPaymentRoutes = (
 export const getIncomingPayment = async (
   deps: BaseDeps,
   args: ResourceRequestArgs,
-  validateOpenApiResponse: ResponseValidator<IncomingPayment>
+  validateOpenApiResponse: ResponseValidator<IncomingPaymentWithConnection>
 ) => {
   const { axiosInstance, logger } = deps
   const { url } = args
@@ -215,9 +222,9 @@ export const listIncomingPayment = async (
   return incomingPayments
 }
 
-export const validateIncomingPayment = (
-  payment: IncomingPayment
-): IncomingPayment => {
+export const validateIncomingPayment = <T extends AnyIncomingPayment>(
+  payment: T
+): T => {
   if (payment.incomingAmount) {
     const { incomingAmount, receivedAmount } = payment
     if (
@@ -239,10 +246,12 @@ export const validateIncomingPayment = (
   }
 
   if (
-    !payment.ilpStreamConnection ||
-    payment.ilpStreamConnection.assetCode !==
+    'ilpStreamConnection' in payment &&
+    typeof payment.ilpStreamConnection === 'object' &&
+    (payment.ilpStreamConnection.assetCode !==
       payment.receivedAmount.assetCode ||
-    payment.ilpStreamConnection.assetScale !== payment.receivedAmount.assetScale
+      payment.ilpStreamConnection.assetScale !==
+        payment.receivedAmount.assetScale)
   ) {
     throw new Error(
       'Stream connection asset information does not match incoming payment asset information'
@@ -253,8 +262,8 @@ export const validateIncomingPayment = (
 }
 
 export const validateCreatedIncomingPayment = (
-  payment: IncomingPayment
-): IncomingPayment => {
+  payment: IncomingPaymentWithConnection
+): IncomingPaymentWithConnection => {
   const { receivedAmount, completed } = payment
 
   if (BigInt(receivedAmount.value) !== BigInt(0)) {

@@ -12,11 +12,16 @@ import {
 
 export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
   path as string
-export type IncomingPayment =
+
+export type IncomingPayment = RSComponents['schemas']['incoming-payment']
+export type IncomingPaymentWithConnection =
   RSComponents['schemas']['incoming-payment-with-connection']
+export type IncomingPaymentWithConnectionUrl =
+  RSComponents['schemas']['incoming-payment-with-connection-url']
 export type CreateIncomingPaymentArgs =
   RSOperations['create-incoming-payment']['requestBody']['content']['application/json']
-export type IncomingPaymentPaginationResult = PaginationResult<IncomingPayment>
+export type IncomingPaymentPaginationResult =
+  PaginationResult<IncomingPaymentWithConnectionUrl>
 export type ILPStreamConnection =
   RSComponents['schemas']['ilp-stream-connection']
 export type OutgoingPayment = RSComponents['schemas']['outgoing-payment']

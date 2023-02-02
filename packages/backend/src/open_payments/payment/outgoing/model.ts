@@ -1,13 +1,17 @@
-import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
+import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
-import { PaymentPointerSubresource } from '../../payment_pointer/model'
+import {
+  PaymentPointerSubresource,
+  PaymentPointer
+} from '../../payment_pointer/model'
 import { Quote } from '../../quote/model'
-import { Amount, AmountJSON } from '../../amount'
+import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
+import { OutgoingPayment as OpenPaymentsOutgoingPayment } from 'open-payments'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {
@@ -68,8 +72,16 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
+  public getUrl(paymentPointer: PaymentPointer): string {
+    return `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`
+  }
+
   public get asset(): Asset {
     return this.quote.asset
+  }
+
+  public get failed(): boolean {
+    return this.state === OutgoingPaymentState.Failed
   }
 
   // Outgoing peer
@@ -144,28 +156,22 @@ export class OutgoingPayment
     return data
   }
 
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer
+  ): OpenPaymentsOutgoingPayment {
     return {
-      id: json.id,
-      state: json.state,
-      receiver: json.receiver,
-      sendAmount: {
-        ...json.sendAmount,
-        value: json.sendAmount.value.toString()
-      },
-      sentAmount: {
-        ...json.sentAmount,
-        value: json.sentAmount.value.toString()
-      },
-      receiveAmount: {
-        ...json.receiveAmount,
-        value: json.receiveAmount.value.toString()
-      },
-      description: json.description,
-      externalRef: json.externalRef,
-      createdAt: json.createdAt,
-      updatedAt: json.updatedAt
+      id: this.getUrl(paymentPointer),
+      paymentPointer: paymentPointer.url,
+      quoteId: this.quote?.getUrl(paymentPointer) ?? undefined,
+      receiveAmount: serializeAmount(this.receiveAmount),
+      sendAmount: serializeAmount(this.sendAmount),
+      sentAmount: serializeAmount(this.sentAmount),
+      receiver: this.receiver,
+      failed: this.failed,
+      externalRef: this.externalRef ?? undefined,
+      description: this.description ?? undefined,
+      createdAt: this.createdAt.toISOString(),
+      updatedAt: this.updatedAt.toISOString()
     }
   }
 }
@@ -235,17 +241,4 @@ export const isPaymentEvent = (o: any): o is PaymentEvent =>
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
-}
-
-export type OutgoingPaymentJSON = {
-  id: string
-  paymentPointer: string
-  receiver: string
-  sendAmount: AmountJSON
-  sentAmount: AmountJSON
-  receiveAmount: AmountJSON
-  description: string | null
-  externalRef: string | null
-  createdAt: string
-  updatedAt: string
 }

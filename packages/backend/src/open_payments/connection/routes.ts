@@ -31,5 +31,5 @@ async function getConnection(
 ): Promise<void> {
   const connection = deps.connectionService.get(ctx.incomingPayment)
   if (!connection) return ctx.throw(404)
-  ctx.body = connection.toJSON()
+  ctx.body = connection.toOpenPaymentsType()
 }

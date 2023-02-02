@@ -96,15 +96,17 @@ describe('Quote Routes', (): void => {
           client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
-      getBody: (quote) => ({
-        id: `${paymentPointer.url}/quotes/${quote.id}`,
-        paymentPointer: paymentPointer.url,
-        receiver: quote.receiver,
-        sendAmount: serializeAmount(quote.sendAmount),
-        receiveAmount: serializeAmount(quote.receiveAmount),
-        createdAt: quote.createdAt.toISOString(),
-        expiresAt: quote.expiresAt.toISOString()
-      }),
+      getBody: (quote) => {
+        return {
+          id: `${paymentPointer.url}/quotes/${quote.id}`,
+          paymentPointer: paymentPointer.url,
+          receiver: quote.receiver,
+          sendAmount: serializeAmount(quote.sendAmount),
+          receiveAmount: serializeAmount(quote.receiveAmount),
+          createdAt: quote.createdAt.toISOString(),
+          expiresAt: quote.expiresAt.toISOString()
+        }
+      },
       urlPath: Quote.urlPath
     })
   })

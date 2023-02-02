@@ -11,10 +11,10 @@ import {
   AuthenticatedClient as OpenPaymentsClient,
   AccessAction,
   AccessType,
-  mockIncomingPayment,
   mockInteractiveGrant,
   mockNonInteractiveGrant,
-  mockPaymentPointer
+  mockPaymentPointer,
+  mockIncomingPaymentWithConnection
 } from 'open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
@@ -90,7 +90,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPayment({
+        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
           ...args,
           paymentPointerUrl: paymentPointer.id
         })
@@ -178,7 +178,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPayment({
+        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
           ...args,
           paymentPointerUrl: paymentPointer.id
         })
