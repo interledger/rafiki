@@ -25,6 +25,7 @@ import {
   AccountingService,
   AccountType,
   LiquidityAccount,
+  LiquidityAccountTypes,
   Transaction
 } from '../service'
 
@@ -108,7 +109,7 @@ export function createAccountingService(
 export async function createLiquidityAccount(
   deps: ServiceDependencies,
   account: LiquidityAccount,
-  accTypeCode?: AccountType
+  accountType?: LiquidityAccountTypes
 ): Promise<LiquidityAccount> {
   if (!validateId(account.id)) {
     throw new Error('unable to create account, invalid id')
@@ -119,8 +120,8 @@ export async function createLiquidityAccount(
         id: account.id,
         type: TigerbeetleAccountType.Credit,
         ledger: account.asset.ledger,
-        code: accTypeCode
-          ? convertToTigerbeetleAccountCode[accTypeCode]
+        code: accountType
+          ? convertToTigerbeetleAccountCode[accountType]
           : convertToTigerbeetleAccountCode[AccountType.LIQUIDITY]
       }
     ])
