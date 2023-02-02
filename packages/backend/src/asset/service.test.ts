@@ -37,7 +37,7 @@ describe('Asset Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     await truncateTables(appContainer.knex)
-    await purgeTigerbeetleData()
+    purgeTigerbeetleData()
   })
 
   afterAll(async (): Promise<void> => {

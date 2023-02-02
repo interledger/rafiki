@@ -50,11 +50,10 @@ export async function startTigerbeetleContainer(
   }
 
   //copy formatted data file
-  await fs.promises.copyFile(
+  fs.copyFileSync(
     `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`,
     `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}_copy`
   )
-  console.log(await fs.promises.readdir(TIGERBEETLE_DIR_HOST))
 
   const tbContStart = await new GenericContainer(
     'ghcr.io/tigerbeetledb/tigerbeetle@sha256:5a347fa46d42dbe2ea451d56874bf9906dcc51e5bb5339964f2d725524d20f65'
@@ -92,16 +91,13 @@ export async function startTigerbeetleContainer(
   }
 }
 
-export async function purgeTigerbeetleData(clusterId?: number): Promise<void> {
+export function purgeTigerbeetleData(clusterId?: number): void {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
 
-  await fs.promises.rm(`${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`)
-  console.log(await fs.promises.readdir(TIGERBEETLE_DIR_HOST))
-
-  await fs.promises.copyFile(
+  fs.rmSync(`${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`)
+  fs.copyFileSync(
     `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}_copy`,
     `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`
   )
-  console.log(await fs.promises.readdir(TIGERBEETLE_DIR_HOST))
 }
