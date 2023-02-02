@@ -1,4 +1,4 @@
-import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
+import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
@@ -154,35 +154,6 @@ export class OutgoingPayment
       data.payment.peerId = this.peerId
     }
     return data
-  }
-
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
-    return {
-      id: json.id,
-      state: json.state,
-      receiver: json.receiver,
-      sendAmount: {
-        ...json.sendAmount,
-        value: json.sendAmount.value.toString()
-      },
-      sentAmount: {
-        ...json.sentAmount,
-        value: json.sentAmount.value.toString()
-      },
-      receiveAmount: {
-        ...json.receiveAmount,
-        value: json.receiveAmount.value.toString()
-      },
-      description: json.description,
-      externalRef: json.externalRef,
-      createdAt: json.createdAt,
-      updatedAt: json.updatedAt
-    }
-  }
-
-  public async getPaymentPointer(): Promise<PaymentPointer> {
-    return this.paymentPointer ?? (await this.$relatedQuery('paymentPointer'))
   }
 
   public toOpenPaymentsType(
