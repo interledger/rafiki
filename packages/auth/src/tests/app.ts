@@ -31,6 +31,7 @@ export const createTestApp = async (
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.authPort = 0
+  config.adminPort = 0
 
   const logger = createLogger({
     transport: {
