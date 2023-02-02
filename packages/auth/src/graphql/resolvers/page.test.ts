@@ -248,4 +248,3 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
   })
 }
 
-test.todo('test suite must contain at least one test')
