@@ -1,4 +1,4 @@
-import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
+import { Model, ModelOptions, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'

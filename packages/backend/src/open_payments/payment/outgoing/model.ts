@@ -1,4 +1,4 @@
-import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
+import { Model, ModelOptions, QueryContext } from 'objection'
 import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
