@@ -8,7 +8,7 @@ import {
   Grant,
   GrantState,
   toOpenPaymentsInteractiveGrant,
-  toOpenPaymentsGrant
+  toOpenPaymentsNonInteractiveGrant
 } from './model'
 import { toOpenPaymentsAccess } from '../access/model'
 import { ClientService } from '../client/service'
@@ -184,7 +184,7 @@ async function createNonInteractiveGrantInitiation(
   }
   const access = await deps.accessService.getByGrant(grant.id)
   ctx.status = 200
-  ctx.body = toOpenPaymentsGrant(
+  ctx.body = toOpenPaymentsNonInteractiveGrant(
     grant,
     { authServerUrl: config.authServerDomain },
     accessToken,
@@ -396,7 +396,7 @@ async function continueGrant(
     const access = await accessService.getByGrant(grant.id)
 
     // TODO: add "continue" to response if additional grant request steps are added
-    ctx.body = toOpenPaymentsGrant(
+    ctx.body = toOpenPaymentsNonInteractiveGrant(
       grant,
       { authServerUrl: config.authServerDomain },
       accessToken,

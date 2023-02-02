@@ -111,7 +111,7 @@ interface ToOpenPaymentsGrantArgs {
   authServerUrl: string
 }
 
-export function toOpenPaymentsGrant(
+export function toOpenPaymentsNonInteractiveGrant(
   grant: Grant,
   args: ToOpenPaymentsGrantArgs,
   accessToken: AccessToken,
