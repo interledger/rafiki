@@ -15,7 +15,8 @@ export {
   JWKS,
   PaymentPointer,
   AccessType,
-  AccessAction
+  AccessAction,
+  AccessToken
 } from './types'
 
 export {

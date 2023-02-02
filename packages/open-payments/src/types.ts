@@ -111,11 +111,13 @@ export type AccessAction = (
   | AccessQuoteActions
 )[number]
 
-export const AccessType: Record<string, AccessType> = Object.freeze({
+export const AccessType: {
+  [key in 'IncomingPayment' | 'OutgoingPayment' | 'Quote']: AccessType
+} = {
   IncomingPayment: 'incoming-payment',
   OutgoingPayment: 'outgoing-payment',
   Quote: 'quote'
-})
+}
 
 export const AccessAction: Record<string, AccessAction> = Object.freeze({
   Create: 'create',
