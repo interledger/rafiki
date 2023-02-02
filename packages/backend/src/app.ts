@@ -21,10 +21,7 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
-import {
-  connectionMiddleware,
-  ConnectionContext
-} from './open_payments/connection/middleware'
+import { connectionMiddleware } from './open_payments/connection/middleware'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
@@ -35,6 +32,7 @@ import {
   RequestAction
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
+import { spspMiddleware } from './spsp/middleware'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
@@ -267,7 +265,6 @@ export class App {
       ctx.status = 200
     })
 
-    const spspRoutes = await this.container.use('spspRoutes')
     const paymentPointerKeyRoutes = await this.container.use(
       'paymentPointerKeyRoutes'
     )
@@ -339,22 +336,7 @@ export class App {
               router[method](
                 toRouterPath(path),
                 connectionMiddleware,
-                async (
-                  ctx: ConnectionContext & SPSPContext,
-                  next: () => Promise<unknown>
-                ): Promise<void> => {
-                  // Fall back to legacy protocols if client doesn't support Open Payments.
-                  if (ctx.accepts('application/spsp4+json')) {
-                    ctx.paymentTag = ctx.incomingPayment.id
-                    ctx.asset = {
-                      code: ctx.incomingPayment.asset.code,
-                      scale: ctx.incomingPayment.asset.scale
-                    }
-                    await spspRoutes.get(ctx)
-                  } else {
-                    await next()
-                  }
-                },
+                spspMiddleware,
                 createValidatorMiddleware<ContextType<typeof route>>(
                   resourceServerSpec,
                   {
@@ -411,22 +393,7 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH,
       createPaymentPointerMiddleware(),
-      async (
-        ctx: PaymentPointerContext & SPSPContext,
-        next: () => Promise<unknown>
-      ): Promise<void> => {
-        // Fall back to legacy protocols if client doesn't support Open Payments.
-        if (ctx.accepts('application/spsp4+json')) {
-          ctx.paymentTag = ctx.paymentPointer.id
-          ctx.asset = {
-            code: ctx.paymentPointer.asset.code,
-            scale: ctx.paymentPointer.asset.scale
-          }
-          await spspRoutes.get(ctx)
-        } else {
-          await next()
-        }
-      },
+      spspMiddleware,
       createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/',
         method: HttpMethod.GET
