@@ -47,7 +47,7 @@ describe('Incoming Payment Model', (): void => {
         incomingAmount: incomingPayment.incomingAmount
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
-        expiresAt: incomingPayment.expiresAt,
+        expiresAt: incomingPayment.expiresAt.toISOString(),
         description: incomingPayment.description ?? undefined,
         externalRef: incomingPayment.externalRef ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
@@ -74,7 +74,7 @@ describe('Incoming Payment Model', (): void => {
         incomingAmount: incomingPayment.incomingAmount
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
-        expiresAt: incomingPayment.expiresAt,
+        expiresAt: incomingPayment.expiresAt.toISOString(),
         description: incomingPayment.description ?? undefined,
         externalRef: incomingPayment.externalRef ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
