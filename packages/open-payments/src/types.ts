@@ -100,6 +100,11 @@ export type AccessOutgoingActions =
   ASExternalComponents['access-outgoing']['actions']
 export type AccessQuoteActions = ASExternalComponents['access-quote']['actions']
 
+export type AccessItem =
+  | ASExternalComponents['access-incoming']
+  | ASExternalComponents['access-outgoing']
+  | ASExternalComponents['access-quote']
+
 export type AccessType =
   | ASExternalComponents['access-incoming']['type']
   | ASExternalComponents['access-outgoing']['type']
