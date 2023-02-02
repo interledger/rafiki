@@ -124,7 +124,10 @@ export const AccessType: {
   Quote: 'quote'
 }
 
-export const AccessAction: Record<string, AccessAction> = Object.freeze({
+export const AccessAction: Record<
+  'Create' | 'Read' | 'ReadAll' | 'Complete' | 'List' | 'ListAll',
+  AccessAction
+> = Object.freeze({
   Create: 'create',
   Read: 'read',
   ReadAll: 'read-all',
