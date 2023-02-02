@@ -293,7 +293,7 @@ async function validateGrant(
         payment: grantPayment
       })
     ) {
-      if (grantPayment.state === OutgoingPaymentState.Failed) {
+      if (grantPayment.failed) {
         const totalSent = await deps.accountingService.getTotalSent(
           grantPayment.id
         )
