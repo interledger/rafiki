@@ -7,11 +7,11 @@ import jestOpenAPI from 'jest-openapi'
 import { URL } from 'url'
 import assert from 'assert'
 
-import { createContext as createAppContext } from '../tests/context'
+import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config, IAppConfig } from '../config/app'
 import { initIocContainer } from '..'
-import { AppContext, AppServices } from '../app'
+import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import {
   GrantRoutes,
@@ -89,11 +89,6 @@ describe('Grant Routes', (): void => {
     interactRef: v4(),
     interactNonce: generateNonce()
   })
-
-  const createContext = <T extends AppContext>(
-    reqOpts: httpMocks.RequestOptions,
-    params: Record<string, unknown>
-  ) => createAppContext(reqOpts, params) as T
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert(generateBaseGrant())
@@ -505,7 +500,7 @@ describe('Grant Routes', (): void => {
         const ctx = createContext<DeleteContext>(
           {
             url: '/continue/{id}',
-            method: 'delete',
+            method: 'DELETE',
             headers: {
               Authorization: `GNAP ${grant.continueToken}`
             }
@@ -527,7 +522,7 @@ describe('Grant Routes', (): void => {
         const ctx = createContext<DeleteContext>(
           {
             url: '/continue/{id}',
-            method: 'delete',
+            method: 'DELETE',
             headers: {
               Authorization: `GNAP ${grant.continueToken}`
             }
@@ -545,7 +540,7 @@ describe('Grant Routes', (): void => {
         const ctx = createContext<DeleteContext>(
           {
             url: '/continue/{id}',
-            method: 'delete',
+            method: 'DELETE',
             headers: {
               Authorization: `GNAP ${grant.continueToken}`
             }
@@ -570,7 +565,7 @@ describe('Grant Routes', (): void => {
           const ctx = createContext<DeleteContext>(
             {
               url: '/continue/{id}',
-              method: 'delete',
+              method: 'DELETE',
               headers: token
                 ? {
                     Authorization: `GNAP ${v4()}`

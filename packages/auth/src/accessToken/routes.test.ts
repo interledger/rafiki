@@ -4,6 +4,7 @@ import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
 
+import { createContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -14,7 +15,6 @@ import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
 import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes, IntrospectContext } from './routes'
-import { createContext } from '../tests/context'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
 
@@ -25,7 +25,7 @@ describe('Access Token Routes', (): void => {
   let accessTokenRoutes: AccessTokenRoutes
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenRoutes = await deps.use('accessTokenRoutes')
     const openApi = await deps.use('openApi')
@@ -102,7 +102,7 @@ describe('Access Token Routes', (): void => {
       jestOpenAPI(openApi.tokenIntrospectionSpec)
     })
     test('Cannot introspect fake token', async (): Promise<void> => {
-      const ctx = createContext(
+      const ctx = createContext<IntrospectContext>(
         {
           headers: {
             Accept: 'application/json'
@@ -115,9 +115,7 @@ describe('Access Token Routes', (): void => {
       ctx.request.body = {
         access_token: v4()
       }
-      await expect(
-        accessTokenRoutes.introspect(ctx as IntrospectContext)
-      ).resolves.toBeUndefined()
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
@@ -129,7 +127,7 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Successfully introspects valid token', async (): Promise<void> => {
-      const ctx = createContext(
+      const ctx = createContext<IntrospectContext>(
         {
           headers: {
             Accept: 'application/json'
@@ -144,9 +142,7 @@ describe('Access Token Routes', (): void => {
         access_token: token.value
       }
 
-      await expect(
-        accessTokenRoutes.introspect(ctx as IntrospectContext)
-      ).resolves.toBeUndefined()
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
@@ -175,7 +171,7 @@ describe('Access Token Routes', (): void => {
       )
       jest.useFakeTimers({ now })
 
-      const ctx = createContext(
+      const ctx = createContext<IntrospectContext>(
         {
           headers: {
             Accept: 'application/json'
@@ -189,9 +185,7 @@ describe('Access Token Routes', (): void => {
       ctx.request.body = {
         access_token: token.value
       }
-      await expect(
-        accessTokenRoutes.introspect(ctx as IntrospectContext)
-      ).resolves.toBeUndefined()
+      await expect(accessTokenRoutes.introspect(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.status).toBe(200)
       expect(ctx.response.get('Content-Type')).toBe(
