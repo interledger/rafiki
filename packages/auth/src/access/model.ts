@@ -38,7 +38,7 @@ export function toOpenPaymentsAccess(
 ): OpenPaymentsAccessItem {
   return {
     actions: accessItem.actions,
-    identifier: accessItem.identifier as string,
+    identifier: accessItem.identifier ?? undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type: accessItem.type as any,
     limits: accessItem.limits ?? undefined
