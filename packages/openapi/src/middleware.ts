@@ -15,6 +15,7 @@ export function createValidatorMiddleware<T extends Koa.DefaultContext>(
     ctx: Koa.Context,
     next: () => Promise<unknown>
   ): Promise<void> => {
+    // TODO: Allow 'application/*+json'
     ctx.assert(ctx.accepts('application/json'), 406, 'must accept json')
     try {
       if (validateRequest(ctx.request)) {
