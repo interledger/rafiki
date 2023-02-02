@@ -1,6 +1,6 @@
 import { Logger } from 'pino'
 import { TokenInfo } from 'token-introspection'
-import { Access, toOpenPaymentsAccess } from '../access/model'
+import { toOpenPaymentsAccess } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from './service'
