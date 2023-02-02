@@ -94,7 +94,6 @@ export interface AppServices {
 export type AppContainer = IocContract<AppServices>
 
 export class App {
-  private publicRouter!: Router<DefaultState, AppContext>
   private server!: Server
   private adminServer!: Server
   public apolloServer!: ApolloServer
