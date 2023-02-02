@@ -9,19 +9,19 @@ import { Grant } from '../grant/model'
 import { toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 
-type TokenRequest<BodyT> = Omit<AppContext['request'], 'body'> & {
+type TokenRequest<BodyT> = Exclude<AppContext['request'], 'body'> & {
   body: BodyT
 }
 
-type TokenContext<BodyT> = Omit<AppContext, 'request'> & {
+type TokenContext<BodyT> = Exclude<AppContext, 'request'> & {
   request: TokenRequest<BodyT>
 }
 
-type ManagementRequest = Omit<AppContext['request'], 'params'> & {
+type ManagementRequest = Exclude<AppContext['request'], 'params'> & {
   params?: Record<'id', string>
 }
 
-type ManagementContext = Omit<AppContext, 'request'> & {
+type ManagementContext = Exclude<AppContext, 'request'> & {
   request: ManagementRequest
 }
 
@@ -110,12 +110,10 @@ async function rotateToken(
     const errorMessage = 'Could not rotate token'
     deps.logger.error({ error: error && error['message '] }, errorMessage)
     ctx.throw(400, { message: errorMessage })
-    return
   }
 
   if (!newToken) {
     ctx.throw(404, { message: 'Token not found' })
-    return
   }
 
   const accessItems = await deps.accessService.getByGrant(newToken.grantId)
