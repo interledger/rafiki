@@ -116,7 +116,7 @@ export const mockIncomingPaymentWithConnection = (
   overrides?: Partial<IncomingPaymentWithConnection>
 ): IncomingPaymentWithConnection => ({
   ...mockIncomingPayment(),
-  ilpStreamConnection: mockILPStreamConnection(),
+  ilpStreamConnection: mockILPStreamConnection(overrides?.ilpStreamConnection),
   ...overrides
 })
 
