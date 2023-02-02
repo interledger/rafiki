@@ -146,16 +146,20 @@ async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
-  const isOnlyIncomingPaymentRequest = ctx.request.body.access_token.access
-    .map((acc) => {
-      return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
-    })
-    .every((el) => el === true)
+  const isOnlyIncomingPaymentAccessRequest =
+    ctx.request.body.access_token.access
+      .map((acc) => {
+        return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
+      })
+      .every((el) => el === true)
 
-  if (isOnlyIncomingPaymentRequest && !deps.config.incomingPaymentInteraction) {
-    createNonInteractiveGrantInitiation(deps, ctx)
+  if (
+    isOnlyIncomingPaymentAccessRequest &&
+    !deps.config.incomingPaymentInteraction
+  ) {
+    await createNonInteractiveGrantInitiation(deps, ctx)
   } else {
-    createInteractiveGrantInitiation(deps, ctx)
+    await createInteractiveGrantInitiation(deps, ctx)
   }
 }
 
