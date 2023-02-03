@@ -178,13 +178,12 @@ describe('Grant Service', (): void => {
         expiresIn: 6000
       }
       const updatedGrant = await grantService.update(grant, updateOptions)
-      expect(updatedGrant).toMatchObject({
-        authServerId,
-        accessType: options.accessType,
-        accessActions: options.accessActions,
+      expect(updatedGrant).toEqual({
+        ...grant,
         accessToken: updateOptions.accessToken,
         managementId: updateOptions.managementUrl.split('/').pop(),
-        expiresAt: new Date(Date.now() + updateOptions.expiresIn * 1000)
+        expiresAt: new Date(Date.now() + updateOptions.expiresIn * 1000),
+        updatedAt: updatedGrant.updatedAt
       })
     })
 
