@@ -10,6 +10,7 @@ generates:
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
       scalars:
+        UInt8: number
         UInt64: bigint
   ../mock-account-provider/generated/graphql.ts:
     plugins:
@@ -20,6 +21,7 @@ generates:
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
       scalars:
+        UInt8: number
         UInt64: bigint
   src/graphql/generated/graphql.schema.json:
     plugins:

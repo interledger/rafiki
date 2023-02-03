@@ -9,6 +9,8 @@ export enum AccountType {
   SETTLEMENT = 'SETTLEMENT'
 }
 
+export type LiquidityAccountTypes = Exclude<AccountType, AccountType.SETTLEMENT>
+
 export interface LiquidityAccount {
   id: string
   asset: {
@@ -49,7 +51,7 @@ export interface Transaction {
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
-    type?: AccountType
+    accountType?: LiquidityAccountTypes
   ): Promise<LiquidityAccount>
   createSettlementAccount(ledger: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>

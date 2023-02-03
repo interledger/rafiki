@@ -154,7 +154,7 @@ describe('Account Middleware', () => {
   test.each`
     name                                                              | createThrows                         | error
     ${'create TB account for PENDING incoming payment success'}       | ${undefined}                         | ${''}
-    ${'create TB account for PENDING incoming payment throws exists'} | ${new AccountAlreadyExistsError('')} | ${'AccountAlreadyExistsError '}
+    ${'create TB account for PENDING incoming payment throws exists'} | ${new AccountAlreadyExistsError('')} | ${''}
     ${'create TB account for PENDING incoming payment throws error'}  | ${new Error('other error')}          | ${'other error'}
   `('$name', async ({ createThrows, error }): Promise<void> => {
     const outgoingAccount = IncomingPaymentAccountFactory.build({
@@ -195,7 +195,7 @@ describe('Account Middleware', () => {
   test.each`
     name                                                     | createThrows                         | error
     ${'create TB account for payment pointer success'}       | ${undefined}                         | ${''}
-    ${'create TB account for payment pointer throws exists'} | ${new AccountAlreadyExistsError('')} | ${'AccountAlreadyExistsError '}
+    ${'create TB account for payment pointer throws exists'} | ${new AccountAlreadyExistsError('')} | ${''}
     ${'create TB account for payment pointer throws error'}  | ${new Error('other error')}          | ${'other error'}
   `('$name', async ({ createThrows, error }): Promise<void> => {
     const outgoingAccount = AccountFactory.build({

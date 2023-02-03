@@ -4,7 +4,7 @@ import base64url from 'base64url'
 import { Amount, parseAmount } from '../amount'
 import { AssetOptions } from '../../asset/service'
 import {
-  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   ILPStreamConnection as OpenPaymentsConnection
 } from 'open-payments'
 import { ConnectionBase } from '../connection/model'
@@ -17,7 +17,7 @@ interface OpenPaymentsConnectionWithIlpAddress
 
 type ReceiverIncomingPayment = Readonly<
   Omit<
-    OpenPaymentsIncomingPayment,
+    OpenPaymentsIncomingPaymentWithConnection,
     | 'ilpStreamConnection'
     | 'expiresAt'
     | 'receivedAmount'
@@ -51,7 +51,7 @@ export class Receiver extends ConnectionBase {
   }
 
   static fromIncomingPayment(
-    incomingPayment: OpenPaymentsIncomingPayment
+    incomingPayment: OpenPaymentsIncomingPaymentWithConnection
   ): Receiver {
     if (!incomingPayment.ilpStreamConnection) {
       throw new Error('Missing stream connection on incoming payment')

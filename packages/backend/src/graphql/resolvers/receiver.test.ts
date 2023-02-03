@@ -6,7 +6,10 @@ import { AppServices } from '../../app'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { Amount, serializeAmount } from '../../open_payments/amount'
-import { mockIncomingPayment, mockPaymentPointer } from 'open-payments'
+import {
+  mockIncomingPaymentWithConnection,
+  mockPaymentPointer
+} from 'open-payments'
 import { CreateReceiverResponse } from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
 import { Receiver } from '../../open_payments/receiver/model'
@@ -49,7 +52,7 @@ describe('Receiver Resolver', (): void => {
         incomingAmount
       }): Promise<void> => {
         const receiver = Receiver.fromIncomingPayment(
-          mockIncomingPayment({
+          mockIncomingPaymentWithConnection({
             id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
             paymentPointer: paymentPointer.id,
             description,

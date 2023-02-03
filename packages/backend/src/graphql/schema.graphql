@@ -141,7 +141,7 @@ type AssetEdge {
 
 input CreateAssetInput {
   code: String!
-  scale: Int!
+  scale: UInt8!
   withdrawalThreshold: UInt64
 }
 
@@ -192,7 +192,7 @@ input HttpOutgoingInput {
 
 input AssetInput {
   code: String!
-  scale: Int!
+  scale: UInt8!
 }
 
 input AddPeerLiquidityInput {
@@ -254,7 +254,7 @@ input CreatePaymentPointerKeyInput {
 type Asset implements Model {
   id: ID!
   code: String!
-  scale: Int!
+  scale: UInt8!
   withdrawalThreshold: UInt64
   createdAt: String!
 }
@@ -380,7 +380,7 @@ enum IncomingPaymentState {
 type Amount {
   value: UInt64!
   assetCode: String!
-  assetScale: Int!
+  assetScale: UInt8!
 }
 
 type OutgoingPaymentConnection {
@@ -447,7 +447,7 @@ type Quote {
 input AmountInput {
   value: UInt64!
   assetCode: String!
-  assetScale: Int!
+  assetScale: UInt8!
 }
 
 input CreateQuoteInput {
@@ -635,4 +635,5 @@ interface MutationResponse {
   message: String!
 }
 
+scalar UInt8
 scalar UInt64

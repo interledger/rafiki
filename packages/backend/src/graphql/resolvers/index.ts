@@ -32,7 +32,7 @@ import {
   depositEventLiquidity,
   withdrawEventLiquidity
 } from './liquidity'
-import { GraphQLBigInt } from '../scalars'
+import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
   createPaymentPointerKey,
   revokePaymentPointerKey
@@ -40,6 +40,7 @@ import {
 import { createReceiver } from './receiver'
 
 export const resolvers: Resolvers = {
+  UInt8: GraphQLUInt8,
   UInt64: GraphQLBigInt,
   Query: {
     paymentPointer: getPaymentPointer,
