@@ -18,7 +18,7 @@ import {
 } from 'open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
-import { AccessToken } from 'open-payments/dist/types'
+import { AccessToken } from 'open-payments'
 
 describe('Remote Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
