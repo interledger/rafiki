@@ -24,7 +24,7 @@ describe('Access Token Service', (): void => {
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
   })
@@ -116,21 +116,15 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can get an access token by its value', async (): Promise<void> => {
-      const fetchedToken = await accessTokenService.get(accessToken.value)
-      assert.ok(fetchedToken)
-      expect(fetchedToken.value).toEqual(accessToken.value)
-      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
-      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+      await expect(accessTokenService.get(accessToken.value)).resolves.toEqual(
+        accessToken
+      )
     })
 
     test('Can get an access token by its managementId', async (): Promise<void> => {
-      const fetchedToken = await accessTokenService.getByManagementId(
-        accessToken.managementId
-      )
-      assert.ok(fetchedToken)
-      expect(fetchedToken.value).toEqual(accessToken.value)
-      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
-      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+      await expect(
+        accessTokenService.getByManagementId(accessToken.managementId)
+      ).resolves.toMatchObject(accessToken)
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {
@@ -271,12 +265,14 @@ describe('Access Token Service', (): void => {
       expect(rotatedToken?.value).not.toBe(originalTokenValue)
     })
     test('Cannot rotate token with incorrect management id', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(v4(), token.value)
-      expect(result).toBeUndefined()
+      await expect(
+        accessTokenService.rotate(v4(), token.value)
+      ).resolves.toBeUndefined()
     })
     test('Cannot rotate token with incorrect value', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(token.managementId, v4())
-      expect(result).toBeUndefined()
+      await expect(
+        accessTokenService.rotate(token.managementId, v4())
+      ).resolves.toBeUndefined()
     })
   })
 })
