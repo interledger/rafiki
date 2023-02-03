@@ -11,10 +11,10 @@ import {
   AuthenticatedClient as OpenPaymentsClient,
   AccessAction,
   AccessType,
-  mockIncomingPayment,
   mockInteractiveGrant,
   mockNonInteractiveGrant,
-  mockPaymentPointer
+  mockPaymentPointer,
+  mockIncomingPaymentWithConnection
 } from 'open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
@@ -118,6 +118,44 @@ describe('Remote Incoming Payment Service', (): void => {
         ).resolves.toEqual(RemoteIncomingPaymentError.ExpiredGrant)
         expect(clientRequestRotateTokenSpy).toHaveBeenCalled()
       })
+      test.each`
+        incomingAmount | expiresAt                        | description                | externalRef
+        ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      `('creates remote incoming payment ($#)', async (args): Promise<void> => {
+        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+          ...args,
+          paymentPointerUrl: paymentPointer.id
+        })
+
+        const grant = await grantService.create(grantOptions)
+
+        const clientCreateIncomingPaymentSpy = jest
+          .spyOn(openPaymentsClient.incomingPayment, 'create')
+          .mockResolvedValueOnce(mockedIncomingPayment)
+
+        const incomingPayment = await remoteIncomingPaymentService.create({
+          ...args,
+          paymentPointerUrl: paymentPointer.id
+        })
+
+        expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
+        expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
+          {
+            paymentPointer: paymentPointer.id,
+            accessToken: grant.accessToken
+          },
+          {
+            ...args,
+            expiresAt: args.expiresAt
+              ? args.expiresAt.toISOString()
+              : undefined,
+            incomingAmount: args.incomingAmount
+              ? serializeAmount(args.incomingAmount)
+              : undefined
+          }
+        )
+      })
 
       test('returns error if fails to create the incoming payment', async () => {
         await grantService.create(grantOptions)
@@ -139,7 +177,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
       `('creates remote incoming payment ($#)', (args): void => {
-        const mockedIncomingPayment = mockIncomingPayment({
+        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
           ...args,
           paymentPointerUrl: paymentPointer.id
         })
@@ -212,7 +250,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPayment({
+        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
           ...args,
           paymentPointerUrl: paymentPointer.id
         })
