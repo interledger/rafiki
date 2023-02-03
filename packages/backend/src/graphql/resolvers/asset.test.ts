@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client'
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
+// import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 
@@ -15,7 +15,7 @@ import { isAssetError } from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
-import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
+// import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import {
   AssetMutationResponse,
   Asset,

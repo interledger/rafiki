@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
+// import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -16,7 +16,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
+// import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
 describe('Accounting Service', (): void => {
