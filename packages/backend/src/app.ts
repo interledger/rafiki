@@ -20,9 +20,10 @@ import { loadSchemaSync } from '@graphql-tools/load'
 
 import { resolvers } from './graphql/resolvers'
 import { HttpTokenService } from './httpToken/service'
-import { AssetService } from './asset/service'
+import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
+import { connectionMiddleware } from './open_payments/connection/middleware'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
@@ -33,6 +34,7 @@ import {
   RequestAction
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
+import { spspMiddleware } from './spsp/middleware'
 import { SPSPRoutes } from './spsp/routes'
 import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
@@ -137,6 +139,11 @@ export type CreateContext<BodyT> = CollectionContext<BodyT>
 export type ReadContext = SubresourceContext
 export type CompleteContext = SubresourceContext
 export type ListContext = CollectionContext<never, PageQueryParams>
+
+export interface SPSPContext extends AppContext {
+  paymentTag: string
+  asset: AssetOptions
+}
 
 type ContextType<T> = T extends (
   ctx: infer Context
@@ -284,7 +291,6 @@ export class App {
       ctx.status = 200
     })
 
-    const spspRoutes = await this.container.use('spspRoutes')
     const paymentPointerKeyRoutes = await this.container.use(
       'paymentPointerKeyRoutes'
     )
@@ -355,6 +361,8 @@ export class App {
               route = connectionRoutes.get
               router[method](
                 toRouterPath(path),
+                connectionMiddleware,
+                spspMiddleware,
                 createValidatorMiddleware<ContextType<typeof route>>(
                   resourceServerSpec,
                   {
@@ -411,18 +419,12 @@ export class App {
     router.get(
       PAYMENT_POINTER_PATH,
       createPaymentPointerMiddleware(),
+      spspMiddleware,
       createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),
-      async (ctx: PaymentPointerContext): Promise<void> => {
-        // Fall back to legacy protocols if client doesn't support Open Payments.
-        if (ctx.accepts('application/json')) await paymentPointerRoutes.get(ctx)
-        //else if (ctx.accepts('application/ilp-stream+json')) // TODO https://docs.openpayments.dev/accounts#payment-details
-        else if (ctx.accepts('application/spsp4+json'))
-          await spspRoutes.get(ctx)
-        else ctx.throw(406, 'no accepted Content-Type available')
-      }
+      paymentPointerRoutes.get
     )
 
     koa.use(router.routes())

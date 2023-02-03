@@ -1,13 +1,13 @@
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
 import jestOpenAPI from 'jest-openapi'
-import { v4 as uuid } from 'uuid'
 
-import { AppServices, ReadContext } from '../../app'
+import { AppServices } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../../'
+import { ConnectionContext } from './middleware'
 import { ConnectionRoutes } from './routes'
 import { createAsset } from '../../tests/asset'
 import { createContext } from '../../tests/context'
@@ -67,22 +67,6 @@ describe('Connection Routes', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns 404 for nonexistent connection id on incoming payment', async (): Promise<void> => {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' },
-          url: `/connections/${incomingPayment.connectionId}`
-        },
-        {
-          id: uuid()
-        }
-      )
-      await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
-        'status',
-        404
-      )
-    })
-
     test.each`
       state
       ${IncomingPaymentState.Completed}
@@ -95,15 +79,11 @@ describe('Connection Routes', (): void => {
           expiresAt:
             state === IncomingPaymentState.Expired ? new Date() : undefined
         })
-        const ctx = createContext<ReadContext>(
-          {
-            headers: { Accept: 'application/json' },
-            url: `/connections/${incomingPayment.connectionId}`
-          },
-          {
-            id: incomingPayment.connectionId as string
-          }
-        )
+        const ctx = createContext<ConnectionContext>({
+          headers: { Accept: 'application/json' },
+          url: `/connections/${incomingPayment.connectionId}`
+        })
+        ctx.incomingPayment = incomingPayment
         await expect(connectionRoutes.get(ctx)).rejects.toHaveProperty(
           'status',
           404
@@ -111,16 +91,12 @@ describe('Connection Routes', (): void => {
       }
     )
 
-    test('returns 200 for correct connection id', async (): Promise<void> => {
-      const ctx = createContext<ReadContext>(
-        {
-          headers: { Accept: 'application/json' },
-          url: `/connections/${incomingPayment.connectionId}`
-        },
-        {
-          id: incomingPayment.connectionId as string
-        }
-      )
+    test('returns 200 with connection', async (): Promise<void> => {
+      const ctx = createContext<ConnectionContext>({
+        headers: { Accept: 'application/json' },
+        url: `/connections/${incomingPayment.connectionId}`
+      })
+      ctx.incomingPayment = incomingPayment
       await expect(connectionRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
 

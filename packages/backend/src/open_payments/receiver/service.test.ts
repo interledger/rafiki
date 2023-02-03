@@ -7,10 +7,10 @@ import {
   AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,
   PaymentPointer as OpenPaymentsPaymentPointer,
-  mockIncomingPayment,
   mockPaymentPointer,
   NonInteractiveGrant,
-  GrantRequest
+  GrantRequest,
+  mockIncomingPaymentWithConnection
 } from 'open-payments'
 import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
@@ -193,26 +193,26 @@ describe('Receiver Service', (): void => {
           'get'
         )
 
-        await expect(receiverService.get(incomingPayment.url)).resolves.toEqual(
-          {
-            assetCode: incomingPayment.receivedAmount.assetCode,
-            assetScale: incomingPayment.receivedAmount.assetScale,
-            ilpAddress: expect.any(String),
-            sharedSecret: expect.any(Buffer),
-            incomingPayment: {
-              id: incomingPayment.url,
-              paymentPointer: incomingPayment.paymentPointer.url,
-              completed: incomingPayment.completed,
-              receivedAmount: incomingPayment.receivedAmount,
-              incomingAmount: incomingPayment.incomingAmount,
-              description: incomingPayment.description || undefined,
-              externalRef: incomingPayment.externalRef || undefined,
-              expiresAt: incomingPayment.expiresAt,
-              updatedAt: new Date(incomingPayment.updatedAt),
-              createdAt: new Date(incomingPayment.createdAt)
-            }
+        await expect(
+          receiverService.get(incomingPayment.getUrl(paymentPointer))
+        ).resolves.toEqual({
+          assetCode: incomingPayment.receivedAmount.assetCode,
+          assetScale: incomingPayment.receivedAmount.assetScale,
+          ilpAddress: expect.any(String),
+          sharedSecret: expect.any(Buffer),
+          incomingPayment: {
+            id: incomingPayment.getUrl(paymentPointer),
+            paymentPointer: paymentPointer.url,
+            completed: incomingPayment.completed,
+            receivedAmount: incomingPayment.receivedAmount,
+            incomingAmount: incomingPayment.incomingAmount,
+            description: incomingPayment.description || undefined,
+            externalRef: incomingPayment.externalRef || undefined,
+            expiresAt: incomingPayment.expiresAt,
+            updatedAt: new Date(incomingPayment.updatedAt),
+            createdAt: new Date(incomingPayment.createdAt)
           }
-        )
+        })
         expect(clientGetIncomingPaymentSpy).not.toHaveBeenCalled()
       })
 
@@ -263,7 +263,7 @@ describe('Receiver Service', (): void => {
           paymentPointer = mockPaymentPointer({
             authServer
           })
-          incomingPayment = mockIncomingPayment({
+          incomingPayment = mockIncomingPaymentWithConnection({
             id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
             paymentPointer: paymentPointer.id
           })
@@ -455,7 +455,7 @@ describe('Receiver Service', (): void => {
           expiresAt,
           incomingAmount
         }): Promise<void> => {
-          const incomingPayment = mockIncomingPayment({
+          const incomingPayment = mockIncomingPaymentWithConnection({
             description,
             externalRef,
             expiresAt,

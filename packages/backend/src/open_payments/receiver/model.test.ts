@@ -44,9 +44,7 @@ describe('Receiver Model', (): void => {
       assert(connection instanceof Connection)
 
       const receiver = Receiver.fromIncomingPayment(
-        incomingPayment.toOpenPaymentsType({
-          ilpStreamConnection: connection
-        })
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
       )
 
       expect(receiver).toEqual({
@@ -55,8 +53,8 @@ describe('Receiver Model', (): void => {
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
-          id: incomingPayment.url,
-          paymentPointer: incomingPayment.paymentPointer.url,
+          id: incomingPayment.getUrl(paymentPointer),
+          paymentPointer: paymentPointer.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
           completed: incomingPayment.completed,
@@ -77,12 +75,11 @@ describe('Receiver Model', (): void => {
       const connection = connectionService.get(incomingPayment)
 
       assert(connection instanceof Connection)
+      const openPaymentsIncomingPayment =
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+
       expect(() =>
-        Receiver.fromIncomingPayment(
-          incomingPayment.toOpenPaymentsType({
-            ilpStreamConnection: connection
-          })
-        )
+        Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
       ).toThrow('Cannot create receiver from completed incoming payment')
     })
 
@@ -96,12 +93,11 @@ describe('Receiver Model', (): void => {
       const connection = connectionService.get(incomingPayment)
 
       assert(connection instanceof Connection)
+      const openPaymentsIncomingPayment =
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+
       expect(() =>
-        Receiver.fromIncomingPayment(
-          incomingPayment.toOpenPaymentsType({
-            ilpStreamConnection: connection
-          })
-        )
+        Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
       ).toThrow('Cannot create receiver from expired incoming payment')
     })
 
@@ -115,12 +111,11 @@ describe('Receiver Model', (): void => {
       assert(connection instanceof Connection)
       ;(connection.ilpAddress as string) = 'not base 64 encoded'
 
+      const openPaymentsIncomingPayment =
+        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+
       expect(() =>
-        Receiver.fromIncomingPayment(
-          incomingPayment.toOpenPaymentsType({
-            ilpStreamConnection: connection
-          })
-        )
+        Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
       ).toThrow('Invalid ILP address on stream connection')
     })
   })

@@ -15,6 +15,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { AccountType } from '../accounting/service'
+import { CheckViolationError } from 'objection'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -113,6 +114,16 @@ describe('Asset Service', (): void => {
       await expect(assetService.create(options)).resolves.toMatchObject(options)
       await expect(assetService.create(options)).resolves.toEqual(
         AssetError.DuplicateAsset
+      )
+    })
+
+    test('Cannot create asset with scale > 255', async (): Promise<void> => {
+      const options = {
+        code: 'ABC',
+        scale: 256
+      }
+      await expect(assetService.create(options)).rejects.toThrow(
+        CheckViolationError
       )
     })
   })
