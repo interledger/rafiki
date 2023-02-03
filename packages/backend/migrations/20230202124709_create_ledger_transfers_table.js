@@ -8,9 +8,9 @@ exports.up = function (knex) {
     table.uuid('transferRef').notNullable().unique().index()
 
     table.uuid('debitAccountId').notNullable()
-    table.foreign('debitAccountId').references('ledgerAccount.id')
+    table.foreign('debitAccountId').references('ledgerAccounts.id')
     table.uuid('creditAccountId').notNullable()
-    table.foreign('creditAccountId').references('ledgerAccount.id')
+    table.foreign('creditAccountId').references('ledgerAccounts.id')
     table.bigInteger('amount').notNullable()
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
