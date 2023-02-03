@@ -70,10 +70,18 @@ const setup = async (globalConfig): Promise<void> => {
 
   const setupTigerbeetle = async () => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const { container, port } = await startTigerbeetleContainer()
+      const testContainers = await Promise.all(
+        [0, 1, 2, 3].map(async (i: number) => {
+          return await startTigerbeetleContainer(i)
+        })
+      )
 
-      process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${port}]`
-      global.__BACKEND_TIGERBEETLE__ = container
+      process.env.TIGERBEETLE_NODE_PORTS = `[${testContainers[0].port},${testContainers[1].port},${testContainers[2].port},${testContainers[3].port}]`
+      process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${testContainers[0].port}]`
+      global.__BACKEND_TIGERBEETLE__ = testContainers[0].container
+      global.__ACCOUNTING_TIGERBEETLE__ = testContainers[1].container
+      global.__ASSET_TIGERBEETLE__ = testContainers[2].container
+      global.__ASSET_RESOLVER_TIGERBEETLE__ = testContainers[3].container
     }
   }
 

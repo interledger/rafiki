@@ -1,6 +1,5 @@
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import tmp from 'tmp'
-import fs from 'fs'
 
 import { Config } from '../config/app'
 
@@ -49,12 +48,6 @@ export async function startTigerbeetleContainer(
       .on('end', () => console.log('Stream closed for [tb-format]'))
   }
 
-  //copy formatted data file
-  fs.copyFileSync(
-    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`,
-    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}_copy`
-  )
-
   const tbContStart = await new GenericContainer(
     'ghcr.io/tigerbeetledb/tigerbeetle@sha256:5a347fa46d42dbe2ea451d56874bf9906dcc51e5bb5339964f2d725524d20f65'
   )
@@ -89,15 +82,4 @@ export async function startTigerbeetleContainer(
     container: tbContStart,
     port: tbContStart.getMappedPort(TIGERBEETLE_PORT)
   }
-}
-
-export function purgeTigerbeetleData(clusterId?: number): void {
-  const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
-  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
-
-  fs.rmSync(`${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`)
-  fs.copyFileSync(
-    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}_copy`,
-    `${TIGERBEETLE_DIR_HOST}/${tigerbeetleFile}`
-  )
 }

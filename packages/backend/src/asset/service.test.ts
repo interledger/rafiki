@@ -20,12 +20,12 @@ describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let tigerbeetleContainer: StartedTestContainer
+  // let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
-    Config.tigerbeetleReplicaAddresses = [port]
+    // const { container, port } = await startTigerbeetleContainer()
+    // tigerbeetleContainer = container
+    Config.tigerbeetleReplicaAddresses = [Config.tigerbeetleNodePorts[2]]
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -38,7 +38,7 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop()
+    // await tigerbeetleContainer.stop()
   })
 
   describe('create', (): void => {
