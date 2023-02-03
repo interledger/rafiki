@@ -11,7 +11,9 @@ exports.up = function (knex) {
     table.foreign('debitAccountId').references('ledgerAccounts.id')
     table.uuid('creditAccountId').notNullable()
     table.foreign('creditAccountId').references('ledgerAccounts.id')
-    table.bigInteger('amount').notNullable()
+
+    table.bigInteger('amount').notNullable().checkPositive()
+
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
 
