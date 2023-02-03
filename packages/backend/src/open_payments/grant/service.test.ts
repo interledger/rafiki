@@ -138,7 +138,7 @@ describe('Grant Service', (): void => {
       ).resolves.toBeUndefined()
     })
 
-    test('cannot store grant with misformatted management url', async (): Promise<void> => {
+    test('cannot store grant with missing management url', async (): Promise<void> => {
       const options: CreateOptions = {
         accessToken: uuid(),
         managementUrl: '',
