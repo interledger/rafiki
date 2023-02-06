@@ -147,6 +147,14 @@ async function rotate(
       return
     }
 
+    // lock grant
+    await deps
+      .knex<Grant>('grants')
+      .select()
+      .where('id', oldToken.grantId)
+      .forNoKeyUpdate()
+      .timeout(5000)
+
     return AccessToken.query(trx).insertAndFetch({
       value: generateToken(),
       grantId: oldToken.grantId,
