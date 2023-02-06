@@ -32,7 +32,7 @@
     "knex": "^2.4",
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.3.0",
-    "koa-session": "^6.3.1",
+    "koa-session": "^6.4.0",
     "node-mocks-http": "^1.12.1",
     "objection": "^3.0.1",
     "objection-db-errors": "^1.1.2",

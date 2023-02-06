@@ -76,7 +76,7 @@ importers:
       knex: ^2.4
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
-      koa-session: ^6.3.1
+      koa-session: ^6.4.0
       nock: ^13.3.0
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
@@ -108,7 +108,7 @@ importers:
       knex: 2.4.1_pg@8.9.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
-      koa-session: 6.3.1
+      koa-session: 6.4.0
       node-mocks-http: 1.12.1
       objection: 3.0.1_knex@2.4.1
       objection-db-errors: 1.1.2_objection@3.0.1
@@ -10071,8 +10071,8 @@ packages:
       path-to-regexp: 6.2.1
     dev: false
 
-  /koa-session/6.3.1:
-    resolution: {integrity: sha512-Y6206QSkDgtIgjTT7ndmIgZjWrOcY3jflfsDjwvxLfYwSiwKGVAi3l1ExhI2KjkEO1uhKyPxcEWhEDn8HaoRUg==}
+  /koa-session/6.4.0:
+    resolution: {integrity: sha512-h/dxmSOvNEXpHQPRs4TV03TZVFyZIjmYQiTAW5JBFTYBOZ0VdpZ8QEE6Dud75g8z9JNGXi3m++VqRmqToB+c2A==}
     engines: {node: '>=8.0.0'}
     dependencies:
       crc: 3.8.0
