@@ -10,15 +10,6 @@ module.exports = async () => {
   if (global.__BACKEND_TIGERBEETLE__) {
     await global.__BACKEND_TIGERBEETLE__.stop()
   }
-  if (global.__ACCOUNTING_TIGERBEETLE__) {
-    await global.__BACKEND_TIGERBEETLE__.stop()
-  }
-  if (global.__ASSET_TIGERBEETLE__) {
-    await global.__BACKEND_TIGERBEETLE__.stop()
-  }
-  if (global.__ASSET_RESOLVER_TIGERBEETLE__) {
-    await global.__BACKEND_TIGERBEETLE__.stop()
-  }
   if (global.__BACKEND_REDIS__) {
     await global.__BACKEND_REDIS__.stop()
   }

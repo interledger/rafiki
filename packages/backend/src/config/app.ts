@@ -57,9 +57,6 @@ export const Config = {
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
     : ['3004'],
-  tigerbeetleNodePorts: process.env.TIGERBEETLE_NODE_PORTS
-    ? JSON.parse(process.env.TIGERBEETLE_NODE_PORTS)
-    : [],
 
   pricesUrl: process.env.PRICES_URL, // optional
   pricesLifetime: +(process.env.PRICES_LIFETIME || 15_000),

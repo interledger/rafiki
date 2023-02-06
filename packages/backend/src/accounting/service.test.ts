@@ -1,5 +1,5 @@
 import assert from 'assert'
-// import { StartedTestContainer } from 'testcontainers'
+import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -16,7 +16,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-// import { startTigerbeetleContainer } from '../tests/tigerbeetle'
+import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
 describe('Accounting Service', (): void => {
@@ -24,7 +24,7 @@ describe('Accounting Service', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
-  // let tigerbeetleContainer: StartedTestContainer
+  let tigerbeetleContainer: StartedTestContainer
   const timeout = BigInt(10_000) // 10 seconds
 
   let ledger = 1
@@ -33,9 +33,9 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    // const { container, port } = await startTigerbeetleContainer()
-    // tigerbeetleContainer = container
-    Config.tigerbeetleReplicaAddresses = [Config.tigerbeetleNodePorts[1]]
+    const { container, port } = await startTigerbeetleContainer()
+    tigerbeetleContainer = container
+    Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -49,7 +49,7 @@ describe('Accounting Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    // await tigerbeetleContainer.stop()
+    await tigerbeetleContainer.stop()
   })
 
   describe('Create Liquidity Account', (): void => {

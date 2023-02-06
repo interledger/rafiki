@@ -9,9 +9,10 @@ const { name: TIGERBEETLE_DIR_HOST } = tmp.dirSync({ unsafeCleanup: true })
 const TIGERBEETLE_CONTAINER_LOG =
   process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
-export async function startTigerbeetleContainer(
-  clusterId?: number
-): Promise<{ container: StartedTestContainer; port: number }> {
+export async function startTigerbeetleContainer(clusterId?: number): Promise<{
+  container: StartedTestContainer
+  port: number
+}> {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
 
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
