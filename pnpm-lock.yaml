@@ -54,9 +54,9 @@ importers:
       '@graphql-codegen/introspection': 2.2.3
       '@graphql-codegen/typescript': 2.8.7
       '@graphql-codegen/typescript-resolvers': 2.7.12
-      '@graphql-tools/graphql-file-loader': ^7.5.14
-      '@graphql-tools/load': ^7.8.9
-      '@graphql-tools/schema': ^9.0.13
+      '@graphql-tools/graphql-file-loader': ^7.5.15
+      '@graphql-tools/load': ^7.8.11
+      '@graphql-tools/schema': ^9.0.15
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@types/jest': ^29.4.0
@@ -67,7 +67,7 @@ importers:
       '@types/koa__router': ^12.0.0
       '@types/uuid': ^9.0.0
       ajv: ^8.12.0
-      axios: ^1.3.1
+      axios: ^1.3.2
       cross-fetch: ^3.1.4
       graphql: ^16.6.0
       http-signature-utils: workspace:../http-signature-utils
@@ -76,7 +76,7 @@ importers:
       knex: ^2.4
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
-      koa-session: ^6.3.1
+      koa-session: ^6.4.0
       nock: ^13.3.0
       node-mocks-http: ^1.12.1
       objection: ^3.0.1
@@ -101,14 +101,14 @@ importers:
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
-      axios: 1.3.1
+      axios: 1.3.2
       graphql: 16.6.0
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       knex: 2.4.1_pg@8.9.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
-      koa-session: 6.3.1
+      koa-session: 6.4.0
       node-mocks-http: 1.12.1
       objection: 3.0.1_knex@2.4.1
       objection-db-errors: 1.1.2_objection@3.0.1
@@ -171,7 +171,7 @@ importers:
       '@types/uuid': ^9.0.0
       add: ^2.0.6
       ajv: ^8.12.0
-      axios: 1.3.1
+      axios: 1.3.2
       base64url: ^3.0.1
       cross-fetch: ^3.1.4
       extensible-error: ^1.0.2
@@ -228,7 +228,7 @@ importers:
       '@poppinss/file-generator': 1.0.2
       add: 2.0.6
       ajv: 8.12.0
-      axios: 1.3.1
+      axios: 1.3.2
       base64url: 3.0.1
       extensible-error: 1.0.2
       fishery: 2.2.2
@@ -343,7 +343,7 @@ importers:
       '@types/react': ^18.0.27
       '@types/react-dom': ^18.0.10
       '@types/uuid': ^9.0.0
-      axios: ^1.3.1
+      axios: ^1.3.2
       eslint: ^8.33.0
       graphql: ^16.6.0
       http-signature-utils: workspace:../http-signature-utils
@@ -359,7 +359,7 @@ importers:
       '@remix-run/serve': 1.12.0
       '@types/node': 18.7.12
       '@types/uuid': 9.0.0
-      axios: 1.3.1
+      axios: 1.3.2
       graphql: 16.6.0
       http-signature-utils: link:../http-signature-utils
       react: 18.2.0
@@ -378,7 +378,7 @@ importers:
     specifiers:
       '@types/node': ^18.7.12
       '@types/uuid': ^9.0.0
-      axios: ^1.3.1
+      axios: ^1.3.2
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
       http-signature-utils: workspace:../http-signature-utils
@@ -389,7 +389,7 @@ importers:
       typescript: ^4.9.5
       uuid: ^9.0.0
     dependencies:
-      axios: 1.3.1
+      axios: 1.3.2
       http-message-signatures: 0.1.2
       http-signature-utils: link:../http-signature-utils
       openapi: link:../openapi
@@ -441,7 +441,7 @@ importers:
   packages/token-introspection:
     specifiers:
       '@types/node': ^18.7.12
-      axios: ^1.3.1
+      axios: ^1.3.2
       nock: ^13.3.0
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
@@ -449,7 +449,7 @@ importers:
       typescript: ^4.9.5
       uuid: ^8.3.2
     dependencies:
-      axios: 1.3.1
+      axios: 1.3.2
       openapi: link:../openapi
       pino: 8.8.0
     devDependencies:
@@ -3181,7 +3181,7 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
-      '@graphql-tools/utils': 9.1.4_graphql@16.6.0
+      '@graphql-tools/utils': 9.2.0_graphql@16.6.0
       change-case-all: 1.0.15
       common-tags: 1.8.2
       graphql: 16.6.0
@@ -5808,8 +5808,8 @@ packages:
       - debug
     dev: true
 
-  /axios/1.3.1:
-    resolution: {integrity: sha512-78pWJsQTceInlyaeBQeYZ/QgZeWS8hGeKiIJiDKQe3hEyBb7sEMq0K4gjx+Va6WHTYO4zI/RRl8qGRzn0YMadA==}
+  /axios/1.3.2:
+    resolution: {integrity: sha512-1M3O703bYqYuPhbHeya5bnhpYVsDDRyQSabNja04mZtboLNSuZ4YrltestrLXfHgmzua4TpUqRiVKbiQuo2epw==}
     dependencies:
       follow-redirects: 1.15.1
       form-data: 4.0.0
@@ -10071,8 +10071,8 @@ packages:
       path-to-regexp: 6.2.1
     dev: false
 
-  /koa-session/6.3.1:
-    resolution: {integrity: sha512-Y6206QSkDgtIgjTT7ndmIgZjWrOcY3jflfsDjwvxLfYwSiwKGVAi3l1ExhI2KjkEO1uhKyPxcEWhEDn8HaoRUg==}
+  /koa-session/6.4.0:
+    resolution: {integrity: sha512-h/dxmSOvNEXpHQPRs4TV03TZVFyZIjmYQiTAW5JBFTYBOZ0VdpZ8QEE6Dud75g8z9JNGXi3m++VqRmqToB+c2A==}
     engines: {node: '>=8.0.0'}
     dependencies:
       crc: 3.8.0
