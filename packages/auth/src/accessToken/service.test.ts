@@ -69,7 +69,6 @@ describe('Access Token Service', (): void => {
   }
 
   let grant: Grant
-  let token: AccessToken
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
@@ -85,12 +84,6 @@ describe('Access Token Service', (): void => {
         ...BASE_ACCESS
       })
     ]
-    token = await AccessToken.query(trx).insertAndFetch({
-      grantId: grant.id,
-      ...BASE_TOKEN,
-      value: generateToken(),
-      managementId: v4()
-    })
   })
 
   describe('Create', (): void => {
@@ -121,6 +114,29 @@ describe('Access Token Service', (): void => {
       )
     })
 
+    test('Cannot get rotated access token', async (): Promise<void> => {
+      await accessTokenService.rotate(
+        accessToken.managementId,
+        accessToken.value
+      )
+
+      await expect(
+        accessTokenService.get(accessToken.value)
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getByManagementId', (): void => {
+    let accessToken: AccessToken
+    beforeEach(async (): Promise<void> => {
+      accessToken = await AccessToken.query(trx).insert({
+        value: 'test-access-token',
+        managementId: v4(),
+        grantId: grant.id,
+        expiresIn: 1234
+      })
+    })
+
     test('Can get an access token by its managementId', async (): Promise<void> => {
       await expect(
         accessTokenService.getByManagementId(accessToken.managementId)
@@ -133,35 +149,67 @@ describe('Access Token Service', (): void => {
         accessTokenService.getByManagementId(v4())
       ).resolves.toBeUndefined()
     })
+
+    test('Cannot get rotated access token by managementId', async (): Promise<void> => {
+      await accessTokenService.rotate(
+        accessToken.managementId,
+        accessToken.value
+      )
+
+      await expect(
+        accessTokenService.getByManagementId(accessToken.managementId)
+      ).resolves.toBeUndefined()
+    })
   })
 
   describe('Introspect', (): void => {
+    let accessToken: AccessToken
+    beforeEach(async (): Promise<void> => {
+      accessToken = await AccessToken.query(trx).insert({
+        value: 'test-access-token',
+        managementId: v4(),
+        grantId: grant.id,
+        expiresIn: 1234
+      })
+    })
+
     test('Can introspect active token', async (): Promise<void> => {
-      await expect(accessTokenService.introspect(token.value)).resolves.toEqual(
-        grant
-      )
+      await expect(
+        accessTokenService.introspect(accessToken.value)
+      ).resolves.toEqual(grant)
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
-      const tokenCreatedDate = new Date(token.createdAt)
+      const tokenCreatedDate = new Date(accessToken.createdAt)
       const now = new Date(
-        tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
+        tokenCreatedDate.getTime() + (accessToken.expiresIn + 1) * 1000
       )
       jest.useFakeTimers({ now })
       await expect(
-        accessTokenService.introspect(token.value)
+        accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()
     })
 
     test('Can introspect active token for revoked grant', async (): Promise<void> => {
       await grant.$query(trx).patch({ state: GrantState.Revoked })
       await expect(
-        accessTokenService.introspect(token.value)
+        accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()
     })
 
     test('Cannot introspect non-existing token', async (): Promise<void> => {
       expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
+    })
+
+    test('Cannot introspect rotated access token', async (): Promise<void> => {
+      await accessTokenService.rotate(
+        accessToken.managementId,
+        accessToken.value
+      )
+
+      await expect(
+        accessTokenService.introspect(accessToken.value)
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -212,6 +260,14 @@ describe('Access Token Service', (): void => {
       expect(result).toBeUndefined()
       await expect(
         AccessToken.query(trx).findById(token.id)
+      ).resolves.toBeUndefined()
+    })
+
+    test('Cannot revoke rotated access token', async (): Promise<void> => {
+      await accessTokenService.rotate(token.managementId, token.value)
+
+      await expect(
+        accessTokenService.revoke(token.id, token.value)
       ).resolves.toBeUndefined()
     })
   })
