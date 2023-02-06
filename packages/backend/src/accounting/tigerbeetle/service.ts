@@ -86,7 +86,7 @@ export function createAccountingService(
 ): AccountingService {
   const deps = {
     ...deps_,
-    logger: deps_.logger.child({ service: 'AccountingService' })
+    logger: deps_.logger.child({ service: 'TigerbeetleAccountingService' })
   }
   return {
     createLiquidityAccount: (options, accTypeCode) =>
