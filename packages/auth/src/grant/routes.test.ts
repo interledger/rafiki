@@ -424,7 +424,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot issue access token without interact ref', async (): Promise<void> => {
-        const ctx = createContext(
+        const ctx = createContext<ContinueContext>(
           {
             headers: {
               Accept: 'application/json',
@@ -437,11 +437,11 @@ describe('Grant Routes', (): void => {
           }
         )
 
-        ctx.request.body = {}
+        ctx.request.body = {} as {
+          interact_ref: string
+        }
 
-        await expect(
-          grantRoutes.continue(ctx as ContinueContext)
-        ).rejects.toMatchObject({
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
           status: 401,
           error: 'invalid_request'
         })

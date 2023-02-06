@@ -130,7 +130,7 @@ async function rotate(
   managementId: string,
   tokenValue: string
 ): Promise<AccessToken | undefined> {
-  return await AccessToken.transaction(async (trx) => {
+  return AccessToken.transaction(async (trx) => {
     const oldToken = await AccessToken.query(trx)
       .delete()
       .returning('*')
@@ -147,13 +147,11 @@ async function rotate(
       return
     }
 
-    const token = await AccessToken.query(trx).insertAndFetch({
+    return AccessToken.query(trx).insertAndFetch({
       value: generateToken(),
       grantId: oldToken.grantId,
       expiresIn: oldToken.expiresIn,
       managementId: v4()
     })
-
-    return token
   })
 }

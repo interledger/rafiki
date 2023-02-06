@@ -108,7 +108,7 @@ async function rotateToken(
     newToken = await deps.accessTokenService.rotate(managementId, token)
   } catch (error) {
     const errorMessage = 'Could not rotate token'
-    deps.logger.error({ error: error && error['message '] }, errorMessage)
+    deps.logger.error({ error: error && error['message'] }, errorMessage)
     ctx.throw(400, { message: errorMessage })
   }
 
