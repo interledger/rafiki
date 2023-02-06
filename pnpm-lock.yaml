@@ -85,7 +85,7 @@ importers:
       openapi: workspace:../openapi
       openapi-types: ^12.1.0
       pg: ^8.9.0
-      pino: ^8.8.0
+      pino: ^8.9.0
       pino-pretty: ^9.1.1
       testcontainers: ^9.1.1
       token-introspection: workspace:*
@@ -115,7 +115,7 @@ importers:
       open-payments: link:../open-payments
       openapi: link:../openapi
       pg: 8.9.0
-      pino: 8.8.0
+      pino: 8.9.0
       pino-pretty: 9.1.1
       testcontainers: 9.1.1
       token-introspection: link:../token-introspection
@@ -201,7 +201,7 @@ importers:
       openapi: workspace:../openapi
       openapi-types: ^12.1.0
       pg: ^8.9.0
-      pino: ^8.8.0
+      pino: ^8.9.0
       pino-pretty: ^9.1.1
       raw-body: ^2.5.1
       react: ~18.2.0
@@ -252,7 +252,7 @@ importers:
       open-payments: link:../open-payments
       openapi: link:../openapi
       pg: 8.9.0
-      pino: 8.8.0
+      pino: 8.9.0
       pino-pretty: 9.1.1
       raw-body: 2.5.1
       tigerbeetle-node: 0.10.0
@@ -385,7 +385,7 @@ importers:
       nock: ^13.3.0
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
-      pino: ^8.8.0
+      pino: ^8.9.0
       typescript: ^4.9.5
       uuid: ^9.0.0
     dependencies:
@@ -393,7 +393,7 @@ importers:
       http-message-signatures: 0.1.2
       http-signature-utils: link:../http-signature-utils
       openapi: link:../openapi
-      pino: 8.8.0
+      pino: 8.9.0
       uuid: 9.0.0
     devDependencies:
       '@types/node': 18.7.13
@@ -445,13 +445,13 @@ importers:
       nock: ^13.3.0
       openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
-      pino: ^8.4.2
+      pino: ^8.9.0
       typescript: ^4.9.5
       uuid: ^8.3.2
     dependencies:
       axios: 1.3.2
       openapi: link:../openapi
-      pino: 8.8.0
+      pino: 8.9.0
     devDependencies:
       '@types/node': 18.11.9
       nock: 13.3.0
@@ -11738,8 +11738,8 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino/8.8.0:
-    resolution: {integrity: sha512-cF8iGYeu2ODg2gIwgAHcPrtR63ILJz3f7gkogaHC/TXVVXxZgInmNYiIpDYEwgEkxZti2Se6P2W2DxlBIZe6eQ==}
+  /pino/8.9.0:
+    resolution: {integrity: sha512-/x9qSrFW4wh+7OL5bLIbfl06aK/8yCSIldhD3VmVGiVYWSdFFpXvJh/4xWKENs+DhG1VkJnnpWxMF6fZ2zGXeg==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
