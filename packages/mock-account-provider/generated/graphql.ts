@@ -12,6 +12,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  UInt8: number;
   UInt64: bigint;
 };
 
@@ -40,13 +41,13 @@ export enum Alg {
 export type Amount = {
   __typename?: 'Amount';
   assetCode: Scalars['String'];
-  assetScale: Scalars['Int'];
+  assetScale: Scalars['UInt8'];
   value: Scalars['UInt64'];
 };
 
 export type AmountInput = {
   assetCode: Scalars['String'];
-  assetScale: Scalars['Int'];
+  assetScale: Scalars['UInt8'];
   value: Scalars['UInt64'];
 };
 
@@ -55,7 +56,7 @@ export type Asset = Model & {
   code: Scalars['String'];
   createdAt: Scalars['String'];
   id: Scalars['ID'];
-  scale: Scalars['Int'];
+  scale: Scalars['UInt8'];
   withdrawalThreshold?: Maybe<Scalars['UInt64']>;
 };
 
@@ -67,7 +68,7 @@ export type AssetEdge = {
 
 export type AssetInput = {
   code: Scalars['String'];
-  scale: Scalars['Int'];
+  scale: Scalars['UInt8'];
 };
 
 export type AssetMutationResponse = MutationResponse & {
@@ -86,7 +87,7 @@ export type AssetsConnection = {
 
 export type CreateAssetInput = {
   code: Scalars['String'];
-  scale: Scalars['Int'];
+  scale: Scalars['UInt8'];
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']>;
 };
 
@@ -914,6 +915,7 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   TriggerPaymentPointerEventsMutationResponse: ResolverTypeWrapper<Partial<TriggerPaymentPointerEventsMutationResponse>>;
+  UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
   UpdateAssetInput: ResolverTypeWrapper<Partial<UpdateAssetInput>>;
   UpdatePeerInput: ResolverTypeWrapper<Partial<UpdatePeerInput>>;
@@ -988,6 +990,7 @@ export type ResolversParentTypes = {
   String: Partial<Scalars['String']>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   TriggerPaymentPointerEventsMutationResponse: Partial<TriggerPaymentPointerEventsMutationResponse>;
+  UInt8: Partial<Scalars['UInt8']>;
   UInt64: Partial<Scalars['UInt64']>;
   UpdateAssetInput: Partial<UpdateAssetInput>;
   UpdatePeerInput: Partial<UpdatePeerInput>;
@@ -996,7 +999,7 @@ export type ResolversParentTypes = {
 
 export type AmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Amount'] = ResolversParentTypes['Amount']> = {
   assetCode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  assetScale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  assetScale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   value?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1005,7 +1008,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  scale?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1355,6 +1358,10 @@ export type TriggerPaymentPointerEventsMutationResponseResolvers<ContextType = a
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export interface UInt8ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt8'], any> {
+  name: 'UInt8';
+}
+
 export interface UInt64ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt64'], any> {
   name: 'UInt64';
 }
@@ -1410,6 +1417,7 @@ export type Resolvers<ContextType = any> = {
   RevokePaymentPointerKeyMutationResponse?: RevokePaymentPointerKeyMutationResponseResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   TriggerPaymentPointerEventsMutationResponse?: TriggerPaymentPointerEventsMutationResponseResolvers<ContextType>;
+  UInt8?: GraphQLScalarType;
   UInt64?: GraphQLScalarType;
   UpdatePeerMutationResponse?: UpdatePeerMutationResponseResolvers<ContextType>;
 };
