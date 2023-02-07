@@ -31,8 +31,8 @@ describe('Accounting Service', (): void => {
   const timeout = BigInt(10_000) // 10 seconds
 
   const newLedger = (() => {
-    let id = 1
-    return () => id++
+    let i = 1
+    return () => i++
   })()
 
   beforeAll(async (): Promise<void> => {
