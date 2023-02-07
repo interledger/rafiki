@@ -2,9 +2,9 @@ import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
 import {
   AccountingService,
-  LiquidityAccountTypes,
   Deposit,
   LiquidityAccount,
+  LiquidityAccountType,
   Transaction,
   TransferOptions,
   Withdrawal
@@ -42,7 +42,7 @@ export function createAccountingService(
 export async function createLiquidityAccount(
   deps: ServiceDependencies,
   account: LiquidityAccount,
-  accountType?: LiquidityAccountTypes
+  accountType: LiquidityAccountType
 ): Promise<LiquidityAccount> {
   throw new Error('Not implemented')
 }
