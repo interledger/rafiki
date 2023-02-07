@@ -125,7 +125,7 @@ export async function createSettlementAccount(
   try {
     await createAccounts(deps, [
       {
-        id: account.asset.ledger,
+        id: account.asset.ledger.toString(),
         ledger: account.asset.ledger,
         code: TigerbeetleAccountCode.SETTLEMENT
       }
