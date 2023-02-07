@@ -46,8 +46,8 @@ importers:
   packages/auth:
     specifiers:
       '@adonisjs/fold': ^8.2.0
-      '@apollo/client': ^3.7.4
-      '@apollo/server': ^4.3.1
+      '@apollo/client': ^3.7.7
+      '@apollo/server': ^4.3.3
       '@as-integrations/koa': ^0.2.1
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 3.0.0
@@ -93,8 +93,8 @@ importers:
       uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@apollo/server': 4.3.2_graphql@16.6.0
-      '@as-integrations/koa': 0.2.1_mgxebyjh3txidl7qcvz7cg7ptq
+      '@apollo/server': 4.3.3_graphql@16.6.0
+      '@as-integrations/koa': 0.2.1_dpcutta2c222hliu7uxzof7uwe
       '@graphql-tools/graphql-file-loader': 7.5.15_graphql@16.6.0
       '@graphql-tools/load': 7.8.11_graphql@16.6.0
       '@graphql-tools/schema': 9.0.15_graphql@16.6.0
@@ -121,7 +121,7 @@ importers:
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
-      '@apollo/client': 3.7.6_graphql@16.6.0
+      '@apollo/client': 3.7.7_graphql@16.6.0
       '@faker-js/faker': 7.6.0
       '@graphql-codegen/cli': 3.0.0_orruxv2p5gif2qexvsnapvq7be
       '@graphql-codegen/introspection': 3.0.0_graphql@16.6.0
@@ -143,8 +143,8 @@ importers:
   packages/backend:
     specifiers:
       '@adonisjs/fold': ^8.2.0
-      '@apollo/client': ^3.7.6
-      '@apollo/server': ^4.3.2
+      '@apollo/client': ^3.7.7
+      '@apollo/server': ^4.3.3
       '@as-integrations/koa': ^0.2.1
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 3.0.0
@@ -215,8 +215,8 @@ importers:
       uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@apollo/server': 4.3.2_graphql@16.6.0
-      '@as-integrations/koa': 0.2.1_mgxebyjh3txidl7qcvz7cg7ptq
+      '@apollo/server': 4.3.3_graphql@16.6.0
+      '@as-integrations/koa': 0.2.1_dpcutta2c222hliu7uxzof7uwe
       '@faker-js/faker': 7.6.0
       '@graphql-tools/graphql-file-loader': 7.5.15_graphql@16.6.0
       '@graphql-tools/load': 7.8.11_graphql@16.6.0
@@ -259,7 +259,7 @@ importers:
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
-      '@apollo/client': 3.7.6_onqnqwb3ubg5opvemcqf7c2qhy
+      '@apollo/client': 3.7.7_onqnqwb3ubg5opvemcqf7c2qhy
       '@graphql-codegen/cli': 3.0.0_orruxv2p5gif2qexvsnapvq7be
       '@graphql-codegen/introspection': 3.0.0_graphql@16.6.0
       '@graphql-codegen/typescript': 3.0.0_graphql@16.6.0
@@ -333,7 +333,7 @@ importers:
 
   packages/mock-account-provider:
     specifiers:
-      '@apollo/client': ^3.7.6
+      '@apollo/client': ^3.7.7
       '@remix-run/dev': ^1.12.0
       '@remix-run/eslint-config': ^1.12.0
       '@remix-run/node': ^1.12.0
@@ -353,7 +353,7 @@ importers:
       uuid: ^9.0.0
       yaml: ^2.2.1
     dependencies:
-      '@apollo/client': 3.7.6_gdcq4dv6opitr3wbfwyjmanyra
+      '@apollo/client': 3.7.7_gdcq4dv6opitr3wbfwyjmanyra
       '@remix-run/node': 1.12.0
       '@remix-run/react': 1.12.0_biqbaboplfbrettd7655fr4n2y
       '@remix-run/serve': 1.12.0
@@ -494,8 +494,8 @@ packages:
       graphql: 16.6.0
     dev: false
 
-  /@apollo/client/3.7.6_gdcq4dv6opitr3wbfwyjmanyra:
-    resolution: {integrity: sha512-K0l8+wgcdVDjdgI8O2YuhX1CiQlavGuBp8HR/+PEbc2+jqM/BaVpL0g7YAuXrTW20np/MXHNRDxK20/ujF9hjA==}
+  /@apollo/client/3.7.7_gdcq4dv6opitr3wbfwyjmanyra:
+    resolution: {integrity: sha512-Rp/pCWuJSjLN7Xl5Qi2NoeURmZYEU/TIUz0n/LOwEo1tGdU2W7/fGVZ8+5um58JeVYq4UoTGBKFxSVeG4s411A==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
@@ -530,8 +530,8 @@ packages:
       zen-observable-ts: 1.2.5
     dev: false
 
-  /@apollo/client/3.7.6_graphql@16.6.0:
-    resolution: {integrity: sha512-K0l8+wgcdVDjdgI8O2YuhX1CiQlavGuBp8HR/+PEbc2+jqM/BaVpL0g7YAuXrTW20np/MXHNRDxK20/ujF9hjA==}
+  /@apollo/client/3.7.7_graphql@16.6.0:
+    resolution: {integrity: sha512-Rp/pCWuJSjLN7Xl5Qi2NoeURmZYEU/TIUz0n/LOwEo1tGdU2W7/fGVZ8+5um58JeVYq4UoTGBKFxSVeG4s411A==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
@@ -564,8 +564,8 @@ packages:
       zen-observable-ts: 1.2.5
     dev: true
 
-  /@apollo/client/3.7.6_onqnqwb3ubg5opvemcqf7c2qhy:
-    resolution: {integrity: sha512-K0l8+wgcdVDjdgI8O2YuhX1CiQlavGuBp8HR/+PEbc2+jqM/BaVpL0g7YAuXrTW20np/MXHNRDxK20/ujF9hjA==}
+  /@apollo/client/3.7.7_onqnqwb3ubg5opvemcqf7c2qhy:
+    resolution: {integrity: sha512-Rp/pCWuJSjLN7Xl5Qi2NoeURmZYEU/TIUz0n/LOwEo1tGdU2W7/fGVZ8+5um58JeVYq4UoTGBKFxSVeG4s411A==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
@@ -629,8 +629,8 @@ packages:
       graphql: 16.6.0
     dev: false
 
-  /@apollo/server/4.3.2_graphql@16.6.0:
-    resolution: {integrity: sha512-ZiAA31ruAGNmyUapclR70j/asG2Pn/m+Md9W/+EHVb34/pZhgpv+wNdeOw+7YYa+r78nme300C7pfX4pRWsolA==}
+  /@apollo/server/4.3.3_graphql@16.6.0:
+    resolution: {integrity: sha512-2nigGTgXCAUk2PHHGybtofyuuVAA/QUZwRJzwuCbRFgY1fKkMT7J4fUPwNcA809lDlZyyYphcQnM/vQNbeiu6w==}
     engines: {node: '>=14.16.0'}
     peerDependencies:
       graphql: ^16.6.0
@@ -658,7 +658,7 @@ packages:
       loglevel: 1.8.0
       lru-cache: 7.14.1
       negotiator: 0.6.3
-      node-abort-controller: 3.0.1
+      node-abort-controller: 3.1.1
       node-fetch: 2.6.7
       uuid: 9.0.0
       whatwg-mimetype: 3.0.0
@@ -808,14 +808,14 @@ packages:
       - encoding
     dev: true
 
-  /@as-integrations/koa/0.2.1_mgxebyjh3txidl7qcvz7cg7ptq:
+  /@as-integrations/koa/0.2.1_dpcutta2c222hliu7uxzof7uwe:
     resolution: {integrity: sha512-PjVHug92GCTZgw1uksg6sD1Odr/uMpoVIiMyoXyKL8UcSHJ1/pK3ud1x3v9l+mAL8HiXFKCSnpCVWkof+3/Fgg==}
     engines: {node: '>=14.0'}
     peerDependencies:
       '@apollo/server': ^4.0.0
       koa: ^2.0.0
     dependencies:
-      '@apollo/server': 4.3.2_graphql@16.6.0
+      '@apollo/server': 4.3.3_graphql@16.6.0
       koa: 2.14.1
     dev: false
 
@@ -8208,7 +8208,7 @@ packages:
       graphql: 16.6.0
       tslib: 2.5.0
     optionalDependencies:
-      '@apollo/client': 3.7.6_onqnqwb3ubg5opvemcqf7c2qhy
+      '@apollo/client': 3.7.7_onqnqwb3ubg5opvemcqf7c2qhy
     transitivePeerDependencies:
       - graphql-ws
       - react
@@ -10842,8 +10842,8 @@ packages:
       - supports-color
     dev: true
 
-  /node-abort-controller/3.0.1:
-    resolution: {integrity: sha512-/ujIVxthRs+7q6hsdjHMaj8hRG9NuWmwrz+JdRwZ14jdFoKSkm+vDsCbF9PLpnSqjaWQJuTmVtcWHNLr+vrOFw==}
+  /node-abort-controller/3.1.1:
+    resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
     dev: false
 
   /node-addon-api/1.7.2:
