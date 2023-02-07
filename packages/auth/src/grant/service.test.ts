@@ -22,9 +22,10 @@ describe('Grant Service', (): void => {
   let grant: Grant
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
-    grantService = await deps.use('grantService')
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+
+    grantService = await deps.use('grantService')
   })
 
   const CLIENT = faker.internet.url()
