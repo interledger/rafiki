@@ -5,11 +5,10 @@ import {
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 import { TransferError } from '../errors'
-import { AccountId } from '../utils'
 
 import { TigerbeetleCreateTransferError } from './errors'
 import { ServiceDependencies } from './service'
-import { toTigerbeetleId } from './utils'
+import { AccountId, toTigerbeetleId } from './utils'
 
 const ACCOUNT_TYPE = 1
 

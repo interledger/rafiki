@@ -1,5 +1,3 @@
-import { AccountId } from './utils'
-
 export class CreateAccountError extends Error {
   constructor(public code: number) {
     super('CreateAccountError code=' + code)
@@ -41,12 +39,5 @@ export class BalanceTransferError extends Error {
   constructor(public error: TransferError) {
     super()
     this.name = 'TransferError'
-  }
-}
-
-export class UnknownAccountError extends Error {
-  constructor(accountId: AccountId) {
-    super('Account not found. account=' + accountId)
-    this.name = 'UnknownAccountError'
   }
 }
