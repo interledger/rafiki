@@ -5,7 +5,6 @@ import { Config } from '../config/app'
 
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
-const { name: TIGERBEETLE_DIR_HOST } = tmp.dirSync({ unsafeCleanup: true })
 const TIGERBEETLE_CONTAINER_LOG =
   process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
@@ -14,7 +13,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   port: number
 }> {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
-
+  const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
@@ -23,7 +22,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
-        source: TIGERBEETLE_DIR_HOST,
+        source: tigerbeetleDir,
         target: TIGERBEETLE_DIR
       }
     ])
@@ -55,7 +54,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
-        source: TIGERBEETLE_DIR_HOST,
+        source: tigerbeetleDir,
         target: TIGERBEETLE_DIR
       }
     ])
