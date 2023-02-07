@@ -17,7 +17,8 @@ exports.up = function (knex) {
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
 
-    table.enu('state', ['PENDING', 'POSTED', 'VOIDED', 'EXPIRED']).notNullable()
+    table.timestamp('expiresAt').nullable()
+    table.enu('state', ['PENDING', 'POSTED', 'VOIDED']).notNullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
