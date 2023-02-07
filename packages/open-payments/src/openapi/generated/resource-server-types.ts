@@ -280,24 +280,6 @@ export interface components {
        */
       createdAt: string;
     };
-    /** @description Pagination parameters */
-    pagination:
-      | components["schemas"]["forward-pagination"]
-      | components["schemas"]["backward-pagination"];
-    /** @description Forward pagination parameters */
-    "forward-pagination": {
-      /** @description The number of items to return. */
-      first?: number;
-      /** @description The cursor key to list from. */
-      cursor?: string;
-    };
-    /** @description Backward pagination parameters */
-    "backward-pagination": {
-      /** @description The number of items to return. */
-      last?: number;
-      /** @description The cursor key to list from. */
-      cursor: string;
-    };
     "page-info": {
       /** @description Cursor corresponding to the first element in the result array. */
       startCursor: string;
@@ -330,8 +312,12 @@ export interface components {
     403: unknown;
   };
   parameters: {
-    /** @description Pagination parameters */
-    pagination: components["schemas"]["pagination"];
+    /** @description The cursor key to list from. */
+    cursor: string;
+    /** @description The number of items to return after the cursor. */
+    first: number;
+    /** @description The number of items to return before the cursor. */
+    last: number;
     /** @description Sub-resource identifier */
     id: string;
     /** @description The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK. */
@@ -405,8 +391,12 @@ export interface operations {
   "list-incoming-payments": {
     parameters: {
       query: {
-        /** Pagination parameters */
-        pagination?: components["parameters"]["pagination"];
+        /** The cursor key to list from. */
+        cursor?: components["parameters"]["cursor"];
+        /** The number of items to return after the cursor. */
+        first?: components["parameters"]["first"];
+        /** The number of items to return before the cursor. */
+        last?: components["parameters"]["last"];
       };
       header: {
         /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
@@ -480,8 +470,12 @@ export interface operations {
   "list-outgoing-payments": {
     parameters: {
       query: {
-        /** Pagination parameters */
-        pagination?: components["parameters"]["pagination"];
+        /** The cursor key to list from. */
+        cursor?: components["parameters"]["cursor"];
+        /** The number of items to return after the cursor. */
+        first?: components["parameters"]["first"];
+        /** The number of items to return before the cursor. */
+        last?: components["parameters"]["last"];
       };
       header: {
         /** The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member's key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member's value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details. */
