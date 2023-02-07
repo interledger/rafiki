@@ -8,6 +8,14 @@ export enum LiquidityAccountType {
   WEB_MONETIZATION = 'WEB_MONETIZATION'
 }
 
+export interface SettlementAccount {
+  id: string
+  asset: {
+    id: string
+    ledger: number
+  }
+}
+
 export interface LiquidityAccount {
   id: string
   asset: {
@@ -50,13 +58,15 @@ export interface AccountingService {
     account: LiquidityAccount,
     accountType: LiquidityAccountType
   ): Promise<LiquidityAccount>
-  createSettlementAccount(ledger: number): Promise<void>
+  createSettlementAccount(
+    account: SettlementAccount
+  ): Promise<SettlementAccount>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
   getTotalReceived(id: string): Promise<bigint | undefined>
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
-  getSettlementBalance(ledger: number): Promise<bigint | undefined>
+  getSettlementBalance(id: string): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createDeposit(deposit: Deposit): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>

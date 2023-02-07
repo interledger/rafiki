@@ -21,6 +21,7 @@ import {
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
+  SettlementAccount,
   Transaction,
   TransferOptions,
   Withdrawal
@@ -73,13 +74,14 @@ export function createAccountingService(
     // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
-    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
+    createSettlementAccount: (account) =>
+      createSettlementAccount(deps, account),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
+    getSettlementBalance: (id) => getSettlementBalance(deps, id),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
@@ -118,16 +120,18 @@ export async function createLiquidityAccount(
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  ledger: number
-): Promise<void> {
+  account: SettlementAccount
+): Promise<SettlementAccount> {
   try {
     await createAccounts(deps, [
       {
-        id: ledger,
-        ledger,
+        id: account.asset.ledger,
+        ledger: account.asset.ledger,
         code: TigerbeetleAccountCode.SETTLEMENT
       }
     ])
+
+    return account
   } catch (err) {
     // Don't complain if asset settlement account already exists.
     // This could change if TigerBeetle could be reset between tests.
@@ -135,7 +139,7 @@ export async function createSettlementAccount(
       err instanceof TigerbeetleCreateAccountError &&
       areAllAccountExistsErrors([err.code])
     ) {
-      return
+      return account
     }
     throw err
   }
@@ -201,9 +205,9 @@ export async function getAccountsTotalReceived(
 
 export async function getSettlementBalance(
   deps: ServiceDependencies,
-  ledger: number
+  id: string
 ): Promise<bigint | undefined> {
-  const assetAccount = (await getAccounts(deps, [ledger]))[0]
+  const assetAccount = (await getAccounts(deps, [id]))[0]
 
   if (assetAccount) {
     return calculateBalance(assetAccount)

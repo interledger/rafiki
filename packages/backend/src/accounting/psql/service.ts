@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
 import {
@@ -5,6 +6,7 @@ import {
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
+  SettlementAccount,
   Transaction,
   TransferOptions,
   Withdrawal
@@ -24,13 +26,14 @@ export function createAccountingService(
   return {
     createLiquidityAccount: (options, accTypeCode) =>
       createLiquidityAccount(deps, options, accTypeCode),
-    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
+    createSettlementAccount: (account) =>
+      createSettlementAccount(deps, account),
     getBalance: (id) => getAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
+    getSettlementBalance: (id) => getSettlementBalance(deps, id),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
@@ -49,8 +52,8 @@ export async function createLiquidityAccount(
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  ledger: number
-): Promise<void> {
+  account: SettlementAccount
+): Promise<SettlementAccount> {
   throw new Error('Not implemented')
 }
 
@@ -91,7 +94,7 @@ export async function getAccountsTotalReceived(
 
 export async function getSettlementBalance(
   deps: ServiceDependencies,
-  ledger: number
+  id: string
 ): Promise<bigint | undefined> {
   throw new Error('Not implemented')
 }

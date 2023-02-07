@@ -90,7 +90,7 @@ describe('Asset Service', (): void => {
         BigInt(0)
       )
       await expect(
-        accountingService.getSettlementBalance(asset.ledger)
+        accountingService.getSettlementBalance(asset.ledger.toString())
       ).resolves.toEqual(BigInt(0))
     })
 
