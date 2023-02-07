@@ -7,8 +7,8 @@ import { GrantService, GrantRequest as GrantRequestBody } from './service'
 import {
   Grant,
   GrantState,
-  toOpenPaymentsInteractiveGrant,
-  toOpenPaymentsNonInteractiveGrant
+  toOpenPaymentPendingGrant,
+  toOpenPaymentsGrant
 } from './model'
 import { toOpenPaymentsAccess } from '../access/model'
 import { ClientService } from '../client/service'
@@ -130,7 +130,7 @@ export function createGrantRoutes({
     config
   }
   return {
-    create: (ctx: CreateContext) => createGrantInitiation(deps, ctx),
+    create: (ctx: CreateContext) => createGrant(deps, ctx),
     interaction: {
       start: (ctx: StartContext) => startInteraction(deps, ctx),
       finish: (ctx: FinishContext) => finishInteraction(deps, ctx),
@@ -142,7 +142,7 @@ export function createGrantRoutes({
   }
 }
 
-async function createGrantInitiation(
+async function createGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
@@ -157,13 +157,13 @@ async function createGrantInitiation(
     isOnlyIncomingPaymentAccessRequest &&
     !deps.config.incomingPaymentInteraction
   ) {
-    await createNonInteractiveGrantInitiation(deps, ctx)
+    await createGrantInitiation(deps, ctx)
   } else {
-    await createInteractiveGrantInitiation(deps, ctx)
+    await createPendingGrant(deps, ctx)
   }
 }
 
-async function createNonInteractiveGrantInitiation(
+async function createGrantInitiation(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
@@ -184,7 +184,7 @@ async function createNonInteractiveGrantInitiation(
   }
   const access = await deps.accessService.getByGrant(grant.id)
   ctx.status = 200
-  ctx.body = toOpenPaymentsNonInteractiveGrant(
+  ctx.body = toOpenPaymentsGrant(
     grant,
     { authServerUrl: config.authServerDomain },
     accessToken,
@@ -192,7 +192,7 @@ async function createNonInteractiveGrantInitiation(
   )
 }
 
-async function createInteractiveGrantInitiation(
+async function createPendingGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
@@ -209,7 +209,7 @@ async function createInteractiveGrantInitiation(
 
   const grant = await grantService.create(body)
   ctx.status = 200
-  ctx.body = toOpenPaymentsInteractiveGrant(grant, {
+  ctx.body = toOpenPaymentPendingGrant(grant, {
     client,
     authServerUrl: config.authServerDomain,
     waitTimeSeconds: config.waitTimeSeconds
@@ -396,7 +396,7 @@ async function continueGrant(
     const access = await accessService.getByGrant(grant.id)
 
     // TODO: add "continue" to response if additional grant request steps are added
-    ctx.body = toOpenPaymentsNonInteractiveGrant(
+    ctx.body = toOpenPaymentsGrant(
       grant,
       { authServerUrl: config.authServerDomain },
       accessToken,
