@@ -23,14 +23,14 @@ import {
   CreateAssetInput
 } from '../generated/graphql'
 
-describe.skip('Asset Resolvers', (): void => {
+describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
+    const { container, port } = await startTigerbeetleContainer(3)
     tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
 

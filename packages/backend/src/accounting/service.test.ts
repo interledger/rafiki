@@ -19,7 +19,7 @@ import { truncateTables } from '../tests/tableManager'
 import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
-describe.skip('Accounting Service', (): void => {
+describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
@@ -33,7 +33,7 @@ describe.skip('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
+    const { container, port } = await startTigerbeetleContainer(1)
     tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
 

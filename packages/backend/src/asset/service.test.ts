@@ -17,14 +17,14 @@ import { AppServices } from '../app'
 import { AccountTypeCode } from '../accounting/service'
 import { CheckViolationError } from 'objection'
 
-describe.skip('Asset Service', (): void => {
+describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
+    const { container, port } = await startTigerbeetleContainer(2)
     tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
 
