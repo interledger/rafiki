@@ -247,4 +247,35 @@ describe('Grant Service', (): void => {
       await expect(grantService.deleteGrant(v4())).resolves.toEqual(false)
     })
   })
+
+  describe('lock', (): void => {
+    test('a grant reference can be locked', async (): Promise<void> => {
+      const grantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment
+            }
+          ]
+        }
+      }
+
+      const grant = await grantService.create(grantRequest)
+
+      const timeoutMs = 50
+
+      const lock = async (): Promise<void> => {
+        return await Grant.transaction(async (trx) => {
+          await grantService.lock(grant.id, trx, timeoutMs)
+          await new Promise((resolve) => setTimeout(resolve, timeoutMs + 10))
+          await grantService.get(grant.id)
+        })
+      }
+      await expect(Promise.all([lock(), lock()])).rejects.toThrowError(
+        /Defined query timeout/
+      )
+    })
+  })
 })

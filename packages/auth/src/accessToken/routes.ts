@@ -9,6 +9,7 @@ import { Grant } from '../grant/model'
 import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
+import { GrantService } from '../grant/service'
 
 type TokenRequest<BodyT> = Exclude<AppContext['request'], 'body'> & {
   body: BodyT
@@ -40,6 +41,7 @@ interface ServiceDependencies {
   accessTokenService: AccessTokenService
   accessService: AccessService
   clientService: ClientService
+  grantService: GrantService
 }
 
 export interface AccessTokenRoutes {
@@ -120,6 +122,8 @@ async function rotateToken(
     if (!newToken) {
       ctx.throw(404, { message: 'Token not found' })
     }
+
+    await deps.grantService.lock(newToken.grantId, trx)
 
     accessItems = await deps.accessService.getByGrant(newToken.grantId, trx)
 
