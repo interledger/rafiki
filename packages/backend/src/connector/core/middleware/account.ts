@@ -1,5 +1,6 @@
 import { Errors } from 'ilp-packet'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
+import { LiquidityAccountType } from '../../../accounting/service'
 import { IncomingPaymentState } from '../../../open_payments/payment/incoming/model'
 import { validateId } from '../../../shared/utils'
 import {
@@ -18,10 +19,14 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> {
     const createLiquidityAccount = async (
-      account: IncomingAccount
+      account: IncomingAccount,
+      accountType: LiquidityAccountType
     ): Promise<void> => {
       try {
-        await ctx.services.accounting.createLiquidityAccount(account)
+        await ctx.services.accounting.createLiquidityAccount(
+          account,
+          accountType
+        )
       } catch (err) {
         // Don't complain if liquidity account already exists.
         if (err instanceof AccountAlreadyExistsError) {
@@ -57,7 +62,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           // Create the tigerbeetle account if not exists.
           // The incoming payment state will be PENDING until payments are received.
           if (incomingPayment.state === IncomingPaymentState.Pending) {
-            await createLiquidityAccount(incomingPayment)
+            await createLiquidityAccount(
+              incomingPayment,
+              LiquidityAccountType.INCOMING
+            )
           }
           return incomingPayment
         }
@@ -67,7 +75,10 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
         )
         if (paymentPointer) {
           if (!paymentPointer.totalEventsAmount) {
-            await createLiquidityAccount(paymentPointer)
+            await createLiquidityAccount(
+              paymentPointer,
+              LiquidityAccountType.WEB_MONETIZATION
+            )
           }
           return paymentPointer
         }

@@ -17,6 +17,7 @@ import {
   AccountingService,
   Deposit,
   LiquidityAccount,
+  LiquidityAccountType,
   Withdrawal
 } from '../service'
 
@@ -63,7 +64,10 @@ describe('Accounting Service', (): void => {
         }
       }
       await expect(
-        accountingService.createLiquidityAccount(account)
+        accountingService.createLiquidityAccount(
+          account,
+          LiquidityAccountType.ASSET
+        )
       ).resolves.toEqual(account)
       await expect(accountingService.getBalance(account.id)).resolves.toEqual(
         BigInt(0)
@@ -72,13 +76,16 @@ describe('Accounting Service', (): void => {
 
     test('Create throws on invalid id', async (): Promise<void> => {
       await expect(
-        accountingService.createLiquidityAccount({
-          id: 'not a uuid',
-          asset: {
-            id: uuid(),
-            ledger: newLedger()
-          }
-        })
+        accountingService.createLiquidityAccount(
+          {
+            id: 'not a uuid',
+            asset: {
+              id: uuid(),
+              ledger: newLedger()
+            }
+          },
+          LiquidityAccountType.ASSET
+        )
       ).rejects.toThrowError('unable to create account, invalid id')
     })
 
@@ -92,13 +99,16 @@ describe('Accounting Service', (): void => {
       ])
 
       await expect(
-        accountingService.createLiquidityAccount({
-          id: uuid(),
-          asset: {
+        accountingService.createLiquidityAccount(
+          {
             id: uuid(),
-            ledger: newLedger()
-          }
-        })
+            asset: {
+              id: uuid(),
+              ledger: newLedger()
+            }
+          },
+          LiquidityAccountType.ASSET
+        )
       ).rejects.toThrowError(
         new TigerbeetleCreateAccountError(
           CreateTbAccountError.exists_with_different_ledger

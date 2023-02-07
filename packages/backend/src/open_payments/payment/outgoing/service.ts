@@ -18,7 +18,10 @@ import {
   PaymentEventType
 } from './model'
 import { Grant } from '../../auth/middleware'
-import { AccountingService } from '../../../accounting/service'
+import {
+  AccountingService,
+  LiquidityAccountType
+} from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
@@ -346,10 +349,13 @@ async function fundPayment(
 
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
-      await deps.accountingService.createLiquidityAccount({
-        id: id,
-        asset: payment.asset
-      })
+      await deps.accountingService.createLiquidityAccount(
+        {
+          id: id,
+          asset: payment.asset
+        },
+        LiquidityAccountType.OUTGOING
+      )
     } catch (err) {
       // Don't complain if liquidity account already exists.
       if (err instanceof AccountAlreadyExistsError) {

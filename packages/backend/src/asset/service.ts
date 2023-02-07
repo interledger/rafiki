@@ -4,7 +4,7 @@ import { AssetError } from './errors'
 import { Asset } from './model'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
-import { AccountingService, AccountType } from '../accounting/service'
+import { AccountingService, LiquidityAccountType } from '../accounting/service'
 
 export interface AssetOptions {
   code: string
@@ -71,7 +71,7 @@ async function createAsset(
       })
       await deps.accountingService.createLiquidityAccount(
         asset,
-        AccountType.LIQUIDITY_ASSET
+        LiquidityAccountType.ASSET
       )
       await deps.accountingService.createSettlementAccount(asset.ledger)
 

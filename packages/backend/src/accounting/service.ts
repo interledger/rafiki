@@ -1,15 +1,12 @@
 import { TransferError } from './errors'
 
-export enum AccountType {
-  LIQUIDITY = 'LIQUIDITY',
-  LIQUIDITY_ASSET = 'LIQUIDITY_ASSET',
-  LIQUIDITY_PEER = 'LIQUIDITY_PEER',
-  LIQUIDITY_INCOMING = 'LIQUIDITY_INCOMING',
-  LIQUIDITY_OUTGOING = 'LIQUIDITY_OUTGOING',
-  SETTLEMENT = 'SETTLEMENT'
+export enum LiquidityAccountType {
+  ASSET = 'ASSET',
+  PEER = 'PEER',
+  INCOMING = 'INCOMING',
+  OUTGOING = 'OUTGOING',
+  WEB_MONETIZATION = 'WEB_MONETIZATION'
 }
-
-export type LiquidityAccountTypes = Exclude<AccountType, AccountType.SETTLEMENT>
 
 export interface LiquidityAccount {
   id: string
@@ -51,7 +48,7 @@ export interface Transaction {
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
-    accountType?: LiquidityAccountTypes
+    accountType: LiquidityAccountType
   ): Promise<LiquidityAccount>
   createSettlementAccount(ledger: number): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
