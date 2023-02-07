@@ -44,6 +44,7 @@ import {
   grantContinueHttpsigMiddleware,
   tokenHttpsigMiddleware
 } from './signature/middleware'
+import { AccessService } from './access/service'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -87,6 +88,7 @@ export interface AppServices {
   config: Promise<IAppConfig>
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
+  accessService: Promise<AccessService>
   accessTokenRoutes: Promise<AccessTokenRoutes>
   grantRoutes: Promise<GrantRoutes>
 }
