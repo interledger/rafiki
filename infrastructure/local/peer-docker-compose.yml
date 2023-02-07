@@ -34,9 +34,9 @@ services:
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://peerbackend:peerbackend@database/peerbackend
-      TIGERBEETLE_CLUSTER_ID: 0
-      # Tigerbeetle will support DNS in future
-      TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
+      USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
+      TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
+      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://peer-auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://peer-auth:3006/introspect
