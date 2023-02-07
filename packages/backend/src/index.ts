@@ -24,6 +24,7 @@ import {
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
 import { createPeerService } from './peer/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
@@ -159,12 +160,20 @@ export function initIocContainer(
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
     const config = await deps.use('config')
-    const tigerbeetle = await deps.use('tigerbeetle')
 
-    return createTigerbeetleAccountingService({
-      logger: logger,
-      knex: knex,
-      tigerbeetle,
+    if (config.useTigerbeetle) {
+      const tigerbeetle = await deps.use('tigerbeetle')
+      return createTigerbeetleAccountingService({
+        logger,
+        knex,
+        tigerbeetle,
+        withdrawalThrottleDelay: config.withdrawalThrottleDelay
+      })
+    }
+
+    return createPsqlAccountingService({
+      logger,
+      knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
   })
