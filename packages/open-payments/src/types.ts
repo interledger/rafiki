@@ -66,7 +66,7 @@ export type NonInteractiveGrantRequest = {
   access_token: ASOperations['post-request']['requestBody']['content']['application/json']['access_token']
   client: ASOperations['post-request']['requestBody']['content']['application/json']['client']
 }
-export type NonInteractiveGrant = {
+export type Grant = {
   access_token: ASComponents['schemas']['access_token']
   continue: ASComponents['schemas']['continue']
 }
@@ -78,20 +78,16 @@ export type GrantRequest = {
 export type GrantContinuationRequest = {
   interact_ref: ASOperations['post-continue']['requestBody']['content']['application/json']['interact_ref']
 }
-export type InteractiveGrant = {
+export type PendingGrant = {
   interact: ASComponents['schemas']['interact-response']
   continue: ASComponents['schemas']['continue']
 }
 export type AccessToken = {
   access_token: ASComponents['schemas']['access_token']
 }
-export const isInteractiveGrant = (
-  grant: InteractiveGrant | NonInteractiveGrant
-): grant is InteractiveGrant => !!(grant as InteractiveGrant).interact
-
-export const isNonInteractiveGrant = (
-  grant: InteractiveGrant | NonInteractiveGrant
-): grant is NonInteractiveGrant => !!(grant as NonInteractiveGrant).access_token
+export const isPendingGrant = (
+  grant: PendingGrant | Grant
+): grant is PendingGrant => !!(grant as PendingGrant).interact
 
 type ASExternalComponents = ASExternal['schemas.yaml']['components']['schemas']
 export type AccessIncomingActions =

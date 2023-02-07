@@ -7,10 +7,9 @@ export {
   ILPStreamConnection,
   Quote,
   OutgoingPayment,
-  InteractiveGrant,
-  NonInteractiveGrant,
-  isInteractiveGrant,
-  isNonInteractiveGrant,
+  PendingGrant,
+  Grant,
+  isPendingGrant,
   JWK,
   JWKS,
   PaymentPointer,
@@ -41,6 +40,6 @@ export {
   mockAccessToken,
   mockContinuationRequest,
   mockGrantRequest,
-  mockInteractiveGrant,
-  mockNonInteractiveGrant
+  mockGrant,
+  mockPendingGrant
 } from './test/helpers'
