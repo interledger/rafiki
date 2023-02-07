@@ -39,6 +39,7 @@ import { ReceiverError } from './errors'
 import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import assert from 'assert'
 import { Receiver } from './model'
+import { Grant } from '../grant/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -282,7 +283,12 @@ describe('Receiver Service', (): void => {
                 ...grantOptions,
                 authServer
               })
-            ).resolves.toMatchObject(grantOptions)
+            ).resolves.toMatchObject({
+              accessType: grantOptions.accessType,
+              accessActions: grantOptions.accessActions,
+              accessToken: grantOptions.accessToken,
+              managementId: '8f69de01-5bf9-4603-91ed-eeca101081f1'
+            })
           }
           jest
             .spyOn(paymentPointerService, 'getByUrl')
@@ -380,6 +386,33 @@ describe('Receiver Service', (): void => {
         })
 
         if (existingGrant) {
+          test('returns undefined for invalid remote auth server', async (): Promise<void> => {
+            const grant = await grantService.get({
+              ...grantOptions,
+              authServer
+            })
+            assert.ok(grant)
+            const getExistingGrantSpy = jest
+              .spyOn(grantService, 'get')
+              .mockResolvedValueOnce({
+                ...grant,
+                authServer: undefined,
+                expired: true
+              } as Grant)
+            jest
+              .spyOn(openPaymentsClient.paymentPointer, 'get')
+              .mockResolvedValueOnce(paymentPointer)
+            const clientRequestGrantSpy = jest.spyOn(
+              openPaymentsClient.grant,
+              'request'
+            )
+
+            await expect(
+              receiverService.get(incomingPayment.id)
+            ).resolves.toBeUndefined()
+            expect(getExistingGrantSpy).toHaveBeenCalled()
+            expect(clientRequestGrantSpy).not.toHaveBeenCalled()
+          })
           test('returns undefined for expired grant that cannot be rotated', async (): Promise<void> => {
             const grant = await grantService.get({
               ...grantOptions,

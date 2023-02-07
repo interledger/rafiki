@@ -25,7 +25,7 @@ export class Grant extends BaseModel {
   }
 
   public authServerId!: string
-  public authServer!: AuthServer
+  public authServer?: AuthServer
   public continueId?: string
   public continueToken?: string
   public accessToken!: string
@@ -38,7 +38,7 @@ export class Grant extends BaseModel {
     return !!this.expiresAt && this.expiresAt <= new Date()
   }
 
-  public get managementUrl(): string {
-    return `${this.authServer.url}/token/${this.managementId}`
+  public getManagementUrl(authServerUrl: string): string {
+    return `${authServerUrl}/token/${this.managementId}`
   }
 }

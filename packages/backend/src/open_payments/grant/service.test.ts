@@ -152,55 +152,44 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('Update Grant', (): void => {
-    let options: CreateOptions
+  describe.each`
+    expiresIn    | description
+    ${undefined} | ${'without prior expiresIn'}
+    ${3000}      | ${'with prior expiresIn'}
+  `('Update Grant ($description)', ({ expiresIn }): void => {
     let grant: Grant
-    let authServerId: string
     beforeEach(async (): Promise<void> => {
-      options = {
+      const options = {
         authServer: faker.internet.url(),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll],
         accessToken: uuid(),
         managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
-        expiresIn: 3000
+        expiresIn
       }
       grant = await grantService.create(options)
-      const authServerService = await deps.use('authServerService')
-      authServerId = (await authServerService.getOrCreate(options.authServer))
-        .id
     })
-
-    test('can update grant', async (): Promise<void> => {
-      const updateOptions = {
-        accessToken: uuid(),
-        managementUrl: `${faker.internet.url()}/${uuid()}`,
-        expiresIn: 6000
+    test.each`
+      expiresIn    | description
+      ${undefined} | ${'without expiresIn'}
+      ${6000}      | ${'with expiresIn'}
+    `(
+      'can update grant ($description)',
+      async ({ expiresIn }): Promise<void> => {
+        const updateOptions = {
+          accessToken: uuid(),
+          managementUrl: `${faker.internet.url()}/${uuid()}`,
+          expiresIn
+        }
+        const updatedGrant = await grantService.update(grant, updateOptions)
+        expect(updatedGrant).toEqual({
+          ...grant,
+          accessToken: updateOptions.accessToken,
+          managementId: updateOptions.managementUrl.split('/').pop(),
+          expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+          updatedAt: updatedGrant.updatedAt
+        })
       }
-      const updatedGrant = await grantService.update(grant, updateOptions)
-      expect(updatedGrant).toEqual({
-        ...grant,
-        accessToken: updateOptions.accessToken,
-        managementId: updateOptions.managementUrl.split('/').pop(),
-        expiresAt: new Date(Date.now() + updateOptions.expiresIn * 1000),
-        updatedAt: updatedGrant.updatedAt
-      })
-    })
-
-    test('can update grant w/o expiry', async (): Promise<void> => {
-      const updateOptions = {
-        accessToken: uuid(),
-        managementUrl: `${faker.internet.url()}/${uuid()}`
-      }
-      const updatedGrant = await grantService.update(grant, updateOptions)
-      expect(updatedGrant).toMatchObject({
-        authServerId,
-        accessType: options.accessType,
-        accessActions: options.accessActions,
-        accessToken: updateOptions.accessToken,
-        managementId: updateOptions.managementUrl.split('/').pop(),
-        expiresAt: null
-      })
-    })
+    )
   })
 })

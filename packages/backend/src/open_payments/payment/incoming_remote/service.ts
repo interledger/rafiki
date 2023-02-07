@@ -64,13 +64,6 @@ async function create(
     return grantOrError
   }
 
-  if (!grantOrError.accessToken) {
-    const errorMessage =
-      'Grant for remote incoming payment is missing access token'
-    deps.logger.warn({ grant: grantOrError }, errorMessage)
-    return RemoteIncomingPaymentError.InvalidGrant
-  }
-
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
@@ -120,9 +113,12 @@ async function getGrant(
 
   if (existingGrant) {
     if (existingGrant.expired) {
+      if (!existingGrant.authServer) {
+        return RemoteIncomingPaymentError.UnknownAuthServer
+      }
       try {
         const rotatedToken = await deps.openPaymentsClient.token.rotate({
-          url: existingGrant.managementUrl,
+          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
           accessToken: existingGrant.accessToken
         })
         return deps.grantService.update(existingGrant, {
@@ -132,7 +128,7 @@ async function getGrant(
         })
       } catch (err) {
         deps.logger.error({ grantOptions }, 'Grant token rotation failed.')
-        return RemoteIncomingPaymentError.ExpiredGrant
+        throw err
       }
     }
     return existingGrant

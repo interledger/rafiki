@@ -238,7 +238,7 @@ async function getIncomingPayment(
     } else {
       return await deps.openPaymentsClient.incomingPayment.get({
         url,
-        accessToken: grant.accessToken || ''
+        accessToken: grant.accessToken
       })
     }
   } catch (error) {
@@ -296,9 +296,13 @@ async function getIncomingPaymentGrant(
   const existingGrant = await deps.grantService.get(grantOptions)
   if (existingGrant) {
     if (existingGrant.expired) {
+      if (!existingGrant.authServer) {
+        deps.logger.warn('Unknown auth server.')
+        return undefined
+      }
       try {
         const rotatedToken = await deps.openPaymentsClient.token.rotate({
-          url: existingGrant.managementUrl,
+          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
           accessToken: existingGrant.accessToken
         })
         return deps.grantService.update(existingGrant, {
