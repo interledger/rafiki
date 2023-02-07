@@ -2,11 +2,19 @@ import {
   CreateAccountError as CreateAccountErrorCode,
   CreateTransferError as CreateTransferErrorCode
 } from 'tigerbeetle-node'
+import { AccountId } from './utils'
 
 export class TigerbeetleCreateAccountError extends Error {
   constructor(public code: number) {
-    super('CreateAccountError code=' + code)
+    super(`CreateAccountError code: ${code}`)
     this.name = 'CreateAccountError'
+  }
+}
+
+export class TigerbeetleUnknownAccountError extends Error {
+  constructor(accountId: AccountId) {
+    super(`Account not found. accountId: ${accountId}`)
+    this.name = 'UnknownAccountError'
   }
 }
 
