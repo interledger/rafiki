@@ -141,6 +141,7 @@ export function initIocContainer(
       return createAccessTokenRoutes({
         config: await deps.use('config'),
         logger: await deps.use('logger'),
+        knex: await deps.use('knex'),
         accessTokenService: await deps.use('accessTokenService'),
         clientService: await deps.use('clientService'),
         accessService: await deps.use('accessService')
