@@ -3,15 +3,21 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { ButtonOrLink, type ButtonOrLinkProps } from './utils/ButtonOrLink'
 
 const buttonStyles = cva(
-  'inline-flex items-center justify-center px-4 py-1.5 rounded-md font-medium focus:outline-none disabled:cursor-not-allowed',
+  'inline-flex items-center justify-center focus:outline-none disabled:cursor-not-allowed',
   {
     variants: {
       intent: {
-        default: 'bg-pearl hover:bg-wafer disabled:bg-mercury shadow-md '
+        default:
+          'bg-[#F37F64] hover:bg-[#DA725A] disabled:bg-mercury disabled:text-gray-500 shadow-md text-white'
+      },
+      size: {
+        sm: 'px-2 py-1 rounded-md font-medium',
+        md: 'px-3 py-2 rounded-md font-medium'
       }
     },
     defaultVariants: {
-      intent: 'default'
+      intent: 'default',
+      size: 'md'
     }
   }
 )

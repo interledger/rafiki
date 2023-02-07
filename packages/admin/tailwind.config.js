@@ -4,13 +4,14 @@ module.exports = {
   theme: {
     extend: {
       backgroundImage: {
-        polkadot: 'url("public/polkadot-backdrop.svg")'
+        polkadot: 'url("public/bg.webp")'
       },
       colors: {
         pearl: '#eee6e2',
-        'off-white': '#fbf7f4',
+        offwhite: '#fbf7f4',
         wafer: '#e3d7d0',
-        mercury: '#e2e2e2'
+        mercury: '#e2e2e2',
+        tealish: '#1e3250'
       }
     }
   },
