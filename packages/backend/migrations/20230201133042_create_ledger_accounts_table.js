@@ -12,11 +12,11 @@ exports.up = function (knex) {
 
     table
       .enu('type', [
-        'LIQUIDITY',
         'LIQUIDITY_ASSET',
         'LIQUIDITY_PEER',
         'LIQUIDITY_INCOMING',
         'LIQUIDITY_OUTGOING',
+        'LIQUIDITY_WEB_MONETIZATION',
         'SETTLEMENT'
       ])
       .notNullable()
