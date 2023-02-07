@@ -9,6 +9,9 @@ export function toTigerbeetleId(id: AccountId): bigint {
   if (typeof id === 'bigint') {
     return id
   }
+  if (typeof id === 'string' && !isNaN(Number(id))) {
+    return BigInt(id)
+  }
   if (!validateId(id)) {
     throw new Error()
   }

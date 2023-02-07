@@ -30,10 +30,10 @@ describe('Accounting Service', (): void => {
   let tigerbeetleContainer: StartedTestContainer
   const timeout = BigInt(10_000) // 10 seconds
 
-  let ledger = 1
-  function newLedger() {
-    return ledger++
-  }
+  const newLedger = (() => {
+    let i = 1
+    return () => i++
+  })()
 
   beforeAll(async (): Promise<void> => {
     const { container, port } = await startTigerbeetleContainer()
@@ -261,7 +261,7 @@ describe('Accounting Service', (): void => {
       await accountingService.createSettlementAccount(account)
 
       await expect(
-        accountingService.getSettlementBalance(ledger.toString())
+        accountingService.getSettlementBalance(account.asset.ledger.toString())
       ).resolves.toEqual(BigInt(0))
     })
   })
