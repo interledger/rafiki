@@ -16,7 +16,8 @@ export {
   PaymentPointer,
   AccessType,
   AccessAction,
-  AccessToken
+  AccessToken,
+  AccessItem
 } from './types'
 
 export {

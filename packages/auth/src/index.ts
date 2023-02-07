@@ -142,7 +142,8 @@ export function initIocContainer(
         config: await deps.use('config'),
         logger: await deps.use('logger'),
         accessTokenService: await deps.use('accessTokenService'),
-        clientService: await deps.use('clientService')
+        clientService: await deps.use('clientService'),
+        accessService: await deps.use('accessService')
       })
     }
   )
@@ -224,7 +225,9 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
-  app.listen(config.port)
+  await app.startAdminServer(config.adminPort)
+  await app.startAuthServer(config.authPort)
+  logger.info(`Admin listening on ${app.getAdminPort()}`)
   logger.info(`Auth server listening on ${app.getPort()}`)
 }
 
