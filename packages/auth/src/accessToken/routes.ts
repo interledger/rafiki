@@ -130,10 +130,10 @@ async function rotateToken(
     await trx.commit()
   } catch (error) {
     await trx.rollback()
-    const errorMessage = 'Could not rotate token'
-    deps.logger.error({ error: error && error['message'] }, errorMessage)
+    const defaultErrorMessage = 'Could not rotate token'
+    deps.logger.error({ error: error && error['message'] }, defaultErrorMessage)
     ctx.throw((error && error['status']) ?? 400, {
-      message: (error && error['message']) ?? errorMessage
+      message: (error && error['message']) ?? defaultErrorMessage
     })
   }
 
