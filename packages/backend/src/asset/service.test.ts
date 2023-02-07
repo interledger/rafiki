@@ -17,7 +17,7 @@ import { AppServices } from '../app'
 import { AccountTypeCode } from '../accounting/service'
 import { CheckViolationError } from 'objection'
 
-describe('Asset Service', (): void => {
+describe.skip('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService

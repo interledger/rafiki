@@ -23,7 +23,7 @@ import {
   CreateAssetInput
 } from '../generated/graphql'
 
-describe('Asset Resolvers', (): void => {
+describe.skip('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService

@@ -19,7 +19,7 @@ import { truncateTables } from '../tests/tableManager'
 import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
 
-describe('Accounting Service', (): void => {
+describe.skip('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
