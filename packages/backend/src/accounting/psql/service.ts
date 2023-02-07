@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
 import {
