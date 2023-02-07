@@ -9,7 +9,8 @@ import {
 } from './accounts'
 import {
   areAllAccountExistsErrors,
-  TigerbeetleCreateAccountError
+  TigerbeetleCreateAccountError,
+  TigerbeetleUnknownAccountError
 } from './errors'
 import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../../shared/baseService'
@@ -18,15 +19,17 @@ import { toTigerbeetleId } from './utils'
 import {
   AccountAlreadyExistsError,
   BalanceTransferError,
-  TransferError,
-  UnknownAccountError
+  TransferError
 } from '../errors'
 import {
   AccountingService,
   AccountType,
+  Deposit,
   LiquidityAccount,
   LiquidityAccountTypes,
-  Transaction
+  Transaction,
+  TransferOptions,
+  Withdrawal
 } from '../service'
 
 export const convertToTigerbeetleAccountCode: {
@@ -38,42 +41,6 @@ export const convertToTigerbeetleAccountCode: {
   [AccountType.LIQUIDITY_INCOMING]: 4,
   [AccountType.LIQUIDITY_OUTGOING]: 5,
   [AccountType.SETTLEMENT]: 101
-}
-
-export interface OnCreditOptions {
-  totalReceived: bigint
-  withdrawalThrottleDelay?: number
-}
-
-export interface Deposit {
-  id: string
-  account: LiquidityAccount
-  amount: bigint
-}
-
-export interface Withdrawal extends Deposit {
-  timeout?: bigint
-}
-
-// Model classes that have a corresponding Tigerbeetle liquidity
-// account SHOULD implement this LiquidityAccount interface and call
-// createLiquidityAccount for each model instance.
-// The Tigerbeetle account id will be the model id.
-// Such models include:
-//   ../asset/model
-//   ../open_payments/payment_pointer/model
-//   ../open_payments/payment/incoming/model
-//   ../open_payments/payment/outgoing/model
-//   ../peer/model
-// Asset settlement Tigerbeetle accounts are the only exception.
-// Their account id is the corresponding asset's ledger value.
-
-export interface TransferOptions {
-  sourceAccount: LiquidityAccount
-  destinationAccount: LiquidityAccount
-  sourceAmount: bigint
-  destinationAmount?: bigint
-  timeout: bigint
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -89,6 +56,18 @@ export function createAccountingService(
     logger: deps_.logger.child({ service: 'AccountingService' })
   }
   return {
+    // Model classes that have a corresponding Tigerbeetle liquidity
+    // account SHOULD implement this LiquidityAccount interface and call
+    // createLiquidityAccount for each model instance.
+    // The Tigerbeetle account id will be the model id.
+    // Such models include:
+    //   ../asset/model
+    //   ../open_payments/payment_pointer/model
+    //   ../open_payments/payment/incoming/model
+    //   ../open_payments/payment/outgoing/model
+    //   ../peer/model
+    // Asset settlement Tigerbeetle accounts are the only exception.
+    // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accTypeCode) =>
       createLiquidityAccount(deps, options, accTypeCode),
     createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
@@ -330,9 +309,11 @@ export async function createTransfer(
   if (error) {
     switch (error.error) {
       case TransferError.UnknownSourceAccount:
-        throw new UnknownAccountError(transfers[error.index].sourceAccountId)
+        throw new TigerbeetleUnknownAccountError(
+          transfers[error.index].sourceAccountId
+        )
       case TransferError.UnknownDestinationAccount:
-        throw new UnknownAccountError(
+        throw new TigerbeetleUnknownAccountError(
           transfers[error.index].destinationAccountId
         )
       case TransferError.InsufficientBalance:

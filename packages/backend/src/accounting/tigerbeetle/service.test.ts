@@ -3,7 +3,6 @@ import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { Deposit, Withdrawal } from './service'
 import { TigerbeetleCreateAccountError } from './errors'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
@@ -14,7 +13,12 @@ import { truncateTables } from '../../tests/tableManager'
 import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import { AccountFactory, FactoryAccount } from '../../tests/accountFactory'
 import { isTransferError, TransferError } from '../errors'
-import { AccountingService, LiquidityAccount } from '../service'
+import {
+  AccountingService,
+  Deposit,
+  LiquidityAccount,
+  Withdrawal
+} from '../service'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
