@@ -14,7 +14,11 @@ import {
 import { createTokenAuthMiddleware } from './middleware'
 import { RatesService } from '../../rates/service'
 import { CreateAccountError, TransferError } from '../../accounting/errors'
-import { LiquidityAccount, Transaction } from '../../accounting/service'
+import {
+  LiquidityAccount,
+  LiquidityAccountType,
+  Transaction
+} from '../../accounting/service'
 import { AssetOptions } from '../../asset/service'
 import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
@@ -56,7 +60,8 @@ export interface TransferOptions {
 export interface AccountingService {
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
   createLiquidityAccount(
-    account: LiquidityAccount
+    account: LiquidityAccount,
+    type: LiquidityAccountType
   ): Promise<LiquidityAccount | CreateAccountError>
 }
 

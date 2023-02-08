@@ -14,7 +14,7 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { AccountTypeCode } from '../accounting/service'
+import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
 
 describe('Asset Service', (): void => {
@@ -83,7 +83,7 @@ describe('Asset Service', (): void => {
 
       expect(liquiditySpy).toHaveBeenCalledWith(
         asset,
-        AccountTypeCode.LiquidityAsset
+        LiquidityAccountType.ASSET
       )
       expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
 

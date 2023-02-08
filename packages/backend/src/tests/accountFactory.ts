@@ -1,10 +1,15 @@
 import { v4 as uuid } from 'uuid'
 
-import { AccountingService, LiquidityAccount } from '../accounting/service'
+import {
+  AccountingService,
+  LiquidityAccount,
+  LiquidityAccountType
+} from '../accounting/service'
 import { randomLedger } from './asset'
 
 type BuildOptions = Partial<LiquidityAccount> & {
   balance?: bigint
+  type?: LiquidityAccountType
 }
 
 export type FactoryAccount = Omit<LiquidityAccount, 'asset'> & {
@@ -37,13 +42,19 @@ export class AccountFactory {
     }
     if (!options.asset) {
       await this.accounts.createSettlementAccount(asset.ledger)
-      await this.accounts.createLiquidityAccount(asset)
+      await this.accounts.createLiquidityAccount(
+        asset,
+        LiquidityAccountType.ASSET
+      )
     }
     const account = {
       id: options.id || uuid(),
       asset
     }
-    await this.accounts.createLiquidityAccount(account)
+    await this.accounts.createLiquidityAccount(
+      account,
+      options?.type || LiquidityAccountType.INCOMING
+    )
 
     if (options.balance) {
       await this.accounts.createDeposit({
