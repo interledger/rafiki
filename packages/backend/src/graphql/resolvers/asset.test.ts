@@ -46,7 +46,9 @@ describe('Asset Resolvers', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop()
+    await tigerbeetleContainer.stop({
+      timeout: 10000
+    })
   })
 
   describe('Create Asset', (): void => {
