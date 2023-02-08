@@ -6,20 +6,20 @@ const NodeEnvironment = require('jest-environment-node').TestEnvironment
 class CustomEnvironment extends NodeEnvironment {
   constructor(config, context) {
     super(config, context)
-    console.log(config.globalConfig)
-    console.log(config.projectConfig)
     this.testPath = context.testPath
     this.docblockPragmas = context.docblockPragmas
   }
 
   async setup() {
     await super.setup()
-    this.global.testVar = 'DEFINED'
-    console.log(`SETUP: ${this.global.testVar}`)
   }
 
   async teardown() {
-    console.log(`TEARDOWN: ${this.global.testVar}`)
+    if (this.global['container']) {
+      console.log('container defined, stopping container')
+      await this.global.container.stop()
+    }
+
     await super.teardown()
   }
 
