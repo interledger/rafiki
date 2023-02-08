@@ -1,5 +1,6 @@
 import { ZeroCopyIlpPrepare } from '../..'
 import { AccountAlreadyExistsError } from '../../../../accounting/errors'
+import { LiquidityAccountType } from '../../../../accounting/service'
 import {
   AccountFactory,
   IlpPrepareFactory,
@@ -189,7 +190,10 @@ describe('Account Middleware', () => {
       expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
       expect(ctx.accounts.incoming).toEqual(incomingAccount)
     }
-    expect(spy).toHaveBeenCalledWith(outgoingAccount)
+    expect(spy).toHaveBeenCalledWith(
+      outgoingAccount,
+      LiquidityAccountType.INCOMING
+    )
   })
 
   test.each`
@@ -229,6 +233,9 @@ describe('Account Middleware', () => {
       expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
       expect(ctx.accounts.incoming).toEqual(incomingAccount)
     }
-    expect(spy).toHaveBeenCalledWith(outgoingAccount)
+    expect(spy).toHaveBeenCalledWith(
+      outgoingAccount,
+      LiquidityAccountType.WEB_MONETIZATION
+    )
   })
 })

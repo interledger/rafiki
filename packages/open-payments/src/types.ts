@@ -100,6 +100,11 @@ export type AccessOutgoingActions =
   ASExternalComponents['access-outgoing']['actions']
 export type AccessQuoteActions = ASExternalComponents['access-quote']['actions']
 
+export type AccessItem =
+  | ASExternalComponents['access-incoming']
+  | ASExternalComponents['access-outgoing']
+  | ASExternalComponents['access-quote']
+
 export type AccessType =
   | ASExternalComponents['access-incoming']['type']
   | ASExternalComponents['access-outgoing']['type']
@@ -111,13 +116,18 @@ export type AccessAction = (
   | AccessQuoteActions
 )[number]
 
-export const AccessType: Record<string, AccessType> = Object.freeze({
+export const AccessType: {
+  [key in 'IncomingPayment' | 'OutgoingPayment' | 'Quote']: AccessType
+} = {
   IncomingPayment: 'incoming-payment',
   OutgoingPayment: 'outgoing-payment',
   Quote: 'quote'
-})
+}
 
-export const AccessAction: Record<string, AccessAction> = Object.freeze({
+export const AccessAction: Record<
+  'Create' | 'Read' | 'ReadAll' | 'Complete' | 'List' | 'ListAll',
+  AccessAction
+> = Object.freeze({
   Create: 'create',
   Read: 'read',
   ReadAll: 'read-all',

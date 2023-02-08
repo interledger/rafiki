@@ -1,26 +1,27 @@
 import { Logger } from 'pino'
-import { ActiveTokenInfo, TokenInfo } from 'token-introspection'
-import { Access } from '../access/model'
+import { TokenInfo } from 'token-introspection'
+import { toOpenPaymentsAccess } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from './service'
-import { accessToBody } from '../shared/utils'
 import { ClientService } from '../client/service'
 import { Grant } from '../grant/model'
+import { toOpenPaymentsAccessToken } from './model'
+import { AccessService } from '../access/service'
 
-type TokenRequest<BodyT> = Omit<AppContext['request'], 'body'> & {
+type TokenRequest<BodyT> = Exclude<AppContext['request'], 'body'> & {
   body: BodyT
 }
 
-type TokenContext<BodyT> = Omit<AppContext, 'request'> & {
+type TokenContext<BodyT> = Exclude<AppContext, 'request'> & {
   request: TokenRequest<BodyT>
 }
 
-type ManagementRequest = Omit<AppContext['request'], 'params'> & {
+type ManagementRequest = Exclude<AppContext['request'], 'params'> & {
   params?: Record<'id', string>
 }
 
-type ManagementContext = Omit<AppContext, 'request'> & {
+type ManagementContext = Exclude<AppContext, 'request'> & {
   request: ManagementRequest
 }
 
@@ -35,6 +36,7 @@ interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   accessTokenService: AccessTokenService
+  accessService: AccessService
   clientService: ClientService
 }
 
@@ -79,9 +81,7 @@ function grantToTokenInfo(grant?: Grant): TokenInfo {
   return {
     active: true,
     grant: grant.id,
-    access: grant.access.map((a: Access) =>
-      accessToBody(a)
-    ) as ActiveTokenInfo['access'],
+    access: grant.access.map(toOpenPaymentsAccess),
     client: grant.client
   }
 }
@@ -102,18 +102,26 @@ async function rotateToken(
 ): Promise<void> {
   const { id: managementId } = ctx.params
   const token = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
-  const result = await deps.accessTokenService.rotate(managementId, token)
-  if (result.success == true) {
-    ctx.status = 200
-    ctx.body = {
-      access_token: {
-        access: result.access.map((a) => accessToBody(a)),
-        value: result.value,
-        manage: deps.config.authServerDomain + `/token/${result.managementId}`,
-        expires_in: result.expiresIn
-      }
-    }
-  } else {
-    ctx.throw(404, { message: result.error.message })
+
+  let newToken
+  try {
+    newToken = await deps.accessTokenService.rotate(managementId, token)
+  } catch (error) {
+    const errorMessage = 'Could not rotate token'
+    deps.logger.error({ error: error && error['message'] }, errorMessage)
+    ctx.throw(400, { message: errorMessage })
+  }
+
+  if (!newToken) {
+    ctx.throw(404, { message: 'Token not found' })
+  }
+
+  const accessItems = await deps.accessService.getByGrant(newToken.grantId)
+
+  ctx.status = 200
+  ctx.body = {
+    access_token: toOpenPaymentsAccessToken(newToken, accessItems, {
+      authServerUrl: deps.config.authServerDomain
+    })
   }
 }
