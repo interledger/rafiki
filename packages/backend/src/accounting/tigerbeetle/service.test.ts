@@ -1,3 +1,7 @@
+/**
+ * @jest-environment ./packages/backend/custom-env
+ */
+
 import assert from 'assert'
 import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
@@ -35,6 +39,8 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
+    console.log(`IN TEST ${global['testVar']}`)
+
     const { container, port } = await startTigerbeetleContainer()
     tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
