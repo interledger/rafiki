@@ -43,6 +43,7 @@ describe('Asset Resolvers', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
+    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('Create Asset', (): void => {

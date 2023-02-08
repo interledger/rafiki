@@ -36,6 +36,7 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('create', (): void => {
