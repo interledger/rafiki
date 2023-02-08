@@ -1,6 +1,5 @@
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import tmp from 'tmp'
-import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config/app'
 
@@ -15,10 +14,10 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
 }> {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
-  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_${uuid()}.tigerbeetle`
+  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle:debug'
+    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
@@ -50,7 +49,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   }
 
   const tbContStart = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle:debug'
+    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
