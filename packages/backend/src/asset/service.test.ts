@@ -1,4 +1,5 @@
 import assert from 'assert'
+import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
@@ -20,9 +21,11 @@ describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
+  let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { port } = await startTigerbeetleContainer()
+    const { container, port } = await startTigerbeetleContainer()
+    tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
@@ -36,6 +39,8 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+    await new Promise((f) => setTimeout(f, 5000))
+    await tigerbeetleContainer.stop()
   })
 
   describe('create', (): void => {
