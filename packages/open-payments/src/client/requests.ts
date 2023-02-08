@@ -191,6 +191,11 @@ export const createAxiosInstance = (args: {
   keyId?: string
 }): AxiosInstance => {
   const axiosInstance = axios.create({
+    headers: {
+      common: {
+        Accept: 'application/json'
+      }
+    },
     timeout: args.requestTimeoutMs
   })
   axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
