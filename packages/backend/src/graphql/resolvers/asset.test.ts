@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client'
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
+// import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 import { ApolloError } from '@apollo/client'
 
@@ -15,7 +15,7 @@ import { isAssetError } from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
-import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
+// import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import {
   AssetMutationResponse,
   Asset,
@@ -27,12 +27,12 @@ describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let tigerbeetleContainer: StartedTestContainer
+  // let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
-    Config.tigerbeetleReplicaAddresses = [port]
+    // const { container, port } = await startTigerbeetleContainer()
+    // tigerbeetleContainer = container
+    // Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -46,9 +46,7 @@ describe('Asset Resolvers', (): void => {
   afterAll(async (): Promise<void> => {
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop({
-      timeout: 10000
-    })
+    // await tigerbeetleContainer.stop()
   })
 
   describe('Create Asset', (): void => {

@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
+// import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
@@ -9,7 +9,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
+// import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -21,12 +21,12 @@ describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let tigerbeetleContainer: StartedTestContainer
+  // let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
-    Config.tigerbeetleReplicaAddresses = [port]
+    // const { container, port } = await startTigerbeetleContainer()
+    // tigerbeetleContainer = container
+    // Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
@@ -39,9 +39,7 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop({
-      timeout: 10000
-    })
+    // await tigerbeetleContainer.stop()
   })
 
   describe('create', (): void => {
