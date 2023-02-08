@@ -39,7 +39,7 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop({ timeout: 20000 })
+    await tigerbeetleContainer.stop()
   })
 
   describe('create', (): void => {

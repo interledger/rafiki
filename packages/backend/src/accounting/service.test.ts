@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
+// import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
@@ -24,7 +24,7 @@ describe('Accounting Service', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
-  let tigerbeetleContainer: StartedTestContainer
+  // let tigerbeetleContainer: StartedTestContainer
   const timeout = BigInt(10_000) // 10 seconds
 
   let ledger = 1
@@ -33,8 +33,8 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
+    const { port } = await startTigerbeetleContainer()
+    // tigerbeetleContainer = container
     Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
@@ -49,7 +49,7 @@ describe('Accounting Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop({ timeout: 20000 })
+    // await tigerbeetleContainer.stop()
   })
 
   describe('Create Liquidity Account', (): void => {
