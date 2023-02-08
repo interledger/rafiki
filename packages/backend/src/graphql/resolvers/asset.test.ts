@@ -30,9 +30,8 @@ describe('Asset Resolvers', (): void => {
   let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer(3)
+    const { container, port } = await startTigerbeetleContainer()
     tigerbeetleContainer = container
-    Config.tigerbeetleClusterId = 3
     Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)

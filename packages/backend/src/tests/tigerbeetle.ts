@@ -1,5 +1,6 @@
 import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers'
 import tmp from 'tmp'
+import { v4 as uuid } from 'uuid'
 
 import { Config } from '../config/app'
 
@@ -14,7 +15,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
 }> {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
-  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
+  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_${uuid()}.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
     'ghcr.io/tigerbeetledb/tigerbeetle@sha256:f891541f99b5c307b2b13e80441ba9793e43ca2bcce3720639951e1e8fdc96f6'

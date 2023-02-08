@@ -33,9 +33,8 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer(1)
+    const { container, port } = await startTigerbeetleContainer()
     tigerbeetleContainer = container
-    Config.tigerbeetleClusterId = 1
     Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
