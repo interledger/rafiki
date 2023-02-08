@@ -18,7 +18,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_${uuid()}.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:f891541f99b5c307b2b13e80441ba9793e43ca2bcce3720639951e1e8fdc96f6'
+    'ghcr.io/tigerbeetledb/tigerbeetle:debug'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
@@ -50,7 +50,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   }
 
   const tbContStart = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:f891541f99b5c307b2b13e80441ba9793e43ca2bcce3720639951e1e8fdc96f6'
+    'ghcr.io/tigerbeetledb/tigerbeetle:debug'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
