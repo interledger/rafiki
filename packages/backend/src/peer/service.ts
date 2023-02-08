@@ -9,7 +9,7 @@ import { isValidIlpAddress } from 'ilp-packet'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import { AccountingService, AccountTypeCode } from '../accounting/service'
+import { AccountingService, LiquidityAccountType } from '../accounting/service'
 import { AssetService } from '../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
@@ -129,7 +129,7 @@ async function createPeer(
           id: peer.id,
           asset: peer.asset
         },
-        AccountTypeCode.LiquidityPeer
+        LiquidityAccountType.PEER
       )
 
       return peer

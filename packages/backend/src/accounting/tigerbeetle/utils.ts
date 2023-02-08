@@ -1,4 +1,4 @@
-import { validateId } from '../shared/utils'
+import { validateId } from '../../shared/utils'
 
 export type AccountId = string | number | bigint
 
