@@ -18,6 +18,8 @@ import {
 } from 'open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
+import { AccessToken } from 'open-payments'
+import { Grant } from '../../grant/model'
 
 describe('Remote Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -58,7 +60,8 @@ describe('Remote Incoming Payment Service', (): void => {
       accessType: AccessType.IncomingPayment,
       accessActions: [AccessAction.Create, AccessAction.ReadAll],
       accessToken: 'OZB8CDFONP219RP1LT0OS9M2PMHKUR64TB8N6BW7',
-      authServer: paymentPointer.authServer
+      authServer: paymentPointer.authServer,
+      managementUrl: `${paymentPointer.authServer}/token/aq1sw2de3fr4`
     }
 
     test('throws if payment pointer not found', async () => {
@@ -85,6 +88,43 @@ describe('Remote Incoming Payment Service', (): void => {
           .mockResolvedValue(paymentPointer)
       })
 
+      test('returns error if grant expired and token cannot be rotated', async () => {
+        await grantService.create({
+          ...grantOptions,
+          expiresIn: -10
+        })
+        const clientRequestRotateTokenSpy = jest
+          .spyOn(openPaymentsClient.token, 'rotate')
+          .mockRejectedValueOnce(new Error('Error in rotating client'))
+
+        await expect(
+          remoteIncomingPaymentService.create({
+            paymentPointerUrl: paymentPointer.id
+          })
+        ).rejects.toThrowError('Error in rotating client')
+        expect(clientRequestRotateTokenSpy).toHaveBeenCalled()
+      })
+
+      test('returns error if grant expired and management url cannot be retrieved', async () => {
+        const grant = await grantService.create({
+          ...grantOptions,
+          expiresIn: -10
+        })
+        const getExistingGrantSpy = jest
+          .spyOn(grantService, 'get')
+          .mockResolvedValueOnce({
+            ...grant,
+            authServer: undefined,
+            expired: true
+          } as Grant)
+
+        await expect(
+          remoteIncomingPaymentService.create({
+            paymentPointerUrl: paymentPointer.id
+          })
+        ).rejects.toThrow('unknown auth server')
+        expect(getExistingGrantSpy).toHaveBeenCalled()
+      })
       test.each`
         incomingAmount | expiresAt                        | description                | externalRef
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
@@ -124,32 +164,6 @@ describe('Remote Incoming Payment Service', (): void => {
         )
       })
 
-      test('returns error if grant expired', async () => {
-        await grantService.create({
-          ...grantOptions,
-          expiresIn: -10
-        })
-
-        await expect(
-          remoteIncomingPaymentService.create({
-            paymentPointerUrl: paymentPointer.id
-          })
-        ).resolves.toEqual(RemoteIncomingPaymentError.ExpiredGrant)
-      })
-
-      test('returns error if grant does not have accessToken', async () => {
-        await grantService.create({
-          ...grantOptions,
-          accessToken: undefined
-        })
-
-        await expect(
-          remoteIncomingPaymentService.create({
-            paymentPointerUrl: paymentPointer.id
-          })
-        ).resolves.toEqual(RemoteIncomingPaymentError.InvalidGrant)
-      })
-
       test('returns error if fails to create the incoming payment', async () => {
         await grantService.create(grantOptions)
         jest
@@ -163,6 +177,84 @@ describe('Remote Incoming Payment Service', (): void => {
             paymentPointerUrl: paymentPointer.id
           })
         ).resolves.toEqual(RemoteIncomingPaymentError.InvalidRequest)
+      })
+
+      describe.each`
+        incomingAmount | expiresAt                        | description                | externalRef
+        ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      `('creates remote incoming payment ($#)', (args): void => {
+        const newToken = {
+          access_token: {
+            value: 'T0OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1L',
+            manage: `${grantOptions.authServer}/token/d3f288c2-0b41-42f0-9b2f-66ff4bf45a7a`,
+            expires_in: 3600,
+            access: [
+              {
+                type: grantOptions.accessType,
+                actions: grantOptions.accessActions
+              }
+            ]
+          }
+        } as AccessToken
+        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+          ...args,
+          paymentPointerUrl: paymentPointer.id
+        })
+
+        test.each`
+          grantExpired
+          ${false}
+          ${true}
+        `(
+          '- grant expired: $grantExpired',
+          async ({ grantExpired }): Promise<void> => {
+            const options = !grantExpired
+              ? grantOptions
+              : { ...grantOptions, expiresIn: -10 }
+            const grant = await grantService.create(options)
+
+            const clientCreateIncomingPaymentSpy = jest
+              .spyOn(openPaymentsClient.incomingPayment, 'create')
+              .mockResolvedValueOnce(mockedIncomingPayment)
+
+            const clientRequestRotateTokenSpy = jest
+              .spyOn(openPaymentsClient.token, 'rotate')
+              .mockResolvedValueOnce(newToken)
+
+            const incomingPayment = await remoteIncomingPaymentService.create({
+              ...args,
+              paymentPointerUrl: paymentPointer.id
+            })
+
+            expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
+            expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
+              {
+                paymentPointer: paymentPointer.id,
+                accessToken: grant.expired
+                  ? newToken.access_token.value
+                  : grant.accessToken
+              },
+              {
+                ...args,
+                expiresAt: args.expiresAt
+                  ? args.expiresAt.toISOString()
+                  : undefined,
+                incomingAmount: args.incomingAmount
+                  ? serializeAmount(args.incomingAmount)
+                  : undefined
+              }
+            )
+            if (grantExpired) {
+              expect(clientRequestRotateTokenSpy).toHaveBeenCalledWith({
+                url: grantOptions.managementUrl,
+                accessToken: grantOptions.accessToken
+              })
+            } else {
+              expect(clientRequestRotateTokenSpy).not.toHaveBeenCalled()
+            }
+          }
+        )
       })
     })
 
@@ -219,7 +311,8 @@ describe('Remote Incoming Payment Service', (): void => {
         expect(grantCreateSpy).toHaveBeenCalledWith({
           ...grantOptions,
           accessToken: grant.access_token.value,
-          expiresIn: grant.access_token.expires_in
+          expiresIn: grant.access_token.expires_in,
+          managementUrl: grant.access_token.manage
         })
         expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
           {
