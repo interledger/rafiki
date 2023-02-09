@@ -122,7 +122,7 @@ describe('Remote Incoming Payment Service', (): void => {
           remoteIncomingPaymentService.create({
             paymentPointerUrl: paymentPointer.id
           })
-        ).resolves.toEqual(RemoteIncomingPaymentError.UnknownAuthServer)
+        ).rejects.toThrow('unknown auth server')
         expect(getExistingGrantSpy).toHaveBeenCalled()
       })
       test.each`

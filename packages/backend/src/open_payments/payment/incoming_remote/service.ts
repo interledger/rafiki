@@ -114,7 +114,7 @@ async function getGrant(
   if (existingGrant) {
     if (existingGrant.expired) {
       if (!existingGrant.authServer) {
-        return RemoteIncomingPaymentError.UnknownAuthServer
+        throw new Error('unknown auth server')
       }
       try {
         const rotatedToken = await deps.openPaymentsClient.token.rotate({
@@ -127,7 +127,7 @@ async function getGrant(
           expiresIn: rotatedToken.access_token.expires_in
         })
       } catch (err) {
-        deps.logger.error({ grantOptions }, 'Grant token rotation failed.')
+        deps.logger.error({ err, grantOptions }, 'Grant token rotation failed.')
         throw err
       }
     }
