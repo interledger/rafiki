@@ -200,7 +200,7 @@ describe('Access Token Service', (): void => {
     })
 
     test('Cannot introspect non-existing token', async (): Promise<void> => {
-      expect(accessTokenService.introspect('v4')).resolves.toBeUndefined()
+      expect(accessTokenService.introspect(v4())).resolves.toBeUndefined()
     })
 
     test('Cannot introspect rotated access token', async (): Promise<void> => {
