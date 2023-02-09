@@ -12,6 +12,7 @@ import { Config } from '../../config/app'
 import {
   AccountingService,
   LiquidityAccount,
+  LiquidityAccountType,
   Withdrawal
 } from '../../accounting/service'
 import { Asset } from '../../asset/model'
@@ -1692,7 +1693,10 @@ describe('Liquidity Resolvers', (): void => {
               data = incomingPayment.toData(amount)
             } else {
               liquidityAccount = paymentPointer
-              await accountingService.createLiquidityAccount(paymentPointer)
+              await accountingService.createLiquidityAccount(
+                paymentPointer,
+                LiquidityAccountType.WEB_MONETIZATION
+              )
               data = paymentPointer.toData(amount)
             }
             await WebhookEvent.query(knex).insertAndFetch({

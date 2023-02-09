@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
@@ -14,18 +13,16 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { AccountTypeCode } from '../accounting/service'
+import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
+    const { port } = await startTigerbeetleContainer()
     Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
@@ -39,7 +36,7 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop()
+    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('create', (): void => {
@@ -82,7 +79,7 @@ describe('Asset Service', (): void => {
 
       expect(liquiditySpy).toHaveBeenCalledWith(
         asset,
-        AccountTypeCode.LiquidityAsset
+        LiquidityAccountType.ASSET
       )
       expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
 
