@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
 import {
@@ -38,7 +39,7 @@ export function createAccountingService(
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
+    getSettlementBalance: (id) => getSettlementBalance(deps, id),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
