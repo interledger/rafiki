@@ -1,14 +1,13 @@
 import { UniqueViolationError } from 'objection'
 
 import { BaseService } from '../../../shared/baseService'
-import { LedgerAccount } from './model'
-import { AccountType } from '../../service'
+import { LedgerAccount, LedgerAccountType } from './model'
 import { AccountAlreadyExistsError } from '../../errors'
 
 export interface CreateArgs {
   accountRef: string
   assetId: string
-  type: AccountType
+  type: LedgerAccountType
 }
 
 export interface LedgerAccountService {
@@ -29,22 +28,20 @@ export async function createLedgerAccountService({
     knex
   }
   return {
-    create: (options) => create(deps, options)
+    create: (args) => create(deps, args)
   }
 }
 
 async function create(
-  _: ServiceDependencies,
+  deps: ServiceDependencies,
   args: CreateArgs
 ): Promise<LedgerAccount> {
   try {
     const { accountRef, assetId, type } = args
-    return await LedgerAccount.transaction(async (trx) => {
-      return LedgerAccount.query(trx).insertAndFetch({
-        assetId,
-        accountRef,
-        type
-      })
+    return await LedgerAccount.query(deps.knex).insertAndFetch({
+      assetId,
+      accountRef,
+      type
     })
   } catch (err) {
     if (err instanceof UniqueViolationError) {
