@@ -278,7 +278,7 @@ describe('Accounting Service', (): void => {
 
       await accountingService.createSettlementAccount(account)
       await expect(
-        accountingService.getSettlementBalance(account.asset.ledger.toFixed())
+        accountingService.getSettlementBalance(account.asset.ledger.toString())
       ).resolves.toEqual(BigInt(0))
     })
 
