@@ -28,7 +28,13 @@ export class TigerbeetleCreateTransferError extends Error {
 export function areAllAccountExistsErrors(
   errors: CreateAccountErrorCode[]
 ): boolean {
-  return areAllOfTypeAccountErrors(errors, [CreateAccountErrorCode.exists])
+  return areAllOfTypeAccountErrors(errors, [
+    CreateAccountErrorCode.exists_with_different_flags,
+    CreateAccountErrorCode.exists_with_different_user_data,
+    CreateAccountErrorCode.exists_with_different_ledger,
+    CreateAccountErrorCode.exists_with_different_code,
+    CreateAccountErrorCode.exists
+  ])
 }
 
 export function areAllOfTypeAccountErrors(
