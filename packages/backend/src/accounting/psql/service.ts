@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
 import {
@@ -11,8 +10,14 @@ import {
   TransferOptions,
   Withdrawal
 } from '../service'
+import {
+  LedgerAccountType,
+  mapLiquidityAccountTypeToLedgerAccountType
+} from './ledger-account/model'
+import { LedgerAccountService } from './ledger-account/service'
 
 export interface ServiceDependencies extends BaseService {
+  ledgerAccountService: LedgerAccountService
   withdrawalThrottleDelay?: number
 }
 
@@ -33,7 +38,7 @@ export function createAccountingService(
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
     getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (id) => getSettlementBalance(deps, id),
+    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
@@ -47,14 +52,26 @@ export async function createLiquidityAccount(
   account: LiquidityAccount,
   accountType: LiquidityAccountType
 ): Promise<LiquidityAccount> {
-  throw new Error('Not implemented')
+  await deps.ledgerAccountService.create({
+    accountRef: account.id,
+    assetId: account.asset.id,
+    type: mapLiquidityAccountTypeToLedgerAccountType[accountType]
+  })
+
+  return account
 }
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
   account: SettlementAccount
 ): Promise<SettlementAccount> {
-  throw new Error('Not implemented')
+  await deps.ledgerAccountService.create({
+    accountRef: account.asset.id,
+    assetId: account.asset.id,
+    type: LedgerAccountType.SETTLEMENT
+  })
+
+  return account
 }
 
 export async function getAccountBalance(
