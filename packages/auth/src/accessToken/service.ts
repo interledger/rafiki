@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { Transaction, TransactionOrKnex } from 'objection'
+import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { generateToken } from '../shared/utils'
@@ -8,9 +8,17 @@ import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 import { IAppConfig } from '../config/app'
 
-interface RotateTokenArgs {
+interface RevokeTokenArgs {
   managementId: string
   tokenValue: string
+  trx?: TransactionOrKnex
+}
+
+interface RotateTokenArgs {
+  grantId: string
+  managementId: string
+  tokenValue: string
+  expiresIn?: number
   trx?: TransactionOrKnex
 }
 
@@ -18,7 +26,7 @@ export interface AccessTokenService {
   get(token: string): Promise<AccessToken | undefined>
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(token: string): Promise<Grant | undefined>
-  revoke(id: string, tokenValue: string): Promise<void>
+  revoke(args: RevokeTokenArgs): Promise<boolean>
   create(grantId: string, opts?: AccessTokenOpts): Promise<AccessToken>
   rotate(args: RotateTokenArgs): Promise<AccessToken | undefined>
 }
@@ -31,7 +39,7 @@ interface ServiceDependencies extends BaseService {
 
 interface AccessTokenOpts {
   expiresIn?: number
-  trx?: Transaction
+  trx?: TransactionOrKnex
 }
 
 export async function createAccessTokenService({
@@ -56,7 +64,7 @@ export async function createAccessTokenService({
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
     introspect: (token: string) => introspect(deps, token),
-    revoke: (id: string, tokenValue: string) => revoke(deps, id, tokenValue),
+    revoke: (args: RevokeTokenArgs) => revoke(deps, args),
     create: (grantId: string, opts?: AccessTokenOpts) =>
       createAccessToken(deps, grantId, opts),
     rotate: (args: RotateTokenArgs) => rotate(deps, args)
@@ -103,15 +111,17 @@ async function introspect(
 
 async function revoke(
   deps: ServiceDependencies,
-  id: string,
-  tokenValue: string
-): Promise<void> {
-  await AccessToken.query()
+  args: RevokeTokenArgs
+): Promise<boolean> {
+  const { managementId, tokenValue, trx } = args
+  const deletedCount = await AccessToken.query(trx || deps.knex)
     .findOne({
-      managementId: id,
+      managementId,
       value: tokenValue
     })
     .delete()
+
+  return deletedCount === 1
 }
 
 async function createAccessToken(
@@ -131,28 +141,17 @@ async function rotate(
   deps: ServiceDependencies,
   args: RotateTokenArgs
 ): Promise<AccessToken | undefined> {
-  const { managementId, tokenValue, trx } = args
+  const { managementId, tokenValue, grantId, expiresIn, trx } = args
 
-  const oldToken = await AccessToken.query(trx || deps.knex)
-    .delete()
-    .returning('*')
-    .findOne({
-      managementId,
-      value: tokenValue
-    })
+  const isRevoked = await revoke(deps, args)
 
-  if (!oldToken) {
+  if (!isRevoked) {
     deps.logger.warn(
-      { managementId, tokenValue },
-      'Could not find old token during token rotation'
+      { managementId, tokenValue, grantId },
+      'Could not revoke access token'
     )
-    return
+    return undefined
   }
 
-  return AccessToken.query(trx || deps.knex).insertAndFetch({
-    value: generateToken(),
-    grantId: oldToken.grantId,
-    expiresIn: oldToken.expiresIn,
-    managementId: v4()
-  })
+  return createAccessToken(deps, grantId, { trx, expiresIn })
 }

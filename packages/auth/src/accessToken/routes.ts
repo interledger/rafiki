@@ -11,6 +11,12 @@ import { AccessService } from '../access/service'
 import { TransactionOrKnex } from 'objection'
 import { GrantService } from '../grant/service'
 
+export type TokenHttpSigContext = AppContext & {
+  accessToken: AccessToken & {
+    grant: NonNullable<AccessToken['grant']>
+  }
+}
+
 type TokenRequest<BodyT> = Exclude<AppContext['request'], 'body'> & {
   body: BodyT
 }
@@ -23,7 +29,7 @@ type ManagementRequest = Exclude<AppContext['request'], 'params'> & {
   params?: Record<'id', string>
 }
 
-type ManagementContext = Exclude<AppContext, 'request'> & {
+type ManagementContext = Exclude<TokenHttpSigContext, 'request'> & {
   request: ManagementRequest
 }
 
@@ -94,9 +100,19 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  const token = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
-  const { id: managementId } = ctx.params
-  await deps.accessTokenService.revoke(managementId, token)
+  const { managementId, value: tokenValue, grantId } = ctx.accessToken
+  const isRevoked = await deps.accessTokenService.revoke({
+    managementId,
+    tokenValue
+  })
+
+  if (!isRevoked) {
+    deps.logger.warn(
+      { managementId, tokenValue, grantId },
+      'Could not revoke access token'
+    )
+  }
+
   ctx.status = 204
 }
 
@@ -104,37 +120,33 @@ async function rotateToken(
   deps: ServiceDependencies,
   ctx: RotateContext
 ): Promise<void> {
-  const { id: managementId } = ctx.params
-  const tokenValue = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
-
   const trx = await AccessToken.startTransaction()
 
   let accessItems: Access[]
   let newToken: AccessToken | undefined
 
   try {
+    await deps.grantService.lock(ctx.accessToken.grantId, trx)
     newToken = await deps.accessTokenService.rotate({
-      managementId,
-      tokenValue,
+      grantId: ctx.accessToken.grantId,
+      managementId: ctx.accessToken.managementId,
+      tokenValue: ctx.accessToken.value,
+      expiresIn: ctx.accessToken.expiresIn,
       trx
     })
 
     if (!newToken) {
-      ctx.throw(404, { message: 'Token not found' })
+      ctx.throw()
     }
-
-    await deps.grantService.lock(newToken.grantId, trx)
 
     accessItems = await deps.accessService.getByGrant(newToken.grantId, trx)
 
     await trx.commit()
   } catch (error) {
     await trx.rollback()
-    const defaultErrorMessage = 'Could not rotate token'
-    deps.logger.error({ error: error && error['message'] }, defaultErrorMessage)
-    ctx.throw((error && error['status']) ?? 400, {
-      message: (error && error['message']) ?? defaultErrorMessage
-    })
+    const errorMessage = 'Could not rotate token'
+    deps.logger.error({ error: error && error['message'] }, errorMessage)
+    ctx.throw(400, { message: errorMessage })
   }
 
   ctx.status = 200
