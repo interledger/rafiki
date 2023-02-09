@@ -100,18 +100,10 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  const { managementId, value: tokenValue, grantId } = ctx.accessToken
-  const isRevoked = await deps.accessTokenService.revoke({
-    managementId,
-    tokenValue
+  await deps.accessTokenService.revoke({
+    managementId: ctx.accessToken.managementId,
+    tokenValue: ctx.accessToken.value
   })
-
-  if (!isRevoked) {
-    deps.logger.warn(
-      { managementId, tokenValue, grantId },
-      'Could not revoke access token'
-    )
-  }
 
   ctx.status = 204
 }
