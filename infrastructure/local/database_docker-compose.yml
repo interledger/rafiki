@@ -27,19 +27,18 @@ services:
       - -c
       - |
         set -ex
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
         set +e
         ls $$DATA_FILE
         DATA_FILE_EXISTS="$$?"
         set -e
         echo $$DATA_FILE_EXISTS
         if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
-          /opt/beta-beetle/tigerbeetle init --cluster=0 --replica=0 --directory=/var/lib/tigerbeetle; 
+          /opt/beta-beetle/tigerbeetle format --cluster=0 --replica=0 $$DATA_FILE; 
         fi
         hostname -I
         ls /var/lib/tigerbeetle
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
-        /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
+        /opt/beta-beetle/tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
   redis:
     image: 'redis:7'
     restart: unless-stopped
