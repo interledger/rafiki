@@ -100,10 +100,7 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  await deps.accessTokenService.revoke({
-    managementId: ctx.accessToken.managementId,
-    tokenValue: ctx.accessToken.value
-  })
+  await deps.accessTokenService.revoke(ctx.accessToken.id)
 
   ctx.status = 204
 }
@@ -119,13 +116,14 @@ async function rotateToken(
 
   try {
     await deps.grantService.lock(ctx.accessToken.grantId, trx)
-    newToken = await deps.accessTokenService.rotate({
-      grantId: ctx.accessToken.grantId,
-      managementId: ctx.accessToken.managementId,
-      tokenValue: ctx.accessToken.value,
-      expiresIn: ctx.accessToken.expiresIn,
+    newToken = await deps.accessTokenService.rotate(
+      {
+        id: ctx.accessToken.id,
+        grantId: ctx.accessToken.grantId,
+        expiresIn: ctx.accessToken.expiresIn
+      },
       trx
-    })
+    )
 
     if (!newToken) {
       ctx.throw()

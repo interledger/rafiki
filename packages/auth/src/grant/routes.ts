@@ -174,9 +174,10 @@ async function createNonInteractiveGrantInitiation(
   let accessToken: AccessToken
   try {
     grant = await grantService.create(body, trx)
-    accessToken = await deps.accessTokenService.create(grant.id, {
+    accessToken = await deps.accessTokenService.create(
+      { grantId: grant.id },
       trx
-    })
+    )
     await trx.commit()
   } catch (err) {
     await trx.rollback()
@@ -235,7 +236,6 @@ async function getGrantDetails(
   const grant = await grantService.getByInteractionSession(interactId, nonce)
   if (!grant) {
     ctx.throw(404)
-    return
   }
 
   ctx.body = {
@@ -392,7 +392,7 @@ async function continueGrant(
       ctx.throw(401, { error: 'request_denied' })
     }
 
-    const accessToken = await accessTokenService.create(grant.id)
+    const accessToken = await accessTokenService.create({ grantId: grant.id })
     const access = await accessService.getByGrant(grant.id)
 
     // TODO: add "continue" to response if additional grant request steps are added
