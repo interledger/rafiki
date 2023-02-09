@@ -2,7 +2,11 @@ import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { LimitData } from './types'
 import { join } from 'path'
-import { AccessType, AccessAction } from 'open-payments'
+import {
+  AccessType,
+  AccessAction,
+  AccessItem as OpenPaymentsAccessItem
+} from 'open-payments'
 
 export class Access extends BaseModel {
   public static get tableName(): string {
@@ -27,4 +31,16 @@ export class Access extends BaseModel {
   public actions!: AccessAction[]
   public identifier?: string
   public limits?: LimitData
+}
+
+export function toOpenPaymentsAccess(
+  accessItem: Access
+): OpenPaymentsAccessItem {
+  return {
+    actions: accessItem.actions,
+    identifier: accessItem.identifier ?? undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type: accessItem.type as any,
+    limits: accessItem.limits ?? undefined
+  }
 }
