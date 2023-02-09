@@ -20,6 +20,12 @@ describe('requests', (): void => {
           .defaults.timeout
       ).toBe(1000)
     })
+    test('sets Accept header properly', async (): Promise<void> => {
+      expect(
+        createAxiosInstance({ requestTimeoutMs: 0, privateKey, keyId }).defaults
+          .headers.common['Accept']
+      ).toBe('application/json')
+    })
     test('sets Content-Type header properly', async (): Promise<void> => {
       expect(
         createAxiosInstance({ requestTimeoutMs: 0, privateKey, keyId }).defaults
@@ -287,6 +293,7 @@ describe('requests', (): void => {
             Date.now() / 1000
           )};keyid="${keyId}";alg="ed25519"`
         )
+        .matchHeader('Accept', 'application/json')
         .matchHeader('Content-Digest', /sha-512=:([a-zA-Z0-9+/]){86}==:/)
         .matchHeader('Content-Length', '11')
         .matchHeader('Content-Type', 'application/json')
@@ -341,6 +348,7 @@ describe('requests', (): void => {
             Date.now() / 1000
           )};keyid="${keyId}";alg="ed25519"`
         )
+        .matchHeader('Accept', 'application/json')
         .matchHeader('Authorization', `GNAP ${accessToken}`)
         .matchHeader('Content-Digest', /sha-512=:([a-zA-Z0-9+/]){86}==:/)
         .matchHeader('Content-Length', '11')

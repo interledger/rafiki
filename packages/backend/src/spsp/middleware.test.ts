@@ -53,7 +53,11 @@ describe('SPSP Middleware', (): void => {
     })
 
     test('calls next for non-SPSP request', async (): Promise<void> => {
+      const spspRoutes = await ctx.container.use('spspRoutes')
+      const spspSpy = jest.spyOn(spspRoutes, 'get')
+      ctx.headers['accept'] = 'application/json'
       await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
+      expect(spspSpy).not.toHaveBeenCalled()
       expect(next).toHaveBeenCalled()
     })
 
