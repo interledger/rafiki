@@ -5,7 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.createTable('ledgerAccounts', function (table) {
     table.uuid('id').notNullable().primary()
-    table.uuid('accountRef').notNullable().unique().index()
+    table.uuid('accountRef').notNullable().index()
 
     table.uuid('assetId').notNullable()
     table.foreign('assetId').references('assets.id')
@@ -23,6 +23,8 @@ exports.up = function (knex) {
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
+
+    table.unique(['accountRef', 'type'])
   })
 }
 
