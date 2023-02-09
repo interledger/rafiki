@@ -25,7 +25,6 @@ describe('Accounting Service', (): void => {
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
-  // let tigerbeetleContainer: StartedTestContainer
   const timeout = BigInt(10_000) // 10 seconds
 
   let ledger = 1
