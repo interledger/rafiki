@@ -7,8 +7,8 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
     table.uuid('accountRef').notNullable().unique().index()
 
-    table.uuid('assetId').notNullable()
-    table.foreign('assetId').references('assets.id')
+    table.smallint('ledger').notNullable()
+    table.foreign('ledger').references('assets.ledger')
 
     table
       .enu('type', [
