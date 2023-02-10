@@ -6,8 +6,8 @@ import { AccountId } from './utils'
 
 export class TigerbeetleCreateAccountError extends Error {
   constructor(public code: number) {
-    super(`CreateAccountError code: ${code}`)
-    this.name = 'CreateAccountError'
+    super(`Tigerbeetle error code: ${code}`)
+    this.name = 'TigerbeetleCreateAccountError'
   }
 }
 
@@ -29,10 +29,10 @@ export function areAllAccountExistsErrors(
   errors: CreateAccountErrorCode[]
 ): boolean {
   return areAllOfTypeAccountErrors(errors, [
-    CreateAccountErrorCode.exists_with_different_debits_pending,
-    CreateAccountErrorCode.exists_with_different_debits_posted,
-    CreateAccountErrorCode.exists_with_different_credits_pending,
-    CreateAccountErrorCode.exists_with_different_credits_posted,
+    CreateAccountErrorCode.exists_with_different_flags,
+    CreateAccountErrorCode.exists_with_different_user_data,
+    CreateAccountErrorCode.exists_with_different_ledger,
+    CreateAccountErrorCode.exists_with_different_code,
     CreateAccountErrorCode.exists
   ])
 }
