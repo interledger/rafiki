@@ -191,9 +191,14 @@ export const createAxiosInstance = (args: {
   keyId?: string
 }): AxiosInstance => {
   const axiosInstance = axios.create({
+    headers: {
+      common: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    },
     timeout: args.requestTimeoutMs
   })
-  axiosInstance.defaults.headers.common['Content-Type'] = 'application/json'
 
   if (args.privateKey !== undefined && args.keyId !== undefined) {
     const privateKey = args.privateKey

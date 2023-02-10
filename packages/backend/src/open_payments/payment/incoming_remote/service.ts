@@ -64,13 +64,6 @@ async function create(
     return grantOrError
   }
 
-  if (!grantOrError.accessToken) {
-    const errorMessage =
-      'Grant for remote incoming payment is missing access token'
-    deps.logger.warn({ grant: grantOrError }, errorMessage)
-    return RemoteIncomingPaymentError.InvalidGrant
-  }
-
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
@@ -120,10 +113,23 @@ async function getGrant(
 
   if (existingGrant) {
     if (existingGrant.expired) {
-      // TODO https://github.com/interledger/rafiki/issues/795
-      const errorMessage = 'Grant access token expired'
-      deps.logger.error({ grantOptions }, errorMessage)
-      return RemoteIncomingPaymentError.ExpiredGrant
+      if (!existingGrant.authServer) {
+        throw new Error('unknown auth server')
+      }
+      try {
+        const rotatedToken = await deps.openPaymentsClient.token.rotate({
+          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
+          accessToken: existingGrant.accessToken
+        })
+        return deps.grantService.update(existingGrant, {
+          accessToken: rotatedToken.access_token.value,
+          managementUrl: rotatedToken.access_token.manage,
+          expiresIn: rotatedToken.access_token.expires_in
+        })
+      } catch (err) {
+        deps.logger.error({ err, grantOptions }, 'Grant token rotation failed.')
+        throw err
+      }
     }
     return existingGrant
   }
@@ -149,6 +155,7 @@ async function getGrant(
     return deps.grantService.create({
       ...grantOptions,
       accessToken: grant.access_token.value,
+      managementUrl: grant.access_token.manage,
       expiresIn: grant.access_token.expires_in
     })
   }
