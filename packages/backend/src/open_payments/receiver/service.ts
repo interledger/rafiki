@@ -131,9 +131,7 @@ async function createLocalIncomingPayment(
     throw new Error(errorMessage)
   }
 
-  return incomingPaymentOrError.toOpenPaymentsType({
-    ilpStreamConnection: connection
-  })
+  return incomingPaymentOrError.toOpenPaymentsType(paymentPointer, connection)
 }
 
 async function getReceiver(
@@ -240,7 +238,7 @@ async function getIncomingPayment(
     } else {
       return await deps.openPaymentsClient.incomingPayment.get({
         url,
-        accessToken: grant.accessToken || ''
+        accessToken: grant.accessToken
       })
     }
   } catch (error) {
@@ -276,7 +274,7 @@ async function getLocalIncomingPayment({
     return undefined
   }
 
-  return incomingPayment.toOpenPaymentsType({ ilpStreamConnection: connection })
+  return incomingPayment.toOpenPaymentsType(paymentPointer, connection)
 }
 
 async function getIncomingPaymentGrant(
@@ -298,10 +296,24 @@ async function getIncomingPaymentGrant(
   const existingGrant = await deps.grantService.get(grantOptions)
   if (existingGrant) {
     if (existingGrant.expired) {
-      // TODO
-      // https://github.com/interledger/rafiki/issues/795
-      deps.logger.warn({ grantOptions }, 'Grant access token expired')
-      return undefined
+      if (!existingGrant.authServer) {
+        deps.logger.warn('Unknown auth server.')
+        return undefined
+      }
+      try {
+        const rotatedToken = await deps.openPaymentsClient.token.rotate({
+          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
+          accessToken: existingGrant.accessToken
+        })
+        return deps.grantService.update(existingGrant, {
+          accessToken: rotatedToken.access_token.value,
+          managementUrl: rotatedToken.access_token.manage,
+          expiresIn: rotatedToken.access_token.expires_in
+        })
+      } catch (err) {
+        deps.logger.warn({ err }, 'Grant token rotation failed.')
+        return undefined
+      }
     }
     return existingGrant
   }
@@ -324,11 +336,17 @@ async function getIncomingPaymentGrant(
   )
 
   if (isNonInteractiveGrant(grant)) {
-    return await deps.grantService.create({
-      ...grantOptions,
-      accessToken: grant.access_token.value,
-      expiresIn: grant.access_token.expires_in
-    })
+    try {
+      return await deps.grantService.create({
+        ...grantOptions,
+        accessToken: grant.access_token.value,
+        managementUrl: grant.access_token.manage,
+        expiresIn: grant.access_token.expires_in
+      })
+    } catch (err) {
+      deps.logger.warn({ grantOptions }, 'Grant has wrong format')
+      return undefined
+    }
   }
   deps.logger.warn({ grantOptions }, 'Grant request required interaction')
   return undefined

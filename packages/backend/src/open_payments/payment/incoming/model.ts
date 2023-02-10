@@ -1,8 +1,8 @@
-import { Model, ModelOptions, Pojo, QueryContext } from 'objection'
+import { Model, ModelOptions, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { Connection, ConnectionJSON } from '../../connection/model'
+import { Connection } from '../../connection/model'
 import {
   PaymentPointer,
   PaymentPointerSubresource
@@ -11,7 +11,11 @@ import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../connector/core/rafiki'
 import { WebhookEvent } from '../../../webhook/model'
-import { IncomingPayment as OpenPaymentsIncomingPayment } from 'open-payments'
+import {
+  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
+  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+} from 'open-payments'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',
@@ -80,7 +84,6 @@ export class IncomingPayment
     }
   }
 
-  public paymentPointer!: PaymentPointer
   public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
@@ -127,8 +130,8 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public get url(): string {
-    return `${this.paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
+  public getUrl(paymentPointer: PaymentPointer): string {
+    return `${paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -211,67 +214,60 @@ export class IncomingPayment
     }
   }
 
-  $formatJson(json: Pojo): Pojo {
-    json = super.$formatJson(json)
-    const payment: Pojo = {
-      id: json.id,
-      receivedAmount: {
-        ...json.receivedAmount,
-        value: json.receivedAmount.value.toString()
-      },
-      completed: json.completed,
-      createdAt: json.createdAt,
-      updatedAt: json.updatedAt,
-      expiresAt: json.expiresAt.toISOString()
-    }
-    if (json.incomingAmount) {
-      payment.incomingAmount = {
-        ...json.incomingAmount,
-        value: json.incomingAmount.value.toString()
-      }
-    }
-    if (json.description) {
-      payment.description = json.description
-    }
-    if (json.externalRef) {
-      payment.externalRef = json.externalRef
-    }
-    return payment
-  }
-
-  public toOpenPaymentsType({
-    ilpStreamConnection
-  }: {
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer
+  ): OpenPaymentsIncomingPayment
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
     ilpStreamConnection: Connection
-  }): OpenPaymentsIncomingPayment {
-    return {
-      id: this.url,
-      paymentPointer: this.paymentPointer.url,
+  ): OpenPaymentsIncomingPaymentWithConnection
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
+    ilpStreamConnection: string
+  ): OpenPaymentsIncomingPaymentWithConnectionUrl
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
+    ilpStreamConnection?: Connection | string
+  ):
+    | OpenPaymentsIncomingPaymentWithConnection
+    | OpenPaymentsIncomingPaymentWithConnectionUrl
+
+  public toOpenPaymentsType(
+    paymentPointer: PaymentPointer,
+    ilpStreamConnection?: Connection | string
+  ):
+    | OpenPaymentsIncomingPayment
+    | OpenPaymentsIncomingPaymentWithConnection
+    | OpenPaymentsIncomingPaymentWithConnectionUrl {
+    const baseIncomingPayment: OpenPaymentsIncomingPayment = {
+      id: this.getUrl(paymentPointer),
+      paymentPointer: paymentPointer.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,
       receivedAmount: serializeAmount(this.receivedAmount),
       completed: this.completed,
+      description: this.description ?? undefined,
+      externalRef: this.externalRef ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
-      expiresAt: this.expiresAt.toISOString(),
+      expiresAt: this.expiresAt.toISOString()
+    }
+
+    if (!ilpStreamConnection) {
+      return baseIncomingPayment
+    }
+
+    if (typeof ilpStreamConnection === 'string') {
+      return {
+        ...baseIncomingPayment,
+        ilpStreamConnection
+      }
+    }
+
+    return {
+      ...baseIncomingPayment,
       ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
     }
   }
-}
-
-// TODO: disallow undefined
-// https://github.com/interledger/rafiki/issues/594
-export type IncomingPaymentJSON = {
-  id: string
-  paymentPointer: string
-  incomingAmount?: AmountJSON
-  receivedAmount: AmountJSON
-  completed: boolean
-  description?: string
-  externalRef?: string
-  createdAt: string
-  updatedAt: string
-  expiresAt?: string
-  ilpStreamConnection?: ConnectionJSON | string
 }

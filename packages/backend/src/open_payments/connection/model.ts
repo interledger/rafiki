@@ -4,14 +4,6 @@ import { IlpAddress } from 'ilp-packet'
 import { ILPStreamConnection } from 'open-payments'
 import { IncomingPayment } from '../payment/incoming/model'
 
-export type ConnectionJSON = {
-  id: string
-  ilpAddress: IlpAddress
-  sharedSecret: string
-  assetCode: string
-  assetScale: number
-}
-
 export abstract class ConnectionBase {
   protected constructor(
     public readonly ilpAddress: IlpAddress,
@@ -53,16 +45,6 @@ export class Connection extends ConnectionBase {
 
   public get url(): string {
     return `${this.openPaymentsUrl}/connections/${this.id}`
-  }
-
-  public toJSON(): ConnectionJSON {
-    return {
-      id: this.url,
-      ilpAddress: this.ilpAddress,
-      sharedSecret: base64url(this.sharedSecret),
-      assetCode: this.assetCode,
-      assetScale: this.assetScale
-    }
   }
 
   public toOpenPaymentsType(): ILPStreamConnection {

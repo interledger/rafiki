@@ -12,11 +12,16 @@ import {
 
 export const getRSPath = <P extends keyof RSPaths>(path: P): string =>
   path as string
-export type IncomingPayment =
+
+export type IncomingPayment = RSComponents['schemas']['incoming-payment']
+export type IncomingPaymentWithConnection =
   RSComponents['schemas']['incoming-payment-with-connection']
+export type IncomingPaymentWithConnectionUrl =
+  RSComponents['schemas']['incoming-payment-with-connection-url']
 export type CreateIncomingPaymentArgs =
   RSOperations['create-incoming-payment']['requestBody']['content']['application/json']
-export type IncomingPaymentPaginationResult = PaginationResult<IncomingPayment>
+export type IncomingPaymentPaginationResult =
+  PaginationResult<IncomingPaymentWithConnectionUrl>
 export type ILPStreamConnection =
   RSComponents['schemas']['ilp-stream-connection']
 export type OutgoingPayment = RSComponents['schemas']['outgoing-payment']
@@ -95,6 +100,11 @@ export type AccessOutgoingActions =
   ASExternalComponents['access-outgoing']['actions']
 export type AccessQuoteActions = ASExternalComponents['access-quote']['actions']
 
+export type AccessItem =
+  | ASExternalComponents['access-incoming']
+  | ASExternalComponents['access-outgoing']
+  | ASExternalComponents['access-quote']
+
 export type AccessType =
   | ASExternalComponents['access-incoming']['type']
   | ASExternalComponents['access-outgoing']['type']
@@ -106,13 +116,18 @@ export type AccessAction = (
   | AccessQuoteActions
 )[number]
 
-export const AccessType: Record<string, AccessType> = Object.freeze({
+export const AccessType: {
+  [key in 'IncomingPayment' | 'OutgoingPayment' | 'Quote']: AccessType
+} = {
   IncomingPayment: 'incoming-payment',
   OutgoingPayment: 'outgoing-payment',
   Quote: 'quote'
-})
+}
 
-export const AccessAction: Record<string, AccessAction> = Object.freeze({
+export const AccessAction: Record<
+  'Create' | 'Read' | 'ReadAll' | 'Complete' | 'List' | 'ListAll',
+  AccessAction
+> = Object.freeze({
   Create: 'create',
   Read: 'read',
   ReadAll: 'read-all',

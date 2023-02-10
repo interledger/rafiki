@@ -3,9 +3,9 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
 
     // TigerBeetle account 2 byte ledger field representing account's asset
-    table.specificType('ledger', 'smallserial').notNullable()
+    table.specificType('ledger', 'smallserial').notNullable().unique()
     table.string('code').notNullable()
-    table.integer('scale').notNullable()
+    table.smallint('scale').unsigned().notNullable()
 
     table.bigInteger('withdrawalThreshold').nullable()
 
@@ -15,6 +15,8 @@ exports.up = function (knex) {
     table.unique(['code', 'scale'])
 
     table.index(['createdAt', 'id'])
+
+    table.check('?? <= 255', ['scale'])
   })
 }
 

@@ -2,6 +2,7 @@ import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
+import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
@@ -23,7 +24,7 @@ describe('Access Token Service', (): void => {
   let accessTokenService: AccessTokenService
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
   })
@@ -68,7 +69,6 @@ describe('Access Token Service', (): void => {
   }
 
   let grant: Grant
-  let token: AccessToken
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
@@ -84,12 +84,6 @@ describe('Access Token Service', (): void => {
         ...BASE_ACCESS
       })
     ]
-    token = await AccessToken.query(trx).insertAndFetch({
-      grantId: grant.id,
-      ...BASE_TOKEN,
-      value: generateToken(),
-      managementId: v4()
-    })
   })
 
   describe('Create', (): void => {
@@ -115,19 +109,35 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can get an access token by its value', async (): Promise<void> => {
-      const fetchedToken = await accessTokenService.get(accessToken.value)
-      expect(fetchedToken.value).toEqual(accessToken.value)
-      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
-      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+      await expect(accessTokenService.get(accessToken.value)).resolves.toEqual(
+        accessToken
+      )
+    })
+
+    test('Cannot get rotated access token', async (): Promise<void> => {
+      await accessTokenService.rotate(accessToken.id)
+
+      await expect(
+        accessTokenService.get(accessToken.value)
+      ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getByManagementId', (): void => {
+    let accessToken: AccessToken
+    beforeEach(async (): Promise<void> => {
+      accessToken = await AccessToken.query(trx).insert({
+        value: 'test-access-token',
+        managementId: v4(),
+        grantId: grant.id,
+        expiresIn: 1234
+      })
     })
 
     test('Can get an access token by its managementId', async (): Promise<void> => {
-      const fetchedToken = await accessTokenService.getByManagementId(
-        accessToken.managementId
-      )
-      expect(fetchedToken.value).toEqual(accessToken.value)
-      expect(fetchedToken.managementId).toEqual(accessToken.managementId)
-      expect(fetchedToken.grantId).toEqual(accessToken.grantId)
+      await expect(
+        accessTokenService.getByManagementId(accessToken.managementId)
+      ).resolves.toMatchObject(accessToken)
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {
@@ -136,35 +146,60 @@ describe('Access Token Service', (): void => {
         accessTokenService.getByManagementId(v4())
       ).resolves.toBeUndefined()
     })
+
+    test('Cannot get rotated access token by managementId', async (): Promise<void> => {
+      await accessTokenService.rotate(accessToken.id)
+      await expect(
+        accessTokenService.getByManagementId(accessToken.managementId)
+      ).resolves.toBeUndefined()
+    })
   })
 
   describe('Introspect', (): void => {
+    let accessToken: AccessToken
+    beforeEach(async (): Promise<void> => {
+      accessToken = await AccessToken.query(trx).insert({
+        value: 'test-access-token',
+        managementId: v4(),
+        grantId: grant.id,
+        expiresIn: 1234
+      })
+    })
+
     test('Can introspect active token', async (): Promise<void> => {
-      await expect(accessTokenService.introspect(token.value)).resolves.toEqual(
-        grant
-      )
+      await expect(
+        accessTokenService.introspect(accessToken.value)
+      ).resolves.toEqual(grant)
     })
 
     test('Can introspect expired token', async (): Promise<void> => {
-      const tokenCreatedDate = new Date(token.createdAt)
+      const tokenCreatedDate = new Date(accessToken.createdAt)
       const now = new Date(
-        tokenCreatedDate.getTime() + (token.expiresIn + 1) * 1000
+        tokenCreatedDate.getTime() + (accessToken.expiresIn + 1) * 1000
       )
       jest.useFakeTimers({ now })
       await expect(
-        accessTokenService.introspect(token.value)
+        accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()
     })
 
     test('Can introspect active token for revoked grant', async (): Promise<void> => {
       await grant.$query(trx).patch({ state: GrantState.Revoked })
       await expect(
-        accessTokenService.introspect(token.value)
+        accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()
     })
 
     test('Cannot introspect non-existing token', async (): Promise<void> => {
-      expect(accessTokenService.introspect('uuid')).resolves.toBeUndefined()
+      expect(accessTokenService.introspect(v4())).resolves.toBeUndefined()
+    })
+
+    test('Cannot introspect rotated access token', async (): Promise<void> => {
+      await accessTokenService.rotate(accessToken.id)
+
+      await expect(
+        accessTokenService.introspect(accessToken.value)
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -189,33 +224,30 @@ describe('Access Token Service', (): void => {
     })
     test('Can revoke un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
-      const result = await accessTokenService.revoke(
-        token.managementId,
-        token.value
-      )
-      expect(result).toBeUndefined()
+      await expect(accessTokenService.revoke(token.id)).resolves.toEqual(token)
       await expect(
         AccessToken.query(trx).findById(token.id)
       ).resolves.toBeUndefined()
     })
     test('Can revoke even if token has already expired', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
-      const result = await accessTokenService.revoke(
-        token.managementId,
-        token.value
-      )
-      expect(result).toBeUndefined()
+      await expect(accessTokenService.revoke(token.id)).resolves.toEqual(token)
       await expect(
         AccessToken.query(trx).findById(token.id)
       ).resolves.toBeUndefined()
     })
     test('Can revoke even if token has already been revoked', async (): Promise<void> => {
       await token.$query(trx).delete()
-      const result = await accessTokenService.revoke(token.id, token.value)
-      expect(result).toBeUndefined()
+      await expect(accessTokenService.revoke(token.id)).resolves.toBeUndefined()
       await expect(
         AccessToken.query(trx).findById(token.id)
       ).resolves.toBeUndefined()
+    })
+
+    test('Cannot revoke rotated access token', async (): Promise<void> => {
+      await accessTokenService.rotate(token.id)
+
+      await expect(accessTokenService.revoke(token.id)).resolves.toBeUndefined()
     })
   })
 
@@ -247,33 +279,23 @@ describe('Access Token Service', (): void => {
 
     test('Can rotate un-expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: 1000000 })
-      const result = await accessTokenService.rotate(
-        token.managementId,
-        token.value
-      )
-      expect(result.success).toBe(true)
-      expect(result.success && result.value).not.toBe(originalTokenValue)
+      const result = await accessTokenService.rotate(token.id)
+      assert.ok(result)
+      expect(result.value).not.toBe(originalTokenValue)
     })
     test('Can rotate expired token', async (): Promise<void> => {
       await token.$query(trx).patch({ expiresIn: -1 })
-      const result = await accessTokenService.rotate(
-        token.managementId,
-        token.value
-      )
-      expect(result.success).toBe(true)
+      const result = await accessTokenService.rotate(token.id)
+      assert.ok(result)
       const rotatedToken = await AccessToken.query(trx).findOne({
-        managementId: result.success && result.managementId
+        managementId: result.managementId
       })
-      expect(rotatedToken).toBeDefined()
+      assert.ok(rotatedToken)
       expect(rotatedToken?.value).not.toBe(originalTokenValue)
     })
-    test('Cannot rotate token with incorrect management id', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(v4(), token.value)
-      expect(result.success).toBe(false)
-    })
-    test('Cannot rotate token with incorrect value', async (): Promise<void> => {
-      const result = await accessTokenService.rotate(token.managementId, v4())
-      expect(result.success).toBe(false)
+
+    test('Cannot rotate token with incorrect id', async (): Promise<void> => {
+      await expect(accessTokenService.rotate(v4())).resolves.toBeUndefined()
     })
   })
 })

@@ -14,7 +14,9 @@ import {
   JWK,
   AccessToken,
   Quote,
-  IncomingPaymentPaginationResult
+  IncomingPaymentPaginationResult,
+  IncomingPaymentWithConnection,
+  IncomingPaymentWithConnectionUrl
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -81,7 +83,7 @@ export const mockPaymentPointer = (
 export const mockILPStreamConnection = (
   overrides?: Partial<ILPStreamConnection>
 ): ILPStreamConnection => ({
-  id: uuid(),
+  id: `https://example.com/.well-known/pay/connections/${uuid()}`,
   sharedSecret: base64url('sharedSecret'),
   ilpAddress: 'test.ilpAddress',
   assetCode: 'USD',
@@ -93,7 +95,7 @@ export const mockIncomingPayment = (
   overrides?: Partial<IncomingPayment>
 ): IncomingPayment => ({
   id: `https://example.com/.well-known/pay/incoming-payments/${uuid()}`,
-  paymentPointer: 'paymentPointer',
+  paymentPointer: 'https://example.com/.well-known/pay',
   completed: false,
   incomingAmount: {
     assetCode: 'USD',
@@ -107,7 +109,22 @@ export const mockIncomingPayment = (
   },
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
-  ilpStreamConnection: mockILPStreamConnection(),
+  ...overrides
+})
+
+export const mockIncomingPaymentWithConnection = (
+  overrides?: Partial<IncomingPaymentWithConnection>
+): IncomingPaymentWithConnection => ({
+  ...mockIncomingPayment(),
+  ilpStreamConnection: mockILPStreamConnection(overrides?.ilpStreamConnection),
+  ...overrides
+})
+
+export const mockIncomingPaymentWithConnectionUrl = (
+  overrides?: Partial<IncomingPaymentWithConnectionUrl>
+): IncomingPaymentWithConnectionUrl => ({
+  ...mockIncomingPayment(),
+  ilpStreamConnection: mockILPStreamConnection().id,
   ...overrides
 })
 
@@ -134,8 +151,8 @@ export const mockIncomingPaymentPaginationResult = (
 export const mockOutgoingPayment = (
   overrides?: Partial<OutgoingPayment>
 ): OutgoingPayment => ({
-  id: uuid(),
-  paymentPointer: 'paymentPointer',
+  id: `https://example.com/.well-known/pay/outgoing-payments/${uuid()}`,
+  paymentPointer: 'https://example.com/.well-known/pay',
   failed: false,
   sendAmount: {
     assetCode: 'USD',
@@ -269,9 +286,9 @@ export const mockAccessToken = (
 })
 
 export const mockQuote = (overrides?: Partial<Quote>): Quote => ({
-  id: uuid(),
-  receiver: `receiver`,
-  paymentPointer: 'paymentPointer',
+  id: `https://example.com/.well-known/pay/quotes/${uuid()}`,
+  receiver: 'https://example.com/.well-known/peer',
+  paymentPointer: 'https://example.com/.well-known/pay',
   sendAmount: {
     value: '100',
     assetCode: 'USD',

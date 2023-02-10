@@ -1,8 +1,7 @@
 export enum RemoteIncomingPaymentError {
   UnknownPaymentPointer = 'UnknownPaymentPointer',
   InvalidRequest = 'InvalidRequest',
-  InvalidGrant = 'InvalidGrant',
-  ExpiredGrant = 'ExpiredGrant'
+  InvalidGrant = 'InvalidGrant'
 }
 
 export const isRemoteIncomingPaymentError = (
@@ -16,8 +15,7 @@ export const errorToCode: {
 } = {
   [RemoteIncomingPaymentError.UnknownPaymentPointer]: 404,
   [RemoteIncomingPaymentError.InvalidRequest]: 500,
-  [RemoteIncomingPaymentError.InvalidGrant]: 500,
-  [RemoteIncomingPaymentError.ExpiredGrant]: 500
+  [RemoteIncomingPaymentError.InvalidGrant]: 500
 }
 
 export const errorToMessage: {
@@ -27,7 +25,5 @@ export const errorToMessage: {
   [RemoteIncomingPaymentError.InvalidRequest]:
     'invalid remote incoming payment request',
   [RemoteIncomingPaymentError.InvalidGrant]:
-    'invalid grant for remote incoming payment',
-  [RemoteIncomingPaymentError.ExpiredGrant]:
-    'expired grant for remote incoming payment'
+    'invalid grant for remote incoming payment'
 }

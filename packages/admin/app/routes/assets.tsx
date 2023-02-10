@@ -22,7 +22,6 @@ export const loader = async ({ request }: LoaderArgs) => {
   )
 
   if (!pagination.success) {
-    console.log(pagination.error)
     throw new Error('Invalid pagination.')
   }
 

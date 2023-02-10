@@ -2,7 +2,10 @@ export {
   GrantRequest,
   GrantContinuationRequest,
   IncomingPayment,
+  IncomingPaymentWithConnection,
+  IncomingPaymentWithConnectionUrl,
   ILPStreamConnection,
+  Quote,
   OutgoingPayment,
   InteractiveGrant,
   NonInteractiveGrant,
@@ -12,7 +15,9 @@ export {
   JWKS,
   PaymentPointer,
   AccessType,
-  AccessAction
+  AccessAction,
+  AccessToken,
+  AccessItem
 } from './types'
 
 export {
@@ -26,6 +31,8 @@ export {
   mockILPStreamConnection,
   mockPaymentPointer,
   mockIncomingPayment,
+  mockIncomingPaymentWithConnection,
+  mockIncomingPaymentWithConnectionUrl,
   mockOutgoingPayment,
   mockIncomingPaymentPaginationResult,
   mockOutgoingPaymentPaginationResult,

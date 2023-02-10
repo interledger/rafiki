@@ -1,30 +1,30 @@
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
 import { CreateAccountError as CreateTbAccountError } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
+import { TigerbeetleCreateAccountError } from './errors'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { Config } from '../../config/app'
+import { IocContract } from '@adonisjs/fold'
+import { initIocContainer } from '../../'
+import { AppServices } from '../../app'
+import { truncateTables } from '../../tests/tableManager'
+import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
+import { AccountFactory, FactoryAccount } from '../../tests/accountFactory'
+import { isTransferError, TransferError } from '../errors'
 import {
   AccountingService,
-  LiquidityAccount,
   Deposit,
+  LiquidityAccount,
+  LiquidityAccountType,
   Withdrawal
-} from './service'
-import { CreateAccountError, TransferError, isTransferError } from './errors'
-import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
-import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
-import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
-import { AccountFactory, FactoryAccount } from '../tests/accountFactory'
+} from '../service'
 
 describe('Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
   let accountFactory: AccountFactory
-  let tigerbeetleContainer: StartedTestContainer
   const timeout = BigInt(10_000) // 10 seconds
 
   let ledger = 1
@@ -33,8 +33,7 @@ describe('Accounting Service', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
+    const { port } = await startTigerbeetleContainer()
     Config.tigerbeetleReplicaAddresses = [port]
 
     deps = await initIocContainer(Config)
@@ -49,7 +48,7 @@ describe('Accounting Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop()
+    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('Create Liquidity Account', (): void => {
@@ -62,7 +61,10 @@ describe('Accounting Service', (): void => {
         }
       }
       await expect(
-        accountingService.createLiquidityAccount(account)
+        accountingService.createLiquidityAccount(
+          account,
+          LiquidityAccountType.ASSET
+        )
       ).resolves.toEqual(account)
       await expect(accountingService.getBalance(account.id)).resolves.toEqual(
         BigInt(0)
@@ -71,13 +73,16 @@ describe('Accounting Service', (): void => {
 
     test('Create throws on invalid id', async (): Promise<void> => {
       await expect(
-        accountingService.createLiquidityAccount({
-          id: 'not a uuid',
-          asset: {
-            id: uuid(),
-            ledger: newLedger()
-          }
-        })
+        accountingService.createLiquidityAccount(
+          {
+            id: 'not a uuid',
+            asset: {
+              id: uuid(),
+              ledger: newLedger()
+            }
+          },
+          LiquidityAccountType.ASSET
+        )
       ).rejects.toThrowError('unable to create account, invalid id')
     })
 
@@ -91,15 +96,18 @@ describe('Accounting Service', (): void => {
       ])
 
       await expect(
-        accountingService.createLiquidityAccount({
-          id: uuid(),
-          asset: {
+        accountingService.createLiquidityAccount(
+          {
             id: uuid(),
-            ledger: newLedger()
-          }
-        })
+            asset: {
+              id: uuid(),
+              ledger: newLedger()
+            }
+          },
+          LiquidityAccountType.ASSET
+        )
       ).rejects.toThrowError(
-        new CreateAccountError(
+        new TigerbeetleCreateAccountError(
           CreateTbAccountError.exists_with_different_ledger
         )
       )

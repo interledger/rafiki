@@ -18,7 +18,10 @@ import {
   PaymentEventType
 } from './model'
 import { Grant } from '../../auth/middleware'
-import { AccountingService } from '../../../accounting/service'
+import {
+  AccountingService,
+  LiquidityAccountType
+} from '../../../accounting/service'
 import { PeerService } from '../../../peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
@@ -26,12 +29,9 @@ import { PaymentPointerSubresourceService } from '../../payment_pointer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
-import {
-  areAllAccountExistsErrors,
-  CreateAccountError
-} from '../../../accounting/errors'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
+import { AccountAlreadyExistsError } from '../../../accounting/errors'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -293,7 +293,7 @@ async function validateGrant(
         payment: grantPayment
       })
     ) {
-      if (grantPayment.state === OutgoingPaymentState.Failed) {
+      if (grantPayment.failed) {
         const totalSent = await deps.accountingService.getTotalSent(
           grantPayment.id
         )
@@ -349,16 +349,16 @@ async function fundPayment(
 
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
-      await deps.accountingService.createLiquidityAccount({
-        id: id,
-        asset: payment.asset
-      })
+      await deps.accountingService.createLiquidityAccount(
+        {
+          id: id,
+          asset: payment.asset
+        },
+        LiquidityAccountType.OUTGOING
+      )
     } catch (err) {
       // Don't complain if liquidity account already exists.
-      if (
-        err instanceof CreateAccountError &&
-        areAllAccountExistsErrors([err.code])
-      ) {
+      if (err instanceof AccountAlreadyExistsError) {
         // Do nothing.
       } else {
         throw err

@@ -8,15 +8,16 @@ const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
 const TIGERBEETLE_CONTAINER_LOG =
   process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
 
-export async function startTigerbeetleContainer(
-  clusterId?: number
-): Promise<{ container: StartedTestContainer; port: number }> {
+export async function startTigerbeetleContainer(clusterId?: number): Promise<{
+  container: StartedTestContainer
+  port: number
+}> {
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
-  // TODO const @jason (waiting for TB 0.10.0): tigerBeetleFile = `${TIGERBEETLE_DIR}/cluster_${clusterId}_replica_0_test.tigerbeetle`
+  const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
 
   const tbContFormat = await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
+    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
@@ -27,12 +28,16 @@ export async function startTigerbeetleContainer(
     ])
     .withAddedCapabilities('IPC_LOCK')
     .withCommand([
-      'init',
+      'format',
       '--cluster=' + tigerbeetleClusterId,
       '--replica=0',
-      '--directory=' + TIGERBEETLE_DIR
+      `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
-    .withWaitStrategy(Wait.forLogMessage(/initialized data file/))
+    .withWaitStrategy(
+      Wait.forLogMessage(
+        `info(main): 0: formatted: cluster=${tigerbeetleClusterId}`
+      )
+    )
     .start()
 
   const streamTbFormat = await tbContFormat.logs()
@@ -43,11 +48,8 @@ export async function startTigerbeetleContainer(
       .on('end', () => console.log('Stream closed for [tb-format]'))
   }
 
-  // Give TB a chance to startup (no message currently to notify allocation is complete):
-  await new Promise((f) => setTimeout(f, 1000))
-
   const tbContStart = await new GenericContainer(
-    'ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303'
+    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433'
   )
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
@@ -59,12 +61,14 @@ export async function startTigerbeetleContainer(
     .withAddedCapabilities('IPC_LOCK')
     .withCommand([
       'start',
-      '--cluster=' + tigerbeetleClusterId,
-      '--replica=0',
       '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
-      '--directory=' + TIGERBEETLE_DIR
+      `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
-    .withWaitStrategy(Wait.forLogMessage(/listening on/))
+    .withWaitStrategy(
+      Wait.forLogMessage(
+        `info(main): 0: cluster=${tigerbeetleClusterId}: listening on 0.0.0.0:${TIGERBEETLE_PORT}`
+      )
+    )
     .start()
 
   const streamTbStart = await tbContStart.logs()

@@ -7,12 +7,15 @@ import { IocContract } from '@adonisjs/fold'
 import { createHeaders } from 'http-signature-utils'
 
 import { AppContext, AppContextData, AppServices } from '../app'
+import { TokenHttpSigContext } from '../accessToken/routes'
+import { AccessToken } from '../accessToken/model'
+import { Grant } from '../grant/model'
 
-export function createContext(
+export function createContext<T extends AppContext>(
   reqOpts: httpMocks.RequestOptions,
   params: Record<string, unknown>,
   container?: IocContract<AppServices>
-): AppContext {
+): T {
   const req = httpMocks.createRequest(reqOpts)
   const res = httpMocks.createResponse()
   const koa = new Koa<unknown, AppContextData>()
@@ -35,17 +38,17 @@ export function createContext(
   ctx.session = { ...req.session }
   ctx.closeEmitter = new EventEmitter()
   ctx.container = container
-  return ctx as AppContext
+  return ctx as T
 }
 
-export async function createContextWithSigHeaders(
+export async function createContextWithSigHeaders<T extends AppContext>(
   reqOpts: httpMocks.RequestOptions,
   params: Record<string, unknown>,
   requestBody: Record<string, unknown>,
   privateKey: crypto.KeyObject,
   keyId: string,
   container?: IocContract<AppServices>
-): Promise<AppContext> {
+): Promise<T> {
   const { headers, url, method } = reqOpts
   if (!headers || !url || !method) {
     throw new Error('ReqestOptions missing headers or method or url')
@@ -76,5 +79,29 @@ export async function createContextWithSigHeaders(
 
   ctx.request.body = requestBody
 
-  return ctx as AppContext
+  return ctx as T
+}
+
+export function createTokenHttpSigContext(
+  accessToken: AccessToken,
+  grant: Grant,
+  container?: IocContract<AppServices>
+): TokenHttpSigContext {
+  const ctx = createContext<TokenHttpSigContext>(
+    {
+      headers: {
+        Accept: 'application/json',
+        Authorization: `GNAP ${accessToken.value}`
+      },
+      url: `/token/${accessToken.id}`,
+      method: 'POST'
+    },
+    { id: accessToken.managementId },
+    container
+  )
+
+  accessToken.grant = grant
+  ctx.accessToken = accessToken as AccessToken & { grant: Grant }
+
+  return ctx
 }

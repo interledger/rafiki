@@ -23,7 +23,7 @@ import {
 } from './shared/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import { createAccountingService } from './accounting/service'
+import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
 import { createPeerService } from './peer/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
@@ -158,8 +158,10 @@ export function initIocContainer(
   container.singleton('accountingService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
+    const config = await deps.use('config')
     const tigerbeetle = await deps.use('tigerbeetle')
-    return await createAccountingService({
+
+    return createTigerbeetleAccountingService({
       logger: logger,
       knex: knex,
       tigerbeetle,

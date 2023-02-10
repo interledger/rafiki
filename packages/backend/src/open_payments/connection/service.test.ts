@@ -57,7 +57,7 @@ describe('Connection Service', (): void => {
       expect(connection.url).toEqual(
         `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
       )
-      expect(connection.toJSON()).toEqual({
+      expect(connection.toOpenPaymentsType()).toEqual({
         id: connection.url,
         ilpAddress: connection.ilpAddress,
         sharedSecret: base64url(connection.sharedSecret || ''),

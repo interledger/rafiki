@@ -13,9 +13,10 @@ import {
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
+import { Pagination } from '../shared/baseModel'
 
 export interface GrantService {
-  get(grantId: string): Promise<Grant | undefined>
+  get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteraction(interactId: string): Promise<InteractiveGrant | undefined>
   getByInteractionSession(
@@ -30,6 +31,9 @@ export interface GrantService {
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
   deleteGrant(continueId: string): Promise<boolean>
+  deleteGrantById(grantId: string): Promise<boolean>
+  getPage(pagination?: Pagination): Promise<Grant[]>
+  lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -81,7 +85,7 @@ export async function createGrantService({
     knex
   }
   return {
-    get: (grantId: string) => get(grantId),
+    get: (grantId: string, trx?: Transaction) => get(grantId, trx),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
@@ -94,12 +98,19 @@ export async function createGrantService({
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
-    deleteGrant: (continueId: string) => deleteGrant(deps, continueId)
+    deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
+    deleteGrantById: (grantId: string) => deleteGrantById(deps, grantId),
+    getPage: (pagination?) => getGrantsPage(deps, pagination),
+    lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
+      lock(deps, grantId, trx, timeoutMs)
   }
 }
 
-async function get(grantId: string): Promise<Grant | undefined> {
-  return Grant.query().findById(grantId)
+async function get(
+  grantId: string,
+  trx?: Transaction
+): Promise<Grant | undefined> {
+  return Grant.query(trx).findById(grantId)
 }
 
 async function issueGrant(
@@ -128,6 +139,20 @@ async function deleteGrant(
   if (deletion === 0) {
     deps.logger.info(
       `Could not find grant corresponding to continueId: ${continueId}`
+    )
+    return false
+  }
+  return true
+}
+
+async function deleteGrantById(
+  deps: ServiceDependencies,
+  grantId: string
+): Promise<boolean> {
+  const deletion = await Grant.query(deps.knex).deleteById(grantId)
+  if (deletion === 0) {
+    deps.logger.info(
+      `Could not delete grant corresponding to grantId: ${grantId}`
     )
     return false
   }
@@ -217,4 +242,30 @@ async function getByContinue(
   )
     return null
   return grant
+}
+
+async function getGrantsPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination
+): Promise<Grant[]> {
+  return await Grant.query(deps.knex).getPage(pagination)
+}
+
+async function lock(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx: Transaction,
+  timeoutMs?: number
+): Promise<void> {
+  const grants = await trx<Grant>(Grant.tableName)
+    .select()
+    .where('id', grantId)
+    .forNoKeyUpdate()
+    .timeout(timeoutMs ?? 5000)
+
+  if (grants.length <= 0) {
+    deps.logger.warn(
+      `No grant found when attempting to lock grantId: ${grantId}`
+    )
+  }
 }
