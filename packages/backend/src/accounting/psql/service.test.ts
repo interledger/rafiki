@@ -60,7 +60,7 @@ describe('Psql Accounting Service', (): void => {
       ).resolves.toEqual(account)
       expect(createAccountSpy).toHaveBeenCalledWith({
         accountRef: account.id,
-        assetId: account.asset.id,
+        ledger: asset.ledger,
         type: LedgerAccountType.LIQUIDITY_ASSET
       })
     })
@@ -85,7 +85,7 @@ describe('Psql Accounting Service', (): void => {
       ).rejects.toThrowError(AccountAlreadyExistsError)
       expect(createAccountSpy).toHaveBeenCalledWith({
         accountRef: account.id,
-        assetId: account.asset.id,
+        ledger: asset.ledger,
         type: LedgerAccountType.LIQUIDITY_ASSET
       })
     })
@@ -93,39 +93,35 @@ describe('Psql Accounting Service', (): void => {
 
   describe('createSettlementAccount', (): void => {
     test('creates account', async (): Promise<void> => {
-      const account = {
-        id: uuid(),
-        asset
-      }
-
       const createAccountSpy = jest.spyOn(ledgerAccountService, 'create')
 
       await expect(
-        accountingService.createSettlementAccount(account)
-      ).resolves.toEqual(account)
+        accountingService.createSettlementAccount(asset.ledger)
+      ).resolves.toBeUndefined()
       expect(createAccountSpy).toHaveBeenCalledWith({
-        accountRef: account.asset.id,
-        assetId: account.asset.id,
+        accountRef: asset.id,
+        ledger: asset.ledger,
         type: LedgerAccountType.SETTLEMENT
       })
     })
 
-    test('throws on error', async (): Promise<void> => {
-      const account = {
-        id: uuid(),
-        asset
-      }
+    test('throws if cannot find asset', async (): Promise<void> => {
+      await expect(
+        accountingService.createSettlementAccount(999)
+      ).rejects.toThrowError(/Could not find asset/)
+    })
 
+    test('throws on error', async (): Promise<void> => {
       const createAccountSpy = jest
         .spyOn(ledgerAccountService, 'create')
         .mockRejectedValueOnce(new Error('could not create account'))
 
       await expect(
-        accountingService.createSettlementAccount(account)
+        accountingService.createSettlementAccount(asset.ledger)
       ).rejects.toThrowError(Error)
       expect(createAccountSpy).toHaveBeenCalledWith({
-        accountRef: account.asset.id,
-        assetId: account.asset.id,
+        accountRef: asset.id,
+        ledger: asset.ledger,
         type: LedgerAccountType.SETTLEMENT
       })
     })

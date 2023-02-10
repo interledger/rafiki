@@ -47,7 +47,7 @@ describe('Ledger Account Service', (): void => {
       const type = LedgerAccountType.LIQUIDITY_ASSET
 
       const account = await ledgerAccountService.create({
-        assetId: asset.id,
+        ledger: asset.ledger,
         accountRef,
         type
       })
@@ -55,7 +55,7 @@ describe('Ledger Account Service', (): void => {
       expect(account).toEqual({
         id: expect.any(String),
         accountRef,
-        assetId: asset.id,
+        ledger: asset.ledger,
         type,
         createdAt: expect.any(Date),
         updatedAt: expect.any(Date)
@@ -67,24 +67,24 @@ describe('Ledger Account Service', (): void => {
       const type = LedgerAccountType.SETTLEMENT
 
       await LedgerAccount.query().insertAndFetch({
-        assetId: asset.id,
+        ledger: asset.ledger,
         accountRef,
         type
       })
 
       await expect(
         ledgerAccountService.create({
-          assetId: asset.id,
+          ledger: asset.ledger,
           accountRef,
           type
         })
       ).rejects.toThrow(AccountAlreadyExistsError)
     })
 
-    test('throws if violates asset.id foreign key constraint', async (): Promise<void> => {
+    test('throws if violates asset.ledger foreign key constraint', async (): Promise<void> => {
       await expect(
         ledgerAccountService.create({
-          assetId: uuid(),
+          ledger: 9999,
           accountRef: uuid(),
           type: LedgerAccountType.SETTLEMENT
         })
