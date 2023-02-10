@@ -161,7 +161,30 @@ export async function getSettlementBalance(
   deps: ServiceDependencies,
   ledger: number
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const asset = await Asset.query(deps.knex).findOne({ ledger })
+  if (!asset) {
+    deps.logger.error(`Could not find asset by ledger value: ${ledger}`)
+    return
+  }
+
+  const settlementAccount =
+    await deps.ledgerAccountService.getSettlementAccount(asset.id)
+
+  if (!settlementAccount) {
+    deps.logger.error(
+      {
+        ledger,
+        assetId: asset.id
+      },
+      'Could not find settlement account by account'
+    )
+    return
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, settlementAccount)
+
+  return debitsPosted + debitsPending - creditsPosted
 }
 
 export async function createTransfer(

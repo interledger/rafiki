@@ -111,7 +111,7 @@ describe('Psql Accounting Service', (): void => {
 
     test('throws if cannot find asset', async (): Promise<void> => {
       await expect(
-        accountingService.createSettlementAccount(999)
+        accountingService.createSettlementAccount(-1)
       ).rejects.toThrowError(/Could not find asset/)
     })
 
@@ -323,6 +323,58 @@ describe('Psql Accounting Service', (): void => {
       await expect(
         accountingService.getAccountsTotalSent([uuid(), uuid()])
       ).resolves.toEqual([])
+    })
+  })
+
+  describe('getSettlementBalance', (): void => {
+    test('gets settlement balance', async (): Promise<void> => {
+      const [settlementAccount, account] = await Promise.all([
+        createLedgerAccount(
+          {
+            accountRef: asset.id,
+            ledger: asset.ledger,
+            type: LedgerAccountType.SETTLEMENT
+          },
+          knex
+        ),
+        createLedgerAccount({ ledger: asset.ledger }, knex)
+      ])
+
+      await createLedgerTransfer(
+        {
+          debitAccountId: settlementAccount.id,
+          creditAccountId: account.id,
+          ledger: settlementAccount.ledger,
+          type: LedgerTransferType.DEPOSIT,
+          amount: 10n
+        },
+        knex
+      )
+
+      await expect(
+        accountingService.getSettlementBalance(settlementAccount.ledger)
+      ).resolves.toBe(10n)
+    })
+
+    test('returns undefined for non-existing ledger value', async (): Promise<void> => {
+      await expect(
+        accountingService.getSettlementBalance(-1)
+      ).resolves.toBeUndefined()
+    })
+
+    test('returns undefined for incorrect accountRef', async (): Promise<void> => {
+      const settlementAccount = await createLedgerAccount(
+        {
+          accountRef: uuid(),
+          ledger: asset.ledger,
+          type: LedgerAccountType.SETTLEMENT
+        },
+        knex
+      )
+
+      await expect(
+        accountingService.getSettlementBalance(settlementAccount.ledger)
+      ).resolves.toBeUndefined()
     })
   })
 })

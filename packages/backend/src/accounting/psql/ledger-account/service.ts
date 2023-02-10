@@ -13,6 +13,7 @@ interface CreateArgs {
 export interface LedgerAccountService {
   create(args: CreateArgs): Promise<LedgerAccount>
   getLiquidityAccount(accountRef: string): Promise<LedgerAccount | undefined>
+  getSettlementAccount(accountRef: string): Promise<LedgerAccount | undefined>
 }
 
 type ServiceDependencies = BaseService
@@ -30,7 +31,8 @@ export async function createLedgerAccountService({
   }
   return {
     create: (args) => create(deps, args),
-    getLiquidityAccount: (args) => getLiquidityAccount(deps, args)
+    getLiquidityAccount: (args) => getLiquidityAccount(deps, args),
+    getSettlementAccount: (args) => getSettlementAccount(deps, args)
   }
 }
 
@@ -60,4 +62,13 @@ async function getLiquidityAccount(
   return LedgerAccount.query(deps.knex)
     .findOne({ accountRef })
     .whereNot({ type: LedgerAccountType.SETTLEMENT })
+}
+
+async function getSettlementAccount(
+  deps: ServiceDependencies,
+  accountRef: string
+): Promise<LedgerAccount | undefined> {
+  return LedgerAccount.query(deps.knex)
+    .findOne({ accountRef })
+    .where({ type: LedgerAccountType.SETTLEMENT })
 }
