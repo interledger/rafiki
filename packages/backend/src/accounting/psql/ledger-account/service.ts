@@ -4,14 +4,15 @@ import { BaseService } from '../../../shared/baseService'
 import { LedgerAccount, LedgerAccountType } from './model'
 import { AccountAlreadyExistsError } from '../../errors'
 
-export interface CreateArgs {
+interface CreateArgs {
   accountRef: string
   ledger: number
   type: LedgerAccountType
 }
 
 export interface LedgerAccountService {
-  create(options: CreateArgs): Promise<LedgerAccount>
+  create(args: CreateArgs): Promise<LedgerAccount>
+  getLiquidityAccount(accountRef: string): Promise<LedgerAccount | undefined>
 }
 
 type ServiceDependencies = BaseService
@@ -28,7 +29,8 @@ export async function createLedgerAccountService({
     knex
   }
   return {
-    create: (args) => create(deps, args)
+    create: (args) => create(deps, args),
+    getLiquidityAccount: (args) => getLiquidityAccount(deps, args)
   }
 }
 
@@ -49,4 +51,13 @@ async function create(
     }
     throw err
   }
+}
+
+async function getLiquidityAccount(
+  deps: ServiceDependencies,
+  accountRef: string
+): Promise<LedgerAccount | undefined> {
+  return LedgerAccount.query(deps.knex)
+    .findOne({ accountRef })
+    .whereNot({ type: LedgerAccountType.SETTLEMENT })
 }

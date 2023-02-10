@@ -13,14 +13,25 @@ import {
   Withdrawal
 } from '../service'
 import {
+  LedgerAccount,
   LedgerAccountType,
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
 import { LedgerAccountService } from './ledger-account/service'
+import { LedgerTransfer, LedgerTransferState } from './ledger-transfer/model'
+import { LedgerTransferService } from './ledger-transfer/service'
 
 export interface ServiceDependencies extends BaseService {
   ledgerAccountService: LedgerAccountService
+  ledgerTransferService: LedgerTransferService
   withdrawalThrottleDelay?: number
+}
+
+interface AccountBalance {
+  creditsPosted: bigint
+  creditsPending: bigint
+  debitsPosted: bigint
+  debitsPending: bigint
 }
 
 export function createAccountingService(
@@ -34,7 +45,7 @@ export function createAccountingService(
     createLiquidityAccount: (options, accTypeCode) =>
       createLiquidityAccount(deps, options, accTypeCode),
     createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
-    getBalance: (id) => getAccountBalance(deps, id),
+    getBalance: (id) => getLiquidityAccountBalance(deps, id),
     getTotalSent: (id) => getAccountTotalSent(deps, id),
     getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
     getTotalReceived: (id) => getAccountTotalReceived(deps, id),
@@ -78,11 +89,22 @@ export async function createSettlementAccount(
   })
 }
 
-export async function getAccountBalance(
+export async function getLiquidityAccountBalance(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await deps.ledgerAccountService.getLiquidityAccount(
+    accountRef
+  )
+
+  if (!account) {
+    return
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, account)
+
+  return creditsPosted - debitsPosted - debitsPending
 }
 
 export async function getAccountTotalSent(
@@ -159,4 +181,35 @@ async function postAccountWithdrawal(
   withdrawalId: string
 ): Promise<void | TransferError> {
   throw new Error('Not implemented')
+}
+
+async function getAccountBalances(
+  deps: ServiceDependencies,
+  account: LedgerAccount
+): Promise<AccountBalance> {
+  const transfers = await deps.ledgerTransferService.getAccountTransfers(
+    account.id
+  )
+
+  const credits = transfers.filter(
+    (transfer) => transfer.creditAccountId === account.id
+  )
+  const debits = transfers.filter(
+    (transfer) => transfer.debitAccountId === account.id
+  )
+
+  return {
+    creditsPosted: sum(credits, LedgerTransferState.POSTED),
+    creditsPending: sum(credits, LedgerTransferState.PENDING),
+    debitsPosted: sum(debits, LedgerTransferState.POSTED),
+    debitsPending: sum(debits, LedgerTransferState.PENDING)
+  }
+}
+
+function sum(transfers: LedgerTransfer[], state: LedgerTransferState) {
+  return transfers
+    .filter((transfer) => transfer.state === state)
+    .reduce((sum, transfer) => {
+      return sum + transfer.amount
+    }, 0n)
 }

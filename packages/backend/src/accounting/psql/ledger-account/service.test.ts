@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 
 import { LedgerAccountService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { LedgerAccount, LedgerAccountType } from './model'
+import { LedgerAccountType } from './model'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -13,6 +13,7 @@ import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { AccountAlreadyExistsError } from '../../errors'
 import { ForeignKeyViolationError } from 'objection'
+import { createLedgerAccount } from '../../../tests/ledgerAccount'
 
 describe('Ledger Account Service', (): void => {
   let deps: IocContract<AppServices>
@@ -66,11 +67,14 @@ describe('Ledger Account Service', (): void => {
       const accountRef = uuid()
       const type = LedgerAccountType.SETTLEMENT
 
-      await LedgerAccount.query().insertAndFetch({
-        ledger: asset.ledger,
-        accountRef,
-        type
-      })
+      await createLedgerAccount(
+        {
+          accountRef,
+          ledger: asset.ledger,
+          type
+        },
+        knex
+      )
 
       await expect(
         ledgerAccountService.create({
@@ -89,6 +93,42 @@ describe('Ledger Account Service', (): void => {
           type: LedgerAccountType.SETTLEMENT
         })
       ).rejects.toThrow(ForeignKeyViolationError)
+    })
+  })
+
+  describe('getLiquidityAccount', (): void => {
+    test('gets account', async (): Promise<void> => {
+      const accountRef = uuid()
+
+      const account = await createLedgerAccount(
+        {
+          accountRef,
+          ledger: asset.ledger,
+          type: LedgerAccountType.LIQUIDITY_ASSET
+        },
+        knex
+      )
+
+      await expect(
+        ledgerAccountService.getLiquidityAccount(accountRef)
+      ).resolves.toEqual(account)
+    })
+
+    test('ignores settlement account', async (): Promise<void> => {
+      const accountRef = uuid()
+
+      await createLedgerAccount(
+        {
+          accountRef,
+          ledger: asset.ledger,
+          type: LedgerAccountType.SETTLEMENT
+        },
+        knex
+      )
+
+      await expect(
+        ledgerAccountService.getLiquidityAccount(accountRef)
+      ).resolves.toBeUndefined()
     })
   })
 })

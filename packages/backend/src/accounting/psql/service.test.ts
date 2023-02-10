@@ -11,8 +11,9 @@ import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { AccountingService, LiquidityAccountType } from '../service'
 import { LedgerAccountService } from './ledger-account/service'
-import { LedgerAccountType } from './ledger-account/model'
+import { LedgerAccount, LedgerAccountType } from './ledger-account/model'
 import { AccountAlreadyExistsError } from '../errors'
+import { createLedgerAccount } from '../../tests/ledgerAccount'
 
 describe('Psql Accounting Service', (): void => {
   let deps: IocContract<AppServices>
@@ -124,6 +125,33 @@ describe('Psql Accounting Service', (): void => {
         ledger: asset.ledger,
         type: LedgerAccountType.SETTLEMENT
       })
+    })
+  })
+
+  describe('getBalance', (): void => {
+    let account: LedgerAccount
+
+    beforeEach(async (): Promise<void> => {
+      account = await createLedgerAccount(
+        {
+          accountRef: asset.id,
+          ledger: asset.ledger,
+          type: LedgerAccountType.LIQUIDITY_INCOMING
+        },
+        knex
+      )
+    })
+
+    test('gets balance for existing account', async (): Promise<void> => {
+      await expect(
+        accountingService.getBalance(account.accountRef)
+      ).resolves.toBe(0n)
+    })
+
+    test('returns undefined for non-existing account', async (): Promise<void> => {
+      await expect(
+        accountingService.getBalance(uuid())
+      ).resolves.toBeUndefined()
     })
   })
 })
