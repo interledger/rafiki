@@ -14,8 +14,8 @@ exports.up = function (knex) {
 
     table.bigInteger('amount').notNullable().checkPositive()
 
-    table.uuid('assetId').notNullable()
-    table.foreign('assetId').references('assets.id')
+    table.smallint('ledger').notNullable()
+    table.foreign('ledger').references('assets.ledger')
 
     table.timestamp('expiresAt').nullable()
     table.enu('state', ['PENDING', 'POSTED', 'VOIDED']).notNullable()
