@@ -45,11 +45,13 @@ export function createAccountingService(
     createLiquidityAccount: (options, accTypeCode) =>
       createLiquidityAccount(deps, options, accTypeCode),
     createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
-    getBalance: (id) => getLiquidityAccountBalance(deps, id),
-    getTotalSent: (id) => getAccountTotalSent(deps, id),
-    getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
-    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
-    getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
+    getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
+    getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
+    getAccountsTotalSent: (accountRefs) =>
+      getAccountsTotalSent(deps, accountRefs),
+    getTotalReceived: (accountRef) => getAccountTotalReceived(deps, accountRef),
+    getAccountsTotalReceived: (accountRefs) =>
+      getAccountsTotalReceived(deps, accountRefs),
     getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
@@ -109,30 +111,50 @@ export async function getLiquidityAccountBalance(
 
 export async function getAccountTotalSent(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await deps.ledgerAccountService.getLiquidityAccount(
+    accountRef
+  )
+
+  if (!account) {
+    return
+  }
+
+  return (await getAccountBalances(deps, account)).debitsPosted
 }
 
 export async function getAccountsTotalSent(
   deps: ServiceDependencies,
-  ids: string[]
+  accountRefs: string[]
 ): Promise<(bigint | undefined)[]> {
-  throw new Error('Not implemented')
+  return Promise.all(
+    accountRefs.map((accountRef) => getAccountTotalSent(deps, accountRef))
+  )
 }
 
 export async function getAccountTotalReceived(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await deps.ledgerAccountService.getLiquidityAccount(
+    accountRef
+  )
+
+  if (!account) {
+    return
+  }
+
+  return (await getAccountBalances(deps, account)).creditsPosted
 }
 
 export async function getAccountsTotalReceived(
   deps: ServiceDependencies,
-  ids: string[]
+  accountRefs: string[]
 ): Promise<(bigint | undefined)[]> {
-  throw new Error('Not implemented')
+  return Promise.all(
+    accountRefs.map((accountRef) => getAccountTotalReceived(deps, accountRef))
+  )
 }
 
 export async function getSettlementBalance(
