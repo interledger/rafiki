@@ -16,6 +16,7 @@ const navigation = [
   }
 ]
 
+// TODO: Mobile menu
 export const Sidebar = () => {
   return (
     <div className='hidden md:fixed md:flex md:w-60 md:inset-y-0 md:flex-col'>
@@ -35,7 +36,9 @@ export const Sidebar = () => {
                 to={href}
                 className={({ isActive }) =>
                   cx(
-                    isActive ? 'bg-wafer' : 'text-tealish/70 hover:bg-pearl',
+                    isActive
+                      ? 'bg-mercury'
+                      : 'text-tealish/70 hover:bg-mercury/70',
                     'flex p-2 font-medium rounded-md'
                   )
                 }
