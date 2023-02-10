@@ -1,18 +1,16 @@
 {
+  "name": "admin",
   "private": true,
   "sideEffects": false,
   "scripts": {
     "build": "pnpm tw:build && remix build",
     "dev": "concurrently -c green.bold,blue.bold 'pnpm tw:watch' 'pnpm dev:remix'",
     "dev:remix": "PORT=3005 remix dev",
+    "lint:fix": "eslint --fix app/",
+    "lint:check": "eslint app/",
     "start": "PORT=3005 remix-serve build",
     "tw:build": "tailwindcss -m -i ./app/tailwind.css -o app/styles/main.css",
-    "tw:watch": "tailwindcss -w -i ./app/tailwind.css -o app/styles/main.css",
-    "lint": "npx eslint --fix app/",
-    "format": "prettier --write app/ && pnpm lint",
-    "checks": "pnpm check:prettier && pnpm check:lint",
-    "check:lint": "npx eslint app/",
-    "check:prettier": "prettier --check app/"
+    "tw:watch": "tailwindcss -w -i ./app/tailwind.css -o app/styles/main.css"
   },
   "dependencies": {
     "@apollo/client": "^3.7.5",
@@ -21,16 +19,17 @@
     "@remix-run/serve": "^1.12.0",
     "class-variance-authority": "^0.4.0",
     "graphql": "^16.6.0",
-    "ilp-packet": "3.1.4-alpha.1",
+    "ilp-packet": "3.1.4-alpha.2",
     "isbot": "^3.6.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tiny-invariant": "^1.3.1"
+    "tiny-invariant": "^1.3.1",
+    "zod": "^3.20.2"
   },
   "devDependencies": {
     "@remix-run/dev": "^1.12.0",
     "@remix-run/eslint-config": "^1.12.0",
-    "@types/graphql": "^14.5.0",
+    "@tailwindcss/forms": "^0.5.3",
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@typescript-eslint/eslint-plugin": "^5.49.0",
@@ -47,11 +46,5 @@
   },
   "engines": {
     "node": ">=14"
-  },
-  "prettier": {
-    "semi": false,
-    "singleQuote": true,
-    "jsxSingleQuote": true,
-    "trailingComma": "none"
   }
 }
