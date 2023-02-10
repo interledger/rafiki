@@ -1,173 +1,110 @@
-import { Link, useCatch } from '@remix-run/react'
-import formStyles from '../styles/dist/Form.css'
-import displayItemsStyles from '../styles/dist/DisplayItems.css'
-import { useLoaderData, Form } from '@remix-run/react'
-import { redirect, json } from '@remix-run/node'
-import type { ActionArgs } from '@remix-run/node'
-import { gql } from '@apollo/client'
-import { apolloClient } from '../lib/apolloClient.server'
-import type { AssetEdge, Asset } from '../../generated/graphql'
+import { json, type LoaderArgs } from '@remix-run/node'
+import { useLoaderData, useNavigate } from '@remix-run/react'
+import { z } from 'zod'
+import { Button } from '~/components/ui/Button'
+import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { assetService } from '~/services/bootstrap.server'
 
-function DisplayAssets({ assets }: { assets: Asset[] }) {
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Scale</th>
-          <th>Withdrawl threshold</th>
-        </tr>
-      </thead>
-      <tbody>
-        {assets.length
-          ? assets.map((asset) => (
-              <tr key={asset.id}>
-                <td>
-                  <Link to={asset.id}>{asset.code}</Link>
-                </td>
-                <td>
-                  <Link to={asset.id}>{asset.scale}</Link>
-                </td>
-                <td>
-                  <Link to={asset.id}>
-                    {asset.withdrawalThreshold
-                      ? asset.withdrawalThreshold.toString()
-                      : 'null'}
-                  </Link>
-                </td>
-              </tr>
-            ))
-          : ''}
-      </tbody>
-    </table>
+const paginationSchema = z
+  .object({
+    after: z.string().uuid(),
+    before: z.string().uuid(),
+    first: z.coerce.number().positive(),
+    last: z.coerce.number().positive()
+  })
+  .partial()
+  .strict()
+
+export const loader = async ({ request }: LoaderArgs) => {
+  const url = new URL(request.url)
+  const pagination = paginationSchema.safeParse(
+    Object.fromEntries(url.searchParams.entries())
   )
+
+  if (!pagination.success) {
+    console.log(pagination.error)
+    throw new Error('Invalid pagination.')
+  }
+
+  const assets = await assetService.list({
+    ...pagination.data
+  })
+
+  return json({ assets })
 }
 
-// TODO: add a message if there are no assets to display
 export default function AssetsPage() {
-  const { assets }: { assets: Asset[] } = useLoaderData<typeof loader>()
+  const { assets } = useLoaderData<typeof loader>()
+  const navigate = useNavigate()
 
-  return (
-    <main>
-      <div className='header-row'>
-        <h1>Assets</h1>
-        <Form method='post' id='asset-search-form'>
-          <span>
-            <input
-              type='search'
-              id='asset-id'
-              name='assetId'
-              // TODO: update placeholder when search bar becomes global
-              placeholder='Search asset by ID'
-              required
-            />
-            <div className='form-actions'>
-              <button className='search-button'>
-                <img alt='Search' src={require('../../public/search.svg')} />
-              </button>
-            </div>
-          </span>
-        </Form>
-        <Link to='/assets/create'>
-          <button className='basic-button'>Create Asset</button>
-        </Link>
-      </div>
-      <div className='main-content'>
-        <DisplayAssets assets={assets} />
-      </div>
-      <div className='bottom-buttons'>
-        <button disabled={true} className='basic-button left'>
-          Previous
-        </button>
-        <button disabled={true} className='basic-button right'>
-          Next
-        </button>
-      </div>
-    </main>
-  )
-}
+  let previousPageUrl = '',
+    nextPageUrl = ''
 
-export async function loader() {
-  const assets = await apolloClient
-    .query({
-      query: gql`
-        query Assets {
-          assets {
-            edges {
-              node {
-                code
-                id
-                scale
-                withdrawalThreshold
-              }
-            }
-          }
-        }
-      `
-    })
-    .then((query): Asset[] => {
-      if (query?.data?.assets?.edges) {
-        return query.data.assets.edges.map((element: AssetEdge) => element.node)
-      } else {
-        throw new Error(`No assets were found`)
-      }
-    })
-
-  return json({ assets: assets })
-}
-
-export async function action({ request }: ActionArgs) {
-  // TODO: extend to be a global search bar
-  const formData = await request.formData()
-  const assetData = {
-    assetID: formData.get('assetId')
+  if (assets.pageInfo.hasPreviousPage) {
+    previousPageUrl = `/assets?before=${assets.pageInfo.startCursor}`
   }
 
-  if (!assetData.assetID) {
-    throw json(
-      {
-        message: 'Unable to access asset ID'
-      },
-      {
-        status: 404,
-        statusText: 'Not Found'
-      }
-    )
+  if (assets.pageInfo.hasNextPage) {
+    nextPageUrl = `/assets?after=${assets.pageInfo.endCursor}`
   }
-  return redirect('/assets/' + assetData.assetID)
-}
 
-export function CatchBoundary() {
-  const caughtResponse = useCatch()
   return (
-    <div>
-      {caughtResponse.status && caughtResponse.statusText && (
-        <h2>{caughtResponse.status + ' ' + caughtResponse.statusText}</h2>
-      )}
-      <p>{caughtResponse.data?.message || 'An Error Occurred'}</p>
-      <Link to='/assets'>
-        <button className='basic-button'>Back</button>
-      </Link>
+    <div className='pt-4 flex flex-col space-y-8'>
+      <div className='flex p-4 bg-offwhite rounded-md justify-between items-center'>
+        <div className='flex-1'>
+          <h3 className='text-2xl'>Assets</h3>
+        </div>
+        <div className='ml-auto'>
+          <Button aria-label='add new asset'>Add asset</Button>
+        </div>
+      </div>
+      <div className='flex flex-col rounded-md bg-offwhite'>
+        <Table>
+          <THead columns={['ID', 'Code', 'Scale', 'Withdrawl threshold']} />
+          <TBody>
+            {assets.edges.map((asset) => (
+              <TRow
+                key={asset.node.id}
+                className='cursor-pointer'
+                onClick={() => navigate(`/assets/${asset.node.id}`)}
+              >
+                <TCell>{asset.node.id}</TCell>
+                <TCell>{asset.node.code}</TCell>
+                <TCell>{asset.node.scale}</TCell>
+                <TCell>
+                  {asset.node.withdrawalThreshold ? (
+                    asset.node.withdrawalThreshold
+                  ) : (
+                    <span className='italic font-light'>
+                      No withdrawal threshold
+                    </span>
+                  )}
+                </TCell>
+              </TRow>
+            ))}
+          </TBody>
+        </Table>
+        <div className='flex items-center justify-between p-5'>
+          <Button
+            aria-label='go to previous page'
+            disabled={!assets.pageInfo.hasPreviousPage}
+            onClick={() => {
+              navigate(previousPageUrl)
+            }}
+          >
+            Previous
+          </Button>
+          <Button
+            aria-label='go to next page'
+            disabled={!assets.pageInfo.hasNextPage}
+            onClick={() => {
+              navigate(nextPageUrl)
+            }}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
     </div>
   )
-}
-
-export function ErrorBoundary({ error }: { error: Error }) {
-  return (
-    <div>
-      <h1>Error</h1>
-      <p>There was an error loading the assets.</p>
-      {error.message.length > 0 && <p>Error: {error.message}</p>}
-      <Link to='/assets'>
-        <button className='basic-button'>Back</button>
-      </Link>
-    </div>
-  )
-}
-
-export function links() {
-  return [
-    { rel: 'stylesheet', href: formStyles },
-    { rel: 'stylesheet', href: displayItemsStyles }
-  ]
 }

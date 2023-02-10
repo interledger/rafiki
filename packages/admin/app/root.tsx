@@ -11,8 +11,7 @@ import {
 
 import tailwind from './styles/main.css'
 import favicon from '../public/favicon.svg'
-import MainNavigation from 'app/components/MainNavigation'
-import Menu from './components/Menu'
+import { Sidebar } from './components/Sidebar'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -22,19 +21,22 @@ export const meta: MetaFunction = () => ({
 
 export default function App() {
   return (
-    <html lang='en'>
+    <html
+      lang='en'
+      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+    >
       <head>
         <Meta />
         <Links />
       </head>
-      <body className='bg-polkadot bg-cover min-h-screen relative overflow-hidden min-w-screen'>
-        <div className='transition-all m-2 lg:m-10 absolute inset-0 bg-[#fbf7f4] rounded-lg flex flex-col lg:flex-row p-4 lg:p-10'>
-          <Menu />
-          <main className='flex flex-1 bg-white rounded-lg flex-col p-5'>
-            <div className='px-4 sm:px-6 lg:px-8'>
+      <body className='h-full  text-tealish'>
+        <div className='min-h-full'>
+          <Sidebar />
+          <div className='flex md:pl-60 flex-1 flex-col'>
+            <main className='pb-8 px-4'>
               <Outlet />
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
         <ScrollRestoration />
         <Scripts />
@@ -44,6 +46,7 @@ export default function App() {
   )
 }
 
+// TODO: add styles to ErrorBoundary
 export function ErrorBoundary({ error }: { error: Error }) {
   return (
     <html lang='en'>
@@ -56,10 +59,10 @@ export function ErrorBoundary({ error }: { error: Error }) {
           <div className='admin-panel-background'>
             <header className='admin-menu'>
               <h1>Rafiki Admin</h1>
-              <MainNavigation />
             </header>
             <div className='admin-panel-inside'>
               <main>
+                {JSON.stringify(error)}
                 <h1>An error ocurred</h1>
                 <p>{error.message}</p>
               </main>
@@ -74,6 +77,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
   )
 }
 
+// TODO: add styles to CatchBoundary
 export function CatchBoundary() {
   const caughtResponse = useCatch()
 
@@ -88,7 +92,6 @@ export function CatchBoundary() {
           <div className='admin-panel-background'>
             <header className='admin-menu'>
               <h1>Rafiki Admin</h1>
-              <MainNavigation />
             </header>
             <div className='admin-panel-inside'>
               <main>

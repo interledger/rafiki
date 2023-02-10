@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { isValidIlpAddress } from 'ilp-packet'
 
 // TODO: Rather use a type guard. There might be a built in type guard for strings
@@ -65,3 +66,23 @@ export function validatePositiveInt(
     return 'Field cannot have a value of zero'
   }
 }
+
+export const createPeerSchema = z.object({
+  name: z.string().optional(),
+  staticIlpAddress: z
+    .string()
+    .refine((ilpAddress) => isValidIlpAddress(ilpAddress), {
+      message: 'The provided ILP Address is not valid.'
+    }),
+  maxPacketAmount: z.coerce
+    .number({
+      invalid_type_error: 'Max packet amount is expected to be a number.'
+    })
+    .optional(),
+  incomingAuthTokens: z.string().optional(),
+  outgoingAuthToken: z.string(),
+  outgoingEndpoint: z
+    .string()
+    .url({ message: 'Invalid outgoing HTTP endpoint URL.' }),
+  asset: z.string()
+})
