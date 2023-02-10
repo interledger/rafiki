@@ -4,7 +4,7 @@ import { Knex } from 'knex'
 import { v4 } from 'uuid'
 import jestOpenAPI from 'jest-openapi'
 
-import { createContext } from '../tests/context'
+import { createContext, createTokenHttpSigContext } from '../tests/context'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -17,17 +17,23 @@ import { Access } from '../access/model'
 import { AccessTokenRoutes, IntrospectContext } from './routes'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
+import { GrantService } from '../grant/service'
+import { AccessTokenService } from './service'
 
 describe('Access Token Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let trx: Knex.Transaction
   let accessTokenRoutes: AccessTokenRoutes
+  let accessTokenService: AccessTokenService
+  let grantService: GrantService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     accessTokenRoutes = await deps.use('accessTokenRoutes')
+    grantService = await deps.use('grantService')
+    accessTokenService = await deps.use('accessTokenService')
     const openApi = await deps.use('openApi')
     jestOpenAPI(openApi.authServerSpec)
   })
@@ -76,7 +82,7 @@ describe('Access Token Routes', (): void => {
   const BASE_TOKEN = {
     value: generateToken(),
     managementId: v4(),
-    expiresIn: 3600
+    expiresIn: Config.accessTokenExpirySeconds
   }
 
   describe('Introspect', (): void => {
@@ -200,10 +206,6 @@ describe('Access Token Routes', (): void => {
   describe('Revocation', (): void => {
     let grant: Grant
     let token: AccessToken
-    let managementId: string
-    let url: string
-
-    const method = 'DELETE'
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
@@ -211,57 +213,19 @@ describe('Access Token Routes', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN
       })
-      managementId = token.managementId
-      url = `/token/${managementId}`
-    })
-
-    test('Returns status 204 even if management id does not exist', async (): Promise<void> => {
-      managementId = v4()
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${token.value}`
-          },
-          url: `/token/${managementId}`,
-          method
-        },
-        { id: managementId }
-      )
-
-      await accessTokenRoutes.revoke(ctx)
-      expect(ctx.response.status).toBe(204)
     })
 
     test('Returns status 204 even if token does not exist', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${v4()}`
-          },
-          url: `/token/${managementId}`,
-          method
-        },
-        { id: managementId }
-      )
+      const ctx = createTokenHttpSigContext(token, grant)
+
+      await token.$query(trx).delete()
 
       await accessTokenRoutes.revoke(ctx)
       expect(ctx.response.status).toBe(204)
     })
 
     test('Returns status 204 if token has not expired', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${token.value}`
-          },
-          url,
-          method
-        },
-        { id: managementId }
-      )
+      const ctx = createTokenHttpSigContext(token, grant)
 
       await token.$query(trx).patch({ expiresIn: 10000 })
       await accessTokenRoutes.revoke(ctx)
@@ -269,17 +233,7 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Returns status 204 if token has expired', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${token.value}`
-          },
-          url,
-          method
-        },
-        { id: managementId }
-      )
+      const ctx = createTokenHttpSigContext(token, grant)
 
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.revoke(ctx)
@@ -291,7 +245,6 @@ describe('Access Token Routes', (): void => {
     let grant: Grant
     let access: Access
     let token: AccessToken
-    let managementId: string
 
     beforeEach(async (): Promise<void> => {
       grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
@@ -303,63 +256,13 @@ describe('Access Token Routes', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN
       })
-      managementId = BASE_TOKEN.managementId
 
       const openApi = await deps.use('openApi')
       jestOpenAPI(openApi.authServerSpec)
     })
 
-    test('Cannot rotate nonexistent token management id', async (): Promise<void> => {
-      managementId = v4()
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${token.value}`
-          },
-          method: 'POST',
-          url: `/token/${managementId}`
-        },
-        { id: managementId }
-      )
-
-      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
-        status: 404,
-        message: 'Token not found'
-      })
-    })
-
-    test('Cannot rotate nonexistent token', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${v4()}`
-          },
-          method: 'POST',
-          url: `/token/${managementId}`
-        },
-        { id: managementId }
-      )
-
-      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
-        status: 404,
-        message: 'Token not found'
-      })
-    })
-
     test('Can rotate token', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${token.value}`
-          },
-          url: `/token/${token.id}`,
-          method: 'POST'
-        },
-        { id: managementId }
-      )
+      const ctx = createTokenHttpSigContext(token, grant)
 
       await accessTokenRoutes.rotate(ctx)
       expect(ctx.response.get('Content-Type')).toBe(
@@ -374,8 +277,8 @@ describe('Access Token Routes', (): void => {
               limits: access.limits
             }
           ],
-          value: expect.anything(),
-          manage: expect.anything(),
+          value: expect.any(String),
+          manage: expect.any(String),
           expires_in: token.expiresIn
         }
       })
@@ -383,17 +286,7 @@ describe('Access Token Routes', (): void => {
     })
 
     test('Can rotate an expired token', async (): Promise<void> => {
-      const ctx = createContext(
-        {
-          headers: {
-            Accept: 'application/json',
-            Authorization: `GNAP ${token.value}`
-          },
-          url: `/token/${token.id}`,
-          method: 'POST'
-        },
-        { id: managementId }
-      )
+      const ctx = createTokenHttpSigContext(token, grant)
 
       await token.$query(trx).patch({ expiresIn: -1 })
       await accessTokenRoutes.rotate(ctx)
@@ -412,10 +305,34 @@ describe('Access Token Routes', (): void => {
           ],
           value: expect.anything(),
           manage: expect.anything(),
-          expires_in: token.expiresIn
+          expires_in: Config.accessTokenExpirySeconds
         }
       })
       expect(ctx.response).toSatisfyApiSpec()
+    })
+
+    test('Locks grant during token rotation', async (): Promise<void> => {
+      const ctx = createTokenHttpSigContext(token, grant)
+
+      const grantLockSpy = jest.spyOn(grantService, 'lock')
+
+      await accessTokenRoutes.rotate(ctx)
+
+      expect(grantLockSpy).toHaveBeenCalledTimes(1)
+      expect(grantLockSpy).toHaveBeenCalledWith(
+        token.grantId,
+        expect.anything()
+      )
+    })
+
+    test('Returns status 400 if could not rotate token', async (): Promise<void> => {
+      const ctx = createTokenHttpSigContext(token, grant)
+      jest.spyOn(accessTokenService, 'rotate').mockResolvedValueOnce(undefined)
+
+      await expect(accessTokenRoutes.rotate(ctx)).rejects.toMatchObject({
+        status: 400,
+        message: 'Could not rotate token'
+      })
     })
   })
 })

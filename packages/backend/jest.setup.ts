@@ -6,9 +6,6 @@ import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
 
-//TODO @jason: https://github.com/interledger/rafiki/issues/518
-//TODO @jason const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
-
 const REDIS_PORT = 6379
 
 const setup = async (globalConfig): Promise<void> => {
@@ -71,7 +68,6 @@ const setup = async (globalConfig): Promise<void> => {
   const setupTigerbeetle = async () => {
     if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
       const { container, port } = await startTigerbeetleContainer()
-
       process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${port}]`
       global.__BACKEND_TIGERBEETLE__ = container
     }

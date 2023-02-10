@@ -3,7 +3,7 @@ import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 
 import { Grant } from './model'
-import { GrantOptions, GrantService } from './service'
+import { CreateOptions, GrantService } from './service'
 import { AuthServer } from '../authServer/model'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
@@ -11,6 +11,7 @@ import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { AccessType, AccessAction } from 'open-payments'
+import { v4 as uuid } from 'uuid'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -26,10 +27,13 @@ describe('Grant Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     grantService = await deps.use('grantService')
+    jest.useFakeTimers()
+    jest.setSystemTime(Date.now())
   })
 
   afterEach(async (): Promise<void> => {
     await truncateTables(knex)
+    jest.useRealTimers()
   })
 
   afterAll(async (): Promise<void> => {
@@ -58,12 +62,9 @@ describe('Grant Service', (): void => {
           ).resolves.toBeUndefined()
           authServerId = undefined
         }
-        jest.useFakeTimers()
-        jest.setSystemTime(Date.now())
       })
 
       afterEach(async (): Promise<void> => {
-        jest.useRealTimers()
         if (existingAuthServer) {
           expect(grant?.authServerId).toEqual(authServerId)
         } else {
@@ -84,7 +85,9 @@ describe('Grant Service', (): void => {
       `(
         'Grant can be created and fetched ($description)',
         async ({ expiresIn }): Promise<void> => {
-          const options: GrantOptions = {
+          const options: CreateOptions = {
+            accessToken: uuid(),
+            managementUrl: `${faker.internet.url()}/${uuid()}`,
             authServer: authServerUrl,
             accessType: AccessType.IncomingPayment,
             accessActions: [AccessAction.ReadAll]
@@ -107,7 +110,9 @@ describe('Grant Service', (): void => {
     })
 
     test('cannot fetch non-existing grant', async (): Promise<void> => {
-      const options: GrantOptions = {
+      const options: CreateOptions = {
+        accessToken: uuid(),
+        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
         authServer: faker.internet.url(),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll]
@@ -132,5 +137,59 @@ describe('Grant Service', (): void => {
         })
       ).resolves.toBeUndefined()
     })
+
+    test('cannot store grant with missing management url', async (): Promise<void> => {
+      const options: CreateOptions = {
+        accessToken: uuid(),
+        managementUrl: '',
+        authServer: faker.internet.url(),
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll]
+      }
+      await expect(grantService.create(options)).rejects.toThrow(
+        'invalid management id'
+      )
+    })
+  })
+
+  describe.each`
+    expiresIn    | description
+    ${undefined} | ${'without prior expiresIn'}
+    ${3000}      | ${'with prior expiresIn'}
+  `('Update Grant ($description)', ({ expiresIn }): void => {
+    let grant: Grant
+    beforeEach(async (): Promise<void> => {
+      const options = {
+        authServer: faker.internet.url(),
+        accessType: AccessType.IncomingPayment,
+        accessActions: [AccessAction.ReadAll],
+        accessToken: uuid(),
+        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
+        expiresIn
+      }
+      grant = await grantService.create(options)
+    })
+    test.each`
+      expiresIn    | description
+      ${undefined} | ${'without expiresIn'}
+      ${6000}      | ${'with expiresIn'}
+    `(
+      'can update grant ($description)',
+      async ({ expiresIn }): Promise<void> => {
+        const updateOptions = {
+          accessToken: uuid(),
+          managementUrl: `${faker.internet.url()}/${uuid()}`,
+          expiresIn
+        }
+        const updatedGrant = await grantService.update(grant, updateOptions)
+        expect(updatedGrant).toEqual({
+          ...grant,
+          accessToken: updateOptions.accessToken,
+          managementId: updateOptions.managementUrl.split('/').pop(),
+          expiresAt: expiresIn ? new Date(Date.now() + expiresIn * 1000) : null,
+          updatedAt: updatedGrant.updatedAt
+        })
+      }
+    )
   })
 })

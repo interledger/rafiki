@@ -13,6 +13,7 @@ import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from 'open-payments'
+import { Access } from './model'
 
 describe('Access Service', (): void => {
   let deps: IocContract<AppServices>
@@ -21,9 +22,9 @@ describe('Access Service', (): void => {
   let trx: Knex.Transaction
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
-    accessService = await deps.use('accessService')
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+    accessService = await deps.use('accessService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -49,56 +50,87 @@ describe('Access Service', (): void => {
     interactNonce: generateNonce()
   }
 
-  test('Can create incoming payment access', async (): Promise<void> => {
-    const grant = await Grant.query(trx).insertAndFetch({
-      ...BASE_GRANT
+  describe('create', (): void => {
+    test('Can create incoming payment access', async (): Promise<void> => {
+      const grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
+
+      const incomingPaymentAccess: IncomingPaymentRequest = {
+        type: 'incoming-payment',
+        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
+      }
+
+      const access = await accessService.createAccess(grant.id, [
+        incomingPaymentAccess
+      ])
+
+      expect(access.length).toEqual(1)
+      expect(access[0].grantId).toEqual(grant.id)
+      expect(access[0].type).toEqual(AccessType.IncomingPayment)
     })
 
-    const incomingPaymentAccess: IncomingPaymentRequest = {
-      type: 'incoming-payment',
-      actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
-    }
+    test('Can create outgoing payment access', async (): Promise<void> => {
+      const outgoingPaymentLimit = {
+        sendAmount: {
+          value: '1000000000',
+          assetCode: 'usd',
+          assetScale: 9
+        },
+        receiveAmount: {
+          value: '2000000000',
+          assetCode: 'usd',
+          assetScale: 9
+        },
+        expiresAt: new Date().toISOString(),
+        receiver: 'https://wallet.com/alice'
+      }
 
-    const access = await accessService.createAccess(grant.id, [
-      incomingPaymentAccess
-    ])
+      const outgoingPaymentAccess: OutgoingPaymentRequest = {
+        type: 'outgoing-payment',
+        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
+        limits: outgoingPaymentLimit
+      }
 
-    expect(access.length).toEqual(1)
-    expect(access[0].grantId).toEqual(grant.id)
-    expect(access[0].type).toEqual(AccessType.IncomingPayment)
+      const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+
+      const access = await accessService.createAccess(grant.id, [
+        outgoingPaymentAccess
+      ])
+
+      expect(access.length).toEqual(1)
+      expect(access[0].grantId).toEqual(grant.id)
+      expect(access[0].type).toEqual(AccessType.OutgoingPayment)
+      expect(access[0].limits).toEqual(outgoingPaymentLimit)
+    })
   })
 
-  test('Can create outgoing payment access', async (): Promise<void> => {
-    const outgoingPaymentLimit = {
-      sendAmount: {
-        value: '1000000000',
-        assetCode: 'usd',
-        assetScale: 9
-      },
-      receiveAmount: {
-        value: '2000000000',
-        assetCode: 'usd',
-        assetScale: 9
-      },
-      expiresAt: new Date().toISOString(),
-      receiver: 'https://wallet.com/alice'
-    }
+  describe('getByGrant', (): void => {
+    test('gets access', async () => {
+      const grant = await Grant.query(trx).insertAndFetch({
+        ...BASE_GRANT
+      })
 
-    const outgoingPaymentAccess: OutgoingPaymentRequest = {
-      type: 'outgoing-payment',
-      actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
-      limits: outgoingPaymentLimit
-    }
+      const incomingPaymentAccess: IncomingPaymentRequest = {
+        type: 'incoming-payment',
+        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
+      }
 
-    const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      const access = await Access.query(trx).insert([
+        {
+          grantId: grant.id,
+          type: incomingPaymentAccess.type,
+          actions: incomingPaymentAccess.actions
+        }
+      ])
 
-    const access = await accessService.createAccess(grant.id, [
-      outgoingPaymentAccess
-    ])
+      const fetchedAccess = await accessService.getByGrant(grant.id)
 
-    expect(access.length).toEqual(1)
-    expect(access[0].grantId).toEqual(grant.id)
-    expect(access[0].type).toEqual(AccessType.OutgoingPayment)
-    expect(access[0].limits).toEqual(outgoingPaymentLimit)
+      expect(fetchedAccess.length).toEqual(1)
+      expect(fetchedAccess[0].id).toEqual(access[0].id)
+      expect(fetchedAccess[0].grantId).toEqual(grant.id)
+      expect(fetchedAccess[0].type).toEqual(AccessType.IncomingPayment)
+      expect(fetchedAccess[0].actions).toEqual(incomingPaymentAccess.actions)
+    })
   })
 })

@@ -79,10 +79,10 @@
     "open-payments": "workspace:../open-payments",
     "openapi": "workspace:../openapi",
     "pg": "^8.9.0",
-    "pino": "^8.9.0",
+    "pino": "^8.10.0",
     "pino-pretty": "^9.1.1",
     "raw-body": "^2.5.1",
-    "tigerbeetle-node": "^0.10.0",
+    "tigerbeetle-node": "^0.11.11",
     "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   }

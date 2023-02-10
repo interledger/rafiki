@@ -140,5 +140,7 @@ export async function tokenHttpsigMiddleware(
   if (!sigVerified) {
     ctx.throw(401, 'invalid signature')
   }
+
+  ctx.accessToken = accessToken
   await next()
 }
