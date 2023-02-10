@@ -34,8 +34,8 @@ describe('Ledger Transfer Service', (): void => {
   beforeEach(async (): Promise<void> => {
     asset = await Asset.query(knex).insertAndFetch(randomAsset())
     ;[creditAccount, debitAccount] = await Promise.all([
-      createLedgerAccount({ assetId: asset.id }, knex),
-      createLedgerAccount({ assetId: asset.id }, knex)
+      createLedgerAccount({ ledger: asset.ledger }, knex),
+      createLedgerAccount({ ledger: asset.ledger }, knex)
     ])
   })
 
@@ -58,7 +58,7 @@ describe('Ledger Transfer Service', (): void => {
       async ({ accountType }): Promise<void> => {
         const transfer = await createLedgerTransfer(
           {
-            assetId: creditAccount.assetId,
+            ledger: creditAccount.ledger,
             creditAccountId: creditAccount.id,
             debitAccountId: debitAccount.id,
             state: LedgerTransferState.POSTED
@@ -83,7 +83,7 @@ describe('Ledger Transfer Service', (): void => {
       async ({ accountType }): Promise<void> => {
         const transfer = await createLedgerTransfer(
           {
-            assetId: creditAccount.assetId,
+            ledger: creditAccount.ledger,
             creditAccountId: creditAccount.id,
             debitAccountId: debitAccount.id,
             state: LedgerTransferState.PENDING
@@ -108,7 +108,7 @@ describe('Ledger Transfer Service', (): void => {
       async ({ accountType }): Promise<void> => {
         await createLedgerTransfer(
           {
-            assetId: creditAccount.assetId,
+            ledger: creditAccount.ledger,
             creditAccountId: creditAccount.id,
             debitAccountId: debitAccount.id,
             state: LedgerTransferState.PENDING,
@@ -134,7 +134,7 @@ describe('Ledger Transfer Service', (): void => {
       async ({ accountType }): Promise<void> => {
         await createLedgerTransfer(
           {
-            assetId: creditAccount.assetId,
+            ledger: creditAccount.ledger,
             creditAccountId: creditAccount.id,
             debitAccountId: debitAccount.id,
             state: LedgerTransferState.VOIDED

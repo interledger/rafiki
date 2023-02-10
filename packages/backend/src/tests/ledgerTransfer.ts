@@ -9,7 +9,7 @@ import {
 interface CreateLedgerTransferArgs {
   transferRef?: string
   amount?: bigint
-  assetId: string
+  ledger: number
   creditAccountId: string
   debitAccountId: string
   state?: LedgerTransferState
@@ -24,7 +24,7 @@ export const createLedgerTransfer = async (
   const {
     amount,
     transferRef,
-    assetId,
+    ledger,
     creditAccountId,
     debitAccountId,
     state,
@@ -38,7 +38,7 @@ export const createLedgerTransfer = async (
     debitAccountId: debitAccountId,
     amount: amount ?? 10n,
     expiresAt,
-    assetId,
+    ledger,
     state: state ?? LedgerTransferState.POSTED,
     type
   })

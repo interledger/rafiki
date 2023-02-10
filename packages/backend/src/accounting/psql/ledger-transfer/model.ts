@@ -19,8 +19,6 @@ export class LedgerTransfer extends BaseModel {
     return 'ledgerTransfers'
   }
 
-  public readonly id!: string
-
   public readonly creditAccountId!: string
   public readonly creditAccount?: LedgerAccount
   public readonly debitAccountId!: string
@@ -30,7 +28,7 @@ export class LedgerTransfer extends BaseModel {
 
   public readonly amount!: bigint
 
-  public readonly assetId!: string
+  public readonly ledger!: number
   public readonly asset?: Asset
 
   public readonly expiresAt?: Date
@@ -42,15 +40,15 @@ export class LedgerTransfer extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: Asset,
       join: {
-        from: 'ledgerTransfers.assetId',
-        to: 'assets.id'
+        from: 'ledgerTransfers.ledger',
+        to: 'assets.ledger'
       }
     },
     creditAccount: {
       relation: Model.HasOneRelation,
       modelClass: LedgerAccount,
       join: {
-        from: 'ledgerTransfers.assetId',
+        from: 'ledgerTransfers.creditAccountId',
         to: 'ledgerAccounts.id'
       }
     },
@@ -58,7 +56,7 @@ export class LedgerTransfer extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: LedgerAccount,
       join: {
-        from: 'ledgerTransfers.assetId',
+        from: 'ledgerTransfers.debitAccountId',
         to: 'ledgerAccounts.id'
       }
     }
