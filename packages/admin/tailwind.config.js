@@ -11,9 +11,10 @@ module.exports = {
         offwhite: '#fbf7f4',
         wafer: '#e3d7d0',
         mercury: '#e2e2e2',
-        tealish: '#1e3250'
+        tealish: '#1e3250',
+        vermillion: '#c94343'
       }
     }
   },
-  plugins: []
+  plugins: [require('@tailwindcss/forms')]
 }
