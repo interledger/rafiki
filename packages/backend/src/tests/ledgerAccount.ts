@@ -7,7 +7,7 @@ import {
 
 interface CreateLedgerAccountArgs {
   accountRef?: string
-  assetId: string
+  ledger: number
   type?: LedgerAccountType
 }
 
@@ -15,11 +15,11 @@ export const createLedgerAccount = async (
   args: CreateLedgerAccountArgs,
   knex: TransactionOrKnex
 ): Promise<LedgerAccount> => {
-  const { accountRef, assetId, type } = args
+  const { accountRef, ledger, type } = args
 
   return LedgerAccount.query(knex).insertAndFetch({
     accountRef: accountRef ?? uuid(),
-    assetId,
+    ledger,
     type: type ?? LedgerAccountType.LIQUIDITY_INCOMING
   })
 }
