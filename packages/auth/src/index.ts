@@ -47,6 +47,20 @@ export function initIocContainer(
       migrations: {
         directory: './',
         tableName: 'auth_knex_migrations'
+      },
+      log: {
+        warn(message) {
+          logger.warn(message)
+        },
+        error(message) {
+          logger.error(message)
+        },
+        deprecate(message) {
+          logger.warn(message)
+        },
+        debug(message) {
+          logger.debug(message)
+        }
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
@@ -127,11 +141,13 @@ export function initIocContainer(
   container.singleton(
     'accessTokenService',
     async (deps: IocContract<AppServices>) => {
+      const { accessTokenExpirySeconds } = await deps.use('config')
+
       return await createAccessTokenService({
         logger: await deps.use('logger'),
-        config: await deps.use('config'),
         knex: await deps.use('knex'),
-        clientService: await deps.use('clientService')
+        clientService: await deps.use('clientService'),
+        accessTokenExpirySeconds
       })
     }
   )
@@ -141,9 +157,11 @@ export function initIocContainer(
       return createAccessTokenRoutes({
         config: await deps.use('config'),
         logger: await deps.use('logger'),
+        knex: await deps.use('knex'),
         accessTokenService: await deps.use('accessTokenService'),
         clientService: await deps.use('clientService'),
-        accessService: await deps.use('accessService')
+        accessService: await deps.use('accessService'),
+        grantService: await deps.use('grantService')
       })
     }
   )

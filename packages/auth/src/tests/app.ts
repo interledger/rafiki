@@ -41,7 +41,7 @@ export const createTestApp = async (
         ignore: 'pid,hostname'
       }
     },
-    level: process.env.LOG_LEVEL || 'error',
+    level: process.env.LOG_LEVEL || 'silent',
     name: 'test-logger'
   })
 
