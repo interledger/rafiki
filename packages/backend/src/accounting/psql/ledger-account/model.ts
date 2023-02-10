@@ -17,9 +17,8 @@ export class LedgerAccount extends BaseModel {
     return 'ledgerAccounts'
   }
 
-  public readonly id!: string
   public readonly accountRef!: string
-  public readonly assetId!: string
+  public readonly ledger!: number
   public readonly type!: LedgerAccountType
   public readonly asset?: Asset
 
@@ -28,8 +27,8 @@ export class LedgerAccount extends BaseModel {
       relation: Model.HasOneRelation,
       modelClass: Asset,
       join: {
-        from: 'ledgerAccounts.assetId',
-        to: 'assets.id'
+        from: 'ledgerAccounts.ledger',
+        to: 'assets.ledger'
       }
     }
   }

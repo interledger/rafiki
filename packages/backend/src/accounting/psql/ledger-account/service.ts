@@ -6,7 +6,7 @@ import { AccountAlreadyExistsError } from '../../errors'
 
 export interface CreateArgs {
   accountRef: string
-  assetId: string
+  ledger: number
   type: LedgerAccountType
 }
 
@@ -37,9 +37,9 @@ async function create(
   args: CreateArgs
 ): Promise<LedgerAccount> {
   try {
-    const { accountRef, assetId, type } = args
+    const { accountRef, ledger, type } = args
     return await LedgerAccount.query(deps.knex).insertAndFetch({
-      assetId,
+      ledger,
       accountRef,
       type
     })
