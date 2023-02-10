@@ -6,42 +6,27 @@ import { generateToken } from '../shared/utils'
 import { Grant, GrantState } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
-import { IAppConfig } from '../config/app'
-
-interface RotateTokenArgs {
-  id: string
-  grantId: string
-  expiresIn?: number
-}
-
-interface CreateTokenArgs {
-  grantId: string
-  expiresIn?: number
-}
 
 export interface AccessTokenService {
   get(tokenValue: string): Promise<AccessToken | undefined>
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(tokenValue: string): Promise<Grant | undefined>
-  create(args: CreateTokenArgs, trx?: TransactionOrKnex): Promise<AccessToken>
-  revoke(id: string, trx?: TransactionOrKnex): Promise<boolean>
-  rotate(
-    args: RotateTokenArgs,
-    trx?: TransactionOrKnex
-  ): Promise<AccessToken | undefined>
+  create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
+  revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
+  rotate(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   clientService: ClientService
-  config: IAppConfig
+  accessTokenExpirySeconds: number
 }
 
 export async function createAccessTokenService({
   logger,
   knex,
-  config,
-  clientService
+  clientService,
+  accessTokenExpirySeconds
 }: ServiceDependencies): Promise<AccessTokenService> {
   const log = logger.child({
     service: 'TokenService'
@@ -51,7 +36,7 @@ export async function createAccessTokenService({
     logger: log,
     knex,
     clientService,
-    config
+    accessTokenExpirySeconds
   }
 
   return {
@@ -60,9 +45,9 @@ export async function createAccessTokenService({
       getByManagementId(managementId),
     introspect: (tokenValue: string) => introspect(deps, tokenValue),
     revoke: (id: string, trx?: TransactionOrKnex) => revoke(deps, id, trx),
-    create: (args: CreateTokenArgs, trx?: TransactionOrKnex) =>
-      createAccessToken(deps, args, trx),
-    rotate: (args: RotateTokenArgs) => rotate(deps, args)
+    create: (grantId: string, trx?: TransactionOrKnex) =>
+      createAccessToken(deps, grantId, trx),
+    rotate: (id: string) => rotate(deps, id)
   }
 }
 
@@ -108,41 +93,37 @@ async function revoke(
   deps: ServiceDependencies,
   id: string,
   trx?: TransactionOrKnex
-): Promise<boolean> {
-  const deletedCount = await AccessToken.query(trx || deps.knex)
-    .findById(id)
-    .delete()
-
-  return deletedCount === 1
+): Promise<AccessToken | undefined> {
+  return AccessToken.query(trx || deps.knex)
+    .deleteById(id)
+    .returning('*')
+    .first()
 }
 
 async function createAccessToken(
   deps: ServiceDependencies,
-  args: CreateTokenArgs,
+  grantId: string,
   trx?: TransactionOrKnex
 ): Promise<AccessToken> {
-  const { grantId, expiresIn } = args
   return AccessToken.query(trx || deps.knex).insert({
     value: generateToken(),
     managementId: v4(),
     grantId,
-    expiresIn: expiresIn ?? deps.config.accessTokenExpirySeconds
+    expiresIn: deps.accessTokenExpirySeconds
   })
 }
 
 async function rotate(
   deps: ServiceDependencies,
-  args: RotateTokenArgs,
+  id: string,
   trx?: TransactionOrKnex
 ): Promise<AccessToken | undefined> {
-  const { id, grantId, expiresIn } = args
+  const revokedToken = await revoke(deps, id, trx)
 
-  const isRevoked = await revoke(deps, id, trx)
-
-  if (!isRevoked) {
-    deps.logger.warn({ tokenId: id, grantId }, 'Could not revoke access token')
+  if (!revokedToken) {
+    deps.logger.warn({ tokenId: id }, 'Could not revoke access token')
     return undefined
   }
 
-  return createAccessToken(deps, { grantId, expiresIn }, trx)
+  return createAccessToken(deps, revokedToken.grantId, trx)
 }

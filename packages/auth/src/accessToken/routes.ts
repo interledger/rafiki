@@ -116,14 +116,7 @@ async function rotateToken(
 
   try {
     await deps.grantService.lock(ctx.accessToken.grantId, trx)
-    newToken = await deps.accessTokenService.rotate(
-      {
-        id: ctx.accessToken.id,
-        grantId: ctx.accessToken.grantId,
-        expiresIn: ctx.accessToken.expiresIn
-      },
-      trx
-    )
+    newToken = await deps.accessTokenService.rotate(ctx.accessToken.id, trx)
 
     if (!newToken) {
       ctx.throw()

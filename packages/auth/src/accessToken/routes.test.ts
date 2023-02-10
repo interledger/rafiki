@@ -82,7 +82,7 @@ describe('Access Token Routes', (): void => {
   const BASE_TOKEN = {
     value: generateToken(),
     managementId: v4(),
-    expiresIn: 3600
+    expiresIn: Config.accessTokenExpirySeconds
   }
 
   describe('Introspect', (): void => {
@@ -305,7 +305,7 @@ describe('Access Token Routes', (): void => {
           ],
           value: expect.anything(),
           manage: expect.anything(),
-          expires_in: token.expiresIn
+          expires_in: Config.accessTokenExpirySeconds
         }
       })
       expect(ctx.response).toSatisfyApiSpec()
