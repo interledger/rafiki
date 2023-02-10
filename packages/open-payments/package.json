@@ -31,7 +31,7 @@
     "http-message-signatures": "^0.1.2",
     "http-signature-utils": "workspace:../http-signature-utils",
     "openapi": "workspace:../openapi",
-    "pino": "^8.9.0",
+    "pino": "^8.10.0",
     "uuid": "^9.0.0"
   }
 }
