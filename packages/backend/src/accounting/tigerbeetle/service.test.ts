@@ -17,7 +17,6 @@ import {
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
-  SettlementAccount,
   Withdrawal
 } from '../service'
 
@@ -28,10 +27,10 @@ describe('Accounting Service', (): void => {
   let accountFactory: AccountFactory
   const timeout = BigInt(10_000) // 10 seconds
 
-  const newLedger = (() => {
-    let i = 1
-    return () => i++
-  })()
+  let ledger = 1
+  function newLedger() {
+    return ledger++
+  }
 
   beforeAll(async (): Promise<void> => {
     const { port } = await startTigerbeetleContainer()
@@ -243,45 +242,32 @@ describe('Accounting Service', (): void => {
 
   describe('Create Settlement Account', (): void => {
     test("Can create an asset's settlement account", async (): Promise<void> => {
-      const account: SettlementAccount = {
-        id: uuid(),
-        asset: {
-          id: uuid(),
-          ledger: newLedger()
-        }
-      }
+      const ledger = newLedger()
 
       await expect(
-        accountingService.getSettlementBalance(account.asset.ledger.toString())
+        accountingService.getSettlementBalance(ledger)
       ).resolves.toBeUndefined()
 
-      await accountingService.createSettlementAccount(account)
+      await accountingService.createSettlementAccount(ledger)
 
       await expect(
-        accountingService.getSettlementBalance(account.asset.ledger.toString())
+        accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))
     })
   })
 
   describe('Get Settlement Balance', (): void => {
     test("Can retrieve an asset's settlement account balance", async (): Promise<void> => {
-      const account: SettlementAccount = {
-        id: uuid(),
-        asset: {
-          id: uuid(),
-          ledger: newLedger()
-        }
-      }
-
-      await accountingService.createSettlementAccount(account)
+      const ledger = newLedger()
+      await accountingService.createSettlementAccount(ledger)
       await expect(
-        accountingService.getSettlementBalance(account.asset.ledger.toString())
+        accountingService.getSettlementBalance(ledger)
       ).resolves.toEqual(BigInt(0))
     })
 
     test('Returns undefined for nonexistent account', async (): Promise<void> => {
       await expect(
-        accountingService.getSettlementBalance(newLedger().toString())
+        accountingService.getSettlementBalance(newLedger())
       ).resolves.toBeUndefined()
     })
   })
@@ -509,7 +495,7 @@ describe('Accounting Service', (): void => {
         BigInt(0)
       )
       await expect(
-        accountingService.getSettlementBalance(account.asset.ledger.toString())
+        accountingService.getSettlementBalance(account.asset.ledger)
       ).resolves.toEqual(BigInt(0))
     })
 
@@ -521,9 +507,7 @@ describe('Accounting Service', (): void => {
         accountingService.getBalance(deposit.account.id)
       ).resolves.toEqual(deposit.amount)
       await expect(
-        accountingService.getSettlementBalance(
-          deposit.account.asset.ledger.toString()
-        )
+        accountingService.getSettlementBalance(deposit.account.asset.ledger)
       ).resolves.toEqual(deposit.amount)
     })
 
@@ -589,7 +573,7 @@ describe('Accounting Service', (): void => {
         startingBalance
       )
       await expect(
-        accountingService.getSettlementBalance(account.asset.ledger.toString())
+        accountingService.getSettlementBalance(account.asset.ledger)
       ).resolves.toEqual(startingBalance)
     })
 
@@ -611,7 +595,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(startingBalance - withdrawal.amount)
         await expect(
           accountingService.getSettlementBalance(
-            withdrawal.account.asset.ledger.toString()
+            withdrawal.account.asset.ledger
           )
         ).resolves.toEqual(
           timeout ? startingBalance : startingBalance - withdrawal.amount
@@ -685,7 +669,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(startingBalance - withdrawal.amount)
         await expect(
           accountingService.getSettlementBalance(
-            withdrawal.account.asset.ledger.toString()
+            withdrawal.account.asset.ledger
           )
         ).resolves.toEqual(startingBalance - withdrawal.amount)
       })
@@ -752,7 +736,7 @@ describe('Accounting Service', (): void => {
         ).resolves.toEqual(startingBalance)
         await expect(
           accountingService.getSettlementBalance(
-            withdrawal.account.asset.ledger.toString()
+            withdrawal.account.asset.ledger
           )
         ).resolves.toEqual(startingBalance)
       })
