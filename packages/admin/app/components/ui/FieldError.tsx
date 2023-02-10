@@ -10,7 +10,7 @@ export const FieldError = ({ error }: FieldErrorProps) => {
       {Array.isArray(error) ? (
         <>
           {error.map((e) => (
-            <p key={e}>e</p>
+            <p key={e}>{e}</p>
           ))}
         </>
       ) : (
