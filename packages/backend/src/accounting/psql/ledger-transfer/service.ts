@@ -1,34 +1,16 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../../shared/baseService'
-import { TransferError } from '../../errors'
 import { LedgerTransfer, LedgerTransferState } from './model'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
   debits: LedgerTransfer[]
 }
-
-export type CreateTransferArgs = Pick<
-  LedgerTransfer,
-  | 'amount'
-  | 'transferRef'
-  | 'creditAccountId'
-  | 'debitAccountId'
-  | 'ledger'
-  | 'expiresAt'
-  | 'type'
-  | 'state'
->
-
 export interface LedgerTransferService {
   getAccountTransfers(
     accountId: string,
     trx?: TransactionOrKnex
   ): Promise<GetTransfersResult>
-  createTransfers(
-    transfers: CreateTransferArgs[],
-    trx?: TransactionOrKnex
-  ): Promise<TransferError | void>
 }
 
 type ServiceDependencies = BaseService
@@ -46,8 +28,7 @@ export async function createLedgerTransferService({
   }
   return {
     getAccountTransfers: (accountId, trx) =>
-      getAccountTransfers(deps, accountId, trx),
-    createTransfers: (transfers, trx) => createTransfers(deps, transfers, trx)
+      getAccountTransfers(deps, accountId, trx)
   }
 }
 
@@ -81,17 +62,4 @@ async function getAccountTransfers(
     },
     { credits: [], debits: [] } as GetTransfersResult
   )
-}
-
-async function createTransfers(
-  deps: ServiceDependencies,
-  transfers: CreateTransferArgs[],
-  trx?: TransactionOrKnex
-): Promise<void> {
-  try {
-    await LedgerTransfer.query(trx || deps.knex).insertAndFetch(transfers)
-  } catch (error) {
-    deps.logger.error('error')
-    throw new Error('transfer error')
-  }
 }
