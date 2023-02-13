@@ -1,29 +1,12 @@
 require('ts-node/register')
 
 import { knex } from 'knex'
-import {
-  GenericContainer,
-  StartupCheckStrategy,
-  StartupStatus,
-  Wait
-} from 'testcontainers'
-import Dockerode from 'dockerode'
+import { GenericContainer } from 'testcontainers'
 import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
 
 const REDIS_PORT = 6379
-
-class ReadyAfterDelayWaitStrategy extends StartupCheckStrategy {
-  public checkStartupState(
-    dockerClient: Dockerode,
-    containerId: string
-  ): Promise<StartupStatus> {
-    const success = 0
-
-    return new Promise((resolve) => setTimeout(() => resolve('SUCCESS'), 3000))
-  }
-}
 
 const setup = async (globalConfig): Promise<void> => {
   const workers = globalConfig.maxWorkers
