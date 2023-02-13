@@ -244,18 +244,31 @@ async function getAccountBalances(
   const { credits, debits } =
     await deps.ledgerTransferService.getAccountTransfers(account.id)
 
-  return {
-    creditsPosted: sum(credits, LedgerTransferState.POSTED),
-    creditsPending: sum(credits, LedgerTransferState.PENDING),
-    debitsPosted: sum(debits, LedgerTransferState.POSTED),
-    debitsPending: sum(debits, LedgerTransferState.PENDING)
-  }
-}
+  let creditsPosted = 0n
+  let creditsPending = 0n
+  let debitsPosted = 0n
+  let debitsPending = 0n
 
-function sum(transfers: LedgerTransfer[], state: LedgerTransferState) {
-  return transfers
-    .filter((transfer) => transfer.state === state)
-    .reduce((sum, transfer) => {
-      return sum + transfer.amount
-    }, 0n)
+  for (const credit of credits) {
+    if (credit.state === LedgerTransferState.POSTED) {
+      creditsPosted += credit.amount
+    } else if (credit.state === LedgerTransferState.PENDING) {
+      creditsPending += credit.amount
+    }
+  }
+
+  for (const debit of debits) {
+    if (debit.state === LedgerTransferState.POSTED) {
+      debitsPosted += debit.amount
+    } else if (debit.state === LedgerTransferState.PENDING) {
+      debitsPending += debit.amount
+    }
+  }
+
+  return {
+    creditsPosted,
+    creditsPending,
+    debitsPosted,
+    debitsPending
+  }
 }
