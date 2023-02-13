@@ -1,7 +1,7 @@
 require('ts-node/register')
 
 import { knex } from 'knex'
-import { GenericContainer } from 'testcontainers'
+import { GenericContainer, Wait } from 'testcontainers'
 import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
@@ -24,6 +24,7 @@ const setup = async (globalConfig): Promise<void> => {
         .withEnvironment({
           POSTGRES_PASSWORD: 'password'
         })
+        .withWaitStrategy(Wait.forLogMessage(/listening on IPv4 address/))
         .start()
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
