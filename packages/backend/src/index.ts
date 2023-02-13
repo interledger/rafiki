@@ -23,7 +23,9 @@ import {
 } from './shared/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import { createAccountingService } from './accounting/service'
+import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
+import { createLedgerAccountService } from './accounting/psql/ledger-account/service'
 import { createPeerService } from './peer/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
@@ -155,14 +157,39 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService')
     })
   })
+
+  container.singleton('ledgerAccountService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+
+    return createLedgerAccountService({
+      logger,
+      knex
+    })
+  })
+
   container.singleton('accountingService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const tigerbeetle = await deps.use('tigerbeetle')
-    return await createAccountingService({
-      logger: logger,
-      knex: knex,
-      tigerbeetle,
+    const config = await deps.use('config')
+
+    if (config.useTigerbeetle) {
+      const tigerbeetle = await deps.use('tigerbeetle')
+
+      return createTigerbeetleAccountingService({
+        logger,
+        knex,
+        tigerbeetle,
+        withdrawalThrottleDelay: config.withdrawalThrottleDelay
+      })
+    }
+
+    const ledgerAccountService = await deps.use('ledgerAccountService')
+
+    return createPsqlAccountingService({
+      logger,
+      knex,
+      ledgerAccountService,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
   })

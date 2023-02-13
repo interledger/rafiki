@@ -100,10 +100,11 @@ describe('Grant Routes', (): void => {
   })
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+
     grantRoutes = await deps.use('grantRoutes')
     config = await deps.use('config')
-    appContainer = await createTestApp(deps)
     accessTokenService = await deps.use('accessTokenService')
     clientService = await deps.use('clientService')
   })

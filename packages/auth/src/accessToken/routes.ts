@@ -1,13 +1,21 @@
 import { Logger } from 'pino'
 import { TokenInfo } from 'token-introspection'
-import { toOpenPaymentsAccess } from '../access/model'
+import { Access, toOpenPaymentsAccess } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from './service'
 import { ClientService } from '../client/service'
 import { Grant } from '../grant/model'
-import { toOpenPaymentsAccessToken } from './model'
+import { AccessToken, toOpenPaymentsAccessToken } from './model'
 import { AccessService } from '../access/service'
+import { TransactionOrKnex } from 'objection'
+import { GrantService } from '../grant/service'
+
+export type TokenHttpSigContext = AppContext & {
+  accessToken: AccessToken & {
+    grant: NonNullable<AccessToken['grant']>
+  }
+}
 
 type TokenRequest<BodyT> = Exclude<AppContext['request'], 'body'> & {
   body: BodyT
@@ -21,7 +29,7 @@ type ManagementRequest = Exclude<AppContext['request'], 'params'> & {
   params?: Record<'id', string>
 }
 
-type ManagementContext = Exclude<AppContext, 'request'> & {
+type ManagementContext = Exclude<TokenHttpSigContext, 'request'> & {
   request: ManagementRequest
 }
 
@@ -35,9 +43,11 @@ export type RotateContext = ManagementContext
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
+  knex: TransactionOrKnex
   accessTokenService: AccessTokenService
   accessService: AccessService
   clientService: ClientService
+  grantService: GrantService
 }
 
 export interface AccessTokenRoutes {
@@ -90,9 +100,8 @@ async function revokeToken(
   deps: ServiceDependencies,
   ctx: RevokeContext
 ): Promise<void> {
-  const token = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
-  const { id: managementId } = ctx.params
-  await deps.accessTokenService.revoke(managementId, token)
+  await deps.accessTokenService.revoke(ctx.accessToken.id)
+
   ctx.status = 204
 }
 
@@ -100,23 +109,28 @@ async function rotateToken(
   deps: ServiceDependencies,
   ctx: RotateContext
 ): Promise<void> {
-  const { id: managementId } = ctx.params
-  const token = (ctx.headers['authorization'] ?? '').replace('GNAP ', '')
+  const trx = await AccessToken.startTransaction()
 
-  let newToken
+  let accessItems: Access[]
+  let newToken: AccessToken | undefined
+
   try {
-    newToken = await deps.accessTokenService.rotate(managementId, token)
+    await deps.grantService.lock(ctx.accessToken.grantId, trx)
+    newToken = await deps.accessTokenService.rotate(ctx.accessToken.id, trx)
+
+    if (!newToken) {
+      ctx.throw()
+    }
+
+    accessItems = await deps.accessService.getByGrant(newToken.grantId, trx)
+
+    await trx.commit()
   } catch (error) {
+    await trx.rollback()
     const errorMessage = 'Could not rotate token'
     deps.logger.error({ error: error && error['message'] }, errorMessage)
     ctx.throw(400, { message: errorMessage })
   }
-
-  if (!newToken) {
-    ctx.throw(404, { message: 'Token not found' })
-  }
-
-  const accessItems = await deps.accessService.getByGrant(newToken.grantId)
 
   ctx.status = 200
   ctx.body = {

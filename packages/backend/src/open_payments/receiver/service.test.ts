@@ -39,6 +39,7 @@ import { ReceiverError } from './errors'
 import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import assert from 'assert'
 import { Receiver } from './model'
+import { Grant } from '../grant/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -228,7 +229,8 @@ describe('Receiver Service', (): void => {
         const grantOptions = {
           accessType: AccessType.IncomingPayment,
           accessActions: [AccessAction.ReadAll],
-          accessToken: 'OZB8CDFONP219RP1LT0OS9M2PMHKUR64TB8N6BW7'
+          accessToken: 'OZB8CDFONP219RP1LT0OS9M2PMHKUR64TB8N6BW7',
+          managementUrl: `${authServer}/token/8f69de01-5bf9-4603-91ed-eeca101081f1`
         }
         const grantRequest: GrantRequest = {
           access_token: {
@@ -246,7 +248,7 @@ describe('Receiver Service', (): void => {
         const grant: NonInteractiveGrant = {
           access_token: {
             value: grantOptions.accessToken,
-            manage: `${authServer}/token/8f69de01-5bf9-4603-91ed-eeca101081f1`,
+            manage: grantOptions.managementUrl,
             expires_in: 3600,
             access: grantRequest.access_token.access
           },
@@ -256,6 +258,14 @@ describe('Receiver Service', (): void => {
             },
             uri: `${authServer}/continue/4CF492MLVMSW9MKMXKHQ`,
             wait: 30
+          }
+        }
+        const newToken = {
+          access_token: {
+            value: 'T0OS9M2PMHKUR64TB8N6BW7OZB8CDFONP219RP1L',
+            manage: `${authServer}/token/d3f288c2-0b41-42f0-9b2f-66ff4bf45a7a`,
+            expires_in: 3600,
+            access: grantRequest.access_token.access
           }
         }
 
@@ -273,14 +283,23 @@ describe('Receiver Service', (): void => {
                 ...grantOptions,
                 authServer
               })
-            ).resolves.toMatchObject(grantOptions)
+            ).resolves.toMatchObject({
+              accessType: grantOptions.accessType,
+              accessActions: grantOptions.accessActions,
+              accessToken: grantOptions.accessToken,
+              managementId: '8f69de01-5bf9-4603-91ed-eeca101081f1'
+            })
           }
           jest
             .spyOn(paymentPointerService, 'getByUrl')
             .mockResolvedValueOnce(undefined)
         })
 
-        test('resolves incoming payment', async () => {
+        test.each`
+          rotate   | description
+          ${false} | ${''}
+          ${true}  | ${'- after rotating access token'}
+        `('resolves incoming payment $description', async ({ rotate }) => {
           const clientGetPaymentPointerSpy = jest
             .spyOn(openPaymentsClient.paymentPointer, 'get')
             .mockResolvedValueOnce(paymentPointer)
@@ -292,6 +311,18 @@ describe('Receiver Service', (): void => {
           const clientGetIncomingPaymentSpy = jest
             .spyOn(openPaymentsClient.incomingPayment, 'get')
             .mockResolvedValueOnce(incomingPayment)
+
+          const clientRequestRotateTokenSpy = jest
+            .spyOn(openPaymentsClient.token, 'rotate')
+            .mockResolvedValueOnce(newToken)
+
+          if (existingGrant && rotate) {
+            const fetchedGrant = await grantService.get({
+              ...grantOptions,
+              authServer
+            })
+            await fetchedGrant?.$query(knex).patch({ expiresAt: new Date() })
+          }
 
           await expect(
             receiverService.get(incomingPayment.id)
@@ -326,8 +357,17 @@ describe('Receiver Service', (): void => {
           }
           expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
             url: incomingPayment.id,
-            accessToken: grantOptions.accessToken
+            accessToken:
+              existingGrant && rotate
+                ? newToken.access_token.value
+                : grantOptions.accessToken
           })
+          if (existingGrant && rotate) {
+            expect(clientRequestRotateTokenSpy).toHaveBeenCalledWith({
+              url: grant.access_token.manage,
+              accessToken: grantOptions.accessToken
+            })
+          }
         })
 
         test('returns undefined for invalid remote incoming payment payment pointer', async (): Promise<void> => {
@@ -346,7 +386,34 @@ describe('Receiver Service', (): void => {
         })
 
         if (existingGrant) {
-          test('returns undefined for expired grant', async (): Promise<void> => {
+          test('returns undefined for invalid remote auth server', async (): Promise<void> => {
+            const grant = await grantService.get({
+              ...grantOptions,
+              authServer
+            })
+            assert.ok(grant)
+            const getExistingGrantSpy = jest
+              .spyOn(grantService, 'get')
+              .mockResolvedValueOnce({
+                ...grant,
+                authServer: undefined,
+                expired: true
+              } as Grant)
+            jest
+              .spyOn(openPaymentsClient.paymentPointer, 'get')
+              .mockResolvedValueOnce(paymentPointer)
+            const clientRequestGrantSpy = jest.spyOn(
+              openPaymentsClient.grant,
+              'request'
+            )
+
+            await expect(
+              receiverService.get(incomingPayment.id)
+            ).resolves.toBeUndefined()
+            expect(getExistingGrantSpy).toHaveBeenCalled()
+            expect(clientRequestGrantSpy).not.toHaveBeenCalled()
+          })
+          test('returns undefined for expired grant that cannot be rotated', async (): Promise<void> => {
             const grant = await grantService.get({
               ...grantOptions,
               authServer

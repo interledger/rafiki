@@ -16,7 +16,7 @@ import { AccessService } from '../access/service'
 import { Pagination } from '../shared/baseModel'
 
 export interface GrantService {
-  get(grantId: string): Promise<Grant | undefined>
+  get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteraction(interactId: string): Promise<InteractiveGrant | undefined>
   getByInteractionSession(
@@ -33,6 +33,7 @@ export interface GrantService {
   deleteGrant(continueId: string): Promise<boolean>
   deleteGrantById(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination): Promise<Grant[]>
+  lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -84,7 +85,7 @@ export async function createGrantService({
     knex
   }
   return {
-    get: (grantId: string) => get(grantId),
+    get: (grantId: string, trx?: Transaction) => get(grantId, trx),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
@@ -99,12 +100,17 @@ export async function createGrantService({
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
     deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
     deleteGrantById: (grantId: string) => deleteGrantById(deps, grantId),
-    getPage: (pagination?) => getGrantsPage(deps, pagination)
+    getPage: (pagination?) => getGrantsPage(deps, pagination),
+    lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
+      lock(deps, grantId, trx, timeoutMs)
   }
 }
 
-async function get(grantId: string): Promise<Grant | undefined> {
-  return Grant.query().findById(grantId)
+async function get(
+  grantId: string,
+  trx?: Transaction
+): Promise<Grant | undefined> {
+  return Grant.query(trx).findById(grantId)
 }
 
 async function issueGrant(
@@ -243,4 +249,23 @@ async function getGrantsPage(
   pagination?: Pagination
 ): Promise<Grant[]> {
   return await Grant.query(deps.knex).getPage(pagination)
+}
+
+async function lock(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx: Transaction,
+  timeoutMs?: number
+): Promise<void> {
+  const grants = await trx<Grant>(Grant.tableName)
+    .select()
+    .where('id', grantId)
+    .forNoKeyUpdate()
+    .timeout(timeoutMs ?? 5000)
+
+  if (grants.length <= 0) {
+    deps.logger.warn(
+      `No grant found when attempting to lock grantId: ${grantId}`
+    )
+  }
 }

@@ -21,8 +21,8 @@ describe('Client Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
-    clientService = await deps.use('clientService')
     appContainer = await createTestApp(deps)
+    clientService = await deps.use('clientService')
   })
 
   afterAll(async (): Promise<void> => {

@@ -39,8 +39,8 @@
     "open-payments": "workspace:*",
     "openapi": "workspace:../openapi",
     "pg": "^8.9.0",
-    "pino": "^8.9.0",
-    "pino-pretty": "^9.1.1",
+    "pino": "^8.10.0",
+    "pino-pretty": "^9.2.0",
     "testcontainers": "^9.1.2",
     "token-introspection": "workspace:*",
     "uuid": "^9.0.0"

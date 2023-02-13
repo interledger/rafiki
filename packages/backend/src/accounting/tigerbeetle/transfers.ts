@@ -4,8 +4,9 @@ import {
   TransferFlags
 } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
+import { TransferError } from '../errors'
 
-import { CreateTransferError, TransferError } from './errors'
+import { TigerbeetleCreateTransferError } from './errors'
 import { ServiceDependencies } from './service'
 import { AccountId, toTigerbeetleId } from './utils'
 
@@ -107,20 +108,6 @@ export async function createTransfers(
       case CreateTransferErrorCode.linked_event_failed:
         break
       // 1st phase
-      // TODO @jason: This needs to be removed: =========>
-      case 13: //debit_account_not_found,
-        return { index, error: TransferError.UnknownSourceAccount }
-      case 14: //credit_account_not_found,
-        return { index, error: TransferError.UnknownDestinationAccount }
-      case 17: //exists_with_different_flags,
-        return { index, error: TransferError.TransferExists }
-      case 19: //exists_with_different_credit_account_id,
-        return { index, error: TransferError.TransferExists }
-      case 32: //exceeds_credits
-        return { index, error: TransferError.InsufficientBalance }
-      case 33: //exceeds_debits
-        return { index, error: TransferError.InsufficientDebitBalance }
-      // TODO @jason: stop ==============================>
       case CreateTransferErrorCode.exists:
       case CreateTransferErrorCode.exists_with_different_debit_account_id:
       case CreateTransferErrorCode.exists_with_different_credit_account_id:
@@ -160,28 +147,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_already_voided:
         return { index, error: TransferError.AlreadyVoided }
       default:
-        // TODO @jason: This needs to be removed: =========>
-        switch (code) {
-          case 39: //pending_transfer_not_found
-            return { index, error: TransferError.UnknownTransfer }
-          case 40: //pending_transfer_not_pending
-            return {
-              index,
-              error: transfers[index].postId
-                ? TransferError.AlreadyPosted
-                : TransferError.AlreadyVoided
-            }
-          case 47: //pending_transfer_already_posted,
-            return { index, error: TransferError.AlreadyPosted }
-          case 48: //pending_transfer_already_voided,
-            return { index, error: TransferError.AlreadyVoided }
-          case 49: //pending_transfer_expired,
-            return { index, error: TransferError.TransferExpired }
-        }
-
-        // TODO @jason: stop ==============================>
-
-        throw new CreateTransferError(code)
+        throw new TigerbeetleCreateTransferError(code)
     }
   }
 }

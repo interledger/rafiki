@@ -45,6 +45,7 @@ import {
   tokenHttpsigMiddleware
 } from './signature/middleware'
 import { AccessService } from './access/service'
+import { AccessTokenService } from './accessToken/service'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -90,6 +91,7 @@ export interface AppServices {
   grantService: Promise<GrantService>
   accessService: Promise<AccessService>
   accessTokenRoutes: Promise<AccessTokenRoutes>
+  accessTokenService: Promise<AccessTokenService>
   grantRoutes: Promise<GrantRoutes>
 }
 
@@ -246,7 +248,7 @@ export class App {
     )
 
     // Token Rotation
-    router.post(
+    router.post<DefaultState, RotateContext>(
       '/token/:id',
       createValidatorMiddleware<RotateContext>(openApi.authServerSpec, {
         path: '/token/{id}',
@@ -257,7 +259,7 @@ export class App {
     )
 
     // Token Revocation
-    router.delete(
+    router.delete<DefaultState, RevokeContext>(
       '/token/:id',
       createValidatorMiddleware<RevokeContext>(openApi.authServerSpec, {
         path: '/token/{id}',
