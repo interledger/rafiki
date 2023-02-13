@@ -232,16 +232,8 @@ async function getAccountBalances(
   deps: ServiceDependencies,
   account: LedgerAccount
 ): Promise<AccountBalance> {
-  const transfers = await deps.ledgerTransferService.getAccountTransfers(
-    account.id
-  )
-
-  const credits = transfers.filter(
-    (transfer) => transfer.creditAccountId === account.id
-  )
-  const debits = transfers.filter(
-    (transfer) => transfer.debitAccountId === account.id
-  )
+  const { credits, debits } =
+    await deps.ledgerTransferService.getAccountTransfers(account.id)
 
   return {
     creditsPosted: sum(credits, LedgerTransferState.POSTED),

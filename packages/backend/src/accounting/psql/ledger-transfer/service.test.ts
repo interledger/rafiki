@@ -70,7 +70,11 @@ describe('Ledger Transfer Service', (): void => {
           ledgerTransferService.getAccountTransfers(
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
-        ).resolves.toEqual([transfer])
+        ).resolves.toEqual(
+          accountType === 'credit'
+            ? { credits: [transfer], debits: [] }
+            : { credits: [], debits: [transfer] }
+        )
       }
     )
 
@@ -95,7 +99,11 @@ describe('Ledger Transfer Service', (): void => {
           ledgerTransferService.getAccountTransfers(
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
-        ).resolves.toEqual([transfer])
+        ).resolves.toEqual(
+          accountType === 'credit'
+            ? { credits: [transfer], debits: [] }
+            : { credits: [], debits: [transfer] }
+        )
       }
     )
 
@@ -121,7 +129,7 @@ describe('Ledger Transfer Service', (): void => {
           ledgerTransferService.getAccountTransfers(
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
-        ).resolves.toEqual([])
+        ).resolves.toEqual({ credits: [], debits: [] })
       }
     )
 
@@ -146,7 +154,7 @@ describe('Ledger Transfer Service', (): void => {
           ledgerTransferService.getAccountTransfers(
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
-        ).resolves.toEqual([])
+        ).resolves.toEqual({ credits: [], debits: [] })
       }
     )
   })

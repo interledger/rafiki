@@ -2,11 +2,15 @@ import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../../shared/baseService'
 import { LedgerTransfer, LedgerTransferState } from './model'
 
+interface GetTransfersResult {
+  credits: LedgerTransfer[]
+  debits: LedgerTransfer[]
+}
 export interface LedgerTransferService {
   getAccountTransfers(
     accountId: string,
     trx?: TransactionOrKnex
-  ): Promise<LedgerTransfer[]>
+  ): Promise<GetTransfersResult>
 }
 
 type ServiceDependencies = BaseService
@@ -32,7 +36,7 @@ async function getAccountTransfers(
   deps: ServiceDependencies,
   accountId: string,
   trx?: TransactionOrKnex
-): Promise<LedgerTransfer[]> {
+): Promise<GetTransfersResult> {
   const transfers = await LedgerTransfer.query(trx || deps.knex)
     .where((query) =>
       query.where({ debitAccountId: accountId }).orWhere({
@@ -46,5 +50,16 @@ async function getAccountTransfers(
       state: LedgerTransferState.VOIDED
     })
 
-  return transfers
+  return transfers.reduce(
+    (results, transfer) => {
+      if (transfer.debitAccountId === accountId) {
+        results.debits.push(transfer)
+      } else {
+        results.credits.push(transfer)
+      }
+
+      return results
+    },
+    { credits: [], debits: [] } as GetTransfersResult
+  )
 }
