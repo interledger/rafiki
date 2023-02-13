@@ -1,4 +1,3 @@
-import { v4 as uuid } from 'uuid'
 import { TransactionOrKnex } from 'objection'
 import {
   LedgerTransfer,
@@ -33,7 +32,7 @@ export const createLedgerTransfer = async (
   } = args
 
   return LedgerTransfer.query(knex).insertAndFetch({
-    transferRef: transferRef ?? uuid(),
+    transferRef,
     creditAccountId: creditAccountId,
     debitAccountId: debitAccountId,
     amount: amount ?? 10n,

@@ -1,4 +1,5 @@
-import { Model } from 'objection'
+import { v4 as uuid } from 'uuid'
+import { Model, QueryContext } from 'objection'
 import { Asset } from '../../../asset/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { LedgerAccount } from '../ledger-account/model'
@@ -24,7 +25,7 @@ export class LedgerTransfer extends BaseModel {
   public readonly debitAccountId!: string
   public readonly debitAccount?: LedgerAccount
 
-  public readonly transferRef!: string
+  public transferRef!: string
 
   public readonly amount!: bigint
 
@@ -34,6 +35,11 @@ export class LedgerTransfer extends BaseModel {
   public readonly expiresAt?: Date
   public readonly state!: LedgerTransferState
   public readonly type?: LedgerTransferType
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+    this.transferRef = this.transferRef || uuid()
+  }
 
   static relationMappings = {
     asset: {
