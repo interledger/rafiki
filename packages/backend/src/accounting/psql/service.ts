@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { TransactionOrKnex } from 'objection'
 import { Asset } from '../../asset/model'
-import { AssetService } from '../../asset/service'
 import { BaseService } from '../../shared/baseService'
-import { CreateAccountError, TransferError } from '../errors'
+import { TransferError } from '../errors'
 import {
   AccountingService,
   Deposit,
@@ -55,9 +55,10 @@ export function createAccountingService(
     logger: deps_.logger.child({ service: 'PsqlAccountingService' })
   }
   return {
-    createLiquidityAccount: (options, accTypeCode) =>
-      createLiquidityAccount(deps, options, accTypeCode),
-    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
+    createLiquidityAccount: (options, accTypeCode, trx) =>
+      createLiquidityAccount(deps, options, accTypeCode, trx),
+    createSettlementAccount: (ledger, trx) =>
+      createSettlementAccount(deps, ledger, trx),
     getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
     getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
     getAccountsTotalSent: (accountRefs) =>
@@ -77,31 +78,39 @@ export function createAccountingService(
 export async function createLiquidityAccount(
   deps: ServiceDependencies,
   account: LiquidityAccount,
-  accountType: LiquidityAccountType
+  accountType: LiquidityAccountType,
+  trx?: TransactionOrKnex
 ): Promise<LiquidityAccount> {
-  await deps.ledgerAccountService.create({
-    accountRef: account.id,
-    ledger: account.asset.ledger,
-    type: mapLiquidityAccountTypeToLedgerAccountType[accountType]
-  })
+  await deps.ledgerAccountService.create(
+    {
+      accountRef: account.id,
+      ledger: account.asset.ledger,
+      type: mapLiquidityAccountTypeToLedgerAccountType[accountType]
+    },
+    trx
+  )
 
   return account
 }
 
 export async function createSettlementAccount(
   deps: ServiceDependencies,
-  ledger: number
+  ledger: number,
+  trx?: TransactionOrKnex
 ): Promise<void> {
-  const asset = await Asset.query(deps.knex).findOne({ ledger })
+  const asset = await Asset.query(trx || deps.knex).findOne({ ledger })
   if (!asset) {
     throw new Error(`Could not find asset by ledger value: ${ledger}`)
   }
 
-  await deps.ledgerAccountService.create({
-    accountRef: asset.id,
-    ledger,
-    type: LedgerAccountType.SETTLEMENT
-  })
+  await deps.ledgerAccountService.create(
+    {
+      accountRef: asset.id,
+      ledger,
+      type: LedgerAccountType.SETTLEMENT
+    },
+    trx
+  )
 }
 
 export async function getLiquidityAccountBalance(
