@@ -86,7 +86,7 @@ importers:
       openapi-types: ^12.1.0
       pg: ^8.9.0
       pino: ^8.10.0
-      pino-pretty: ^9.1.1
+      pino-pretty: ^9.2.0
       testcontainers: ^9.1.2
       token-introspection: workspace:*
       typescript: ^4.9.5
@@ -116,7 +116,7 @@ importers:
       openapi: link:../openapi
       pg: 8.9.0
       pino: 8.10.0
-      pino-pretty: 9.1.1
+      pino-pretty: 9.2.0
       testcontainers: 9.1.2
       token-introspection: link:../token-introspection
       uuid: 9.0.0
@@ -202,7 +202,7 @@ importers:
       openapi-types: ^12.1.0
       pg: ^8.9.0
       pino: ^8.10.0
-      pino-pretty: ^9.1.1
+      pino-pretty: ^9.2.0
       raw-body: ^2.5.1
       react: ~18.2.0
       rosie: ^2.1.0
@@ -253,7 +253,7 @@ importers:
       openapi: link:../openapi
       pg: 8.9.0
       pino: 8.10.0
-      pino-pretty: 9.1.1
+      pino-pretty: 9.2.0
       raw-body: 2.5.1
       tigerbeetle-node: 0.11.11
       token-introspection: link:../token-introspection
@@ -10238,13 +10238,8 @@ packages:
       kind-of: 6.0.3
     dev: true
 
-  /minimist/1.2.6:
-    resolution: {integrity: sha512-Jsjnk4bw3YJqYzbdyBiNsPWHPfO++UGG749Cxs6peCu5Xg4nrena6OVxOYxrQTqww0Jmwt+Ref8rggumkTLz9Q==}
-    dev: false
-
   /minimist/1.2.7:
     resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
-    dev: true
 
   /minipass-collect/1.0.2:
     resolution: {integrity: sha512-6T6lH0H8OG9kITm/Jm6tdooIbogG9e0tLgpY6mphXSm/A9u8Nq1ryBG+Qspiub9LjWlBPsPS3tWQ/Botq4FdxA==}
@@ -11029,8 +11024,8 @@ packages:
       split2: 4.1.0
     dev: false
 
-  /pino-pretty/9.1.1:
-    resolution: {integrity: sha512-iJrnjgR4FWQIXZkUF48oNgoRI9BpyMhaEmihonHeCnZ6F50ZHAS4YGfGBT/ZVNsPmd+hzkIPGzjKdY08+/yAXw==}
+  /pino-pretty/9.2.0:
+    resolution: {integrity: sha512-7CeszmFqrUD08+JvtYcFXowNE7duFlE1XScmR41qTMbwQOhn7gijYYrRb5udH+z8xq4+A8vN8rQNYVPCTfzmGw==}
     hasBin: true
     dependencies:
       colorette: 2.0.19
@@ -11039,7 +11034,7 @@ packages:
       fast-safe-stringify: 2.1.1
       help-me: 4.0.1
       joycon: 3.1.1
-      minimist: 1.2.6
+      minimist: 1.2.7
       on-exit-leak-free: 2.1.0
       pino-abstract-transport: 1.0.0
       pump: 3.0.0
