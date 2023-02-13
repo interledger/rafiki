@@ -19,7 +19,6 @@ import {
 } from './ledger-account/model'
 import { LedgerAccountService } from './ledger-account/service'
 import {
-  LedgerTransfer,
   LedgerTransferState,
   LedgerTransferType
 } from './ledger-transfer/model'
