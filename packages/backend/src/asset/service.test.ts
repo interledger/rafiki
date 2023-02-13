@@ -14,7 +14,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
-import { CheckViolationError } from 'objection'
+import { CheckViolationError, Transaction } from 'objection'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -79,9 +79,13 @@ describe('Asset Service', (): void => {
 
       expect(liquiditySpy).toHaveBeenCalledWith(
         asset,
-        LiquidityAccountType.ASSET
+        LiquidityAccountType.ASSET,
+        expect.any(Function)
       )
-      expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
+      expect(settlementSpy).toHaveBeenCalledWith(
+        asset.ledger,
+        expect.any(Function)
+      )
 
       await expect(accountingService.getBalance(asset.id)).resolves.toEqual(
         BigInt(0)
