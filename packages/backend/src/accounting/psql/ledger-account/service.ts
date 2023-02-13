@@ -1,4 +1,4 @@
-import { UniqueViolationError } from 'objection'
+import { TransactionOrKnex, UniqueViolationError } from 'objection'
 
 import { BaseService } from '../../../shared/baseService'
 import { LedgerAccount, LedgerAccountType } from './model'
@@ -11,7 +11,7 @@ export interface CreateArgs {
 }
 
 export interface LedgerAccountService {
-  create(options: CreateArgs): Promise<LedgerAccount>
+  create(options: CreateArgs, trx?: TransactionOrKnex): Promise<LedgerAccount>
 }
 
 type ServiceDependencies = BaseService
@@ -28,17 +28,18 @@ export async function createLedgerAccountService({
     knex
   }
   return {
-    create: (args) => create(deps, args)
+    create: (args, trx) => create(deps, args, trx)
   }
 }
 
 async function create(
   deps: ServiceDependencies,
-  args: CreateArgs
+  args: CreateArgs,
+  trx?: TransactionOrKnex
 ): Promise<LedgerAccount> {
   try {
     const { accountRef, ledger, type } = args
-    return await LedgerAccount.query(deps.knex).insertAndFetch({
+    return await LedgerAccount.query(trx || deps.knex).insertAndFetch({
       ledger,
       accountRef,
       type

@@ -58,11 +58,14 @@ describe('Psql Accounting Service', (): void => {
           LiquidityAccountType.ASSET
         )
       ).resolves.toEqual(account)
-      expect(createAccountSpy).toHaveBeenCalledWith({
-        accountRef: account.id,
-        ledger: asset.ledger,
-        type: LedgerAccountType.LIQUIDITY_ASSET
-      })
+      expect(createAccountSpy).toHaveBeenCalledWith(
+        {
+          accountRef: account.id,
+          ledger: asset.ledger,
+          type: LedgerAccountType.LIQUIDITY_ASSET
+        },
+        undefined
+      )
     })
 
     test('throws on error', async (): Promise<void> => {
@@ -83,11 +86,14 @@ describe('Psql Accounting Service', (): void => {
           LiquidityAccountType.ASSET
         )
       ).rejects.toThrowError(AccountAlreadyExistsError)
-      expect(createAccountSpy).toHaveBeenCalledWith({
-        accountRef: account.id,
-        ledger: asset.ledger,
-        type: LedgerAccountType.LIQUIDITY_ASSET
-      })
+      expect(createAccountSpy).toHaveBeenCalledWith(
+        {
+          accountRef: account.id,
+          ledger: asset.ledger,
+          type: LedgerAccountType.LIQUIDITY_ASSET
+        },
+        undefined
+      )
     })
   })
 
@@ -98,11 +104,14 @@ describe('Psql Accounting Service', (): void => {
       await expect(
         accountingService.createSettlementAccount(asset.ledger)
       ).resolves.toBeUndefined()
-      expect(createAccountSpy).toHaveBeenCalledWith({
-        accountRef: asset.id,
-        ledger: asset.ledger,
-        type: LedgerAccountType.SETTLEMENT
-      })
+      expect(createAccountSpy).toHaveBeenCalledWith(
+        {
+          accountRef: asset.id,
+          ledger: asset.ledger,
+          type: LedgerAccountType.SETTLEMENT
+        },
+        undefined
+      )
     })
 
     test('throws if cannot find asset', async (): Promise<void> => {
@@ -119,11 +128,14 @@ describe('Psql Accounting Service', (): void => {
       await expect(
         accountingService.createSettlementAccount(asset.ledger)
       ).rejects.toThrowError(Error)
-      expect(createAccountSpy).toHaveBeenCalledWith({
-        accountRef: asset.id,
-        ledger: asset.ledger,
-        type: LedgerAccountType.SETTLEMENT
-      })
+      expect(createAccountSpy).toHaveBeenCalledWith(
+        {
+          accountRef: asset.id,
+          ledger: asset.ledger,
+          type: LedgerAccountType.SETTLEMENT
+        },
+        undefined
+      )
     })
   })
 })
