@@ -14,7 +14,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
-import { CheckViolationError, Transaction } from 'objection'
+import { CheckViolationError } from 'objection'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
