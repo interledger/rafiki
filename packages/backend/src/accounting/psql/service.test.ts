@@ -23,7 +23,6 @@ describe('Psql Accounting Service', (): void => {
   let accountingService: AccountingService
   let ledgerAccountService: LedgerAccountService
   let knex: Knex
-
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {

@@ -18,7 +18,7 @@ import {
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
 import { LedgerAccountService } from './ledger-account/service'
-import { LedgerTransfer, LedgerTransferState } from './ledger-transfer/model'
+import { LedgerTransferState } from './ledger-transfer/model'
 import { LedgerTransferService } from './ledger-transfer/service'
 
 export interface ServiceDependencies extends BaseService {
