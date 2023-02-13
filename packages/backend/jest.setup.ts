@@ -1,11 +1,10 @@
 require('ts-node/register')
 
 import { knex } from 'knex'
-import { GenericContainer } from 'testcontainers'
+import { GenericContainer, Wait } from 'testcontainers'
 import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
-
 const REDIS_PORT = 6379
 
 const setup = async (globalConfig): Promise<void> => {
@@ -24,6 +23,13 @@ const setup = async (globalConfig): Promise<void> => {
         .withEnvironment({
           POSTGRES_PASSWORD: 'password'
         })
+        .withHealthCheck({
+          test: ['CMD-SHELL', 'pg_isready -d testing'],
+          interval: 10000,
+          timeout: 5000,
+          retries: 5
+        })
+        .withWaitStrategy(Wait.forHealthCheck())
         .start()
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
