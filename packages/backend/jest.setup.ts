@@ -5,7 +5,6 @@ import { GenericContainer, Wait } from 'testcontainers'
 import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
-
 const REDIS_PORT = 6379
 
 const setup = async (globalConfig): Promise<void> => {
