@@ -1,12 +1,29 @@
 require('ts-node/register')
 
 import { knex } from 'knex'
-import { GenericContainer, Wait } from 'testcontainers'
+import {
+  GenericContainer,
+  StartupCheckStrategy,
+  StartupStatus,
+  Wait
+} from 'testcontainers'
+import Dockerode from 'dockerode'
 import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
 
 const REDIS_PORT = 6379
+
+class ReadyAfterDelayWaitStrategy extends StartupCheckStrategy {
+  public checkStartupState(
+    dockerClient: Dockerode,
+    containerId: string
+  ): Promise<StartupStatus> {
+    const success = 0
+
+    return new Promise((resolve) => setTimeout(() => resolve('SUCCESS'), 3000))
+  }
+}
 
 const setup = async (globalConfig): Promise<void> => {
   const workers = globalConfig.maxWorkers
@@ -24,9 +41,12 @@ const setup = async (globalConfig): Promise<void> => {
         .withEnvironment({
           POSTGRES_PASSWORD: 'password'
         })
-        .withWaitStrategy(
-          Wait.forLogMessage(/database system is ready to accept connections/)
-        )
+        .withHealthCheck({
+          test: ['CMD-SHELL', 'pg_isready'],
+          interval: 10000,
+          timeout: 5000,
+          retries: 5
+        })
         .start()
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
