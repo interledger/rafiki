@@ -18,8 +18,15 @@ import {
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
 import { LedgerAccountService } from './ledger-account/service'
-import { LedgerTransfer, LedgerTransferState } from './ledger-transfer/model'
-import { LedgerTransferService } from './ledger-transfer/service'
+import {
+  LedgerTransfer,
+  LedgerTransferState,
+  LedgerTransferType
+} from './ledger-transfer/model'
+import {
+  CreateTransferArgs,
+  LedgerTransferService
+} from './ledger-transfer/service'
 
 export interface ServiceDependencies extends BaseService {
   ledgerAccountService: LedgerAccountService
@@ -32,6 +39,12 @@ interface AccountBalance {
   creditsPending: bigint
   debitsPosted: bigint
   debitsPending: bigint
+}
+
+interface ValidateTransferArgs {
+  amount: bigint
+  creditAccount: LedgerAccount
+  debitAccount: LedgerAccount
 }
 
 export function createAccountingService(
@@ -196,6 +209,24 @@ export async function getSettlementBalance(
   return debitsPosted + debitsPending - creditsPosted
 }
 
+function validateTransfer(
+  args: ValidateTransferArgs
+): TransferError | undefined {
+  const { amount, creditAccount, debitAccount } = args
+
+  if (amount <= 0n) {
+    return TransferError.InvalidAmount
+  }
+
+  if (creditAccount.id === debitAccount.id) {
+    return TransferError.SameAccounts
+  }
+
+  if (creditAccount.ledger !== debitAccount.ledger) {
+    return TransferError.DifferentAssets
+  }
+}
+
 export async function createTransfer(
   deps: ServiceDependencies,
   {
@@ -211,9 +242,55 @@ export async function createTransfer(
 
 async function createAccountDeposit(
   deps: ServiceDependencies,
-  { id, account, amount }: Deposit
+  args: Deposit
 ): Promise<void | TransferError> {
-  throw new Error('Not implemented')
+  const {
+    id: transferRef,
+    account: { id: accountRef, asset: accountAsset },
+    amount
+  } = args
+
+  const [account, settlementAccount] = await Promise.all([
+    deps.ledgerAccountService.getLiquidityAccount(accountRef),
+    deps.ledgerAccountService.getSettlementAccount(accountAsset.id)
+  ])
+
+  if (!account) {
+    return TransferError.UnknownDestinationAccount
+  }
+
+  if (!settlementAccount) {
+    return TransferError.UnknownSourceAccount
+  }
+
+  const transferError = validateTransfer({
+    amount,
+    creditAccount: account,
+    debitAccount: settlementAccount
+  })
+
+  if (transferError) {
+    return transferError
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, settlementAccount)
+
+  if (debitsPending + debitsPosted + amount > creditsPosted) {
+    return TransferError.InsufficientDebitBalance
+  }
+
+  const transfer: CreateTransferArgs = {
+    transferRef,
+    creditAccountId: account.id,
+    debitAccountId: settlementAccount.id,
+    amount,
+    ledger: settlementAccount.ledger,
+    type: LedgerTransferType.DEPOSIT,
+    state: LedgerTransferState.POSTED
+  }
+
+  await deps.ledgerTransferService.createTransfers([transfer])
 }
 
 async function createAccountWithdrawal(
