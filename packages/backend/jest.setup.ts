@@ -24,7 +24,9 @@ const setup = async (globalConfig): Promise<void> => {
         .withEnvironment({
           POSTGRES_PASSWORD: 'password'
         })
-        .withWaitStrategy(Wait.forLogMessage(/listening on IPv4 address/))
+        .withWaitStrategy(
+          Wait.forLogMessage(/database system is ready to accept connections/)
+        )
         .start()
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
