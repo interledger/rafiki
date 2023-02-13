@@ -25,7 +25,7 @@ const setup = async (globalConfig): Promise<void> => {
           POSTGRES_PASSWORD: 'password'
         })
         .withHealthCheck({
-          test: ['CMD-SHELL', 'pg_isready'],
+          test: ['CMD-SHELL', 'pg_isready -d testing'],
           interval: 10000,
           timeout: 5000,
           retries: 5
