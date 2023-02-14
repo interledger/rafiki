@@ -11,8 +11,7 @@ import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
 import { peerService } from '~/services/bootstrap.server'
 import { createPeerSchema } from '~/lib/validate.server'
-import { z } from 'zod'
-import type { JSONError } from '~/shared/types'
+import type { ZodFieldErrors } from '~/shared/types'
 
 export default function CreatePeerPage() {
   const response = useActionData<typeof action>()
@@ -34,7 +33,7 @@ export default function CreatePeerPage() {
         {/* Create Peer form */}
         <Form method='post' replace>
           <div className='px-6 pt-5'>
-            <ErrorPanel errors={response?.errors.formErrors} />
+            <ErrorPanel errors={response?.errors.message} />
           </div>
 
           <fieldset disabled={isSubmitting}>
@@ -130,12 +129,21 @@ export default function CreatePeerPage() {
 }
 
 export async function action({ request }: ActionArgs) {
+  const errors: {
+    fieldErrors: ZodFieldErrors<typeof createPeerSchema>
+    message: string[]
+  } = {
+    fieldErrors: {},
+    message: []
+  }
+
   const formData = Object.fromEntries(await request.formData())
 
   const result = createPeerSchema.safeParse(formData)
 
   if (!result.success) {
-    return json({ errors: result.error.flatten() })
+    errors.fieldErrors = result.error.flatten().fieldErrors
+    return json({ errors }, { status: 400 })
   }
 
   // TODO: Fix Apollo
@@ -167,14 +175,10 @@ export async function action({ request }: ActionArgs) {
   })
 
   if (!response?.createPeer.success) {
-    const validationError = new z.ZodError([]).flatten()
-    validationError.formErrors = [
+    errors.message = [
       response?.createPeer.message ?? 'Could not create peer. Please try again!'
     ]
-
-    return json<JSONError<typeof createPeerSchema>>({
-      errors: validationError
-    })
+    return json({ errors }, { status: 400 })
   }
 
   return redirect('/')
