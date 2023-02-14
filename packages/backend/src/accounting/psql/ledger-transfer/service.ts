@@ -27,7 +27,7 @@ export interface LedgerTransferService {
   ): Promise<GetTransfersResult>
   createTransfers(
     transfers: CreateTransferArgs[],
-    trx?: TransactionOrKnex
+    trx: TransactionOrKnex
   ): Promise<TransferError | void>
 }
 
@@ -84,9 +84,9 @@ async function getAccountTransfers(
 }
 
 async function createTransfers(
-  deps: ServiceDependencies,
+  _: ServiceDependencies,
   transfers: CreateTransferArgs[],
-  trx?: TransactionOrKnex
+  trx: TransactionOrKnex
 ): Promise<TransferError | void> {
-  await LedgerTransfer.query(trx || deps.knex).insertAndFetch(transfers)
+  await LedgerTransfer.query(trx).insertAndFetch(transfers)
 }
