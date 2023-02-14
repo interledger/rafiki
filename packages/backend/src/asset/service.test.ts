@@ -79,9 +79,13 @@ describe('Asset Service', (): void => {
 
       expect(liquiditySpy).toHaveBeenCalledWith(
         asset,
-        LiquidityAccountType.ASSET
+        LiquidityAccountType.ASSET,
+        expect.any(Function)
       )
-      expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
+      expect(settlementSpy).toHaveBeenCalledWith(
+        asset.ledger,
+        expect.any(Function)
+      )
 
       await expect(accountingService.getBalance(asset.id)).resolves.toEqual(
         BigInt(0)

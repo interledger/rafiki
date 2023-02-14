@@ -1,3 +1,4 @@
+import { TransactionOrKnex } from 'objection'
 import { TransferError } from './errors'
 
 export enum LiquidityAccountType {
@@ -48,9 +49,13 @@ export interface Transaction {
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
-    accountType: LiquidityAccountType
+    accountType: LiquidityAccountType,
+    trx?: TransactionOrKnex
   ): Promise<LiquidityAccount>
-  createSettlementAccount(ledger: number): Promise<void>
+  createSettlementAccount(
+    ledger: number,
+    trx?: TransactionOrKnex
+  ): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
