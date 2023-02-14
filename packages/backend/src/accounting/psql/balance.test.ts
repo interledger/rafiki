@@ -43,21 +43,19 @@ describe('Balances', (): void => {
   })
 
   describe('getAccountBalances', (): void => {
-    let creditAccount: LedgerAccount
-    let debitAccount: LedgerAccount
+    let account: LedgerAccount
+    let peerAccount: LedgerAccount
 
     beforeEach(async (): Promise<void> => {
       asset = await Asset.query(knex).insertAndFetch(randomAsset())
-      ;[creditAccount, debitAccount] = await Promise.all([
+      ;[account, peerAccount] = await Promise.all([
         createLedgerAccount({ ledger: asset.ledger }, knex),
         createLedgerAccount({ ledger: asset.ledger }, knex)
       ])
     })
 
     test('gets balances for account without transfers', async (): Promise<void> => {
-      await expect(
-        getAccountBalances(serviceDeps, creditAccount)
-      ).resolves.toEqual({
+      await expect(getAccountBalances(serviceDeps, account)).resolves.toEqual({
         creditsPosted: 0n,
         creditsPending: 0n,
         debitsPosted: 0n,
@@ -68,18 +66,16 @@ describe('Balances', (): void => {
     test('ignores voided transfers', async (): Promise<void> => {
       await createLedgerTransfer(
         {
-          ledger: creditAccount.ledger,
-          creditAccountId: creditAccount.id,
-          debitAccountId: debitAccount.id,
+          ledger: account.ledger,
+          creditAccountId: account.id,
+          debitAccountId: peerAccount.id,
           state: LedgerTransferState.VOIDED,
           amount: 10n
         },
         knex
       )
 
-      await expect(
-        getAccountBalances(serviceDeps, creditAccount)
-      ).resolves.toEqual({
+      await expect(getAccountBalances(serviceDeps, account)).resolves.toEqual({
         creditsPosted: 0n,
         creditsPending: 0n,
         debitsPosted: 0n,
@@ -87,59 +83,104 @@ describe('Balances', (): void => {
       })
     })
 
-    describe.each`
-      accountType
-      ${'credit'}
-      ${'debit'}
-    `(
-      'for $accountType accounts',
-      ({ accountType }: { accountType: 'credit' | 'debit' }): void => {
-        test.each`
-          state
-          ${LedgerTransferState.POSTED}
-          ${LedgerTransferState.PENDING}
-        `(
-          `gets balances for $state ${accountType}s`,
-          async ({ state }: { state: LedgerTransferState }): Promise<void> => {
-            const baseTransfer = {
-              ledger: creditAccount.ledger,
-              creditAccountId: creditAccount.id,
-              debitAccountId: debitAccount.id,
-              state
-            }
+    describe('calculates balances for single transfers', (): void => {
+      const amounts = {
+        credit: {
+          POSTED: 40n,
+          PENDING: 30n
+        },
+        debit: {
+          POSTED: 20n,
+          PENDING: 10n
+        }
+      }
 
-            await Promise.all([
-              createLedgerTransfer({ ...baseTransfer, amount: 10n }, knex),
-              createLedgerTransfer({ ...baseTransfer, amount: 20n }, knex)
-            ])
+      for (const type of ['credit', 'debit']) {
+        for (const state of [
+          LedgerTransferState.POSTED,
+          LedgerTransferState.PENDING
+        ]) {
+          test(`gets balances for ${state} ${type}s`, async (): Promise<void> => {
+            await createLedgerTransfer(
+              {
+                ledger: account.ledger,
+                creditAccountId:
+                  type === 'credit' ? account.id : peerAccount.id,
+                debitAccountId: type === 'credit' ? peerAccount.id : account.id,
+                state,
+                amount: amounts[type][state]
+              },
+              knex
+            )
 
             await expect(
-              getAccountBalances(
-                serviceDeps,
-                accountType === 'credit' ? creditAccount : debitAccount
-              )
+              getAccountBalances(serviceDeps, account)
             ).resolves.toEqual({
               creditsPosted:
-                accountType === 'credit' && state === LedgerTransferState.POSTED
-                  ? 30n
+                type === 'credit' && state === LedgerTransferState.POSTED
+                  ? amounts['credit']['POSTED']
                   : 0n,
               creditsPending:
-                accountType === 'credit' &&
-                state === LedgerTransferState.PENDING
-                  ? 30n
+                type === 'credit' && state === LedgerTransferState.PENDING
+                  ? amounts['credit']['PENDING']
                   : 0n,
               debitsPosted:
-                accountType === 'debit' && state === LedgerTransferState.POSTED
-                  ? 30n
+                type === 'debit' && state === LedgerTransferState.POSTED
+                  ? amounts['debit']['POSTED']
                   : 0n,
               debitsPending:
-                accountType === 'debit' && state === LedgerTransferState.PENDING
-                  ? 30n
+                type === 'debit' && state === LedgerTransferState.PENDING
+                  ? amounts['debit']['PENDING']
                   : 0n
             })
-          }
-        )
+          })
+        }
       }
-    )
+    })
+
+    test('calculates balances for mixed transfers', async (): Promise<void> => {
+      const amounts = {
+        credit: {
+          POSTED: 40n,
+          PENDING: 30n
+        },
+        debit: {
+          POSTED: 20n,
+          PENDING: 10n
+        }
+      }
+
+      const promises = []
+
+      for (const type of ['credit', 'debit']) {
+        for (const state of [
+          LedgerTransferState.POSTED,
+          LedgerTransferState.PENDING
+        ]) {
+          promises.push(
+            createLedgerTransfer(
+              {
+                ledger: account.ledger,
+                creditAccountId:
+                  type === 'credit' ? account.id : peerAccount.id,
+                debitAccountId: type === 'credit' ? peerAccount.id : account.id,
+                state,
+                amount: amounts[type][state]
+              },
+              knex
+            )
+          )
+        }
+      }
+
+      await Promise.all(promises)
+
+      await expect(getAccountBalances(serviceDeps, account)).resolves.toEqual({
+        creditsPosted: amounts['credit']['POSTED'],
+        creditsPending: amounts['credit']['PENDING'],
+        debitsPosted: amounts['debit']['POSTED'],
+        debitsPending: amounts['debit']['PENDING']
+      })
+    })
   })
 })
