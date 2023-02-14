@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { TransactionOrKnex } from 'objection'
+import { UniqueViolationError } from 'objection-db-errors'
 import { Asset } from '../../asset/model'
 import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
@@ -28,6 +29,7 @@ import {
 } from './ledger-transfer/service'
 
 export interface ServiceDependencies extends BaseService {
+  knex: TransactionOrKnex
   ledgerAccountService: LedgerAccountService
   ledgerTransferService: LedgerTransferService
   withdrawalThrottleDelay?: number
@@ -245,13 +247,16 @@ async function createAccountDeposit(
 ): Promise<void | TransferError> {
   const {
     id: transferRef,
-    account: { id: accountRef, asset: accountAsset },
+    account: {
+      id: accountRef,
+      asset: { id: assetRef }
+    },
     amount
   } = args
 
   const [account, settlementAccount] = await Promise.all([
     deps.ledgerAccountService.getLiquidityAccount(accountRef),
-    deps.ledgerAccountService.getSettlementAccount(accountAsset.id)
+    deps.ledgerAccountService.getSettlementAccount(assetRef)
   ])
 
   if (!account) {
@@ -272,13 +277,6 @@ async function createAccountDeposit(
     return transferError
   }
 
-  const { creditsPosted, debitsPending, debitsPosted } =
-    await getAccountBalances(deps, settlementAccount)
-
-  if (debitsPending + debitsPosted + amount > creditsPosted) {
-    return TransferError.InsufficientDebitBalance
-  }
-
   const transfer: CreateTransferArgs = {
     transferRef,
     creditAccountId: account.id,
@@ -288,8 +286,17 @@ async function createAccountDeposit(
     type: LedgerTransferType.DEPOSIT,
     state: LedgerTransferState.POSTED
   }
+  try {
+    await deps.knex.transaction(async (trx) => {
+      await deps.ledgerTransferService.createTransfers([transfer], trx)
+    })
+  } catch (error) {
+    if (error instanceof UniqueViolationError) {
+      return TransferError.TransferExists
+    }
 
-  await deps.ledgerTransferService.createTransfers([transfer])
+    throw error
+  }
 }
 
 async function createAccountWithdrawal(
@@ -315,10 +322,11 @@ async function postAccountWithdrawal(
 
 async function getAccountBalances(
   deps: ServiceDependencies,
-  account: LedgerAccount
+  account: LedgerAccount,
+  trx?: TransactionOrKnex
 ): Promise<AccountBalance> {
   const { credits, debits } =
-    await deps.ledgerTransferService.getAccountTransfers(account.id)
+    await deps.ledgerTransferService.getAccountTransfers(account.id, trx)
 
   let creditsPosted = 0n
   let creditsPending = 0n

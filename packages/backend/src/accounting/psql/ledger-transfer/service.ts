@@ -1,4 +1,5 @@
 import { TransactionOrKnex } from 'objection'
+import { UniqueViolationError } from 'objection-db-errors'
 import { BaseService } from '../../../shared/baseService'
 import { TransferError } from '../../errors'
 import { LedgerTransfer, LedgerTransferState } from './model'
@@ -87,11 +88,6 @@ async function createTransfers(
   deps: ServiceDependencies,
   transfers: CreateTransferArgs[],
   trx?: TransactionOrKnex
-): Promise<void> {
-  try {
-    await LedgerTransfer.query(trx || deps.knex).insertAndFetch(transfers)
-  } catch (error) {
-    deps.logger.error('error')
-    throw new Error('transfer error')
-  }
+): Promise<TransferError | void> {
+  await LedgerTransfer.query(trx || deps.knex).insertAndFetch(transfers)
 }
