@@ -1,8 +1,8 @@
 import { TransactionOrKnex, UniqueViolationError } from 'objection'
 
-import { BaseService } from '../../../shared/baseService'
 import { LedgerAccount, LedgerAccountType } from './model'
 import { AccountAlreadyExistsError } from '../../errors'
+import { ServiceDependencies } from '../service'
 
 interface CreateArgs {
   accountRef: string
@@ -10,33 +10,7 @@ interface CreateArgs {
   type: LedgerAccountType
 }
 
-export interface LedgerAccountService {
-  create(args: CreateArgs, trx?: TransactionOrKnex): Promise<LedgerAccount>
-  getLiquidityAccount(accountRef: string): Promise<LedgerAccount | undefined>
-  getSettlementAccount(accountRef: string): Promise<LedgerAccount | undefined>
-}
-
-type ServiceDependencies = BaseService
-
-export async function createLedgerAccountService({
-  logger,
-  knex
-}: ServiceDependencies): Promise<LedgerAccountService> {
-  const log = logger.child({
-    service: 'LedgerAccountService'
-  })
-  const deps: ServiceDependencies = {
-    logger: log,
-    knex
-  }
-  return {
-    create: (args, trx) => create(deps, args, trx),
-    getLiquidityAccount: (args) => getLiquidityAccount(deps, args),
-    getSettlementAccount: (args) => getSettlementAccount(deps, args)
-  }
-}
-
-async function create(
+export async function createAccount(
   deps: ServiceDependencies,
   args: CreateArgs,
   trx?: TransactionOrKnex
@@ -56,7 +30,7 @@ async function create(
   }
 }
 
-async function getLiquidityAccount(
+export async function getLiquidityAccount(
   deps: ServiceDependencies,
   accountRef: string
 ): Promise<LedgerAccount | undefined> {
@@ -65,7 +39,7 @@ async function getLiquidityAccount(
     .whereNot({ type: LedgerAccountType.SETTLEMENT })
 }
 
-async function getSettlementAccount(
+export async function getSettlementAccount(
   deps: ServiceDependencies,
   accountRef: string
 ): Promise<LedgerAccount | undefined> {

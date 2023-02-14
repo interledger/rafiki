@@ -1,7 +1,6 @@
 import { TransactionOrKnex } from 'objection'
-import { BaseService } from '../../../shared/baseService'
-import { TransferError } from '../../errors'
 import { LedgerTransfer, LedgerTransferState } from './model'
+import { ServiceDependencies } from '../service'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
@@ -20,38 +19,7 @@ export type CreateTransferArgs = Pick<
   timeoutMs?: bigint
 }
 
-export interface LedgerTransferService {
-  getAccountTransfers(
-    accountId: string,
-    trx?: TransactionOrKnex
-  ): Promise<GetTransfersResult>
-  createTransfers(
-    transfers: CreateTransferArgs[],
-    trx: TransactionOrKnex
-  ): Promise<TransferError | void>
-}
-
-type ServiceDependencies = BaseService
-
-export async function createLedgerTransferService({
-  logger,
-  knex
-}: ServiceDependencies): Promise<LedgerTransferService> {
-  const log = logger.child({
-    service: 'LedgerTransferService'
-  })
-  const deps: ServiceDependencies = {
-    logger: log,
-    knex
-  }
-  return {
-    getAccountTransfers: (accountId, trx) =>
-      getAccountTransfers(deps, accountId, trx),
-    createTransfers: (transfers, trx) => createTransfers(deps, transfers, trx)
-  }
-}
-
-async function getAccountTransfers(
+export async function getAccountTransfers(
   deps: ServiceDependencies,
   accountId: string,
   trx?: TransactionOrKnex
@@ -83,11 +51,11 @@ async function getAccountTransfers(
   )
 }
 
-async function createTransfers(
+export async function createTransfers(
   _: ServiceDependencies,
   transfers: CreateTransferArgs[],
   trx: TransactionOrKnex
-): Promise<TransferError | void> {
+): Promise<void> {
   await LedgerTransfer.query(trx).insertAndFetch(transfers.map(prepareTransfer))
 }
 

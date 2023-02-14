@@ -1,32 +1,30 @@
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { LedgerAccountService } from './service'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { LedgerAccountType } from './model'
 import { Config } from '../../../config/app'
-import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices } from '../../../app'
 import { Asset } from '../../../asset/model'
 import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { AccountAlreadyExistsError } from '../../errors'
 import { ForeignKeyViolationError } from 'objection'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
+import { ServiceDependencies } from '../service'
+import { createAccount, getLiquidityAccount } from '.'
 
-describe('Ledger Account Service', (): void => {
-  let deps: IocContract<AppServices>
+describe('Ledger Account', (): void => {
+  let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
-  let ledgerAccountService: LedgerAccountService
   let knex: Knex
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config, useTigerbeetle: false })
+    const deps = initIocContainer({ ...Config, useTigerbeetle: false })
     appContainer = await createTestApp(deps)
+    serviceDeps = { logger: await deps.use('logger') }
     knex = appContainer.knex
-    ledgerAccountService = await deps.use('ledgerAccountService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -47,13 +45,13 @@ describe('Ledger Account Service', (): void => {
       const accountRef = uuid()
       const type = LedgerAccountType.LIQUIDITY_ASSET
 
-      const account = await ledgerAccountService.create({
-        ledger: asset.ledger,
-        accountRef,
-        type
-      })
-
-      expect(account).toEqual({
+      await expect(
+        createAccount(serviceDeps, {
+          ledger: asset.ledger,
+          accountRef,
+          type
+        })
+      ).resolves.toEqual({
         id: expect.any(String),
         accountRef,
         ledger: asset.ledger,
@@ -77,7 +75,7 @@ describe('Ledger Account Service', (): void => {
       )
 
       await expect(
-        ledgerAccountService.create({
+        createAccount(serviceDeps, {
           ledger: asset.ledger,
           accountRef,
           type
@@ -87,7 +85,7 @@ describe('Ledger Account Service', (): void => {
 
     test('throws if violates asset.ledger foreign key constraint', async (): Promise<void> => {
       await expect(
-        ledgerAccountService.create({
+        createAccount(serviceDeps, {
           ledger: 9999,
           accountRef: uuid(),
           type: LedgerAccountType.SETTLEMENT
@@ -110,7 +108,7 @@ describe('Ledger Account Service', (): void => {
       )
 
       await expect(
-        ledgerAccountService.getLiquidityAccount(accountRef)
+        getLiquidityAccount(serviceDeps, accountRef)
       ).resolves.toEqual(account)
     })
 
@@ -127,7 +125,7 @@ describe('Ledger Account Service', (): void => {
       )
 
       await expect(
-        ledgerAccountService.getLiquidityAccount(accountRef)
+        getLiquidityAccount(serviceDeps, accountRef)
       ).resolves.toBeUndefined()
     })
   })
