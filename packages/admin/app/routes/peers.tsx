@@ -1,36 +1,9 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { z } from 'zod'
 import { Button } from '~/components/ui/Button'
 import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { paginationSchema } from '~/lib/validate.server'
 import { peerService } from '~/services/bootstrap.server'
-
-const paginationSchema = z
-  .object({
-    after: z.string().uuid(),
-    before: z.string().uuid(),
-    first: z.coerce.number().positive(),
-    last: z.coerce.number().positive()
-  })
-  .partial()
-  .strict()
-
-export const loader = async ({ request }: LoaderArgs) => {
-  const url = new URL(request.url)
-  const pagination = paginationSchema.safeParse(
-    Object.fromEntries(url.searchParams.entries())
-  )
-
-  if (!pagination.success) {
-    throw new Error('Invalid pagination.')
-  }
-
-  const peers = await peerService.list({
-    ...pagination.data
-  })
-
-  return json({ peers })
-}
 
 export default function PeersPage() {
   const { peers } = useLoaderData<typeof loader>()
@@ -121,4 +94,21 @@ export default function PeersPage() {
       {/* Peers Table - END*/}
     </div>
   )
+}
+
+export const loader = async ({ request }: LoaderArgs) => {
+  const url = new URL(request.url)
+  const pagination = paginationSchema.safeParse(
+    Object.fromEntries(url.searchParams.entries())
+  )
+
+  if (!pagination.success) {
+    throw new Error('Invalid pagination.')
+  }
+
+  const peers = await peerService.list({
+    ...pagination.data
+  })
+
+  return json({ peers })
 }

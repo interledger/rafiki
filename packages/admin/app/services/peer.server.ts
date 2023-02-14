@@ -3,10 +3,16 @@ import {
   type ApolloClient,
   type NormalizedCacheObject
 } from '@apollo/client'
-import type { CreatePeerInput, QueryPeersArgs } from '~/generated/graphql'
+import type {
+  CreatePeerInput,
+  QueryPeerArgs,
+  QueryPeersArgs
+} from '~/generated/graphql'
 import type {
   CreatePeerMutation,
   CreatePeerMutationVariables,
+  GetPeerQuery,
+  GetPeerQueryVariables,
   ListPeersQuery,
   ListPeersQueryVariables
 } from './__generated__/peer.server.generated'
@@ -18,7 +24,19 @@ export class PeerService {
     this.apollo = apollo
   }
 
-  public async list(args?: QueryPeersArgs) {
+  public async get(args: QueryPeerArgs) {
+    const response = await this.apollo.query<
+      GetPeerQuery,
+      GetPeerQueryVariables
+    >({
+      query: getPeerQuery,
+      variables: args
+    })
+
+    return response.data.peer
+  }
+
+  public async list(args: QueryPeersArgs) {
     const response = await this.apollo.query<
       ListPeersQuery,
       ListPeersQueryVariables
@@ -41,9 +59,32 @@ export class PeerService {
       }
     })
 
-    return response.data
+    return response.data?.createPeer
   }
 }
+
+const getPeerQuery = gql`
+  query GetPeerQuery($id: String!) {
+    peer(id: $id) {
+      id
+      name
+      staticIlpAddress
+      maxPacketAmount
+      createdAt
+      asset {
+        scale
+        code
+        id
+      }
+      http {
+        outgoing {
+          endpoint
+          authToken
+        }
+      }
+    }
+  }
+`
 
 const listPeersQuery = gql`
   query ListPeersQuery(

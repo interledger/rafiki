@@ -75,7 +75,7 @@ export const createPeerSchema = z.object({
       message: 'The provided ILP Address is not valid.'
     }),
   maxPacketAmount: z.coerce
-    .number({
+    .bigint({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
     .optional(),
@@ -86,3 +86,12 @@ export const createPeerSchema = z.object({
     .url({ message: 'Invalid outgoing HTTP endpoint URL.' }),
   asset: z.string()
 })
+
+export const paginationSchema = z
+  .object({
+    after: z.string().uuid(),
+    before: z.string().uuid(),
+    first: z.coerce.number().positive(),
+    last: z.coerce.number().positive()
+  })
+  .strict()

@@ -5,7 +5,6 @@ import {
   useNavigate,
   useNavigation
 } from '@remix-run/react'
-import { Chevron } from '~/components/icons/Chevron'
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
@@ -20,13 +19,16 @@ export default function CreatePeerPage() {
   const isSubmitting = state === 'submitting'
 
   return (
-    <div className='pt-4 flex flex-col space-y-8'>
+    <div className='pt-4 flex flex-col space-y-4'>
       {/* Page Header */}
-      <div className='flex p-4 bg-offwhite rounded-md items-center space-x-5'>
-        <Button aria-label='go back to peers page' onClick={() => navigate(-1)}>
-          <Chevron direction='left' className='w-6 h-6' />
+      <div className='flex p-4 bg-offwhite rounded-md items-center justify-between space-x-5'>
+        <h3 className='text-xl'>Create Peer</h3>
+        <Button
+          aria-label='go back to peers page'
+          onClick={() => navigate('/peers')}
+        >
+          Go to peers page
         </Button>
-        <h3 className='text-2xl'>Create Peer</h3>
       </div>
       {/* Page Header - END */}
       <div className='flex flex-col rounded-md bg-offwhite'>
@@ -174,9 +176,9 @@ export async function action({ request }: ActionArgs) {
       : {})
   })
 
-  if (!response?.createPeer.success) {
+  if (!response?.success) {
     errors.message = [
-      response?.createPeer.message ?? 'Could not create peer. Please try again!'
+      response?.message ?? 'Could not create peer. Please try again!'
     ]
     return json({ errors }, { status: 400 })
   }
