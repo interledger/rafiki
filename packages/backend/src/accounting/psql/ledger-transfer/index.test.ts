@@ -7,12 +7,16 @@ import { Asset } from '../../../asset/model'
 import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount } from '../ledger-account/model'
-import { LedgerTransferState, LedgerTransferType } from './model'
+import {
+  LedgerTransfer,
+  LedgerTransferState,
+  LedgerTransferType
+} from './model'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import { CreateTransferArgs, createTransfers, getAccountTransfers } from '.'
 import { ServiceDependencies } from '../service'
-import { UniqueViolationError } from 'objection'
+import { ForeignKeyViolationError, UniqueViolationError } from 'objection'
 
 describe('Ledger Transfer', (): void => {
   let serviceDeps: ServiceDependencies
@@ -22,7 +26,7 @@ describe('Ledger Transfer', (): void => {
 
   beforeAll(async (): Promise<void> => {
     const deps = initIocContainer({ ...Config, useTigerbeetle: false })
-    appContainer = await createTestApp(deps)
+    appContainer = await createTestApp(deps, { silentLogging: true })
     serviceDeps = {
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
@@ -224,7 +228,35 @@ describe('Ledger Transfer', (): void => {
       }
     )
 
-    test('throws if violates transferRef unique constraint', async (): Promise<void> => {
+    test('throws if any transfer fails', async (): Promise<void> => {
+      const transfer = {
+        ...baseTransfer
+      }
+
+      const failTransfer = {
+        ...baseTransfer,
+        transferRef: uuid(),
+        ledger: -1
+      }
+
+      await expect(
+        createTransfers(serviceDeps, [transfer, failTransfer], knex)
+      ).rejects.toThrow(ForeignKeyViolationError)
+
+      await expect(
+        LedgerTransfer.query(knex).findOne({
+          transferRef: failTransfer.transferRef
+        })
+      ).resolves.toBeUndefined()
+
+      await expect(
+        LedgerTransfer.query(knex).findOne({
+          transferRef: transfer.transferRef
+        })
+      ).resolves.toBeUndefined()
+    })
+
+    test('returns transferError if violates transferRef unique constraint', async (): Promise<void> => {
       const transfer = {
         ...baseTransfer
       }

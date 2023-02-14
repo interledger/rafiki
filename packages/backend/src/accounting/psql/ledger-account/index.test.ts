@@ -22,7 +22,7 @@ describe('Ledger Account', (): void => {
 
   beforeAll(async (): Promise<void> => {
     const deps = initIocContainer({ ...Config, useTigerbeetle: false })
-    appContainer = await createTestApp(deps)
+    appContainer = await createTestApp(deps, { silentLogging: true })
     serviceDeps = {
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
