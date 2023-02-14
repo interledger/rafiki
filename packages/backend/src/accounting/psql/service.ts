@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { TransactionOrKnex } from 'objection'
 import { Asset } from '../../asset/model'
-import { AssetService } from '../../asset/service'
 import { BaseService } from '../../shared/baseService'
-import { CreateAccountError, TransferError } from '../errors'
+import { TransferError } from '../errors'
 import {
   AccountingService,
   Deposit,
@@ -14,14 +13,25 @@ import {
   Withdrawal
 } from '../service'
 import {
+  LedgerAccount,
   LedgerAccountType,
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
 import { LedgerAccountService } from './ledger-account/service'
+import { LedgerTransferState } from './ledger-transfer/model'
+import { LedgerTransferService } from './ledger-transfer/service'
 
 export interface ServiceDependencies extends BaseService {
   ledgerAccountService: LedgerAccountService
+  ledgerTransferService: LedgerTransferService
   withdrawalThrottleDelay?: number
+}
+
+interface AccountBalance {
+  creditsPosted: bigint
+  creditsPending: bigint
+  debitsPosted: bigint
+  debitsPending: bigint
 }
 
 export function createAccountingService(
@@ -36,11 +46,13 @@ export function createAccountingService(
       createLiquidityAccount(deps, options, accTypeCode, trx),
     createSettlementAccount: (ledger, trx) =>
       createSettlementAccount(deps, ledger, trx),
-    getBalance: (id) => getAccountBalance(deps, id),
-    getTotalSent: (id) => getAccountTotalSent(deps, id),
-    getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
-    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
-    getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
+    getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
+    getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
+    getAccountsTotalSent: (accountRefs) =>
+      getAccountsTotalSent(deps, accountRefs),
+    getTotalReceived: (accountRef) => getAccountTotalReceived(deps, accountRef),
+    getAccountsTotalReceived: (accountRefs) =>
+      getAccountsTotalReceived(deps, accountRefs),
     getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
@@ -88,46 +100,100 @@ export async function createSettlementAccount(
   )
 }
 
-export async function getAccountBalance(
+export async function getLiquidityAccountBalance(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await deps.ledgerAccountService.getLiquidityAccount(
+    accountRef
+  )
+
+  if (!account) {
+    return
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, account)
+
+  return creditsPosted - debitsPosted - debitsPending
 }
 
 export async function getAccountTotalSent(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await deps.ledgerAccountService.getLiquidityAccount(
+    accountRef
+  )
+
+  if (!account) {
+    return
+  }
+
+  return (await getAccountBalances(deps, account)).debitsPosted
 }
 
 export async function getAccountsTotalSent(
   deps: ServiceDependencies,
-  ids: string[]
+  accountRefs: string[]
 ): Promise<(bigint | undefined)[]> {
-  throw new Error('Not implemented')
+  return Promise.all(
+    accountRefs.map((accountRef) => getAccountTotalSent(deps, accountRef))
+  )
 }
 
 export async function getAccountTotalReceived(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await deps.ledgerAccountService.getLiquidityAccount(
+    accountRef
+  )
+
+  if (!account) {
+    return
+  }
+
+  return (await getAccountBalances(deps, account)).creditsPosted
 }
 
 export async function getAccountsTotalReceived(
   deps: ServiceDependencies,
-  ids: string[]
+  accountRefs: string[]
 ): Promise<(bigint | undefined)[]> {
-  throw new Error('Not implemented')
+  return Promise.all(
+    accountRefs.map((accountRef) => getAccountTotalReceived(deps, accountRef))
+  )
 }
 
 export async function getSettlementBalance(
   deps: ServiceDependencies,
   ledger: number
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const asset = await Asset.query(deps.knex).findOne({ ledger })
+  if (!asset) {
+    deps.logger.error(`Could not find asset by ledger value: ${ledger}`)
+    return
+  }
+
+  const settlementAccount =
+    await deps.ledgerAccountService.getSettlementAccount(asset.id)
+
+  if (!settlementAccount) {
+    deps.logger.error(
+      {
+        ledger,
+        assetId: asset.id
+      },
+      'Could not find settlement account by account'
+    )
+    return
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, settlementAccount)
+
+  return debitsPosted + debitsPending - creditsPosted
 }
 
 export async function createTransfer(
@@ -169,4 +235,40 @@ async function postAccountWithdrawal(
   withdrawalId: string
 ): Promise<void | TransferError> {
   throw new Error('Not implemented')
+}
+
+async function getAccountBalances(
+  deps: ServiceDependencies,
+  account: LedgerAccount
+): Promise<AccountBalance> {
+  const { credits, debits } =
+    await deps.ledgerTransferService.getAccountTransfers(account.id)
+
+  let creditsPosted = 0n
+  let creditsPending = 0n
+  let debitsPosted = 0n
+  let debitsPending = 0n
+
+  for (const credit of credits) {
+    if (credit.state === LedgerTransferState.POSTED) {
+      creditsPosted += credit.amount
+    } else if (credit.state === LedgerTransferState.PENDING) {
+      creditsPending += credit.amount
+    }
+  }
+
+  for (const debit of debits) {
+    if (debit.state === LedgerTransferState.POSTED) {
+      debitsPosted += debit.amount
+    } else if (debit.state === LedgerTransferState.PENDING) {
+      debitsPending += debit.amount
+    }
+  }
+
+  return {
+    creditsPosted,
+    creditsPending,
+    debitsPosted,
+    debitsPending
+  }
 }

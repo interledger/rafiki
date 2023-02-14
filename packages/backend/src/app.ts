@@ -55,6 +55,7 @@ import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_r
 import { ReceiverService } from './open_payments/receiver/service'
 import { Client as TokenIntrospectionClient } from 'token-introspection'
 import { LedgerAccountService } from './accounting/psql/ledger-account/service'
+import { LedgerTransferService } from './accounting/psql/ledger-transfer/service'
 
 export interface AppContextData {
   logger: Logger
@@ -163,6 +164,7 @@ export interface AppServices {
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
   ledgerAccountService: Promise<LedgerAccountService>
+  ledgerTransferService: Promise<LedgerTransferService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
   paymentPointerService: Promise<PaymentPointerService>
