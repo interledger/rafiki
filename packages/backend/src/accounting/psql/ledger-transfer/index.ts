@@ -55,8 +55,10 @@ export async function createTransfers(
   _: ServiceDependencies,
   transfers: CreateTransferArgs[],
   trx: TransactionOrKnex
-): Promise<void> {
-  await LedgerTransfer.query(trx).insertAndFetch(transfers.map(prepareTransfer))
+): Promise<LedgerTransfer[]> {
+  return LedgerTransfer.query(trx).insertAndFetch(
+    transfers.map(prepareTransfer)
+  )
 }
 
 function prepareTransfer(
