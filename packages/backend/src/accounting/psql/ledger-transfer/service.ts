@@ -1,5 +1,4 @@
 import { TransactionOrKnex } from 'objection'
-import { UniqueViolationError } from 'objection-db-errors'
 import { BaseService } from '../../../shared/baseService'
 import { TransferError } from '../../errors'
 import { LedgerTransfer, LedgerTransferState } from './model'
