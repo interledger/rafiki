@@ -87,7 +87,7 @@ importers:
       pg: ^8.9.0
       pino: ^8.10.0
       pino-pretty: ^9.2.0
-      testcontainers: ^9.1.2
+      testcontainers: ^9.1.3
       token-introspection: workspace:*
       typescript: ^4.9.5
       uuid: ^9.0.0
@@ -117,7 +117,7 @@ importers:
       pg: 8.9.0
       pino: 8.10.0
       pino-pretty: 9.2.0
-      testcontainers: 9.1.2
+      testcontainers: 9.1.3
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
@@ -206,7 +206,7 @@ importers:
       raw-body: ^2.5.1
       react: ~18.2.0
       rosie: ^2.1.0
-      testcontainers: ^9.1.2
+      testcontainers: ^9.1.3
       tigerbeetle-node: ^0.11.11
       tmp: ^0.2.1
       token-introspection: workspace:*
@@ -282,7 +282,7 @@ importers:
       openapi-types: 12.1.0
       react: 18.2.0
       rosie: 2.1.0
-      testcontainers: 9.1.2
+      testcontainers: 9.1.3
       tmp: 0.2.1
       ts-node: 10.9.1_bdgp3l2zgaopogaavxusmetvge
       typescript: 4.9.5
@@ -803,7 +803,7 @@ packages:
     resolution: {integrity: sha512-xhlTqH0m31mnsG0tIP4ETgfSB6gXDaYYsUWTrlUV93fFQPI9dd8hE0Ot6MHLCtqgB32hwJAC3YZMWlXZw7AleA==}
     engines: {node: '>=14'}
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
     transitivePeerDependencies:
       - encoding
     dev: true
@@ -4784,7 +4784,7 @@ packages:
       event-target-polyfill: 0.0.3
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       undici: 5.14.0
       web-streams-polyfill: 3.2.1
     transitivePeerDependencies:
@@ -4799,7 +4799,7 @@ packages:
       busboy: 1.6.0
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       undici: 5.14.0
       web-streams-polyfill: 3.2.1
     transitivePeerDependencies:
@@ -4814,7 +4814,7 @@ packages:
       busboy: 1.6.0
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       undici: 5.14.0
       urlpattern-polyfill: 6.0.2
       web-streams-polyfill: 3.2.1
@@ -5140,6 +5140,9 @@ packages:
     resolution: {integrity: sha512-sRpyiNrx2dEYIMmUXprS8nlpRg2Drs8m9ElX9vVEXaCB4XEAJhKfs7IcX0IwShjuOAjLR6wzIrgoptz1n19i1A==}
     hasBin: true
     dev: true
+
+  /async-lock/1.4.0:
+    resolution: {integrity: sha512-coglx5yIWuetakm3/1dsX9hxCNox22h7+V80RQOu2XUUMidtArxKoZoOtHUPuR84SycKTXzgGzAUR5hJxujyJQ==}
 
   /async-retry/1.3.3:
     resolution: {integrity: sha512-wfr/jstw9xNi/0teMHrRW7dsz3Lt5ARhYNZ2ewpadnhaIp5mbALhOAP+EAdsC7t4Z6wqsDVv9+W6gm1Dk9mEyw==}
@@ -6361,8 +6364,8 @@ packages:
     dependencies:
       path-type: 4.0.0
 
-  /docker-compose/0.23.17:
-    resolution: {integrity: sha512-YJV18YoYIcxOdJKeFcCFihE6F4M2NExWM/d4S1ITcS9samHKnNUihz9kjggr0dNtsrbpFNc7/Yzd19DWs+m1xg==}
+  /docker-compose/0.23.19:
+    resolution: {integrity: sha512-v5vNLIdUqwj4my80wxFDkNH+4S85zsRuH29SO7dCWVWPCMt/ohZBsGN6g6KXWifT0pzQ7uOxqEKCYCDPJ8Vz4g==}
     engines: {node: '>= 6.0.0'}
     dependencies:
       yaml: 1.10.2
@@ -8569,7 +8572,7 @@ packages:
   /isomorphic-fetch/3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       whatwg-fetch: 3.6.2
     transitivePeerDependencies:
       - encoding
@@ -10372,6 +10375,17 @@ packages:
 
   /node-fetch/2.6.7:
     resolution: {integrity: sha512-ZjMPFEfVx5j+y2yF35Kzx5sF7kDzxuDj6ziH4FFbOp87zKDZNx8yExJIb05OGF4Nlt9IHFIMBkRl41VdvcNdbQ==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
+    dependencies:
+      whatwg-url: 5.0.0
+
+  /node-fetch/2.6.9:
+    resolution: {integrity: sha512-DJm/CJkZkRjKKj4Zi4BsKVZh3ValV5IR5s7LVZnW+6YMh0W1BfNA8XSs6DLMGYlId5F3KnA70uu2qepcR08Qqg==}
     engines: {node: 4.x || >=6.0.0}
     peerDependencies:
       encoding: ^0.1.0
@@ -12473,20 +12487,21 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers/9.1.2:
-    resolution: {integrity: sha512-a4VbUUntbrnTsxD20u8TBhFRpdHufGbBQ3ZlPHsROK7JXh9mLDsx7qk272bt+jBm6yUf0SBBhBynC+B6uxb9Mg==}
+  /testcontainers/9.1.3:
+    resolution: {integrity: sha512-Kw7GZC8nD84Uuq2oxa2Ln9F5vIALWIZoQHywOGuiiVthSHzOVl4CtebO25whMf3CrVICwy8CBUimvSdVgU9N7g==}
     engines: {node: '>= 10.16'}
     dependencies:
       '@balena/dockerignore': 1.0.2
       '@types/archiver': 5.3.1
       '@types/dockerode': 3.3.14
       archiver: 5.3.1
+      async-lock: 1.4.0
       byline: 5.0.0
       debug: 4.3.4
-      docker-compose: 0.23.17
+      docker-compose: 0.23.19
       dockerode: 3.3.4
       get-port: 5.1.1
-      node-fetch: 2.6.7
+      node-fetch: 2.6.9
       properties-reader: 2.2.0
       ssh-remote-port-forward: 1.0.4
       tar-fs: 2.1.1
