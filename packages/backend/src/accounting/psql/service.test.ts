@@ -435,10 +435,37 @@ describe('Psql Accounting Service', (): void => {
       ).resolves.toEqual(deposit.amount)
     })
 
+    test('creates multiple deposits', async (): Promise<void> => {
+      const deposits = [
+        { ...deposit, id: uuid(), amount: 10n },
+        { ...deposit, id: uuid(), amount: 20n }
+      ]
+
+      await expect(
+        accountingService.createDeposit(deposits[0])
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.createDeposit(deposits[1])
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(deposits[0].account.id)
+      ).resolves.toEqual(30n)
+      await expect(
+        accountingService.getSettlementBalance(deposits[0].account.asset.ledger)
+      ).resolves.toEqual(30n)
+    })
+
     test('cannot deposit to unknown account', async (): Promise<void> => {
       deposit.account.id = uuid()
       await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
         TransferError.UnknownDestinationAccount
+      )
+    })
+
+    test('cannot deposit from unknown settlement account', async (): Promise<void> => {
+      deposit.account.asset.id = uuid()
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.UnknownSourceAccount
       )
     })
 
