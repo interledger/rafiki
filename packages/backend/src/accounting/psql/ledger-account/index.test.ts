@@ -14,7 +14,7 @@ import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { ServiceDependencies } from '../service'
 import { createAccount, getLiquidityAccount } from '.'
 
-describe('Ledger Accounts', (): void => {
+describe('Ledger Account', (): void => {
   let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
   let knex: Knex
