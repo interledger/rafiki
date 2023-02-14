@@ -42,10 +42,29 @@ The frontend will host the internal admin interface. The current application is 
 
 ## Additional packages
 
+### HTTP Signature Utils
+
+The `http-signature-utils` package includes helper functions for
+
+- loading Ed25519 keys from file or creating them
+- generating JWKs from Ed25519 keys
+- creating HTTP signature headers
+- validate and verify HTTP signature headers
+
+Additionally, the package includes an app that generates HTTP digests and signatures for Postman.
+
 ### Mock Account Provider
 
 The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an account provider. It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
 
+### Open Payments
+
+The `open-payments` package is a client library for making Open Payments API requests.
+
 ### Open API
 
 The `openapi` package is a library for validating requests and responses against an OpenAPI spec.
+
+### Token Introspection
+
+The `token-introspection` package is a client library for making token introspection requests to the auth server.
