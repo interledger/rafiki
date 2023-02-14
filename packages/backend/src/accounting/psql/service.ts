@@ -322,11 +322,10 @@ async function postAccountWithdrawal(
 
 async function getAccountBalances(
   deps: ServiceDependencies,
-  account: LedgerAccount,
-  trx?: TransactionOrKnex
+  account: LedgerAccount
 ): Promise<AccountBalance> {
   const { credits, debits } =
-    await deps.ledgerTransferService.getAccountTransfers(account.id, trx)
+    await deps.ledgerTransferService.getAccountTransfers(account.id)
 
   let creditsPosted = 0n
   let creditsPending = 0n
