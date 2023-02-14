@@ -272,18 +272,11 @@ async function createAccountDeposit(
   }
 
   try {
-    await deps.knex.transaction(async (trx) => {
-      await createTransfers(deps, [transfer], trx)
-    })
+    await createTransfers(deps, [transfer])
   } catch (error) {
     if (error instanceof UniqueViolationError) {
       return TransferError.TransferExists
     }
-
-    deps.logger.error(
-      { errorMessage: error && error['message'], transferRef, accountRef },
-      'Could not create deposit'
-    )
 
     throw error
   }

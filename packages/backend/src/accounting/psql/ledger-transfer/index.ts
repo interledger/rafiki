@@ -52,13 +52,22 @@ export async function getAccountTransfers(
 }
 
 export async function createTransfers(
-  _: ServiceDependencies,
+  deps: ServiceDependencies,
   transfers: CreateTransferArgs[],
-  trx: TransactionOrKnex
+  trx?: TransactionOrKnex
 ): Promise<LedgerTransfer[]> {
-  return LedgerTransfer.query(trx).insertAndFetch(
-    transfers.map(prepareTransfer)
-  )
+  try {
+    return await LedgerTransfer.query(trx || deps.knex).insertAndFetch(
+      transfers.map(prepareTransfer)
+    )
+  } catch (error) {
+    deps.logger.error(
+      { errorMessage: error && error['message'] },
+      'Could not create transfer(s)'
+    )
+
+    throw error
+  }
 }
 
 function prepareTransfer(
