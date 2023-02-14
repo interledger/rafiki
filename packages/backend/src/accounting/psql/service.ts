@@ -286,6 +286,7 @@ async function createAccountDeposit(
     type: LedgerTransferType.DEPOSIT,
     state: LedgerTransferState.POSTED
   }
+
   try {
     await deps.knex.transaction(async (trx) => {
       await deps.ledgerTransferService.createTransfers([transfer], trx)
@@ -294,6 +295,11 @@ async function createAccountDeposit(
     if (error instanceof UniqueViolationError) {
       return TransferError.TransferExists
     }
+
+    deps.logger.error(
+      { errorMessage: error && error['message'], transferRef, accountRef },
+      'Could not create deposit'
+    )
 
     throw error
   }
