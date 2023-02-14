@@ -15,10 +15,10 @@ export type CreateTransferArgs = Pick<
   | 'creditAccountId'
   | 'debitAccountId'
   | 'ledger'
-  | 'expiresAt'
   | 'type'
-  | 'state'
->
+> & {
+  timeoutMs?: bigint
+}
 
 export interface LedgerTransferService {
   getAccountTransfers(
@@ -88,5 +88,26 @@ async function createTransfers(
   transfers: CreateTransferArgs[],
   trx: TransactionOrKnex
 ): Promise<TransferError | void> {
-  await LedgerTransfer.query(trx).insertAndFetch(transfers)
+  await LedgerTransfer.query(trx).insertAndFetch(transfers.map(prepareTransfer))
+}
+
+function prepareTransfer(
+  transfer: CreateTransferArgs
+): Partial<LedgerTransfer> {
+  return {
+    amount: transfer.amount,
+    transferRef: transfer.transferRef,
+    creditAccountId: transfer.creditAccountId,
+    debitAccountId: transfer.debitAccountId,
+    ledger: transfer.ledger,
+    state:
+      transfer.timeoutMs != null
+        ? LedgerTransferState.PENDING
+        : LedgerTransferState.POSTED,
+    expiresAt:
+      transfer.timeoutMs != null
+        ? new Date(Date.now() + Number(transfer.timeoutMs))
+        : undefined,
+    type: transfer.type
+  }
 }

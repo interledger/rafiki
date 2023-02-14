@@ -283,8 +283,7 @@ async function createAccountDeposit(
     debitAccountId: settlementAccount.id,
     amount,
     ledger: settlementAccount.ledger,
-    type: LedgerTransferType.DEPOSIT,
-    state: LedgerTransferState.POSTED
+    type: LedgerTransferType.DEPOSIT
   }
 
   try {
