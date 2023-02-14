@@ -1,38 +1,13 @@
 import { TransactionOrKnex } from 'objection'
-import { BaseService } from '../../../shared/baseService'
 import { LedgerTransfer, LedgerTransferState } from './model'
+import { ServiceDependencies } from '../service'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
   debits: LedgerTransfer[]
 }
-export interface LedgerTransferService {
-  getAccountTransfers(
-    accountId: string,
-    trx?: TransactionOrKnex
-  ): Promise<GetTransfersResult>
-}
 
-type ServiceDependencies = BaseService
-
-export async function createLedgerTransferService({
-  logger,
-  knex
-}: ServiceDependencies): Promise<LedgerTransferService> {
-  const log = logger.child({
-    service: 'LedgerTransferService'
-  })
-  const deps: ServiceDependencies = {
-    logger: log,
-    knex
-  }
-  return {
-    getAccountTransfers: (accountId, trx) =>
-      getAccountTransfers(deps, accountId, trx)
-  }
-}
-
-async function getAccountTransfers(
+export async function getAccountTransfers(
   deps: ServiceDependencies,
   accountId: string,
   trx?: TransactionOrKnex

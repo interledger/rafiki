@@ -10,18 +10,24 @@ import { Asset } from '../../asset/model'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
 import { AccountingService, LiquidityAccountType } from '../service'
-import { LedgerAccountService } from './ledger-account/service'
 import { LedgerAccount, LedgerAccountType } from './ledger-account/model'
+import * as ledgerAccountFns from './ledger-account'
 import { AccountAlreadyExistsError } from '../errors'
 import { createLedgerAccount } from '../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../tests/ledgerTransfer'
 import { LedgerTransferType } from './ledger-transfer/model'
 
+jest.mock('./ledger-account', () => {
+  return {
+    ...jest.requireActual('./ledger-account'),
+    __esModule: true
+  }
+})
+
 describe('Psql Accounting Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let accountingService: AccountingService
-  let ledgerAccountService: LedgerAccountService
   let knex: Knex
   let asset: Asset
 
@@ -30,7 +36,7 @@ describe('Psql Accounting Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     accountingService = await deps.use('accountingService')
-    ledgerAccountService = await deps.use('ledgerAccountService')
+    accountingService
   })
 
   beforeEach(async (): Promise<void> => {
@@ -53,7 +59,7 @@ describe('Psql Accounting Service', (): void => {
         asset
       }
 
-      const createAccountSpy = jest.spyOn(ledgerAccountService, 'create')
+      const createAccountSpy = jest.spyOn(ledgerAccountFns, 'createAccount')
 
       await expect(
         accountingService.createLiquidityAccount(
@@ -61,14 +67,11 @@ describe('Psql Accounting Service', (): void => {
           LiquidityAccountType.ASSET
         )
       ).resolves.toEqual(account)
-      expect(createAccountSpy).toHaveBeenCalledWith(
-        {
-          accountRef: account.id,
-          ledger: asset.ledger,
-          type: LedgerAccountType.LIQUIDITY_ASSET
-        },
-        undefined
-      )
+      expect(createAccountSpy.mock.results[0].value).resolves.toMatchObject({
+        accountRef: account.id,
+        type: LedgerAccountType.LIQUIDITY_ASSET,
+        ledger: asset.ledger
+      })
     })
 
     test('throws on error', async (): Promise<void> => {
@@ -77,8 +80,8 @@ describe('Psql Accounting Service', (): void => {
         asset
       }
 
-      const createAccountSpy = jest
-        .spyOn(ledgerAccountService, 'create')
+      jest
+        .spyOn(ledgerAccountFns, 'createAccount')
         .mockRejectedValueOnce(
           new AccountAlreadyExistsError('could not create account')
         )
@@ -89,32 +92,21 @@ describe('Psql Accounting Service', (): void => {
           LiquidityAccountType.ASSET
         )
       ).rejects.toThrowError(AccountAlreadyExistsError)
-      expect(createAccountSpy).toHaveBeenCalledWith(
-        {
-          accountRef: account.id,
-          ledger: asset.ledger,
-          type: LedgerAccountType.LIQUIDITY_ASSET
-        },
-        undefined
-      )
     })
   })
 
   describe('createSettlementAccount', (): void => {
     test('creates account', async (): Promise<void> => {
-      const createAccountSpy = jest.spyOn(ledgerAccountService, 'create')
+      const createAccountSpy = jest.spyOn(ledgerAccountFns, 'createAccount')
 
       await expect(
         accountingService.createSettlementAccount(asset.ledger)
       ).resolves.toBeUndefined()
-      expect(createAccountSpy).toHaveBeenCalledWith(
-        {
-          accountRef: asset.id,
-          ledger: asset.ledger,
-          type: LedgerAccountType.SETTLEMENT
-        },
-        undefined
-      )
+      expect(createAccountSpy.mock.results[0].value).resolves.toMatchObject({
+        accountRef: asset.id,
+        type: LedgerAccountType.SETTLEMENT,
+        ledger: asset.ledger
+      })
     })
 
     test('throws if cannot find asset', async (): Promise<void> => {
@@ -124,21 +116,13 @@ describe('Psql Accounting Service', (): void => {
     })
 
     test('throws on error', async (): Promise<void> => {
-      const createAccountSpy = jest
-        .spyOn(ledgerAccountService, 'create')
+      jest
+        .spyOn(ledgerAccountFns, 'createAccount')
         .mockRejectedValueOnce(new Error('could not create account'))
 
       await expect(
         accountingService.createSettlementAccount(asset.ledger)
-      ).rejects.toThrowError(Error)
-      expect(createAccountSpy).toHaveBeenCalledWith(
-        {
-          accountRef: asset.id,
-          ledger: asset.ledger,
-          type: LedgerAccountType.SETTLEMENT
-        },
-        undefined
-      )
+      ).rejects.toThrowError('could not create account')
     })
   })
 

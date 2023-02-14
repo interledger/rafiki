@@ -2,29 +2,27 @@ import { Knex } from 'knex'
 
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
-import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices } from '../../../app'
 import { Asset } from '../../../asset/model'
 import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount } from '../ledger-account/model'
-import { LedgerTransferService } from './service'
 import { LedgerTransferState } from './model'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
+import { getAccountTransfers } from '.'
+import { ServiceDependencies } from '../service'
 
-describe('Ledger Transfer Service', (): void => {
-  let deps: IocContract<AppServices>
+describe('Ledger Transfer', (): void => {
+  let serviceDeps: ServiceDependencies
   let appContainer: TestContainer
   let knex: Knex
   let asset: Asset
-  let ledgerTransferService: LedgerTransferService
 
   beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({ ...Config, useTigerbeetle: false })
+    const deps = initIocContainer({ ...Config, useTigerbeetle: false })
     appContainer = await createTestApp(deps)
-    ledgerTransferService = await deps.use('ledgerTransferService')
+    serviceDeps = { logger: await deps.use('logger') }
     knex = appContainer.knex
   })
 
@@ -67,7 +65,8 @@ describe('Ledger Transfer Service', (): void => {
         )
 
         await expect(
-          ledgerTransferService.getAccountTransfers(
+          getAccountTransfers(
+            serviceDeps,
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual(
@@ -96,7 +95,8 @@ describe('Ledger Transfer Service', (): void => {
         )
 
         await expect(
-          ledgerTransferService.getAccountTransfers(
+          getAccountTransfers(
+            serviceDeps,
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual(
@@ -126,7 +126,8 @@ describe('Ledger Transfer Service', (): void => {
         )
 
         await expect(
-          ledgerTransferService.getAccountTransfers(
+          getAccountTransfers(
+            serviceDeps,
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual({ credits: [], debits: [] })
@@ -151,7 +152,8 @@ describe('Ledger Transfer Service', (): void => {
         )
 
         await expect(
-          ledgerTransferService.getAccountTransfers(
+          getAccountTransfers(
+            serviceDeps,
             accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual({ credits: [], debits: [] })
