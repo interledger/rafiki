@@ -24,6 +24,7 @@ import {
 } from './ledger-account/model'
 
 export interface ServiceDependencies extends BaseService {
+  knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
 }
 
