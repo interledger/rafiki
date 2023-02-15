@@ -16,7 +16,6 @@ import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import { CreateTransferArgs, createTransfers, getAccountTransfers } from '.'
 import { ServiceDependencies } from '../service'
-import { ForeignKeyViolationError, UniqueViolationError } from 'objection'
 import { TransferError } from '../../errors'
 
 describe('Ledger Transfer', (): void => {

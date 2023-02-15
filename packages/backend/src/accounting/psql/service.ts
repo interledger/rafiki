@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { TransactionOrKnex } from 'objection'
-import { UniqueViolationError } from 'objection-db-errors'
 import { Asset } from '../../asset/model'
 import { BaseService } from '../../shared/baseService'
 import { TransferError } from '../errors'
@@ -186,24 +185,6 @@ export async function getSettlementBalance(
     await getAccountBalances(deps, settlementAccount)
 
   return debitsPosted + debitsPending - creditsPosted
-}
-
-function validateTransfer(
-  args: ValidateTransferArgs
-): TransferError | undefined {
-  const { amount, creditAccount, debitAccount } = args
-
-  if (amount <= 0n) {
-    return TransferError.InvalidAmount
-  }
-
-  if (creditAccount.id === debitAccount.id) {
-    return TransferError.SameAccounts
-  }
-
-  if (creditAccount.ledger !== debitAccount.ledger) {
-    return TransferError.DifferentAssets
-  }
 }
 
 export async function createTransfer(
