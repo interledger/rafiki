@@ -25,6 +25,12 @@ Note that two counterparties could have multiple peering relationships that diff
 
 ## How to peer two Rafiki instances?
 
+### Using the Admin Dashboard
+
+_Coming Soon_
+
+### Using the Admin API
+
 This section describes the process for setting up peering between two Rafiki instances using the [Admin API](./admin-api.md). The examples are given for one instance, the other instance would have to run the corresponding API calls.
 
 Assume the following peering relationship
@@ -190,6 +196,48 @@ Example successful response:
       "code": "200",
       "success": true,
       "message": "Added peer liquidity",
+      "error": null
+    }
+  }
+}
+```
+
+### Withdraw Peer Liquidity
+
+Query:
+
+```
+mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInput!) {
+  createPeerLiquidityWithdrawal(input: $input) {
+    code
+    success
+    message
+    error
+  }
+}
+```
+
+Query Variables (substitute the peer ID from the "create peer" response for `INSERT_PEER_ID`):
+
+```
+{
+  "input": {
+    "peerId": "INSERT_PEER_ID",
+    "amount": "5000",
+    "id": "25e4ae5b-e844-49f6-89fa-34f33bc03278"
+  }
+}
+```
+
+Example successful response:
+
+```
+{
+  "data": {
+    "createPeerLiquidityWithdrawal": {
+      "code": "200",
+      "success": true,
+      "message": "Created peer liquidity withdrawal",
       "error": null
     }
   }
