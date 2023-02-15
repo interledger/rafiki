@@ -20,7 +20,6 @@ import {
   getSettlementAccount
 } from './ledger-account'
 import {
-  LedgerAccount,
   LedgerAccountType,
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
