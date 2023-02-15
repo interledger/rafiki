@@ -1,21 +1,36 @@
-import { TransactionOrKnex } from 'objection'
+import { TransactionOrKnex, UniqueViolationError } from 'objection'
 import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
+import { LedgerAccount } from '../ledger-account/model'
+import { isTransferError, TransferError } from '../../errors'
+import { getAccountBalances } from '../balance'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
   debits: LedgerTransfer[]
 }
 
+interface CreateTransferError {
+  index: number
+  error: TransferError
+}
+interface CreateTransfersResult {
+  errors: CreateTransferError[]
+  results: LedgerTransfer[]
+}
+
+interface ValidateTransferArgs {
+  amount: bigint
+  creditAccount: LedgerAccount
+  debitAccount: LedgerAccount
+}
+
 export type CreateTransferArgs = Pick<
   LedgerTransfer,
-  | 'amount'
-  | 'transferRef'
-  | 'creditAccountId'
-  | 'debitAccountId'
-  | 'ledger'
-  | 'type'
+  'amount' | 'transferRef' | 'ledger' | 'type'
 > & {
+  creditAccount: LedgerAccount
+  debitAccount: LedgerAccount
   timeoutMs?: bigint
 }
 
@@ -55,19 +70,111 @@ export async function createTransfers(
   deps: ServiceDependencies,
   transfers: CreateTransferArgs[],
   trx?: TransactionOrKnex
-): Promise<LedgerTransfer[]> {
-  try {
-    return await LedgerTransfer.query(trx || deps.knex).insertAndFetch(
-      transfers.map(prepareTransfer)
+): Promise<CreateTransfersResult> {
+  const validationResults = await Promise.all(
+    transfers.map((transfer) =>
+      validateTransfer(deps, {
+        creditAccount: transfer.creditAccount,
+        debitAccount: transfer.debitAccount,
+        amount: transfer.amount
+      })
     )
-  } catch (error) {
-    deps.logger.error(
-      { errorMessage: error && error['message'] },
-      'Could not create transfer(s)'
-    )
+  )
 
-    throw error
+  const errors: CreateTransferError[] = []
+
+  for (const [i, maybeError] of validationResults.entries()) {
+    if (isTransferError(maybeError)) {
+      errors.push({
+        index: i,
+        error: maybeError
+      })
+    }
   }
+
+  if (errors.length > 0) {
+    return {
+      results: [],
+      errors
+    }
+  }
+
+  try {
+    const createdTransfers = await LedgerTransfer.query(
+      trx || deps.knex
+    ).insertAndFetch(transfers.map(prepareTransfer))
+
+    return {
+      results: createdTransfers,
+      errors: []
+    }
+  } catch (error) {
+    if (error instanceof UniqueViolationError) {
+      return {
+        results: [],
+        errors: [{ index: 0, error: TransferError.TransferExists }]
+      }
+    }
+
+    const errorMessage = 'Could not create transfer(s)'
+    deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
+    throw new Error(errorMessage)
+  }
+}
+
+async function validateTransfer(
+  deps: ServiceDependencies,
+  args: ValidateTransferArgs
+): Promise<TransferError | undefined> {
+  const { amount, creditAccount, debitAccount } = args
+
+  if (amount <= 0n) {
+    return TransferError.InvalidAmount
+  }
+
+  if (creditAccount.id === debitAccount.id) {
+    return TransferError.SameAccounts
+  }
+
+  if (creditAccount.ledger !== debitAccount.ledger) {
+    return TransferError.DifferentAssets
+  }
+
+  if (
+    creditAccount.isSettlementAccount &&
+    !(await hasEnoughDebitBalance(deps, creditAccount, amount))
+  ) {
+    return TransferError.InsufficientDebitBalance
+  }
+
+  if (
+    !debitAccount.isSettlementAccount &&
+    !(await hasEnoughLiquidity(deps, debitAccount, amount))
+  ) {
+    return TransferError.InsufficientLiquidity
+  }
+}
+
+async function hasEnoughLiquidity(
+  deps: ServiceDependencies,
+  account: LedgerAccount,
+  amount: bigint
+): Promise<boolean> {
+  const { creditsPosted, debitsPosted, debitsPending } =
+    await getAccountBalances(deps, account)
+
+  return debitsPosted + debitsPending + amount > creditsPosted
+}
+
+async function hasEnoughDebitBalance(
+  deps: ServiceDependencies,
+  account: LedgerAccount,
+  amount: bigint
+): Promise<boolean> {
+  const { creditsPosted, creditsPending, debitsPosted } =
+    await getAccountBalances(deps, account)
+
+  return creditsPosted + creditsPending + amount > debitsPosted
 }
 
 function prepareTransfer(
@@ -76,8 +183,8 @@ function prepareTransfer(
   return {
     amount: transfer.amount,
     transferRef: transfer.transferRef,
-    creditAccountId: transfer.creditAccountId,
-    debitAccountId: transfer.debitAccountId,
+    creditAccountId: transfer.creditAccount.id,
+    debitAccountId: transfer.debitAccount.id,
     ledger: transfer.ledger,
     state:
       transfer.timeoutMs != null

@@ -26,12 +26,6 @@ import {
 import { CreateTransferArgs, createTransfers } from './ledger-transfer'
 import { LedgerTransferType } from './ledger-transfer/model'
 
-interface ValidateTransferArgs {
-  amount: bigint
-  creditAccount: LedgerAccount
-  debitAccount: LedgerAccount
-}
-
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
@@ -251,33 +245,19 @@ async function createAccountDeposit(
     return TransferError.UnknownSourceAccount
   }
 
-  const transferError = validateTransfer({
-    amount,
-    creditAccount: account,
-    debitAccount: settlementAccount
-  })
-
-  if (transferError) {
-    return transferError
-  }
-
   const transfer: CreateTransferArgs = {
     transferRef,
-    creditAccountId: account.id,
-    debitAccountId: settlementAccount.id,
+    debitAccount: settlementAccount,
+    creditAccount: account,
     amount,
     ledger: settlementAccount.ledger,
     type: LedgerTransferType.DEPOSIT
   }
 
-  try {
-    await createTransfers(deps, [transfer])
-  } catch (error) {
-    if (error instanceof UniqueViolationError) {
-      return TransferError.TransferExists
-    }
+  const { errors } = await createTransfers(deps, [transfer])
 
-    throw error
+  if (errors[0]) {
+    return errors[0].error
   }
 }
 

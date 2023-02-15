@@ -17,6 +17,7 @@ import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import { CreateTransferArgs, createTransfers, getAccountTransfers } from '.'
 import { ServiceDependencies } from '../service'
 import { ForeignKeyViolationError, UniqueViolationError } from 'objection'
+import { TransferError } from '../../errors'
 
 describe('Ledger Transfer', (): void => {
   let serviceDeps: ServiceDependencies
@@ -175,8 +176,8 @@ describe('Ledger Transfer', (): void => {
     beforeEach(async (): Promise<void> => {
       baseTransfer = {
         transferRef: uuid(),
-        creditAccountId: creditAccount.id,
-        debitAccountId: debitAccount.id,
+        creditAccount: creditAccount,
+        debitAccount: debitAccount,
         ledger: creditAccount.ledger,
         amount: 10n
       }
@@ -207,24 +208,27 @@ describe('Ledger Transfer', (): void => {
 
         await expect(
           createTransfers(serviceDeps, [transfer], knex)
-        ).resolves.toEqual([
-          {
-            id: expect.any(String),
-            transferRef: transfer.transferRef,
-            creditAccountId: creditAccount.id,
-            debitAccountId: debitAccount.id,
-            ledger: creditAccount.ledger,
-            state: expectedState,
-            amount: transfer.amount,
-            type: transfer.type,
-            expiresAt:
-              timeoutMs != null
-                ? new Date(now.getTime() + Number(timeoutMs))
-                : null,
-            createdAt: expect.any(Date),
-            updatedAt: expect.any(Date)
-          }
-        ])
+        ).resolves.toEqual({
+          results: [
+            {
+              id: expect.any(String),
+              transferRef: transfer.transferRef,
+              creditAccountId: creditAccount.id,
+              debitAccountId: debitAccount.id,
+              ledger: creditAccount.ledger,
+              state: expectedState,
+              amount: transfer.amount,
+              type: transfer.type,
+              expiresAt:
+                timeoutMs != null
+                  ? new Date(now.getTime() + Number(timeoutMs))
+                  : null,
+              createdAt: expect.any(Date),
+              updatedAt: expect.any(Date)
+            }
+          ],
+          errors: []
+        })
       }
     )
 
@@ -241,7 +245,7 @@ describe('Ledger Transfer', (): void => {
 
       await expect(
         createTransfers(serviceDeps, [transfer, failTransfer], knex)
-      ).rejects.toThrow(ForeignKeyViolationError)
+      ).rejects.toThrow('Could not create transfer(s)')
 
       await expect(
         LedgerTransfer.query(knex).findOne({
@@ -263,7 +267,10 @@ describe('Ledger Transfer', (): void => {
 
       await expect(
         createTransfers(serviceDeps, [transfer, transfer], knex)
-      ).rejects.toThrow(UniqueViolationError)
+      ).resolves.toEqual({
+        results: [],
+        errors: [{ index: 0, error: TransferError.TransferExists }]
+      })
     })
   })
 })
