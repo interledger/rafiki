@@ -25,7 +25,6 @@ import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
-import { createLedgerAccountService } from './accounting/psql/ledger-account/service'
 import { createPeerService } from './peer/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
@@ -45,7 +44,6 @@ import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
-import { createLedgerTransferService } from './accounting/psql/ledger-transfer/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -159,26 +157,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('ledgerAccountService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-
-    return createLedgerAccountService({
-      logger,
-      knex
-    })
-  })
-
-  container.singleton('ledgerTransferService', async (deps) => {
-    const logger = await deps.use('logger')
-    const knex = await deps.use('knex')
-
-    return createLedgerTransferService({
-      logger,
-      knex
-    })
-  })
-
   container.singleton('accountingService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
@@ -195,14 +173,9 @@ export function initIocContainer(
       })
     }
 
-    const ledgerAccountService = await deps.use('ledgerAccountService')
-    const ledgerTransferService = await deps.use('ledgerTransferService')
-
     return createPsqlAccountingService({
       logger,
       knex,
-      ledgerAccountService,
-      ledgerTransferService,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
   })
