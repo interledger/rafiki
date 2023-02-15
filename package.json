@@ -21,7 +21,8 @@
     "localenv:build": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml -f ./infrastructure/local/build-override.yml build",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
     "localenv:dbvolumes:remove": "docker volume rm local_database-data && docker volume rm local_tigerbeetle-data",
-    "sanity": "pnpm -r build && pnpm -r test"
+    "sanity": "pnpm -r build && pnpm -r test",
+    "docs": "graphql-markdown --update-file ./docs/admin-api.md --heading-level 2 ./packages/backend/src/graphql/schema.graphql"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.3",
@@ -35,6 +36,7 @@
     "eslint": "^8.34.0",
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-react": "^7.32.2",
+    "graphql-markdown": "^7.0.0",
     "husky": "^8.0.3",
     "jest": "^29.4.2",
     "prettier": "^2.8.4",
