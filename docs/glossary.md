@@ -2,7 +2,16 @@
 
 ## Account Servicing Entity
 
-An Account Servicing Entity provides and maintains a payment account for a payer and is a regulated entity in the country/countries it operates.
+An Account Servicing Entity provides and maintains a payment account for a payer and payee, and is a regulated entity in the country/countries it operates.
+
+## Asset
+
+An Asset consists of two pieces of information, code and scale. The asset code SHOULD be an [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217). The asset scale is the difference in orders of magnitude between the standard unit and a corresponding fractional unit. For example, considering the asset `{ code: 'USD', scale: 2 }`, an amount of $42.42 is expressed as `{ value: 4242, code: 'USD', scale: 2 }`.
+
+Within Rafiki, the resource `asset` additionally contains the following information:
+
+- `id`: identifier
+- `withdrawalThreshold`: defines the minimum withdrawal amount
 
 ## Grant Negotiation Authorization Protocol
 
@@ -14,11 +23,15 @@ Interledger is a protocol for sending packets of money across different payment 
 
 ## Open Payments
 
-Open Payments is an API standard that allows third-parties (with the account holder's consent) to initiate payments and to view the transaction history on the account holder's account. Fore more details, see the [Open Payments website](https://openpayments.guide).
+Open Payments is an API standard that allows third-parties (with the account holder's consent) to initiate payments and to view the transaction history on the account holder's account. For more details, see the [Open Payments website](https://openpayments.guide).
 
 ## Payment Pointer
 
-A Payment Pointers is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem a payment pointer is used by an account holder to share the details of their account with a counter-party. For more details, see the [documentation](https://paymentpointers.org/).
+A Payment Pointers is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem, a payment pointer is used by an account holder to share the details of their account with a counter-party. For more details, see the [documentation](https://paymentpointers.org/).
+
+## Peer
+
+A Peer is a counterparty that a given party transacts with. Within the [Interledger Protocol](#interledger-protocol), connectors maintain peers, or counterparty connectors whom they transact with. For more information, see [the peering documentation](TODO: add once merged).
 
 ## Simple Payments Setup Protocol (SPSP)
 

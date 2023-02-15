@@ -51,11 +51,13 @@ The `http-signature-utils` package includes helper functions for
 - creating HTTP signature headers
 - validate and verify HTTP signature headers
 
-Additionally, the package includes an app that generates HTTP digests and signatures for Postman.
+which is used to process [Open Payments](./glossary.md#open-payments) client keys and signatures and is based on the proposed IETF standard [HTTP Message Signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/).
+
+Additionally, the package includes an app that generates HTTP digests and signatures for the [Postman collection](https://www.postman.com/interledger/workspace/interledger/overview).
 
 ### Mock Account Provider
 
-The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an account provider. It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
+The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an [Account Servicing Entity](./glossary.md#account-servicing-entity). It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
 
 ### Open Payments
 
@@ -67,4 +69,4 @@ The `openapi` package is a library for validating requests and responses against
 
 ### Token Introspection
 
-The `token-introspection` package is a client library for making token introspection requests to the auth server.
+The `token-introspection` package is a client library for making [GNAP](./glossary.md#grant-negotiation-authorization-protocol) token introspection requests to the auth server.
