@@ -140,7 +140,7 @@ async function validateTransfer(
     return TransferError.InvalidAmount
   }
 
-  if (timeoutMs && timeoutMs < 0n) {
+  if (timeoutMs && timeoutMs <= 0n) {
     return TransferError.InvalidTimeout
   }
 

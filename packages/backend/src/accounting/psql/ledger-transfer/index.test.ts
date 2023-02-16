@@ -354,7 +354,7 @@ describe('Ledger Transfer', (): void => {
       ${'passes if posted debits equal transfer amount'}                         | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${10n}       | ${0n}         | ${true}
       ${'passes if posted debits equal transfer amount and all credits'}         | ${true}             | ${6n}          | ${2n}         | ${2n}          | ${10n}       | ${0n}         | ${true}
       ${'fails if posted debits below transfer amount'}                          | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${0n}         | ${false}
-      ${'fails if posted debits below transfer amount, ignores pending credits'} | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${10n}        | ${false}
+      ${'fails if posted debits below transfer amount, ignores pending debits'}  | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${10n}        | ${false}
       ${'fails if posted debits below transfer amount and posted credits'}       | ${true}             | ${5n}          | ${6n}         | ${0n}          | ${10n}       | ${0n}         | ${false}
       ${'fails if posted debits below transfer amount and pending credits'}      | ${true}             | ${5n}          | ${0n}         | ${6n}          | ${10n}       | ${0n}         | ${false}
       ${'fails if posted debits below transfer amount and all credits'}          | ${true}             | ${5n}          | ${3n}         | ${3n}          | ${10n}       | ${0n}         | ${false}
