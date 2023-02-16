@@ -22,12 +22,7 @@ import {
   LedgerAccountType,
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
-import {
-  CreateTransferArgs,
-  createTransfers,
-  getTransferForUpdate,
-  voidTransfer
-} from './ledger-transfer'
+import { CreateTransferArgs, createTransfers } from './ledger-transfer'
 import { LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
@@ -58,10 +53,8 @@ export function createAccountingService(
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    postWithdrawal: (withdrawalRef) =>
-      postAccountWithdrawal(deps, withdrawalRef),
-    voidWithdrawal: (withdrawalRef) =>
-      voidAccountWithdrawal(deps, withdrawalRef)
+    postWithdrawal: (options) => postAccountWithdrawal(deps, options),
+    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
   }
 }
 
@@ -295,15 +288,9 @@ async function createAccountWithdrawal(
 
 async function voidAccountWithdrawal(
   deps: ServiceDependencies,
-  transferRef: string
+  withdrawalId: string
 ): Promise<void | TransferError> {
-  try {
-    return await voidTransfer(deps, transferRef)
-  } catch (error) {
-    const errorMessage = 'Could not void withdrawal'
-    deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
-    return TransferError.UnknownError
-  }
+  throw new Error('Not implemented')
 }
 
 async function postAccountWithdrawal(
