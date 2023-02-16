@@ -18,6 +18,7 @@ import {
   CreateTransferArgs,
   createTransfers,
   getAccountTransfers,
+  getTransferForUpdate,
   hasEnoughDebitBalance,
   hasEnoughLiquidity
 } from '.'
@@ -512,5 +513,64 @@ describe('Ledger Transfer', (): void => {
         ).resolves.toEqual({ credits: [], debits: [] })
       }
     )
+  })
+
+  describe('getTransferForUpdate', (): void => {
+    test('gets transfer by transferRef', async (): Promise<void> => {
+      const transfer = await createLedgerTransfer(
+        {
+          creditAccountId: account.id,
+          debitAccountId: settlementAccount.id,
+          amount: 10n,
+          ledger: account.ledger
+        },
+        knex
+      )
+
+      const trx = await knex.transaction()
+
+      await expect(
+        getTransferForUpdate(serviceDeps, transfer.transferRef, trx)
+      ).resolves.toEqual(transfer)
+
+      await trx.commit()
+    })
+
+    test('returns undefined if no transfer found', async (): Promise<void> => {
+      const trx = await knex.transaction()
+
+      await expect(
+        getTransferForUpdate(serviceDeps, uuid(), trx)
+      ).resolves.toBeUndefined()
+
+      await trx.commit()
+    })
+
+    test('locks tranfser for update', async (): Promise<void> => {
+      const transfer = await createLedgerTransfer(
+        {
+          creditAccountId: account.id,
+          debitAccountId: settlementAccount.id,
+          amount: 10n,
+          ledger: account.ledger
+        },
+        knex
+      )
+
+      const trx = await knex.transaction()
+
+      await expect(
+        getTransferForUpdate(serviceDeps, transfer.transferRef, trx)
+      ).resolves.toEqual(transfer)
+
+      const timeoutOrTransfer = await Promise.race([
+        transfer.$query().patchAndFetch({ state: LedgerTransferState.PENDING }),
+        new Promise((reject) => setTimeout(() => reject('timeout'), 5000))
+      ])
+
+      await trx.commit()
+
+      expect(timeoutOrTransfer).toEqual('timeout')
+    })
   })
 })
