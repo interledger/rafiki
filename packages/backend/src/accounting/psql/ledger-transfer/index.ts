@@ -120,7 +120,7 @@ export async function createTransfers(
     if (error instanceof UniqueViolationError) {
       return {
         results: [],
-        errors: [{ index: 0, error: TransferError.TransferExists }]
+        errors: [{ index: -1, error: TransferError.TransferExists }]
       }
     }
 
