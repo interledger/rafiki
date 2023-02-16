@@ -244,9 +244,46 @@ async function createAccountDeposit(
 
 async function createAccountWithdrawal(
   deps: ServiceDependencies,
-  { id, account, amount, timeout }: Withdrawal
+  args: Withdrawal
 ): Promise<void | TransferError> {
-  throw new Error('Not implemented')
+  const {
+    id: transferRef,
+    account: {
+      id: accountRef,
+      asset: { id: assetRef }
+    },
+    amount,
+    timeout
+  } = args
+
+  const [account, settlementAccount] = await Promise.all([
+    getLiquidityAccount(deps, accountRef),
+    getSettlementAccount(deps, assetRef)
+  ])
+
+  if (!account) {
+    return TransferError.UnknownSourceAccount
+  }
+
+  if (!settlementAccount) {
+    return TransferError.UnknownDestinationAccount
+  }
+
+  const transfer: CreateTransferArgs = {
+    transferRef,
+    debitAccount: account,
+    creditAccount: settlementAccount,
+    amount,
+    ledger: settlementAccount.ledger,
+    type: LedgerTransferType.WITHDRAWAL,
+    timeoutMs: timeout
+  }
+
+  const { errors } = await createTransfers(deps, [transfer])
+
+  if (errors[0]) {
+    return errors[0].error
+  }
 }
 
 async function voidAccountWithdrawal(

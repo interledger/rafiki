@@ -9,7 +9,12 @@ import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountingService, Deposit, LiquidityAccountType } from '../service'
+import {
+  AccountingService,
+  Deposit,
+  LiquidityAccountType,
+  Withdrawal
+} from '../service'
 import { LedgerAccount, LedgerAccountType } from './ledger-account/model'
 import * as ledgerAccountFns from './ledger-account'
 import { AccountAlreadyExistsError, TransferError } from '../errors'
@@ -480,6 +485,152 @@ describe('Psql Accounting Service', (): void => {
       await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
         TransferError.InvalidAmount
       )
+    })
+  })
+
+  describe('createWithdrawal', (): void => {
+    let withdrawal: Withdrawal
+    let account: LedgerAccount
+
+    const startingBalance = 10n
+    const timeout = 10_000n
+
+    beforeEach(async (): Promise<void> => {
+      ;[, account] = await Promise.all([
+        createLedgerAccount(
+          {
+            accountRef: asset.id,
+            ledger: asset.ledger,
+            type: LedgerAccountType.SETTLEMENT
+          },
+          knex
+        ),
+        createLedgerAccount({ ledger: asset.ledger }, knex)
+      ])
+
+      // fund account
+      await accountingService.createDeposit({
+        id: uuid(),
+        amount: startingBalance,
+        account: {
+          id: account.accountRef,
+          asset
+        }
+      })
+
+      withdrawal = {
+        id: uuid(),
+        account: {
+          id: account.accountRef,
+          asset
+        },
+        amount: 1n,
+        timeout
+      }
+      await expect(
+        accountingService.getBalance(account.accountRef)
+      ).resolves.toEqual(startingBalance)
+      await expect(
+        accountingService.getSettlementBalance(account.ledger)
+      ).resolves.toEqual(startingBalance)
+    })
+
+    describe.each`
+      timeout      | description
+      ${undefined} | ${'single-phase'}
+      ${timeout}   | ${'two-phase'}
+    `('($description) withdrawal', ({ timeout }): void => {
+      beforeEach((): void => {
+        withdrawal.timeout = timeout
+      })
+
+      test('creates withdrawal', async (): Promise<void> => {
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toBeUndefined()
+        await expect(
+          accountingService.getBalance(withdrawal.account.id)
+        ).resolves.toEqual(startingBalance - withdrawal.amount)
+        await expect(
+          accountingService.getSettlementBalance(
+            withdrawal.account.asset.ledger
+          )
+        ).resolves.toEqual(
+          timeout ? startingBalance : startingBalance - withdrawal.amount
+        )
+      })
+
+      test('creates multiple withdrawals', async (): Promise<void> => {
+        const withdrawals = [
+          { ...withdrawal, id: uuid(), amount: 1n },
+          { ...withdrawal, id: uuid(), amount: 2n }
+        ]
+
+        await expect(
+          accountingService.createWithdrawal(withdrawals[0])
+        ).resolves.toBeUndefined()
+        await expect(
+          accountingService.createWithdrawal(withdrawals[1])
+        ).resolves.toBeUndefined()
+        await expect(
+          accountingService.getBalance(withdrawal.account.id)
+        ).resolves.toEqual(startingBalance - 3n)
+        await expect(
+          accountingService.getSettlementBalance(
+            withdrawal.account.asset.ledger
+          )
+        ).resolves.toEqual(timeout ? startingBalance : startingBalance - 3n)
+      })
+
+      test('cannot create duplicate withdrawal', async (): Promise<void> => {
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toBeUndefined()
+
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.TransferExists)
+
+        withdrawal.amount = 2n
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.TransferExists)
+      })
+
+      test('cannot withdraw from unknown account', async (): Promise<void> => {
+        withdrawal.account.id = uuid()
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.UnknownSourceAccount)
+      })
+
+      test('cannot withdraw into unknown settlement account', async (): Promise<void> => {
+        withdrawal.account.asset.id = uuid()
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.UnknownDestinationAccount)
+      })
+
+      test('cannot withdraw zero', async (): Promise<void> => {
+        withdrawal.amount = 0n
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.InvalidAmount)
+      })
+
+      test('cannot withdraw negative amount', async (): Promise<void> => {
+        withdrawal.amount = -10n
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.InvalidAmount)
+      })
+
+      test('cannot create withdrawal exceeding account balance', async (): Promise<void> => {
+        withdrawal.amount = startingBalance + 1n
+        await expect(
+          accountingService.createWithdrawal(withdrawal)
+        ).resolves.toEqual(TransferError.InsufficientDebitBalance)
+      })
     })
   })
 })
