@@ -1,3 +1,4 @@
+import Koa from 'koa'
 import { Logger } from 'pino'
 import {
   ReadContext,
@@ -165,7 +166,10 @@ async function listIncomingPayments(
           deps.connectionService.getUrl(payment)
         )
     })
-  } catch (_) {
+  } catch (err) {
+    if (err instanceof Koa.HttpError) {
+      throw err
+    }
     ctx.throw(500, 'Error trying to list incoming payments')
   }
 }

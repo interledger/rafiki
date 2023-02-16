@@ -46,16 +46,18 @@ import { QuoteRoutes } from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
 import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
-import { PageQueryParams } from './shared/pagination'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
-import { AccessAction, AccessType, AuthenticatedClient } from 'open-payments'
+import {
+  AccessAction,
+  AccessType,
+  AuthenticatedClient,
+  PaginationArgs
+} from 'open-payments'
 import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { ReceiverService } from './open_payments/receiver/service'
 import { Client as TokenIntrospectionClient } from 'token-introspection'
-import { LedgerAccountService } from './accounting/psql/ledger-account/service'
-import { LedgerTransferService } from './accounting/psql/ledger-transfer/service'
 
 export interface AppContextData {
   logger: Logger
@@ -140,7 +142,7 @@ type SubresourceContext = Omit<
 export type CreateContext<BodyT> = CollectionContext<BodyT>
 export type ReadContext = SubresourceContext
 export type CompleteContext = SubresourceContext
-export type ListContext = CollectionContext<never, PageQueryParams>
+export type ListContext = CollectionContext<never, PaginationArgs>
 
 export interface SPSPContext extends AppContext {
   paymentTag: string
@@ -163,8 +165,6 @@ export interface AppServices {
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
-  ledgerAccountService: Promise<LedgerAccountService>
-  ledgerTransferService: Promise<LedgerTransferService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
   paymentPointerService: Promise<PaymentPointerService>

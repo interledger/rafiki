@@ -76,8 +76,7 @@ export default function App() {
         {}
         <Snackbar
           id='snackbar'
-          //@ts-expect-error test
-          onClose={setSnackbarOpen}
+          onClose={() => setSnackbarOpen(false)}
           show={snackbarOpen}
           message={message}
           dismissAfter={2000}

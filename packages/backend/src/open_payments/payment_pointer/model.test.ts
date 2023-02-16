@@ -325,6 +325,30 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
           })
         }
       )
+
+      test.each`
+        query                      | message                                    | description
+        ${{ first: 10, last: 10 }} | ${'first and last are mutually exclusive'} | ${'`first` with `last`'}
+        ${{ last: 10 }}            | ${'last requires cursor'}                  | ${'`last` without `cursor`'}
+      `(
+        'returns 400 on $description',
+        async ({ query, message }): Promise<void> => {
+          const ctx = setup<ListContext>({
+            reqOpts: {
+              headers: { Accept: 'application/json' },
+              method: 'GET',
+              query,
+              url: urlPath
+            },
+            paymentPointer: await getPaymentPointer(),
+            accessAction: AccessAction.ListAll
+          })
+          await expect(list(ctx)).rejects.toMatchObject({
+            status: 400,
+            message
+          })
+        }
+      )
     })
   }
 }

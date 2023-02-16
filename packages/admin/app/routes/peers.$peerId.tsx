@@ -249,7 +249,7 @@ export async function action({ request }: ActionArgs) {
   const session = await getSession(request.headers.get('cookie'))
 
   setMessage(session, {
-    content: 'Peer informations were updated',
+    content: 'Peer informations were updated.',
     type: 'success'
   })
 
