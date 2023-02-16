@@ -3,7 +3,7 @@ import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
 import { isTransferError, TransferError } from '../../errors'
-import { getAccountBalances } from '../balance'
+import { AccountBalance, getAccountBalances } from '../balance'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
@@ -19,8 +19,15 @@ interface CreateTransfersResult {
   results: LedgerTransfer[]
 }
 
+interface BalanceCheckArgs {
+  account: LedgerAccount
+  balances: AccountBalance
+  transferAmount: bigint
+}
+
 interface ValidateTransferArgs {
   amount: bigint
+  timeoutMs?: bigint
   creditAccount: LedgerAccount
   debitAccount: LedgerAccount
 }
@@ -71,35 +78,36 @@ export async function createTransfers(
   transfers: CreateTransferArgs[],
   trx?: TransactionOrKnex
 ): Promise<CreateTransfersResult> {
-  const validationResults = await Promise.all(
-    transfers.map((transfer) =>
-      validateTransfer(deps, {
-        creditAccount: transfer.creditAccount,
-        debitAccount: transfer.debitAccount,
-        amount: transfer.amount
-      })
-    )
-  )
-
-  const errors: CreateTransferError[] = []
-
-  for (const [i, maybeError] of validationResults.entries()) {
-    if (isTransferError(maybeError)) {
-      errors.push({
-        index: i,
-        error: maybeError
-      })
-    }
-  }
-
-  if (errors.length > 0) {
-    return {
-      results: [],
-      errors
-    }
-  }
-
   try {
+    const validationResults = await Promise.all(
+      transfers.map((transfer) =>
+        validateTransfer(deps, {
+          creditAccount: transfer.creditAccount,
+          debitAccount: transfer.debitAccount,
+          amount: transfer.amount,
+          timeoutMs: transfer.timeoutMs
+        })
+      )
+    )
+
+    const errors: CreateTransferError[] = []
+
+    for (const [i, maybeError] of validationResults.entries()) {
+      if (isTransferError(maybeError)) {
+        errors.push({
+          index: i,
+          error: maybeError
+        })
+      }
+    }
+
+    if (errors.length > 0) {
+      return {
+        results: [],
+        errors
+      }
+    }
+
     const createdTransfers = await LedgerTransfer.query(
       trx || deps.knex
     ).insertAndFetch(transfers.map(prepareTransfer))
@@ -126,10 +134,14 @@ async function validateTransfer(
   deps: ServiceDependencies,
   args: ValidateTransferArgs
 ): Promise<TransferError | undefined> {
-  const { amount, creditAccount, debitAccount } = args
+  const { amount, timeoutMs, creditAccount, debitAccount } = args
 
   if (amount <= 0n) {
     return TransferError.InvalidAmount
+  }
+
+  if (timeoutMs && timeoutMs < 0n) {
+    return TransferError.InvalidTimeout
   }
 
   if (creditAccount.id === debitAccount.id) {
@@ -140,41 +152,59 @@ async function validateTransfer(
     return TransferError.DifferentAssets
   }
 
+  return validateBalances(deps, args)
+}
+
+async function validateBalances(
+  deps: ServiceDependencies,
+  args: ValidateTransferArgs
+): Promise<TransferError | undefined> {
+  const { amount, creditAccount, debitAccount } = args
+
+  const [creditAccountBalances, debitAccountBalance] = await Promise.all([
+    getAccountBalances(deps, creditAccount),
+    getAccountBalances(deps, debitAccount)
+  ])
+
   if (
-    creditAccount.isSettlementAccount &&
-    !(await hasEnoughDebitBalance(deps, creditAccount, amount))
+    !hasEnoughDebitBalance({
+      account: creditAccount,
+      balances: creditAccountBalances,
+      transferAmount: amount
+    })
   ) {
     return TransferError.InsufficientDebitBalance
   }
 
   if (
-    !debitAccount.isSettlementAccount &&
-    !(await hasEnoughLiquidity(deps, debitAccount, amount))
+    !hasEnoughLiquidity({
+      account: debitAccount,
+      balances: debitAccountBalance,
+      transferAmount: amount
+    })
   ) {
     return TransferError.InsufficientLiquidity
   }
 }
 
-async function hasEnoughLiquidity(
-  deps: ServiceDependencies,
-  account: LedgerAccount,
-  amount: bigint
-): Promise<boolean> {
-  const { creditsPosted, debitsPosted, debitsPending } =
-    await getAccountBalances(deps, account)
+export function hasEnoughLiquidity(args: BalanceCheckArgs): boolean {
+  const { account, balances, transferAmount } = args
+  const { creditsPosted, debitsPosted, debitsPending } = balances
 
-  return debitsPosted + debitsPending + amount > creditsPosted
+  return (
+    account.isSettlementAccount ||
+    creditsPosted >= debitsPosted + debitsPending + transferAmount
+  )
 }
 
-async function hasEnoughDebitBalance(
-  deps: ServiceDependencies,
-  account: LedgerAccount,
-  amount: bigint
-): Promise<boolean> {
-  const { creditsPosted, creditsPending, debitsPosted } =
-    await getAccountBalances(deps, account)
+export function hasEnoughDebitBalance(args: BalanceCheckArgs): boolean {
+  const { account, balances, transferAmount } = args
+  const { creditsPosted, creditsPending, debitsPosted } = balances
 
-  return creditsPosted + creditsPending + amount > debitsPosted
+  return (
+    !account.isSettlementAccount ||
+    debitsPosted >= creditsPosted + creditsPending + transferAmount
+  )
 }
 
 function prepareTransfer(
@@ -186,14 +216,12 @@ function prepareTransfer(
     creditAccountId: transfer.creditAccount.id,
     debitAccountId: transfer.debitAccount.id,
     ledger: transfer.ledger,
-    state:
-      transfer.timeoutMs != null
-        ? LedgerTransferState.PENDING
-        : LedgerTransferState.POSTED,
-    expiresAt:
-      transfer.timeoutMs != null
-        ? new Date(Date.now() + Number(transfer.timeoutMs))
-        : undefined,
+    state: transfer.timeoutMs
+      ? LedgerTransferState.PENDING
+      : LedgerTransferState.POSTED,
+    expiresAt: transfer.timeoutMs
+      ? new Date(Date.now() + Number(transfer.timeoutMs))
+      : undefined,
     type: transfer.type
   }
 }

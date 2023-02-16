@@ -3,7 +3,7 @@ import { LedgerTransferState } from './ledger-transfer/model'
 import { ServiceDependencies } from './service'
 import { getAccountTransfers } from './ledger-transfer'
 
-interface AccountBalance {
+export interface AccountBalance {
   creditsPosted: bigint
   creditsPending: bigint
   debitsPosted: bigint
