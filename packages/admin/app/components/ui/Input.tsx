@@ -2,6 +2,7 @@ import { forwardRef, useId } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
 
 import { FieldError } from './FieldError'
+import { Label } from './Label'
 
 type InputProps = Omit<ComponentPropsWithoutRef<'input'>, 'className'> & {
   label?: string
@@ -15,9 +16,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className=''>
         {label && (
-          <label htmlFor={id} className='block font-medium'>
+          <Label
+            htmlFor={id}
+            required={props.required ?? false}
+            className='block font-medium'
+          >
             {label}
-          </label>
+          </Label>
         )}
         <div className='shadow-sm'>
           <input

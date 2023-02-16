@@ -5,6 +5,23 @@ import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
 import { paginationSchema } from '~/lib/validate.server'
 import { peerService } from '~/services/bootstrap.server'
 
+export const loader = async ({ request }: LoaderArgs) => {
+  const url = new URL(request.url)
+  const pagination = paginationSchema.safeParse(
+    Object.fromEntries(url.searchParams.entries())
+  )
+
+  if (!pagination.success) {
+    throw new Error('Invalid pagination.')
+  }
+
+  const peers = await peerService.list({
+    ...pagination.data
+  })
+
+  return json({ peers })
+}
+
 export default function PeersPage() {
   const { peers } = useLoaderData<typeof loader>()
   const navigate = useNavigate()
@@ -94,21 +111,4 @@ export default function PeersPage() {
       {/* Peers Table - END*/}
     </div>
   )
-}
-
-export const loader = async ({ request }: LoaderArgs) => {
-  const url = new URL(request.url)
-  const pagination = paginationSchema.safeParse(
-    Object.fromEntries(url.searchParams.entries())
-  )
-
-  if (!pagination.success) {
-    throw new Error('Invalid pagination.')
-  }
-
-  const peers = await peerService.list({
-    ...pagination.data
-  })
-
-  return json({ peers })
 }

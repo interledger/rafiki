@@ -2,12 +2,19 @@ import type { ComponentPropsWithoutRef, ReactNode } from 'react'
 
 type LabelProps = Omit<ComponentPropsWithoutRef<'label'>, 'children'> & {
   children: ReactNode
+  required?: boolean
 }
 
-export const Label = ({ htmlFor, children, ...props }: LabelProps) => {
+export const Label = ({
+  htmlFor,
+  children,
+  required,
+  ...props
+}: LabelProps) => {
   return (
     <label htmlFor={htmlFor} className='block font-medium text-sm' {...props}>
-      {children}
+      <span>{children}</span>{' '}
+      {required ? <span className='text-red-500'>*</span> : ''}
     </label>
   )
 }

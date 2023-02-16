@@ -28,4 +28,4 @@ export const paginationSchema = z
     first: z.coerce.number().positive(),
     last: z.coerce.number().positive()
   })
-  .strict()
+  .partial()
