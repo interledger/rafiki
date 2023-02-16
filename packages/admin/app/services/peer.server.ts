@@ -6,7 +6,8 @@ import {
 import type {
   CreatePeerInput,
   QueryPeerArgs,
-  QueryPeersArgs
+  QueryPeersArgs,
+  UpdatePeerInput
 } from '~/generated/graphql'
 import type {
   CreatePeerMutation,
@@ -14,7 +15,9 @@ import type {
   GetPeerQuery,
   GetPeerQueryVariables,
   ListPeersQuery,
-  ListPeersQueryVariables
+  ListPeersQueryVariables,
+  UpdatePeerMutation,
+  UpdatePeerMutationVariables
 } from './__generated__/peer.server.generated'
 
 export class PeerService {
@@ -60,6 +63,20 @@ export class PeerService {
     })
 
     return response.data?.createPeer
+  }
+
+  public async update(args: UpdatePeerInput) {
+    const response = await this.apollo.mutate<
+      UpdatePeerMutation,
+      UpdatePeerMutationVariables
+    >({
+      mutation: updatePeerMutation,
+      variables: {
+        input: args
+      }
+    })
+
+    return response.data?.updatePeer
   }
 }
 
@@ -129,6 +146,16 @@ const createPeerMutation = gql`
       peer {
         id
       }
+    }
+  }
+`
+
+const updatePeerMutation = gql`
+  mutation UpdatePeerMutation($input: UpdatePeerInput!) {
+    updatePeer(input: $input) {
+      code
+      success
+      message
     }
   }
 `

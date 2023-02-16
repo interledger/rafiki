@@ -99,6 +99,7 @@ export default function CreatePeerPage() {
                 </div>
               </div>
             </div>
+            {/* Peer HTTP Info - END */}
             {/* Peer Asset */}
             <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
@@ -112,6 +113,7 @@ export default function CreatePeerPage() {
                     label='Asset'
                     placeholder='Asset ID'
                     required
+                    error={response?.errors?.fieldErrors?.asset}
                   />
                 </div>
               </div>

@@ -6,6 +6,7 @@ type ErrorPanelProps = {
 
 export default function ErrorPanel({ errors }: ErrorPanelProps) {
   if (!errors) return null
+  if (errors.length === 0) return null
 
   let errorMessage = 'There was an error with your submission!'
   if (errors?.length && errors.length > 1) {

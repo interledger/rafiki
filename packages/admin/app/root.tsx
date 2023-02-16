@@ -1,4 +1,4 @@
-import type { MetaFunction } from '@remix-run/node'
+import { json, type LoaderArgs, type MetaFunction } from '@remix-run/node'
 import {
   Links,
   LiveReload,
@@ -6,12 +6,15 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useCatch
+  useCatch,
+  useLoaderData
 } from '@remix-run/react'
-
-import tailwind from './styles/main.css'
+import { useEffect, useState } from 'react'
 import favicon from '../public/favicon.svg'
 import { Sidebar } from './components/Sidebar'
+import { Snackbar } from './components/Snackbar'
+import { commitSession, getSession, type Message } from './lib/message.server'
+import tailwind from './styles/main.css'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -19,7 +22,38 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1'
 })
 
+export const loader = async ({ request }: LoaderArgs) => {
+  const session = await getSession(request.headers.get('cookie'))
+
+  const message = session.get('message') as Message
+
+  if (!message) {
+    return json({ message: null })
+  }
+
+  if (!message.type) {
+    throw new Error('Message should have a type')
+  }
+
+  return json(
+    { message },
+    {
+      headers: { 'Set-Cookie': await commitSession(session) }
+    }
+  )
+}
+
 export default function App() {
+  const { message } = useLoaderData<typeof loader>()
+  const [snackbarOpen, setSnackbarOpen] = useState(false)
+
+  useEffect(() => {
+    if (!message) {
+      return
+    }
+    setSnackbarOpen(true)
+  }, [message])
+
   return (
     <html
       lang='en'
@@ -38,6 +72,16 @@ export default function App() {
             </main>
           </div>
         </div>
+
+        {}
+        <Snackbar
+          id='snackbar'
+          //@ts-expect-error test
+          onClose={setSnackbarOpen}
+          show={snackbarOpen}
+          message={message}
+          dismissAfter={2000}
+        />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
