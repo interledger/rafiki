@@ -217,9 +217,6 @@ mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInp
     success
     message
     error
-    withdrawal {
-      id
-    }
   }
 }
 ```
@@ -245,10 +242,7 @@ Example successful response:
       "code": "200",
       "success": true,
       "message": "Created peer liquidity withdrawal",
-      "error": null,
-      "withdrawal": {
-        "id": "73db3333-1895-4ea1-a3e9-fd72890f6ca8"
-      }
+      "error": null
     }
   }
 }
@@ -269,7 +263,7 @@ mutation PostLiquidityWithdrawal ($withdrawalId: String!) {
 }
 ```
 
-Query Variables (substitute the withdrawal ID from the "create withdrawal" response for `INSERT_WITHDRAWAL_ID`):
+Query Variables (substitute the withdrawal ID from the "create withdrawal" request for `INSERT_WITHDRAWAL_ID`):
 
 ```
 {
@@ -307,7 +301,7 @@ mutation VoidLiquidityWithdrawal ($withdrawalId: String!) {
 }
 ```
 
-Query Variables (substitute the withdrawal ID from the "create withdrawal" response for `INSERT_WITHDRAWAL_ID`):
+Query Variables (substitute the withdrawal ID from the "create withdrawal" request for `INSERT_WITHDRAWAL_ID`):
 
 ```
 {
