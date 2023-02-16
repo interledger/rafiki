@@ -204,6 +204,10 @@ Example successful response:
 
 ### Withdraw Peer Liquidity
 
+This is a two-phase transaction, so the withdrawal needs to be created first and then posted (i.e. the Account Servicing Entity commits to the withdrawal). If the withdrawal is faulty, it can be voided rather than posted.
+
+#### Create Withdrawal
+
 Query:
 
 ```
@@ -213,11 +217,14 @@ mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInp
     success
     message
     error
+    withdrawal {
+      id
+    }
   }
 }
 ```
 
-Query Variables (substitute the peer ID from the "create peer" response for `INSERT_PEER_ID`):
+Query Variables (substitute the ID from the "create peer" response for `INSERT_PEER_ID`):
 
 ```
 {
@@ -238,6 +245,85 @@ Example successful response:
       "code": "200",
       "success": true,
       "message": "Created peer liquidity withdrawal",
+      "error": null,
+      "withdrawal": {
+        "id": "73db3333-1895-4ea1-a3e9-fd72890f6ca8"
+      }
+    }
+  }
+}
+```
+
+#### Post Withdrawal
+
+Query:
+
+```
+mutation PostLiquidityWithdrawal ($withdrawalId: String!) {
+  postLiquidityWithdrawal($withdrawalId: String!) {
+    code
+    success
+    message
+    error
+  }
+}
+```
+
+Query Variables (substitute the withdrawal ID from the "create withdrawal" response for `INSERT_WITHDRAWAL_ID`):
+
+```
+{
+  "withdrawalId": "INSERT_WITHDRAWAL_ID"
+}
+```
+
+Example successful response:
+
+```
+{
+  "data": {
+    "postLiquidityWithdrawal": {
+      "code": "200",
+      "success": true,
+      "message": "Posted Withdrawal",
+      "error": null
+    }
+  }
+}
+```
+
+#### Void Withdrawal
+
+Query:
+
+```
+mutation VoidLiquidityWithdrawal ($withdrawalId: String!) {
+  voidLiquidityWithdrawal($withdrawalId: String!) {
+    code
+    success
+    message
+    error
+  }
+}
+```
+
+Query Variables (substitute the withdrawal ID from the "create withdrawal" response for `INSERT_WITHDRAWAL_ID`):
+
+```
+{
+  "withdrawalId": "INSERT_WITHDRAWAL_ID"
+}
+```
+
+Example successful response:
+
+```
+{
+  "data": {
+    "voidLiquidityWithdrawal": {
+      "code": "200",
+      "success": true,
+      "message": "Voided Withdrawal",
       "error": null
     }
   }
