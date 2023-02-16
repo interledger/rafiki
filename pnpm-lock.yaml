@@ -63,7 +63,7 @@ importers:
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa-session': ^5.10.6
-      '@types/koa__cors': ^3.3.0
+      '@types/koa__cors': ^3.3.1
       '@types/koa__router': ^12.0.0
       '@types/uuid': ^9.0.0
       ajv: ^8.12.0
@@ -131,7 +131,7 @@ importers:
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10
       '@types/koa-session': 5.10.6
-      '@types/koa__cors': 3.3.0
+      '@types/koa__cors': 3.3.1
       '@types/koa__router': 12.0.0
       '@types/uuid': 9.0.0
       cross-fetch: 3.1.5
@@ -162,7 +162,7 @@ importers:
       '@types/jest': ^29.4.0
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
-      '@types/koa__cors': ^3.3.0
+      '@types/koa__cors': ^3.3.1
       '@types/koa__router': ^12.0.0
       '@types/luxon': ^3.2.0
       '@types/react': ^18.0.28
@@ -267,7 +267,7 @@ importers:
       '@types/jest': 29.4.0
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10
-      '@types/koa__cors': 3.3.0
+      '@types/koa__cors': 3.3.1
       '@types/koa__router': 12.0.0
       '@types/luxon': 3.2.0
       '@types/react': 18.0.28
@@ -4373,8 +4373,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/koa__cors/3.3.0:
-    resolution: {integrity: sha512-FUN8YxcBakIs+walVe3+HcNP+Bxd0SB8BJHBWkglZ5C1XQWljlKcEFDG/dPiCIqwVCUbc5X0nYDlH62uEhdHMA==}
+  /@types/koa__cors/3.3.1:
+    resolution: {integrity: sha512-aFGYhTFW7651KhmZZ05VG0QZJre7QxBxDj2LF1lf6GA/wSXEfKVAJxiQQWzRV4ZoMzQIO8vJBXKsUcRuvYK9qw==}
     dependencies:
       '@types/koa': 2.13.5
     dev: true
