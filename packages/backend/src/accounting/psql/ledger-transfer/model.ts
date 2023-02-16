@@ -41,6 +41,22 @@ export class LedgerTransfer extends BaseModel {
     this.transferRef = this.transferRef || uuid()
   }
 
+  public get isPending(): boolean {
+    return this.state === LedgerTransferState.PENDING
+  }
+
+  public get isPosted(): boolean {
+    return this.state === LedgerTransferState.POSTED
+  }
+
+  public get isVoided(): boolean {
+    return this.state === LedgerTransferState.VOIDED
+  }
+
+  public get expired(): boolean {
+    return this.isPending && !!this.expiresAt && this.expiresAt <= new Date()
+  }
+
   static relationMappings = {
     asset: {
       relation: Model.HasOneRelation,
