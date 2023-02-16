@@ -158,7 +158,7 @@ describe('Ledger Transfer', (): void => {
         createTransfers(serviceDeps, [baseTransfer, baseTransfer], knex)
       ).resolves.toEqual({
         results: [],
-        errors: [{ index: 0, error: TransferError.TransferExists }]
+        errors: [{ index: -1, error: TransferError.TransferExists }]
       })
     })
 
