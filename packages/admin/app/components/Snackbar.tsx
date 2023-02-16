@@ -1,6 +1,6 @@
 import { Transition } from '@headlessui/react'
 import { cx } from 'class-variance-authority'
-import type { Dispatch, FC, SetStateAction } from 'react'
+import type { FC } from 'react'
 import { Fragment, useEffect } from 'react'
 import { type Message } from '~/lib/message.server'
 import { CheckCircle } from './icons/CheckCircle'
