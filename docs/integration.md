@@ -6,26 +6,22 @@ Account Servicing Entities provide and maintain payment accounts. In order to ma
 
 ## Quotes / Fees
 
-Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. How they strucutre those fees is completely up to the Account Servicing Entity.
+Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity.
 
 The Account Servicing Entity is required to provide an endpoint that is accessible to the Rafiki backend. It accepts a `POST` request with
 
 #### Request Body
 
-| Variable Name             | Type                                     | Description                                                                   |
-| ------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------- |
-| id                        | string                                   | Interledger quote id                                                          |
-| paymentType               | enum: `'FixedSend'` \| `'FixedDelivery'` | fixed-send or fixed-receive payment                                           |
-| paymentPointerId          | string                                   | id of sending payment pointer                                                 |
-| receiver                  | string                                   | receiving payment pointer                                                     |
-| sendAmount                | [Amount](#amount)                        | defined or quoted send amount                                                 |
-| receiveAmount             | [Amount](#amount)                        | defined or quoted receive amount                                              |
-| maxPacketAmount           | number // bigint                         | discovered maximum packet amount allowed over chosen Interledger payment path |
-| minExchangeRate           | number                                   | aggregate exchange rate the payment is guaranteed to meet                     |
-| lowEstimatedExchangeRate  | number                                   | lower bound of probed exchange rate over the chosen Interledger payment path  |
-| highEstimatedExchangeRate | number                                   | upper bound of probed exchange rate over the chosen Interledger payment path  |
-| createdAt                 | string                                   | creation date and time of Interledger quote                                   |
-| expiresAt                 | string                                   | expiry date and time of Interledger quote                                     |
+| Variable Name    | Type                                     | Description                                 |
+| ---------------- | ---------------------------------------- | ------------------------------------------- |
+| id               | string                                   | Interledger quote id                        |
+| paymentType      | enum: `'FixedSend'` \| `'FixedDelivery'` | fixed-send or fixed-receive payment         |
+| paymentPointerId | string                                   | id of sending payment pointer               |
+| receiver         | string                                   | receiving payment pointer                   |
+| sendAmount       | [Amount](#amount)                        | defined or quoted send amount               |
+| receiveAmount    | [Amount](#amount)                        | defined or quoted receive amount            |
+| createdAt        | string                                   | creation date and time of Interledger quote |
+| expiresAt        | string                                   | expiry date and time of Interledger quote   |
 
 #### Amount
 
@@ -101,6 +97,6 @@ An [Open Payments](./glossary#open-payments) Outgoing Payment completely of part
 
 ## Open Payments
 
-The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. The are auth-protected using the [Grant Negotiation Authorization Protocol](./glossary#grant-negotiation-authorization-protocol) (GNAP). While Rafiki comes with a reference implementation of a GNAP server--the `auth` package--an [Account Servicing Entity](./glossary#account-servicing-entity) may implement its own GNAP server.
+The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. They are auth-protected using the [Grant Negotiation Authorization Protocol](./glossary#grant-negotiation-authorization-protocol) (GNAP). While Rafiki comes with a reference implementation of a GNAP server--the `auth` package--an [Account Servicing Entity](./glossary#account-servicing-entity) may implement its own GNAP server.
 
-Furthermore, the GNAP server requires integration with an Identity Provider to handle user authenticatio and consent. For more information on how to integrate an Identity Provider with the reference implementation, see the docs in the `auth` package.
+Furthermore, the GNAP server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the GNAP server, see the docs in the `auth` package.
