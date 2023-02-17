@@ -7,11 +7,7 @@ import { Asset } from '../../../asset/model'
 import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount, LedgerAccountType } from '../ledger-account/model'
-import {
-  LedgerTransfer,
-  LedgerTransferState,
-  LedgerTransferType
-} from './model'
+import { LedgerTransferState, LedgerTransferType } from './model'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import {
@@ -273,25 +269,24 @@ describe('Ledger Transfer', (): void => {
         errors: [{ index: 1, error: TransferError.SameAccounts }]
       })
 
-      await expect(
-        LedgerTransfer.query(knex).findOne({
-          transferRef: failTransfer.transferRef
-        })
-      ).resolves.toBeUndefined()
+      const accountTransfers = await getAccountTransfers(
+        serviceDeps,
+        account.id,
+        knex
+      )
 
-      await expect(
-        LedgerTransfer.query(knex).findOne({
-          transferRef: transfer.transferRef
-        })
-      ).resolves.toBeUndefined()
+      const transferRefs = [
+        ...accountTransfers.credits,
+        ...accountTransfers.debits
+      ].map((transfer) => transfer.transferRef)
+
+      expect(transferRefs).not.toContain(transfer.transferRef)
+      expect(transferRefs).not.toContain(failTransfer.transferRef)
     })
 
     test('returns error if not enough liquidity', async (): Promise<void> => {
       const transfer: CreateTransferArgs = {
-        ledger: peerAccount.ledger,
-        debitAccount: peerAccount,
-        creditAccount: account,
-        transferRef: uuid(),
+        ...baseTransfer,
         amount: accountStartingBalance + 1n
       }
 
@@ -305,10 +300,8 @@ describe('Ledger Transfer', (): void => {
 
     test('returns error if not enough debit balance', async (): Promise<void> => {
       const transfer: CreateTransferArgs = {
-        ledger: peerAccount.ledger,
-        debitAccount: account,
+        ...baseTransfer,
         creditAccount: settlementAccount,
-        transferRef: uuid(),
         amount: totalAssetSettlementBalance + 1n
       }
 
@@ -362,16 +355,16 @@ describe('Ledger Transfer', (): void => {
 
   describe('hasEnoughDebitBalance', (): void => {
     test.each`
-      description                                                                | isSettlementAccount | transferAmount | creditsPosted | creditsPending | debitsPosted | debitsPending | result
-      ${'passes if non-settlement account'}                                      | ${false}            | ${10n}         | ${0n}         | ${0n}          | ${0n}        | ${0n}         | ${true}
-      ${'passes if posted debits surpass transfer amount'}                       | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${11n}       | ${0n}         | ${true}
-      ${'passes if posted debits equal transfer amount'}                         | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${10n}       | ${0n}         | ${true}
-      ${'passes if posted debits equal transfer amount and all credits'}         | ${true}             | ${6n}          | ${2n}         | ${2n}          | ${10n}       | ${0n}         | ${true}
-      ${'fails if posted debits below transfer amount'}                          | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${0n}         | ${false}
-      ${'fails if posted debits below transfer amount, ignores pending credits'} | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${10n}        | ${false}
-      ${'fails if posted debits below transfer amount and posted credits'}       | ${true}             | ${5n}          | ${6n}         | ${0n}          | ${10n}       | ${0n}         | ${false}
-      ${'fails if posted debits below transfer amount and pending credits'}      | ${true}             | ${5n}          | ${0n}         | ${6n}          | ${10n}       | ${0n}         | ${false}
-      ${'fails if posted debits below transfer amount and all credits'}          | ${true}             | ${5n}          | ${3n}         | ${3n}          | ${10n}       | ${0n}         | ${false}
+      description                                                               | isSettlementAccount | transferAmount | creditsPosted | creditsPending | debitsPosted | debitsPending | result
+      ${'passes if non-settlement account'}                                     | ${false}            | ${10n}         | ${0n}         | ${0n}          | ${0n}        | ${0n}         | ${true}
+      ${'passes if posted debits surpass transfer amount'}                      | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${11n}       | ${0n}         | ${true}
+      ${'passes if posted debits equal transfer amount'}                        | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${10n}       | ${0n}         | ${true}
+      ${'passes if posted debits equal transfer amount and all credits'}        | ${true}             | ${6n}          | ${2n}         | ${2n}          | ${10n}       | ${0n}         | ${true}
+      ${'fails if posted debits below transfer amount'}                         | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${0n}         | ${false}
+      ${'fails if posted debits below transfer amount, ignores pending debits'} | ${true}             | ${11n}         | ${0n}         | ${0n}          | ${10n}       | ${10n}        | ${false}
+      ${'fails if posted debits below transfer amount and posted credits'}      | ${true}             | ${5n}          | ${6n}         | ${0n}          | ${10n}       | ${0n}         | ${false}
+      ${'fails if posted debits below transfer amount and pending credits'}     | ${true}             | ${5n}          | ${0n}         | ${6n}          | ${10n}       | ${0n}         | ${false}
+      ${'fails if posted debits below transfer amount and all credits'}         | ${true}             | ${5n}          | ${3n}         | ${3n}          | ${10n}       | ${0n}         | ${false}
     `(
       '$description',
       async ({
@@ -400,6 +393,14 @@ describe('Ledger Transfer', (): void => {
   })
 
   describe('getAccountTransfers', (): void => {
+    let creditAccount: LedgerAccount
+    let debitAccount: LedgerAccount
+
+    beforeEach(async (): Promise<void> => {
+      creditAccount = account.$clone()
+      debitAccount = peerAccount.$clone()
+    })
+
     test.each`
       accountType
       ${'credit'}
@@ -410,8 +411,8 @@ describe('Ledger Transfer', (): void => {
         const transfer = await createLedgerTransfer(
           {
             ledger: account.ledger,
-            creditAccountId: account.id,
-            debitAccountId: peerAccount.id,
+            creditAccountId: creditAccount.id,
+            debitAccountId: debitAccount.id,
             state: LedgerTransferState.POSTED
           },
           knex
@@ -420,7 +421,7 @@ describe('Ledger Transfer', (): void => {
         await expect(
           getAccountTransfers(
             serviceDeps,
-            accountType === 'credit' ? account.id : peerAccount.id
+            accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual(
           accountType === 'credit'
@@ -440,8 +441,8 @@ describe('Ledger Transfer', (): void => {
         const transfer = await createLedgerTransfer(
           {
             ledger: account.ledger,
-            creditAccountId: account.id,
-            debitAccountId: peerAccount.id,
+            creditAccountId: creditAccount.id,
+            debitAccountId: debitAccount.id,
             state: LedgerTransferState.PENDING
           },
           knex
@@ -450,7 +451,7 @@ describe('Ledger Transfer', (): void => {
         await expect(
           getAccountTransfers(
             serviceDeps,
-            accountType === 'credit' ? account.id : peerAccount.id
+            accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual(
           accountType === 'credit'
@@ -470,8 +471,8 @@ describe('Ledger Transfer', (): void => {
         await createLedgerTransfer(
           {
             ledger: account.ledger,
-            creditAccountId: account.id,
-            debitAccountId: peerAccount.id,
+            creditAccountId: creditAccount.id,
+            debitAccountId: debitAccount.id,
             state: LedgerTransferState.PENDING,
             expiresAt: new Date(Date.now() - 10)
           },
@@ -481,7 +482,7 @@ describe('Ledger Transfer', (): void => {
         await expect(
           getAccountTransfers(
             serviceDeps,
-            accountType === 'credit' ? account.id : peerAccount.id
+            accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual({ credits: [], debits: [] })
       }
@@ -497,8 +498,8 @@ describe('Ledger Transfer', (): void => {
         await createLedgerTransfer(
           {
             ledger: account.ledger,
-            creditAccountId: account.id,
-            debitAccountId: peerAccount.id,
+            creditAccountId: creditAccount.id,
+            debitAccountId: debitAccount.id,
             state: LedgerTransferState.VOIDED
           },
           knex
@@ -507,7 +508,7 @@ describe('Ledger Transfer', (): void => {
         await expect(
           getAccountTransfers(
             serviceDeps,
-            accountType === 'credit' ? account.id : peerAccount.id
+            accountType === 'credit' ? creditAccount.id : debitAccount.id
           )
         ).resolves.toEqual({ credits: [], debits: [] })
       }
