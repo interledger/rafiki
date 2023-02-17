@@ -34,7 +34,7 @@ type Query {
 
   "Fetch an Open Payments quote"
   quote(id: String!): Quote
-  " Fetch an Open Payments outgoing payment"
+  "Fetch an Open Payments outgoing payment"
   outgoingPayment(id: String!): OutgoingPayment
 }
 
