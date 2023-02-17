@@ -14,7 +14,6 @@ importers:
       '@typescript-eslint/parser': ^5.52.0
       eslint: ^8.34.0
       eslint-config-prettier: ^8.6.0
-      eslint-plugin-react: ^7.32.2
       husky: ^8.0.3
       jest: ^29.4.3
       prettier: ^2.8.4
@@ -32,7 +31,6 @@ importers:
       '@typescript-eslint/parser': 5.52.0_7kw3g6rralp5ps6mg3uyzz6azm
       eslint: 8.34.0
       eslint-config-prettier: 8.6.0_eslint@8.34.0
-      eslint-plugin-react: 7.32.2_eslint@8.34.0
       husky: 8.0.3
       jest: 29.4.3_zfha7dvnw4nti6zkbsmhmn6xo4
       prettier: 2.8.4
