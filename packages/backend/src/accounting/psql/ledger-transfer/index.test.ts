@@ -85,7 +85,6 @@ describe('Ledger Transfer', (): void => {
         transferRef: uuid(),
         creditAccount: account,
         debitAccount: peerAccount,
-        ledger: account.ledger,
         amount: 10n
       }
 
@@ -140,7 +139,7 @@ describe('Ledger Transfer', (): void => {
               transferRef: transfer.transferRef,
               creditAccountId: transfer.creditAccount.id,
               debitAccountId: transfer.debitAccount.id,
-              ledger: transfer.ledger,
+              ledger: transfer.creditAccount.ledger,
               state: expectedState,
               amount: transfer.amount,
               type: transfer.type,

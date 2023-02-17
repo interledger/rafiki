@@ -238,7 +238,6 @@ async function createAccountDeposit(
     debitAccount: settlementAccount,
     creditAccount: account,
     amount,
-    ledger: settlementAccount.ledger,
     type: LedgerTransferType.DEPOSIT
   }
 
@@ -281,7 +280,6 @@ async function createAccountWithdrawal(
     debitAccount: account,
     creditAccount: settlementAccount,
     amount,
-    ledger: settlementAccount.ledger,
     type: LedgerTransferType.WITHDRAWAL,
     timeoutMs: timeout
   }
