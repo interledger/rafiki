@@ -48,6 +48,13 @@ export const listSubresource = async <M extends PaymentPointerSubresource>({
   getPaymentPointerPage,
   toBody
 }: ListSubresourceOptions<M>) => {
+  if (ctx.request.query.last) {
+    if (ctx.request.query.first) {
+      ctx.throw(400, 'first and last are mutually exclusive')
+    } else if (!ctx.request.query.cursor) {
+      ctx.throw(400, 'last requires cursor')
+    }
+  }
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   const client = ctx.accessAction === AccessAction.List ? ctx.client : undefined
   const page = await getPaymentPointerPage({

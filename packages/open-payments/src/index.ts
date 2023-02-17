@@ -13,6 +13,7 @@ export {
   isNonInteractiveGrant,
   JWK,
   JWKS,
+  PaginationArgs,
   PaymentPointer,
   AccessType,
   AccessAction,
