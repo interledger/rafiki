@@ -98,9 +98,7 @@ export async function voidTransfer(
       return TransferError.TransferExpired
     }
 
-    await transfer
-      .$query(trx)
-      .patchAndFetch({ state: LedgerTransferState.VOIDED })
+    await transfer.$query(trx).patch({ state: LedgerTransferState.VOIDED })
   })
 }
 

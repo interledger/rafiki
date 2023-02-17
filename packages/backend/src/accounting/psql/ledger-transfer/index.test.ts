@@ -25,7 +25,6 @@ import {
 } from '.'
 import { ServiceDependencies } from '../service'
 import { TransferError } from '../../errors'
-import { AccountingService } from '../../service'
 
 describe('Ledger Transfer', (): void => {
   let serviceDeps: ServiceDependencies
@@ -630,7 +629,7 @@ describe('Ledger Transfer', (): void => {
 
       const timeoutOrTransfer = await Promise.race([
         transfer.$query().patchAndFetch({ state: LedgerTransferState.PENDING }),
-        new Promise((reject) => setTimeout(() => reject('timeout'), 5000))
+        new Promise((reject) => setTimeout(() => reject('timeout'), 1000))
       ])
 
       await trx.commit()
