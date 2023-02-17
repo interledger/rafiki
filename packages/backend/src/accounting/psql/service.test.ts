@@ -9,10 +9,10 @@ import { AppServices } from '../../app'
 import { Asset } from '../../asset/model'
 import { randomAsset } from '../../tests/asset'
 import { truncateTables } from '../../tests/tableManager'
-import { AccountingService, LiquidityAccountType } from '../service'
+import { AccountingService, Deposit, LiquidityAccountType } from '../service'
 import { LedgerAccount, LedgerAccountType } from './ledger-account/model'
 import * as ledgerAccountFns from './ledger-account'
-import { AccountAlreadyExistsError } from '../errors'
+import { AccountAlreadyExistsError, TransferError } from '../errors'
 import { createLedgerAccount } from '../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../tests/ledgerTransfer'
 import { LedgerTransferType } from './ledger-transfer/model'
@@ -33,7 +33,7 @@ describe('Psql Accounting Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({ ...Config, useTigerbeetle: false })
-    appContainer = await createTestApp(deps)
+    appContainer = await createTestApp(deps, { silentLogging: true })
     knex = appContainer.knex
     accountingService = await deps.use('accountingService')
     accountingService
@@ -370,6 +370,116 @@ describe('Psql Accounting Service', (): void => {
       await expect(
         accountingService.getSettlementBalance(settlementAccount.ledger)
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('createAccountDeposit', (): void => {
+    let account: LedgerAccount
+    let deposit: Deposit
+
+    beforeEach(async (): Promise<void> => {
+      ;[, account] = await Promise.all([
+        createLedgerAccount(
+          {
+            accountRef: asset.id,
+            ledger: asset.ledger,
+            type: LedgerAccountType.SETTLEMENT
+          },
+          knex
+        ),
+        createLedgerAccount({ ledger: asset.ledger }, knex)
+      ])
+
+      deposit = {
+        id: uuid(),
+        account: {
+          id: account.accountRef,
+          asset
+        },
+        amount: 10n
+      }
+
+      await expect(
+        accountingService.getBalance(account.accountRef)
+      ).resolves.toEqual(0n)
+      await expect(
+        accountingService.getSettlementBalance(account.ledger)
+      ).resolves.toEqual(0n)
+    })
+
+    test('creates deposit', async (): Promise<void> => {
+      await expect(
+        accountingService.createDeposit(deposit)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(deposit.account.id)
+      ).resolves.toEqual(deposit.amount)
+      await expect(
+        accountingService.getSettlementBalance(deposit.account.asset.ledger)
+      ).resolves.toEqual(deposit.amount)
+    })
+
+    test('creates multiple deposits', async (): Promise<void> => {
+      const deposits = [
+        { ...deposit, id: uuid(), amount: 10n },
+        { ...deposit, id: uuid(), amount: 20n }
+      ]
+
+      await expect(
+        accountingService.createDeposit(deposits[0])
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.createDeposit(deposits[1])
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(deposits[0].account.id)
+      ).resolves.toEqual(30n)
+      await expect(
+        accountingService.getSettlementBalance(deposits[0].account.asset.ledger)
+      ).resolves.toEqual(30n)
+    })
+
+    test('cannot deposit to unknown account', async (): Promise<void> => {
+      deposit.account.id = uuid()
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.UnknownDestinationAccount
+      )
+    })
+
+    test('cannot deposit from unknown settlement account', async (): Promise<void> => {
+      deposit.account.asset.id = uuid()
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.UnknownSourceAccount
+      )
+    })
+
+    test('cannot deposit zero', async (): Promise<void> => {
+      deposit.amount = 0n
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.InvalidAmount
+      )
+    })
+
+    test('cannot create duplicate deposit', async (): Promise<void> => {
+      await expect(
+        accountingService.createDeposit(deposit)
+      ).resolves.toBeUndefined()
+
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.TransferExists
+      )
+
+      deposit.amount = 5n
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.TransferExists
+      )
+    })
+
+    test('cannot deposit negative amount', async (): Promise<void> => {
+      deposit.amount = -10n
+      await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
+        TransferError.InvalidAmount
+      )
     })
   })
 })

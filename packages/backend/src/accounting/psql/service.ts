@@ -22,6 +22,8 @@ import {
   LedgerAccountType,
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
+import { CreateTransferArgs, createTransfers } from './ledger-transfer'
+import { LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -200,9 +202,43 @@ export async function createTransfer(
 
 async function createAccountDeposit(
   deps: ServiceDependencies,
-  { id, account, amount }: Deposit
+  args: Deposit
 ): Promise<void | TransferError> {
-  throw new Error('Not implemented')
+  const {
+    id: transferRef,
+    account: {
+      id: accountRef,
+      asset: { id: assetRef }
+    },
+    amount
+  } = args
+
+  const [account, settlementAccount] = await Promise.all([
+    getLiquidityAccount(deps, accountRef),
+    getSettlementAccount(deps, assetRef)
+  ])
+
+  if (!account) {
+    return TransferError.UnknownDestinationAccount
+  }
+
+  if (!settlementAccount) {
+    return TransferError.UnknownSourceAccount
+  }
+
+  const transfer: CreateTransferArgs = {
+    transferRef,
+    debitAccount: settlementAccount,
+    creditAccount: account,
+    amount,
+    type: LedgerTransferType.DEPOSIT
+  }
+
+  const { errors } = await createTransfers(deps, [transfer])
+
+  if (errors[0]) {
+    return errors[0].error
+  }
 }
 
 async function createAccountWithdrawal(

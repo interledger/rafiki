@@ -33,6 +33,10 @@ export class LedgerAccount extends BaseModel {
       }
     }
   }
+
+  public get isSettlementAccount(): boolean {
+    return this.type === LedgerAccountType.SETTLEMENT
+  }
 }
 
 export const mapLiquidityAccountTypeToLedgerAccountType: {
