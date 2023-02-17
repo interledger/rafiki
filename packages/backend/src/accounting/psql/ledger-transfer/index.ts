@@ -67,41 +67,27 @@ export async function getAccountTransfers(
   )
 }
 
-export async function getTransferForUpdate(
-  _: ServiceDependencies,
-  transferRef: string,
-  trx: Transaction
-): Promise<LedgerTransfer | undefined> {
-  return LedgerTransfer.query(trx).findOne({ transferRef }).forUpdate()
-}
-
 export async function voidTransfer(
   deps: ServiceDependencies,
   transferRef: string
 ): Promise<void | TransferError> {
-  return await deps.knex.transaction(async (trx) => {
-    const transfer = await getTransferForUpdate(deps, transferRef, trx)
-    if (!transfer) {
-      return TransferError.UnknownTransfer
-    }
-
-    const transferError = validateTransferStateUpdate(transfer)
-
-    if (transferError) {
-      return transferError
-    }
-
-    await transfer.$query(trx).patch({ state: LedgerTransferState.VOIDED })
-  })
+  return updateTransferState(deps, transferRef, LedgerTransferState.VOIDED)
 }
 
 export async function postTransfer(
   deps: ServiceDependencies,
   transferRef: string
 ): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRef, LedgerTransferState.POSTED)
+}
+
+async function updateTransferState(
+  deps: ServiceDependencies,
+  transferRef: string,
+  state: LedgerTransferState.POSTED | LedgerTransferState.VOIDED
+): Promise<void | TransferError> {
   return await deps.knex.transaction(async (trx) => {
     const transfer = await getTransferForUpdate(deps, transferRef, trx)
-
     if (!transfer) {
       return TransferError.UnknownTransfer
     }
@@ -112,8 +98,16 @@ export async function postTransfer(
       return transferError
     }
 
-    await transfer.$query(trx).patch({ state: LedgerTransferState.POSTED })
+    await transfer.$query(trx).patch({ state })
   })
+}
+
+export async function getTransferForUpdate(
+  _: ServiceDependencies,
+  transferRef: string,
+  trx: Transaction
+): Promise<LedgerTransfer | undefined> {
+  return LedgerTransfer.query(trx).findOne({ transferRef }).forUpdate()
 }
 
 function validateTransferStateUpdate(
