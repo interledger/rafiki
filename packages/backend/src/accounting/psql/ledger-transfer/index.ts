@@ -230,17 +230,17 @@ async function validateBalances(
   }
 
   if (
-    !hasEnoughLiquidity({
+    !hasEnoughCreditBalance({
       account: debitAccount,
       balances: debitAccountBalance,
       transferAmount: amount
     })
   ) {
-    return TransferError.InsufficientLiquidity
+    return TransferError.InsufficientBalance
   }
 }
 
-export function hasEnoughLiquidity(args: BalanceCheckArgs): boolean {
+export function hasEnoughCreditBalance(args: BalanceCheckArgs): boolean {
   const { account, balances, transferAmount } = args
   const { creditsPosted, debitsPosted, debitsPending } = balances
 

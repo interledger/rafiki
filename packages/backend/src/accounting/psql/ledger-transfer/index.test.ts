@@ -19,7 +19,7 @@ import {
   createTransfers,
   getAccountTransfers,
   hasEnoughDebitBalance,
-  hasEnoughLiquidity,
+  hasEnoughCreditBalance,
   postTransfer,
   voidTransfer
 } from '.'
@@ -289,7 +289,7 @@ describe('Ledger Transfer', (): void => {
       expect(transferRefs).not.toContain(failTransfer.transferRef)
     })
 
-    test('returns error if not enough liquidity', async (): Promise<void> => {
+    test('returns error if not enough balance', async (): Promise<void> => {
       const transfer: CreateTransferArgs = {
         ...baseTransfer,
         amount: accountStartingBalance + 1n
@@ -299,7 +299,7 @@ describe('Ledger Transfer', (): void => {
         createTransfers(serviceDeps, [transfer], knex)
       ).resolves.toEqual({
         results: [],
-        errors: [{ index: 0, error: TransferError.InsufficientLiquidity }]
+        errors: [{ index: 0, error: TransferError.InsufficientBalance }]
       })
     })
 
@@ -319,7 +319,7 @@ describe('Ledger Transfer', (): void => {
     })
   })
 
-  describe('hasEnoughLiquidity', (): void => {
+  describe('hasEnoughCreditBalance', (): void => {
     test.each`
       description                                                                 | isSettlementAccount | transferAmount | creditsPosted | creditsPending | debitsPosted | debitsPending | result
       ${'passes if settlement account'}                                           | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${0n}        | ${0n}         | ${true}
@@ -343,7 +343,7 @@ describe('Ledger Transfer', (): void => {
         result
       }): Promise<void> => {
         expect(
-          hasEnoughLiquidity({
+          hasEnoughCreditBalance({
             account: isSettlementAccount ? settlementAccount : account,
             balances: {
               creditsPosted,
