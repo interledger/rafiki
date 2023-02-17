@@ -8,4 +8,4 @@ pnpm run docs
 # format
 pnpm run format
 # stage
-git add .
+git add docs/admin-api.md
