@@ -36,7 +36,7 @@ export async function loader({ params }: LoaderArgs) {
   const peer = await peerService.get({ id: result.data })
 
   if (!peer) {
-    throw new Error('Peer not found')
+    throw new Response(null, { status: 400, statusText: 'Peer not found.' })
   }
 
   return json({ peer })
@@ -207,7 +207,7 @@ export default function ViewPeerPage() {
               <Button
                 aria-label='go to asset page'
                 type='button'
-                href={`/assets/${peer.asset.id}`}
+                to={`/assets/${peer.asset.id}`}
               >
                 View asset
               </Button>

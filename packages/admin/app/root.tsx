@@ -11,8 +11,10 @@ import {
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import favicon from '../public/favicon.svg'
+import { XCircleIcon } from './components/icons/XCircleIcon'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
+import { Button } from './components/ui/Button'
 import { commitSession, getSession, type Message } from './lib/message.server'
 import tailwind from './styles/main.css'
 
@@ -72,8 +74,6 @@ export default function App() {
             </main>
           </div>
         </div>
-
-        {}
         <Snackbar
           id='snackbar'
           onClose={() => setSnackbarOpen(false)}
@@ -92,24 +92,35 @@ export default function App() {
 // TODO: add styles to ErrorBoundary
 export function ErrorBoundary({ error }: { error: Error }) {
   return (
-    <html lang='en'>
+    <html
+      lang='en'
+      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+    >
       <head>
         <Meta />
         <Links />
       </head>
-      <body>
-        <div className='admin-panel'>
-          <div className='admin-panel-background'>
-            <header className='admin-menu'>
-              <h1>Rafiki Admin</h1>
-            </header>
-            <div className='admin-panel-inside'>
-              <main>
-                {JSON.stringify(error)}
-                <h1>An error ocurred</h1>
-                <p>{error.message}</p>
-              </main>
-            </div>
+      <body className='h-full text-tealish'>
+        <div className='min-h-full'>
+          <Sidebar />
+          <div className='flex md:pl-60 flex-1 flex-col'>
+            <main className='grid min-h-screen place-items-center'>
+              <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-5'>
+                <div className='grid place-items-center'>
+                  <XCircleIcon className='w-10 h-10 text-red-500' />
+                  <p className='text-lg font-semibold'>
+                    There was an issue with your request.
+                  </p>
+                </div>
+                <div>
+                  <span className='font-light'>Cause:</span>{' '}
+                  <span>{error.message}</span>
+                </div>
+                <Button to='/' aria-label='go to homepage'>
+                  Go to homepage
+                </Button>
+              </div>
+            </main>
           </div>
         </div>
         <ScrollRestoration />
@@ -125,13 +136,32 @@ export function CatchBoundary() {
   const caughtResponse = useCatch()
 
   return (
-    <html lang='en'>
+    <html
+      lang='en'
+      className='h-full bg-polkadot bg-cover bg-no-repeat bg-center bg-fixed'
+    >
       <head>
         <Meta />
         <Links />
       </head>
-      <body>
-        <div className='admin-panel'>
+      <body className='h-full text-tealish'>
+        <div className='min-h-full'>
+          <Sidebar />
+          <div className='flex md:pl-60 flex-1 flex-col'>
+            <main className='grid min-h-screen place-items-center'>
+              <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-2'>
+                <h4 className='font-semibold -tracking-widest text-[#F37F64]'>
+                  {caughtResponse.status}
+                </h4>
+                <h2 className='text-2xl'>{caughtResponse.statusText}</h2>
+                <Button to='/' aria-label='go to homepage'>
+                  Go to homepage
+                </Button>
+              </div>
+            </main>
+          </div>
+        </div>
+        {/* <div className='admin-panel'>
           <div className='admin-panel-background'>
             <header className='admin-menu'>
               <h1>Rafiki Admin</h1>
@@ -149,7 +179,7 @@ export function CatchBoundary() {
               </main>
             </div>
           </div>
-        </div>
+        </div> */}
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
