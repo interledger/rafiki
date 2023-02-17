@@ -536,7 +536,7 @@ describe('Ledger Transfer', (): void => {
       )
     })
 
-    test('posts transfer', async (): Promise<void> => {
+    test('voids transfer', async (): Promise<void> => {
       await expect(
         voidTransfer(serviceDeps, transfer.transferRef)
       ).resolves.toBeUndefined()
@@ -629,12 +629,12 @@ describe('Ledger Transfer', (): void => {
         .patch({ expiresAt: new Date(Date.now() - 1) })
 
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        postTransfer(serviceDeps, transfer.transferRef)
       ).resolves.toEqual(TransferError.TransferExpired)
     })
 
     test('returns error if no transfer found', async (): Promise<void> => {
-      await expect(voidTransfer(serviceDeps, uuid())).resolves.toEqual(
+      await expect(postTransfer(serviceDeps, uuid())).resolves.toEqual(
         TransferError.UnknownTransfer
       )
     })
@@ -647,7 +647,7 @@ describe('Ledger Transfer', (): void => {
         .patch({ state: LedgerTransferState.POSTED })
 
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        postTransfer(serviceDeps, transfer.transferRef)
       ).resolves.toEqual(TransferError.AlreadyPosted)
     })
 
@@ -657,7 +657,7 @@ describe('Ledger Transfer', (): void => {
       ).resolves.toBeUndefined()
 
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        postTransfer(serviceDeps, transfer.transferRef)
       ).resolves.toEqual(TransferError.AlreadyVoided)
     })
   })
