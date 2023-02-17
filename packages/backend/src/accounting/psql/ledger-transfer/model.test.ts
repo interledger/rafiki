@@ -48,29 +48,6 @@ describe('Ledger Transfer Model', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('isPending', (): void => {
-    test.each`
-      state                          | result
-      ${LedgerTransferState.PENDING} | ${true}
-      ${LedgerTransferState.POSTED}  | ${false}
-      ${LedgerTransferState.VOIDED}  | ${false}
-    `(
-      'isPending is $result for $state state',
-      async ({ state, result }): Promise<void> => {
-        const transfer = await createLedgerTransfer(
-          {
-            ledger: creditAccount.ledger,
-            creditAccountId: creditAccount.id,
-            debitAccountId: debitAccount.id,
-            state
-          },
-          knex
-        )
-        expect(transfer.isPending).toEqual(result)
-      }
-    )
-  })
-
   describe('isPosted', (): void => {
     test.each`
       state                          | result
@@ -117,14 +94,14 @@ describe('Ledger Transfer Model', (): void => {
     )
   })
 
-  describe('expired', (): void => {
+  describe('isExpired', (): void => {
     const now = Date.now()
 
     describe.each`
-      state                          | description
-      ${LedgerTransferState.PENDING} | ${''}
-      ${LedgerTransferState.POSTED}  | ${''}
-      ${LedgerTransferState.VOIDED}  | ${''}
+      state
+      ${LedgerTransferState.PENDING}
+      ${LedgerTransferState.POSTED}
+      ${LedgerTransferState.VOIDED}
     `('returns correct result for $state', ({ state }): void => {
       test.each`
         expiresAt            | description
@@ -145,8 +122,10 @@ describe('Ledger Transfer Model', (): void => {
           },
           knex
         )
-        expect(transfer.expired).toEqual(
-          state === LedgerTransferState.PENDING && expiresAt <= new Date(now)
+        expect(transfer.isExpired).toEqual(
+          state === LedgerTransferState.PENDING &&
+            !!expiresAt &&
+            expiresAt <= new Date(now)
         )
       })
     })
