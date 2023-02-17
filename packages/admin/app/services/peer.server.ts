@@ -89,9 +89,10 @@ const getPeerQuery = gql`
       maxPacketAmount
       createdAt
       asset {
-        scale
-        code
         id
+        code
+        scale
+        withdrawalThreshold
       }
       http {
         outgoing {

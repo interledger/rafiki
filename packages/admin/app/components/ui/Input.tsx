@@ -14,22 +14,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const id = useId()
 
     return (
-      <div className=''>
+      <div>
         {label && (
-          <Label
-            htmlFor={id}
-            required={props.required ?? false}
-            className='block font-medium'
-          >
+          <Label htmlFor={id} required={props.required ?? false}>
             {label}
           </Label>
         )}
-        <div className='shadow-sm'>
+        <div className='shadow-sm relative'>
           <input
             id={id}
             ref={ref}
             type={type ?? 'text'}
-            className='block w-full rounded-md border border-tealish/50 transition-colors duration-150 placeholder:font-extralight focus:border-tealish focus:outline-none focus:ring-0 disabled:bg-mercury'
+            className='block w-full rounded-md border border-tealish/50 transition-colors pr-10 duration-150 placeholder:font-extralight focus:border-tealish focus:outline-none focus:ring-0 disabled:bg-mercury'
             {...props}
           />
         </div>
