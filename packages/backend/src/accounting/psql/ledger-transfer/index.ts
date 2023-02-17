@@ -1,4 +1,4 @@
-import { Transaction, TransactionOrKnex, UniqueViolationError } from 'objection'
+import { TransactionOrKnex, UniqueViolationError } from 'objection'
 import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
@@ -67,39 +67,58 @@ export async function getAccountTransfers(
   )
 }
 
-export async function getTransferForUpdate(
-  _: ServiceDependencies,
-  transferRef: string,
-  trx: Transaction
-): Promise<LedgerTransfer | undefined> {
-  return LedgerTransfer.query(trx).findOne({ transferRef }).forUpdate()
-}
-
 export async function voidTransfer(
   deps: ServiceDependencies,
   transferRef: string
 ): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRef, LedgerTransferState.VOIDED)
+}
+
+export async function postTransfer(
+  deps: ServiceDependencies,
+  transferRef: string
+): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRef, LedgerTransferState.POSTED)
+}
+
+async function updateTransferState(
+  deps: ServiceDependencies,
+  transferRef: string,
+  state: LedgerTransferState.POSTED | LedgerTransferState.VOIDED
+): Promise<void | TransferError> {
   return await deps.knex.transaction(async (trx) => {
-    const transfer = await getTransferForUpdate(deps, transferRef, trx)
+    const transfer = await LedgerTransfer.query(trx)
+      .findOne({ transferRef })
+      .forUpdate()
 
     if (!transfer) {
       return TransferError.UnknownTransfer
     }
 
-    if (transfer.isVoided) {
-      return TransferError.AlreadyVoided
+    const transferError = validateTransferStateUpdate(transfer)
+
+    if (transferError) {
+      return transferError
     }
 
-    if (transfer.isPosted) {
-      return TransferError.AlreadyPosted
-    }
-
-    if (transfer.expired) {
-      return TransferError.TransferExpired
-    }
-
-    await transfer.$query(trx).patch({ state: LedgerTransferState.VOIDED })
+    await transfer.$query(trx).patch({ state })
   })
+}
+
+function validateTransferStateUpdate(
+  transfer: LedgerTransfer
+): TransferError | void {
+  if (transfer.isVoided) {
+    return TransferError.AlreadyVoided
+  }
+
+  if (transfer.isPosted) {
+    return TransferError.AlreadyPosted
+  }
+
+  if (transfer.expired) {
+    return TransferError.TransferExpired
+  }
 }
 
 export async function createTransfers(
