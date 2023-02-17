@@ -328,7 +328,7 @@ async function createSameAssetTransfers(
         ? destinationAmount
         : sourceAmount
   })
-  // Same asset, different amounts
+
   if (destinationAmount && sourceAmount !== destinationAmount) {
     // Send excess source amount to liquidity account
     if (destinationAmount < sourceAmount) {
@@ -337,8 +337,8 @@ async function createSameAssetTransfers(
         creditAccount: sourceAssetAccount,
         amount: sourceAmount - destinationAmount
       })
-      // Deliver excess destination amount from liquidity account
     } else {
+      // Deliver excess destination amount from liquidity account
       addTransfer({
         debitAccount: destinationAssetAccount,
         creditAccount: destinationAccount,
@@ -393,12 +393,13 @@ async function createCrossCurrencyTransfers(
   }
 
   // Send to source liquidity account
-  // Deliver from destination liquidity account
   addTransfer({
     debitAccount: sourceAccount,
     creditAccount: sourceAssetAccount,
     amount: sourceAmount
   })
+
+  // Deliver from destination liquidity account
   addTransfer({
     debitAccount: destinationAssetAccount,
     creditAccount: destinationAccount,
