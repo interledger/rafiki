@@ -204,7 +204,7 @@ Example successful response:
 
 ### Withdraw Peer Liquidity
 
-This is a two-phase transaction, so the withdrawal needs to be created first and then posted (i.e. the Account Servicing Entity commits to the withdrawal). If the withdrawal is faulty, it can be voided rather than posted.
+This is a two-phase transaction, so the withdrawal needs to be created first and then posted (i.e. the Account Servicing Entity commits to the withdrawal). This way, the Account Servicing Entity can safely perform withdrawals in their internal system before posting in Rafiki. If the internal withdrawal failed or an error was made when creating the withdrawal in Rafiki, it can be voided rather than posted.
 
 #### Create Withdrawal
 
