@@ -7,11 +7,7 @@ import { Asset } from '../../../asset/model'
 import { randomAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { LedgerAccount, LedgerAccountType } from '../ledger-account/model'
-import {
-  LedgerTransfer,
-  LedgerTransferState,
-  LedgerTransferType
-} from './model'
+import { LedgerTransferState, LedgerTransferType } from './model'
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import {
