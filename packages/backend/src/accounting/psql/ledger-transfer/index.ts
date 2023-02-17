@@ -26,14 +26,6 @@ interface BalanceCheckArgs {
   transferAmount: bigint
 }
 
-interface ValidateTransferArgs {
-  amount: bigint
-  timeoutMs?: bigint
-  creditAccount: LedgerAccount
-  debitAccount: LedgerAccount
-  transferRef: string
-}
-
 export type CreateTransferArgs = Pick<
   LedgerTransfer,
   'amount' | 'transferRef' | 'type'
@@ -172,7 +164,7 @@ export async function createTransfers(
 
 async function validateTransfer(
   deps: ServiceDependencies,
-  args: ValidateTransferArgs
+  args: CreateTransferArgs
 ): Promise<TransferError | undefined> {
   const { amount, timeoutMs, creditAccount, debitAccount, transferRef } = args
 
@@ -201,7 +193,7 @@ async function validateTransfer(
 
 async function validateBalances(
   deps: ServiceDependencies,
-  args: ValidateTransferArgs
+  args: CreateTransferArgs
 ): Promise<TransferError | undefined> {
   const { amount, creditAccount, debitAccount } = args
 
