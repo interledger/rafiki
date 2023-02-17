@@ -23,8 +23,6 @@ export class RouteManager {
       const prefixes = peer.getPrefixes()
       this.peers.delete(peerId)
       prefixes.forEach((prefix) => this.updatePrefix(prefix))
-    } else {
-      console.log('no peer found to remove peer')
     }
   }
 
@@ -43,8 +41,6 @@ export class RouteManager {
       // Gotcha the insert of the route into the peers routing table must occur before calling updatePrefix
       peer.insertRoute(route)
       this.updatePrefix(route.prefix)
-    } else {
-      console.log('no peer found to add route for')
     }
   }
 
@@ -53,8 +49,6 @@ export class RouteManager {
     if (peer) {
       peer.deleteRoute(prefix)
       this.updatePrefix(prefix)
-    } else {
-      console.log('no peer found to add route for')
     }
   }
 
