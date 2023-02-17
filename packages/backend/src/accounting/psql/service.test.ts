@@ -826,9 +826,9 @@ describe('Psql Accounting Service', (): void => {
 
       describe.each`
         sourceAmount | destinationAmount | description
-        ${BigInt(1)} | ${BigInt(1)}      | ${'same amount'}
-        ${BigInt(1)} | ${BigInt(2)}      | ${'source < destination'}
-        ${BigInt(2)} | ${BigInt(1)}      | ${'destination < source'}
+        ${1n}        | ${1n}             | ${'same amount'}
+        ${1n}        | ${2n}             | ${'source < destination'}
+        ${2n}        | ${1n}             | ${'destination < source'}
       `('$description', ({ sourceAmount, destinationAmount }): void => {
         test.each`
           post     | description
@@ -843,7 +843,7 @@ describe('Psql Accounting Service', (): void => {
             timeout
           })
           assert.ok(!isTransferError(trxOrError))
-          const amountDiff = BigInt(destinationAmount - sourceAmount)
+          const amountDiff = BigInt(destinationAmount) - sourceAmount
 
           await expect(
             accountingService.getBalance(sourceAccount.id)
@@ -860,7 +860,7 @@ describe('Psql Accounting Service', (): void => {
           } else {
             await expect(
               accountingService.getBalance(sourceAccount.asset.id)
-            ).resolves.toEqual(BigInt(0))
+            ).resolves.toEqual(0n)
 
             await expect(
               accountingService.getBalance(destinationAccount.asset.id)
@@ -869,7 +869,7 @@ describe('Psql Accounting Service', (): void => {
 
           await expect(
             accountingService.getBalance(destinationAccount.id)
-          ).resolves.toEqual(BigInt(0))
+          ).resolves.toEqual(0n)
 
           if (post) {
             await expect(trxOrError.post()).resolves.toBeUndefined()
@@ -894,7 +894,7 @@ describe('Psql Accounting Service', (): void => {
           } else {
             await expect(
               accountingService.getBalance(sourceAccount.asset.id)
-            ).resolves.toEqual(post ? sourceAmount : BigInt(0))
+            ).resolves.toEqual(post ? sourceAmount : 0n)
 
             await expect(
               accountingService.getBalance(destinationAccount.asset.id)
@@ -907,7 +907,7 @@ describe('Psql Accounting Service', (): void => {
 
           await expect(
             accountingService.getBalance(destinationAccount.id)
-          ).resolves.toEqual(post ? destinationAmount : BigInt(0))
+          ).resolves.toEqual(post ? destinationAmount : 0n)
 
           await expect(trxOrError.post()).resolves.toEqual(
             post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
@@ -918,12 +918,12 @@ describe('Psql Accounting Service', (): void => {
         })
       })
 
-      test('Returns error for insufficient source balance', async (): Promise<void> => {
+      test('returns error for insufficient source balance', async (): Promise<void> => {
         const transfer = {
           sourceAccount,
           destinationAccount,
-          sourceAmount: startingSourceBalance + BigInt(1),
-          destinationAmount: BigInt(5),
+          sourceAmount: startingSourceBalance + 1n,
+          destinationAmount: 5n,
           timeout
         }
         await expect(
@@ -934,37 +934,37 @@ describe('Psql Accounting Service', (): void => {
         ).resolves.toEqual(startingSourceBalance)
       })
 
-      test('Returns error for insufficient destination liquidity balance', async (): Promise<void> => {
+      test('returns error for insufficient destination liquidity balance', async (): Promise<void> => {
         await expect(
           accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(1),
-            destinationAmount: startingDestinationLiquidity + BigInt(2),
+            sourceAmount: 1n,
+            destinationAmount: startingDestinationLiquidity + 2n,
             timeout
           })
         ).resolves.toEqual(TransferError.InsufficientLiquidity)
       })
 
-      test('Returns error for same accounts', async (): Promise<void> => {
+      test('returns error for same accounts', async (): Promise<void> => {
         await expect(
           accountingService.createTransfer({
             sourceAccount,
             destinationAccount: sourceAccount,
-            sourceAmount: BigInt(5),
-            destinationAmount: BigInt(5),
+            sourceAmount: 5n,
+            destinationAmount: 5n,
             timeout
           })
         ).resolves.toEqual(TransferError.SameAccounts)
       })
 
-      test('Returns error for invalid source amount', async (): Promise<void> => {
+      test('returns error for invalid source amount', async (): Promise<void> => {
         await expect(
           accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(0),
-            destinationAmount: BigInt(1),
+            sourceAmount: 0n,
+            destinationAmount: 1n,
             timeout
           })
         ).resolves.toEqual(TransferError.InvalidSourceAmount)
@@ -973,20 +973,20 @@ describe('Psql Accounting Service', (): void => {
           accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(-1),
-            destinationAmount: BigInt(1),
+            sourceAmount: -1n,
+            destinationAmount: 1n,
             timeout
           })
         ).resolves.toEqual(TransferError.InvalidSourceAmount)
       })
 
-      test('Returns error for invalid destination amount', async (): Promise<void> => {
+      test('returns error for invalid destination amount', async (): Promise<void> => {
         await expect(
           accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(5),
-            destinationAmount: BigInt(0),
+            sourceAmount: 5n,
+            destinationAmount: 0n,
             timeout
           })
         ).resolves.toEqual(TransferError.InvalidDestinationAmount)
@@ -995,14 +995,14 @@ describe('Psql Accounting Service', (): void => {
           accountingService.createTransfer({
             sourceAccount,
             destinationAccount,
-            sourceAmount: BigInt(5),
-            destinationAmount: BigInt(-1),
+            sourceAmount: 5n,
+            destinationAmount: -1n,
             timeout
           })
         ).resolves.toEqual(TransferError.InvalidDestinationAmount)
       })
 
-      test.todo('Returns error timed out transfer')
+      test.todo('returns error timed out transfer')
     })
   })
 })
