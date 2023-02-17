@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "scripts": {
-    "test": "jest --passWithNoTests --maxWorkers=50% --logHeapUsage",
+    "test": "jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
     "build:deps": "pnpm --filter open-payments build && pnpm --filter token-introspection build",
