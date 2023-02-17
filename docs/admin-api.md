@@ -113,7 +113,11 @@ The Admin API is a GraphQL API. It allows [Account Servicing Entities'](./glossa
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointer</strong></td>
 <td valign="top"><a href="#paymentpointer">PaymentPointer</a></td>
-<td></td>
+<td>
+
+Fetch a payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
@@ -123,7 +127,11 @@ The Admin API is a GraphQL API. It allows [Account Servicing Entities'](./glossa
 <tr>
 <td colspan="2" valign="top"><strong>asset</strong></td>
 <td valign="top"><a href="#asset">Asset</a></td>
-<td></td>
+<td>
+
+Fetch an asset
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
@@ -178,7 +186,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>peer</strong></td>
 <td valign="top"><a href="#peer">Peer</a></td>
-<td></td>
+<td>
+
+Fetch a peer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
@@ -233,7 +245,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>quote</strong></td>
 <td valign="top"><a href="#quote">Quote</a></td>
-<td></td>
+<td>
+
+Fetch an Open Payments quote
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
@@ -243,7 +259,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>outgoingPayment</strong></td>
 <td valign="top"><a href="#outgoingpayment">OutgoingPayment</a></td>
-<td></td>
+<td>
+
+ Fetch an Open Payments outgoing payment
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
@@ -267,7 +287,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>createPaymentPointer</strong></td>
 <td valign="top"><a href="#createpaymentpointermutationresponse">CreatePaymentPointerMutationResponse</a>!</td>
-<td></td>
+<td>
+
+Create payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
@@ -463,7 +487,11 @@ The id of the liquidity withdrawal to void.
 <tr>
 <td colspan="2" valign="top"><strong>createQuote</strong></td>
 <td valign="top"><a href="#quoteresponse">QuoteResponse</a>!</td>
-<td></td>
+<td>
+
+Create an Open Payments Quote
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
@@ -473,7 +501,11 @@ The id of the liquidity withdrawal to void.
 <tr>
 <td colspan="2" valign="top"><strong>createOutgoingPayment</strong></td>
 <td valign="top"><a href="#outgoingpaymentresponse">OutgoingPaymentResponse</a>!</td>
-<td></td>
+<td>
+
+Create an Open Payments Outgoing Payment
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
@@ -483,7 +515,11 @@ The id of the liquidity withdrawal to void.
 <tr>
 <td colspan="2" valign="top"><strong>createIncomingPayment</strong></td>
 <td valign="top"><a href="#incomingpaymentresponse">IncomingPaymentResponse</a>!</td>
-<td></td>
+<td>
+
+Create an internal Open Payments Incoming Payment
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
@@ -493,7 +529,11 @@ The id of the liquidity withdrawal to void.
 <tr>
 <td colspan="2" valign="top"><strong>createReceiver</strong></td>
 <td valign="top"><a href="#createreceiverresponse">CreateReceiverResponse</a>!</td>
-<td></td>
+<td>
+
+Create an external Open Payments Incoming Payment
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
@@ -545,7 +585,11 @@ Create payment pointer key
 <tr>
 <td colspan="2" valign="top"><strong>revokePaymentPointerKey</strong></td>
 <td valign="top"><a href="#revokepaymentpointerkeymutationresponse">RevokePaymentPointerKeyMutationResponse</a></td>
-<td></td>
+<td>
+
+Revoke request signing key
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>

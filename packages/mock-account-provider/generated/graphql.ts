@@ -336,8 +336,11 @@ export type Mutation = {
   createAsset: AssetMutationResponse;
   /** Create liquidity withdrawal from asset */
   createAssetLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
+  /** Create an internal Open Payments Incoming Payment */
   createIncomingPayment: IncomingPaymentResponse;
+  /** Create an Open Payments Outgoing Payment */
   createOutgoingPayment: OutgoingPaymentResponse;
+  /** Create payment pointer */
   createPaymentPointer: CreatePaymentPointerMutationResponse;
   /** Create payment pointer key */
   createPaymentPointerKey?: Maybe<CreatePaymentPointerKeyMutationResponse>;
@@ -347,7 +350,9 @@ export type Mutation = {
   createPeer: CreatePeerMutationResponse;
   /** Create liquidity withdrawal from peer */
   createPeerLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
+  /** Create an Open Payments Quote */
   createQuote: QuoteResponse;
+  /** Create an external Open Payments Incoming Payment */
   createReceiver: CreateReceiverResponse;
   /** Delete peer */
   deletePeer: DeletePeerMutationResponse;
@@ -355,6 +360,7 @@ export type Mutation = {
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Posts liquidity withdrawal */
   postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
+  /** Revoke request signing key */
   revokePaymentPointerKey?: Maybe<RevokePaymentPointerKeyMutationResponse>;
   triggerPaymentPointerEvents: TriggerPaymentPointerEventsMutationResponse;
   /** Update asset withdrawal threshold */
@@ -629,14 +635,19 @@ export type PeersConnection = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Fetch an asset */
   asset?: Maybe<Asset>;
   /** Fetch a page of assets. */
   assets: AssetsConnection;
+  /**  Fetch an Open Payments outgoing payment */
   outgoingPayment?: Maybe<OutgoingPayment>;
+  /** Fetch a payment pointer */
   paymentPointer?: Maybe<PaymentPointer>;
+  /** Fetch a peer */
   peer?: Maybe<Peer>;
   /** Fetch a page of peers. */
   peers: PeersConnection;
+  /** Fetch an Open Payments quote */
   quote?: Maybe<Quote>;
 };
 
