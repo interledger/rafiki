@@ -231,7 +231,6 @@ async function createAccountDeposit(
     debitAccount: settlementAccount,
     creditAccount: account,
     amount,
-    ledger: settlementAccount.ledger,
     type: LedgerTransferType.DEPOSIT
   }
 
