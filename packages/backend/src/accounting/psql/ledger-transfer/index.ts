@@ -15,7 +15,7 @@ interface CreateTransferError {
   index: number
   error: TransferError
 }
-interface CreateTransfersResult {
+export interface CreateTransfersResult {
   errors: CreateTransferError[]
   results: LedgerTransfer[]
 }

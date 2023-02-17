@@ -9,6 +9,7 @@ import {
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
+  OnCreditOptions,
   Transaction,
   TransferOptions,
   Withdrawal
@@ -27,14 +28,33 @@ import {
 import {
   CreateTransferArgs,
   createTransfers,
+  CreateTransfersResult,
   postTransfer,
   voidTransfer
 } from './ledger-transfer'
-import { LedgerTransferType } from './ledger-transfer/model'
+import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
+}
+
+interface CreateTransfersArgs {
+  sourceAccount: LedgerAccount
+  sourceAssetAccount: LedgerAccount
+  destinationAccount: LedgerAccount
+  destinationAssetAccount: LedgerAccount
+  sourceAmount: bigint
+  destinationAmount?: bigint
+  timeout: bigint
+}
+
+interface BuildTransactionForTransfers {
+  destinationAccount: LedgerAccount
+  onDestinationAccountCredit?: (
+    options: OnCreditOptions
+  ) => Promise<LiquidityAccount>
+  pendingTransfers: LedgerTransfer[]
 }
 
 export function createAccountingService(
@@ -198,20 +218,15 @@ export async function createTransfer(
   deps: ServiceDependencies,
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
-  const {
-    sourceAccount: {
-      id: sourceAccountRef,
-      asset: { id: sourceAssetRef, ledger: sourceAccountLedger }
-    },
-    destinationAccount: {
-      id: destinationAccountRef,
-      asset: { id: destinationAssetRef, ledger: destinationAccountLedger },
-      onCredit: onDestinationAccountCredit
-    },
-    sourceAmount,
-    destinationAmount,
-    timeout
-  } = args
+  const sourceAccountRef = args.sourceAccount.id
+  const sourceAssetRef = args.sourceAccount.asset.id
+  const sourceAccountLedger = args.sourceAccount.asset.ledger
+
+  const destinationAccountRef = args.destinationAccount.id
+  const destinationAssetRef = args.destinationAccount.asset.id
+  const destinationAccountLedger = args.destinationAccount.asset.ledger
+
+  const { sourceAmount, destinationAmount, timeout } = args
 
   if (sourceAccountRef === destinationAccountRef) {
     return TransferError.SameAccounts
@@ -245,6 +260,46 @@ export async function createTransfer(
     return TransferError.UnknownDestinationAccount
   }
 
+  const createTransfersArgs: CreateTransfersArgs = {
+    sourceAccount,
+    sourceAssetAccount,
+    sourceAmount,
+    destinationAccount,
+    destinationAssetAccount,
+    destinationAmount,
+    timeout
+  }
+
+  const pendingTransfersOrError =
+    sourceAccountLedger === destinationAccountLedger
+      ? await createSameAssetTransfers(deps, createTransfersArgs)
+      : await createCrossCurrencyTransfers(deps, createTransfersArgs)
+
+  if (isTransferError(pendingTransfersOrError)) {
+    return pendingTransfersOrError
+  }
+
+  return buildTransactionForTransfers(deps, {
+    destinationAccount,
+    onDestinationAccountCredit: args.destinationAccount.onCredit,
+    pendingTransfers: pendingTransfersOrError
+  })
+}
+
+async function createSameAssetTransfers(
+  deps: ServiceDependencies,
+  args: CreateTransfersArgs
+): Promise<LedgerTransfer[] | TransferError> {
+  const {
+    sourceAccount,
+    sourceAssetAccount,
+    destinationAccount,
+    destinationAssetAccount,
+    sourceAmount,
+    destinationAmount,
+    timeout
+  } = args
+
   const transfers: CreateTransferArgs[] = []
 
   const addTransfer = ({
@@ -265,61 +320,112 @@ export async function createTransfer(
     })
   }
 
-  if (sourceAccountLedger === destinationAccountLedger) {
-    addTransfer({
-      debitAccount: sourceAccount,
-      creditAccount: destinationAccount,
-      amount:
-        destinationAmount && destinationAmount < sourceAmount
-          ? destinationAmount
-          : sourceAmount
-    })
-    // Same asset, different amounts
-    if (destinationAmount && sourceAmount !== destinationAmount) {
-      // Send excess source amount to liquidity account
-      if (destinationAmount < sourceAmount) {
-        addTransfer({
-          debitAccount: sourceAccount,
-          creditAccount: sourceAssetAccount,
-          amount: sourceAmount - destinationAmount
-        })
-        // Deliver excess destination amount from liquidity account
-      } else {
-        addTransfer({
-          debitAccount: destinationAssetAccount,
-          creditAccount: destinationAccount,
-          amount: destinationAmount - sourceAmount
-        })
-      }
+  addTransfer({
+    debitAccount: sourceAccount,
+    creditAccount: destinationAccount,
+    amount:
+      destinationAmount && destinationAmount < sourceAmount
+        ? destinationAmount
+        : sourceAmount
+  })
+  // Same asset, different amounts
+  if (destinationAmount && sourceAmount !== destinationAmount) {
+    // Send excess source amount to liquidity account
+    if (destinationAmount < sourceAmount) {
+      addTransfer({
+        debitAccount: sourceAccount,
+        creditAccount: sourceAssetAccount,
+        amount: sourceAmount - destinationAmount
+      })
+      // Deliver excess destination amount from liquidity account
+    } else {
+      addTransfer({
+        debitAccount: destinationAssetAccount,
+        creditAccount: destinationAccount,
+        amount: destinationAmount - sourceAmount
+      })
     }
-    // Different assets / ledgers:
-  } else {
-    // must specify destination amount
-    if (!destinationAmount) {
-      return TransferError.InvalidDestinationAmount
-    }
-    // Send to source liquidity account
-    // Deliver from destination liquidity account
-    addTransfer({
-      debitAccount: sourceAccount,
-      creditAccount: sourceAssetAccount,
-      amount: sourceAmount
-    })
-    addTransfer({
-      debitAccount: destinationAssetAccount,
-      creditAccount: destinationAccount,
-      amount: destinationAmount
+  }
+
+  return handleCreateTransferResults(
+    args,
+    transfers,
+    await createTransfers(deps, transfers)
+  )
+}
+
+async function createCrossCurrencyTransfers(
+  deps: ServiceDependencies,
+  args: CreateTransfersArgs
+): Promise<LedgerTransfer[] | TransferError> {
+  const {
+    sourceAccount,
+    sourceAssetAccount,
+    destinationAccount,
+    destinationAssetAccount,
+    sourceAmount,
+    destinationAmount,
+    timeout
+  } = args
+
+  if (!destinationAmount) {
+    return TransferError.InvalidDestinationAmount
+  }
+
+  const transfers: CreateTransferArgs[] = []
+
+  const addTransfer = ({
+    debitAccount,
+    creditAccount,
+    amount
+  }: {
+    debitAccount: LedgerAccount
+    creditAccount: LedgerAccount
+    amount: bigint
+  }) => {
+    transfers.push({
+      transferRef: uuid(),
+      debitAccount,
+      creditAccount,
+      amount,
+      timeoutMs: timeout
     })
   }
 
-  const { errors } = await createTransfers(deps, transfers)
+  // Send to source liquidity account
+  // Deliver from destination liquidity account
+  addTransfer({
+    debitAccount: sourceAccount,
+    creditAccount: sourceAssetAccount,
+    amount: sourceAmount
+  })
+  addTransfer({
+    debitAccount: destinationAssetAccount,
+    creditAccount: destinationAccount,
+    amount: destinationAmount
+  })
+
+  return handleCreateTransferResults(
+    args,
+    transfers,
+    await createTransfers(deps, transfers)
+  )
+}
+
+async function handleCreateTransferResults(
+  args: CreateTransfersArgs,
+  attemptedTransfers: CreateTransferArgs[],
+  createTransferResults: CreateTransfersResult
+): Promise<LedgerTransfer[] | TransferError> {
+  const { errors, results: pendingTransfers } = createTransferResults
 
   if (errors.length > 0) {
     if (
       errors.find(
         ({ error, index }) =>
           error === TransferError.InsufficientBalance &&
-          transfers[index].debitAccount.id === destinationAssetAccount.id
+          attemptedTransfers[index]?.debitAccount.id ===
+            args.destinationAssetAccount.id
       )
     ) {
       return TransferError.InsufficientLiquidity
@@ -328,10 +434,22 @@ export async function createTransfer(
     return errors[0].error
   }
 
-  const trx: Transaction = {
+  return pendingTransfers
+}
+
+function buildTransactionForTransfers(
+  deps: ServiceDependencies,
+  args: BuildTransactionForTransfers
+): Transaction {
+  const { destinationAccount, onDestinationAccountCredit, pendingTransfers } =
+    args
+
+  return {
     post: async (): Promise<void | TransferError> => {
       const results = await Promise.all(
-        transfers.map((transfer) => postTransfer(deps, transfer.transferRef))
+        pendingTransfers.map((transfer) =>
+          postTransfer(deps, transfer.transferRef)
+        )
       )
 
       const error = results.find((result) => isTransferError(result))
@@ -343,7 +461,7 @@ export async function createTransfer(
       if (onDestinationAccountCredit) {
         const totalReceived = await getAccountTotalReceived(
           deps,
-          destinationAccountRef
+          destinationAccount.accountRef
         )
 
         if (totalReceived === undefined) {
@@ -358,7 +476,9 @@ export async function createTransfer(
     },
     void: async (): Promise<void | TransferError> => {
       const results = await Promise.all(
-        transfers.map((transfer) => voidTransfer(deps, transfer.transferRef))
+        pendingTransfers.map((transfer) =>
+          voidTransfer(deps, transfer.transferRef)
+        )
       )
 
       const error = results.find((result) => isTransferError(result))
@@ -368,7 +488,6 @@ export async function createTransfer(
       }
     }
   }
-  return trx
 }
 
 async function createAccountDeposit(
