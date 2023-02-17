@@ -4,6 +4,7 @@ import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
 import { isTransferError, TransferError } from '../../errors'
 import { AccountBalance, getAccountBalances } from '../balance'
+import { validateId as isValidUuid } from '../../../shared/utils'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
@@ -23,13 +24,6 @@ interface BalanceCheckArgs {
   account: LedgerAccount
   balances: AccountBalance
   transferAmount: bigint
-}
-
-interface ValidateTransferArgs {
-  amount: bigint
-  timeoutMs?: bigint
-  creditAccount: LedgerAccount
-  debitAccount: LedgerAccount
 }
 
 export type CreateTransferArgs = Pick<
@@ -85,6 +79,7 @@ export async function createTransfers(
           creditAccount: transfer.creditAccount,
           debitAccount: transfer.debitAccount,
           amount: transfer.amount,
+          transferRef: transfer.transferRef,
           timeoutMs: transfer.timeoutMs
         })
       )
@@ -132,9 +127,13 @@ export async function createTransfers(
 
 async function validateTransfer(
   deps: ServiceDependencies,
-  args: ValidateTransferArgs
+  args: CreateTransferArgs
 ): Promise<TransferError | undefined> {
-  const { amount, timeoutMs, creditAccount, debitAccount } = args
+  const { amount, timeoutMs, creditAccount, debitAccount, transferRef } = args
+
+  if (!isValidUuid(transferRef)) {
+    return TransferError.InvalidId
+  }
 
   if (amount <= 0n) {
     return TransferError.InvalidAmount
@@ -157,7 +156,7 @@ async function validateTransfer(
 
 async function validateBalances(
   deps: ServiceDependencies,
-  args: ValidateTransferArgs
+  args: CreateTransferArgs
 ): Promise<TransferError | undefined> {
   const { amount, creditAccount, debitAccount } = args
 

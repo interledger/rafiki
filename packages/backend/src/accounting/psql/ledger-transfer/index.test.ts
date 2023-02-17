@@ -221,6 +221,20 @@ describe('Ledger Transfer', (): void => {
       })
     })
 
+    test('returns error if transferRef not uuid', async (): Promise<void> => {
+      const transfer: CreateTransferArgs = {
+        ...baseTransfer,
+        transferRef: ''
+      }
+
+      await expect(
+        createTransfers(serviceDeps, [transfer], knex)
+      ).resolves.toEqual({
+        results: [],
+        errors: [{ index: 0, error: TransferError.InvalidId }]
+      })
+    })
+
     test('returns error for negative timeout value', async (): Promise<void> => {
       const transfer: CreateTransferArgs = {
         ...baseTransfer,
