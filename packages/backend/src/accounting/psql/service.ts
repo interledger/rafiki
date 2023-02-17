@@ -25,7 +25,6 @@ import {
 import {
   CreateTransferArgs,
   createTransfers,
-  getTransferForUpdate,
   voidTransfer
 } from './ledger-transfer'
 import { LedgerTransferType } from './ledger-transfer/model'
@@ -60,8 +59,7 @@ export function createAccountingService(
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (withdrawalRef) =>
       postAccountWithdrawal(deps, withdrawalRef),
-    voidWithdrawal: (withdrawalRef) =>
-      voidAccountWithdrawal(deps, withdrawalRef)
+    voidWithdrawal: (withdrawalRef) => voidTransfer(deps, withdrawalRef)
   }
 }
 
@@ -289,13 +287,6 @@ async function createAccountWithdrawal(
   if (errors[0]) {
     return errors[0].error
   }
-}
-
-async function voidAccountWithdrawal(
-  deps: ServiceDependencies,
-  transferRef: string
-): Promise<void | TransferError> {
-  return await voidTransfer(deps, transferRef)
 }
 
 async function postAccountWithdrawal(

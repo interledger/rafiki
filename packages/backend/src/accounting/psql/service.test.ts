@@ -1,6 +1,5 @@
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
-import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
@@ -21,11 +20,7 @@ import * as ledgerAccountFns from './ledger-account'
 import { AccountAlreadyExistsError, TransferError } from '../errors'
 import { createLedgerAccount } from '../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../tests/ledgerTransfer'
-import {
-  LedgerTransfer,
-  LedgerTransferState,
-  LedgerTransferType
-} from './ledger-transfer/model'
+import { LedgerTransferType } from './ledger-transfer/model'
 
 jest.mock('./ledger-account', () => {
   return {
