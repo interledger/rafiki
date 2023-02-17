@@ -81,25 +81,55 @@ export async function voidTransfer(
 ): Promise<void | TransferError> {
   return await deps.knex.transaction(async (trx) => {
     const transfer = await getTransferForUpdate(deps, transferRef, trx)
+    if (!transfer) {
+      return TransferError.UnknownTransfer
+    }
+
+    const transferError = validateTransferStateUpdate(transfer)
+
+    if (transferError) {
+      return transferError
+    }
+
+    await transfer.$query(trx).patch({ state: LedgerTransferState.VOIDED })
+  })
+}
+
+export async function postTransfer(
+  deps: ServiceDependencies,
+  transferRef: string
+): Promise<void | TransferError> {
+  return await deps.knex.transaction(async (trx) => {
+    const transfer = await getTransferForUpdate(deps, transferRef, trx)
 
     if (!transfer) {
       return TransferError.UnknownTransfer
     }
 
-    if (transfer.isVoided) {
-      return TransferError.AlreadyVoided
+    const transferError = validateTransferStateUpdate(transfer)
+
+    if (transferError) {
+      return transferError
     }
 
-    if (transfer.isPosted) {
-      return TransferError.AlreadyPosted
-    }
-
-    if (transfer.expired) {
-      return TransferError.TransferExpired
-    }
-
-    await transfer.$query(trx).patch({ state: LedgerTransferState.VOIDED })
+    await transfer.$query(trx).patch({ state: LedgerTransferState.POSTED })
   })
+}
+
+function validateTransferStateUpdate(
+  transfer: LedgerTransfer
+): TransferError | void {
+  if (transfer.isVoided) {
+    return TransferError.AlreadyVoided
+  }
+
+  if (transfer.isPosted) {
+    return TransferError.AlreadyPosted
+  }
+
+  if (transfer.expired) {
+    return TransferError.TransferExpired
+  }
 }
 
 export async function createTransfers(

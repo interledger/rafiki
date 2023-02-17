@@ -21,6 +21,7 @@ import {
   getTransferForUpdate,
   hasEnoughDebitBalance,
   hasEnoughLiquidity,
+  postTransfer,
   voidTransfer
 } from '.'
 import { ServiceDependencies } from '../service'
@@ -570,65 +571,6 @@ describe('Ledger Transfer', (): void => {
 
       const timeoutOrTransfer = await Promise.race([
         transfer.$query().patchAndFetch({ state: LedgerTransferState.PENDING }),
-        new Promise((reject) => setTimeout(() => reject('timeout'), 5000))
-      ])
-
-      await trx.commit()
-
-      expect(timeoutOrTransfer).toEqual('timeout')
-    })
-  })
-
-  describe('getTransferForUpdate', (): void => {
-    test('gets transfer by transferRef', async (): Promise<void> => {
-      const transfer = await createLedgerTransfer(
-        {
-          creditAccountId: account.id,
-          debitAccountId: settlementAccount.id,
-          amount: 10n,
-          ledger: account.ledger
-        },
-        knex
-      )
-
-      const trx = await knex.transaction()
-
-      await expect(
-        getTransferForUpdate(serviceDeps, transfer.transferRef, trx)
-      ).resolves.toEqual(transfer)
-
-      await trx.commit()
-    })
-
-    test('returns undefined if no transfer found', async (): Promise<void> => {
-      const trx = await knex.transaction()
-
-      await expect(
-        getTransferForUpdate(serviceDeps, uuid(), trx)
-      ).resolves.toBeUndefined()
-
-      await trx.commit()
-    })
-
-    test('locks tranfser for update', async (): Promise<void> => {
-      const transfer = await createLedgerTransfer(
-        {
-          creditAccountId: account.id,
-          debitAccountId: settlementAccount.id,
-          amount: 10n,
-          ledger: account.ledger
-        },
-        knex
-      )
-
-      const trx = await knex.transaction()
-
-      await expect(
-        getTransferForUpdate(serviceDeps, transfer.transferRef, trx)
-      ).resolves.toEqual(transfer)
-
-      const timeoutOrTransfer = await Promise.race([
-        transfer.$query().patchAndFetch({ state: LedgerTransferState.PENDING }),
         new Promise((reject) => setTimeout(() => reject('timeout'), 1000))
       ])
 
@@ -654,7 +596,7 @@ describe('Ledger Transfer', (): void => {
       )
     })
 
-    test('voids transfer', async (): Promise<void> => {
+    test('posts transfer', async (): Promise<void> => {
       await expect(
         voidTransfer(serviceDeps, transfer.transferRef)
       ).resolves.toBeUndefined()
@@ -666,6 +608,77 @@ describe('Ledger Transfer', (): void => {
           })
         )?.state
       ).toEqual(LedgerTransferState.VOIDED)
+    })
+
+    test('returns error if transfer expired', async (): Promise<void> => {
+      await LedgerTransfer.query(knex)
+        .findOne({
+          transferRef: transfer.transferRef
+        })
+        .patch({ expiresAt: new Date(Date.now() - 1) })
+
+      await expect(
+        voidTransfer(serviceDeps, transfer.transferRef)
+      ).resolves.toEqual(TransferError.TransferExpired)
+    })
+
+    test('returns error if no transfer found', async (): Promise<void> => {
+      await expect(voidTransfer(serviceDeps, uuid())).resolves.toEqual(
+        TransferError.UnknownTransfer
+      )
+    })
+
+    test('returns error if transfer already posted', async (): Promise<void> => {
+      await LedgerTransfer.query(knex)
+        .findOne({
+          transferRef: transfer.transferRef
+        })
+        .patch({ state: LedgerTransferState.POSTED })
+
+      await expect(
+        voidTransfer(serviceDeps, transfer.transferRef)
+      ).resolves.toEqual(TransferError.AlreadyPosted)
+    })
+
+    test('returns error if transfer already voided', async (): Promise<void> => {
+      await expect(
+        voidTransfer(serviceDeps, transfer.transferRef)
+      ).resolves.toBeUndefined()
+
+      await expect(
+        voidTransfer(serviceDeps, transfer.transferRef)
+      ).resolves.toEqual(TransferError.AlreadyVoided)
+    })
+  })
+
+  describe('postTransfer', (): void => {
+    let transfer: LedgerTransfer
+
+    beforeEach(async (): Promise<void> => {
+      transfer = await createLedgerTransfer(
+        {
+          creditAccountId: account.id,
+          debitAccountId: settlementAccount.id,
+          amount: 10n,
+          ledger: account.ledger,
+          state: LedgerTransferState.PENDING
+        },
+        knex
+      )
+    })
+
+    test('posts transfer', async (): Promise<void> => {
+      await expect(
+        postTransfer(serviceDeps, transfer.transferRef)
+      ).resolves.toBeUndefined()
+
+      expect(
+        (
+          await LedgerTransfer.query(knex).findOne({
+            transferRef: transfer.transferRef
+          })
+        )?.state
+      ).toEqual(LedgerTransferState.POSTED)
     })
 
     test('returns error if transfer expired', async (): Promise<void> => {

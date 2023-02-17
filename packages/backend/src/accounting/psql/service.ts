@@ -25,6 +25,7 @@ import {
 import {
   CreateTransferArgs,
   createTransfers,
+  postTransfer,
   voidTransfer
 } from './ledger-transfer'
 import { LedgerTransferType } from './ledger-transfer/model'
@@ -57,8 +58,7 @@ export function createAccountingService(
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    postWithdrawal: (withdrawalRef) =>
-      postAccountWithdrawal(deps, withdrawalRef),
+    postWithdrawal: (withdrawalRef) => postTransfer(deps, withdrawalRef),
     voidWithdrawal: (withdrawalRef) => voidTransfer(deps, withdrawalRef)
   }
 }
@@ -287,11 +287,4 @@ async function createAccountWithdrawal(
   if (errors[0]) {
     return errors[0].error
   }
-}
-
-async function postAccountWithdrawal(
-  deps: ServiceDependencies,
-  withdrawalId: string
-): Promise<void | TransferError> {
-  throw new Error('Not implemented')
 }
