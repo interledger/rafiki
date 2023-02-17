@@ -34,7 +34,7 @@ interface ValidateTransferArgs {
 
 export type CreateTransferArgs = Pick<
   LedgerTransfer,
-  'amount' | 'transferRef' | 'ledger' | 'type'
+  'amount' | 'transferRef' | 'type'
 > & {
   creditAccount: LedgerAccount
   debitAccount: LedgerAccount
@@ -215,7 +215,7 @@ function prepareTransfer(
     transferRef: transfer.transferRef,
     creditAccountId: transfer.creditAccount.id,
     debitAccountId: transfer.debitAccount.id,
-    ledger: transfer.ledger,
+    ledger: transfer.creditAccount.ledger,
     state: transfer.timeoutMs
       ? LedgerTransferState.PENDING
       : LedgerTransferState.POSTED,
