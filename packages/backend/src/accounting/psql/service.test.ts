@@ -633,4 +633,138 @@ describe('Psql Accounting Service', (): void => {
       })
     })
   })
+
+  describe('voidWithdrawal', (): void => {
+    let withdrawal: Withdrawal
+    let account: LedgerAccount
+
+    const startingBalance = 10n
+    const timeout = 10_000n
+
+    beforeEach(async (): Promise<void> => {
+      ;[, account] = await Promise.all([
+        createLedgerAccount(
+          {
+            accountRef: asset.id,
+            ledger: asset.ledger,
+            type: LedgerAccountType.SETTLEMENT
+          },
+          knex
+        ),
+        createLedgerAccount({ ledger: asset.ledger }, knex)
+      ])
+
+      withdrawal = {
+        id: uuid(),
+        account: {
+          id: account.accountRef,
+          asset
+        },
+        amount: 1n,
+        timeout
+      }
+
+      // fund account
+      await accountingService.createDeposit({
+        id: uuid(),
+        amount: startingBalance,
+        account: {
+          id: account.accountRef,
+          asset
+        }
+      })
+    })
+
+    test('voids withdrawal', async (): Promise<void> => {
+      await expect(
+        accountingService.createWithdrawal(withdrawal)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(withdrawal.account.id)
+      ).resolves.toEqual(startingBalance - withdrawal.amount)
+      await expect(
+        accountingService.getSettlementBalance(withdrawal.account.asset.ledger)
+      ).resolves.toEqual(startingBalance)
+
+      await expect(
+        accountingService.voidWithdrawal(withdrawal.id)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(withdrawal.account.id)
+      ).resolves.toEqual(startingBalance)
+    })
+
+    test('returns error if could not void transfer', async (): Promise<void> => {
+      await expect(accountingService.voidWithdrawal(uuid())).resolves.toEqual(
+        TransferError.UnknownTransfer
+      )
+    })
+  })
+
+  describe('postWithdrawal', (): void => {
+    let withdrawal: Withdrawal
+    let account: LedgerAccount
+
+    const startingBalance = 10n
+    const timeout = 10_000n
+
+    beforeEach(async (): Promise<void> => {
+      ;[, account] = await Promise.all([
+        createLedgerAccount(
+          {
+            accountRef: asset.id,
+            ledger: asset.ledger,
+            type: LedgerAccountType.SETTLEMENT
+          },
+          knex
+        ),
+        createLedgerAccount({ ledger: asset.ledger }, knex)
+      ])
+
+      withdrawal = {
+        id: uuid(),
+        account: {
+          id: account.accountRef,
+          asset
+        },
+        amount: 1n,
+        timeout
+      }
+
+      // fund account
+      await accountingService.createDeposit({
+        id: uuid(),
+        amount: startingBalance,
+        account: {
+          id: account.accountRef,
+          asset
+        }
+      })
+    })
+
+    test('posts withdrawal', async (): Promise<void> => {
+      await expect(
+        accountingService.createWithdrawal(withdrawal)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(withdrawal.account.id)
+      ).resolves.toEqual(startingBalance - withdrawal.amount)
+      await expect(
+        accountingService.getSettlementBalance(withdrawal.account.asset.ledger)
+      ).resolves.toEqual(startingBalance)
+
+      await expect(
+        accountingService.postWithdrawal(withdrawal.id)
+      ).resolves.toBeUndefined()
+      await expect(
+        accountingService.getBalance(withdrawal.account.id)
+      ).resolves.toEqual(startingBalance - withdrawal.amount)
+    })
+
+    test('returns error if could not post transfer', async (): Promise<void> => {
+      await expect(accountingService.postWithdrawal(uuid())).resolves.toEqual(
+        TransferError.UnknownTransfer
+      )
+    })
+  })
 })

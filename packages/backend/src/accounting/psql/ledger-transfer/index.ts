@@ -67,6 +67,60 @@ export async function getAccountTransfers(
   )
 }
 
+export async function voidTransfer(
+  deps: ServiceDependencies,
+  transferRef: string
+): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRef, LedgerTransferState.VOIDED)
+}
+
+export async function postTransfer(
+  deps: ServiceDependencies,
+  transferRef: string
+): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRef, LedgerTransferState.POSTED)
+}
+
+async function updateTransferState(
+  deps: ServiceDependencies,
+  transferRef: string,
+  state: LedgerTransferState.POSTED | LedgerTransferState.VOIDED
+): Promise<void | TransferError> {
+  return await deps.knex.transaction(async (trx) => {
+    const transfer = await LedgerTransfer.query(trx)
+      .findOne({ transferRef })
+      .forUpdate()
+
+    if (!transfer) {
+      return TransferError.UnknownTransfer
+    }
+
+    const transferError = validateTransferStateUpdate(transfer)
+
+    if (transferError) {
+      return transferError
+    }
+
+    await transfer.$query(trx).patch({ state })
+  })
+}
+
+function validateTransferStateUpdate(
+  transfer: LedgerTransfer
+): TransferError | void {
+  if (transfer.isVoided) {
+    return TransferError.AlreadyVoided
+  }
+
+  if (transfer.isPosted) {
+    return TransferError.AlreadyPosted
+  }
+
+  if (transfer.isExpired) {
+    return TransferError.TransferExpired
+  }
+}
+
 export async function createTransfers(
   deps: ServiceDependencies,
   transfers: CreateTransferArgs[],
