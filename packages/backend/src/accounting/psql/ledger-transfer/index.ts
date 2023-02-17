@@ -116,7 +116,7 @@ function validateTransferStateUpdate(
     return TransferError.AlreadyPosted
   }
 
-  if (transfer.expired) {
+  if (transfer.isExpired) {
     return TransferError.TransferExpired
   }
 }
