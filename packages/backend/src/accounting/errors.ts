@@ -23,6 +23,7 @@ export enum TransferError {
   InvalidId = 'InvalidId',
   InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
+  InvalidTimeout = 'InvalidTimeout',
   SameAccounts = 'SameAccounts',
   TransferExists = 'TransferExists',
   TransferExpired = 'TransferExpired',

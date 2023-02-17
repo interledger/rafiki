@@ -547,7 +547,7 @@ describe('Accounting Service', (): void => {
       )
     })
 
-    test('Cannot deposit deposit amount', async (): Promise<void> => {
+    test('Cannot deposit negative amount', async (): Promise<void> => {
       deposit.amount = -BigInt(10)
       await expect(accountingService.createDeposit(deposit)).resolves.toEqual(
         TransferError.InvalidAmount
