@@ -3,10 +3,18 @@ import {
   type ApolloClient,
   type NormalizedCacheObject
 } from '@apollo/client'
-import type { QueryAssetsArgs } from '~/generated/graphql'
 import type {
+  QueryAssetArgs,
+  QueryAssetsArgs,
+  UpdateAssetInput
+} from '~/generated/graphql'
+import type {
+  GetAssetQuery,
+  GetAssetQueryVariables,
   ListAssetsQuery,
-  ListAssetsQueryVariables
+  ListAssetsQueryVariables,
+  UpdateAssetMutation,
+  UpdateAssetMutationVariables
 } from './__generated__/asset.server.generated'
 
 export class AssetService {
@@ -16,7 +24,18 @@ export class AssetService {
     this.apollo = apollo
   }
 
-  public async list(args?: QueryAssetsArgs) {
+  public async get(args: QueryAssetArgs) {
+    const response = await this.apollo.query<
+      GetAssetQuery,
+      GetAssetQueryVariables
+    >({
+      query: getAssetQuery,
+      variables: args
+    })
+    return response.data.asset
+  }
+
+  public async list(args: QueryAssetsArgs) {
     const response = await this.apollo.query<
       ListAssetsQuery,
       ListAssetsQueryVariables
@@ -27,7 +46,33 @@ export class AssetService {
 
     return response.data.assets
   }
+
+  public async update(args: UpdateAssetInput) {
+    const response = await this.apollo.mutate<
+      UpdateAssetMutation,
+      UpdateAssetMutationVariables
+    >({
+      mutation: updateAssetMutation,
+      variables: {
+        input: args
+      }
+    })
+
+    return response.data?.updateAssetWithdrawalThreshold
+  }
 }
+
+const getAssetQuery = gql`
+  query GetAssetQuery($id: String!) {
+    asset(id: $id) {
+      id
+      code
+      scale
+      withdrawalThreshold
+      createdAt
+    }
+  }
+`
 
 const listAssetsQuery = gql`
   query ListAssetsQuery(
@@ -51,6 +96,16 @@ const listAssetsQuery = gql`
         hasNextPage
         hasPreviousPage
       }
+    }
+  }
+`
+
+const updateAssetMutation = gql`
+  mutation UpdateAssetMutation($input: UpdateAssetInput!) {
+    updateAssetWithdrawalThreshold(input: $input) {
+      code
+      success
+      message
     }
   }
 `

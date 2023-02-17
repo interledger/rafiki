@@ -1,19 +1,10 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import { z } from 'zod'
+import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { paginationSchema } from '~/lib/validate.server'
 import { assetService } from '~/services/bootstrap.server'
-
-const paginationSchema = z
-  .object({
-    after: z.string().uuid(),
-    before: z.string().uuid(),
-    first: z.coerce.number().positive(),
-    last: z.coerce.number().positive()
-  })
-  .partial()
-  .strict()
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -49,15 +40,15 @@ export default function AssetsPage() {
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex p-4 bg-offwhite rounded-md justify-between items-center'>
-        <div className='flex-1'>
-          <h3 className='text-2xl'>Assets</h3>
-        </div>
-        <div className='ml-auto'>
-          <Button aria-label='add new asset'>Add asset</Button>
-        </div>
-      </div>
-      <div className='flex flex-col rounded-md bg-offwhite'>
+      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+        <PageHeader>
+          <div className='flex-1'>
+            <h3 className='text-2xl'>Assets</h3>
+          </div>
+          <div className='ml-auto'>
+            <Button aria-label='add new asset'>Add asset</Button>
+          </div>
+        </PageHeader>
         <Table>
           <THead columns={['ID', 'Code', 'Scale', 'Withdrawl threshold']} />
           <TBody>
@@ -87,18 +78,14 @@ export default function AssetsPage() {
           <Button
             aria-label='go to previous page'
             disabled={!assets.pageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
+            to={previousPageUrl}
           >
             Previous
           </Button>
           <Button
             aria-label='go to next page'
             disabled={!assets.pageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
+            to={nextPageUrl}
           >
             Next
           </Button>

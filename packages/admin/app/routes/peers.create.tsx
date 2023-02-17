@@ -1,37 +1,27 @@
 import { json, redirect, type ActionArgs } from '@remix-run/node'
-import {
-  Form,
-  useActionData,
-  useNavigate,
-  useNavigation
-} from '@remix-run/react'
+import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
 import { peerService } from '~/services/bootstrap.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
+import PageHeader from '~/components/PageHeader'
 
 export default function CreatePeerPage() {
   const response = useActionData<typeof action>()
-  const navigate = useNavigate()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
-      {/* Page Header */}
-      <div className='flex p-4 bg-offwhite rounded-md items-center justify-between space-x-5'>
-        <h3 className='text-xl'>Create Peer</h3>
-        <Button
-          aria-label='go back to peers page'
-          onClick={() => navigate('/peers')}
-        >
-          Go to peers page
-        </Button>
-      </div>
-      {/* Page Header - END */}
-      <div className='flex flex-col rounded-md bg-offwhite'>
+      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+        <PageHeader>
+          <h3 className='text-xl'>Create Peer</h3>
+          <Button aria-label='go back to peers page' to='/peers'>
+            Go to peers page
+          </Button>
+        </PageHeader>
         {/* Create Peer form */}
         <Form method='post' replace>
           <div className='px-6 pt-5'>
@@ -40,7 +30,7 @@ export default function CreatePeerPage() {
 
           <fieldset disabled={isSubmitting}>
             {/* Peer General Info */}
-            <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+            <div className='grid grid-cols-1py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>General Informations</h3>
               </div>
@@ -175,7 +165,7 @@ export async function action({ request }: ActionArgs) {
     staticIlpAddress: result.data.staticIlpAddress,
     ...(result.data.maxPacketAmount
       ? { maxPacketAmount: Number(result.data.maxPacketAmount) }
-      : {})
+      : { maxPacketAmount: undefined })
   })
 
   if (!response?.success) {

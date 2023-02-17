@@ -1,5 +1,6 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
+import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
 import { paginationSchema } from '~/lib/validate.server'
@@ -39,20 +40,18 @@ export default function PeersPage() {
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>
-      {/* Page Header */}
-      <div className='flex p-4 bg-offwhite rounded-md justify-between items-center'>
-        <div className='flex-1'>
-          <h3 className='text-2xl'>Peers</h3>
-        </div>
-        <div className='ml-auto'>
-          <Button to='/peers/create' aria-label='create a new peer'>
-            Create peer
-          </Button>
-        </div>
-      </div>
-      {/* Page Header - END */}
       {/* Peers Table */}
-      <div className='flex flex-col rounded-md bg-offwhite'>
+      <div className='flex flex-col rounded-md bg-offwhite px-6'>
+        <PageHeader>
+          <div className='flex-1'>
+            <h3 className='text-2xl'>Peers</h3>
+          </div>
+          <div className='ml-auto'>
+            <Button to='/peers/create' aria-label='create a new peer'>
+              Create peer
+            </Button>
+          </div>
+        </PageHeader>
         <Table>
           <THead
             columns={['Name', 'ILP Address', 'Asset', 'Outgoing HTTP Endpoint']}
@@ -90,18 +89,14 @@ export default function PeersPage() {
           <Button
             aria-label='go to previous page'
             disabled={!peers.pageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
+            to={previousPageUrl}
           >
             Previous
           </Button>
           <Button
             aria-label='go to next page'
             disabled={!peers.pageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
+            to={nextPageUrl}
           >
             Next
           </Button>

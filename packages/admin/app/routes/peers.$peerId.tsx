@@ -9,10 +9,10 @@ import {
   Form,
   useActionData,
   useLoaderData,
-  useNavigate,
   useNavigation
 } from '@remix-run/react'
 import { z } from 'zod'
+import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
@@ -39,43 +39,47 @@ export async function loader({ params }: LoaderArgs) {
     throw new Response(null, { status: 400, statusText: 'Peer not found.' })
   }
 
-  return json({ peer })
+  return json({
+    peer: {
+      ...peer,
+      createdAt: new Date(peer.createdAt).toLocaleString(),
+      ...(peer.maxPacketAmount
+        ? { maxPacketAmount: peer.maxPacketAmount.toString() }
+        : {})
+    }
+  })
 }
 
 export default function ViewPeerPage() {
   const { peer } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
-  const navigate = useNavigate()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
-      {/* Page Header */}
-      <div className='flex p-4 bg-offwhite rounded-md items-center justify-between space-x-5'>
-        <div>
-          {peer.name ? (
-            <h4>
-              Name:{' '}
-              <span className='text-sm sm:text-base font-semibold'>
-                {peer.name}
-              </span>
-            </h4>
-          ) : null}
-        </div>
-        <Button
-          aria-label='go back to peers page'
-          onClick={() => navigate('/peers')}
-        >
-          Go to peers page
-        </Button>
-      </div>
-      {/* Page Header - END */}
-      <div className='flex flex-col rounded-md bg-offwhite'>
+      <div className='flex flex-col rounded-md bg-offwhite px-6'>
         {/* Peer General Info */}
-        <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+        <PageHeader>
+          <div>
+            {peer.name ? (
+              <h4>
+                Name:{' '}
+                <span className='text-sm sm:text-base font-semibold'>
+                  {peer.name}
+                </span>
+              </h4>
+            ) : null}
+          </div>
+          <Button aria-label='go back to peers page' to='/peers'>
+            Go to peers page
+          </Button>
+        </PageHeader>
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          {/* Peer General Info*/}
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Informations</h3>
+            <p className='text-sm'>Created at {peer.createdAt}</p>
             <ErrorPanel errors={response?.errors.general.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
@@ -108,6 +112,7 @@ export default function ViewPeerPage() {
                     }
                   />
                   <Input
+                    type='number'
                     name='maxPacketAmount'
                     defaultValue={
                       peer.maxPacketAmount ? peer.maxPacketAmount : ''
@@ -133,7 +138,7 @@ export default function ViewPeerPage() {
         </div>
         {/* Peer General Info - END */}
         {/* Peer HTTP Info */}
-        <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>HTTP Informations</h3>
             <ErrorPanel errors={response?.errors.http.message} />
@@ -182,7 +187,7 @@ export default function ViewPeerPage() {
         </div>
         {/* Peer HTTP Info - END */}
         {/* Peer Asset Info */}
-        <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>Asset Informations</h3>
           </div>
@@ -222,7 +227,6 @@ export default function ViewPeerPage() {
 
 export async function action({ request }: ActionArgs) {
   const actionResponse: {
-    success: boolean
     errors: {
       general: {
         fieldErrors: ZodFieldErrors<typeof peerGeneralInfoSchema>
@@ -234,7 +238,6 @@ export async function action({ request }: ActionArgs) {
       }
     }
   } = {
-    success: true,
     errors: {
       general: {
         fieldErrors: {},
@@ -258,25 +261,21 @@ export async function action({ request }: ActionArgs) {
       )
 
       if (!result.success) {
-        actionResponse.success = false
         actionResponse.errors.general.fieldErrors =
           result.error.flatten().fieldErrors
         return json({ ...actionResponse }, { status: 400 })
       }
-
+      console.log(result.data)
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error
       const response = await peerService.update({
-        id: result.data.id,
-        name: result.data.name,
-        staticIlpAddress: result.data.staticIlpAddress,
+        ...result.data,
         ...(result.data.maxPacketAmount
           ? { maxPacketAmount: Number(result.data.maxPacketAmount) }
-          : {})
+          : { maxPacketAmount: undefined })
       })
 
       if (!response?.success) {
-        actionResponse.success = false
         actionResponse.errors.general.message = [
           response?.message ?? 'Could not update peer. Please try again!'
         ]
@@ -289,7 +288,6 @@ export async function action({ request }: ActionArgs) {
       const result = peerHttpInfoSchema.safeParse(Object.fromEntries(formData))
 
       if (!result.success) {
-        actionResponse.success = false
         actionResponse.errors.http.fieldErrors =
           result.error.flatten().fieldErrors
         return json({ ...actionResponse }, { status: 400 })
@@ -315,7 +313,6 @@ export async function action({ request }: ActionArgs) {
       })
 
       if (!response?.success) {
-        actionResponse.success = false
         actionResponse.errors.general.message = [
           response?.message ?? 'Could not update peer. Please try again!'
         ]
