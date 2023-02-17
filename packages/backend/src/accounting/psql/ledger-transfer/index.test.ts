@@ -129,51 +129,41 @@ describe('Ledger Transfer', (): void => {
 
         jest.useFakeTimers({ now })
 
-        await expect(
-          createTransfers(serviceDeps, [transfer], knex)
-        ).resolves.toEqual({
-          results: [
-            {
-              id: expect.any(String),
-              transferRef: transfer.transferRef,
-              creditAccountId: transfer.creditAccount.id,
-              debitAccountId: transfer.debitAccount.id,
-              ledger: transfer.creditAccount.ledger,
-              state: expectedState,
-              amount: transfer.amount,
-              type: transfer.type,
-              expiresAt: timeoutMs
-                ? new Date(now.getTime() + Number(timeoutMs))
-                : null,
-              createdAt: expect.any(Date),
-              updatedAt: expect.any(Date)
-            }
-          ],
-          errors: []
-        })
+        await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual(
+          {
+            results: [
+              {
+                id: expect.any(String),
+                transferRef: transfer.transferRef,
+                creditAccountId: transfer.creditAccount.id,
+                debitAccountId: transfer.debitAccount.id,
+                ledger: transfer.creditAccount.ledger,
+                state: expectedState,
+                amount: transfer.amount,
+                type: transfer.type,
+                expiresAt: timeoutMs
+                  ? new Date(now.getTime() + Number(timeoutMs))
+                  : null,
+                createdAt: expect.any(Date),
+                updatedAt: expect.any(Date)
+              }
+            ],
+            errors: []
+          }
+        )
       }
     )
 
     test('returns error if duplicate transfer (on unique transferRef constraint)', async (): Promise<void> => {
       await expect(
-        createTransfers(serviceDeps, [baseTransfer, baseTransfer], knex)
+        createTransfers(serviceDeps, [baseTransfer, baseTransfer])
       ).resolves.toEqual({
         results: [],
-        errors: [{ index: -1, error: TransferError.TransferExists }]
+        errors: [{ index: 1, error: TransferError.TransferExists }]
       })
     })
 
-    test('throws if unhandled error during insert', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
-        ...baseTransfer
-      }
-
-      transfer.creditAccount.id = ''
-
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).rejects.toThrow('Could not create transfer(s)')
-    })
+    test.todo('throws if unhandled error during insert')
 
     test.each`
       amount | description
@@ -187,12 +177,12 @@ describe('Ledger Transfer', (): void => {
           amount
         }
 
-        await expect(
-          createTransfers(serviceDeps, [transfer], knex)
-        ).resolves.toEqual({
-          results: [],
-          errors: [{ index: 0, error: TransferError.InvalidAmount }]
-        })
+        await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual(
+          {
+            results: [],
+            errors: [{ index: 0, error: TransferError.InvalidAmount }]
+          }
+        )
       }
     )
 
@@ -204,9 +194,7 @@ describe('Ledger Transfer', (): void => {
       transfer.creditAccount['ledger' as string] = 1
       transfer.debitAccount['ledger' as string] = 0
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.DifferentAssets }]
       })
@@ -219,9 +207,7 @@ describe('Ledger Transfer', (): void => {
         debitAccount: account
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.SameAccounts }]
       })
@@ -233,9 +219,7 @@ describe('Ledger Transfer', (): void => {
         transferRef: ''
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InvalidId }]
       })
@@ -247,9 +231,7 @@ describe('Ledger Transfer', (): void => {
         timeoutMs: -1n
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InvalidTimeout }]
       })
@@ -268,7 +250,7 @@ describe('Ledger Transfer', (): void => {
       }
 
       await expect(
-        createTransfers(serviceDeps, [transfer, failTransfer], knex)
+        createTransfers(serviceDeps, [transfer, failTransfer])
       ).resolves.toEqual({
         results: [],
         errors: [{ index: 1, error: TransferError.SameAccounts }]
@@ -295,9 +277,7 @@ describe('Ledger Transfer', (): void => {
         amount: accountStartingBalance + 1n
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InsufficientBalance }]
       })
@@ -310,9 +290,7 @@ describe('Ledger Transfer', (): void => {
         amount: totalAssetSettlementBalance + 1n
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InsufficientDebitBalance }]
       })

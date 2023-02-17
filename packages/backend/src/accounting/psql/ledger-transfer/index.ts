@@ -1,8 +1,8 @@
-import { TransactionOrKnex, UniqueViolationError } from 'objection'
+import { Transaction, TransactionOrKnex, UniqueViolationError } from 'objection'
 import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
-import { isTransferError, TransferError } from '../../errors'
+import { TransferError } from '../../errors'
 import { AccountBalance, getAccountBalances } from '../balance'
 import { validateId as isValidUuid } from '../../../shared/utils'
 
@@ -123,65 +123,67 @@ function validateTransferStateUpdate(
 
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateTransferArgs[],
-  trx?: TransactionOrKnex
+  transfers: CreateTransferArgs[]
 ): Promise<CreateTransfersResult> {
-  try {
-    const validationResults = await Promise.all(
-      transfers.map((transfer) =>
-        validateTransfer(deps, {
-          creditAccount: transfer.creditAccount,
-          debitAccount: transfer.debitAccount,
-          amount: transfer.amount,
-          transferRef: transfer.transferRef,
-          timeoutMs: transfer.timeoutMs
-        })
+  const trx = await deps.knex.transaction()
+
+  const errors: CreateTransferError[] = []
+  const results: LedgerTransfer[] = []
+
+  for (const [index, transfer] of transfers.entries()) {
+    const error = await validateTransfer(deps, transfer, trx)
+
+    if (error) {
+      errors.push({ index, error })
+      continue
+    }
+
+    try {
+      const createdTransfer = await LedgerTransfer.query(trx).insertAndFetch(
+        prepareTransfer(transfer)
       )
-    )
 
-    const errors: CreateTransferError[] = []
-
-    for (const [i, maybeError] of validationResults.entries()) {
-      if (isTransferError(maybeError)) {
-        errors.push({
-          index: i,
-          error: maybeError
-        })
+      results.push(createdTransfer)
+    } catch (error) {
+      if (error instanceof UniqueViolationError) {
+        errors.push({ index, error: TransferError.TransferExists })
+        continue
       }
-    }
 
-    if (errors.length > 0) {
-      return {
-        results: [],
-        errors
-      }
+      const errorMessage = 'Could not create transfer(s)'
+      deps.logger.error(
+        { errorMessage: error && error['message'] },
+        errorMessage
+      )
+      errors.push({ index, error: TransferError.UnknownError })
     }
+  }
 
-    const createdTransfers = await LedgerTransfer.query(
-      trx || deps.knex
-    ).insertAndFetch(transfers.map(prepareTransfer))
+  if (errors.length > 0) {
+    await trx.rollback()
+    return { results: [], errors }
+  }
 
-    return {
-      results: createdTransfers,
-      errors: []
-    }
+  try {
+    await trx.commit()
+
+    return { results, errors: [] }
   } catch (error) {
-    if (error instanceof UniqueViolationError) {
-      return {
-        results: [],
-        errors: [{ index: -1, error: TransferError.TransferExists }]
-      }
-    }
+    await trx.rollback()
 
     const errorMessage = 'Could not create transfer(s)'
     deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
-    throw new Error(errorMessage)
+    return {
+      results: [],
+      errors: [{ index: -1, error: TransferError.UnknownError }]
+    }
   }
 }
 
 async function validateTransfer(
   deps: ServiceDependencies,
-  args: CreateTransferArgs
+  args: CreateTransferArgs,
+  trx: Transaction
 ): Promise<TransferError | undefined> {
   const { amount, timeoutMs, creditAccount, debitAccount, transferRef } = args
 
@@ -205,18 +207,19 @@ async function validateTransfer(
     return TransferError.DifferentAssets
   }
 
-  return validateBalances(deps, args)
+  return validateBalances(deps, args, trx)
 }
 
 async function validateBalances(
   deps: ServiceDependencies,
-  args: CreateTransferArgs
+  args: CreateTransferArgs,
+  trx: Transaction
 ): Promise<TransferError | undefined> {
   const { amount, creditAccount, debitAccount } = args
 
   const [creditAccountBalances, debitAccountBalance] = await Promise.all([
-    getAccountBalances(deps, creditAccount),
-    getAccountBalances(deps, debitAccount)
+    getAccountBalances(deps, creditAccount, trx),
+    getAccountBalances(deps, debitAccount, trx)
   ])
 
   if (
