@@ -273,7 +273,6 @@ async function createAccountWithdrawal(
     debitAccount: account,
     creditAccount: settlementAccount,
     amount,
-    ledger: settlementAccount.ledger,
     type: LedgerTransferType.WITHDRAWAL,
     timeoutMs: timeout
   }
