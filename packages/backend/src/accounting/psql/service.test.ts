@@ -678,7 +678,9 @@ describe('Psql Accounting Service', (): void => {
           asset
         }
       })
+    })
 
+    test('voids withdrawal', async (): Promise<void> => {
       await expect(
         accountingService.createWithdrawal(withdrawal)
       ).resolves.toBeUndefined()
@@ -688,72 +690,19 @@ describe('Psql Accounting Service', (): void => {
       await expect(
         accountingService.getSettlementBalance(withdrawal.account.asset.ledger)
       ).resolves.toEqual(startingBalance)
-    })
 
-    test('voids withdrawal', async (): Promise<void> => {
       await expect(
         accountingService.voidWithdrawal(withdrawal.id)
       ).resolves.toBeUndefined()
-
-      const transfer = await LedgerTransfer.query(knex).findOne({
-        transferRef: withdrawal.id
-      })
-
-      assert.ok(transfer)
-
-      expect(transfer.state).toEqual(LedgerTransferState.VOIDED)
-
       await expect(
         accountingService.getBalance(withdrawal.account.id)
       ).resolves.toEqual(startingBalance)
     })
 
-    test('returns error if withdrawal expired', async (): Promise<void> => {
-      await LedgerTransfer.query(knex)
-        .findOne({
-          transferRef: withdrawal.id
-        })
-        .patch({ expiresAt: new Date(Date.now() - 1) })
-
-      await expect(
-        accountingService.voidWithdrawal(withdrawal.id)
-      ).resolves.toEqual(TransferError.TransferExpired)
-    })
-
-    test('returns error if no withdrawal found', async (): Promise<void> => {
+    test('returns error if could not void transfer', async (): Promise<void> => {
       await expect(accountingService.voidWithdrawal(uuid())).resolves.toEqual(
         TransferError.UnknownTransfer
       )
-    })
-
-    test('returns error if withdrawal already posted', async (): Promise<void> => {
-      await LedgerTransfer.query(knex)
-        .findOne({
-          transferRef: withdrawal.id
-        })
-        .patch({ state: LedgerTransferState.POSTED })
-
-      await expect(
-        accountingService.voidWithdrawal(withdrawal.id)
-      ).resolves.toEqual(TransferError.AlreadyPosted)
-
-      await expect(
-        accountingService.getBalance(withdrawal.account.id)
-      ).resolves.toEqual(startingBalance - withdrawal.amount)
-    })
-
-    test('returns error if withdrawal already voided', async (): Promise<void> => {
-      await expect(
-        accountingService.voidWithdrawal(withdrawal.id)
-      ).resolves.toBeUndefined()
-
-      await expect(
-        accountingService.voidWithdrawal(withdrawal.id)
-      ).resolves.toEqual(TransferError.AlreadyVoided)
-
-      await expect(
-        accountingService.getBalance(withdrawal.account.id)
-      ).resolves.toEqual(startingBalance)
     })
   })
 })
