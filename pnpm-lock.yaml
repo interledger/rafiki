@@ -301,7 +301,7 @@ importers:
       '@types/uuid': ^9.0.0
       http-message-signatures: ^0.1.2
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
-      jose: ^4.11.4
+      jose: ^4.12.0
       koa: ^2.14.1
       koa-bodyparser: ^4.3.0
       koa-json: ^2.0.2
@@ -313,7 +313,7 @@ importers:
     dependencies:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      jose: 4.11.4
+      jose: 4.12.0
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-json: 2.0.2
@@ -9098,8 +9098,8 @@ packages:
       - ts-node
     dev: true
 
-  /jose/4.11.4:
-    resolution: {integrity: sha512-94FdcR8felat4vaTJyL/WVdtlWLlsnLMZP8v+A0Vru18K3bQ22vn7TtpVh3JlgBFNIlYOUlGqwp/MjRPOnIyCQ==}
+  /jose/4.12.0:
+    resolution: {integrity: sha512-wW1u3cK81b+SFcHjGC8zw87yuyUweEFe0UJirrXEw1NasW00eF7sZjeG3SLBGz001ozxQ46Y9sofDvhBmWFtXQ==}
     dev: false
 
   /joycon/3.1.1:
