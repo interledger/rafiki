@@ -133,6 +133,10 @@ export interface operations {
       };
       /** Bad Request */
       400: unknown;
+      /** Unauthorized */
+      401: unknown;
+      /** Internal Server Error */
+      500: unknown;
     };
     requestBody: {
       content: {
@@ -163,6 +167,8 @@ export interface operations {
           };
         };
       };
+      /** Bad Request */
+      400: unknown;
       /** Unauthorized */
       401: unknown;
       /** Not Found */
@@ -188,8 +194,10 @@ export interface operations {
       };
     };
     responses: {
-      /** Accepted */
-      202: unknown;
+      /** No Content */
+      204: never;
+      /** Bad Request */
+      400: unknown;
       /** Unauthorized */
       401: unknown;
       /** Not Found */
@@ -212,6 +220,8 @@ export interface operations {
           };
         };
       };
+      /** Bad Request */
+      400: unknown;
       /** Unauthorized */
       401: unknown;
       /** Not Found */
@@ -228,6 +238,8 @@ export interface operations {
     responses: {
       /** No Content */
       204: never;
+      /** Bad Request */
+      400: unknown;
       /** Unauthorized */
       401: unknown;
     };

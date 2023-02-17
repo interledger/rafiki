@@ -1,16 +1,12 @@
-import { BaseModel, PageInfo, Pagination } from './baseModel'
+import { PaginationArgs } from 'open-payments'
 
-export interface PageQueryParams {
-  cursor?: string
-  first?: number
-  last?: number
-}
+import { BaseModel, PageInfo, Pagination } from './baseModel'
 
 export function parsePaginationQueryParameters({
   first,
   last,
   cursor
-}: PageQueryParams): Pagination {
+}: PaginationArgs): Pagination {
   return {
     first,
     last,
