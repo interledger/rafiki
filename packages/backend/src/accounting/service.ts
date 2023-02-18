@@ -73,6 +73,7 @@ export interface TransferToCreate {
   sourceAccountId: string
   destinationAccountId: string
   amount: bigint
+  ledger: number
 }
 
 interface CreateAccountToAccountTransferArgs {
@@ -176,14 +177,16 @@ export function buildCrossAssetTransfers(
   transfers.push({
     sourceAccountId: sourceAccount.id,
     destinationAccountId: sourceAccount.asset.id,
-    amount: sourceAmount
+    amount: sourceAmount,
+    ledger: sourceAccount.asset.ledger
   })
 
   // Deliver from destination liquidity account
   transfers.push({
     sourceAccountId: destinationAccount.asset.id,
     destinationAccountId: destinationAccount.id,
-    amount: destinationAmount
+    amount: destinationAmount,
+    ledger: destinationAccount.asset.ledger
   })
 
   return transfers
@@ -202,7 +205,8 @@ export function buildSameAssetTransfers(
     amount:
       destinationAmount && destinationAmount < sourceAmount
         ? destinationAmount
-        : sourceAmount
+        : sourceAmount,
+    ledger: sourceAccount.asset.ledger
   })
 
   if (destinationAmount && sourceAmount !== destinationAmount) {
@@ -211,14 +215,16 @@ export function buildSameAssetTransfers(
       transfers.push({
         sourceAccountId: sourceAccount.id,
         destinationAccountId: sourceAccount.asset.id,
-        amount: sourceAmount - destinationAmount
+        amount: sourceAmount - destinationAmount,
+        ledger: sourceAccount.asset.ledger
       })
     } else {
       // Deliver excess destination amount from liquidity account
       transfers.push({
         sourceAccountId: destinationAccount.asset.id,
         destinationAccountId: destinationAccount.id,
-        amount: destinationAmount - sourceAmount
+        amount: destinationAmount - sourceAmount,
+        ledger: sourceAccount.asset.ledger
       })
     }
   }
