@@ -156,7 +156,7 @@ export async function createTransfers(
 
     if (error) {
       errors.push({ index, error })
-      continue
+      break
     }
 
     try {
@@ -168,7 +168,7 @@ export async function createTransfers(
     } catch (error) {
       if (error instanceof UniqueViolationError) {
         errors.push({ index, error: TransferError.TransferExists })
-        continue
+        break
       }
 
       const errorMessage = 'Could not create transfer(s)'
