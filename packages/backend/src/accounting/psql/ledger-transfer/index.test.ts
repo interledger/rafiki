@@ -15,7 +15,7 @@ import {
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import {
-  CreateTransferArgs,
+  CreateLedgerTransferArgs,
   createTransfers,
   getAccountTransfers,
   hasEnoughDebitBalance,
@@ -72,7 +72,7 @@ describe('Ledger Transfer', (): void => {
   })
 
   describe('createTransfers', (): void => {
-    let baseTransfer: CreateTransferArgs
+    let baseTransfer: CreateLedgerTransferArgs
     let totalAssetSettlementBalance: bigint
 
     const accountStartingBalance = 100n
@@ -119,7 +119,7 @@ describe('Ledger Transfer', (): void => {
         timeoutMs: bigint
         expectedState: LedgerTransferState
       }): Promise<void> => {
-        const transfer: CreateTransferArgs = {
+        const transfer: CreateLedgerTransferArgs = {
           ...baseTransfer,
           timeoutMs,
           type: LedgerTransferType.DEPOSIT
@@ -172,7 +172,7 @@ describe('Ledger Transfer', (): void => {
     `(
       'returns error for invalid amount ($description)',
       async ({ amount }: { amount: bigint }): Promise<void> => {
-        const transfer: CreateTransferArgs = {
+        const transfer: CreateLedgerTransferArgs = {
           ...baseTransfer,
           amount
         }
@@ -187,7 +187,7 @@ describe('Ledger Transfer', (): void => {
     )
 
     test('returns error for mismatched account assets', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer
       }
 
@@ -201,7 +201,7 @@ describe('Ledger Transfer', (): void => {
     })
 
     test('returns error if same account transfer', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         creditAccount: account,
         debitAccount: account
@@ -214,7 +214,7 @@ describe('Ledger Transfer', (): void => {
     })
 
     test('returns error if transferRef not uuid', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         transferRef: ''
       }
@@ -226,7 +226,7 @@ describe('Ledger Transfer', (): void => {
     })
 
     test('returns error for negative timeout value', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         timeoutMs: -1n
       }
@@ -238,11 +238,11 @@ describe('Ledger Transfer', (): void => {
     })
 
     test('does not create transfers if any fail', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer
       }
 
-      const failTransfer: CreateTransferArgs = {
+      const failTransfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         transferRef: uuid(),
         creditAccount: account,
@@ -272,7 +272,7 @@ describe('Ledger Transfer', (): void => {
     })
 
     test('returns error if not enough balance', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         amount: accountStartingBalance + 1n
       }
@@ -284,7 +284,7 @@ describe('Ledger Transfer', (): void => {
     })
 
     test('returns error if not enough debit balance', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         creditAccount: settlementAccount,
         amount: totalAssetSettlementBalance + 1n

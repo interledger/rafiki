@@ -26,7 +26,7 @@ interface BalanceCheckArgs {
   transferAmount: bigint
 }
 
-export type CreateTransferArgs = Pick<
+export type CreateLedgerTransferArgs = Pick<
   LedgerTransfer,
   'amount' | 'transferRef' | 'type'
 > & {
@@ -123,7 +123,7 @@ function validateTransferStateUpdate(
 
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateTransferArgs[]
+  transfers: CreateLedgerTransferArgs[]
 ): Promise<CreateTransfersResult> {
   const trx = await deps.knex.transaction()
 
@@ -182,7 +182,7 @@ export async function createTransfers(
 
 async function validateTransfer(
   deps: ServiceDependencies,
-  args: CreateTransferArgs,
+  args: CreateLedgerTransferArgs,
   trx: Transaction
 ): Promise<TransferError | undefined> {
   const { amount, timeoutMs, creditAccount, debitAccount, transferRef } = args
@@ -212,7 +212,7 @@ async function validateTransfer(
 
 async function validateBalances(
   deps: ServiceDependencies,
-  args: CreateTransferArgs,
+  args: CreateLedgerTransferArgs,
   trx: Transaction
 ): Promise<TransferError | undefined> {
   const { amount, creditAccount, debitAccount } = args
@@ -264,7 +264,7 @@ export function hasEnoughDebitBalance(args: BalanceCheckArgs): boolean {
 }
 
 function prepareTransfer(
-  transfer: CreateTransferArgs
+  transfer: CreateLedgerTransferArgs
 ): Partial<LedgerTransfer> {
   return {
     amount: transfer.amount,

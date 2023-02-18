@@ -829,94 +829,108 @@ describe('Psql Accounting Service', (): void => {
         ${1n}        | ${1n}             | ${'same amount'}
         ${1n}        | ${2n}             | ${'source < destination'}
         ${2n}        | ${1n}             | ${'destination < source'}
-      `('$description', ({ sourceAmount, destinationAmount }): void => {
-        test.each`
-          post     | description
-          ${true}  | ${'post'}
-          ${false} | ${'void'}
-        `('$description', async ({ post }): Promise<void> => {
-          const trxOrError = await accountingService.createTransfer({
-            sourceAccount,
-            destinationAccount,
-            sourceAmount,
-            destinationAmount,
-            timeout
-          })
-          assert.ok(!isTransferError(trxOrError))
-          const amountDiff = BigInt(destinationAmount) - sourceAmount
+      `(
+        '$description',
+        ({
+          sourceAmount,
+          destinationAmount
+        }: {
+          sourceAmount: bigint
+          destinationAmount: bigint
+        }): void => {
+          test.each`
+            post     | description
+            ${true}  | ${'post'}
+            ${false} | ${'void'}
+          `('$description', async ({ post }): Promise<void> => {
+            const trxOrError = await accountingService.createTransfer({
+              sourceAccount,
+              destinationAccount,
+              sourceAmount,
+              destinationAmount,
+              timeout
+            })
+            assert.ok(!isTransferError(trxOrError))
 
-          await expect(
-            accountingService.getBalance(sourceAccount.id)
-          ).resolves.toEqual(startingSourceBalance - sourceAmount)
+            const amountDiff = destinationAmount - sourceAmount
 
-          if (sameAsset) {
             await expect(
-              accountingService.getBalance(sourceAccount.asset.id)
-            ).resolves.toEqual(
-              sourceAmount < destinationAmount
-                ? startingDestinationLiquidity - amountDiff
-                : startingDestinationLiquidity
-            )
-          } else {
+              accountingService.getBalance(sourceAccount.id)
+            ).resolves.toEqual(startingSourceBalance - sourceAmount)
+
+            if (sameAsset) {
+              await expect(
+                accountingService.getBalance(sourceAccount.asset.id)
+              ).resolves.toEqual(
+                sourceAmount < destinationAmount
+                  ? startingDestinationLiquidity - amountDiff
+                  : startingDestinationLiquidity
+              )
+            } else {
+              await expect(
+                accountingService.getBalance(sourceAccount.asset.id)
+              ).resolves.toEqual(0n)
+
+              await expect(
+                accountingService.getBalance(destinationAccount.asset.id)
+              ).resolves.toEqual(
+                startingDestinationLiquidity - destinationAmount
+              )
+            }
+
             await expect(
-              accountingService.getBalance(sourceAccount.asset.id)
+              accountingService.getBalance(destinationAccount.id)
             ).resolves.toEqual(0n)
 
+            if (post) {
+              await expect(trxOrError.post()).resolves.toBeUndefined()
+            } else {
+              await expect(trxOrError.void()).resolves.toBeUndefined()
+            }
+
             await expect(
-              accountingService.getBalance(destinationAccount.asset.id)
-            ).resolves.toEqual(startingDestinationLiquidity - destinationAmount)
-          }
-
-          await expect(
-            accountingService.getBalance(destinationAccount.id)
-          ).resolves.toEqual(0n)
-
-          if (post) {
-            await expect(trxOrError.post()).resolves.toBeUndefined()
-          } else {
-            await expect(trxOrError.void()).resolves.toBeUndefined()
-          }
-
-          await expect(
-            accountingService.getBalance(sourceAccount.id)
-          ).resolves.toEqual(
-            post ? startingSourceBalance - sourceAmount : startingSourceBalance
-          )
-
-          if (sameAsset) {
-            await expect(
-              accountingService.getBalance(sourceAccount.asset.id)
+              accountingService.getBalance(sourceAccount.id)
             ).resolves.toEqual(
               post
-                ? startingDestinationLiquidity - amountDiff
-                : startingDestinationLiquidity
+                ? startingSourceBalance - sourceAmount
+                : startingSourceBalance
             )
-          } else {
-            await expect(
-              accountingService.getBalance(sourceAccount.asset.id)
-            ).resolves.toEqual(post ? sourceAmount : 0n)
+
+            if (sameAsset) {
+              await expect(
+                accountingService.getBalance(sourceAccount.asset.id)
+              ).resolves.toEqual(
+                post
+                  ? startingDestinationLiquidity - amountDiff
+                  : startingDestinationLiquidity
+              )
+            } else {
+              await expect(
+                accountingService.getBalance(sourceAccount.asset.id)
+              ).resolves.toEqual(post ? sourceAmount : 0n)
+
+              await expect(
+                accountingService.getBalance(destinationAccount.asset.id)
+              ).resolves.toEqual(
+                post
+                  ? startingDestinationLiquidity - destinationAmount
+                  : startingDestinationLiquidity
+              )
+            }
 
             await expect(
-              accountingService.getBalance(destinationAccount.asset.id)
-            ).resolves.toEqual(
-              post
-                ? startingDestinationLiquidity - destinationAmount
-                : startingDestinationLiquidity
+              accountingService.getBalance(destinationAccount.id)
+            ).resolves.toEqual(post ? destinationAmount : 0n)
+
+            await expect(trxOrError.post()).resolves.toEqual(
+              post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
             )
-          }
-
-          await expect(
-            accountingService.getBalance(destinationAccount.id)
-          ).resolves.toEqual(post ? destinationAmount : 0n)
-
-          await expect(trxOrError.post()).resolves.toEqual(
-            post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
-          )
-          await expect(trxOrError.void()).resolves.toEqual(
-            post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
-          )
-        })
-      })
+            await expect(trxOrError.void()).resolves.toEqual(
+              post ? TransferError.AlreadyPosted : TransferError.AlreadyVoided
+            )
+          })
+        }
+      )
 
       test('returns error for insufficient source balance', async (): Promise<void> => {
         const transfer = {
