@@ -687,7 +687,7 @@ describe('Ledger Transfer', (): void => {
       )
 
       await expect(
-        voidTransfers(serviceDeps, [
+        postTransfers(serviceDeps, [
           transfer.transferRef,
           failedTransfer.transferRef
         ])
