@@ -67,42 +67,63 @@ export async function getAccountTransfers(
   )
 }
 
-export async function voidTransfer(
+export async function voidTransfers(
   deps: ServiceDependencies,
-  transferRef: string
+  transferRefs: string[]
 ): Promise<void | TransferError> {
-  return updateTransferState(deps, transferRef, LedgerTransferState.VOIDED)
+  return updateTransferState(deps, transferRefs, LedgerTransferState.VOIDED)
 }
 
-export async function postTransfer(
+export async function postTransfers(
   deps: ServiceDependencies,
-  transferRef: string
+  transferRefs: string[]
 ): Promise<void | TransferError> {
-  return updateTransferState(deps, transferRef, LedgerTransferState.POSTED)
+  return updateTransferState(deps, transferRefs, LedgerTransferState.POSTED)
 }
 
 async function updateTransferState(
   deps: ServiceDependencies,
-  transferRef: string,
+  transferRefs: string[],
   state: LedgerTransferState.POSTED | LedgerTransferState.VOIDED
 ): Promise<void | TransferError> {
-  return await deps.knex.transaction(async (trx) => {
-    const transfer = await LedgerTransfer.query(trx)
-      .findOne({ transferRef })
-      .forUpdate()
+  const trx = await deps.knex.transaction()
 
-    if (!transfer) {
-      return TransferError.UnknownTransfer
+  const updateTransfers = async () => {
+    for (const transferRef of transferRefs) {
+      const transfer = await LedgerTransfer.query(trx)
+        .findOne({ transferRef })
+        .forUpdate()
+
+      if (!transfer) {
+        return TransferError.UnknownTransfer
+      }
+
+      const error = validateTransferStateUpdate(transfer)
+
+      if (error) {
+        return error
+      }
+
+      await transfer.$query(trx).patch({ state })
     }
+  }
 
-    const transferError = validateTransferStateUpdate(transfer)
+  const error = await updateTransfers()
 
-    if (transferError) {
-      return transferError
-    }
+  if (error) {
+    await trx.rollback()
+    return error
+  }
 
-    await transfer.$query(trx).patch({ state })
-  })
+  try {
+    await trx.commit()
+  } catch (error) {
+    await trx.rollback()
+
+    const errorMessage = 'Could not void transfer(s)'
+    deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
+    return TransferError.UnknownError
+  }
 }
 
 function validateTransferStateUpdate(

@@ -29,8 +29,8 @@ import {
   CreateLedgerTransferArgs,
   createTransfers,
   CreateTransfersResult,
-  postTransfer,
-  voidTransfer
+  postTransfers,
+  voidTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
@@ -62,8 +62,8 @@ export function createAccountingService(
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    postWithdrawal: (withdrawalRef) => postTransfer(deps, withdrawalRef),
-    voidWithdrawal: (withdrawalRef) => voidTransfer(deps, withdrawalRef)
+    postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
+    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef])
   }
 }
 
@@ -203,27 +203,8 @@ export async function createTransfer(
   return createAccountToAccountTransfer({
     transferArgs: args,
     withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
-    voidTransfers: async (transferRefs) => {
-      const results = await Promise.all(
-        transferRefs.map((transferRef) => voidTransfer(deps, transferRef))
-      )
-
-      const error = results.find((result) => isTransferError(result))
-
-      if (error) {
-        return error
-      }
-    },
-    postTransfers: async (transferRefs) => {
-      const results = await Promise.all(
-        transferRefs.map((transferRef) => postTransfer(deps, transferRef))
-      )
-      const error = results.find((result) => isTransferError(result))
-
-      if (error) {
-        return error
-      }
-    },
+    voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),
+    postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
     getAccountReceived: async (accountRef) =>
       getAccountTotalReceived(deps, accountRef),
     createPendingTransfers: async (transfersToCreate) => {
