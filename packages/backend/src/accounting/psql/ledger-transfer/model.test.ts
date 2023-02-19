@@ -17,7 +17,7 @@ describe('Ledger Transfer Model', (): void => {
 
   beforeAll(async (): Promise<void> => {
     const deps = initIocContainer({ ...Config, useTigerbeetle: false })
-    appContainer = await createTestApp(deps, { silentLogging: true })
+    appContainer = await createTestApp(deps)
     knex = appContainer.knex
   })
 
