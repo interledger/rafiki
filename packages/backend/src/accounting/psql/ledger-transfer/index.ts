@@ -170,11 +170,6 @@ export async function createTransfers(
 
       results.push(createdTransfer)
     } catch (error) {
-      if (error instanceof UniqueViolationError) {
-        errors.push({ index, error: TransferError.TransferExists })
-        break
-      }
-
       const errorMessage = 'Could not create transfer(s)'
       deps.logger.error(
         { errorMessage: error && error['message'] },
@@ -230,6 +225,10 @@ async function validateTransfer(
 
   if (creditAccount.ledger !== debitAccount.ledger) {
     return TransferError.DifferentAssets
+  }
+
+  if (await LedgerTransfer.query(trx).findOne({ transferRef })) {
+    return TransferError.TransferExists
   }
 
   return validateBalances(deps, args, trx)
