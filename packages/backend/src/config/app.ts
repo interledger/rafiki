@@ -58,7 +58,7 @@ export const Config = {
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
 
-  useTigerbeetle: envBool('USE_TIGERBEETLE', true),
+  useTigerbeetle: envBool('USE_TIGERBEETLE', false),
   tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
     ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
