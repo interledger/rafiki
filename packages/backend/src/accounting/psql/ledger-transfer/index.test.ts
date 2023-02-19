@@ -568,6 +568,12 @@ describe('Ledger Transfer', (): void => {
       ).resolves.toEqual(TransferError.AlreadyVoided)
     })
 
+    test('returns error if invalid transferId', async (): Promise<void> => {
+      await expect(voidTransfers(serviceDeps, ['not a uuid'])).resolves.toEqual(
+        TransferError.InvalidId
+      )
+    })
+
     test('does not void transfers if any fail', async (): Promise<void> => {
       const failedTransfer = await createLedgerTransfer(
         {
@@ -672,6 +678,12 @@ describe('Ledger Transfer', (): void => {
       await expect(
         postTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.AlreadyVoided)
+    })
+
+    test('returns error if invalid transferId', async (): Promise<void> => {
+      await expect(postTransfers(serviceDeps, ['not a uuid'])).resolves.toEqual(
+        TransferError.InvalidId
+      )
     })
 
     test('does not post transfers if any fail', async (): Promise<void> => {
