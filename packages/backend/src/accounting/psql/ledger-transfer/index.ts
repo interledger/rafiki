@@ -253,7 +253,7 @@ async function validateBalances(
       transferAmount: amount
     })
   ) {
-    return TransferError.InsufficientDebitBalance
+    return TransferError.InsufficientBalance
   }
 
   if (

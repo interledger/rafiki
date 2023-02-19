@@ -637,7 +637,7 @@ describe('Psql Accounting Service', (): void => {
         withdrawal.amount = startingBalance + 1n
         await expect(
           accountingService.createWithdrawal(withdrawal)
-        ).resolves.toEqual(TransferError.InsufficientDebitBalance)
+        ).resolves.toEqual(TransferError.InsufficientBalance)
       })
     })
   })

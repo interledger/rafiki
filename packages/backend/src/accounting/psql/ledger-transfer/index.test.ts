@@ -292,7 +292,7 @@ describe('Ledger Transfer', (): void => {
 
       await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
-        errors: [{ index: 0, error: TransferError.InsufficientDebitBalance }]
+        errors: [{ index: 0, error: TransferError.InsufficientBalance }]
       })
     })
   })
