@@ -90,6 +90,10 @@ async function updateTransferState(
 
   const updateTransfers = async () => {
     for (const transferRef of transferRefs) {
+      if (!isValidUuid(transferRef)) {
+        return TransferError.InvalidId
+      }
+
       const transfer = await LedgerTransfer.query(trx)
         .findOne({ transferRef })
         .forUpdate()
