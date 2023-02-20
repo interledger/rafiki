@@ -1,4 +1,4 @@
-import { Transaction, TransactionOrKnex } from 'objection'
+import { Transaction, TransactionOrKnex, UniqueViolationError } from 'objection'
 import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
@@ -112,14 +112,15 @@ async function updateTransferState(
     }
   }
 
-  const error = await updateTransfers()
+  try {
+    const error = await updateTransfers()
 
-  if (error) {
-    await trx.rollback()
-    return error
+    if (error) {
+      await trx.rollback()
+      return error
+    }
   }
 
-  try {
     await trx.commit()
   } catch (error) {
     await trx.rollback()
@@ -170,6 +171,11 @@ export async function createTransfers(
 
       results.push(createdTransfer)
     } catch (error) {
+      if (error instanceof UniqueViolationError) {
+        errors.push({ index, error: TransferError.TransferExists })
+        break
+      }
+
       const errorMessage = 'Could not create transfer(s)'
       deps.logger.error(
         { errorMessage: error && error['message'] },
@@ -225,10 +231,6 @@ async function validateTransfer(
 
   if (creditAccount.ledger !== debitAccount.ledger) {
     return TransferError.DifferentAssets
-  }
-
-  if (await LedgerTransfer.query(trx).findOne({ transferRef })) {
-    return TransferError.TransferExists
   }
 
   return validateBalances(deps, args, trx)

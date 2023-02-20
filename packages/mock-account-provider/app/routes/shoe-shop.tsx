@@ -89,7 +89,7 @@ export default function ShoeShop() {
         const acceptanceDecision =
           !!decision && decision.toLowerCase() === 'accept'
         ApiClient.chooseConsent(interactId, nonce, acceptanceDecision)
-          .then((consentResponse) => {
+          .then((_consentResponse) => {
             setCtx({
               ...ctx,
               done: true,
@@ -98,7 +98,7 @@ export default function ShoeShop() {
               nonce
             })
           })
-          .catch((err) => {
+          .catch((_err) => {
             setCtx({
               ...ctx,
               done: true,
