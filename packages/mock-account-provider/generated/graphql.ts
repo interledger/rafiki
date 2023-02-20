@@ -639,7 +639,7 @@ export type Query = {
   asset?: Maybe<Asset>;
   /** Fetch a page of assets. */
   assets: AssetsConnection;
-  /**  Fetch an Open Payments outgoing payment */
+  /** Fetch an Open Payments outgoing payment */
   outgoingPayment?: Maybe<OutgoingPayment>;
   /** Fetch a payment pointer */
   paymentPointer?: Maybe<PaymentPointer>;

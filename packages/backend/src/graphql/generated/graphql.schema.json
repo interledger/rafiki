@@ -4751,7 +4751,7 @@
           },
           {
             "name": "outgoingPayment",
-            "description": " Fetch an Open Payments outgoing payment",
+            "description": "Fetch an Open Payments outgoing payment",
             "args": [
               {
                 "name": "id",

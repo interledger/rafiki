@@ -6,6 +6,6 @@ pnpm --filter backend generate
 # generate docs
 pnpm run docs
 # format
-pnpm run format
+pnpm run format:docs
 # stage
-git add docs/admin-api.md
+git add docs/admin-api.md  **/generated/graphql.*
