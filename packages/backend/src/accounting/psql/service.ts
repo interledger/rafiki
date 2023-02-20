@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { TransactionOrKnex } from 'objection'
 import { Asset } from '../../asset/model'
-import { AssetService } from '../../asset/service'
 import { BaseService } from '../../shared/baseService'
-import { CreateAccountError, TransferError } from '../errors'
+import { TransferError } from '../errors'
 import {
   AccountingService,
   Deposit,
@@ -13,14 +12,26 @@ import {
   TransferOptions,
   Withdrawal
 } from '../service'
+import { getAccountBalances } from './balance'
+import {
+  createAccount,
+  getLiquidityAccount,
+  getSettlementAccount
+} from './ledger-account'
 import {
   LedgerAccountType,
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
-import { LedgerAccountService } from './ledger-account/service'
+import {
+  CreateTransferArgs,
+  createTransfers,
+  postTransfer,
+  voidTransfer
+} from './ledger-transfer'
+import { LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
-  ledgerAccountService: LedgerAccountService
+  knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
 }
 
@@ -36,17 +47,19 @@ export function createAccountingService(
       createLiquidityAccount(deps, options, accTypeCode, trx),
     createSettlementAccount: (ledger, trx) =>
       createSettlementAccount(deps, ledger, trx),
-    getBalance: (id) => getAccountBalance(deps, id),
-    getTotalSent: (id) => getAccountTotalSent(deps, id),
-    getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
-    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
-    getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
+    getBalance: (accountRef) => getLiquidityAccountBalance(deps, accountRef),
+    getTotalSent: (accountRef) => getAccountTotalSent(deps, accountRef),
+    getAccountsTotalSent: (accountRefs) =>
+      getAccountsTotalSent(deps, accountRefs),
+    getTotalReceived: (accountRef) => getAccountTotalReceived(deps, accountRef),
+    getAccountsTotalReceived: (accountRefs) =>
+      getAccountsTotalReceived(deps, accountRefs),
     getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    postWithdrawal: (options) => postAccountWithdrawal(deps, options),
-    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
+    postWithdrawal: (withdrawalRef) => postTransfer(deps, withdrawalRef),
+    voidWithdrawal: (withdrawalRef) => voidTransfer(deps, withdrawalRef)
   }
 }
 
@@ -56,7 +69,8 @@ export async function createLiquidityAccount(
   accountType: LiquidityAccountType,
   trx?: TransactionOrKnex
 ): Promise<LiquidityAccount> {
-  await deps.ledgerAccountService.create(
+  await createAccount(
+    deps,
     {
       accountRef: account.id,
       ledger: account.asset.ledger,
@@ -78,7 +92,8 @@ export async function createSettlementAccount(
     throw new Error(`Could not find asset by ledger value: ${ledger}`)
   }
 
-  await deps.ledgerAccountService.create(
+  await createAccount(
+    deps,
     {
       accountRef: asset.id,
       ledger,
@@ -88,46 +103,93 @@ export async function createSettlementAccount(
   )
 }
 
-export async function getAccountBalance(
+export async function getLiquidityAccountBalance(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await getLiquidityAccount(deps, accountRef)
+
+  if (!account) {
+    return
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, account)
+
+  return creditsPosted - debitsPosted - debitsPending
 }
 
 export async function getAccountTotalSent(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await getLiquidityAccount(deps, accountRef)
+
+  if (!account) {
+    return
+  }
+
+  return (await getAccountBalances(deps, account)).debitsPosted
 }
 
 export async function getAccountsTotalSent(
   deps: ServiceDependencies,
-  ids: string[]
+  accountRefs: string[]
 ): Promise<(bigint | undefined)[]> {
-  throw new Error('Not implemented')
+  return Promise.all(
+    accountRefs.map((accountRef) => getAccountTotalSent(deps, accountRef))
+  )
 }
 
 export async function getAccountTotalReceived(
   deps: ServiceDependencies,
-  id: string
+  accountRef: string
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const account = await getLiquidityAccount(deps, accountRef)
+
+  if (!account) {
+    return
+  }
+
+  return (await getAccountBalances(deps, account)).creditsPosted
 }
 
 export async function getAccountsTotalReceived(
   deps: ServiceDependencies,
-  ids: string[]
+  accountRefs: string[]
 ): Promise<(bigint | undefined)[]> {
-  throw new Error('Not implemented')
+  return Promise.all(
+    accountRefs.map((accountRef) => getAccountTotalReceived(deps, accountRef))
+  )
 }
 
 export async function getSettlementBalance(
   deps: ServiceDependencies,
   ledger: number
 ): Promise<bigint | undefined> {
-  throw new Error('Not implemented')
+  const asset = await Asset.query(deps.knex).findOne({ ledger })
+  if (!asset) {
+    deps.logger.error(`Could not find asset by ledger value: ${ledger}`)
+    return
+  }
+
+  const settlementAccount = await getSettlementAccount(deps, asset.id)
+
+  if (!settlementAccount) {
+    deps.logger.error(
+      {
+        ledger,
+        assetId: asset.id
+      },
+      'Could not find settlement account by account'
+    )
+    return
+  }
+
+  const { creditsPosted, debitsPending, debitsPosted } =
+    await getAccountBalances(deps, settlementAccount)
+
+  return debitsPosted + debitsPending - creditsPosted
 }
 
 export async function createTransfer(
@@ -145,28 +207,84 @@ export async function createTransfer(
 
 async function createAccountDeposit(
   deps: ServiceDependencies,
-  { id, account, amount }: Deposit
+  args: Deposit
 ): Promise<void | TransferError> {
-  throw new Error('Not implemented')
+  const {
+    id: transferRef,
+    account: {
+      id: accountRef,
+      asset: { id: assetRef }
+    },
+    amount
+  } = args
+
+  const [account, settlementAccount] = await Promise.all([
+    getLiquidityAccount(deps, accountRef),
+    getSettlementAccount(deps, assetRef)
+  ])
+
+  if (!account) {
+    return TransferError.UnknownDestinationAccount
+  }
+
+  if (!settlementAccount) {
+    return TransferError.UnknownSourceAccount
+  }
+
+  const transfer: CreateTransferArgs = {
+    transferRef,
+    debitAccount: settlementAccount,
+    creditAccount: account,
+    amount,
+    type: LedgerTransferType.DEPOSIT
+  }
+
+  const { errors } = await createTransfers(deps, [transfer])
+
+  if (errors[0]) {
+    return errors[0].error
+  }
 }
 
 async function createAccountWithdrawal(
   deps: ServiceDependencies,
-  { id, account, amount, timeout }: Withdrawal
+  args: Withdrawal
 ): Promise<void | TransferError> {
-  throw new Error('Not implemented')
-}
+  const {
+    id: transferRef,
+    account: {
+      id: accountRef,
+      asset: { id: assetRef }
+    },
+    amount,
+    timeout
+  } = args
 
-async function voidAccountWithdrawal(
-  deps: ServiceDependencies,
-  withdrawalId: string
-): Promise<void | TransferError> {
-  throw new Error('Not implemented')
-}
+  const [account, settlementAccount] = await Promise.all([
+    getLiquidityAccount(deps, accountRef),
+    getSettlementAccount(deps, assetRef)
+  ])
 
-async function postAccountWithdrawal(
-  deps: ServiceDependencies,
-  withdrawalId: string
-): Promise<void | TransferError> {
-  throw new Error('Not implemented')
+  if (!account) {
+    return TransferError.UnknownSourceAccount
+  }
+
+  if (!settlementAccount) {
+    return TransferError.UnknownDestinationAccount
+  }
+
+  const transfer: CreateTransferArgs = {
+    transferRef,
+    debitAccount: account,
+    creditAccount: settlementAccount,
+    amount,
+    type: LedgerTransferType.WITHDRAWAL,
+    timeoutMs: timeout
+  }
+
+  const { errors } = await createTransfers(deps, [transfer])
+
+  if (errors[0]) {
+    return errors[0].error
+  }
 }

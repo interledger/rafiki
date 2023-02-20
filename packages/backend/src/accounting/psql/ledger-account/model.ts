@@ -19,8 +19,9 @@ export class LedgerAccount extends BaseModel {
 
   public readonly accountRef!: string
   public readonly ledger!: number
-  public readonly type!: LedgerAccountType
   public readonly asset?: Asset
+
+  public readonly type!: LedgerAccountType
 
   static relationMappings = {
     asset: {
@@ -31,6 +32,10 @@ export class LedgerAccount extends BaseModel {
         to: 'assets.ledger'
       }
     }
+  }
+
+  public get isSettlementAccount(): boolean {
+    return this.type === LedgerAccountType.SETTLEMENT
   }
 }
 

@@ -114,7 +114,7 @@ class OpenAPIImpl implements OpenAPI {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (request: any): request is T => {
       if (coercer) {
-        coercer.coerce(request.query)
+        coercer.coerce(request)
       }
       if (defaultSetter) {
         defaultSetter.handle(request)
