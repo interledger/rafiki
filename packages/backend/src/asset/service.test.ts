@@ -8,7 +8,6 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
@@ -22,10 +21,7 @@ describe('Asset Service', (): void => {
   let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    const { port } = await startTigerbeetleContainer()
-    Config.tigerbeetleReplicaAddresses = [port]
-
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
   })
@@ -36,7 +32,6 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('create', (): void => {
@@ -53,7 +48,7 @@ describe('Asset Service', (): void => {
         }
         const asset = await assetService.create(options)
         assert.ok(!isAssetError(asset))
-        await expect(asset).toMatchObject({
+        expect(asset).toMatchObject({
           ...options,
           id: asset.id,
           ledger: asset.ledger,
@@ -102,7 +97,7 @@ describe('Asset Service', (): void => {
       }
       const asset = await assetService.create(options)
       assert.ok(!isAssetError(asset))
-      await expect(asset).toMatchObject({
+      expect(asset).toMatchObject({
         ...options,
         id: asset.id,
         ledger: asset.ledger
@@ -158,7 +153,7 @@ describe('Asset Service', (): void => {
             withdrawalThreshold
           })
           assert.ok(!isAssetError(asset))
-          await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+          expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
           assetId = asset.id
         })
 

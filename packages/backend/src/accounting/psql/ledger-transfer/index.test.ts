@@ -34,7 +34,7 @@ describe('Ledger Transfer', (): void => {
 
   beforeAll(async (): Promise<void> => {
     const deps = initIocContainer({ ...Config, useTigerbeetle: false })
-    appContainer = await createTestApp(deps, { silentLogging: true })
+    appContainer = await createTestApp(deps)
     serviceDeps = {
       logger: await deps.use('logger'),
       knex: await deps.use('knex')
@@ -292,7 +292,7 @@ describe('Ledger Transfer', (): void => {
 
       await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
-        errors: [{ index: 0, error: TransferError.InsufficientDebitBalance }]
+        errors: [{ index: 0, error: TransferError.InsufficientBalance }]
       })
     })
   })
