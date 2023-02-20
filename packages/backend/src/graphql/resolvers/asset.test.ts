@@ -14,7 +14,6 @@ import { isAssetError } from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
-import { startTigerbeetleContainer } from '../../tests/tigerbeetle'
 import {
   AssetMutationResponse,
   Asset,
@@ -28,10 +27,7 @@ describe('Asset Resolvers', (): void => {
   let assetService: AssetService
 
   beforeAll(async (): Promise<void> => {
-    const { port } = await startTigerbeetleContainer()
-    Config.tigerbeetleReplicaAddresses = [port]
-
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
   })
@@ -41,9 +37,8 @@ describe('Asset Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await appContainer.apolloClient.stop()
+    appContainer.apolloClient.stop()
     await appContainer.shutdown()
-    // TODO: find a way to gracefully stop TB container without running into a thread panic
   })
 
   describe('Create Asset', (): void => {
