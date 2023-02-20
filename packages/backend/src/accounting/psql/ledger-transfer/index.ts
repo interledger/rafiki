@@ -119,7 +119,6 @@ async function updateTransferState(
       await trx.rollback()
       return error
     }
-  }
 
     await trx.commit()
   } catch (error) {
