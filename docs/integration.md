@@ -67,31 +67,31 @@ The `backend` package requires an environment variable called `WEBHOOK_URL` whic
 
 #### `IncomingPaymentCompleted`
 
-An [Open Payments](./glossary#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. Any funds already received SHOULD be withdrawn.
+An [Open Payments](./glossary#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
 #### `IncomingPaymentExpired`
 
-An [Open Payments](./glossary#open-payments) Incoming Payment has expired, i.e. it does not accept any incoming funds anymore. Any funds already received SHOULD be withdrawn.
+An [Open Payments](./glossary#open-payments) Incoming Payment has expired, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
 #### `OutgoingPaymentCreated`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment has been created. It requires liquidity to be processed.
+An [Open Payments](./glossary#open-payments) Outgoing Payment has been created. It requires liquidity to be processed. The Account Servicing Entity SHOULD reserve the maximum requisite funds for the payment attempt on the payer's account.
 
 - Action: Deposit liquidity
 
 #### `OutgoingPaymentCompleted`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment was completed, i.e. it won't send any further funds. Any excess liquidity should be withdrawn.
+An [Open Payments](./glossary#open-payments) Outgoing Payment was completed, i.e. it won't send any further funds. The Account Servicing Entity SHOULD withdraw any excess liquidity and deposit it into the payer's account.
 
 - Action: Withdraw liquidity
 
 #### `OutgoingPaymentFailed`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment completely of partially failed to send funds and won't re-try sending them. All or any excess liquidity should be withdrawn.
+An [Open Payments](./glossary#open-payments) Outgoing Payment completely of partially failed to send funds and won't re-try sending them. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and deposit it into the payer's account.
 
 - Action: Withdraw liquidity
 
