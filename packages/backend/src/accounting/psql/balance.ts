@@ -2,6 +2,7 @@ import { LedgerAccount } from './ledger-account/model'
 import { LedgerTransferState } from './ledger-transfer/model'
 import { ServiceDependencies } from './service'
 import { getAccountTransfers } from './ledger-transfer'
+import { TransactionOrKnex } from 'objection'
 
 export interface AccountBalance {
   creditsPosted: bigint
@@ -12,9 +13,10 @@ export interface AccountBalance {
 
 export async function getAccountBalances(
   deps: ServiceDependencies,
-  account: LedgerAccount
+  account: LedgerAccount,
+  trx?: TransactionOrKnex
 ): Promise<AccountBalance> {
-  const { credits, debits } = await getAccountTransfers(deps, account.id)
+  const { credits, debits } = await getAccountTransfers(deps, account.id, trx)
 
   let creditsPosted = 0n
   let creditsPending = 0n

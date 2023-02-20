@@ -28,6 +28,7 @@ export enum TransferError {
   TransferExists = 'TransferExists',
   TransferExpired = 'TransferExpired',
   UnknownTransfer = 'UnknownTransfer',
+  UnknownError = 'UnknownError',
   UnknownSourceAccount = 'UnknownSourceAccount',
   UnknownDestinationAccount = 'UnknownDestinationAccount'
 }

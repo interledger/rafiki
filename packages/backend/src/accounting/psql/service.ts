@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { TransactionOrKnex } from 'objection'
+import { v4 as uuid } from 'uuid'
 import { Asset } from '../../asset/model'
 import { BaseService } from '../../shared/baseService'
-import { TransferError } from '../errors'
+import { isTransferError, TransferError } from '../errors'
 import {
   AccountingService,
   Deposit,
@@ -10,7 +11,9 @@ import {
   LiquidityAccountType,
   Transaction,
   TransferOptions,
-  Withdrawal
+  TransferToCreate,
+  Withdrawal,
+  createAccountToAccountTransfer
 } from '../service'
 import { getAccountBalances } from './balance'
 import {
@@ -23,12 +26,13 @@ import {
   mapLiquidityAccountTypeToLedgerAccountType
 } from './ledger-account/model'
 import {
-  CreateTransferArgs,
+  CreateLedgerTransferArgs,
   createTransfers,
-  postTransfer,
-  voidTransfer
+  CreateTransfersResult,
+  postTransfers,
+  voidTransfers
 } from './ledger-transfer'
-import { LedgerTransferType } from './ledger-transfer/model'
+import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
@@ -58,8 +62,8 @@ export function createAccountingService(
     createTransfer: (options) => createTransfer(deps, options),
     createDeposit: (transfer) => createAccountDeposit(deps, transfer),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    postWithdrawal: (withdrawalRef) => postTransfer(deps, withdrawalRef),
-    voidWithdrawal: (withdrawalRef) => voidTransfer(deps, withdrawalRef)
+    postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
+    voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef])
   }
 }
 
@@ -194,15 +198,92 @@ export async function getSettlementBalance(
 
 export async function createTransfer(
   deps: ServiceDependencies,
-  {
-    sourceAccount,
-    destinationAccount,
-    sourceAmount,
-    destinationAmount,
-    timeout
-  }: TransferOptions
+  args: TransferOptions
 ): Promise<Transaction | TransferError> {
-  throw new Error('Not implemented')
+  return createAccountToAccountTransfer({
+    transferArgs: args,
+    withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
+    voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),
+    postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
+    getAccountReceived: async (accountRef) =>
+      getAccountTotalReceived(deps, accountRef),
+    createPendingTransfers: async (transfersToCreate) => {
+      const [
+        sourceAccount,
+        sourceAssetAccount,
+        destinationAccount,
+        destinationAssetAccount
+      ] = await Promise.all([
+        getLiquidityAccount(deps, args.sourceAccount.id),
+        getLiquidityAccount(deps, args.sourceAccount.asset.id),
+        getLiquidityAccount(deps, args.destinationAccount.id),
+        getLiquidityAccount(deps, args.destinationAccount.asset.id)
+      ])
+
+      if (!sourceAccount || !sourceAssetAccount) {
+        return TransferError.UnknownSourceAccount
+      }
+
+      if (!destinationAccount || !destinationAssetAccount) {
+        return TransferError.UnknownDestinationAccount
+      }
+
+      const accountMap = {
+        [sourceAccount.accountRef]: sourceAccount,
+        [sourceAssetAccount.accountRef]: sourceAssetAccount,
+        [destinationAccount.accountRef]: destinationAccount,
+        [destinationAssetAccount.accountRef]: destinationAssetAccount
+      }
+
+      const pendingTransfersOrError = handleTransferCreateResults(
+        args,
+        transfersToCreate,
+        await createTransfers(
+          deps,
+          transfersToCreate.map((transfer) => ({
+            transferRef: uuid(),
+            debitAccount: accountMap[transfer.sourceAccountId],
+            creditAccount: accountMap[transfer.destinationAccountId],
+            amount: transfer.amount,
+            timeoutMs: args.timeout
+          }))
+        )
+      )
+
+      if (isTransferError(pendingTransfersOrError)) {
+        return pendingTransfersOrError
+      }
+
+      return pendingTransfersOrError.map(
+        (pendingTransfer) => pendingTransfer.transferRef
+      )
+    }
+  })
+}
+
+function handleTransferCreateResults(
+  args: TransferOptions,
+  attemptedTransfers: TransferToCreate[],
+  createTransferResults: CreateTransfersResult
+): LedgerTransfer[] | TransferError {
+  const { errors, results: pendingTransfers } = createTransferResults
+
+  if (errors.length > 0) {
+    if (
+      errors.find(
+        ({ error, index }) =>
+          error === TransferError.InsufficientBalance &&
+          attemptedTransfers[index]?.sourceAccountId ===
+            args.destinationAccount.asset.id
+      )
+    ) {
+      return TransferError.InsufficientLiquidity
+    }
+
+    return errors[0].error
+  }
+
+  return pendingTransfers
 }
 
 async function createAccountDeposit(
@@ -231,7 +312,7 @@ async function createAccountDeposit(
     return TransferError.UnknownSourceAccount
   }
 
-  const transfer: CreateTransferArgs = {
+  const transfer: CreateLedgerTransferArgs = {
     transferRef,
     debitAccount: settlementAccount,
     creditAccount: account,
@@ -273,7 +354,7 @@ async function createAccountWithdrawal(
     return TransferError.UnknownDestinationAccount
   }
 
-  const transfer: CreateTransferArgs = {
+  const transfer: CreateLedgerTransferArgs = {
     transferRef,
     debitAccount: account,
     creditAccount: settlementAccount,

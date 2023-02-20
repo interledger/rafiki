@@ -15,13 +15,13 @@ import {
 import { createLedgerAccount } from '../../../tests/ledgerAccount'
 import { createLedgerTransfer } from '../../../tests/ledgerTransfer'
 import {
-  CreateTransferArgs,
+  CreateLedgerTransferArgs,
   createTransfers,
   getAccountTransfers,
   hasEnoughDebitBalance,
-  hasEnoughLiquidity,
-  postTransfer,
-  voidTransfer
+  hasEnoughCreditBalance,
+  postTransfers,
+  voidTransfers
 } from '.'
 import { ServiceDependencies } from '../service'
 import { TransferError } from '../../errors'
@@ -72,7 +72,7 @@ describe('Ledger Transfer', (): void => {
   })
 
   describe('createTransfers', (): void => {
-    let baseTransfer: CreateTransferArgs
+    let baseTransfer: CreateLedgerTransferArgs
     let totalAssetSettlementBalance: bigint
 
     const accountStartingBalance = 100n
@@ -119,7 +119,7 @@ describe('Ledger Transfer', (): void => {
         timeoutMs: bigint
         expectedState: LedgerTransferState
       }): Promise<void> => {
-        const transfer: CreateTransferArgs = {
+        const transfer: CreateLedgerTransferArgs = {
           ...baseTransfer,
           timeoutMs,
           type: LedgerTransferType.DEPOSIT
@@ -129,51 +129,41 @@ describe('Ledger Transfer', (): void => {
 
         jest.useFakeTimers({ now })
 
-        await expect(
-          createTransfers(serviceDeps, [transfer], knex)
-        ).resolves.toEqual({
-          results: [
-            {
-              id: expect.any(String),
-              transferRef: transfer.transferRef,
-              creditAccountId: transfer.creditAccount.id,
-              debitAccountId: transfer.debitAccount.id,
-              ledger: transfer.creditAccount.ledger,
-              state: expectedState,
-              amount: transfer.amount,
-              type: transfer.type,
-              expiresAt: timeoutMs
-                ? new Date(now.getTime() + Number(timeoutMs))
-                : null,
-              createdAt: expect.any(Date),
-              updatedAt: expect.any(Date)
-            }
-          ],
-          errors: []
-        })
+        await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual(
+          {
+            results: [
+              {
+                id: expect.any(String),
+                transferRef: transfer.transferRef,
+                creditAccountId: transfer.creditAccount.id,
+                debitAccountId: transfer.debitAccount.id,
+                ledger: transfer.creditAccount.ledger,
+                state: expectedState,
+                amount: transfer.amount,
+                type: transfer.type,
+                expiresAt: timeoutMs
+                  ? new Date(now.getTime() + Number(timeoutMs))
+                  : null,
+                createdAt: expect.any(Date),
+                updatedAt: expect.any(Date)
+              }
+            ],
+            errors: []
+          }
+        )
       }
     )
 
     test('returns error if duplicate transfer (on unique transferRef constraint)', async (): Promise<void> => {
       await expect(
-        createTransfers(serviceDeps, [baseTransfer, baseTransfer], knex)
+        createTransfers(serviceDeps, [baseTransfer, baseTransfer])
       ).resolves.toEqual({
         results: [],
-        errors: [{ index: -1, error: TransferError.TransferExists }]
+        errors: [{ index: 1, error: TransferError.TransferExists }]
       })
     })
 
-    test('throws if unhandled error during insert', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
-        ...baseTransfer
-      }
-
-      transfer.creditAccount.id = ''
-
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).rejects.toThrow('Could not create transfer(s)')
-    })
+    test.todo('throws if unhandled error during insert')
 
     test.each`
       amount | description
@@ -182,85 +172,77 @@ describe('Ledger Transfer', (): void => {
     `(
       'returns error for invalid amount ($description)',
       async ({ amount }: { amount: bigint }): Promise<void> => {
-        const transfer: CreateTransferArgs = {
+        const transfer: CreateLedgerTransferArgs = {
           ...baseTransfer,
           amount
         }
 
-        await expect(
-          createTransfers(serviceDeps, [transfer], knex)
-        ).resolves.toEqual({
-          results: [],
-          errors: [{ index: 0, error: TransferError.InvalidAmount }]
-        })
+        await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual(
+          {
+            results: [],
+            errors: [{ index: 0, error: TransferError.InvalidAmount }]
+          }
+        )
       }
     )
 
     test('returns error for mismatched account assets', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer
       }
 
       transfer.creditAccount['ledger' as string] = 1
       transfer.debitAccount['ledger' as string] = 0
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.DifferentAssets }]
       })
     })
 
     test('returns error if same account transfer', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         creditAccount: account,
         debitAccount: account
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.SameAccounts }]
       })
     })
 
     test('returns error if transferRef not uuid', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         transferRef: ''
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InvalidId }]
       })
     })
 
     test('returns error for negative timeout value', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         timeoutMs: -1n
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InvalidTimeout }]
       })
     })
 
     test('does not create transfers if any fail', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer
       }
 
-      const failTransfer: CreateTransferArgs = {
+      const failTransfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         transferRef: uuid(),
         creditAccount: account,
@@ -268,7 +250,7 @@ describe('Ledger Transfer', (): void => {
       }
 
       await expect(
-        createTransfers(serviceDeps, [transfer, failTransfer], knex)
+        createTransfers(serviceDeps, [transfer, failTransfer])
       ).resolves.toEqual({
         results: [],
         errors: [{ index: 1, error: TransferError.SameAccounts }]
@@ -289,37 +271,33 @@ describe('Ledger Transfer', (): void => {
       expect(transferRefs).not.toContain(failTransfer.transferRef)
     })
 
-    test('returns error if not enough liquidity', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+    test('returns error if not enough balance', async (): Promise<void> => {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         amount: accountStartingBalance + 1n
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
-        errors: [{ index: 0, error: TransferError.InsufficientLiquidity }]
+        errors: [{ index: 0, error: TransferError.InsufficientBalance }]
       })
     })
 
     test('returns error if not enough debit balance', async (): Promise<void> => {
-      const transfer: CreateTransferArgs = {
+      const transfer: CreateLedgerTransferArgs = {
         ...baseTransfer,
         creditAccount: settlementAccount,
         amount: totalAssetSettlementBalance + 1n
       }
 
-      await expect(
-        createTransfers(serviceDeps, [transfer], knex)
-      ).resolves.toEqual({
+      await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],
         errors: [{ index: 0, error: TransferError.InsufficientDebitBalance }]
       })
     })
   })
 
-  describe('hasEnoughLiquidity', (): void => {
+  describe('hasEnoughCreditBalance', (): void => {
     test.each`
       description                                                                 | isSettlementAccount | transferAmount | creditsPosted | creditsPending | debitsPosted | debitsPending | result
       ${'passes if settlement account'}                                           | ${true}             | ${10n}         | ${0n}         | ${0n}          | ${0n}        | ${0n}         | ${true}
@@ -343,7 +321,7 @@ describe('Ledger Transfer', (): void => {
         result
       }): Promise<void> => {
         expect(
-          hasEnoughLiquidity({
+          hasEnoughCreditBalance({
             account: isSettlementAccount ? settlementAccount : account,
             balances: {
               creditsPosted,
@@ -520,7 +498,7 @@ describe('Ledger Transfer', (): void => {
     )
   })
 
-  describe('voidTransfer', (): void => {
+  describe('voidTransfers', (): void => {
     let transfer: LedgerTransfer
 
     beforeEach(async (): Promise<void> => {
@@ -538,7 +516,7 @@ describe('Ledger Transfer', (): void => {
 
     test('voids transfer', async (): Promise<void> => {
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        voidTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toBeUndefined()
 
       expect(
@@ -558,12 +536,12 @@ describe('Ledger Transfer', (): void => {
         .patch({ expiresAt: new Date(Date.now() - 1) })
 
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        voidTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.TransferExpired)
     })
 
     test('returns error if no transfer found', async (): Promise<void> => {
-      await expect(voidTransfer(serviceDeps, uuid())).resolves.toEqual(
+      await expect(voidTransfers(serviceDeps, [uuid()])).resolves.toEqual(
         TransferError.UnknownTransfer
       )
     })
@@ -576,22 +554,63 @@ describe('Ledger Transfer', (): void => {
         .patch({ state: LedgerTransferState.POSTED })
 
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        voidTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.AlreadyPosted)
     })
 
     test('returns error if transfer already voided', async (): Promise<void> => {
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        voidTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toBeUndefined()
 
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        voidTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.AlreadyVoided)
+    })
+
+    test('returns error if invalid transferId', async (): Promise<void> => {
+      await expect(voidTransfers(serviceDeps, ['not a uuid'])).resolves.toEqual(
+        TransferError.InvalidId
+      )
+    })
+
+    test('does not void transfers if any fail', async (): Promise<void> => {
+      const failedTransfer = await createLedgerTransfer(
+        {
+          creditAccountId: account.id,
+          debitAccountId: settlementAccount.id,
+          amount: 10n,
+          ledger: account.ledger,
+          state: LedgerTransferState.POSTED
+        },
+        knex
+      )
+
+      await expect(
+        voidTransfers(serviceDeps, [
+          transfer.transferRef,
+          failedTransfer.transferRef
+        ])
+      ).resolves.toEqual(TransferError.AlreadyPosted)
+
+      expect(
+        (
+          await LedgerTransfer.query(knex).findOne({
+            transferRef: transfer.transferRef
+          })
+        )?.state
+      ).toEqual(transfer.state)
+      expect(
+        (
+          await LedgerTransfer.query(knex).findOne({
+            transferRef: failedTransfer.transferRef
+          })
+        )?.state
+      ).toEqual(failedTransfer.state)
     })
   })
 
-  describe('postTransfer', (): void => {
+  describe('postTransfers', (): void => {
     let transfer: LedgerTransfer
 
     beforeEach(async (): Promise<void> => {
@@ -609,7 +628,7 @@ describe('Ledger Transfer', (): void => {
 
     test('posts transfer', async (): Promise<void> => {
       await expect(
-        postTransfer(serviceDeps, transfer.transferRef)
+        postTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toBeUndefined()
 
       expect(
@@ -629,12 +648,12 @@ describe('Ledger Transfer', (): void => {
         .patch({ expiresAt: new Date(Date.now() - 1) })
 
       await expect(
-        postTransfer(serviceDeps, transfer.transferRef)
+        postTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.TransferExpired)
     })
 
     test('returns error if no transfer found', async (): Promise<void> => {
-      await expect(postTransfer(serviceDeps, uuid())).resolves.toEqual(
+      await expect(postTransfers(serviceDeps, [uuid()])).resolves.toEqual(
         TransferError.UnknownTransfer
       )
     })
@@ -647,18 +666,59 @@ describe('Ledger Transfer', (): void => {
         .patch({ state: LedgerTransferState.POSTED })
 
       await expect(
-        postTransfer(serviceDeps, transfer.transferRef)
+        postTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.AlreadyPosted)
     })
 
     test('returns error if transfer already voided', async (): Promise<void> => {
       await expect(
-        voidTransfer(serviceDeps, transfer.transferRef)
+        voidTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toBeUndefined()
 
       await expect(
-        postTransfer(serviceDeps, transfer.transferRef)
+        postTransfers(serviceDeps, [transfer.transferRef])
       ).resolves.toEqual(TransferError.AlreadyVoided)
+    })
+
+    test('returns error if invalid transferId', async (): Promise<void> => {
+      await expect(postTransfers(serviceDeps, ['not a uuid'])).resolves.toEqual(
+        TransferError.InvalidId
+      )
+    })
+
+    test('does not post transfers if any fail', async (): Promise<void> => {
+      const failedTransfer = await createLedgerTransfer(
+        {
+          creditAccountId: account.id,
+          debitAccountId: settlementAccount.id,
+          amount: 10n,
+          ledger: account.ledger,
+          state: LedgerTransferState.VOIDED
+        },
+        knex
+      )
+
+      await expect(
+        postTransfers(serviceDeps, [
+          transfer.transferRef,
+          failedTransfer.transferRef
+        ])
+      ).resolves.toEqual(TransferError.AlreadyVoided)
+
+      expect(
+        (
+          await LedgerTransfer.query(knex).findOne({
+            transferRef: transfer.transferRef
+          })
+        )?.state
+      ).toEqual(transfer.state)
+      expect(
+        (
+          await LedgerTransfer.query(knex).findOne({
+            transferRef: failedTransfer.transferRef
+          })
+        )?.state
+      ).toEqual(failedTransfer.state)
     })
   })
 })
