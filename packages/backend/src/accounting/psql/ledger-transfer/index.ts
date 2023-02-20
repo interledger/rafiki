@@ -1,4 +1,4 @@
-import { Transaction, TransactionOrKnex, UniqueViolationError } from 'objection'
+import { Transaction, TransactionOrKnex } from 'objection'
 import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
