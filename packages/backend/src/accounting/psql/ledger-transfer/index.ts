@@ -112,14 +112,14 @@ async function updateTransferState(
     }
   }
 
-  const error = await updateTransfers()
-
-  if (error) {
-    await trx.rollback()
-    return error
-  }
-
   try {
+    const error = await updateTransfers()
+
+    if (error) {
+      await trx.rollback()
+      return error
+    }
+
     await trx.commit()
   } catch (error) {
     await trx.rollback()
