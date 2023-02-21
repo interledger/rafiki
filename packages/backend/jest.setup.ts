@@ -2,7 +2,6 @@ require('ts-node/register')
 
 import { knex } from 'knex'
 import { GenericContainer, Wait } from 'testcontainers'
-import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
 
 const POSTGRES_PORT = 5432
 const REDIS_PORT = 6379
@@ -71,14 +70,6 @@ const setup = async (globalConfig): Promise<void> => {
     global.__BACKEND_KNEX__ = db
   }
 
-  const setupTigerbeetle = async () => {
-    if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const { container, port } = await startTigerbeetleContainer()
-      process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${port}]`
-      global.__BACKEND_TIGERBEETLE__ = container
-    }
-  }
-
   const setupRedis = async () => {
     if (!process.env.REDIS_URL) {
       const redisContainer = await new GenericContainer('redis:7')
@@ -92,7 +83,7 @@ const setup = async (globalConfig): Promise<void> => {
     }
   }
 
-  await Promise.all([setupDatabase(), setupTigerbeetle(), setupRedis()])
+  await Promise.all([setupDatabase(), setupRedis()])
 }
 
 export default setup

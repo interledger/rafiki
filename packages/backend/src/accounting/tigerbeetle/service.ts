@@ -18,6 +18,7 @@ import {
 } from '../errors'
 import {
   AccountingService,
+  createAccountToAccountTransfer,
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
@@ -212,157 +213,76 @@ export async function getSettlementBalance(
 
 export async function createTransfer(
   deps: ServiceDependencies,
-  {
-    sourceAccount,
-    destinationAccount,
-    sourceAmount,
-    destinationAmount,
-    timeout
-  }: TransferOptions
+  args: TransferOptions
 ): Promise<Transaction | TransferError> {
-  if (sourceAccount.id === destinationAccount.id) {
-    return TransferError.SameAccounts
-  }
-  if (sourceAmount <= BigInt(0)) {
-    return TransferError.InvalidSourceAmount
-  }
-  if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
-    return TransferError.InvalidDestinationAmount
-  }
-  const transfers: NewTransferOptions[] = []
-
-  const addTransfer = ({
-    sourceAccountId,
-    destinationAccountId,
-    amount,
-    ledger
-  }: {
-    sourceAccountId: string
-    destinationAccountId: string
-    amount: bigint
-    ledger: number
-  }) => {
-    transfers.push({
-      id: uuid(),
-      sourceAccountId,
-      destinationAccountId,
-      amount,
-      timeout,
-      ledger
-    })
-  }
-
-  // Same asset / ledger:
-  if (sourceAccount.asset.ledger === destinationAccount.asset.ledger) {
-    addTransfer({
-      sourceAccountId: sourceAccount.id,
-      destinationAccountId: destinationAccount.id,
-      amount:
-        destinationAmount && destinationAmount < sourceAmount
-          ? destinationAmount
-          : sourceAmount,
-      ledger: sourceAccount.asset.ledger
-    })
-    // Same asset, different amounts
-    if (destinationAmount && sourceAmount !== destinationAmount) {
-      // Send excess source amount to liquidity account
-      if (destinationAmount < sourceAmount) {
-        addTransfer({
-          sourceAccountId: sourceAccount.id,
-          destinationAccountId: sourceAccount.asset.id,
-          amount: sourceAmount - destinationAmount,
-          ledger: sourceAccount.asset.ledger
-        })
-        // Deliver excess destination amount from liquidity account
-      } else {
-        addTransfer({
-          sourceAccountId: destinationAccount.asset.id,
-          destinationAccountId: destinationAccount.id,
-          amount: destinationAmount - sourceAmount,
-          ledger: sourceAccount.asset.ledger
-        })
-      }
-    }
-    // Different assets / ledgers:
-  } else {
-    // must specify destination amount
-    if (!destinationAmount) {
-      return TransferError.InvalidDestinationAmount
-    }
-    // Send to source liquidity account
-    // Deliver from destination liquidity account
-    addTransfer({
-      sourceAccountId: sourceAccount.id,
-      destinationAccountId: sourceAccount.asset.id,
-      amount: sourceAmount,
-      ledger: sourceAccount.asset.ledger
-    })
-    addTransfer({
-      sourceAccountId: destinationAccount.asset.id,
-      destinationAccountId: destinationAccount.id,
-      amount: destinationAmount,
-      ledger: destinationAccount.asset.ledger
-    })
-  }
-  const error = await createTransfers(deps, transfers)
-  if (error) {
-    switch (error.error) {
-      case TransferError.UnknownSourceAccount:
-        throw new TigerbeetleUnknownAccountError(
-          transfers[error.index].sourceAccountId
-        )
-      case TransferError.UnknownDestinationAccount:
-        throw new TigerbeetleUnknownAccountError(
-          transfers[error.index].destinationAccountId
-        )
-      case TransferError.InsufficientBalance:
-        if (
-          transfers[error.index].sourceAccountId === destinationAccount.asset.id
-        ) {
-          return TransferError.InsufficientLiquidity
-        }
-        return TransferError.InsufficientBalance
-      default:
-        throw new BalanceTransferError(error.error)
-    }
-  }
-
-  const trx: Transaction = {
-    post: async (): Promise<void | TransferError> => {
+  return createAccountToAccountTransfer({
+    transferArgs: args,
+    withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
+    voidTransfers: async (transferIds) => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => ({ postId: transfer.id }))
+        transferIds.map((transferId) => ({
+          voidId: transferId
+        }))
       )
+
       if (error) {
         return error.error
-      }
-      if (destinationAccount.onCredit) {
-        const totalReceived = await getAccountTotalReceived(
-          deps,
-          destinationAccount.id
-        )
-
-        if (totalReceived === undefined) {
-          throw new Error()
-        }
-
-        await destinationAccount.onCredit({
-          totalReceived,
-          withdrawalThrottleDelay: deps.withdrawalThrottleDelay
-        })
       }
     },
-    void: async (): Promise<void | TransferError> => {
+    postTransfers: async (transferIds) => {
       const error = await createTransfers(
         deps,
-        transfers.map((transfer) => ({ voidId: transfer.id }))
+        transferIds.map((transferId) => ({
+          postId: transferId
+        }))
       )
+
       if (error) {
         return error.error
       }
+    },
+    getAccountReceived: async (accountRef) =>
+      getAccountTotalReceived(deps, accountRef),
+    createPendingTransfers: async (transfersToCreate) => {
+      const tbTransfers: NewTransferOptions[] = transfersToCreate.map(
+        (transfer) => ({
+          id: uuid(),
+          ledger: transfer.ledger,
+          sourceAccountId: transfer.sourceAccountId,
+          destinationAccountId: transfer.destinationAccountId,
+          amount: transfer.amount,
+          timeout: args.timeout
+        })
+      )
+
+      const error = await createTransfers(deps, tbTransfers)
+
+      if (error) {
+        switch (error.error) {
+          case TransferError.UnknownSourceAccount:
+            throw new TigerbeetleUnknownAccountError(
+              transfersToCreate[error.index].sourceAccountId
+            )
+          case TransferError.UnknownDestinationAccount:
+            throw new TigerbeetleUnknownAccountError(
+              transfersToCreate[error.index].destinationAccountId
+            )
+          case TransferError.InsufficientBalance:
+            if (
+              transfersToCreate[error.index].sourceAccountId ===
+              args.destinationAccount.asset.id
+            ) {
+              return TransferError.InsufficientLiquidity
+            }
+            return TransferError.InsufficientBalance
+          default:
+            throw new BalanceTransferError(error.error)
+        }
+      }
+      return tbTransfers.map((transfer) => transfer.id.toString())
     }
-  }
-  return trx
+  })
 }
 
 async function createAccountDeposit(
