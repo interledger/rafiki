@@ -11,7 +11,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
-    "@apollo/client": "^3.7.8",
+    "@apollo/client": "^3.7.9",
     "@graphql-codegen/cli": "3.0.0",
     "@graphql-codegen/introspection": "3.0.0",
     "@graphql-codegen/near-operation-file-preset": "^2.5.0",
@@ -45,7 +45,7 @@
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
     "@apollo/server": "^4.4.0",
-    "@as-integrations/koa": "^0.2.1",
+    "@as-integrations/koa": "^0.3.0",
     "@faker-js/faker": "^7.6.0",
     "@graphql-tools/graphql-file-loader": "^7.5.16",
     "@graphql-tools/load": "^7.8.12",
@@ -82,9 +82,9 @@
     "openapi": "workspace:../openapi",
     "pg": "^8.9.0",
     "pino": "^8.10.0",
-    "pino-pretty": "^9.2.0",
+    "pino-pretty": "^9.3.0",
     "raw-body": "^2.5.1",
-    "tigerbeetle-node": "^0.11.11",
+    "tigerbeetle-node": "^0.11.12",
     "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   }

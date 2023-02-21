@@ -55,7 +55,7 @@ describe('Receiver Service', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
-    appContainer = await createTestApp(deps, { silentLogging: true })
+    appContainer = await createTestApp(deps)
     receiverService = await deps.use('receiverService')
     incomingPaymentService = await deps.use('incomingPaymentService')
     openPaymentsClient = await deps.use('openPaymentsClient')

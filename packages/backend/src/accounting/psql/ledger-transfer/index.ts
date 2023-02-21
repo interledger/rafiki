@@ -1,9 +1,10 @@
-import { TransactionOrKnex, UniqueViolationError } from 'objection'
+import { Transaction, TransactionOrKnex } from 'objection'
 import { LedgerTransfer, LedgerTransferState } from './model'
 import { ServiceDependencies } from '../service'
 import { LedgerAccount } from '../ledger-account/model'
-import { isTransferError, TransferError } from '../../errors'
+import { TransferError } from '../../errors'
 import { AccountBalance, getAccountBalances } from '../balance'
+import { validateId as isValidUuid } from '../../../shared/utils'
 
 interface GetTransfersResult {
   credits: LedgerTransfer[]
@@ -14,7 +15,7 @@ interface CreateTransferError {
   index: number
   error: TransferError
 }
-interface CreateTransfersResult {
+export interface CreateTransfersResult {
   errors: CreateTransferError[]
   results: LedgerTransfer[]
 }
@@ -25,14 +26,7 @@ interface BalanceCheckArgs {
   transferAmount: bigint
 }
 
-interface ValidateTransferArgs {
-  amount: bigint
-  timeoutMs?: bigint
-  creditAccount: LedgerAccount
-  debitAccount: LedgerAccount
-}
-
-export type CreateTransferArgs = Pick<
+export type CreateLedgerTransferArgs = Pick<
   LedgerTransfer,
   'amount' | 'transferRef' | 'type'
 > & {
@@ -73,68 +67,149 @@ export async function getAccountTransfers(
   )
 }
 
+export async function voidTransfers(
+  deps: ServiceDependencies,
+  transferRefs: string[]
+): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRefs, LedgerTransferState.VOIDED)
+}
+
+export async function postTransfers(
+  deps: ServiceDependencies,
+  transferRefs: string[]
+): Promise<void | TransferError> {
+  return updateTransferState(deps, transferRefs, LedgerTransferState.POSTED)
+}
+
+async function updateTransferState(
+  deps: ServiceDependencies,
+  transferRefs: string[],
+  state: LedgerTransferState.POSTED | LedgerTransferState.VOIDED
+): Promise<void | TransferError> {
+  const trx = await deps.knex.transaction()
+
+  const updateTransfers = async () => {
+    for (const transferRef of transferRefs) {
+      if (!isValidUuid(transferRef)) {
+        return TransferError.InvalidId
+      }
+
+      const transfer = await LedgerTransfer.query(trx)
+        .findOne({ transferRef })
+        .forUpdate()
+
+      if (!transfer) {
+        return TransferError.UnknownTransfer
+      }
+
+      const error = validateTransferStateUpdate(transfer)
+
+      if (error) {
+        return error
+      }
+
+      await transfer.$query(trx).patch({ state })
+    }
+  }
+
+  try {
+    const error = await updateTransfers()
+
+    if (error) {
+      await trx.rollback()
+      return error
+    }
+
+    await trx.commit()
+  } catch (error) {
+    await trx.rollback()
+
+    const errorMessage = 'Could not void transfer(s)'
+    deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
+    return TransferError.UnknownError
+  }
+}
+
+function validateTransferStateUpdate(
+  transfer: LedgerTransfer
+): TransferError | void {
+  if (transfer.isVoided) {
+    return TransferError.AlreadyVoided
+  }
+
+  if (transfer.isPosted) {
+    return TransferError.AlreadyPosted
+  }
+
+  if (transfer.isExpired) {
+    return TransferError.TransferExpired
+  }
+}
+
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateTransferArgs[],
-  trx?: TransactionOrKnex
+  transfers: CreateLedgerTransferArgs[]
 ): Promise<CreateTransfersResult> {
-  try {
-    const validationResults = await Promise.all(
-      transfers.map((transfer) =>
-        validateTransfer(deps, {
-          creditAccount: transfer.creditAccount,
-          debitAccount: transfer.debitAccount,
-          amount: transfer.amount,
-          timeoutMs: transfer.timeoutMs
-        })
+  const trx = await deps.knex.transaction()
+
+  const errors: CreateTransferError[] = []
+  const results: LedgerTransfer[] = []
+
+  for (const [index, transfer] of transfers.entries()) {
+    const error = await validateTransfer(deps, transfer, trx)
+
+    if (error) {
+      errors.push({ index, error })
+      break
+    }
+
+    try {
+      const createdTransfer = await LedgerTransfer.query(trx).insertAndFetch(
+        prepareTransfer(transfer)
       )
-    )
 
-    const errors: CreateTransferError[] = []
-
-    for (const [i, maybeError] of validationResults.entries()) {
-      if (isTransferError(maybeError)) {
-        errors.push({
-          index: i,
-          error: maybeError
-        })
-      }
+      results.push(createdTransfer)
+    } catch (error) {
+      const errorMessage = 'Could not create transfer(s)'
+      deps.logger.error(
+        { errorMessage: error && error['message'] },
+        errorMessage
+      )
+      errors.push({ index, error: TransferError.UnknownError })
     }
+  }
 
-    if (errors.length > 0) {
-      return {
-        results: [],
-        errors
-      }
-    }
+  if (errors.length > 0) {
+    await trx.rollback()
+    return { results: [], errors }
+  }
 
-    const createdTransfers = await LedgerTransfer.query(
-      trx || deps.knex
-    ).insertAndFetch(transfers.map(prepareTransfer))
+  try {
+    await trx.commit()
 
-    return {
-      results: createdTransfers,
-      errors: []
-    }
+    return { results, errors: [] }
   } catch (error) {
-    if (error instanceof UniqueViolationError) {
-      return {
-        results: [],
-        errors: [{ index: -1, error: TransferError.TransferExists }]
-      }
-    }
+    await trx.rollback()
 
     const errorMessage = 'Could not create transfer(s)'
     deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
-    throw new Error(errorMessage)
+    return {
+      results: [],
+      errors: [{ index: -1, error: TransferError.UnknownError }]
+    }
   }
 }
 
 async function validateTransfer(
   deps: ServiceDependencies,
-  args: ValidateTransferArgs
+  args: CreateLedgerTransferArgs,
+  trx: Transaction
 ): Promise<TransferError | undefined> {
-  const { amount, timeoutMs, creditAccount, debitAccount } = args
+  const { amount, timeoutMs, creditAccount, debitAccount, transferRef } = args
+
+  if (!isValidUuid(transferRef)) {
+    return TransferError.InvalidId
+  }
 
   if (amount <= 0n) {
     return TransferError.InvalidAmount
@@ -152,18 +227,23 @@ async function validateTransfer(
     return TransferError.DifferentAssets
   }
 
-  return validateBalances(deps, args)
+  if (await LedgerTransfer.query(trx).findOne({ transferRef })) {
+    return TransferError.TransferExists
+  }
+
+  return validateBalances(deps, args, trx)
 }
 
 async function validateBalances(
   deps: ServiceDependencies,
-  args: ValidateTransferArgs
+  args: CreateLedgerTransferArgs,
+  trx: Transaction
 ): Promise<TransferError | undefined> {
   const { amount, creditAccount, debitAccount } = args
 
   const [creditAccountBalances, debitAccountBalance] = await Promise.all([
-    getAccountBalances(deps, creditAccount),
-    getAccountBalances(deps, debitAccount)
+    getAccountBalances(deps, creditAccount, trx),
+    getAccountBalances(deps, debitAccount, trx)
   ])
 
   if (
@@ -173,21 +253,21 @@ async function validateBalances(
       transferAmount: amount
     })
   ) {
-    return TransferError.InsufficientDebitBalance
+    return TransferError.InsufficientBalance
   }
 
   if (
-    !hasEnoughLiquidity({
+    !hasEnoughCreditBalance({
       account: debitAccount,
       balances: debitAccountBalance,
       transferAmount: amount
     })
   ) {
-    return TransferError.InsufficientLiquidity
+    return TransferError.InsufficientBalance
   }
 }
 
-export function hasEnoughLiquidity(args: BalanceCheckArgs): boolean {
+export function hasEnoughCreditBalance(args: BalanceCheckArgs): boolean {
   const { account, balances, transferAmount } = args
   const { creditsPosted, debitsPosted, debitsPending } = balances
 
@@ -208,7 +288,7 @@ export function hasEnoughDebitBalance(args: BalanceCheckArgs): boolean {
 }
 
 function prepareTransfer(
-  transfer: CreateTransferArgs
+  transfer: CreateLedgerTransferArgs
 ): Partial<LedgerTransfer> {
   return {
     amount: transfer.amount,
