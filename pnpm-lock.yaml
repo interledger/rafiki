@@ -46,7 +46,7 @@ importers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.9
       '@apollo/server': ^4.4.0
-      '@as-integrations/koa': ^0.2.1
+      '@as-integrations/koa': ^0.3.0
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 3.0.0
       '@graphql-codegen/introspection': 3.0.0
@@ -92,7 +92,7 @@ importers:
     dependencies:
       '@adonisjs/fold': 8.2.0
       '@apollo/server': 4.4.0_graphql@16.6.0
-      '@as-integrations/koa': 0.2.1_qxwpdylileykw44uxs73xl6kxa
+      '@as-integrations/koa': 0.3.0_qxwpdylileykw44uxs73xl6kxa
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.12_graphql@16.6.0
       '@graphql-tools/schema': 9.0.16_graphql@16.6.0
@@ -143,7 +143,7 @@ importers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.9
       '@apollo/server': ^4.4.0
-      '@as-integrations/koa': ^0.2.1
+      '@as-integrations/koa': ^0.3.0
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 3.0.0
       '@graphql-codegen/introspection': 3.0.0
@@ -214,7 +214,7 @@ importers:
     dependencies:
       '@adonisjs/fold': 8.2.0
       '@apollo/server': 4.4.0_graphql@16.6.0
-      '@as-integrations/koa': 0.2.1_qxwpdylileykw44uxs73xl6kxa
+      '@as-integrations/koa': 0.3.0_qxwpdylileykw44uxs73xl6kxa
       '@faker-js/faker': 7.6.0
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.12_graphql@16.6.0
@@ -806,8 +806,8 @@ packages:
       - encoding
     dev: true
 
-  /@as-integrations/koa/0.2.1_qxwpdylileykw44uxs73xl6kxa:
-    resolution: {integrity: sha512-PjVHug92GCTZgw1uksg6sD1Odr/uMpoVIiMyoXyKL8UcSHJ1/pK3ud1x3v9l+mAL8HiXFKCSnpCVWkof+3/Fgg==}
+  /@as-integrations/koa/0.3.0_qxwpdylileykw44uxs73xl6kxa:
+    resolution: {integrity: sha512-XixgbUaQ/zysaYALasgmEd9OD1x2paYUYBg7CaLll462Lu+PEB89I84z1xRUsCO6M/Y/JcifJ2/kHAoOmBAM3w==}
     engines: {node: '>=14.0'}
     peerDependencies:
       '@apollo/server': ^4.0.0
