@@ -20,6 +20,8 @@ export const loader = async ({ request }: LoaderArgs) => {
     ...pagination.data
   })
 
+  console.log(peers)
+
   return json({ peers })
 }
 
@@ -89,14 +91,18 @@ export default function PeersPage() {
           <Button
             aria-label='go to previous page'
             disabled={!peers.pageInfo.hasPreviousPage}
-            to={previousPageUrl}
+            onClick={() => {
+              navigate(previousPageUrl)
+            }}
           >
             Previous
           </Button>
           <Button
             aria-label='go to next page'
             disabled={!peers.pageInfo.hasNextPage}
-            to={nextPageUrl}
+            onClick={() => {
+              navigate(nextPageUrl)
+            }}
           >
             Next
           </Button>

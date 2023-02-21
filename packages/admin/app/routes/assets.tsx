@@ -78,14 +78,18 @@ export default function AssetsPage() {
           <Button
             aria-label='go to previous page'
             disabled={!assets.pageInfo.hasPreviousPage}
-            to={previousPageUrl}
+            onClick={() => {
+              navigate(previousPageUrl)
+            }}
           >
             Previous
           </Button>
           <Button
             aria-label='go to next page'
             disabled={!assets.pageInfo.hasNextPage}
-            to={nextPageUrl}
+            onClick={() => {
+              navigate(nextPageUrl)
+            }}
           >
             Next
           </Button>
