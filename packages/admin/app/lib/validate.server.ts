@@ -5,8 +5,8 @@ export const paginationSchema = z
   .object({
     after: z.string().uuid(),
     before: z.string().uuid(),
-    first: z.coerce.number().positive(),
-    last: z.coerce.number().positive()
+    first: z.coerce.number().int().positive(),
+    last: z.coerce.number().int().positive()
   })
   .partial()
 
@@ -22,6 +22,8 @@ export const peerGeneralInfoSchema = z.object({
     .number({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
+    .int()
+    .positive()
     .optional()
 })
 
@@ -50,5 +52,26 @@ export const updateAssetSchema = z.object({
     .number({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
+    .int()
+    .positive()
     .optional()
 })
+
+export const createAssetSchema = z
+  .object({
+    code: z
+      .string()
+      .length(3, { message: 'Code should be 3 characters long' })
+      .regex(/^[a-zA-Z]+$/, { message: 'Code should only contain letters.' })
+      .transform((code) => code.toUpperCase()),
+    scale: z.coerce
+      .number({
+        invalid_type_error: 'Max packet amount is expected to be a number.'
+      })
+      .int()
+      .positive()
+      .max(255, { message: 'Scale should be between 0 and 255' })
+      .optional()
+  })
+  .merge(updateAssetSchema)
+  .omit({ id: true })
