@@ -46,7 +46,9 @@ export default function AssetsPage() {
             <h3 className='text-2xl'>Assets</h3>
           </div>
           <div className='ml-auto'>
-            <Button aria-label='add new asset'>Add asset</Button>
+            <Button aria-label='add new asset' to='/assets/create'>
+              Add asset
+            </Button>
           </div>
         </PageHeader>
         <Table>

@@ -23,7 +23,7 @@ export const peerGeneralInfoSchema = z.object({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
     .int()
-    .positive()
+    .nonnegative()
     .optional()
 })
 
@@ -53,7 +53,7 @@ export const updateAssetSchema = z.object({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
     .int()
-    .positive()
+    .nonnegative()
     .optional()
 })
 
@@ -71,7 +71,6 @@ export const createAssetSchema = z
       .int()
       .positive()
       .max(255, { message: 'Scale should be between 0 and 255' })
-      .optional()
   })
   .merge(updateAssetSchema)
   .omit({ id: true })

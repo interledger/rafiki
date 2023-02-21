@@ -4,11 +4,14 @@ import {
   type NormalizedCacheObject
 } from '@apollo/client'
 import type {
+  CreateAssetInput,
   QueryAssetArgs,
   QueryAssetsArgs,
   UpdateAssetInput
 } from '~/generated/graphql'
 import type {
+  CreateAssetMutation,
+  CreateAssetMutationVariables,
   GetAssetQuery,
   GetAssetQueryVariables,
   ListAssetsQuery,
@@ -45,6 +48,20 @@ export class AssetService {
     })
 
     return response.data.assets
+  }
+
+  public async create(args: CreateAssetInput) {
+    const response = await this.apollo.mutate<
+      CreateAssetMutation,
+      CreateAssetMutationVariables
+    >({
+      mutation: createAssetMutation,
+      variables: {
+        input: args
+      }
+    })
+
+    return response.data?.createAsset
   }
 
   public async update(args: UpdateAssetInput) {
@@ -95,6 +112,19 @@ const listAssetsQuery = gql`
         endCursor
         hasNextPage
         hasPreviousPage
+      }
+    }
+  }
+`
+
+const createAssetMutation = gql`
+  mutation CreateAssetMutation($input: CreateAssetInput!) {
+    createAsset(input: $input) {
+      code
+      success
+      message
+      asset {
+        id
       }
     }
   }

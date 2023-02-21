@@ -30,12 +30,12 @@ export default function CreatePeerPage() {
 
           <fieldset disabled={isSubmitting}>
             {/* Peer General Info */}
-            <div className='grid grid-cols-1py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+            <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>General Informations</h3>
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full max-w-lg p-4 space-y-3'>
+                <div className='w-full p-4 space-y-3'>
                   <Input
                     name='name'
                     label='Name'
@@ -65,7 +65,7 @@ export default function CreatePeerPage() {
                 <h3 className='text-lg font-medium'>HTTP Informations</h3>
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full max-w-lg p-4 space-y-3'>
+                <div className='w-full p-4 space-y-3'>
                   <Input
                     name='incomingAuthTokens'
                     label='Incoming Auth Tokens'
@@ -97,7 +97,7 @@ export default function CreatePeerPage() {
                 <p className='text-sm italic'>(TODO: dropdown)</p>
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-                <div className='w-full max-w-lg p-4 space-y-3'>
+                <div className='w-full p-4 space-y-3'>
                   <Input
                     name='asset'
                     label='Asset'
