@@ -27,11 +27,11 @@ The Account Servicing Entity is required to provide an endpoint that is accessib
 
 (The example amount is $42.42.)
 
-| Variable Name | Type             | Description                                                                                               |
-| ------------- | ---------------- | --------------------------------------------------------------------------------------------------------- |
-| value         | number // bigint | e.g. `4242`                                                                                               |
-| assetCode     | string           | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
-| assetScale    | number           | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
+| Variable Name | Type                       | Description                                                                                               |
+| ------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| value         | string // number // bigint | e.g. `"4242"` or `4242`                                                                                   |
+| assetCode     | string                     | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
+| assetScale    | number                     | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
 
 If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-provider` includes a [minimalistic example](../packages/mock-account-provider/app/routes/quotes.ts).
 
@@ -91,7 +91,7 @@ An [Open Payments](./glossary#open-payments) Outgoing Payment was completed, i.e
 
 #### `OutgoingPaymentFailed`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment completely of partially failed to send funds and won't re-try sending them. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and deposit it into the payer's account.
+An [Open Payments](./glossary#open-payments) Outgoing Payment failed to send all (or any) of the funds and won't re-try. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and return it to the payer's account.
 
 - Action: Withdraw liquidity
 
