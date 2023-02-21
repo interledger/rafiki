@@ -18,12 +18,11 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm checks
 
-  backend:
+  graphql:
     runs-on: ubuntu-latest
     needs: checkout
-    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
 
       - name: generate graphql
         run: pnpm --filter backend generate
@@ -35,14 +34,19 @@ jobs:
           files: |
             **/generated/graphql.ts
 
-      - name: check if GraphQL was generated
+      - name: fail if GraphQL was generated
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: exit 1
-      
-      - name: build deps and test
-        uses: ./.github/workflows/rafiki/env-setup
-        run: pnpm --filter backend build:deps
-        run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test
+
+  backend:
+    runs-on: ubuntu-latest
+    needs: [checkout, graphql]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter backend build:deps
+      - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test
 
   frontend:
     runs-on: ubuntu-latest
