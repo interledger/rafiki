@@ -1,11 +1,9 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# generate graphql schema
-pnpm --filter backend generate
 # generate docs
 pnpm run docs
 # format
 pnpm run format:docs
 # stage
-git add docs/admin-api.md  **/generated/graphql.*
+git add docs/admin-api.md
