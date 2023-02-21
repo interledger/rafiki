@@ -12,8 +12,8 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
-  UInt8: any;
-  UInt64: bigint;
+  UInt8: number;
+  UInt64: number;
 };
 
 export type AddAssetLiquidityInput = {

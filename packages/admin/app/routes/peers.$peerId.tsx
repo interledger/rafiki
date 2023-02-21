@@ -42,10 +42,7 @@ export async function loader({ params }: LoaderArgs) {
   return json({
     peer: {
       ...peer,
-      createdAt: new Date(peer.createdAt).toLocaleString(),
-      ...(peer.maxPacketAmount
-        ? { maxPacketAmount: peer.maxPacketAmount.toString() }
-        : {})
+      createdAt: new Date(peer.createdAt).toLocaleString()
     }
   })
 }
@@ -266,12 +263,11 @@ export async function action({ request }: ActionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
       console.log(result.data)
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
+
       const response = await peerService.update({
         ...result.data,
         ...(result.data.maxPacketAmount
-          ? { maxPacketAmount: Number(result.data.maxPacketAmount) }
+          ? { maxPacketAmount: result.data.maxPacketAmount }
           : { maxPacketAmount: undefined })
       })
 

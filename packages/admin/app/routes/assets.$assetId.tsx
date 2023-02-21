@@ -16,7 +16,7 @@ import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import { Input } from '~/components/ui/Input'
 import ErrorPanel from '~/components/ui/ErrorPanel'
-import { ZodFieldErrors } from '~/shared/types'
+import type { ZodFieldErrors } from '~/shared/types'
 import { updateAssetSchema } from '~/lib/validate.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
 
@@ -37,10 +37,7 @@ export async function loader({ params }: LoaderArgs) {
   return json({
     asset: {
       ...asset,
-      createdAt: new Date(asset.createdAt).toLocaleString(),
-      ...(asset.withdrawalThreshold
-        ? { withdrawalThreshold: asset.withdrawalThreshold.toString() }
-        : {})
+      createdAt: new Date(asset.createdAt).toLocaleString()
     }
   })
 }
@@ -116,13 +113,11 @@ export async function action({ request }: ActionArgs) {
     actionResponse.errors.fieldErrors = result.error.flatten().fieldErrors
     return json({ ...actionResponse }, { status: 400 })
   }
-  console.log(result.data)
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
+
   const response = await assetService.update({
     ...result.data,
     ...(result.data.withdrawalThreshold
-      ? { withdrawalThreshold: Number(result.data.withdrawalThreshold) }
+      ? { withdrawalThreshold: result.data.withdrawalThreshold }
       : { withdrawalThreshold: undefined })
   })
 

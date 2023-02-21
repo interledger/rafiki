@@ -140,12 +140,6 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  // TODO: Fix Apollo
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-expect-error
-  // If we define 'maxPacketAmount' as a BigInt in the Zod schema we will receive
-  // an error: 'Apollo Network request failed. Payload is not serializable: Do not
-  // know how to serialize a BigInt.'.
   const response = await peerService.create({
     name: result.data.name,
     http: {
@@ -164,7 +158,7 @@ export async function action({ request }: ActionArgs) {
     assetId: result.data.asset,
     staticIlpAddress: result.data.staticIlpAddress,
     ...(result.data.maxPacketAmount
-      ? { maxPacketAmount: Number(result.data.maxPacketAmount) }
+      ? { maxPacketAmount: result.data.maxPacketAmount }
       : { maxPacketAmount: undefined })
   })
 
@@ -175,5 +169,5 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  return redirect('/')
+  return redirect(`/peers/${response.peer?.id}`)
 }
