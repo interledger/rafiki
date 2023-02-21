@@ -36,7 +36,8 @@ generates:
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
       scalars:
-        UInt64: bigint
+        UInt8: number
+        UInt64: number
   ../admin/app:
     preset: near-operation-file
     presetConfig:
@@ -50,5 +51,6 @@ generates:
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
       scalars:
-        UInt64: bigint
+        UInt8: number
+        UInt64: number
 
