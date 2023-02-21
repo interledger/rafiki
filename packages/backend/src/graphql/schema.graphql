@@ -458,7 +458,7 @@ type Quote {
 input AmountInput {
   value: UInt64!
   assetCode: String!
-  assetScale: UInt8!
+  assetScale: UInt8
 }
 
 input CreateQuoteInput {

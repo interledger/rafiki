@@ -2244,7 +2244,7 @@ The id of the transfer.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>assetScale</strong></td>
-<td valign="top"><a href="#uint8">UInt8</a>!</td>
+<td valign="top"><a href="#uint8">UInt8</a></td>
 <td></td>
 </tr>
 </tbody>
