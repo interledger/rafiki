@@ -25,8 +25,9 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/rafiki/env-setup
 
-      - name: generate graphql
+      - name: generate backend graphql
         run: pnpm --filter backend generate
+      - name: generate auth graphql
         run: pnpm --filter auth generate
 
       - name: verify changed files
