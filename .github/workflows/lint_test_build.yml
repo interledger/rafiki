@@ -23,6 +23,7 @@ jobs:
     needs: checkout
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/workflows/rafiki/env-setup
 
       - name: generate graphql
         run: pnpm --filter backend generate
