@@ -201,7 +201,7 @@ importers:
       pg: ^8.9.0
       pino: ^8.10.0
       pino-pretty: ^9.3.0
-      raw-body: ^2.5.1
+      raw-body: ^2.5.2
       react: ~18.2.0
       rosie: ^2.1.0
       testcontainers: ^9.1.3
@@ -252,7 +252,7 @@ importers:
       pg: 8.9.0
       pino: 8.10.0
       pino-pretty: 9.3.0
-      raw-body: 2.5.1
+      raw-body: 2.5.2
       tigerbeetle-node: 0.11.12
       token-introspection: link:../token-introspection
       uuid: 9.0.0
@@ -5916,7 +5916,7 @@ packages:
     dependencies:
       inflation: 2.0.0
       qs: 6.11.0
-      raw-body: 2.5.1
+      raw-body: 2.5.2
       type-is: 1.6.18
     dev: false
 
@@ -10934,7 +10934,7 @@ packages:
       http-proxy-agent: 4.0.1
       https-proxy-agent: 5.0.1
       pac-resolver: 5.0.1
-      raw-body: 2.5.1
+      raw-body: 2.5.2
       socks-proxy-agent: 5.0.1
     transitivePeerDependencies:
       - supports-color
@@ -11571,6 +11571,15 @@ packages:
 
   /raw-body/2.5.1:
     resolution: {integrity: sha512-qqJBtEyVgS0ZmPGdCFPWJ3FreoqvG4MVQln/kCgF7Olq95IbOp0/BWyMwbdtn4VTvkM8Y7khCQ2Xgk/tcrCXig==}
+    engines: {node: '>= 0.8'}
+    dependencies:
+      bytes: 3.1.2
+      http-errors: 2.0.0
+      iconv-lite: 0.4.24
+      unpipe: 1.0.0
+
+  /raw-body/2.5.2:
+    resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
     engines: {node: '>= 0.8'}
     dependencies:
       bytes: 3.1.2
