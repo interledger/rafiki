@@ -27,13 +27,14 @@ jobs:
 
       - name: generate graphql
         run: pnpm --filter backend generate
+        run: pnpm --filter auth generate
 
       - name: verify changed files
         uses: tj-actions/verify-changed-files@v13
         id: verify-changed-files
         with:
           files: |
-            **/generated/graphql.ts
+            **/generated/graphql.*
 
       - name: fail if GraphQL was generated
         if: steps.verify-changed-files.outputs.files_changed == 'true'
@@ -60,7 +61,7 @@ jobs:
 
   auth:
     runs-on: ubuntu-latest
-    needs: checkout
+    needs: [checkout, graphql]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3
