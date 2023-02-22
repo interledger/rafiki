@@ -18,7 +18,6 @@
     "check:prettier": "prettier --check .",
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
-    "docs": "graphql-markdown --update-file ./docs/admin-api.md --heading-level 2 ./packages/backend/src/graphql/schema.graphql",
     "localenv": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml",
     "localenv:build": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml -f ./infrastructure/local/build-override.yml build",
     "localenv:start": "pnpm localenv up -d --build",
@@ -29,7 +28,8 @@
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
     "localenv:dbvolumes:database:remove": "docker volume rm local_database-data",
     "localenv:dbvolumes:tigerbeetle:remove": "docker volume rm local_tigerbeetle-data",
-    "sanity": "pnpm -r build && pnpm -r test"
+    "sanity": "pnpm -r build && pnpm -r test",
+    "docs": "graphql-markdown --update-file ./docs/admin-api.md --heading-level 2 ./packages/backend/src/graphql/schema.graphql"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.4",
