@@ -7,6 +7,7 @@ import { peerService } from '~/services/bootstrap.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import PageHeader from '~/components/PageHeader'
+import { commitSession, getSession, setMessage } from '~/lib/message.server'
 
 export default function CreatePeerPage() {
   const response = useActionData<typeof action>()
@@ -169,5 +170,14 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  return redirect(`/peers/${response.peer?.id}`)
+  const session = await getSession(request.headers.get('cookie'))
+
+  setMessage(session, {
+    content: 'Peer created.',
+    type: 'success'
+  })
+
+  return redirect(`/peers/${response.peer?.id}`, {
+    headers: { 'Set-Cookie': await commitSession(session) }
+  })
 }

@@ -13,7 +13,7 @@
     "tw:watch": "tailwindcss -w -i ./app/tailwind.css -o app/styles/main.css"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.7",
+    "@apollo/client": "^3.7.9",
     "@headlessui/react": "^1.7.11",
     "@remix-run/node": "^1.12.0",
     "@remix-run/react": "^1.12.0",

@@ -37,7 +37,7 @@ generates:
       inputMaybeValue: T | undefined
       scalars:
         UInt8: number
-        UInt64: number
+        UInt64: bigint
   ../admin/app:
     preset: near-operation-file
     presetConfig:
@@ -52,5 +52,5 @@ generates:
       inputMaybeValue: T | undefined
       scalars:
         UInt8: number
-        UInt64: number
+        UInt64: bigint
 

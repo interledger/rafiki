@@ -19,11 +19,9 @@ export const peerGeneralInfoSchema = z.object({
       message: 'The provided ILP Address is not valid.'
     }),
   maxPacketAmount: z.coerce
-    .number({
+    .bigint({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
-    .int()
-    .nonnegative()
     .optional()
 })
 
@@ -49,11 +47,9 @@ export const createPeerSchema = peerGeneralInfoSchema
 export const updateAssetSchema = z.object({
   id: z.string().uuid(),
   withdrawalThreshold: z.coerce
-    .number({
+    .bigint({
       invalid_type_error: 'Max packet amount is expected to be a number.'
     })
-    .int()
-    .nonnegative()
     .optional()
 })
 

@@ -46,7 +46,7 @@ export const Snackbar: FC<SnackbarProps> = ({
       show={show}
       as={'div'}
       className={cx(
-        'fixed top-2 left-0 z-[100] mx-auto w-full overflow-y-visible lg:top-4',
+        'fixed top-2 left-0 z-[100] mx-auto w-full overflow-y-visible lg:top-4 pointer-events-none',
         offset ? 'lg:pl-64' : ''
       )}
     >

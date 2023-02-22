@@ -43,7 +43,7 @@ importers:
 
   packages/admin:
     specifiers:
-      '@apollo/client': ^3.7.7
+      '@apollo/client': ^3.7.9
       '@headlessui/react': ^1.7.11
       '@remix-run/dev': ^1.12.0
       '@remix-run/eslint-config': ^1.12.0

@@ -7,6 +7,7 @@ import { assetService } from '~/services/bootstrap.server'
 import { createAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import PageHeader from '~/components/PageHeader'
+import { commitSession, getSession, setMessage } from '~/lib/message.server'
 
 export default function CreateAssetPage() {
   const response = useActionData<typeof action>()
@@ -104,5 +105,14 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  return redirect(`/assets/${response.asset?.id}`)
+  const session = await getSession(request.headers.get('cookie'))
+
+  setMessage(session, {
+    content: 'Asset created.',
+    type: 'success'
+  })
+
+  return redirect(`/assets/${response.asset?.id}`, {
+    headers: { 'Set-Cookie': await commitSession(session) }
+  })
 }
