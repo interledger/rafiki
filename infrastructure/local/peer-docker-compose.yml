@@ -15,6 +15,8 @@ services:
       AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
       INTROSPECTION_HTTPSIG: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
+    depends_on:
+      - auth
   peer-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
@@ -36,7 +38,7 @@ services:
       DATABASE_URL: postgresql://peerbackend:peerbackend@database/peerbackend
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
-      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
+      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-[]}
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://peer-auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://peer-auth:3006/introspect
@@ -50,6 +52,8 @@ services:
       REDIS_URL: redis://redis:6379/1
       QUOTE_URL: http://local-bank/quote
       PAYMENT_POINTER_URL: https://peer-backend/.well-known/pay
+    depends_on:
+      - backend
   local-bank:
     build:
       context: ../..
