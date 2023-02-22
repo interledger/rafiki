@@ -35,31 +35,30 @@ export async function action({ request }: ActionArgs) {
   const feeStructure = CONFIG.seed.fees[0]
   const asset = CONFIG.seed.asset
   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
-    // TODO: handle quote fee calculation for different assets/scales
-    if (
-      receivedQuote.sendAmount.assetCode !== asset.code ||
-      receivedQuote.sendAmount.assetScale !== asset.scale
-    ) {
+    // TODO: handle quote fee calculation for different assets
+    if (receivedQuote.sendAmount.assetCode !== asset.code) {
       throw json('Invalid quote sendAmount asset', { status: 400 })
     }
     const sendAmountValue = BigInt(receivedQuote.sendAmount.value)
     const fees =
       // TODO: bigint/float multiplication
       BigInt(Math.floor(Number(sendAmountValue) * feeStructure.percentage)) +
-      BigInt(feeStructure.fixed)
+      BigInt(
+        feeStructure.fixed * Math.pow(10, receivedQuote.sendAmount.assetScale)
+      )
 
     receivedQuote.sendAmount.value = (sendAmountValue + fees).toString()
   } else if (receivedQuote.paymentType === PaymentType.FixedSend) {
-    if (
-      receivedQuote.receiveAmount.assetCode !== asset.code ||
-      receivedQuote.receiveAmount.assetScale !== asset.scale
-    ) {
+    if (receivedQuote.receiveAmount.assetCode !== asset.code) {
       throw json('Invalid quote receiveAmount asset', { status: 400 })
     }
     const receiveAmountValue = BigInt(receivedQuote.receiveAmount.value)
     const fees =
       BigInt(Math.floor(Number(receiveAmountValue) * feeStructure.percentage)) +
-      BigInt(feeStructure.fixed)
+      BigInt(
+        feeStructure.fixed *
+          Math.pow(10, receivedQuote.receiveAmount.assetScale)
+      )
 
     if (receiveAmountValue <= fees) {
       throw json('Fees exceed quote receiveAmount', { status: 400 })
