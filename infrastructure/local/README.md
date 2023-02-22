@@ -15,19 +15,19 @@ The following should be run from the root of the project.
 ```
 
 // If you have spun up this environment before then run
-pnpm localenv down && pnpm localenv:dbvolumes:remove
+pnpm localenv down && pnpm localenv:dbvolumes:database:remove
 
 // Start the local environment
-pnpm localenv up -d --build
+pnpm localenv:start
 
 // Seed auth tokens
 pnpm localenv:seed:auth
 
 // tear down
-pnpm localenv down
+pnpm localenv:stop
 
-// delete database volumes (containers must be removed first with e.g. pnpm localenv down)
-pnpm localenv:dbvolumes:remove
+// delete database volume (containers must be removed first with e.g. pnpm localenv down)
+pnpm localenv:dbvolumes:database:remove
 ```
 
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
