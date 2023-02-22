@@ -174,6 +174,7 @@ async function createQuote(
     if (isQuoteError(err)) {
       return err
     }
+    deps.logger.error({ err }, 'error creating a quote')
     throw err
   }
 }

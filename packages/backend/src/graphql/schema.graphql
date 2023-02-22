@@ -1,6 +1,8 @@
 type Query {
+  "Fetch a payment pointer"
   paymentPointer(id: String!): PaymentPointer
 
+  "Fetch an asset"
   asset(id: String!): Asset
 
   "Fetch a page of assets."
@@ -15,6 +17,7 @@ type Query {
     last: Int
   ): AssetsConnection!
 
+  "Fetch a peer"
   peer(id: String!): Peer
 
   "Fetch a page of peers."
@@ -29,11 +32,14 @@ type Query {
     last: Int
   ): PeersConnection!
 
+  "Fetch an Open Payments quote"
   quote(id: String!): Quote
+  "Fetch an Open Payments outgoing payment"
   outgoingPayment(id: String!): OutgoingPayment
 }
 
 type Mutation {
+  "Create payment pointer"
   createPaymentPointer(
     input: CreatePaymentPointerInput!
   ): CreatePaymentPointerMutationResponse!
@@ -92,16 +98,20 @@ type Mutation {
     withdrawalId: String!
   ): LiquidityMutationResponse
 
+  "Create an Open Payments Quote"
   createQuote(input: CreateQuoteInput!): QuoteResponse!
 
+  "Create an Open Payments Outgoing Payment"
   createOutgoingPayment(
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
+  "Create an internal Open Payments Incoming Payment"
   createIncomingPayment(
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
+  "Create an external Open Payments Incoming Payment"
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Deposit webhook event liquidity"
@@ -115,6 +125,7 @@ type Mutation {
     input: CreatePaymentPointerKeyInput!
   ): CreatePaymentPointerKeyMutationResponse
 
+  "Revoke request signing key"
   revokePaymentPointerKey(id: String!): RevokePaymentPointerKeyMutationResponse
 }
 

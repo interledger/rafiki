@@ -4,7 +4,7 @@ const requestUrl = request.url
     key === '3' ? 'backend' : 'peer-backend'
   )
 const requestBody =
-  request.method === 'POST'
+  request.method === 'POST' && Object.keys(request.data).length !== 0
     ? request.data.replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
         pm.collectionVariables.get(key)
       )
