@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# generate docs
+pnpm run docs
+# format
+pnpm run format:docs
+# stage
+git add docs/admin-api.md
