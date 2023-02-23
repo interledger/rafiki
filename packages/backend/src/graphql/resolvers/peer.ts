@@ -144,9 +144,9 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
               message: 'Deleted ILP Peer'
             }
           : {
-              code: '404',
+              code: errorToCode[PeerError.UnknownPeer].toString(),
               success: false,
-              message: 'Could not delete Peer'
+              message: errorToMessage[PeerError.UnknownPeer]
             }
       )
       .catch((error) => {

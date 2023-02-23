@@ -13,14 +13,13 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { errorToCode, errorToMessage, PeerError } from '../../peer/errors'
-import { Peer as PeerModel } from '../../peer/model'
+import { Peer, Peer as PeerModel } from '../../peer/model'
 import { PeerService } from '../../peer/service'
 import { createAsset } from '../../tests/asset'
 import { createPeer } from '../../tests/peer'
 import {
   CreatePeerInput,
   CreatePeerMutationResponse,
-  Peer,
   PeersConnection,
   UpdatePeerMutationResponse
 } from '../generated/graphql'
@@ -569,8 +568,10 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Could not delete Peer')
+      expect(response.code).toEqual(
+        errorToCode[PeerError.UnknownPeer].toString()
+      )
+      expect(response.message).toEqual(errorToMessage[PeerError.UnknownPeer])
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
