@@ -14,7 +14,7 @@ The following should be run from the root of the project.
 
 ```
 // If you have spun up this environment before then run
-pnpm localenv:stop && pnpm localenv:dbvolumes:database:remove
+pnpm localenv:stop && pnpm localenv:dbvolumes:remove
 
 // Start the local environment
 pnpm localenv:start
