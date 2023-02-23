@@ -48,6 +48,7 @@ export interface PeerService {
   getByDestinationAddress(address: string): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination): Promise<Peer[]>
+  delete(id: string): Promise<Peer | undefined>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -81,7 +82,8 @@ export async function createPeerService({
     getByDestinationAddress: (destinationAddress) =>
       getPeerByDestinationAddress(deps, destinationAddress),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
-    getPage: (pagination?) => getPeersPage(deps, pagination)
+    getPage: (pagination?) => getPeersPage(deps, pagination),
+    delete: (id) => deletePeer(deps, id)
   }
 }
 
@@ -282,4 +284,15 @@ async function getPeersPage(
   return await Peer.query(deps.knex)
     .getPage(pagination)
     .withGraphFetched('asset')
+}
+
+async function deletePeer(
+  deps: ServiceDependencies,
+  id: string
+): Promise<Peer | undefined> {
+  return Peer.query(deps.knex)
+    .withGraphFetched('asset')
+    .deleteById(id)
+    .returning('*')
+    .first()
 }

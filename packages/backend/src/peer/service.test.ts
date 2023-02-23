@@ -329,4 +329,23 @@ describe('Peer Service', (): void => {
         peerService.getPage(pagination)
     })
   })
+
+  describe('Delete Peer', (): void => {
+    test('Can delete peer', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+
+      await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
+    })
+
+    test('Returns undefined if no peer exists by id', async (): Promise<void> => {
+      await expect(peerService.delete(uuid())).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined for already deleted peer', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+
+      await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.delete(peer.id)).resolves.toBeUndefined()
+    })
+  })
 })
