@@ -162,6 +162,13 @@ async function updatePeer(
     return PeerError.InvalidStaticIlpAddress
   }
 
+  if (
+    options.http?.outgoing.endpoint &&
+    !isValidHttpUrl(options.http.outgoing.endpoint)
+  ) {
+    return PeerError.InvalidHTTPEndpoint
+  }
+
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }

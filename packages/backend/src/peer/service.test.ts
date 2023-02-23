@@ -271,6 +271,23 @@ describe('Peer Service', (): void => {
       )
       await expect(peerService.get(peer.id)).resolves.toEqual(peer)
     })
+
+    test('Returns error for invalid HTTP endpoint', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+      const updateOptions: UpdateOptions = {
+        id: peer.id,
+        http: {
+          outgoing: {
+            ...peer.http.outgoing,
+            endpoint: 'http://.com'
+          }
+        }
+      }
+      await expect(peerService.update(updateOptions)).resolves.toEqual(
+        PeerError.InvalidHTTPEndpoint
+      )
+      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+    })
   })
 
   describe('Get Peer By ILP Address', (): void => {
