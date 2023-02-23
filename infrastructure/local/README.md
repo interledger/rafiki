@@ -16,8 +16,8 @@ The following should be run from the root of the project.
 // If you have spun up this environment before then run
 pnpm localenv:stop && pnpm localenv:dbvolumes:database:remove
 
-// Build & start the local environment
-pnpm localenv:build:start
+// Start the local environment
+pnpm localenv:start
 
 // tear down
 pnpm localenv:stop
@@ -26,10 +26,10 @@ pnpm localenv:stop
 pnpm localenv:dbvolumes:remove
 ```
 
-If you want to use Postgres as the accounting database instead of Tigerbeetle, you can append `psql` to the `localenv` commands:
+If you want to use Postgres as the accounting database instead of Tigerbeetle, you can append `psql` to the `localenv:` commands:
 
 ```
-pnpm localenv:psql:build:start
+pnpm localenv:psql:start
 pnpm localenv:psql:stop
 ```
 
