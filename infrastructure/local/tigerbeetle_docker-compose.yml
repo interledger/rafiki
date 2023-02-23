@@ -1,7 +1,7 @@
 version: '3'
 services:
- tigerbeetle:
-    image: ghcr.io/coilhq/tigerbeetle@sha256:c312832a460e7374bcbd4bd4a5ae79b8762f73df6363c9c8106c76d864e21303
+  tigerbeetle:
+    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433
     restart: unless-stopped
     privileged: true
     volumes:
@@ -14,18 +14,20 @@ services:
       - -c
       - |
         set -ex
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
         set +e
         ls $$DATA_FILE
         DATA_FILE_EXISTS="$$?"
         set -e
         echo $$DATA_FILE_EXISTS
         if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
-          /opt/beta-beetle/tigerbeetle init --cluster=0 --replica=0 --directory=/var/lib/tigerbeetle; 
+          /opt/beta-beetle/tigerbeetle format --cluster=0 --replica=0 $$DATA_FILE; 
         fi
         hostname -I
         ls /var/lib/tigerbeetle
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0000000000_replica_000.tigerbeetle
-        /opt/beta-beetle/tigerbeetle start --cluster="0" --replica="0" --directory=/var/lib/tigerbeetle --addresses=0.0.0.0:4342
+        /opt/beta-beetle/tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
+  backend:
+    depends_on:
+      - tigerbeetle
 volumes:
-  tigerbeetle-data: # named volumes can be managed easier using docker-compose
+  tigerbeetle-data:
