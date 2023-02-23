@@ -4,7 +4,7 @@ services:
     image: 'postgres' # use latest official postgres version
     restart: unless-stopped
     networks:
-      - local_rafiki
+      rafiki:
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
@@ -43,13 +43,15 @@ services:
     image: 'redis:7'
     restart: unless-stopped
     networks:
-      local_rafiki:
+      rafiki:
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
   tigerbeetle-data: # named volumes can be managed easier using docker-compose
 
 networks:
-  local_rafiki:
-    external: true
-
-
+  rafiki:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24
+          gateway: 10.5.0.1
