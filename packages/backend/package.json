@@ -79,7 +79,7 @@
     "open-payments": "workspace:../open-payments",
     "openapi": "workspace:../openapi",
     "pg": "^8.9.0",
-    "pino": "^8.10.0",
+    "pino": "^8.11.0",
     "pino-pretty": "^9.3.0",
     "raw-body": "^2.5.2",
     "tigerbeetle-node": "^0.11.12",
