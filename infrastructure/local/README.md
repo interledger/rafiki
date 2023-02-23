@@ -13,21 +13,24 @@ Prerequisites:
 The following should be run from the root of the project.
 
 ```
-
 // If you have spun up this environment before then run
-pnpm localenv down && pnpm localenv:dbvolumes:database:remove
+pnpm localenv:stop && pnpm localenv:dbvolumes:database:remove
 
-// Start the local environment
-pnpm localenv:start
-
-// Seed auth tokens
-pnpm localenv:seed:auth
+// Build & start the local environment
+pnpm localenv:build:start
 
 // tear down
 pnpm localenv:stop
 
-// delete database volume (containers must be removed first with e.g. pnpm localenv down)
-pnpm localenv:dbvolumes:database:remove
+// delete database volumes (containers must be removed first with e.g. pnpm localenv:stop)
+pnpm localenv:dbvolumes:remove
+```
+
+If you want to use Postgres as the accounting database instead of Tigerbeetle, you can append `psql` to the `localenv` commands:
+
+```
+pnpm localenv:psql:build:start
+pnpm localenv:psql:stop
 ```
 
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
