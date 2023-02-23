@@ -506,4 +506,104 @@ describe('Peer Resolvers', (): void => {
       expect(response.message).toEqual(errorToMessage[error])
     })
   })
+
+  describe('Delete Peer', (): void => {
+    let peer: PeerModel
+
+    beforeEach(async (): Promise<void> => {
+      peer = await createPeer(deps)
+    })
+
+    test('Can delete a peer', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation DeletePeer($id: String!) {
+              deletePeer(id: $id) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            id: peer.id
+          }
+        })
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.deletePeer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      expect(response.message).toEqual('Deleted ILP Peer')
+      await expect(peerService.get(peer.id)).resolves.toBeUndefined()
+    })
+
+    test('Returns error for unknown peer', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation DeletePeer($id: String!) {
+              deletePeer(id: $id) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            id: uuid()
+          }
+        })
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.deletePeer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('404')
+      expect(response.message).toEqual('Could not delete Peer')
+    })
+
+    test('Returns error if unexpected error', async (): Promise<void> => {
+      jest.spyOn(peerService, 'delete').mockImplementationOnce(async () => {
+        throw new Error('unexpected')
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation DeletePeer($id: String!) {
+              deletePeer(id: $id) {
+                code
+                success
+                message
+              }
+            }
+          `,
+          variables: {
+            id: peer.id
+          }
+        })
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.deletePeer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('400')
+      expect(response.message).toEqual('Error trying to delete peer')
+    })
+  })
 })
