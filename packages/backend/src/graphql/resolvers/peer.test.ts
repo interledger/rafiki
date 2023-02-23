@@ -48,7 +48,7 @@ describe('Peer Resolvers', (): void => {
   })
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
   })
@@ -62,7 +62,7 @@ describe('Peer Resolvers', (): void => {
   })
 
   afterAll(async (): Promise<void> => {
-    await appContainer.apolloClient.stop()
+    appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
 
@@ -505,6 +505,54 @@ describe('Peer Resolvers', (): void => {
       expect(response.code).toEqual(errorToCode[error].toString())
       expect(response.message).toEqual(errorToMessage[error])
     })
+
+    test('Returns error if unexpected error', async (): Promise<void> => {
+      jest.spyOn(peerService, 'update').mockImplementationOnce(async () => {
+        throw new Error('unexpected')
+      })
+
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdatePeer($input: UpdatePeerInput!) {
+              updatePeer(input: $input) {
+                code
+                success
+                message
+                peer {
+                  id
+                  maxPacketAmount
+                  http {
+                    outgoing {
+                      authToken
+                      endpoint
+                    }
+                  }
+                  staticIlpAddress
+                  name
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: peer.id,
+              maxPacketAmount: '100'
+            }
+          }
+        })
+        .then((query): UpdatePeerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePeer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('500')
+      expect(response.message).toEqual('Error trying to update peer')
+    })
   })
 
   describe('Delete Peer', (): void => {
@@ -604,7 +652,7 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('400')
+      expect(response.code).toEqual('500')
       expect(response.message).toEqual('Error trying to delete peer')
     })
   })

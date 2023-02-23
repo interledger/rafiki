@@ -120,7 +120,7 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
           'error updating peer'
         )
         return {
-          code: '400',
+          code: '500',
           message: 'Error trying to update peer',
           success: false
         }
@@ -158,7 +158,7 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
           'error deleting peer'
         )
         return {
-          code: '400',
+          code: '500',
           message: 'Error trying to delete peer',
           success: false
         }
