@@ -4,28 +4,33 @@
 
 ## What is Rafiki?
 
-Rafiki is an open source package that exposes a comprehensive set of
-Interledger APIs. It's intended to be run by wallet providers, allowing them to
-offer Interledger functionality to their users.
+Rafiki is open source software that allows an [Account Servicing Entity](./docs/glossary.md#account-servicing-entity) to enable [Interledger](./docs/glossary.md#interledger-protocol) functionality on its users' accounts.
 
-Rafiki is made up of several components including an Interledger connector, a
-high-throughput accounting database, and an API which can be accessed directly
-by users to implement Interledger applications.
+This includes
 
-Rafiki also allows for delegated access, offering OAuth-based flows to grant
-third-party applications access to Interledger functionality on a user's
-account.
+- sending and receiving payments (via [SPSP](./docs/glossary.md#simple-payments-setup-protocol-spsp) and [Open Payments](./docs/glossary.md#open-payments))
+- allowing third-party access to initiate payments and view transation data (via [Open Payments](./docs/glossary.md#open-payments))
 
-### New to interledger?
+**❗ Rafiki is intended to be run by [Account Servicing Entities](./docs/glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
+
+Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [Tigerbeetle](./docs/glossary.md#tigerbeetle), and several APIs:
+
+- the [Admin API](./docs/admin-api.md) to create [peering relationships](./docs/glossary.md#peer), add supported [assets](./docs/glossary.md#asset), and issue [payment pointers](./docs/glossary.md#payment-pointer)
+- the [Open Payments](./docs/glossary.md#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
+- the [SPSP](./docs/glossary.md#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
+
+Additionally, this package also includes a reference implementation of a [GNAP](./docs/glossary.md#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](./docs/glossary.md#open-payments) API. For more information on the architecture, check out the [Architecture documentation](./docs/architecture.md).
+
+### New to Interledger?
 
 Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
 
-- [Good first issues](https://github.com/interledger/rafiki/contribute)
-- [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Interledger Website](https://interledger.org/)
+- [Interledger Docs](https://interledger.org/developer-tools/get-started/overview/)
+- [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Payment pointers](https://paymentpointers.org/)
+- [Open Payments](https://openpayments.guide/)
 - [Web monetization](https://webmonetization.org/)
-- [Coil developers](https://developers.coil.com/)
 
 ## Contributing
 
@@ -74,13 +79,11 @@ pnpm i
 ```sh
 # build all the packages in the repo:
 pnpm -r build
-# build specific package (backend):
+# build specific package (e.g. backend):
 pnpm --filter backend build
 
-# run individual tests
+# run individual tests (e.g. backend)
 pnpm --filter backend test
-pnpm --filter auth test
-pnpm --filter open-api test
 
 # run all tests
 pnpm -r --workspace-concurrency=1 test

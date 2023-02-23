@@ -48,7 +48,7 @@ services:
       OPEN_PAYMENTS_URL: http://local-bank
       PRICES_URL: http://local-bank/prices
       REDIS_URL: redis://redis:6379/1
-      QUOTE_URL: http://local-bank/quote
+      QUOTE_URL: http://local-bank/quotes
       PAYMENT_POINTER_URL: https://peer-backend/.well-known/pay
   local-bank:
     build:

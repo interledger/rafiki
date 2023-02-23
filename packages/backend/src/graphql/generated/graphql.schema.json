@@ -2761,7 +2761,7 @@
           },
           {
             "name": "createIncomingPayment",
-            "description": null,
+            "description": "Create an internal Open Payments Incoming Payment",
             "args": [
               {
                 "name": "input",
@@ -2794,7 +2794,7 @@
           },
           {
             "name": "createOutgoingPayment",
-            "description": null,
+            "description": "Create an Open Payments Outgoing Payment",
             "args": [
               {
                 "name": "input",
@@ -2827,7 +2827,7 @@
           },
           {
             "name": "createPaymentPointer",
-            "description": null,
+            "description": "Create payment pointer",
             "args": [
               {
                 "name": "input",
@@ -2980,7 +2980,7 @@
           },
           {
             "name": "createQuote",
-            "description": null,
+            "description": "Create an Open Payments Quote",
             "args": [
               {
                 "name": "input",
@@ -3013,7 +3013,7 @@
           },
           {
             "name": "createReceiver",
-            "description": null,
+            "description": "Create an external Open Payments Incoming Payment",
             "args": [
               {
                 "name": "input",
@@ -3137,7 +3137,7 @@
           },
           {
             "name": "revokePaymentPointerKey",
-            "description": null,
+            "description": "Revoke request signing key",
             "args": [
               {
                 "name": "id",
@@ -4657,7 +4657,7 @@
         "fields": [
           {
             "name": "asset",
-            "description": null,
+            "description": "Fetch an asset",
             "args": [
               {
                 "name": "id",
@@ -4751,7 +4751,7 @@
           },
           {
             "name": "outgoingPayment",
-            "description": null,
+            "description": "Fetch an Open Payments outgoing payment",
             "args": [
               {
                 "name": "id",
@@ -4780,7 +4780,7 @@
           },
           {
             "name": "paymentPointer",
-            "description": null,
+            "description": "Fetch a payment pointer",
             "args": [
               {
                 "name": "id",
@@ -4809,7 +4809,7 @@
           },
           {
             "name": "peer",
-            "description": null,
+            "description": "Fetch a peer",
             "args": [
               {
                 "name": "id",
@@ -4903,7 +4903,7 @@
           },
           {
             "name": "quote",
-            "description": null,
+            "description": "Fetch an Open Payments quote",
             "args": [
               {
                 "name": "id",
