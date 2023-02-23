@@ -144,6 +144,7 @@ describe('Peer Resolvers', (): void => {
       error
       ${PeerError.DuplicateIncomingToken}
       ${PeerError.InvalidStaticIlpAddress}
+      ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownAsset}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
@@ -469,6 +470,7 @@ describe('Peer Resolvers', (): void => {
       error
       ${PeerError.DuplicateIncomingToken}
       ${PeerError.InvalidStaticIlpAddress}
+      ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownPeer}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'update').mockResolvedValueOnce(error)
