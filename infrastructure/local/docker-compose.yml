@@ -7,7 +7,7 @@ services:
       dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
-      - rafiki
+      - local_rafiki
     ports:
       - '3006:3006'
     environment:
@@ -22,7 +22,7 @@ services:
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
-      - rafiki
+      - local_rafiki
     ports:
       - '3030:80'
     environment:
@@ -47,7 +47,7 @@ services:
       - '3000:80'
       - '3001:3001'
     networks:
-      - rafiki
+      - local_rafiki
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
@@ -78,7 +78,7 @@ services:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
     networks:
-      - rafiki
+      - local_rafiki
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
@@ -91,7 +91,7 @@ services:
     image: 'redis:7'
     restart: unless-stopped
     networks:
-      - rafiki
+      - local_rafiki
   signatures:
     build:
       context: ../..
@@ -104,14 +104,10 @@ services:
     volumes:
       - ./private-key.pem:/workspace/private-key.pem
     networks:
-      - rafiki
+      - local_rafiki
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
 
 networks:
-  rafiki:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 10.5.0.0/24
-          gateway: 10.5.0.1
+  local_rafiki:
+    external: true
