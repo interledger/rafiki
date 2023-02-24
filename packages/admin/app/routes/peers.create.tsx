@@ -95,7 +95,7 @@ export default function CreatePeerPage() {
             </div>
             {/* Peer General Info - END */}
             {/* Peer HTTP Info */}
-            <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+            <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>HTTP Informations</h3>
               </div>
@@ -126,7 +126,7 @@ export default function CreatePeerPage() {
             </div>
             {/* Peer HTTP Info - END */}
             {/* Peer Asset */}
-            <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+            <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>Asset Informations</h3>
               </div>
