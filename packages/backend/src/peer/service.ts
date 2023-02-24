@@ -15,6 +15,7 @@ import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
 import { HttpTokenError } from '../httpToken/errors'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
+import { isValidHttpUrl } from '../shared/utils'
 
 export interface HttpOptions {
   incoming?: {
@@ -102,6 +103,10 @@ async function createPeer(
     return PeerError.InvalidStaticIlpAddress
   }
 
+  if (!isValidHttpUrl(options.http.outgoing.endpoint)) {
+    return PeerError.InvalidHTTPEndpoint
+  }
+
   try {
     return await Peer.transaction(deps.knex, async (trx) => {
       const peer = await Peer.query(trx)
@@ -157,6 +162,13 @@ async function updatePeer(
     !isValidIlpAddress(options.staticIlpAddress)
   ) {
     return PeerError.InvalidStaticIlpAddress
+  }
+
+  if (
+    options.http?.outgoing.endpoint &&
+    !isValidHttpUrl(options.http.outgoing.endpoint)
+  ) {
+    return PeerError.InvalidHTTPEndpoint
   }
 
   if (!deps.knex) {

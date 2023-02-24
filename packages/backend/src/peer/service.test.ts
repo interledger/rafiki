@@ -165,6 +165,14 @@ describe('Peer Service', (): void => {
         })
       ).resolves.toEqual(PeerError.InvalidStaticIlpAddress)
     })
+
+    test('Cannot create a peer with invalid HTTP endpoint', async (): Promise<void> => {
+      const options = randomPeer()
+      options.http.outgoing.endpoint = 'http://.com'
+      await expect(peerService.create(options)).resolves.toEqual(
+        PeerError.InvalidHTTPEndpoint
+      )
+    })
   })
 
   describe('Update Peer', (): void => {
@@ -260,6 +268,23 @@ describe('Peer Service', (): void => {
       }
       await expect(peerService.update(updateOptions)).resolves.toEqual(
         PeerError.InvalidStaticIlpAddress
+      )
+      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+    })
+
+    test('Returns error for invalid HTTP endpoint', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+      const updateOptions: UpdateOptions = {
+        id: peer.id,
+        http: {
+          outgoing: {
+            ...peer.http.outgoing,
+            endpoint: 'http://.com'
+          }
+        }
+      }
+      await expect(peerService.update(updateOptions)).resolves.toEqual(
+        PeerError.InvalidHTTPEndpoint
       )
       await expect(peerService.get(peer.id)).resolves.toEqual(peer)
     })

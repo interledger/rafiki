@@ -1,6 +1,7 @@
 export enum PeerError {
   DuplicateIncomingToken = 'DuplicateIncomingToken',
   InvalidStaticIlpAddress = 'InvalidStaticIlpAddress',
+  InvalidHTTPEndpoint = 'InvalidHTTPEndpoint',
   UnknownAsset = 'UnknownAsset',
   UnknownPeer = 'UnknownPeer'
 }
@@ -14,6 +15,7 @@ export const errorToCode: {
 } = {
   [PeerError.DuplicateIncomingToken]: 409,
   [PeerError.InvalidStaticIlpAddress]: 400,
+  [PeerError.InvalidHTTPEndpoint]: 400,
   [PeerError.UnknownAsset]: 400,
   [PeerError.UnknownPeer]: 404
 }
@@ -23,6 +25,7 @@ export const errorToMessage: {
 } = {
   [PeerError.DuplicateIncomingToken]: 'duplicate incoming token',
   [PeerError.InvalidStaticIlpAddress]: 'invalid ILP address',
+  [PeerError.InvalidHTTPEndpoint]: 'invalid HTTP endpoint',
   [PeerError.UnknownAsset]: 'unknown asset',
   [PeerError.UnknownPeer]: 'unknown peer'
 }
