@@ -31,6 +31,7 @@ If you want to use Postgres as the accounting database instead of Tigerbeetle, y
 ```
 pnpm localenv:psql:start
 pnpm localenv:psql:stop
+pnpm localenv:psql:dbvolumes:remove
 ```
 
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
