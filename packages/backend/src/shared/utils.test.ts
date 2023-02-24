@@ -15,6 +15,7 @@ describe('utils', (): void => {
       ${'http://foo'}             | ${true}  | ${'valid'}
       ${'http://foo.bar.baz.com'} | ${true}  | ${'valid'}
       ${'http://peer.test:3000'}  | ${true}  | ${'valid'}
+      ${'https://foo'}            | ${true}  | ${'valid'}
     `('returns $result for $type HTTP url', ({ url, result }): void => {
       expect(isValidHttpUrl(url)).toEqual(result)
     })
