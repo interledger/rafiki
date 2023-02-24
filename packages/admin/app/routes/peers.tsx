@@ -20,8 +20,6 @@ export const loader = async ({ request }: LoaderArgs) => {
     ...pagination.data
   })
 
-  console.log(peers)
-
   return json({ peers })
 }
 

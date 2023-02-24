@@ -1,4 +1,4 @@
-import { XCircleIcon } from '../icons/XCircleIcon'
+import { XCircle } from '../icons/XCircle'
 
 type ErrorPanelProps = {
   errors?: string[]
@@ -17,7 +17,7 @@ export default function ErrorPanel({ errors }: ErrorPanelProps) {
     <div className='rounded-md bg-red-100 p-4 shadow-md'>
       <div className='flex'>
         <div className='flex-shrink-0'>
-          <XCircleIcon className='h-8 w-w text-vermillion' />
+          <XCircle className='h-8 w-w text-vermillion' />
         </div>
         <div className='ml-3 mt-1 text-vermillion'>
           <h3 className='font-medium'>{errorMessage}</h3>

@@ -5,6 +5,7 @@ import {
 } from '@apollo/client'
 import type {
   CreatePeerInput,
+  MutationDeletePeerArgs,
   QueryPeerArgs,
   QueryPeersArgs,
   UpdatePeerInput
@@ -12,6 +13,8 @@ import type {
 import type {
   CreatePeerMutation,
   CreatePeerMutationVariables,
+  DeletePeerMutation,
+  DeletePeerMutationVariables,
   GetPeerQuery,
   GetPeerQueryVariables,
   ListPeersQuery,
@@ -77,6 +80,19 @@ export class PeerService {
     })
 
     return response.data?.updatePeer
+  }
+
+  public async delete(args: MutationDeletePeerArgs) {
+    console.log(args)
+    const response = await this.apollo.mutate<
+      DeletePeerMutation,
+      DeletePeerMutationVariables
+    >({
+      mutation: deletePeerMutation,
+      variables: args
+    })
+
+    return response.data?.deletePeer
   }
 }
 
@@ -154,6 +170,16 @@ const createPeerMutation = gql`
 const updatePeerMutation = gql`
   mutation UpdatePeerMutation($input: UpdatePeerInput!) {
     updatePeer(input: $input) {
+      code
+      success
+      message
+    }
+  }
+`
+
+const deletePeerMutation = gql`
+  mutation DeletePeerMutation($id: String!) {
+    deletePeer(id: $id) {
       code
       success
       message

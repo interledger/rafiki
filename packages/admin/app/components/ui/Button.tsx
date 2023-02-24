@@ -8,7 +8,8 @@ const buttonStyles = cva(
     variants: {
       intent: {
         default:
-          'bg-[#F37F64] hover:bg-[#DA725A] disabled:bg-mercury disabled:text-gray-500 shadow-md text-white'
+          'bg-[#F37F64] hover:bg-[#DA725A] disabled:bg-mercury disabled:text-gray-500 shadow-md text-white',
+        danger: 'bg-red-500 hover:bg-red-600 shadow-md text-white'
       },
       size: {
         sm: 'px-2 py-1 rounded-md font-medium',

@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react'
 
-export const CheckCircle = (props: SVGProps<SVGSVGElement>) => {
+export const CheckCircleSolid = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'

@@ -9,9 +9,12 @@ import {
   Form,
   useActionData,
   useLoaderData,
-  useNavigation
+  useNavigation,
+  useSubmit
 } from '@remix-run/react'
+import { type FormEvent, useState } from 'react'
 import { z } from 'zod'
+import { DangerZone } from '~/components/DangerZone'
 import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
@@ -20,7 +23,8 @@ import { PasswordInput } from '~/components/ui/PasswordInput'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
 import {
   peerGeneralInfoSchema,
-  peerHttpInfoSchema
+  peerHttpInfoSchema,
+  uuidSchema
 } from '~/lib/validate.server'
 import { peerService } from '~/services/bootstrap.server'
 import type { ZodFieldErrors } from '~/shared/types'
@@ -51,6 +55,7 @@ export default function ViewPeerPage() {
   const { peer } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
+
   const isSubmitting = state === 'submitting'
 
   return (
@@ -217,6 +222,21 @@ export default function ViewPeerPage() {
           </div>
         </div>
         {/* Peer Asset Info - END */}
+        {/* DELETE PEER - Danger zone */}
+        <DangerZone title='Delete Peer'>
+          <Form method='post'>
+            <Input type='hidden' name='id' value={peer.id} />
+            <Button
+              type='submit'
+              intent='danger'
+              name='intent'
+              value='delete'
+              aria-label='delete peer'
+            >
+              Delete peer
+            </Button>
+          </Form>
+        </DangerZone>
       </div>
     </div>
   )
@@ -247,6 +267,7 @@ export async function action({ request }: ActionArgs) {
     }
   }
 
+  const session = await getSession(request.headers.get('cookie'))
   const formData = await request.formData()
   const intent = formData.get('intent')
   formData.delete('intent')
@@ -262,7 +283,6 @@ export async function action({ request }: ActionArgs) {
           result.error.flatten().fieldErrors
         return json({ ...actionResponse }, { status: 400 })
       }
-      console.log(result.data)
 
       const response = await peerService.update({
         ...result.data,
@@ -317,11 +337,44 @@ export async function action({ request }: ActionArgs) {
 
       break
     }
+    case 'delete': {
+      const result = uuidSchema.safeParse(Object.fromEntries(formData))
+      if (!result.success) {
+        setMessage(session, {
+          content: 'Invalid peer ID.',
+          type: 'error'
+        })
+
+        return redirect('.', {
+          headers: { 'Set-Cookie': await commitSession(session) }
+        })
+      }
+
+      const response = await peerService.delete(result.data)
+      if (!response?.success) {
+        setMessage(session, {
+          content: 'Could not delete peer.',
+          type: 'error'
+        })
+
+        return redirect('.', {
+          headers: { 'Set-Cookie': await commitSession(session) }
+        })
+      }
+
+      setMessage(session, {
+        content: 'Peer was deleted.',
+        type: 'success'
+      })
+
+      return redirect('/peers', {
+        headers: { 'Set-Cookie': await commitSession(session) }
+      })
+      break
+    }
     default:
       throw new Error('Invalid intent.')
   }
-
-  const session = await getSession(request.headers.get('cookie'))
 
   setMessage(session, {
     content: 'Peer informations were updated.',

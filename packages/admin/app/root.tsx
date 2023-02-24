@@ -11,7 +11,7 @@ import {
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import favicon from '../public/favicon.svg'
-import { XCircleIcon } from './components/icons/XCircleIcon'
+import { XCircle } from './components/icons/XCircle'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
@@ -107,7 +107,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
             <main className='grid min-h-screen place-items-center'>
               <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-5'>
                 <div className='grid place-items-center'>
-                  <XCircleIcon className='w-10 h-10 text-red-500' />
+                  <XCircle className='w-10 h-10 text-red-500' />
                   <p className='text-lg font-semibold'>
                     There was an issue with your request.
                   </p>

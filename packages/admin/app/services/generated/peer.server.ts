@@ -30,3 +30,10 @@ export type UpdatePeerMutationVariables = Types.Exact<{
 
 
 export type UpdatePeerMutation = { __typename?: 'Mutation', updatePeer: { __typename?: 'UpdatePeerMutationResponse', code: string, success: boolean, message: string } };
+
+export type DeletePeerMutationVariables = Types.Exact<{
+  id: Types.Scalars['String'];
+}>;
+
+
+export type DeletePeerMutation = { __typename?: 'Mutation', deletePeer: { __typename?: 'DeletePeerMutationResponse', code: string, success: boolean, message: string } };

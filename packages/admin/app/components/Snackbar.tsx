@@ -3,7 +3,8 @@ import { cx } from 'class-variance-authority'
 import type { FC } from 'react'
 import { Fragment, useEffect } from 'react'
 import { type Message } from '~/lib/message.server'
-import { CheckCircle } from './icons/CheckCircle'
+import { CheckCircleSolid } from './icons/CheckCircle'
+import { XCircleSolid } from './icons/XCircle'
 
 interface SnackbarProps {
   id: string
@@ -62,7 +63,10 @@ export const Snackbar: FC<SnackbarProps> = ({
         >
           <div className='mx-4 flex w-full transform items-center justify-start space-x-3 overflow-hidden rounded-xl bg-white py-3 px-4 text-left align-middle shadow-lg transition-all sm:max-w-[22rem]'>
             {message.type === 'success' && (
-              <CheckCircle className='w-4 h-4 text-green-400' />
+              <CheckCircleSolid className='w-4 h-4 text-green-400' />
+            )}
+            {message.type === 'error' && (
+              <XCircleSolid className='w-4 h-4 text-red-400' />
             )}
             <p className='text text-tealish'>{message.content}</p>
           </div>
