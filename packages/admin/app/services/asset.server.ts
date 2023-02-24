@@ -105,6 +105,7 @@ const listAssetsQuery = gql`
           id
           scale
           withdrawalThreshold
+          createdAt
         }
       }
       pageInfo {

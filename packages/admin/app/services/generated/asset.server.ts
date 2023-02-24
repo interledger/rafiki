@@ -15,7 +15,7 @@ export type ListAssetsQueryVariables = Types.Exact<{
 }>;
 
 
-export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type CreateAssetMutationVariables = Types.Exact<{
   input: Types.CreateAssetInput;

@@ -1,15 +1,49 @@
 import { json, redirect, type ActionArgs } from '@remix-run/node'
-import { Form, useActionData, useNavigation } from '@remix-run/react'
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation
+} from '@remix-run/react'
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
-import { peerService } from '~/services/bootstrap.server'
+import { assetService, peerService } from '~/services/bootstrap.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import PageHeader from '~/components/PageHeader'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { type Asset } from '~/generated/graphql'
+
+export async function loader() {
+  let assets: Asset[] = []
+  let hasNextPage = true
+  let after: string | undefined
+
+  while (hasNextPage) {
+    const response = await assetService.list({ after })
+
+    if (response.edges) {
+      assets = [...assets, ...response.edges.map((edge) => edge.node)]
+    }
+
+    if (response.pageInfo.hasNextPage) {
+      hasNextPage = true
+      if (response.pageInfo.endCursor) {
+        after = response?.pageInfo?.endCursor
+      } else {
+        after = assets[assets.length - 1].id
+      }
+    } else {
+      hasNextPage = false
+    }
+  }
+
+  return json({ assets })
+}
 
 export default function CreatePeerPage() {
+  const { assets } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
   const isSubmitting = state === 'submitting'
@@ -95,17 +129,33 @@ export default function CreatePeerPage() {
             <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>Asset Informations</h3>
-                <p className='text-sm italic'>(TODO: dropdown)</p>
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     name='asset'
                     label='Asset'
-                    placeholder='Asset ID'
+                    placeholder='Select asset'
                     required
+                    autoComplete='off'
+                    list='assets'
                     error={response?.errors?.fieldErrors?.asset}
                   />
+                  <datalist id='assets'>
+                    {assets.map((asset) => (
+                      <option
+                        className='bg-red-200'
+                        key={asset.id}
+                        value={asset.id}
+                      >
+                        {asset.code} (Scale: {asset.scale} |{' '}
+                        {asset.withdrawalThreshold
+                          ? `Withdrawal treshold ${asset.withdrawalThreshold}`
+                          : 'No withdrawal treshold'}
+                        )
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
               </div>
             </div>
