@@ -9,10 +9,8 @@ import {
   Form,
   useActionData,
   useLoaderData,
-  useNavigation,
-  useSubmit
+  useNavigation
 } from '@remix-run/react'
-import { type FormEvent, useState } from 'react'
 import { z } from 'zod'
 import { DangerZone } from '~/components/DangerZone'
 import PageHeader from '~/components/PageHeader'
