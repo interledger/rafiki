@@ -65,7 +65,7 @@ export default function CreatePeerPage() {
 
           <fieldset disabled={isSubmitting}>
             {/* Peer General Info */}
-            <div className='grid grid-cols-1 px-0 md:px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+            <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>General Informations</h3>
               </div>
@@ -160,7 +160,7 @@ export default function CreatePeerPage() {
               </div>
             </div>
             {/* Peer Asset - End */}
-            <div className='flex justify-end px-6 py-3'>
+            <div className='flex justify-end py-3'>
               <Button aria-label='create peer' type='submit'>
                 {isSubmitting ? 'Creating peer ...' : 'Create'}
               </Button>
