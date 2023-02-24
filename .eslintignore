@@ -3,5 +3,4 @@ public
 **/generated
 dist
 build
-postman-scripts
-**/__generated__
+postman-scripts_

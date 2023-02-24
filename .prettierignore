@@ -10,4 +10,3 @@ Dockerfile
 .gitignore
 .prettierignore
 infrastructure/helm/**
-**/__generated__

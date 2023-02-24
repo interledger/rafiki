@@ -38,9 +38,6 @@ dist
 # node_modules
 **/node_modules
 
-# GraphQL Generated Types
-**/__generated__
-
 **/.terraform
 
 tmp

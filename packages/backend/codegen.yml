@@ -41,8 +41,9 @@ generates:
   ../admin/app:
     preset: near-operation-file
     presetConfig:
-      folder: __generated__
+      folder: generated
       baseTypesPath: '/generated/graphql.ts'
+      extension: '.ts'
     plugins:
       - 'typescript-operations'
     config:

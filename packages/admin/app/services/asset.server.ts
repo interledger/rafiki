@@ -18,7 +18,7 @@ import type {
   ListAssetsQueryVariables,
   UpdateAssetMutation,
   UpdateAssetMutationVariables
-} from './__generated__/asset.server.generated'
+} from './generated/asset.server'
 
 export class AssetService {
   private apollo: ApolloClient<NormalizedCacheObject>

@@ -18,7 +18,7 @@ import type {
   ListPeersQueryVariables,
   UpdatePeerMutation,
   UpdatePeerMutationVariables
-} from './__generated__/peer.server.generated'
+} from './generated/peer.server'
 
 export class PeerService {
   private apollo: ApolloClient<NormalizedCacheObject>
