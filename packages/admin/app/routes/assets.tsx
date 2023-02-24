@@ -54,26 +54,34 @@ export default function AssetsPage() {
         <Table>
           <THead columns={['ID', 'Code', 'Scale', 'Withdrawl threshold']} />
           <TBody>
-            {assets.edges.map((asset) => (
-              <TRow
-                key={asset.node.id}
-                className='cursor-pointer'
-                onClick={() => navigate(`/assets/${asset.node.id}`)}
-              >
-                <TCell>{asset.node.id}</TCell>
-                <TCell>{asset.node.code}</TCell>
-                <TCell>{asset.node.scale}</TCell>
-                <TCell>
-                  {asset.node.withdrawalThreshold ? (
-                    asset.node.withdrawalThreshold
-                  ) : (
-                    <span className='italic font-light'>
-                      No withdrawal threshold
-                    </span>
-                  )}
+            {assets.edges.length ? (
+              assets.edges.map((asset) => (
+                <TRow
+                  key={asset.node.id}
+                  className='cursor-pointer'
+                  onClick={() => navigate(`/assets/${asset.node.id}`)}
+                >
+                  <TCell>{asset.node.id}</TCell>
+                  <TCell>{asset.node.code}</TCell>
+                  <TCell>{asset.node.scale}</TCell>
+                  <TCell>
+                    {asset.node.withdrawalThreshold ? (
+                      asset.node.withdrawalThreshold
+                    ) : (
+                      <span className='italic font-light'>
+                        No withdrawal threshold
+                      </span>
+                    )}
+                  </TCell>
+                </TRow>
+              ))
+            ) : (
+              <TRow>
+                <TCell colSpan={4} className='text-center'>
+                  No assets found.
                 </TCell>
               </TRow>
-            ))}
+            )}
           </TBody>
         </Table>
         <div className='flex items-center justify-between p-5'>

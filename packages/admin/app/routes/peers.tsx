@@ -57,31 +57,39 @@ export default function PeersPage() {
             columns={['Name', 'ILP Address', 'Asset', 'Outgoing HTTP Endpoint']}
           />
           <TBody>
-            {peers.edges.map((peer) => (
-              <TRow
-                key={peer.node.id}
-                className='cursor-pointer'
-                onClick={() => navigate(`/peers/${peer.node.id}`)}
-              >
-                <TCell>
-                  <div className='flex flex-col'>
-                    {peer.node.name ? (
-                      <span className='font-medium'>{peer.node.name}</span>
-                    ) : (
-                      <span className='text-tealish/80'>No peer name</span>
-                    )}
-                    <div className='text-tealish/50 text-xs'>
-                      (ID: {peer.node.id})
+            {peers.edges.length ? (
+              peers.edges.map((peer) => (
+                <TRow
+                  key={peer.node.id}
+                  className='cursor-pointer'
+                  onClick={() => navigate(`/peers/${peer.node.id}`)}
+                >
+                  <TCell>
+                    <div className='flex flex-col'>
+                      {peer.node.name ? (
+                        <span className='font-medium'>{peer.node.name}</span>
+                      ) : (
+                        <span className='text-tealish/80'>No peer name</span>
+                      )}
+                      <div className='text-tealish/50 text-xs'>
+                        (ID: {peer.node.id})
+                      </div>
                     </div>
-                  </div>
+                  </TCell>
+                  <TCell>{peer.node.staticIlpAddress}</TCell>
+                  <TCell>
+                    {peer.node.asset.code} (Scale: {peer.node.asset.scale})
+                  </TCell>
+                  <TCell>{peer.node.http.outgoing.endpoint}</TCell>
+                </TRow>
+              ))
+            ) : (
+              <TRow>
+                <TCell colSpan={4} className='text-center'>
+                  No peers found.
                 </TCell>
-                <TCell>{peer.node.staticIlpAddress}</TCell>
-                <TCell>
-                  {peer.node.asset.code} (Scale: {peer.node.asset.scale})
-                </TCell>
-                <TCell>{peer.node.http.outgoing.endpoint}</TCell>
               </TRow>
-            ))}
+            )}
           </TBody>
         </Table>
         {/* Pagination */}
