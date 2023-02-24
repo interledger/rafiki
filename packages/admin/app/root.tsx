@@ -26,7 +26,6 @@ export const meta: MetaFunction = () => ({
 
 export const loader = async ({ request }: LoaderArgs) => {
   const session = await getSession(request.headers.get('cookie'))
-
   const message = session.get('message') as Message
 
   if (!message) {
@@ -65,10 +64,10 @@ export default function App() {
         <Meta />
         <Links />
       </head>
-      <body className='h-full  text-tealish'>
+      <body className='h-full text-tealish'>
         <div className='min-h-full'>
           <Sidebar />
-          <div className='flex md:pl-60 flex-1 flex-col'>
+          <div className='pt-20 md:pt-0 flex md:pl-60 flex-1 flex-col'>
             <main className='pb-8 px-4'>
               <Outlet />
             </main>
@@ -89,7 +88,6 @@ export default function App() {
   )
 }
 
-// TODO: add styles to ErrorBoundary
 export function ErrorBoundary({ error }: { error: Error }) {
   return (
     <html
@@ -103,7 +101,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
           <Sidebar />
-          <div className='flex md:pl-60 flex-1 flex-col'>
+          <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
             <main className='grid min-h-screen place-items-center'>
               <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-5'>
                 <div className='grid place-items-center'>
@@ -131,7 +129,6 @@ export function ErrorBoundary({ error }: { error: Error }) {
   )
 }
 
-// TODO: add styles to CatchBoundary
 export function CatchBoundary() {
   const caughtResponse = useCatch()
 
@@ -147,7 +144,7 @@ export function CatchBoundary() {
       <body className='h-full text-tealish'>
         <div className='min-h-full'>
           <Sidebar />
-          <div className='flex md:pl-60 flex-1 flex-col'>
+          <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
             <main className='grid min-h-screen place-items-center'>
               <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-2'>
                 <h4 className='font-semibold -tracking-widest text-[#F37F64]'>
@@ -161,25 +158,6 @@ export function CatchBoundary() {
             </main>
           </div>
         </div>
-        {/* <div className='admin-panel'>
-          <div className='admin-panel-background'>
-            <header className='admin-menu'>
-              <h1>Rafiki Admin</h1>
-            </header>
-            <div className='admin-panel-inside'>
-              <main>
-                {caughtResponse.statusText && (
-                  <h1>{caughtResponse.statusText}</h1>
-                )}
-                {(caughtResponse.data && (
-                  <pre>
-                    <code>{JSON.stringify(caughtResponse.data, null, 2)}</code>
-                  </pre>
-                )) || <p>{'Something went wrong.'}</p>}
-              </main>
-            </div>
-          </div>
-        </div> */}
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

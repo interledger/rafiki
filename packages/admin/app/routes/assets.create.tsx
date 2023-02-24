@@ -31,7 +31,7 @@ export default function CreateAssetPage() {
 
           <fieldset disabled={isSubmitting}>
             {/* Asset General Info */}
-            <div className='grid grid-cols-1 px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+            <div className='grid grid-cols-1 px-0 md:px-6 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
                 <h3 className='text-lg font-medium'>General Informations</h3>
               </div>

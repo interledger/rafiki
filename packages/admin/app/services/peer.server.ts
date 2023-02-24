@@ -83,7 +83,6 @@ export class PeerService {
   }
 
   public async delete(args: MutationDeletePeerArgs) {
-    console.log(args)
     const response = await this.apollo.mutate<
       DeletePeerMutation,
       DeletePeerMutationVariables
