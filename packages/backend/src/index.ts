@@ -23,7 +23,8 @@ import {
 } from './shared/ilp_plugin'
 import { createHttpTokenService } from './httpToken/service'
 import { createAssetService } from './asset/service'
-import { createAccountingService } from './accounting/service'
+import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
 import { createPeerService } from './peer/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
@@ -77,6 +78,20 @@ export function initIocContainer(
       migrations: {
         directory: './',
         tableName: 'knex_migrations'
+      },
+      log: {
+        warn(message) {
+          logger.warn(message)
+        },
+        error(message) {
+          logger.error(message)
+        },
+        deprecate(message) {
+          logger.warn(message)
+        },
+        debug(message) {
+          logger.debug(message)
+        }
       }
     })
     // node pg defaults to returning bigint as string. This ensures it parses to bigint
@@ -155,14 +170,26 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService')
     })
   })
+
   container.singleton('accountingService', async (deps) => {
     const logger = await deps.use('logger')
     const knex = await deps.use('knex')
-    const tigerbeetle = await deps.use('tigerbeetle')
-    return await createAccountingService({
-      logger: logger,
-      knex: knex,
-      tigerbeetle,
+    const config = await deps.use('config')
+
+    if (config.useTigerbeetle) {
+      const tigerbeetle = await deps.use('tigerbeetle')
+
+      return createTigerbeetleAccountingService({
+        logger,
+        knex,
+        tigerbeetle,
+        withdrawalThrottleDelay: config.withdrawalThrottleDelay
+      })
+    }
+
+    return createPsqlAccountingService({
+      logger,
+      knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay
     })
   })

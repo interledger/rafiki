@@ -174,9 +174,7 @@ async function createGrantInitiation(
   let accessToken: AccessToken
   try {
     grant = await grantService.create(body, trx)
-    accessToken = await deps.accessTokenService.create(grant.id, {
-      trx
-    })
+    accessToken = await deps.accessTokenService.create(grant.id, trx)
     await trx.commit()
   } catch (err) {
     await trx.rollback()
@@ -235,7 +233,6 @@ async function getGrantDetails(
   const grant = await grantService.getByInteractionSession(interactId, nonce)
   if (!grant) {
     ctx.throw(404)
-    return
   }
 
   ctx.body = {

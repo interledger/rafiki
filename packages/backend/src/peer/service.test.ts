@@ -165,6 +165,14 @@ describe('Peer Service', (): void => {
         })
       ).resolves.toEqual(PeerError.InvalidStaticIlpAddress)
     })
+
+    test('Cannot create a peer with invalid HTTP endpoint', async (): Promise<void> => {
+      const options = randomPeer()
+      options.http.outgoing.endpoint = 'http://.com'
+      await expect(peerService.create(options)).resolves.toEqual(
+        PeerError.InvalidHTTPEndpoint
+      )
+    })
   })
 
   describe('Update Peer', (): void => {
@@ -263,6 +271,23 @@ describe('Peer Service', (): void => {
       )
       await expect(peerService.get(peer.id)).resolves.toEqual(peer)
     })
+
+    test('Returns error for invalid HTTP endpoint', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+      const updateOptions: UpdateOptions = {
+        id: peer.id,
+        http: {
+          outgoing: {
+            ...peer.http.outgoing,
+            endpoint: 'http://.com'
+          }
+        }
+      }
+      await expect(peerService.update(updateOptions)).resolves.toEqual(
+        PeerError.InvalidHTTPEndpoint
+      )
+      await expect(peerService.get(peer.id)).resolves.toEqual(peer)
+    })
   })
 
   describe('Get Peer By ILP Address', (): void => {
@@ -327,6 +352,25 @@ describe('Peer Service', (): void => {
       createModel: () => createPeer(deps, { assetId: asset.id }),
       getPage: (pagination: Pagination | undefined) =>
         peerService.getPage(pagination)
+    })
+  })
+
+  describe('Delete Peer', (): void => {
+    test('Can delete peer', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+
+      await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
+    })
+
+    test('Returns undefined if no peer exists by id', async (): Promise<void> => {
+      await expect(peerService.delete(uuid())).resolves.toBeUndefined()
+    })
+
+    test('Returns undefined for already deleted peer', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+
+      await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
+      await expect(peerService.delete(peer.id)).resolves.toBeUndefined()
     })
   })
 })

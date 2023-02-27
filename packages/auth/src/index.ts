@@ -141,11 +141,13 @@ export function initIocContainer(
   container.singleton(
     'accessTokenService',
     async (deps: IocContract<AppServices>) => {
+      const { accessTokenExpirySeconds } = await deps.use('config')
+
       return await createAccessTokenService({
         logger: await deps.use('logger'),
-        config: await deps.use('config'),
         knex: await deps.use('knex'),
-        clientService: await deps.use('clientService')
+        clientService: await deps.use('clientService'),
+        accessTokenExpirySeconds
       })
     }
   )

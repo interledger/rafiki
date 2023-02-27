@@ -12,6 +12,7 @@ export {
   isPendingGrant,
   JWK,
   JWKS,
+  PaginationArgs,
   PaymentPointer,
   AccessType,
   AccessAction,

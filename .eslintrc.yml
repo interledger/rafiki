@@ -6,7 +6,6 @@ env:
   amd: true
 extends:
   - 'eslint:recommended'
-  - 'plugin:react/recommended'
   - 'plugin:@typescript-eslint/recommended'
   - 'prettier'
 root: true
@@ -17,10 +16,6 @@ parserOptions:
   ecmaVersion: 2020
   sourceType: module
 plugins:
-  - react
   - '@typescript-eslint'
 rules:
   '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
-settings:
-  react:
-    version: "detect"

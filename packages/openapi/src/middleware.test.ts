@@ -89,6 +89,25 @@ describe('OpenAPI Validator', (): void => {
       }
     )
 
+    test('coerces query parameter type', async (): Promise<void> => {
+      const first = 5
+      const next = jest.fn().mockImplementation(() => {
+        expect(ctx.request.query.first).toEqual(first)
+        ctx.response.body = {}
+      })
+      const ctx = createContext(
+        {
+          headers: { Accept: 'application/json' },
+          url: `${PATH}?first=${first}`
+        },
+        {
+          accountId
+        }
+      )
+      await expect(validateListMiddleware(ctx, next)).resolves.toBeUndefined()
+      expect(next).toHaveBeenCalled()
+    })
+
     test('returns 400 on invalid query parameter', async (): Promise<void> => {
       const ctx = createContext(
         {

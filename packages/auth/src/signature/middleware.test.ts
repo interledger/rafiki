@@ -22,6 +22,7 @@ import {
 } from './middleware'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessType, AccessAction } from 'open-payments'
+import { ContinueContext, CreateContext } from '../grant/routes'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -31,7 +32,7 @@ describe('Signature Service', (): void => {
   let testClientKey: JWK
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     testKeys = generateTestKeys()
     testClientKey = testKeys.publicKey
@@ -121,7 +122,7 @@ describe('Signature Service', (): void => {
           keys: [testClientKey]
         })
 
-      const ctx = await createContextWithSigHeaders(
+      const ctx = await createContextWithSigHeaders<CreateContext>(
         {
           headers: {
             Accept: 'application/json'
@@ -153,7 +154,7 @@ describe('Signature Service', (): void => {
           keys: [testClientKey]
         })
 
-      const ctx = await createContextWithSigHeaders(
+      const ctx = await createContextWithSigHeaders<ContinueContext>(
         {
           headers: {
             Accept: 'application/json',
@@ -206,14 +207,19 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
+      expect(ctx.accessToken).toMatchObject(token)
+      expect(ctx.accessToken.grant).toEqual(grant)
 
       scope.done()
     })
 
     test('token management request fails if grant cannot be found', async () => {
+      const tokenWithoutGrant = token.$clone()
+      tokenWithoutGrant.grant = undefined
+
       const tokenSpy = jest
         .spyOn(accessTokenService, 'getByManagementId')
-        .mockReturnValueOnce({ ...token, grant: undefined })
+        .mockResolvedValueOnce(tokenWithoutGrant)
 
       const ctx = await createContextWithSigHeaders(
         {
@@ -277,7 +283,7 @@ describe('Signature Service', (): void => {
           keys: [testClientKey]
         })
 
-      const ctx = await createContextWithSigHeaders(
+      const ctx = await createContextWithSigHeaders<ContinueContext>(
         {
           headers: {
             Accept: 'application/json',
@@ -303,7 +309,7 @@ describe('Signature Service', (): void => {
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {
-      const ctx = await createContextWithSigHeaders(
+      const ctx = await createContextWithSigHeaders<CreateContext>(
         {
           headers: {
             Accept: 'application/json'
@@ -329,7 +335,7 @@ describe('Signature Service', (): void => {
     })
 
     test('middleware fails if content-digest is invalid', async (): Promise<void> => {
-      const ctx = await createContextWithSigHeaders(
+      const ctx = await createContextWithSigHeaders<CreateContext>(
         {
           headers: {
             Accept: 'application/json'
@@ -346,7 +352,8 @@ describe('Signature Service', (): void => {
         deps
       )
 
-      ctx.request.body = { test: 'this is wrong' }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ctx.request.body = { test: 'this is wrong' } as any
 
       await expect(
         grantInitiationHttpsigMiddleware(ctx, next)

@@ -1,14 +1,9 @@
 require('ts-node/register')
 
 import { knex } from 'knex'
-import { GenericContainer } from 'testcontainers'
-import { startTigerbeetleContainer } from './src/tests/tigerbeetle'
+import { GenericContainer, Wait } from 'testcontainers'
 
 const POSTGRES_PORT = 5432
-
-//TODO @jason: https://github.com/interledger/rafiki/issues/518
-//TODO @jason const TIGERBEETLE_FILE = `${TIGERBEETLE_DIR}/cluster_${TIGERBEETLE_CLUSTER_ID}_replica_0.tigerbeetle`
-
 const REDIS_PORT = 6379
 
 const setup = async (globalConfig): Promise<void> => {
@@ -27,6 +22,13 @@ const setup = async (globalConfig): Promise<void> => {
         .withEnvironment({
           POSTGRES_PASSWORD: 'password'
         })
+        .withHealthCheck({
+          test: ['CMD-SHELL', 'pg_isready -d testing'],
+          interval: 10000,
+          timeout: 5000,
+          retries: 5
+        })
+        .withWaitStrategy(Wait.forHealthCheck())
         .start()
 
       process.env.DATABASE_URL = `postgresql://postgres:password@localhost:${postgresContainer.getMappedPort(
@@ -68,15 +70,6 @@ const setup = async (globalConfig): Promise<void> => {
     global.__BACKEND_KNEX__ = db
   }
 
-  const setupTigerbeetle = async () => {
-    if (!process.env.TIGERBEETLE_REPLICA_ADDRESSES) {
-      const { container, port } = await startTigerbeetleContainer()
-
-      process.env.TIGERBEETLE_REPLICA_ADDRESSES = `[${port}]`
-      global.__BACKEND_TIGERBEETLE__ = container
-    }
-  }
-
   const setupRedis = async () => {
     if (!process.env.REDIS_URL) {
       const redisContainer = await new GenericContainer('redis:7')
@@ -90,7 +83,7 @@ const setup = async (globalConfig): Promise<void> => {
     }
   }
 
-  await Promise.all([setupDatabase(), setupTigerbeetle(), setupRedis()])
+  await Promise.all([setupDatabase(), setupRedis()])
 }
 
 export default setup

@@ -1,3 +1,4 @@
+import Koa from 'koa'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext, ListContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'
@@ -100,7 +101,10 @@ async function listOutgoingPayments(
       getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
       toBody: (payment) => outgoingPaymentToBody(ctx.paymentPointer, payment)
     })
-  } catch (_) {
+  } catch (err) {
+    if (err instanceof Koa.HttpError) {
+      throw err
+    }
     ctx.throw(500, 'Error trying to list outgoing payments')
   }
 }

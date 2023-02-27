@@ -1,4 +1,5 @@
 import { IocContract } from '@adonisjs/fold'
+import { LiquidityAccountType } from '../accounting/service'
 
 import { AppServices } from '../app'
 import { isIncomingPaymentError } from '../open_payments/payment/incoming/errors'
@@ -16,7 +17,10 @@ export async function createIncomingPayment(
   }
 
   const accountingService = await deps.use('accountingService')
-  await accountingService.createLiquidityAccount(incomingPaymentOrError)
+  await accountingService.createLiquidityAccount(
+    incomingPaymentOrError,
+    LiquidityAccountType.INCOMING
+  )
 
   return incomingPaymentOrError
 }

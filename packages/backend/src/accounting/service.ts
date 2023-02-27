@@ -1,45 +1,14 @@
-import { Client } from 'tigerbeetle-node'
-import { v4 as uuid } from 'uuid'
+import { TransactionOrKnex } from 'objection'
+import { isTransferError, TransferError } from './errors'
 
-import {
-  AccountType,
-  calculateBalance,
-  createAccounts,
-  getAccounts
-} from './accounts'
-import {
-  areAllAccountExistsErrors,
-  BalanceTransferError,
-  CreateAccountError,
-  TransferError,
-  UnknownAccountError
-} from './errors'
-import { NewTransferOptions, createTransfers } from './transfers'
-import { BaseService } from '../shared/baseService'
-import { validateId } from '../shared/utils'
-import { toTigerbeetleId } from './utils'
-
-export enum AccountTypeCode {
-  Liquidity = 1,
-  LiquidityAsset = 2,
-  LiquidityPeer = 3,
-  LiquidityIncoming = 4,
-  LiquidityOutgoing = 5,
-  Settlement = 101
+export enum LiquidityAccountType {
+  ASSET = 'ASSET',
+  PEER = 'PEER',
+  INCOMING = 'INCOMING',
+  OUTGOING = 'OUTGOING',
+  WEB_MONETIZATION = 'WEB_MONETIZATION'
 }
 
-// Model classes that have a corresponding Tigerbeetle liquidity
-// account SHOULD implement this LiquidityAccount interface and call
-// createLiquidityAccount for each model instance.
-// The Tigerbeetle account id will be the model id.
-// Such models include:
-//   ../asset/model
-//   ../open_payments/payment_pointer/model
-//   ../open_payments/payment/incoming/model
-//   ../open_payments/payment/outgoing/model
-//   ../peer/model
-// Asset settlement Tigerbeetle accounts are the only exception.
-// Their account id is the corresponding asset's ledger value.
 export interface LiquidityAccount {
   id: string
   asset: {
@@ -80,9 +49,13 @@ export interface Transaction {
 export interface AccountingService {
   createLiquidityAccount(
     account: LiquidityAccount,
-    accTypeCode?: AccountTypeCode
+    accountType: LiquidityAccountType,
+    trx?: TransactionOrKnex
   ): Promise<LiquidityAccount>
-  createSettlementAccount(ledger: number): Promise<void>
+  createSettlementAccount(
+    ledger: number,
+    trx?: TransactionOrKnex
+  ): Promise<void>
   getBalance(id: string): Promise<bigint | undefined>
   getTotalSent(id: string): Promise<bigint | undefined>
   getAccountsTotalSent(ids: string[]): Promise<(bigint | undefined)[]>
@@ -96,280 +69,78 @@ export interface AccountingService {
   voidWithdrawal(id: string): Promise<void | TransferError>
 }
 
-export interface ServiceDependencies extends BaseService {
-  tigerbeetle: Client
+export interface TransferToCreate {
+  sourceAccountId: string
+  destinationAccountId: string
+  amount: bigint
+  ledger: number
+}
+
+interface CreateAccountToAccountTransferArgs {
+  transferArgs: TransferOptions
+  voidTransfers(transferIds: string[]): Promise<void | TransferError>
+  postTransfers(transferIds: string[]): Promise<void | TransferError>
+  getAccountReceived(accountRef: string): Promise<bigint | undefined>
+  createPendingTransfers(
+    transfers: TransferToCreate[]
+  ): Promise<string[] | TransferError>
   withdrawalThrottleDelay?: number
 }
 
-export function createAccountingService(
-  deps_: ServiceDependencies
-): AccountingService {
-  const deps = {
-    ...deps_,
-    logger: deps_.logger.child({ service: 'AccountingService' })
-  }
-  return {
-    createLiquidityAccount: (options, accTypeCode) =>
-      createLiquidityAccount(deps, options, accTypeCode),
-    createSettlementAccount: (ledger) => createSettlementAccount(deps, ledger),
-    getBalance: (id) => getAccountBalance(deps, id),
-    getTotalSent: (id) => getAccountTotalSent(deps, id),
-    getAccountsTotalSent: (ids) => getAccountsTotalSent(deps, ids),
-    getTotalReceived: (id) => getAccountTotalReceived(deps, id),
-    getAccountsTotalReceived: (ids) => getAccountsTotalReceived(deps, ids),
-    getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
-    createTransfer: (options) => createTransfer(deps, options),
-    createDeposit: (transfer) => createAccountDeposit(deps, transfer),
-    createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
-    postWithdrawal: (options) => postAccountWithdrawal(deps, options),
-    voidWithdrawal: (options) => voidAccountWithdrawal(deps, options)
-  }
-}
-
-export async function createLiquidityAccount(
-  deps: ServiceDependencies,
-  account: LiquidityAccount,
-  accTypeCode?: AccountTypeCode
-): Promise<LiquidityAccount> {
-  if (!validateId(account.id)) {
-    throw new Error('unable to create account, invalid id')
-  }
-
-  await createAccounts(deps, [
-    {
-      id: account.id,
-      type: AccountType.Credit,
-      ledger: account.asset.ledger,
-      code: accTypeCode ? accTypeCode : AccountTypeCode.Liquidity
-    }
-  ])
-  return account
-}
-
-export async function createSettlementAccount(
-  deps: ServiceDependencies,
-  ledger: number
-): Promise<void> {
-  try {
-    await createAccounts(deps, [
-      {
-        id: ledger,
-        type: AccountType.Debit,
-        ledger,
-        code: AccountTypeCode.Settlement
-      }
-    ])
-  } catch (err) {
-    // Don't complain if asset settlement account already exists.
-    // This could change if TigerBeetle could be reset between tests.
-    if (
-      err instanceof CreateAccountError &&
-      areAllAccountExistsErrors([err.code])
-    ) {
-      return
-    }
-    throw err
-  }
-}
-
-export async function getAccountBalance(
-  deps: ServiceDependencies,
-  id: string
-): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [id]))[0]
-  if (account) {
-    return calculateBalance(account)
-  }
-}
-
-export async function getAccountTotalSent(
-  deps: ServiceDependencies,
-  id: string
-): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [id]))[0]
-  if (account) {
-    return account.debits_posted
-  }
-}
-
-export async function getAccountsTotalSent(
-  deps: ServiceDependencies,
-  ids: string[]
-): Promise<(bigint | undefined)[]> {
-  if (ids.length > 0) {
-    const accounts = await getAccounts(deps, ids)
-    return ids.map(
-      (id) =>
-        accounts.find((account) => account.id === toTigerbeetleId(id))
-          ?.debits_posted
-    )
-  } else return []
-}
-
-export async function getAccountTotalReceived(
-  deps: ServiceDependencies,
-  id: string
-): Promise<bigint | undefined> {
-  const account = (await getAccounts(deps, [id]))[0]
-  if (account) {
-    return account.credits_posted
-  }
-}
-
-export async function getAccountsTotalReceived(
-  deps: ServiceDependencies,
-  ids: string[]
-): Promise<(bigint | undefined)[]> {
-  if (ids.length > 0) {
-    const accounts = await getAccounts(deps, ids)
-    return ids.map(
-      (id) =>
-        accounts.find((account) => account.id === toTigerbeetleId(id))
-          ?.credits_posted
-    )
-  } else return []
-}
-
-export async function getSettlementBalance(
-  deps: ServiceDependencies,
-  ledger: number
-): Promise<bigint | undefined> {
-  const assetAccount = (await getAccounts(deps, [ledger]))[0]
-
-  if (assetAccount) {
-    return calculateBalance(assetAccount)
-  }
-}
-
-export async function createTransfer(
-  deps: ServiceDependencies,
-  {
-    sourceAccount,
-    destinationAccount,
-    sourceAmount,
-    destinationAmount,
-    timeout
-  }: TransferOptions
+export async function createAccountToAccountTransfer(
+  args: CreateAccountToAccountTransferArgs
 ): Promise<Transaction | TransferError> {
+  const {
+    voidTransfers,
+    postTransfers,
+    createPendingTransfers,
+    getAccountReceived,
+    withdrawalThrottleDelay,
+    transferArgs
+  } = args
+
+  const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
+    transferArgs
+
   if (sourceAccount.id === destinationAccount.id) {
     return TransferError.SameAccounts
   }
-  if (sourceAmount <= BigInt(0)) {
+
+  if (sourceAmount <= 0n) {
     return TransferError.InvalidSourceAmount
   }
-  if (destinationAmount !== undefined && destinationAmount <= BigInt(0)) {
+
+  if (destinationAmount !== undefined && destinationAmount <= 0n) {
     return TransferError.InvalidDestinationAmount
   }
-  const transfers: NewTransferOptions[] = []
 
-  const addTransfer = ({
-    sourceAccountId,
-    destinationAccountId,
-    amount,
-    ledger
-  }: {
-    sourceAccountId: string
-    destinationAccountId: string
-    amount: bigint
-    ledger: number
-  }) => {
-    transfers.push({
-      id: uuid(),
-      sourceAccountId,
-      destinationAccountId,
-      amount,
-      timeout,
-      ledger
-    })
+  const transfersToCreateOrError =
+    sourceAccount.asset.ledger === destinationAccount.asset.ledger
+      ? buildSameAssetTransfers(transferArgs)
+      : buildCrossAssetTransfers(transferArgs)
+
+  if (isTransferError(transfersToCreateOrError)) {
+    return transfersToCreateOrError
   }
 
-  // Same asset / ledger:
-  if (sourceAccount.asset.ledger === destinationAccount.asset.ledger) {
-    addTransfer({
-      sourceAccountId: sourceAccount.id,
-      destinationAccountId: destinationAccount.id,
-      amount:
-        destinationAmount && destinationAmount < sourceAmount
-          ? destinationAmount
-          : sourceAmount,
-      ledger: sourceAccount.asset.ledger
-    })
-    // Same asset, different amounts
-    if (destinationAmount && sourceAmount !== destinationAmount) {
-      // Send excess source amount to liquidity account
-      if (destinationAmount < sourceAmount) {
-        addTransfer({
-          sourceAccountId: sourceAccount.id,
-          destinationAccountId: sourceAccount.asset.id,
-          amount: sourceAmount - destinationAmount,
-          ledger: sourceAccount.asset.ledger
-        })
-        // Deliver excess destination amount from liquidity account
-      } else {
-        addTransfer({
-          sourceAccountId: destinationAccount.asset.id,
-          destinationAccountId: destinationAccount.id,
-          amount: destinationAmount - sourceAmount,
-          ledger: sourceAccount.asset.ledger
-        })
-      }
-    }
-    // Different assets / ledgers:
-  } else {
-    // must specify destination amount
-    if (!destinationAmount) {
-      return TransferError.InvalidDestinationAmount
-    }
-    // Send to source liquidity account
-    // Deliver from destination liquidity account
-    addTransfer({
-      sourceAccountId: sourceAccount.id,
-      destinationAccountId: sourceAccount.asset.id,
-      amount: sourceAmount,
-      ledger: sourceAccount.asset.ledger
-    })
-    addTransfer({
-      sourceAccountId: destinationAccount.asset.id,
-      destinationAccountId: destinationAccount.id,
-      amount: destinationAmount,
-      ledger: destinationAccount.asset.ledger
-    })
-  }
-  const error = await createTransfers(deps, transfers)
-  if (error) {
-    switch (error.error) {
-      case TransferError.UnknownSourceAccount:
-        throw new UnknownAccountError(transfers[error.index].sourceAccountId)
-      case TransferError.UnknownDestinationAccount:
-        throw new UnknownAccountError(
-          transfers[error.index].destinationAccountId
-        )
-      case TransferError.InsufficientBalance:
-        if (
-          transfers[error.index].sourceAccountId === destinationAccount.asset.id
-        ) {
-          return TransferError.InsufficientLiquidity
-        }
-        return TransferError.InsufficientBalance
-      default:
-        throw new BalanceTransferError(error.error)
-    }
+  const pendingTransferIdsOrError = await createPendingTransfers(
+    transfersToCreateOrError
+  )
+
+  if (isTransferError(pendingTransferIdsOrError)) {
+    return pendingTransferIdsOrError
   }
 
-  const trx: Transaction = {
+  return {
     post: async (): Promise<void | TransferError> => {
-      const error = await createTransfers(
-        deps,
-        transfers.map((transfer) => ({ postId: transfer.id }))
-      )
+      const error = await postTransfers(pendingTransferIdsOrError)
+
       if (error) {
-        return error.error
+        return error
       }
+
       if (destinationAccount.onCredit) {
-        const totalReceived = await getAccountTotalReceived(
-          deps,
-          destinationAccount.id
-        )
+        const totalReceived = await getAccountReceived(destinationAccount.id)
 
         if (totalReceived === undefined) {
           throw new Error()
@@ -377,96 +148,86 @@ export async function createTransfer(
 
         await destinationAccount.onCredit({
           totalReceived,
-          withdrawalThrottleDelay: deps.withdrawalThrottleDelay
+          withdrawalThrottleDelay
         })
       }
     },
     void: async (): Promise<void | TransferError> => {
-      const error = await createTransfers(
-        deps,
-        transfers.map((transfer) => ({ voidId: transfer.id }))
-      )
+      const error = await voidTransfers(pendingTransferIdsOrError)
+
       if (error) {
-        return error.error
+        return error
       }
     }
   }
-  return trx
 }
 
-async function createAccountDeposit(
-  deps: ServiceDependencies,
-  { id, account, amount }: Deposit
-): Promise<void | TransferError> {
-  if (!validateId(id)) {
-    return TransferError.InvalidId
+export function buildCrossAssetTransfers(
+  args: TransferOptions
+): TransferToCreate[] | TransferError {
+  const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
+    args
+
+  if (!destinationAmount) {
+    return TransferError.InvalidDestinationAmount
   }
-  const error = await createTransfers(deps, [
-    {
-      id,
-      sourceAccountId: account.asset.ledger,
-      destinationAccountId: account.id,
-      amount,
-      ledger: account.asset.ledger
-    }
-  ])
-  if (error) {
-    return error.error
-  }
+
+  const transfers: TransferToCreate[] = []
+  // Send to source liquidity account
+  transfers.push({
+    sourceAccountId: sourceAccount.id,
+    destinationAccountId: sourceAccount.asset.id,
+    amount: sourceAmount,
+    ledger: sourceAccount.asset.ledger
+  })
+
+  // Deliver from destination liquidity account
+  transfers.push({
+    sourceAccountId: destinationAccount.asset.id,
+    destinationAccountId: destinationAccount.id,
+    amount: destinationAmount,
+    ledger: destinationAccount.asset.ledger
+  })
+
+  return transfers
 }
 
-async function createAccountWithdrawal(
-  deps: ServiceDependencies,
-  { id, account, amount, timeout }: Withdrawal
-): Promise<void | TransferError> {
-  if (!validateId(id)) {
-    return TransferError.InvalidId
-  }
-  const error = await createTransfers(deps, [
-    {
-      id,
-      sourceAccountId: account.id,
-      destinationAccountId: account.asset.ledger,
-      amount,
-      timeout,
-      ledger: account.asset.ledger
-    }
-  ])
-  if (error) {
-    return error.error
-  }
-}
+export function buildSameAssetTransfers(
+  args: TransferOptions
+): TransferToCreate[] {
+  const { sourceAccount, destinationAccount, sourceAmount, destinationAmount } =
+    args
+  const transfers: TransferToCreate[] = []
 
-async function voidAccountWithdrawal(
-  deps: ServiceDependencies,
-  withdrawalId: string
-): Promise<void | TransferError> {
-  if (!validateId(withdrawalId)) {
-    return TransferError.InvalidId
-  }
-  const error = await createTransfers(deps, [
-    {
-      voidId: withdrawalId
-    }
-  ])
-  if (error) {
-    return error.error
-  }
-}
+  transfers.push({
+    sourceAccountId: sourceAccount.id,
+    destinationAccountId: destinationAccount.id,
+    amount:
+      destinationAmount && destinationAmount < sourceAmount
+        ? destinationAmount
+        : sourceAmount,
+    ledger: sourceAccount.asset.ledger
+  })
 
-async function postAccountWithdrawal(
-  deps: ServiceDependencies,
-  withdrawalId: string
-): Promise<void | TransferError> {
-  if (!validateId(withdrawalId)) {
-    return TransferError.InvalidId
-  }
-  const error = await createTransfers(deps, [
-    {
-      postId: withdrawalId
+  if (destinationAmount && sourceAmount !== destinationAmount) {
+    // Send excess source amount to liquidity account
+    if (destinationAmount < sourceAmount) {
+      transfers.push({
+        sourceAccountId: sourceAccount.id,
+        destinationAccountId: sourceAccount.asset.id,
+        amount: sourceAmount - destinationAmount,
+        ledger: sourceAccount.asset.ledger
+      })
+    } else {
+      // Deliver excess destination amount from liquidity account
+      transfers.push({
+        sourceAccountId: destinationAccount.asset.id,
+        destinationAccountId: destinationAccount.id,
+        amount: destinationAmount - sourceAmount,
+        ledger: sourceAccount.asset.ledger
+      })
     }
-  ])
-  if (error) {
-    return error.error
   }
+
+  return transfers
 }

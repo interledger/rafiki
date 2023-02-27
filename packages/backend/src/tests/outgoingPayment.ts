@@ -7,6 +7,7 @@ import { Receiver } from '../open_payments/receiver/model'
 import { isOutgoingPaymentError } from '../open_payments/payment/outgoing/errors'
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/service'
+import { LiquidityAccountType } from '../accounting/service'
 
 export async function createOutgoingPayment(
   deps: IocContract<AppServices>,
@@ -48,7 +49,10 @@ export async function createOutgoingPayment(
   }
 
   const accountingService = await deps.use('accountingService')
-  await accountingService.createLiquidityAccount(outgoingPaymentOrError)
+  await accountingService.createLiquidityAccount(
+    outgoingPaymentOrError,
+    LiquidityAccountType.OUTGOING
+  )
 
   return outgoingPaymentOrError
 }

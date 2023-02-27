@@ -1,6 +1,6 @@
-import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 import { ZeroCopyIlpPrepare } from '../..'
-import { CreateAccountError } from '../../../../accounting/errors'
+import { AccountAlreadyExistsError } from '../../../../accounting/errors'
+import { LiquidityAccountType } from '../../../../accounting/service'
 import {
   AccountFactory,
   IlpPrepareFactory,
@@ -153,10 +153,10 @@ describe('Account Middleware', () => {
   })
 
   test.each`
-    name                                                              | createThrows                                                               | error
-    ${'create TB account for PENDING incoming payment success'}       | ${undefined}                                                               | ${''}
-    ${'create TB account for PENDING incoming payment throws exists'} | ${new CreateAccountError(CreateAccountErrorCode.exists)}                   | ${''}
-    ${'create TB account for PENDING incoming payment throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=8'}
+    name                                                              | createThrows                         | error
+    ${'create TB account for PENDING incoming payment success'}       | ${undefined}                         | ${''}
+    ${'create TB account for PENDING incoming payment throws exists'} | ${new AccountAlreadyExistsError('')} | ${''}
+    ${'create TB account for PENDING incoming payment throws error'}  | ${new Error('other error')}          | ${'other error'}
   `('$name', async ({ createThrows, error }): Promise<void> => {
     const outgoingAccount = IncomingPaymentAccountFactory.build({
       id: 'tbIncomingPayment',
@@ -190,14 +190,17 @@ describe('Account Middleware', () => {
       expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
       expect(ctx.accounts.incoming).toEqual(incomingAccount)
     }
-    expect(spy).toHaveBeenCalledWith(outgoingAccount)
+    expect(spy).toHaveBeenCalledWith(
+      outgoingAccount,
+      LiquidityAccountType.INCOMING
+    )
   })
 
   test.each`
-    name                                                     | createThrows                                                               | error
-    ${'create TB account for payment pointer success'}       | ${undefined}                                                               | ${''}
-    ${'create TB account for payment pointer throws exists'} | ${new CreateAccountError(CreateAccountErrorCode.exists)}                   | ${''}
-    ${'create TB account for payment pointer throws error'}  | ${new CreateAccountError(CreateAccountErrorCode.mutually_exclusive_flags)} | ${'CreateAccountError code=8'}
+    name                                                     | createThrows                         | error
+    ${'create TB account for payment pointer success'}       | ${undefined}                         | ${''}
+    ${'create TB account for payment pointer throws exists'} | ${new AccountAlreadyExistsError('')} | ${''}
+    ${'create TB account for payment pointer throws error'}  | ${new Error('other error')}          | ${'other error'}
   `('$name', async ({ createThrows, error }): Promise<void> => {
     const outgoingAccount = AccountFactory.build({
       id: 'spspFallback'
@@ -230,6 +233,9 @@ describe('Account Middleware', () => {
       expect(ctx.accounts.outgoing).toEqual(outgoingAccount)
       expect(ctx.accounts.incoming).toEqual(incomingAccount)
     }
-    expect(spy).toHaveBeenCalledWith(outgoingAccount)
+    expect(spy).toHaveBeenCalledWith(
+      outgoingAccount,
+      LiquidityAccountType.WEB_MONETIZATION
+    )
   })
 })

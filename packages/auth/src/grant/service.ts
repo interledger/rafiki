@@ -252,14 +252,20 @@ async function getGrantsPage(
 }
 
 async function lock(
-  _: ServiceDependencies,
+  deps: ServiceDependencies,
   grantId: string,
   trx: Transaction,
   timeoutMs?: number
 ): Promise<void> {
-  await trx<Grant>('grants')
+  const grants = await trx<Grant>(Grant.tableName)
     .select()
     .where('id', grantId)
     .forNoKeyUpdate()
     .timeout(timeoutMs ?? 5000)
+
+  if (grants.length <= 0) {
+    deps.logger.warn(
+      `No grant found when attempting to lock grantId: ${grantId}`
+    )
+  }
 }

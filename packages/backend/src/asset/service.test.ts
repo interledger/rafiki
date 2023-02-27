@@ -1,5 +1,4 @@
 import assert from 'assert'
-import { StartedTestContainer } from 'testcontainers'
 import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
@@ -9,26 +8,20 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
-import { startTigerbeetleContainer } from '../tests/tigerbeetle'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
-import { AccountTypeCode } from '../accounting/service'
+import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
-  let tigerbeetleContainer: StartedTestContainer
 
   beforeAll(async (): Promise<void> => {
-    const { container, port } = await startTigerbeetleContainer()
-    tigerbeetleContainer = container
-    Config.tigerbeetleReplicaAddresses = [port]
-
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
   })
@@ -39,7 +32,6 @@ describe('Asset Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
-    await tigerbeetleContainer.stop()
   })
 
   describe('create', (): void => {
@@ -56,7 +48,7 @@ describe('Asset Service', (): void => {
         }
         const asset = await assetService.create(options)
         assert.ok(!isAssetError(asset))
-        await expect(asset).toMatchObject({
+        expect(asset).toMatchObject({
           ...options,
           id: asset.id,
           ledger: asset.ledger,
@@ -82,9 +74,13 @@ describe('Asset Service', (): void => {
 
       expect(liquiditySpy).toHaveBeenCalledWith(
         asset,
-        AccountTypeCode.LiquidityAsset
+        LiquidityAccountType.ASSET,
+        expect.any(Function)
       )
-      expect(settlementSpy).toHaveBeenCalledWith(asset.ledger)
+      expect(settlementSpy).toHaveBeenCalledWith(
+        asset.ledger,
+        expect.any(Function)
+      )
 
       await expect(accountingService.getBalance(asset.id)).resolves.toEqual(
         BigInt(0)
@@ -101,7 +97,7 @@ describe('Asset Service', (): void => {
       }
       const asset = await assetService.create(options)
       assert.ok(!isAssetError(asset))
-      await expect(asset).toMatchObject({
+      expect(asset).toMatchObject({
         ...options,
         id: asset.id,
         ledger: asset.ledger
@@ -157,7 +153,7 @@ describe('Asset Service', (): void => {
             withdrawalThreshold
           })
           assert.ok(!isAssetError(asset))
-          await expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+          expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
           assetId = asset.id
         })
 

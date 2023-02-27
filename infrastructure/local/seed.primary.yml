@@ -27,5 +27,5 @@ accounts:
     path: accounts/wbdc
     postmanEnvVar: wbdcPaymentPointer
 fees:
-  - fixed: 100
+  - fixed: 1
     percentage: 0.02

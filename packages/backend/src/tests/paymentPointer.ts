@@ -10,6 +10,7 @@ import { AppServices } from '../app'
 import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { CreateOptions as BaseCreateOptions } from '../open_payments/payment_pointer/service'
+import { LiquidityAccountType } from '../accounting/service'
 
 interface CreateOptions extends Partial<BaseCreateOptions> {
   mockServerPort?: number
@@ -35,10 +36,13 @@ export async function createPaymentPointer(
   }
   if (options.createLiquidityAccount) {
     const accountingService = await deps.use('accountingService')
-    await accountingService.createLiquidityAccount({
-      id: paymentPointerOrError.id,
-      asset: paymentPointerOrError.asset
-    })
+    await accountingService.createLiquidityAccount(
+      {
+        id: paymentPointerOrError.id,
+        asset: paymentPointerOrError.asset
+      },
+      LiquidityAccountType.WEB_MONETIZATION
+    )
   }
   if (options.mockServerPort) {
     const url = new URL(paymentPointerOrError.url)

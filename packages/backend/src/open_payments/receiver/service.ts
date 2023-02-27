@@ -238,7 +238,7 @@ async function getIncomingPayment(
     } else {
       return await deps.openPaymentsClient.incomingPayment.get({
         url,
-        accessToken: grant.accessToken || ''
+        accessToken: grant.accessToken
       })
     }
   } catch (error) {
@@ -296,10 +296,24 @@ async function getIncomingPaymentGrant(
   const existingGrant = await deps.grantService.get(grantOptions)
   if (existingGrant) {
     if (existingGrant.expired) {
-      // TODO
-      // https://github.com/interledger/rafiki/issues/795
-      deps.logger.warn({ grantOptions }, 'Grant access token expired')
-      return undefined
+      if (!existingGrant.authServer) {
+        deps.logger.warn('Unknown auth server.')
+        return undefined
+      }
+      try {
+        const rotatedToken = await deps.openPaymentsClient.token.rotate({
+          url: existingGrant.getManagementUrl(existingGrant.authServer.url),
+          accessToken: existingGrant.accessToken
+        })
+        return deps.grantService.update(existingGrant, {
+          accessToken: rotatedToken.access_token.value,
+          managementUrl: rotatedToken.access_token.manage,
+          expiresIn: rotatedToken.access_token.expires_in
+        })
+      } catch (err) {
+        deps.logger.warn({ err }, 'Grant token rotation failed.')
+        return undefined
+      }
     }
     return existingGrant
   }

@@ -1,9 +1,3 @@
-import {
-  CreateAccountError as CreateAccountErrorCode,
-  CreateTransferError as CreateTransferErrorCode
-} from 'tigerbeetle-node'
-import { AccountId } from './utils'
-
 export class CreateAccountError extends Error {
   constructor(public code: number) {
     super('CreateAccountError code=' + code)
@@ -11,10 +5,10 @@ export class CreateAccountError extends Error {
   }
 }
 
-export class CreateTransferError extends Error {
-  constructor(public code: CreateTransferErrorCode) {
-    super()
-    this.name = 'CreateTransferError'
+export class AccountAlreadyExistsError extends Error {
+  constructor(public message: string) {
+    super(`AccountAlreadyExistsError ${message}`)
+    this.name = 'AccountAlreadyExistsError'
   }
 }
 
@@ -29,10 +23,12 @@ export enum TransferError {
   InvalidId = 'InvalidId',
   InvalidSourceAmount = 'InvalidSourceAmount',
   InvalidDestinationAmount = 'InvalidDestinationAmount',
+  InvalidTimeout = 'InvalidTimeout',
   SameAccounts = 'SameAccounts',
   TransferExists = 'TransferExists',
   TransferExpired = 'TransferExpired',
   UnknownTransfer = 'UnknownTransfer',
+  UnknownError = 'UnknownError',
   UnknownSourceAccount = 'UnknownSourceAccount',
   UnknownDestinationAccount = 'UnknownDestinationAccount'
 }
@@ -41,38 +37,9 @@ export enum TransferError {
 export const isTransferError = (o: any): o is TransferError =>
   Object.values(TransferError).includes(o)
 
-export function areAllAccountExistsErrors(
-  errors: CreateAccountErrorCode[]
-): boolean {
-  return areAllOfTypeAccountErrors(errors, [
-    CreateAccountErrorCode.exists_with_different_debits_pending,
-    CreateAccountErrorCode.exists_with_different_debits_posted,
-    CreateAccountErrorCode.exists_with_different_credits_pending,
-    CreateAccountErrorCode.exists_with_different_credits_posted,
-    CreateAccountErrorCode.exists
-  ])
-}
-
-export function areAllOfTypeAccountErrors(
-  errorsOccurred: CreateAccountErrorCode[],
-  errToVerify: CreateAccountErrorCode[]
-): boolean {
-  for (const occurred of errorsOccurred) {
-    if (!errToVerify.includes(occurred)) return false
-  }
-  return true
-}
-
 export class BalanceTransferError extends Error {
   constructor(public error: TransferError) {
     super()
     this.name = 'TransferError'
-  }
-}
-
-export class UnknownAccountError extends Error {
-  constructor(accountId: AccountId) {
-    super('Account not found. account=' + accountId)
-    this.name = 'UnknownAccountError'
   }
 }

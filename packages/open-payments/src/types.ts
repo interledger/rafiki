@@ -32,14 +32,18 @@ type PaginationResult<T> = {
   result: T[]
 }
 export type OutgoingPaymentPaginationResult = PaginationResult<OutgoingPayment>
-export type ForwardPagination =
-  RSComponents['schemas']['forward-pagination'] & {
-    last?: never
-  }
-export type BackwardPagination =
-  RSComponents['schemas']['backward-pagination'] & {
-    first?: never
-  }
+export type ForwardPagination = Omit<
+  RSOperations['list-incoming-payments']['parameters']['query'],
+  'last'
+> & {
+  last?: never
+}
+export type BackwardPagination = Omit<
+  RSOperations['list-incoming-payments']['parameters']['query'],
+  'first'
+> & {
+  first?: never
+}
 export type PaginationArgs = ForwardPagination | BackwardPagination
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
