@@ -1,7 +1,7 @@
 import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
-  isNonInteractiveGrant,
+  isPendingGrant,
   AccessAction,
   PaymentPointer as OpenPaymentsPaymentPointer
 } from 'open-payments'
@@ -151,7 +151,7 @@ async function getGrant(
     }
   )
 
-  if (isNonInteractiveGrant(grant)) {
+  if (!isPendingGrant(grant)) {
     return deps.grantService.create({
       ...grantOptions,
       accessToken: grant.access_token.value,
@@ -160,7 +160,7 @@ async function getGrant(
     })
   }
 
-  const errorMessage = 'Grant request requires interaction'
+  const errorMessage = 'Grant is pending/requires interaction'
   deps.logger.warn({ grantOptions }, errorMessage)
   return RemoteIncomingPaymentError.InvalidGrant
 }

@@ -2,7 +2,7 @@ import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
   ILPStreamConnection as OpenPaymentsConnection,
-  isNonInteractiveGrant,
+  isPendingGrant,
   AccessType,
   AccessAction
 } from 'open-payments'
@@ -335,7 +335,7 @@ async function getIncomingPaymentGrant(
     }
   )
 
-  if (isNonInteractiveGrant(grant)) {
+  if (!isPendingGrant(grant)) {
     try {
       return await deps.grantService.create({
         ...grantOptions,
@@ -348,6 +348,6 @@ async function getIncomingPaymentGrant(
       return undefined
     }
   }
-  deps.logger.warn({ grantOptions }, 'Grant request required interaction')
+  deps.logger.warn({ grantOptions }, 'Grant is pending/requires interaction')
   return undefined
 }
