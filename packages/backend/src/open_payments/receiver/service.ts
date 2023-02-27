@@ -336,11 +336,17 @@ async function getIncomingPaymentGrant(
   )
 
   if (!isPendingGrant(grant)) {
-    return await deps.grantService.create({
-      ...grantOptions,
-      accessToken: grant.access_token.value,
-      expiresIn: grant.access_token.expires_in
-    })
+    try {
+      return await deps.grantService.create({
+        ...grantOptions,
+        accessToken: grant.access_token.value,
+        managementUrl: grant.access_token.manage,
+        expiresIn: grant.access_token.expires_in
+      })
+    } catch (err) {
+      deps.logger.warn({ grantOptions }, 'Grant has wrong format')
+      return undefined
+    }
   }
   deps.logger.warn({ grantOptions }, 'Grant is pending/requires interaction')
   return undefined
