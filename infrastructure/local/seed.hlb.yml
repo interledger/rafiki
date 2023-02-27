@@ -1,6 +1,6 @@
 self:
-  graphqlUrl: http://peer-backend:3001/graphql
-  hostname: 'peer-backend'
+  graphqlUrl: http://happy-life-bank-backend:3001/graphql
+  hostname: 'happy-life-bank'
   mapHostname: 'primary-map'
   openPaymentPublishedPort: 4000
 asset:
@@ -8,7 +8,7 @@ asset:
   scale: 2
 peers:
   - initialLiquidity: '1000000000000'
-    peerUrl: http://backend:3002
+    peerUrl: http://cloud-nine-wallet-backend:3002
     peerIlpAddress: test.rafiki
 accounts:
   - name: 'Philip Fry'

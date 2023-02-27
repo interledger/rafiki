@@ -1,21 +1,26 @@
 version: '3'
 services:
-  peer-auth:
-    image: ghcr.io/interledger/rafiki-auth:latest
+  happy-life-bank:
     build:
       context: ../..
-      dockerfile: ./packages/auth/Dockerfile
+      dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
       - local_rafiki
     ports:
-      - "4006:3006"
+      - '3031:80'
     environment:
       NODE_ENV: development
-      AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
-      INTROSPECTION_HTTPSIG: "false"
-      AUTH_SERVER_DOMAIN: "http://localhost:4006"
-  peer-backend:
+      LOG_LEVEL: debug
+      PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.yml
+      KEY_FILE: /workspace/private-key.pem
+    volumes:
+      - ./seed.hlb.yml:/workspace/seed.yml
+      - ./private-key.hlb.pem:/workspace/private-key.pem
+    depends_on:
+      - happy-life-bank-backend
+  happy-life-bank-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../..
@@ -38,39 +43,34 @@ services:
       # Tigerbeetle will support DNS in future
       TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
       NONCE_REDIS_KEY: test
-      AUTH_SERVER_GRANT_URL: http://peer-auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://peer-auth:3006/introspect
+      AUTH_SERVER_GRANT_URL: http://happy-life-bank-auth:3006
+      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3006/introspect
       ILP_ADDRESS: test.peer
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
-      PUBLIC_HOST: http://peer-backend
-      WEBHOOK_URL: http://local-bank/webhooks
-      OPEN_PAYMENTS_URL: http://local-bank
-      PRICES_URL: http://local-bank/prices
+      PUBLIC_HOST: http://happy-life-bank-backend
+      WEBHOOK_URL: http://happy-life-bank/webhooks
+      OPEN_PAYMENTS_URL: http://happy-life-bank
+      PRICES_URL: http://happy-life-bank/prices
       REDIS_URL: redis://redis:6379/1
-      QUOTE_URL: http://local-bank/quotes
-      PAYMENT_POINTER_URL: https://peer-backend/.well-known/pay
-  local-bank:
+      QUOTE_URL: http://happy-life-bank/quotes
+      PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
+  happy-life-bank-auth:
+    image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../..
-      dockerfile: ./packages/mock-account-provider/Dockerfile
+      dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
       - local_rafiki
     ports:
-      - '3031:80'
+      - "4006:3006"
     environment:
       NODE_ENV: development
-      LOG_LEVEL: debug
-      PORT: 80
-      SEED_FILE_LOCATION: /workspace/seed.peer.yml
-      KEY_FILE: /workspace/private-key.pem
-    volumes:
-      - ./seed.peer.yml:/workspace/seed.peer.yml
-      - ./peer-private-key.pem:/workspace/private-key.pem
-    depends_on:
-      - peer-backend
-  peer-signatures:
+      AUTH_DATABASE_URL: postgresql://peerauth:peerauth@database/peerauth
+      INTROSPECTION_HTTPSIG: "false"
+      AUTH_SERVER_DOMAIN: "http://localhost:4006"
+  happy-life-bank-signatures:
     build:
       context: ../..
       dockerfile: ./packages/http-signature-utils/Dockerfile
@@ -80,7 +80,8 @@ services:
     environment:
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./peer-private-key.pem:/workspace/private-key.pem
+      - ./private-key.hlb.pem:/workspace/private-key.pem
+
 networks:
   local_rafiki:
     external: true

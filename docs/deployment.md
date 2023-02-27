@@ -40,11 +40,11 @@ pnpm localenv up -d --build
 
 ### Exploring Accounts on Mock account provider
 
-Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Provider.
+Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Provider called Cloud Nine Wallet.
 
 ![Mock Account Provider Accounts](./img/map-accounts.png)
 
-The accounts of the second instance can be found on `localhost:3031`.
+The accounts of the second instance (Happy Life Bank) can be found on `localhost:3031`.
 
 When clicking on the Account Name, a list of Transactions appears.
 
@@ -107,3 +107,5 @@ pnpm localenv:dbvolumes:remove
 ## Testing Environment
 
 ## Production Environment
+
+TODO: Describe helm charts and how to run a kubernetes cluster once we have them
