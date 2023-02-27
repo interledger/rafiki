@@ -77,7 +77,7 @@ services:
   peer-signatures:
     build:
       context: ../..
-      dockerfile: ./packages/http-signature-utils/Dockerfile
+      dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile
     restart: always
     ports:
       - '3041:3000'
