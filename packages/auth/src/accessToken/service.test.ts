@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
-import { v4 as uuid } from 'uuid'
+import { v4 } from 'uuid'
 import assert from 'assert'
 
 import { createTestApp, TestContainer } from '../tests/app'
@@ -53,7 +53,7 @@ describe('Access Token Service', (): void => {
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
     actions: [AccessAction.Read, AccessAction.Create],
-    identifier: `https://example.com/${uuid()}`,
+    identifier: `https://example.com/${v4()}`,
     limits: {
       receiver: 'https://wallet.com/alice',
       sendAmount: {
@@ -73,8 +73,8 @@ describe('Access Token Service', (): void => {
     grant = await Grant.query(trx).insertAndFetch({
       ...BASE_GRANT,
       continueToken: generateToken(),
-      continueId: uuid(),
-      interactId: uuid(),
+      continueId: v4(),
+      interactId: v4(),
       interactRef: generateNonce(),
       interactNonce: generateNonce()
     })
@@ -102,7 +102,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       accessToken = await AccessToken.query(trx).insert({
         value: 'test-access-token',
-        managementId: uuid(),
+        managementId: v4(),
         grantId: grant.id,
         expiresIn: 1234
       })
@@ -128,7 +128,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       accessToken = await AccessToken.query(trx).insert({
         value: 'test-access-token',
-        managementId: uuid(),
+        managementId: v4(),
         grantId: grant.id,
         expiresIn: 1234
       })
@@ -141,9 +141,9 @@ describe('Access Token Service', (): void => {
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {
-      await expect(accessTokenService.get(uuid())).resolves.toBeUndefined()
+      await expect(accessTokenService.get(v4())).resolves.toBeUndefined()
       await expect(
-        accessTokenService.getByManagementId(uuid())
+        accessTokenService.getByManagementId(v4())
       ).resolves.toBeUndefined()
     })
 
@@ -160,7 +160,7 @@ describe('Access Token Service', (): void => {
     beforeEach(async (): Promise<void> => {
       accessToken = await AccessToken.query(trx).insert({
         value: 'test-access-token',
-        managementId: uuid(),
+        managementId: v4(),
         grantId: grant.id,
         expiresIn: 1234
       })
@@ -210,8 +210,8 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         continueToken: generateToken(),
-        continueId: uuid(),
-        interactId: uuid(),
+        continueId: v4(),
+        interactId: v4(),
         interactRef: generateNonce(),
         interactNonce: generateNonce()
       })
@@ -219,7 +219,7 @@ describe('Access Token Service', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN,
         value: generateToken(),
-        managementId: uuid()
+        managementId: v4()
       })
     })
     test('Can revoke un-expired token', async (): Promise<void> => {
@@ -259,8 +259,8 @@ describe('Access Token Service', (): void => {
       grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT,
         continueToken: generateToken(),
-        continueId: uuid(),
-        interactId: uuid(),
+        continueId: v4(),
+        interactId: v4(),
         interactRef: generateNonce(),
         interactNonce: generateNonce()
       })
@@ -272,7 +272,7 @@ describe('Access Token Service', (): void => {
         grantId: grant.id,
         ...BASE_TOKEN,
         value: generateToken(),
-        managementId: uuid()
+        managementId: v4()
       })
       originalTokenValue = token.value
     })
