@@ -86,7 +86,7 @@ importers:
       openapi-types: ^12.1.0
       pg: ^8.9.0
       pino: ^8.11.0
-      pino-pretty: ^9.3.0
+      pino-pretty: ^9.4.0
       testcontainers: ^9.1.3
       token-introspection: workspace:*
       typescript: ^4.9.5
@@ -116,7 +116,7 @@ importers:
       openapi: link:../openapi
       pg: 8.9.0
       pino: 8.11.0
-      pino-pretty: 9.3.0
+      pino-pretty: 9.4.0
       testcontainers: 9.1.3
       token-introspection: link:../token-introspection
       uuid: 9.0.0
@@ -202,7 +202,7 @@ importers:
       openapi-types: ^12.1.0
       pg: ^8.9.0
       pino: ^8.11.0
-      pino-pretty: ^9.3.0
+      pino-pretty: ^9.4.0
       raw-body: ^2.5.2
       react: ~18.2.0
       rosie: ^2.1.0
@@ -253,7 +253,7 @@ importers:
       openapi: link:../openapi
       pg: 8.9.0
       pino: 8.11.0
-      pino-pretty: 9.3.0
+      pino-pretty: 9.4.0
       raw-body: 2.5.2
       tigerbeetle-node: 0.11.12
       token-introspection: link:../token-introspection
@@ -11298,8 +11298,8 @@ packages:
       split2: 4.1.0
     dev: false
 
-  /pino-pretty/9.3.0:
-    resolution: {integrity: sha512-T3FIzVc2sQfDY6FSjhvAEOeA1sby0YKI4he4VsI+d8q3MyYnfsPT+7OI3W/99v0v3TfJN/nMJradEvJWjbjRaQ==}
+  /pino-pretty/9.4.0:
+    resolution: {integrity: sha512-NIudkNLxnl7MGj1XkvsqVyRgo6meFP82ECXF2PlOI+9ghmbGuBUUqKJ7IZPIxpJw4vhhSva0IuiDSAuGh6TV9g==}
     hasBin: true
     dependencies:
       colorette: 2.0.19
