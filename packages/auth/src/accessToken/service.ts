@@ -7,12 +7,6 @@ import { Grant, GrantState } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 
-interface RotateTokenArgs {
-  managementId: string
-  tokenValue: string
-  trx?: TransactionOrKnex
-}
-
 export interface AccessTokenService {
   get(tokenValue: string): Promise<AccessToken | undefined>
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
