@@ -39,9 +39,9 @@ services:
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
       DATABASE_URL: postgresql://backend:backend@database/backend
-      TIGERBEETLE_CLUSTER_ID: 0
-      # Tigerbeetle will support DNS in future
-      TIGERBEETLE_REPLICA_ADDRESSES: '["10.5.0.50:4342"]'
+      USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
+      TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
+      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3006/introspect
@@ -56,7 +56,6 @@ services:
       QUOTE_URL: http://cloud-nine-wallet/quotes
       PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
     depends_on:
-      - tigerbeetle
       - database
       - redis
   cloud-nine-wallet-auth:
@@ -74,7 +73,6 @@ services:
       AUTH_DATABASE_URL: postgresql://auth:auth@database/auth
       INTROSPECTION_HTTPSIG: "false"
     depends_on:
-      - tigerbeetle
       - database
   cloud-nine-wallet-signatures:
     build:
@@ -102,32 +100,6 @@ services:
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
-  tigerbeetle:
-    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433
-    restart: unless-stopped
-    privileged: true
-    volumes:
-      - tigerbeetle-data:/var/lib/tigerbeetle
-    networks:
-      rafiki:
-        ipv4_address: 10.5.0.50
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        set -ex
-        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
-        set +e
-        ls $$DATA_FILE
-        DATA_FILE_EXISTS="$$?"
-        set -e
-        echo $$DATA_FILE_EXISTS
-        if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
-          /opt/beta-beetle/tigerbeetle format --cluster=0 --replica=0 $$DATA_FILE; 
-        fi
-        hostname -I
-        ls /var/lib/tigerbeetle
-        /opt/beta-beetle/tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
   redis:
     image: 'redis:7'
     restart: unless-stopped
@@ -136,7 +108,6 @@ services:
       
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
-  tigerbeetle-data: # named volumes can be managed easier using docker-compose
 
 networks:
   rafiki:

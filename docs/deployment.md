@@ -32,10 +32,10 @@ The following should be run from the root of the project.
 
 ```
 // If you have spun up this environment before then run
-pnpm localenv down && pnpm localenv:dbvolumes:remove
+pnpm localenv:stop && pnpm localenv:dbvolumes:remove
 
 // Start the local environment
-pnpm localenv up -d --build
+pnpm localenv:start
 ```
 
 ### Exploring Accounts on Mock account provider
@@ -98,13 +98,11 @@ Keep-Alive: timeout=5
 
 ```
 // tear down
-pnpm localenv down
+pnpm localenv:stop
 
-// delete database volumes (containers must be removed first with e.g. pnpm localenv down)
+// delete database volumes (containers must be removed first with e.g. pnpm localenv:stop)
 pnpm localenv:dbvolumes:remove
 ```
-
-## Testing Environment
 
 ## Production Environment
 

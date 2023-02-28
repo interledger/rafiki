@@ -61,7 +61,7 @@ export const Config = {
   useTigerbeetle: envBool('USE_TIGERBEETLE', false),
   tigerbeetleClusterId: envInt('TIGERBEETLE_CLUSTER_ID', 0),
   tigerbeetleReplicaAddresses: process.env.TIGERBEETLE_REPLICA_ADDRESSES
-    ? JSON.parse(process.env.TIGERBEETLE_REPLICA_ADDRESSES)
+    ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
     : ['3004'],
 
   pricesUrl: process.env.PRICES_URL, // optional

@@ -120,7 +120,7 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
           'error updating peer'
         )
         return {
-          code: '400',
+          code: '500',
           message: 'Error trying to update peer',
           success: false
         }
@@ -129,13 +129,40 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
 
 export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
   async (
-    parent,
+    _,
     args,
     ctx
   ): Promise<ResolversTypes['DeletePeerMutationResponse']> => {
-    // TODO:
-    console.log(ctx) // temporary to pass linting
-    return {}
+    const peerService = await ctx.container.use('peerService')
+    return peerService
+      .delete(args.id)
+      .then((peer: Peer | undefined) =>
+        peer
+          ? {
+              code: '200',
+              success: true,
+              message: 'Deleted ILP Peer'
+            }
+          : {
+              code: errorToCode[PeerError.UnknownPeer].toString(),
+              success: false,
+              message: errorToMessage[PeerError.UnknownPeer]
+            }
+      )
+      .catch((error) => {
+        ctx.logger.error(
+          {
+            id: args.id,
+            error
+          },
+          'error deleting peer'
+        )
+        return {
+          code: '500',
+          message: 'Error trying to delete peer',
+          success: false
+        }
+      })
   }
 
 export const peerToGraphql = (peer: Peer): SchemaPeer => ({
