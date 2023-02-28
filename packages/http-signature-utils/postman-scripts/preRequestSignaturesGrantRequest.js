@@ -2,13 +2,15 @@ const url = require('url')
 
 const body = JSON.parse(request.data)
 const client = url.parse(body.client)
-const jwkUrl = `http://localhost:${client.host === 'cloud-nine-wallet-backend' ? '3' : '4'}000${
-  client.path
-}/jwks.json`
+const jwkUrl = `http://localhost:${
+  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'
+}000${client.path}/jwks.json`
 pm.collectionVariables.set(
   'signatureUrl',
   pm.collectionVariables.get(
-    client.host === 'cloud-nine-wallet-backend' ? 'SignatureHost' : 'PeerSignatureHost'
+    client.host === 'cloud-nine-wallet-backend'
+      ? 'SignatureHost'
+      : 'PeerSignatureHost'
   )
 )
 
