@@ -51,7 +51,6 @@ export const Config = {
     envString('REDIS_TLS_KEY_FILE_PATH', ''),
     envString('REDIS_TLS_CERT_FILE_PATH', '')
   ),
-  coilApiGrpcUrl: envString('COIL_API_GRPC_URL', 'localhost:6000'),
   nonceRedisKey: envString('NONCE_REDIS_KEY', 'nonceToProject'),
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
   streamSecret: process.env.STREAM_SECRET
@@ -104,10 +103,7 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
-
-  /** Frontend **/
-  frontendUrl: envString('FRONTEND_URL', 'http://localhost:3000')
+  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', ''))
 }
 
 function parseRedisTlsConfig(
