@@ -106,7 +106,36 @@ pnpm localenv:dbvolumes:remove
 
 ## Production Environment
 
-TODO: Describe helm charts and how to run a kubernetes cluster once we have them
+The production environment consists of
+
+- `backend`
+- (optional but recommended) `auth`
+
+and the databases
+
+- Tigerbeetle or Postgres (accounting)
+- Postgres (Open Payments resources, auth resources)
+- Redis (STREAM details)
+
+To integrate Rafiki with your own services, view the [integration documentation](./integration.md).
+
+### Running the production environment
+
+Dependencies:
+
+- [Kubernetes](https://kubernetes.io/releases/download/)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
+- [helm](https://helm.sh/docs/intro/install/)
+
+TODO: Describe helm charts and how to install them on kubernetes cluster once we have them
+
+```
+// add rafiki repository
+$ helm repo add ...
+
+// install rafiki components
+$ helm install ...
+```
 
 ### Environment Variables
 
