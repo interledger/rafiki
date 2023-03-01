@@ -146,12 +146,12 @@ TODO: Describe helm charts and how to run a kubernetes cluster once we have them
 | `SIGNATURE_VERSION`             | `1`                                                         | to generate quote signatures                                             |
 | `SLIPPAGE`                      | `0.01`                                                      | accepted quote fluctuation, default 1%                                   |
 | `STREAM_SECRET`                 | 32 random bytes                                             | seed secret to generate connection secrets                               |
-| `TIGERBEETLE_CLUSTER_ID`        | `0`                                                         |                                                                          |
+| `TIGERBEETLE_CLUSTER_ID`        | `0`                                                         | Tigerbeetle cluster id                                                   |
 | `TIGERBEETLE_REPLICA_ADDRESSES` | `['3004']`                                                  | array of ports                                                           |
 | `USE_TIGERBEETLE`               | `false`                                                     | flag - use Tigerbeetle or Postgres for accounting                        |
 | `WEBHOOK_TIMEOUT`               | `2000`                                                      | milliseconds                                                             |
 | `WEBHOOK_URL`                   | `http://127.0.0.1:4001/webhook`                             | endpoint on the Account Servicing Entity that consumes webhook events    |
-| `WEBHOOK_WORKERS`               | `1`                                                         |                                                                          |
+| `WEBHOOK_WORKERS`               | `1`                                                         | number of workers processing webhook requests                            |
 | `WEBHOOK_WORKER_IDLE`           | `200`                                                       | milliseconds                                                             |
 | `WITHDRAWAL_THROTTLE_DELAY`     | `undefined`                                                 | delay in withdrawal processing                                           |
 
