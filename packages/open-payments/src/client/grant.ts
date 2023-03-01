@@ -6,8 +6,8 @@ import {
 } from '.'
 import {
   getASPath,
-  InteractiveGrant,
-  NonInteractiveGrant,
+  PendingGrant,
+  Grant,
   GrantRequest,
   GrantContinuationRequest
 } from '../types'
@@ -21,26 +21,25 @@ export interface GrantRoutes {
   request(
     postArgs: UnauthenticatedResourceRequestArgs,
     args: Omit<GrantRequest, 'client'>
-  ): Promise<InteractiveGrant | NonInteractiveGrant>
+  ): Promise<PendingGrant | Grant>
   continue(
     postArgs: ResourceRequestArgs,
     args: GrantContinuationRequest
-  ): Promise<NonInteractiveGrant>
+  ): Promise<Grant>
   cancel(postArgs: ResourceRequestArgs): Promise<void>
 }
 
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
   const requestGrantValidator = deps.openApi.createResponseValidator<
-    InteractiveGrant | NonInteractiveGrant
+    PendingGrant | Grant
   >({
     path: getASPath('/'),
     method: HttpMethod.POST
   })
-  const continueGrantValidator =
-    deps.openApi.createResponseValidator<NonInteractiveGrant>({
-      path: getASPath('/continue/{id}'),
-      method: HttpMethod.POST
-    })
+  const continueGrantValidator = deps.openApi.createResponseValidator<Grant>({
+    path: getASPath('/continue/{id}'),
+    method: HttpMethod.POST
+  })
   const cancelGrantValidator = deps.openApi.createResponseValidator({
     path: getASPath('/continue/{id}'),
     method: HttpMethod.DELETE

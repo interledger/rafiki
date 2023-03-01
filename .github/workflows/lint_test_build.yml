@@ -119,6 +119,15 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter http-signature-utils test
 
+  local-http-signatures:
+    runs-on: ubuntu-latest
+    needs: checkout
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm --filter local-http-signatures build
+
   token-introspection:
     runs-on: ubuntu-latest
     needs: checkout
@@ -146,6 +155,7 @@ jobs:
       - mock-account-provider
       - open-payments
       - http-signature-utils
+      - local-http-signatures
       - token-introspection
     steps:
       - uses: actions/checkout@v3

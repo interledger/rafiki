@@ -5,9 +5,12 @@ import logger from 'koa-logger'
 import json from 'koa-json'
 import bodyParser from 'koa-bodyparser'
 
-import { parseOrProvisionKey } from './utils/key'
-import { createHeaders, Headers } from './utils/headers'
-import { RequestLike } from '.'
+import {
+  parseOrProvisionKey,
+  createHeaders,
+  Headers,
+  RequestLike
+} from 'http-signature-utils'
 
 type AppContext<TResponseBody = unknown> = Koa.ParameterizedContext<
   Koa.DefaultState,

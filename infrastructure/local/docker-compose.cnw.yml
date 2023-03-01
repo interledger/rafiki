@@ -77,7 +77,7 @@ services:
   cloud-nine-wallet-signatures:
     build:
       context: ../..
-      dockerfile: ./packages/http-signature-utils/Dockerfile
+      dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile
     restart: always
     ports:
       - '3040:3000'
@@ -105,7 +105,7 @@ services:
     restart: unless-stopped
     networks:
       - rafiki
-      
+
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
 

@@ -8,8 +8,8 @@ import {
   GrantState,
   StartMethod,
   FinishMethod,
-  InteractiveGrant,
-  isInteractiveGrant
+  PendingGrant,
+  isPendingGrant
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -18,11 +18,11 @@ import { Pagination } from '../shared/baseModel'
 export interface GrantService {
   get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteraction(interactId: string): Promise<InteractiveGrant | undefined>
+  getByInteraction(interactId: string): Promise<PendingGrant | undefined>
   getByInteractionSession(
     interactId: string,
     interactNonce: string
-  ): Promise<InteractiveGrant | undefined>
+  ): Promise<PendingGrant | undefined>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
@@ -207,9 +207,9 @@ async function create(
 
 async function getByInteraction(
   interactId: string
-): Promise<InteractiveGrant | undefined> {
+): Promise<PendingGrant | undefined> {
   const grant = await Grant.query().findOne({ interactId })
-  if (!grant || !isInteractiveGrant(grant)) {
+  if (!grant || !isPendingGrant(grant)) {
     return undefined
   } else {
     return grant
@@ -219,11 +219,11 @@ async function getByInteraction(
 async function getByInteractionSession(
   interactId: string,
   interactNonce: string
-): Promise<InteractiveGrant | undefined> {
+): Promise<PendingGrant | undefined> {
   const grant = await Grant.query()
     .findOne({ interactId, interactNonce })
     .withGraphFetched('access')
-  if (!grant || !isInteractiveGrant(grant)) {
+  if (!grant || !isPendingGrant(grant)) {
     return undefined
   } else {
     return grant
