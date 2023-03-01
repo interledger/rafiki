@@ -8,6 +8,7 @@ export interface PaymentPointerRoutes {
   getKeys(args: UnauthenticatedResourceRequestArgs): Promise<JWKS>
 }
 
+/** @hidden */
 export const createPaymentPointerRoutes = (
   deps: RouteDeps
 ): PaymentPointerRoutes => {

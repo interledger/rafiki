@@ -16,7 +16,8 @@
     "generate:resource-server-types": "openapi-typescript src/openapi/resource-server.yaml --output src/openapi/generated/resource-server-types.ts",
     "generate:types": "pnpm generate:auth-server-types && pnpm generate:resource-server-types",
     "prepack": "pnpm build",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "typedoc": "typedoc"
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
@@ -24,6 +25,8 @@
     "base64url": "^3.0.1",
     "nock": "^13.3.0",
     "openapi-typescript": "^4.5.0",
+    "typedoc": "^0.23.26",
+    "typedoc-plugin-markdown": "^3.14.0",
     "typescript": "^4.9.5"
   },
   "dependencies": {

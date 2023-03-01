@@ -7,6 +7,7 @@ export interface ILPStreamConnectionRoutes {
   get(args: UnauthenticatedResourceRequestArgs): Promise<ILPStreamConnection>
 }
 
+/** @hidden */
 export const createILPStreamConnectionRoutes = (
   deps: RouteDeps
 ): ILPStreamConnectionRoutes => {

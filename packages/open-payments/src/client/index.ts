@@ -25,16 +25,19 @@ import {
 import { createTokenRoutes, TokenRoutes } from './token'
 import { createQuoteRoutes, QuoteRoutes } from './quote'
 
+/** @hidden */
 export interface BaseDeps {
   axiosInstance: AxiosInstance
   logger: Logger
 }
 
+/** @hidden */
 interface ClientDeps extends BaseDeps {
   resourceServerOpenApi: OpenAPI
   authServerOpenApi: OpenAPI
 }
 
+/** @hidden */
 export interface RouteDeps extends BaseDeps {
   axiosInstance: AxiosInstance
   openApi: OpenAPI
@@ -42,12 +45,16 @@ export interface RouteDeps extends BaseDeps {
 }
 
 export interface UnauthenticatedResourceRequestArgs {
+  /** The full url of the resource.
+   * e.g. https://openpayments.guide/alice/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c
+   */
   url: string
 }
 
 interface AuthenticatedRequestArgs {
   accessToken: string
 }
+
 export interface ResourceRequestArgs
   extends UnauthenticatedResourceRequestArgs,
     AuthenticatedRequestArgs {}
@@ -81,7 +88,9 @@ const createDeps = async (
 }
 
 export interface CreateUnauthenticatedClientArgs {
+  /** Milliseconds to wait before timing out an HTTP request */
   requestTimeoutMs?: number
+  /** The custom logger instance to use. This defaults to the pino logger. */
   logger?: Logger
 }
 
@@ -90,6 +99,9 @@ export interface UnauthenticatedClient {
   paymentPointer: PaymentPointerRoutes
 }
 
+/**
+ * Creates an OpenPayments client that only makes unauthenticated requests.
+ */
 export const createUnauthenticatedClient = async (
   args: CreateUnauthenticatedClientArgs
 ): Promise<UnauthenticatedClient> => {
@@ -171,3 +183,13 @@ export const createAuthenticatedClient = async (
     })
   }
 }
+
+// const cl = await createAuthenticatedClient({
+//   keyId:'',
+//   paymentPointerUrl:'',
+//   privateKey: ''
+// })
+
+// cl.grant.cancel({
+//   url:
+// })

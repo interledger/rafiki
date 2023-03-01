@@ -34,6 +34,7 @@ export interface IncomingPaymentRoutes {
   ): Promise<IncomingPaymentPaginationResult>
 }
 
+/** @hidden */
 export const createIncomingPaymentRoutes = (
   deps: RouteDeps
 ): IncomingPaymentRoutes => {
@@ -96,6 +97,7 @@ export const createIncomingPaymentRoutes = (
   }
 }
 
+/** @hidden */
 export const getIncomingPayment = async (
   deps: BaseDeps,
   args: ResourceRequestArgs,
@@ -123,6 +125,7 @@ export const getIncomingPayment = async (
   }
 }
 
+/** @hidden */
 export const createIncomingPayment = async (
   deps: BaseDeps,
   requestArgs: CollectionRequestArgs,
@@ -152,6 +155,7 @@ export const createIncomingPayment = async (
   }
 }
 
+/** @hidden */
 export const completeIncomingPayment = async (
   deps: BaseDeps,
   args: ResourceRequestArgs,
@@ -180,6 +184,7 @@ export const completeIncomingPayment = async (
   }
 }
 
+/** @hidden */
 export const listIncomingPayment = async (
   deps: BaseDeps,
   args: CollectionRequestArgs,
@@ -222,6 +227,7 @@ export const listIncomingPayment = async (
   return incomingPayments
 }
 
+/** @hidden */
 export const validateIncomingPayment = <T extends AnyIncomingPayment>(
   payment: T
 ): T => {
@@ -261,6 +267,7 @@ export const validateIncomingPayment = <T extends AnyIncomingPayment>(
   return payment
 }
 
+/** @hidden */
 export const validateCreatedIncomingPayment = (
   payment: IncomingPaymentWithConnection
 ): IncomingPaymentWithConnection => {
@@ -277,6 +284,7 @@ export const validateCreatedIncomingPayment = (
   return validateIncomingPayment(payment)
 }
 
+/** @hidden */
 export const validateCompletedIncomingPayment = (
   payment: IncomingPayment
 ): IncomingPayment => {

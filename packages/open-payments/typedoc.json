@@ -1,0 +1,14 @@
+{
+  "entryPoints": [
+    "./src/client/index.ts", 
+    "./src/client/grant.ts",
+    "./src/client/outgoing-payment.ts",
+    "./src/client/quote.ts",
+    "./src/client/payment-pointer.ts",
+    "./src/client/ilp-stream-connection.ts",
+    "./src/client/incoming-payment.ts",
+    "./src/client/token.ts"
+  ],
+  "out": "docs",
+  "plugin": ["typedoc-plugin-markdown"]
+}

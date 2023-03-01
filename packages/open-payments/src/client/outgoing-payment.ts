@@ -26,6 +26,7 @@ export interface OutgoingPaymentRoutes {
   ): Promise<OutgoingPayment>
 }
 
+/** @hidden */
 export const createOutgoingPaymentRoutes = (
   deps: RouteDeps
 ): OutgoingPaymentRoutes => {
@@ -76,6 +77,7 @@ export const createOutgoingPaymentRoutes = (
   }
 }
 
+/** @hidden */
 export const getOutgoingPayment = async (
   deps: BaseDeps,
   requestArgs: ResourceRequestArgs,
@@ -103,6 +105,7 @@ export const getOutgoingPayment = async (
   }
 }
 
+/** @hidden */
 export const createOutgoingPayment = async (
   deps: BaseDeps,
   requestArgs: CollectionRequestArgs,
@@ -132,6 +135,7 @@ export const createOutgoingPayment = async (
   }
 }
 
+/** @hidden */
 export const listOutgoingPayments = async (
   deps: BaseDeps,
   requestArgs: CollectionRequestArgs,
@@ -173,6 +177,7 @@ export const listOutgoingPayments = async (
   return outgoingPayments
 }
 
+/** @hidden */
 export const validateOutgoingPayment = (
   payment: OutgoingPayment
 ): OutgoingPayment => {

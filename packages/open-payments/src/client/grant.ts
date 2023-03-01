@@ -13,11 +13,17 @@ import {
 } from '../types'
 import { post, deleteRequest } from './requests'
 
-export interface GrantRouteDeps extends RouteDeps {
+interface GrantRouteDeps extends RouteDeps {
   client: string
 }
 
 export interface GrantRoutes {
+  /**
+   * Makes a new grant request.
+   * @see [Open Payments - Grant Request](https://docs.openpayments.guide/reference/post-request)
+   *
+   * @returns A grant with an access token, or a pending grant that requires user-interaction.
+   */
   request(
     postArgs: UnauthenticatedResourceRequestArgs,
     args: Omit<GrantRequest, 'client'>
@@ -26,9 +32,14 @@ export interface GrantRoutes {
     postArgs: ResourceRequestArgs,
     args: GrantContinuationRequest
   ): Promise<Grant>
+  /**
+   * Cancels a grant.
+   * @see [Open Payments - Cancel Grant](https://docs.openpayments.guide/reference/delete-continue)
+   */
   cancel(postArgs: ResourceRequestArgs): Promise<void>
 }
 
+/** @hidden */
 export const createGrantRoutes = (deps: GrantRouteDeps): GrantRoutes => {
   const requestGrantValidator = deps.openApi.createResponseValidator<
     PendingGrant | Grant

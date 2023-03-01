@@ -48,7 +48,8 @@ export type PaginationArgs = ForwardPagination | BackwardPagination
 export type PaymentPointer = RSComponents['schemas']['payment-pointer']
 export type JWK = RSComponents['schemas']['json-web-key']
 export type JWKS = RSComponents['schemas']['json-web-key-set']
-export type Quote = RSComponents['schemas']['quote']
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type Quote = RSComponents['schemas']['quote'] & {}
 type QuoteArgsBase = {
   receiver: RSOperations['create-quote']['requestBody']['content']['application/json']['receiver']
 }

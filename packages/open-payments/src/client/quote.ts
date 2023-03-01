@@ -16,6 +16,7 @@ export interface QuoteRoutes {
   ): Promise<Quote>
 }
 
+/** @hidden */
 export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   const { axiosInstance, openApi, logger } = deps
 
@@ -45,6 +46,7 @@ export const createQuoteRoutes = (deps: RouteDeps): QuoteRoutes => {
   }
 }
 
+/** @hidden */
 export const getQuote = async (
   deps: BaseDeps,
   args: ResourceRequestArgs,
@@ -61,6 +63,7 @@ export const getQuote = async (
   return quote
 }
 
+/** @hidden */
 export const createQuote = async (
   deps: BaseDeps,
   createArgs: CollectionRequestArgs,
