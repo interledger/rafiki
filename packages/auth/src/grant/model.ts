@@ -3,8 +3,8 @@ import { BaseModel } from '../shared/baseModel'
 import { Access } from '../access/model'
 import { join } from 'path'
 import {
-  InteractiveGrant as OpenPaymentsInteractiveGrant,
-  NonInteractiveGrant as OpenPaymentsGrant
+  PendingGrant as OpenPaymentsPendingGrant,
+  Grant as OpenPaymentsGrant
 } from 'open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 
@@ -66,7 +66,7 @@ export class Grant extends BaseModel {
   public interactNonce?: string // AS-generated nonce for post-interaction hash
 }
 
-interface ToOpenPaymentsInteractiveGrantArgs {
+interface ToOpenPaymentsPendingGrantArgs {
   authServerUrl: string
   client: {
     name: string
@@ -75,12 +75,12 @@ interface ToOpenPaymentsInteractiveGrantArgs {
   waitTimeSeconds?: number
 }
 
-export function toOpenPaymentsInteractiveGrant(
+export function toOpenPaymentPendingGrant(
   grant: Grant,
-  args: ToOpenPaymentsInteractiveGrantArgs
-): OpenPaymentsInteractiveGrant {
-  if (!isInteractiveGrant(grant)) {
-    throw new Error('Expected interactive grant')
+  args: ToOpenPaymentsPendingGrantArgs
+): OpenPaymentsPendingGrant {
+  if (!isPendingGrant(grant)) {
+    throw new Error('Expected pending/interactive grant')
   }
 
   const { authServerUrl, client, waitTimeSeconds } = args
@@ -111,7 +111,7 @@ interface ToOpenPaymentsGrantArgs {
   authServerUrl: string
 }
 
-export function toOpenPaymentsNonInteractiveGrant(
+export function toOpenPaymentsGrant(
   grant: Grant,
   args: ToOpenPaymentsGrantArgs,
   accessToken: AccessToken,
@@ -130,7 +130,7 @@ export function toOpenPaymentsNonInteractiveGrant(
   }
 }
 
-export interface InteractiveGrant extends Grant {
+export interface PendingGrant extends Grant {
   finishMethod: NonNullable<Grant['finishMethod']>
   finishUri: NonNullable<Grant['finishUri']>
   interactId: NonNullable<Grant['interactId']>
@@ -138,7 +138,7 @@ export interface InteractiveGrant extends Grant {
   interactNonce: NonNullable<Grant['interactNonce']> // AS-generated nonce for post-interaction hash
 }
 
-export function isInteractiveGrant(grant: Grant): grant is InteractiveGrant {
+export function isPendingGrant(grant: Grant): grant is PendingGrant {
   return !!(
     grant.finishMethod &&
     grant.finishUri &&

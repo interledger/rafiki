@@ -11,8 +11,8 @@ import {
   AuthenticatedClient as OpenPaymentsClient,
   AccessAction,
   AccessType,
-  mockInteractiveGrant,
-  mockNonInteractiveGrant,
+  mockPendingGrant,
+  mockGrant,
   mockPaymentPointer,
   mockIncomingPaymentWithConnection
 } from 'open-payments'
@@ -275,7 +275,7 @@ describe('Remote Incoming Payment Service', (): void => {
           paymentPointerUrl: paymentPointer.id
         })
 
-        const grant = mockNonInteractiveGrant()
+        const grant = mockGrant()
 
         const clientCreateIncomingPaymentSpy = jest
           .spyOn(openPaymentsClient.incomingPayment, 'create')
@@ -334,7 +334,7 @@ describe('Remote Incoming Payment Service', (): void => {
       test('returns error if created grant is interactive', async () => {
         jest
           .spyOn(openPaymentsClient.grant, 'request')
-          .mockResolvedValueOnce(mockInteractiveGrant())
+          .mockResolvedValueOnce(mockPendingGrant())
 
         await expect(
           remoteIncomingPaymentService.create({

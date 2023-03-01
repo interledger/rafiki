@@ -8,7 +8,7 @@ import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   PaymentPointer as OpenPaymentsPaymentPointer,
   mockPaymentPointer,
-  NonInteractiveGrant,
+  Grant as OpenPaymentsGrant,
   GrantRequest,
   mockIncomingPaymentWithConnection
 } from 'open-payments'
@@ -245,7 +245,7 @@ describe('Receiver Service', (): void => {
             start: ['redirect']
           }
         } as GrantRequest
-        const grant: NonInteractiveGrant = {
+        const grant: OpenPaymentsGrant = {
           access_token: {
             value: grantOptions.accessToken,
             manage: grantOptions.managementUrl,
