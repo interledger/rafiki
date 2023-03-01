@@ -9,6 +9,5 @@
     "./src/client/incoming-payment.ts",
     "./src/client/token.ts"
   ],
-  "out": "docs",
-  "plugin": ["typedoc-plugin-markdown"]
+  "out": "docs"
 }
