@@ -43,6 +43,37 @@ importers:
       tigerbeetle-node:
         built: true
 
+  infrastructure/local/local-http-signatures:
+    specifiers:
+      '@types/koa': 2.13.5
+      '@types/koa-bodyparser': ^4.3.10
+      '@types/koa-json': ^2.0.20
+      '@types/koa-logger': ^3.1.2
+      '@types/koa-router': ^7.4.4
+      '@types/node': ^18.7.12
+      http-signature-utils: workspace:../../../packages/http-signature-utils
+      koa: ^2.14.1
+      koa-bodyparser: ^4.3.0
+      koa-json: ^2.0.2
+      koa-logger: ^3.2.1
+      koa-router: ^12.0.0
+      typescript: ^4.9.5
+    dependencies:
+      http-signature-utils: link:../../../packages/http-signature-utils
+      koa: 2.14.1
+      koa-bodyparser: 4.3.0
+      koa-json: 2.0.2
+      koa-logger: 3.2.1
+      koa-router: 12.0.0
+    devDependencies:
+      '@types/koa': 2.13.5
+      '@types/koa-bodyparser': 4.3.10
+      '@types/koa-json': 2.0.20
+      '@types/koa-logger': 3.1.2
+      '@types/koa-router': 7.4.4
+      '@types/node': 18.11.18
+      typescript: 4.9.5
+
   packages/auth:
     specifiers:
       '@adonisjs/fold': ^8.2.0
@@ -292,43 +323,21 @@ importers:
 
   packages/http-signature-utils:
     specifiers:
-      '@types/koa': 2.13.5
-      '@types/koa-bodyparser': ^4.3.10
-      '@types/koa-json': ^2.0.20
-      '@types/koa-logger': ^3.1.2
-      '@types/koa-router': ^7.4.4
       '@types/node': ^18.7.12
       '@types/uuid': ^9.0.0
       http-message-signatures: ^0.1.2
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jose: ^4.13.0
-      koa: ^2.14.1
-      koa-bodyparser: ^4.3.0
-      koa-json: ^2.0.2
-      koa-logger: ^3.2.1
-      koa-router: ^12.0.0
-      node-mocks-http: ^1.12.1
       typescript: ^4.9.5
       uuid: ^9.0.0
     dependencies:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       jose: 4.13.0
-      koa: 2.14.1
-      koa-bodyparser: 4.3.0
-      koa-json: 2.0.2
-      koa-logger: 3.2.1
-      koa-router: 12.0.0
       uuid: 9.0.0
     devDependencies:
-      '@types/koa': 2.13.5
-      '@types/koa-bodyparser': 4.3.10
-      '@types/koa-json': 2.0.20
-      '@types/koa-logger': 3.1.2
-      '@types/koa-router': 7.4.4
       '@types/node': 18.11.9
       '@types/uuid': 9.0.0
-      node-mocks-http: 1.12.1
       typescript: 4.9.5
 
   packages/mock-account-provider:
@@ -4365,20 +4374,7 @@ packages:
     resolution: {integrity: sha512-p4rgkeRmiJu8XGC3eH2duRCNgnLUl6sjadEXH/AsieH/9fqYfXSZoZNC9CAe+FQK+QmM76hVyvuJ5Jrl5xxNeA==}
     dependencies:
       '@types/cookies': 0.7.7
-      '@types/koa': 2.13.4
-    dev: true
-
-  /@types/koa/2.13.4:
-    resolution: {integrity: sha512-dfHYMfU+z/vKtQB7NUrthdAEiSvnLebvBjwHtfFmpZmB7em2N3WVQdHgnFq+xvyVgxW5jKDmjWfLD3lw4g4uTw==}
-    dependencies:
-      '@types/accepts': 1.3.5
-      '@types/content-disposition': 0.5.5
-      '@types/cookies': 0.7.7
-      '@types/http-assert': 1.5.3
-      '@types/http-errors': 1.8.2
-      '@types/keygrip': 1.0.2
-      '@types/koa-compose': 3.2.5
-      '@types/node': 18.11.9
+      '@types/koa': 2.13.5
     dev: true
 
   /@types/koa/2.13.5:
@@ -4391,7 +4387,7 @@ packages:
       '@types/http-errors': 1.8.2
       '@types/keygrip': 1.0.2
       '@types/koa-compose': 3.2.5
-      '@types/node': 18.11.9
+      '@types/node': 18.11.18
     dev: true
 
   /@types/koa__cors/3.3.1:
