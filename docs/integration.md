@@ -4,24 +4,42 @@
 
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services.
 
-## Quotes / Fees
+## Quotes / Rates and Fees
 
 Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity.
 
-The Account Servicing Entity is required to provide an endpoint that is accessible to the Rafiki backend. It accepts a `POST` request with
+### Rates (Prices)
+
+For the quoting to be successful, Rafiki needs to be provided with the current exchange rate by the Account Servicing Entity. The Account Servicing Entity needs to expose an endpoint that accepts a `GET` requests and responds as follows.
+
+#### Response Body
+
+| Variable Name      | Type   | Description                                                                  |
+| ------------------ | ------ | ---------------------------------------------------------------------------- |
+| `base`             | String | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` |
+| `rates`            | Object | Object containing `<currency : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`   |
+| `rates.<currency>` | Number | exchange rate given `base` and `<currency>`                                  |
+
+The response status code for a successful request is a `200`. The `mock-account-provider` includes a [minimalistic example](../packages/mock-account-provider/app/routes/prices.ts).
+
+The `backend` package requires an environment variable called `PRICES_URL` which MUST specify the URL of this endpoint.
+
+### Fees
+
+If the Account Servicing Entity decides to add sending fees, it is required to provide an endpoint that is accessible to the Rafiki backend. It accepts a `POST` request with
 
 #### Request Body
 
-| Variable Name    | Type                                     | Description                                 |
-| ---------------- | ---------------------------------------- | ------------------------------------------- |
-| id               | string                                   | Interledger quote id                        |
-| paymentType      | enum: `'FixedSend'` \| `'FixedDelivery'` | fixed-send or fixed-receive payment         |
-| paymentPointerId | string                                   | id of sending payment pointer               |
-| receiver         | string                                   | receiving payment pointer                   |
-| sendAmount       | [Amount](#amount)                        | defined or quoted send amount               |
-| receiveAmount    | [Amount](#amount)                        | defined or quoted receive amount            |
-| createdAt        | string                                   | creation date and time of Interledger quote |
-| expiresAt        | string                                   | expiry date and time of Interledger quote   |
+| Variable Name      | Type                                     | Description                                 |
+| ------------------ | ---------------------------------------- | ------------------------------------------- |
+| `id`               | String                                   | Interledger quote id                        |
+| `paymentType`      | Enum: `'FixedSend'` \| `'FixedDelivery'` | fixed-send or fixed-receive payment         |
+| `paymentPointerId` | String                                   | id of sending payment pointer               |
+| `receiver`         | String                                   | receiving payment pointer                   |
+| `sendAmount`       | [Amount](#amount)                        | defined or quoted send amount               |
+| `receiveAmount`    | [Amount](#amount)                        | defined or quoted receive amount            |
+| `createdAt`        | String                                   | creation date and time of Interledger quote |
+| `expiresAt`        | String                                   | expiry date and time of Interledger quote   |
 
 #### Amount
 
@@ -29,13 +47,13 @@ The Account Servicing Entity is required to provide an endpoint that is accessib
 
 | Variable Name | Type                       | Description                                                                                               |
 | ------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
-| value         | string // number // bigint | e.g. `"4242"` or `4242`                                                                                   |
-| assetCode     | string                     | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
-| assetScale    | number                     | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
+| `value`       | String // Number // bigint | e.g. `"4242"` or `4242`                                                                                   |
+| `assetCode`   | String                     | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
+| `assetScale`  | Number                     | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
 
 If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-provider` includes a [minimalistic example](../packages/mock-account-provider/app/routes/quotes.ts).
 
-The `backend` package requires an environment variable called `QUOTE_URL` which MUST specify this endpoint.
+The `backend` package requires an environment variable called `QUOTE_URL` which MUST specify the URL of this endpoint.
 
 ## Webhook Events
 
@@ -47,19 +65,19 @@ The endpoint accepts a `POST` request with
 
 | Variable Name | Type                          | Description         |
 | ------------- | ----------------------------- | ------------------- |
-| id            | string                        | event id            |
-| type          | enum: [EventType](#eventtype) |
-| data          | Object                        | any additional data |
+| `id`          | String                        | event id            |
+| `type`        | Enum: [EventType](#eventtype) |
+| `data`        | Object                        | any additional data |
 
 #### EventType
 
-| Value                    | Description                                                                 |
-| ------------------------ | --------------------------------------------------------------------------- |
-| IncomingPaymentCompleted | Incoming payment is complete and doesn't accept any incoming funds anymore. |
-| IncomingPaymentExpired   | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
-| OutgoingPaymentCreated   | Outgoing payment was created.                                               |
-| OutgoingPaymentCompleted | Outgoing payment is complete.                                               |
-| OutgoingPaymentFailed    | Outgoing payment failed.                                                    |
+| Value                      | Description                                                                 |
+| -------------------------- | --------------------------------------------------------------------------- |
+| `IncomingPaymentCompleted` | Incoming payment is complete and doesn't accept any incoming funds anymore. |
+| `IncomingPaymentExpired`   | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
+| `OutgoingPaymentCreated`   | Outgoing payment was created.                                               |
+| `OutgoingPaymentCompleted` | Outgoing payment is complete.                                               |
+| `OutgoingPaymentFailed`    | Outgoing payment failed.                                                    |
 
 The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
 
