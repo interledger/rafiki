@@ -82,7 +82,7 @@
     "pino": "^8.11.0",
     "pino-pretty": "^9.4.0",
     "raw-body": "^2.5.2",
-    "tigerbeetle-node": "^0.11.12",
+    "tigerbeetle-node": "^0.12.0",
     "token-introspection": "workspace:*",
     "uuid": "^9.0.0"
   }

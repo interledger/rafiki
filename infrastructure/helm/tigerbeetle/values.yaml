@@ -23,10 +23,10 @@ statefulset:
   clusterId: "0"
 
   image:
-    repository: ghcr.io/tigerbeetledb/tigerbeetle@sha256
+    repository: ghcr.io/tigerbeetledb/tigerbeetle
     pullPolicy: IfNotPresent
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433"
+    tag: "latest"
 
   proxyImage:
     repository: nginx
