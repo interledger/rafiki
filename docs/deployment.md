@@ -142,7 +142,7 @@ $ helm install ...
 #### Backend
 
 | Variable                        | Default                                                     | Description                                                              |
-| ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ | --- |
 | `ADMIN_PORT`                    | `3001`                                                      | GraphQL Server port                                                      |
 | `AUTH_SERVER_GRANT_URL`         | `http://127.0.0.1:3006`                                     | endpoint to on the Open Payments Auth Server to request a grant          |
 | `AUTH_SERVER_INTROSPECTION_URL` | `http://127.0.0.1:3007/introspect`                          | endpoint to on the Open Payments Auth Server to introspect an auth token |
@@ -176,7 +176,7 @@ $ helm install ...
 | `SLIPPAGE`                      | `0.01`                                                      | accepted quote fluctuation, default 1%                                   |
 | `STREAM_SECRET`                 | 32 random bytes                                             | seed secret to generate connection secrets                               |
 | `TIGERBEETLE_CLUSTER_ID`        | `0`                                                         | Tigerbeetle cluster id                                                   |
-| `TIGERBEETLE_REPLICA_ADDRESSES` | `['3004']`                                                  | array of ports                                                           |
+| `TIGERBEETLE_REPLICA_ADDRESSES` | `3004`                                                      | comma separated IP addresses/ports                                       |     |
 | `USE_TIGERBEETLE`               | `false`                                                     | flag - use Tigerbeetle or Postgres for accounting                        |
 | `WEBHOOK_TIMEOUT`               | `2000`                                                      | milliseconds                                                             |
 | `WEBHOOK_URL`                   | `http://127.0.0.1:4001/webhook`                             | endpoint on the Account Servicing Entity that consumes webhook events    |
@@ -201,5 +201,5 @@ $ helm install ...
 | `INTROSPECTION_HTTPSIG`        | `false`                                                          | flag - check http signature on introspection requests                      |
 | `LOG_LEVEL`                    | `info`                                                           | [Pino Log Level](https://getpino.io/#/docs/api?id=levels)                  |
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |
-| `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server                                     |
+| `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server, same as in `AUTH_SERVER_DOMAIN`    |
 | `WAIT_SECONDS`                 | `5`                                                              | wait time included in `grant.continue`                                     |

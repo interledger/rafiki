@@ -1,6 +1,6 @@
 # Local Playground
 
-This environment will set up an playground where you can use the Rafiki Amdin APIs and the Open Payments APIs.
+This environment will set up an playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
 Prerequisites:
 
@@ -36,17 +36,19 @@ pnpm localenv:psql:dbvolumes:remove
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
 its own docker compose files ([Cloud Nine Wallet](./docker-compose.cnw.yml), [Happy Life Bank](./docker-compose.hlf.yml)).
 The primary Cloud Nine Wallet docker compose file (`docker-compose.cnw.yml`) includes the main Rafiki services `backend` and `auth`, as well
-as the required data stores tigerbeetle, redis, and postgres, so it can be run on its own. Furthermore,
-both include the `http-signatur-utils` for signature generation for Postman.
+as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
+both include the `local-signature-utils` signature generation app for Postman.
 The secondary Happy Life Bank docker compose file (`docker-compose.hlb.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
-The `pnpm run localenv` command starts both the primary instance and the secondary.
+The `pnpm localenv:start` command starts both the primary instance and the secondary.
 
 ## Environment overview
 
 ![Docker compose environment](./local-dev.png)
 
-(a) Cloud Nine Wallet User Interface - accessible at http://localhost:3030
+#### Cloud Nine Wallet
+
+(a) User Interface - accessible at http://localhost:3030
 
 (b) Admin API - accessible at http://localhost:3001/graphql
 
@@ -56,7 +58,9 @@ The `pnpm run localenv` command starts both the primary instance and the seconda
 
 (e) Postman Signature Service - accessible at accessible at http://localhost:3040
 
-(f) Happy Life Bank User Interface - accessible at http://localhost:3031
+#### Happy Life Bank
+
+(f) User Interface - accessible at http://localhost:3031
 
 (g) Admin API - accessible at http://localhost:4001/graphql
 
