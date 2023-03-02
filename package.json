@@ -23,7 +23,7 @@
     "localenv:start": "pnpm localenv up -d",
     "localenv:stop": "pnpm localenv down",
     "localenv:dbvolumes:remove": "docker volume rm local_database-data && docker volume rm local_tigerbeetle-data",
-    "localenv:psql": "docker compose -f ./infrastructure/local/docker-compose.yml -f ./infrastructure/local/peer-docker-compose.yml",
+    "localenv:psql": "docker compose -f ./infrastructure/local/docker-compose.cnw.yml -f ./infrastructure/local/docker-compose.hlb.yml",
     "localenv:psql:build": "pnpm localenv:psql build",
     "localenv:psql:start": "pnpm localenv:psql up -d",
     "localenv:psql:stop": "pnpm localenv down",
