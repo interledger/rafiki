@@ -9,7 +9,7 @@ asset:
 peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
-    peerIlpAddress: test.rafiki
+    peerIlpAddress: test.cloud-nine-wallet
 accounts:
   - name: 'Philip Fry'
     path: accounts/pfry

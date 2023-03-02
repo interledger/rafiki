@@ -45,7 +45,7 @@ services:
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-auth:3006
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3006/introspect
-      ILP_ADDRESS: test.peer
+      ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
       PUBLIC_HOST: http://happy-life-bank-backend
