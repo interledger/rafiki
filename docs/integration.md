@@ -14,11 +14,11 @@ For the quoting to be successful, Rafiki needs to be provided with the current e
 
 #### Response Body
 
-| Variable Name      | Type   | Description                                                                  |
-| ------------------ | ------ | ---------------------------------------------------------------------------- |
-| `base`             | String | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` |
-| `rates`            | Object | Object containing `<currency : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`   |
-| `rates.<currency>` | Number | exchange rate given `base` and `<currency>`                                  |
+| Variable Name        | Type   | Description                                                                                            |
+| -------------------- | ------ | ------------------------------------------------------------------------------------------------------ |
+| `base`               | String | asset code represented as [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` |
+| `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`                           |
+| `rates.<asset_code>` | Number | exchange rate given `base` and `<asset_code>`                                                          |
 
 The response status code for a successful request is a `200`. The `mock-account-provider` includes a [minimalistic example](../packages/mock-account-provider/app/routes/prices.ts).
 
