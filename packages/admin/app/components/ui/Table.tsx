@@ -23,23 +23,7 @@ type TCellProps = ComponentProps<'td'> & {
   children: ReactNode
 }
 
-export const Table = ({ children, className, ...props }: TableProps) => {
-  return (
-    <div className='overflow-x-auto'>
-      <table
-        className={cx(
-          className,
-          'min-w-full divide-y divide-mercury table-fixed'
-        )}
-        {...props}
-      >
-        {children}
-      </table>
-    </div>
-  )
-}
-
-export const THead = ({
+const THead = ({
   columns,
   thProps,
   trProps,
@@ -59,11 +43,11 @@ export const THead = ({
   )
 }
 
-export const TBody = ({ children, ...props }: TBodyProps) => {
+const TBody = ({ children, ...props }: TBodyProps) => {
   return <tbody {...props}>{children}</tbody>
 }
 
-export const TRow = ({ children, className, ...props }: TRowProps) => {
+const TRow = ({ children, className, ...props }: TRowProps) => {
   return (
     <tr
       className={cx(
@@ -77,7 +61,7 @@ export const TRow = ({ children, className, ...props }: TRowProps) => {
   )
 }
 
-export const TCell = ({ children, className, ...props }: TCellProps) => {
+const TCell = ({ children, className, ...props }: TCellProps) => {
   return (
     <td
       className={cx(
@@ -90,3 +74,24 @@ export const TCell = ({ children, className, ...props }: TCellProps) => {
     </td>
   )
 }
+
+export const Table = ({ children, className, ...props }: TableProps) => {
+  return (
+    <div className='overflow-x-auto'>
+      <table
+        className={cx(
+          className,
+          'min-w-full divide-y divide-mercury table-fixed'
+        )}
+        {...props}
+      >
+        {children}
+      </table>
+    </div>
+  )
+}
+
+Table.Head = THead
+Table.Body = TBody
+Table.Row = TRow
+Table.Cell = TCell

@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import {
   json,
   redirect,
@@ -12,12 +11,8 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { z } from 'zod'
-import { DangerZone } from '~/components/DangerZone'
-import PageHeader from '~/components/PageHeader'
-import { Button } from '~/components/ui/Button'
-import ErrorPanel from '~/components/ui/ErrorPanel'
-import { Input } from '~/components/ui/Input'
-import { PasswordInput } from '~/components/ui/PasswordInput'
+import { DangerZone, PageHeader } from '~/components'
+import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
 import {

@@ -1,6 +1,6 @@
-import { forwardRef } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { ButtonOrLink, type ButtonOrLinkProps } from './utils/ButtonOrLink'
+import { forwardRef } from 'react'
+import { ButtonOrLink, type ButtonOrLinkProps } from './ButtonOrLink'
 
 const buttonStyles = cva(
   'inline-flex items-center justify-center focus:outline-none disabled:cursor-not-allowed',

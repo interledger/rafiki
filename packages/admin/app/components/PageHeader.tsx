@@ -18,5 +18,3 @@ export const PageHeader = ({ children, className }: PageHeaderProps) => {
     </div>
   )
 }
-
-export default PageHeader

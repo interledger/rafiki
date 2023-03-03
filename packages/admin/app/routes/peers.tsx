@@ -1,8 +1,7 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import PageHeader from '~/components/PageHeader'
-import { Button } from '~/components/ui/Button'
-import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { PageHeader } from '~/components'
+import { Button, Table } from '~/components/ui'
 import { listPeers } from '~/lib/api/peer.server'
 import { paginationSchema } from '~/lib/validate.server'
 
@@ -53,18 +52,18 @@ export default function PeersPage() {
           </div>
         </PageHeader>
         <Table>
-          <THead
+          <Table.Head
             columns={['Name', 'ILP Address', 'Asset', 'Outgoing HTTP Endpoint']}
           />
-          <TBody>
+          <Table.Body>
             {peers.edges.length ? (
               peers.edges.map((peer) => (
-                <TRow
+                <Table.Row
                   key={peer.node.id}
                   className='cursor-pointer'
                   onClick={() => navigate(`/peers/${peer.node.id}`)}
                 >
-                  <TCell>
+                  <Table.Cell>
                     <div className='flex flex-col'>
                       {peer.node.name ? (
                         <span className='font-medium'>{peer.node.name}</span>
@@ -75,22 +74,22 @@ export default function PeersPage() {
                         (ID: {peer.node.id})
                       </div>
                     </div>
-                  </TCell>
-                  <TCell>{peer.node.staticIlpAddress}</TCell>
-                  <TCell>
+                  </Table.Cell>
+                  <Table.Cell>{peer.node.staticIlpAddress}</Table.Cell>
+                  <Table.Cell>
                     {peer.node.asset.code} (Scale: {peer.node.asset.scale})
-                  </TCell>
-                  <TCell>{peer.node.http.outgoing.endpoint}</TCell>
-                </TRow>
+                  </Table.Cell>
+                  <Table.Cell>{peer.node.http.outgoing.endpoint}</Table.Cell>
+                </Table.Row>
               ))
             ) : (
-              <TRow>
-                <TCell colSpan={4} className='text-center'>
+              <Table.Row>
+                <Table.Cell colSpan={4} className='text-center'>
                   No peers found.
-                </TCell>
-              </TRow>
+                </Table.Cell>
+              </Table.Row>
             )}
-          </TBody>
+          </Table.Body>
         </Table>
         {/* Pagination */}
         <div className='flex items-center justify-between p-5'>

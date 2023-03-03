@@ -1,5 +1,5 @@
-import { forwardRef, useId } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
+import { forwardRef, useId } from 'react'
 
 import { FieldError } from './FieldError'
 import { Label } from './Label'

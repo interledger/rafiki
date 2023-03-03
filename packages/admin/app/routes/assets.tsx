@@ -1,8 +1,7 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
-import PageHeader from '~/components/PageHeader'
-import { Button } from '~/components/ui/Button'
-import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { PageHeader } from '~/components'
+import { Button, Table } from '~/components/ui'
 import { listAssets } from '~/lib/api/asset.server'
 import { paginationSchema } from '~/lib/validate.server'
 
@@ -52,19 +51,21 @@ export default function AssetsPage() {
           </div>
         </PageHeader>
         <Table>
-          <THead columns={['ID', 'Code', 'Scale', 'Withdrawl threshold']} />
-          <TBody>
+          <Table.Head
+            columns={['ID', 'Code', 'Scale', 'Withdrawl threshold']}
+          />
+          <Table.Body>
             {assets.edges.length ? (
               assets.edges.map((asset) => (
-                <TRow
+                <Table.Row
                   key={asset.node.id}
                   className='cursor-pointer'
                   onClick={() => navigate(`/assets/${asset.node.id}`)}
                 >
-                  <TCell>{asset.node.id}</TCell>
-                  <TCell>{asset.node.code}</TCell>
-                  <TCell>{asset.node.scale}</TCell>
-                  <TCell>
+                  <Table.Cell>{asset.node.id}</Table.Cell>
+                  <Table.Cell>{asset.node.code}</Table.Cell>
+                  <Table.Cell>{asset.node.scale}</Table.Cell>
+                  <Table.Cell>
                     {asset.node.withdrawalThreshold ? (
                       asset.node.withdrawalThreshold
                     ) : (
@@ -72,17 +73,17 @@ export default function AssetsPage() {
                         No withdrawal threshold
                       </span>
                     )}
-                  </TCell>
-                </TRow>
+                  </Table.Cell>
+                </Table.Row>
               ))
             ) : (
-              <TRow>
-                <TCell colSpan={4} className='text-center'>
+              <Table.Row>
+                <Table.Cell colSpan={4} className='text-center'>
                   No assets found.
-                </TCell>
-              </TRow>
+                </Table.Cell>
+              </Table.Row>
             )}
-          </TBody>
+          </Table.Body>
         </Table>
         <div className='flex items-center justify-between p-5'>
           <Button

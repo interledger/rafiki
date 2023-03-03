@@ -5,16 +5,14 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { Button } from '~/components/ui/Button'
-import ErrorPanel from '~/components/ui/ErrorPanel'
-import { Input } from '~/components/ui/Input'
-import { createPeerSchema } from '~/lib/validate.server'
-import type { ZodFieldErrors } from '~/shared/types'
-import PageHeader from '~/components/PageHeader'
-import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { PageHeader } from '~/components/PageHeader'
+import { Button, ErrorPanel, Input } from '~/components/ui'
 import { type Asset } from '~/generated/graphql'
 import { listAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
+import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { createPeerSchema } from '~/lib/validate.server'
+import type { ZodFieldErrors } from '~/shared/types'
 
 export async function loader() {
   let assets: Asset[] = []

@@ -1,9 +1,8 @@
-import { forwardRef, useId, useState } from 'react'
 import type { ComponentPropsWithoutRef } from 'react'
-
+import { forwardRef, useId, useState } from 'react'
+import { Eye, EyeSlash } from '../icons'
 import { FieldError } from './FieldError'
 import { Label } from './Label'
-import { Eye, EyeSlash } from '../icons'
 
 type InputProps = Omit<
   ComponentPropsWithoutRef<'input'>,

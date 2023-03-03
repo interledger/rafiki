@@ -4,7 +4,7 @@ type ErrorPanelProps = {
   errors?: string[]
 }
 
-export default function ErrorPanel({ errors }: ErrorPanelProps) {
+export const ErrorPanel = ({ errors }: ErrorPanelProps) => {
   if (!errors) return null
   if (errors.length === 0) return null
 

@@ -4,21 +4,19 @@ import {
   type ActionArgs,
   type LoaderArgs
 } from '@remix-run/node'
-import { z } from 'zod'
 import {
   Form,
   useActionData,
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import PageHeader from '~/components/PageHeader'
-import { Button } from '~/components/ui/Button'
-import { Input } from '~/components/ui/Input'
-import ErrorPanel from '~/components/ui/ErrorPanel'
-import type { ZodFieldErrors } from '~/shared/types'
-import { updateAssetSchema } from '~/lib/validate.server'
-import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { z } from 'zod'
+import { PageHeader } from '~/components'
+import { Button, ErrorPanel, Input } from '~/components/ui'
 import { getAsset, updateAsset } from '~/lib/api/asset.server'
+import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { updateAssetSchema } from '~/lib/validate.server'
+import type { ZodFieldErrors } from '~/shared/types'
 
 export async function loader({ params }: LoaderArgs) {
   const assetId = params.assetId
