@@ -13,7 +13,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   )
 
   if (!pagination.success) {
-    throw new Error('Invalid pagination.')
+    throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
   const peers = await listPeers({

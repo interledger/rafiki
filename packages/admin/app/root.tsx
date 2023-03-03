@@ -32,10 +32,6 @@ export const loader = async ({ request }: LoaderArgs) => {
     return json({ message: null })
   }
 
-  if (!message.type) {
-    throw new Error('Message should have a type')
-  }
-
   return json(
     { message },
     {
@@ -147,10 +143,10 @@ export function CatchBoundary() {
           <div className='flex pt-20 md:pt-0 md:pl-60 flex-1 flex-col'>
             <main className='grid min-h-screen place-items-center'>
               <div className='flex items-center justify-center flex-col bg-offwhite p-10 rounded-md shadow-md space-y-2'>
-                <h4 className='font-semibold -tracking-widest text-[#F37F64]'>
+                <h4 className='font-semibold text-xl -tracking-widest text-[#F37F64]'>
                   {caughtResponse.status}
                 </h4>
-                <h2 className='text-2xl'>{caughtResponse.statusText}</h2>
+                <h2 className='text-xl'>{caughtResponse.statusText}</h2>
                 <Button to='/' aria-label='go to homepage'>
                   Go to homepage
                 </Button>

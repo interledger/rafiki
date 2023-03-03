@@ -32,13 +32,13 @@ export async function loader({ params }: LoaderArgs) {
 
   const result = z.string().uuid().safeParse(peerId)
   if (!result.success) {
-    throw new Error('Invalid peer ID.')
+    throw json(null, { status: 400, statusText: 'Invalid peer ID.' })
   }
 
   const peer = await getPeer({ id: result.data })
 
   if (!peer) {
-    throw new Response(null, { status: 400, statusText: 'Peer not found.' })
+    throw json(null, { status: 400, statusText: 'Peer not found.' })
   }
 
   return json({
@@ -371,7 +371,7 @@ export async function action({ request }: ActionArgs) {
       break
     }
     default:
-      throw new Error('Invalid intent.')
+      throw json(null, { status: 400, statusText: 'Invalid intent.' })
   }
 
   setMessage(session, {

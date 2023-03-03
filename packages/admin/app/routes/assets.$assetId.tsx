@@ -25,13 +25,13 @@ export async function loader({ params }: LoaderArgs) {
 
   const result = z.string().uuid().safeParse(assetId)
   if (!result.success) {
-    throw new Error('Invalid asset ID.')
+    throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
   const asset = await getAsset({ id: result.data })
 
   if (!asset) {
-    throw new Response(null, { status: 400, statusText: 'Asset not found.' })
+    throw json(null, { status: 404, statusText: 'Asset not found.' })
   }
 
   return json({
