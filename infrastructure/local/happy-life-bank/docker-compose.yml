@@ -2,11 +2,11 @@ version: '3'
 services:
   happy-life-bank:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
     restart: always
     networks:
-      - local_rafiki
+      - rafiki
     ports:
       - '3031:80'
     environment:
@@ -16,14 +16,14 @@ services:
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./seed.hlb.yml:/workspace/seed.yml
-      - ./private-key.hlb.pem:/workspace/private-key.pem
+      - ./seed.yml:/workspace/seed.yml
+      - ./private-key.pem:/workspace/private-key.pem
     depends_on:
       - happy-life-bank-backend
   happy-life-bank-backend:
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
-      context: ../..
+      context: ../../..
       dockerfile: ./packages/backend/Dockerfile
     restart: always
     privileged: true
@@ -31,14 +31,14 @@ services:
       - "4000:80"
       - "4001:3001"
     networks:
-      - local_rafiki
+      - rafiki
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
-      DATABASE_URL: postgresql://happy-life-bank-backend:happy-life-bank-backend@database/happy-life-bank-backend
+      DATABASE_URL: postgresql://happy_life_bank_backend:happy_life_bank_backend@database/happy_life_bank_backend
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
@@ -58,21 +58,21 @@ services:
   happy-life-bank-auth:
     image: ghcr.io/interledger/rafiki-auth:latest
     build:
-      context: ../..
+      context: ../../..
       dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
-      - local_rafiki
+      - rafiki
     ports:
       - "4006:3006"
     environment:
       NODE_ENV: development
-      AUTH_DATABASE_URL: postgresql://happy-life-bank-auth:happy-life-bank-auth@database/happy-life-bank-auth
+      AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@database/happy_life_bank_auth
       INTROSPECTION_HTTPSIG: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
   happy-life-bank-signatures:
     build:
-      context: ../..
+      context: ../../..
       dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile
     restart: always
     ports:
@@ -80,8 +80,8 @@ services:
     environment:
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./private-key.hlb.pem:/workspace/private-key.pem
+      - ./private-key.pem:/workspace/private-key.pem
 
 networks:
-  local_rafiki:
+  rafiki:
     external: true

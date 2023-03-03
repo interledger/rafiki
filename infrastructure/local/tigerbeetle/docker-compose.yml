@@ -26,8 +26,9 @@ services:
         hostname -I
         ls /var/lib/tigerbeetle
         /opt/beta-beetle/tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
-  cloud-nine-wallet-backend:
-    depends_on:
-      - tigerbeetle
 volumes:
   tigerbeetle-data:
+
+networks:
+  rafiki:
+    external: true
