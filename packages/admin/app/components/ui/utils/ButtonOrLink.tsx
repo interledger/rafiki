@@ -20,7 +20,6 @@ export const ButtonOrLink = forwardRef<
   const isLink = typeof to !== 'undefined' || typeof href !== 'undefined'
 
   if (isLink) {
-    // eslint-disable-next-line jsx-a11y/anchor-has-content
     return <AnchorOrLink href={href} to={to} ref={ref} {...props} />
   }
 
