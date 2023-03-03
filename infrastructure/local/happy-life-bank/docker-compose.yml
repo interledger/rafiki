@@ -1,6 +1,7 @@
 version: '3'
 services:
-  happy-life-bank:
+  mock-account-provider:
+    hostname: happy-life-bank
     build:
       context: ../../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
@@ -19,8 +20,9 @@ services:
       - ./seed.yml:/workspace/seed.yml
       - ./private-key.pem:/workspace/private-key.pem
     depends_on:
-      - happy-life-bank-backend
-  happy-life-bank-backend:
+      - backend
+  backend:
+    hostname: happy-life-bank-backend
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../../..
@@ -55,7 +57,8 @@ services:
       REDIS_URL: redis://redis:6379/1
       QUOTE_URL: http://happy-life-bank/quotes
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
-  happy-life-bank-auth:
+  auth:
+    hostname: happy-life-bank-auth
     image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../../..
@@ -70,7 +73,8 @@ services:
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@database/happy_life_bank_auth
       INTROSPECTION_HTTPSIG: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
-  happy-life-bank-signatures:
+  signatures:
+    hostname: happy-life-bank-signatures
     build:
       context: ../../..
       dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile

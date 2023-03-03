@@ -1,6 +1,7 @@
 version: '3'
 services:
-  cloud-nine-wallet:
+  mock-account-provider:
+    hostname: cloud-nine-wallet
     build:
       context: ../../..
       dockerfile: ./packages/mock-account-provider/Dockerfile
@@ -19,8 +20,9 @@ services:
       - ./seed.yml:/workspace/seed.yml
       - ./private-key.pem:/workspace/private-key.pem
     depends_on:
-      - cloud-nine-wallet-backend
-  cloud-nine-wallet-backend:
+      - backend
+  backend:
+    hostname: cloud-nine-wallet-backend
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../../..
@@ -58,7 +60,8 @@ services:
     depends_on:
       - database
       - redis
-  cloud-nine-wallet-auth:
+  auth:
+    hostname: cloud-nine-wallet-auth
     image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../../..
@@ -74,7 +77,8 @@ services:
       INTROSPECTION_HTTPSIG: "false"
     depends_on:
       - database
-  cloud-nine-wallet-signatures:
+  signatures:
+    hostname: cloud-nine-wallet-signatures
     build:
       context: ../../..
       dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile
