@@ -8,12 +8,8 @@ Once a grant is initialized, there are four main endpoints that are used as part
 - `GET /grant/:id/:nonce` (made by the IDP to the AS, secured with `x-idp-secret` header, returns grant info for the consent screen to enumerate )
 - `POST /grant/:id/:nonce/(accept OR reject)` (made by the IDP to the AS, secured with `x-idp-secret` header, accepts or rejects the grant based on the user's input on the consent screen. **IDP then redirects to `GET /interact/:id/:nonce/finish`**)
 - `GET /interact/:id/:nonce/finish` (ends the interaction established by `GET /interact/:id/:nonce`, redirects browser session to client callback. Contains a query param that either indicates a failure, or on success, a `hash` parameter that the client can use to verify the successful interaction, and the `interact_ref` that identifies the interaction on the AS.)
-  - Examples include:
-    - `?result=grant_rejected` (if interaction was rejected)
-    - `?result=grant_invalid` (if grant is not in a state where it may be accepted or rejected, e.g. already approved)
-    - `?hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A
-&interact_ref=4IFWWIKYBC2PQ6U56NL1` (if interaction was accepted)
-      - `hash` is a `sha-256` hash of values provided by the client in the body of the [grant initialization request](https://docs.openpayments.guide/reference/post) (`interact.finish.nonce`), values returned in the AS response for that request (`interact.finish`), the `interact_ref` provided alongside the `hash`, and the uri of the grant initialization request (`https://auth-server.com/`).
+  - Examples include: - `?result=grant_rejected` (if interaction was rejected) - `?result=grant_invalid` (if grant is not in a state where it may be accepted or rejected, e.g. already approved) - `?hash=p28jsq0Y2KK3WS__a42tavNC64ldGTBroywsWxT4md_jZQ1R\HZT8BOWYHcLmObM7XHPAdJzTZMtKBsaraJ64A
+&interact_ref=4IFWWIKYBC2PQ6U56NL1` (if interaction was accepted) - `hash` is a `sha-256` hash of values provided by the client in the body of the [grant initialization request](https://docs.openpayments.guide/reference/post) (`interact.finish.nonce`), values returned in the AS response for that request (`interact.finish`), the `interact_ref` provided alongside the `hash`, and the uri of the grant initialization request (`https://auth-server.com/`).
 - `POST /continue/:id` ([this should still be accurate](https://docs.openpayments.guide/reference/post-continue), final back-channel request made by client if interaction was successful, AS responds with an access token)
 
 ### On `x-idp-secret`
