@@ -4,7 +4,6 @@ import {
   type ActionArgs,
   type LoaderArgs
 } from '@remix-run/node'
-import { assetService } from '~/services/bootstrap.server'
 import { z } from 'zod'
 import {
   Form,
@@ -19,6 +18,7 @@ import ErrorPanel from '~/components/ui/ErrorPanel'
 import type { ZodFieldErrors } from '~/shared/types'
 import { updateAssetSchema } from '~/lib/validate.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { getAsset, updateAsset } from '~/lib/api/asset.server'
 
 export async function loader({ params }: LoaderArgs) {
   const assetId = params.assetId
@@ -28,7 +28,7 @@ export async function loader({ params }: LoaderArgs) {
     throw new Error('Invalid asset ID.')
   }
 
-  const asset = await assetService.get({ id: result.data })
+  const asset = await getAsset({ id: result.data })
 
   if (!asset) {
     throw new Response(null, { status: 400, statusText: 'Asset not found.' })
@@ -114,7 +114,7 @@ export async function action({ request }: ActionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const response = await assetService.update({
+  const response = await updateAsset({
     ...result.data,
     ...(result.data.withdrawalThreshold
       ? { withdrawalThreshold: result.data.withdrawalThreshold }

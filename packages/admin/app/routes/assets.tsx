@@ -3,8 +3,8 @@ import { useLoaderData, useNavigate } from '@remix-run/react'
 import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { listAssets } from '~/lib/api/asset.server'
 import { paginationSchema } from '~/lib/validate.server'
-import { assetService } from '~/services/bootstrap.server'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -16,7 +16,7 @@ export const loader = async ({ request }: LoaderArgs) => {
     throw new Error('Invalid pagination.')
   }
 
-  const assets = await assetService.list({
+  const assets = await listAssets({
     ...pagination.data
   })
 

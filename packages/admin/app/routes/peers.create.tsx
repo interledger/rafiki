@@ -8,12 +8,13 @@ import {
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
-import { assetService, peerService } from '~/services/bootstrap.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import PageHeader from '~/components/PageHeader'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
 import { type Asset } from '~/generated/graphql'
+import { listAssets } from '~/lib/api/asset.server'
+import { createPeer } from '~/lib/api/peer.server'
 
 export async function loader() {
   let assets: Asset[] = []
@@ -21,7 +22,7 @@ export async function loader() {
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await assetService.list({ after })
+    const response = await listAssets({ after })
 
     if (response.edges) {
       assets = [...assets, ...response.edges.map((edge) => edge.node)]
@@ -191,7 +192,7 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await peerService.create({
+  const response = await createPeer({
     name: result.data.name,
     http: {
       outgoing: {

@@ -3,8 +3,8 @@ import { useLoaderData, useNavigate } from '@remix-run/react'
 import PageHeader from '~/components/PageHeader'
 import { Button } from '~/components/ui/Button'
 import { Table, TBody, TCell, THead, TRow } from '~/components/ui/Table'
+import { listPeers } from '~/lib/api/peer.server'
 import { paginationSchema } from '~/lib/validate.server'
-import { peerService } from '~/services/bootstrap.server'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -16,7 +16,7 @@ export const loader = async ({ request }: LoaderArgs) => {
     throw new Error('Invalid pagination.')
   }
 
-  const peers = await peerService.list({
+  const peers = await listPeers({
     ...pagination.data
   })
 

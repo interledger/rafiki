@@ -3,11 +3,11 @@ import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
-import { assetService } from '~/services/bootstrap.server'
 import { createAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import PageHeader from '~/components/PageHeader'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { createAsset } from '~/lib/api/asset.server'
 
 export default function CreateAssetPage() {
   const response = useActionData<typeof action>()
@@ -91,7 +91,7 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const response = await assetService.create({
+  const response = await createAsset({
     ...result.data,
     ...(result.data.withdrawalThreshold
       ? { withdrawalThreshold: result.data.withdrawalThreshold }

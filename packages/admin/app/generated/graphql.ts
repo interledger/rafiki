@@ -1434,14 +1434,14 @@ export type Resolvers<ContextType = any> = {
 };
 
 
-export type GetAssetQueryQueryVariables = Exact<{
+export type GetAssetQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
-export type GetAssetQueryQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } | null };
+export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } | null };
 
-export type ListAssetsQueryQueryVariables = Exact<{
+export type ListAssetsQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -1449,30 +1449,30 @@ export type ListAssetsQueryQueryVariables = Exact<{
 }>;
 
 
-export type ListAssetsQueryQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListAssetsQuery = { __typename?: 'Query', assets: { __typename?: 'AssetsConnection', edges: Array<{ __typename?: 'AssetEdge', node: { __typename?: 'Asset', code: string, id: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
-export type CreateAssetMutationMutationVariables = Exact<{
+export type CreateAssetMutationVariables = Exact<{
   input: CreateAssetInput;
 }>;
 
 
-export type CreateAssetMutationMutation = { __typename?: 'Mutation', createAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string, asset?: { __typename?: 'Asset', id: string } | null } };
+export type CreateAssetMutation = { __typename?: 'Mutation', createAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string, asset?: { __typename?: 'Asset', id: string } | null } };
 
-export type UpdateAssetMutationMutationVariables = Exact<{
+export type UpdateAssetMutationVariables = Exact<{
   input: UpdateAssetInput;
 }>;
 
 
-export type UpdateAssetMutationMutation = { __typename?: 'Mutation', updateAssetWithdrawalThreshold: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
+export type UpdateAssetMutation = { __typename?: 'Mutation', updateAssetWithdrawalThreshold: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
 
-export type GetPeerQueryQueryVariables = Exact<{
+export type GetPeerQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
-export type GetPeerQueryQuery = { __typename?: 'Query', peer?: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, maxPacketAmount?: bigint | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null }, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string, authToken: string } } } | null };
+export type GetPeerQuery = { __typename?: 'Query', peer?: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, maxPacketAmount?: bigint | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null }, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string, authToken: string } } } | null };
 
-export type ListPeersQueryQueryVariables = Exact<{
+export type ListPeersQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
@@ -1480,25 +1480,25 @@ export type ListPeersQueryQueryVariables = Exact<{
 }>;
 
 
-export type ListPeersQueryQuery = { __typename?: 'Query', peers: { __typename?: 'PeersConnection', edges: Array<{ __typename?: 'PeerEdge', node: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string } }, asset: { __typename?: 'Asset', code: string, scale: number } } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListPeersQuery = { __typename?: 'Query', peers: { __typename?: 'PeersConnection', edges: Array<{ __typename?: 'PeerEdge', node: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string } }, asset: { __typename?: 'Asset', code: string, scale: number } } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
-export type CreatePeerMutationMutationVariables = Exact<{
+export type CreatePeerMutationVariables = Exact<{
   input: CreatePeerInput;
 }>;
 
 
-export type CreatePeerMutationMutation = { __typename?: 'Mutation', createPeer: { __typename?: 'CreatePeerMutationResponse', code: string, success: boolean, message: string, peer?: { __typename?: 'Peer', id: string } | null } };
+export type CreatePeerMutation = { __typename?: 'Mutation', createPeer: { __typename?: 'CreatePeerMutationResponse', code: string, success: boolean, message: string, peer?: { __typename?: 'Peer', id: string } | null } };
 
-export type UpdatePeerMutationMutationVariables = Exact<{
+export type UpdatePeerMutationVariables = Exact<{
   input: UpdatePeerInput;
 }>;
 
 
-export type UpdatePeerMutationMutation = { __typename?: 'Mutation', updatePeer: { __typename?: 'UpdatePeerMutationResponse', code: string, success: boolean, message: string } };
+export type UpdatePeerMutation = { __typename?: 'Mutation', updatePeer: { __typename?: 'UpdatePeerMutationResponse', code: string, success: boolean, message: string } };
 
-export type DeletePeerMutationMutationVariables = Exact<{
+export type DeletePeerMutationVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
-export type DeletePeerMutationMutation = { __typename?: 'Mutation', deletePeer: { __typename?: 'DeletePeerMutationResponse', code: string, success: boolean, message: string } };
+export type DeletePeerMutation = { __typename?: 'Mutation', deletePeer: { __typename?: 'DeletePeerMutationResponse', code: string, success: boolean, message: string } };

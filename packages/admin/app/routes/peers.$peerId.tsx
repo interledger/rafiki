@@ -18,13 +18,13 @@ import { Button } from '~/components/ui/Button'
 import ErrorPanel from '~/components/ui/ErrorPanel'
 import { Input } from '~/components/ui/Input'
 import { PasswordInput } from '~/components/ui/PasswordInput'
+import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
 import {
   peerGeneralInfoSchema,
   peerHttpInfoSchema,
   uuidSchema
 } from '~/lib/validate.server'
-import { peerService } from '~/services/bootstrap.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
 export async function loader({ params }: LoaderArgs) {
@@ -35,7 +35,7 @@ export async function loader({ params }: LoaderArgs) {
     throw new Error('Invalid peer ID.')
   }
 
-  const peer = await peerService.get({ id: result.data })
+  const peer = await getPeer({ id: result.data })
 
   if (!peer) {
     throw new Response(null, { status: 400, statusText: 'Peer not found.' })
@@ -282,7 +282,7 @@ export async function action({ request }: ActionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await peerService.update({
+      const response = await updatePeer({
         ...result.data,
         ...(result.data.maxPacketAmount
           ? { maxPacketAmount: result.data.maxPacketAmount }
@@ -307,7 +307,7 @@ export async function action({ request }: ActionArgs) {
         return json({ ...actionResponse }, { status: 400 })
       }
 
-      const response = await peerService.update({
+      const response = await updatePeer({
         id: result.data.id,
         http: {
           ...(result.data.incomingAuthTokens
@@ -348,7 +348,7 @@ export async function action({ request }: ActionArgs) {
         })
       }
 
-      const response = await peerService.delete(result.data)
+      const response = await deletePeer(result.data)
       if (!response?.success) {
         setMessage(session, {
           content: 'Could not delete peer.',
