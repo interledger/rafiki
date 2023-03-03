@@ -31,23 +31,8 @@ generates:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'
-    config:
-      defaultMapper: Partial<{T}>
-      # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
-      inputMaybeValue: T | undefined
-      scalars:
-        UInt8: number
-        UInt64: bigint
-  ../admin/app:
-    preset: near-operation-file
-    presetConfig:
-      folder: generated
-      baseTypesPath: '/generated/graphql.ts'
-      extension: '.ts'
-    plugins:
       - 'typescript-operations'
     config:
-      omitOperationSuffix: true
       defaultMapper: Partial<{T}>
       # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
       inputMaybeValue: T | undefined
