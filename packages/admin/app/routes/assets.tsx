@@ -19,13 +19,6 @@ export const loader = async ({ request }: LoaderArgs) => {
     ...pagination.data
   })
 
-  return json({ assets })
-}
-
-export default function AssetsPage() {
-  const { assets } = useLoaderData<typeof loader>()
-  const navigate = useNavigate()
-
   let previousPageUrl = '',
     nextPageUrl = ''
 
@@ -36,6 +29,14 @@ export default function AssetsPage() {
   if (assets.pageInfo.hasNextPage) {
     nextPageUrl = `/assets?after=${assets.pageInfo.endCursor}`
   }
+
+  return json({ assets, previousPageUrl, nextPageUrl })
+}
+
+export default function AssetsPage() {
+  const { assets, previousPageUrl, nextPageUrl } =
+    useLoaderData<typeof loader>()
+  const navigate = useNavigate()
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>

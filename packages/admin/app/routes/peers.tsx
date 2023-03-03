@@ -19,13 +19,6 @@ export const loader = async ({ request }: LoaderArgs) => {
     ...pagination.data
   })
 
-  return json({ peers })
-}
-
-export default function PeersPage() {
-  const { peers } = useLoaderData<typeof loader>()
-  const navigate = useNavigate()
-
   let previousPageUrl = '',
     nextPageUrl = ''
 
@@ -36,6 +29,13 @@ export default function PeersPage() {
   if (peers.pageInfo.hasNextPage) {
     nextPageUrl = `/peers?after=${peers.pageInfo.endCursor}`
   }
+
+  return json({ peers, previousPageUrl, nextPageUrl })
+}
+
+export default function PeersPage() {
+  const { peers, previousPageUrl, nextPageUrl } = useLoaderData<typeof loader>()
+  const navigate = useNavigate()
 
   return (
     <div className='pt-4 flex flex-col space-y-8'>
