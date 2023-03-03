@@ -3,8 +3,7 @@ import { cx } from 'class-variance-authority'
 import type { FC } from 'react'
 import { Fragment, useEffect } from 'react'
 import { type Message } from '~/lib/message.server'
-import { CheckCircleSolid } from './icons/CheckCircle'
-import { XCircleSolid } from './icons/XCircle'
+import { CheckCircleSolid, XCircleSolid } from './icons'
 
 interface SnackbarProps {
   id: string

@@ -3,7 +3,7 @@ import type { ComponentPropsWithoutRef } from 'react'
 
 import { FieldError } from './FieldError'
 import { Label } from './Label'
-import { Eye, EyeSlash } from '../icons/Eye'
+import { Eye, EyeSlash } from '../icons'
 
 type InputProps = Omit<
   ComponentPropsWithoutRef<'input'>,

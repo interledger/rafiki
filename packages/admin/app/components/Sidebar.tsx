@@ -2,8 +2,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { NavLink } from '@remix-run/react'
 import { cx } from 'class-variance-authority'
 import { Fragment, useState } from 'react'
-import { Bars } from './icons/Bars'
-import { X } from './icons/X'
+import { Bars, X } from './icons'
 
 const navigation = [
   {

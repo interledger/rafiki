@@ -11,7 +11,7 @@ import {
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import favicon from '../public/favicon.svg'
-import { XCircle } from './components/icons/XCircle'
+import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
