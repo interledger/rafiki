@@ -7,8 +7,6 @@ The Library includes
 - creating HTTP signature headers
 - validate and verify HTTP signature headers
 
-Additionally, the package includes an app that generates HTTP digests and signatures for Postman.
-
 ## Local Development
 
 ### Building
@@ -116,24 +114,3 @@ const isValidSig = await validateSignature(
   }
 ):
 ```
-
-## Running the Postman signature app
-
-### Prerequisites
-
-- [Docker](https://docs.docker.com/engine/install/) configured to [run as non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
-
-### Docker build
-
-In order to build the docker container to run the signature app, run the following command.
-
-```shell
-# from the root
-docker build -f packages/http-signature-utils/Dockerfile -t rafiki-signatures .
-```
-
-The following environment variables can be set.
-
-| Name     | Description                | Note                                                  |
-| -------- | -------------------------- | ----------------------------------------------------- |
-| KEY_FILE | `/PATH/TO/private-key.pem` | Key file needs to be copied into the docker container |

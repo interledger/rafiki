@@ -4,10 +4,8 @@ import { createAxiosInstance } from '../client/requests'
 import {
   ILPStreamConnection,
   IncomingPayment,
-  InteractiveGrant,
   GrantRequest,
   GrantContinuationRequest,
-  NonInteractiveGrant,
   OutgoingPayment,
   OutgoingPaymentPaginationResult,
   PaymentPointer,
@@ -16,7 +14,9 @@ import {
   Quote,
   IncomingPaymentPaginationResult,
   IncomingPaymentWithConnection,
-  IncomingPaymentWithConnectionUrl
+  IncomingPaymentWithConnectionUrl,
+  PendingGrant,
+  Grant
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
@@ -198,9 +198,9 @@ export const mockOutgoingPaymentPaginationResult = (
   }
 }
 
-export const mockInteractiveGrant = (
-  overrides?: Partial<InteractiveGrant>
-): InteractiveGrant => ({
+export const mockPendingGrant = (
+  overrides?: Partial<PendingGrant>
+): PendingGrant => ({
   interact: {
     redirect: 'http://example.com/redirect',
     finish: 'EF5C2D8DF0663FD5'
@@ -215,9 +215,7 @@ export const mockInteractiveGrant = (
   ...overrides
 })
 
-export const mockNonInteractiveGrant = (
-  overrides?: Partial<NonInteractiveGrant>
-): NonInteractiveGrant => ({
+export const mockGrant = (overrides?: Partial<Grant>): Grant => ({
   access_token: {
     value: '99C36C2A4DB5BEBC',
     manage: 'http://example.com/token/',
