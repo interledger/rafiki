@@ -66,50 +66,57 @@ The endpoint accepts a `POST` request with
 | Variable Name | Type                          | Description         |
 | ------------- | ----------------------------- | ------------------- |
 | `id`          | String                        | event id            |
-| `type`        | Enum: [EventType](#eventtype) |
+| `type`        | Enum: [EventType](#eventtype) |                     |
 | `data`        | Object                        | any additional data |
 
 #### EventType
 
-| Value                      | Description                                                                 |
-| -------------------------- | --------------------------------------------------------------------------- |
-| `IncomingPaymentCompleted` | Incoming payment is complete and doesn't accept any incoming funds anymore. |
-| `IncomingPaymentExpired`   | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
-| `OutgoingPaymentCreated`   | Outgoing payment was created.                                               |
-| `OutgoingPaymentCompleted` | Outgoing payment is complete.                                               |
-| `OutgoingPaymentFailed`    | Outgoing payment failed.                                                    |
+| Value                              | Description                                                                 |
+| ---------------------------------- | --------------------------------------------------------------------------- |
+| `incoming_payment.completed`       | Incoming payment is complete and doesn't accept any incoming funds anymore. |
+| `incoming_payment.expired`         | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
+| `outgoing_payment.created`         | Outgoing payment was created.                                               |
+| `outgoing_payment.completed`       | Outgoing payment is complete.                                               |
+| `outgoing_payment.failed`          | Outgoing payment failed.                                                    |
+| `payment_pointer.web_monetization` | Web Monetization payments received via STREAM.                              |
 
 The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
 
 ### Event Handlers
 
-#### `IncomingPaymentCompleted`
+#### `incoming_payment.completed`
 
-An [Open Payments](./glossary#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
+An [Open Payments](./glossary#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
-#### `IncomingPaymentExpired`
+#### `incoming_payment.expired`
 
 An [Open Payments](./glossary#open-payments) Incoming Payment has expired, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
-#### `OutgoingPaymentCreated`
+#### `outgoing_payment.created`
 
 An [Open Payments](./glossary#open-payments) Outgoing Payment has been created. It requires liquidity to be processed. The Account Servicing Entity SHOULD reserve the maximum requisite funds for the payment attempt on the payer's account.
 
 - Action: Deposit liquidity
 
-#### `OutgoingPaymentCompleted`
+#### `outgoing_payment.completed`
 
 An [Open Payments](./glossary#open-payments) Outgoing Payment was completed, i.e. it won't send any further funds. The Account Servicing Entity SHOULD withdraw any excess liquidity and deposit it into the payer's account.
 
 - Action: Withdraw liquidity
 
-#### `OutgoingPaymentFailed`
+#### `outgoing_payment.failed`
 
 An [Open Payments](./glossary#open-payments) Outgoing Payment failed to send all (or any) of the funds and won't re-try. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and return it to the payer's account.
+
+- Action: Withdraw liquidity
+
+#### `payment_pointer.web_monetization`
+
+A [Web Monetization](./glossary#web-monetization) payment has been received via [STREAM](./glossary.md#stream) by a payment pointer. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
