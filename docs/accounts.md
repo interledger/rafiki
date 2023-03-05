@@ -68,6 +68,20 @@ A settlement account may only hold a negative balance. Rafiki enforces that its 
 | ---------------- | --------------- |
 | Outgoing Payment | Payment Pointer |
 
+##### Send Amount < Receive Amount
+
+| Debit Account    | Credit Account   |
+| ---------------- | ---------------- |
+| Outgoing Payment | Incoming Payment |
+| Asset Liquidity  | Incoming Payment |
+
+##### Send Amount > Receive Amount
+
+| Debit Account    | Credit Account   |
+| ---------------- | ---------------- |
+| Outgoing Payment | Incoming Payment |
+| Outgoing Payment | Asset Liquidity  |
+
 ##### Cross currency
 
 | Debit Account    | Credit Account   | Asset |
