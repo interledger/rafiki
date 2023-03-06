@@ -20,18 +20,18 @@ export type AddAssetLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the asset to add liquidity. */
-  assetId: Scalars['String'];
+  assetId: Scalars['ID'];
   /** The id of the transfer. */
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 export type AddPeerLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
-  id: Scalars['String'];
+  id: Scalars['ID'];
   /** The id of the peer to add liquidity. */
-  peerId: Scalars['String'];
+  peerId: Scalars['ID'];
 };
 
 export enum Alg {
@@ -40,23 +40,32 @@ export enum Alg {
 
 export type Amount = {
   __typename?: 'Amount';
+  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   assetCode: Scalars['String'];
+  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   assetScale: Scalars['UInt8'];
   value: Scalars['UInt64'];
 };
 
 export type AmountInput = {
+  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   assetCode: Scalars['String'];
+  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   assetScale: Scalars['UInt8'];
   value: Scalars['UInt64'];
 };
 
 export type Asset = Model & {
   __typename?: 'Asset';
+  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String'];
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Asset id */
   id: Scalars['ID'];
+  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];
+  /** Minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: Maybe<Scalars['UInt64']>;
 };
 
@@ -67,7 +76,9 @@ export type AssetEdge = {
 };
 
 export type AssetInput = {
+  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String'];
+  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];
 };
 
@@ -86,8 +97,11 @@ export type AssetsConnection = {
 };
 
 export type CreateAssetInput = {
+  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String'];
+  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];
+  /** Minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']>;
 };
 
@@ -95,35 +109,48 @@ export type CreateAssetLiquidityWithdrawalInput = {
   /** Amount of withdrawal. */
   amount: Scalars['UInt64'];
   /** The id of the asset to create the withdrawal for. */
-  assetId: Scalars['String'];
+  assetId: Scalars['ID'];
   /** The id of the withdrawal. */
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 export type CreateIncomingPaymentInput = {
+  /** Human readable description of the incoming payment that will be visible to the account holder. */
   description?: InputMaybe<Scalars['String']>;
+  /** Expiration date-time */
   expiresAt?: InputMaybe<Scalars['String']>;
+  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
+  /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
-  paymentPointerId: Scalars['String'];
+  /** Id of the payment pointer under which the incoming payment will be created */
+  paymentPointerId: Scalars['ID'];
 };
 
 export type CreateOutgoingPaymentInput = {
+  /** Human readable description of the outgoing payment that will be visible to the account holder. */
   description?: InputMaybe<Scalars['String']>;
+  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
-  paymentPointerId: Scalars['String'];
-  quoteId: Scalars['String'];
+  /** Id of the payment pointer under which the outgoing payment will be created */
+  paymentPointerId: Scalars['ID'];
+  /** Id of the corresponding quote for that outgoing payment */
+  quoteId: Scalars['ID'];
 };
 
 export type CreatePaymentPointerInput = {
-  assetId: Scalars['String'];
+  /** Asset of the payment pointer */
+  assetId: Scalars['ID'];
+  /** Public name associated with the payment pointer */
   publicName?: InputMaybe<Scalars['String']>;
+  /** Payment Pointer URL */
   url: Scalars['String'];
 };
 
 export type CreatePaymentPointerKeyInput = {
+  /** Public key */
   jwk: JwkInput;
-  paymentPointerId: Scalars['String'];
+  paymentPointerId: Scalars['ID'];
 };
 
 export type CreatePaymentPointerKeyMutationResponse = MutationResponse & {
@@ -144,16 +171,21 @@ export type CreatePaymentPointerMutationResponse = MutationResponse & {
 
 export type CreatePaymentPointerWithdrawalInput = {
   /** The id of the withdrawal. */
-  id: Scalars['String'];
+  id: Scalars['ID'];
   /** The id of the Open Payments payment pointer to create the withdrawal for. */
-  paymentPointerId: Scalars['String'];
+  paymentPointerId: Scalars['ID'];
 };
 
 export type CreatePeerInput = {
-  assetId: Scalars['String'];
+  /** Asset id of peering relationship */
+  assetId: Scalars['ID'];
+  /** Peering connection details */
   http: HttpInput;
+  /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
+  /** Peer's public name */
   name?: InputMaybe<Scalars['String']>;
+  /** Peer's ILP address */
   staticIlpAddress: Scalars['String'];
 };
 
@@ -161,9 +193,9 @@ export type CreatePeerLiquidityWithdrawalInput = {
   /** Amount of withdrawal. */
   amount: Scalars['UInt64'];
   /** The id of the withdrawal. */
-  id: Scalars['String'];
+  id: Scalars['ID'];
   /** The id of the peer to create the withdrawal for. */
-  peerId: Scalars['String'];
+  peerId: Scalars['ID'];
 };
 
 export type CreatePeerMutationResponse = MutationResponse & {
@@ -175,17 +207,26 @@ export type CreatePeerMutationResponse = MutationResponse & {
 };
 
 export type CreateQuoteInput = {
-  paymentPointerId: Scalars['String'];
+  /** Id of the payment pointer under which the quote will be created */
+  paymentPointerId: Scalars['ID'];
+  /** Amount to receive (fixed receive) */
   receiveAmount?: InputMaybe<AmountInput>;
+  /** Payment pointer URL of the receiver */
   receiver: Scalars['String'];
+  /** Amount to send (fixed send) */
   sendAmount?: InputMaybe<AmountInput>;
 };
 
 export type CreateReceiverInput = {
+  /** Human readable description of the incoming payment that will be visible to the account holder. */
   description?: InputMaybe<Scalars['String']>;
+  /** Expiration date-time */
   expiresAt?: InputMaybe<Scalars['String']>;
+  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
+  /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
+  /** Receiving payment pointer URL */
   paymentPointerUrl: Scalars['String'];
 };
 
@@ -210,39 +251,56 @@ export type DeletePeerMutationResponse = MutationResponse & {
 
 export type Http = {
   __typename?: 'Http';
+  /** Outgoing connection details */
   outgoing: HttpOutgoing;
 };
 
 export type HttpIncomingInput = {
+  /** Array of auth tokens accepted by this Rafiki instance */
   authTokens: Array<Scalars['String']>;
 };
 
 export type HttpInput = {
+  /** Incoming connection details */
   incoming?: InputMaybe<HttpIncomingInput>;
+  /** Outgoing connection details */
   outgoing: HttpOutgoingInput;
 };
 
 export type HttpOutgoing = {
   __typename?: 'HttpOutgoing';
+  /** Auth token to present at the peering Rafiki instance */
   authToken: Scalars['String'];
+  /** Peer's connection endpoint */
   endpoint: Scalars['String'];
 };
 
 export type HttpOutgoingInput = {
+  /** Auth token to present at the peering Rafiki instance */
   authToken: Scalars['String'];
+  /** Peer's connection endpoint */
   endpoint: Scalars['String'];
 };
 
 export type IncomingPayment = Model & {
   __typename?: 'IncomingPayment';
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Human readable description of the incoming payment that will be visible to the account holder. */
   description?: Maybe<Scalars['String']>;
+  /** Date-time of expiry. After this time, the incoming payment will accept further payments made to it. */
   expiresAt: Scalars['String'];
+  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: Maybe<Scalars['String']>;
+  /** Incoming Payment id */
   id: Scalars['ID'];
+  /** The maximum amount that should be paid into the payment pointer under this incoming payment. */
   incomingAmount?: Maybe<Amount>;
+  /** Id of the payment pointer under which this incoming payment was created */
   paymentPointerId: Scalars['ID'];
+  /** The total amount that has been paid into the payment pointer under this incoming payment. */
   receivedAmount: Amount;
+  /** Incoming payment state */
   state: IncomingPaymentState;
 };
 
@@ -279,18 +337,28 @@ export enum IncomingPaymentState {
 
 export type Jwk = {
   __typename?: 'Jwk';
+  /** Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
   alg: Alg;
+  /** Curve that the key pair is derived from. The only allowed value is `Ed25519`. */
   crv: Crv;
+  /** Key id */
   kid: Scalars['String'];
+  /** Key type. The only allowed value is `OKP`. */
   kty: Kty;
+  /** Base64 url-encoded public key. */
   x: Scalars['String'];
 };
 
 export type JwkInput = {
+  /** Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`. */
   alg: Alg;
+  /** Curve that the key pair is derived from. The only allowed value is `Ed25519`. */
   crv: Crv;
+  /** Key id */
   kid: Scalars['String'];
+  /** Key type. The only allowed value is `OKP`. */
   kty: Kty;
+  /** Base64 url-encoded public key. */
   x: Scalars['String'];
 };
 
@@ -332,42 +400,43 @@ export type Mutation = {
   addAssetLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Add peer liquidity */
   addPeerLiquidity?: Maybe<LiquidityMutationResponse>;
-  /** Create asset */
+  /** Create an asset */
   createAsset: AssetMutationResponse;
-  /** Create liquidity withdrawal from asset */
+  /** Withdraw asset liquidity */
   createAssetLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
-  /** Create an internal Open Payments Incoming Payment */
+  /** Create an internal Open Payments Incoming Payment. The receiver has a payment pointer on this Rafiki instance. */
   createIncomingPayment: IncomingPaymentResponse;
   /** Create an Open Payments Outgoing Payment */
   createOutgoingPayment: OutgoingPaymentResponse;
-  /** Create payment pointer */
+  /** Create a payment pointer */
   createPaymentPointer: CreatePaymentPointerMutationResponse;
-  /** Create payment pointer key */
+  /** Add a public key to a payment pointer that is used to verify Open Payments requests. */
   createPaymentPointerKey?: Maybe<CreatePaymentPointerKeyMutationResponse>;
-  /** Create liquidity withdrawal from Open Payments payment pointer */
+  /** Withdraw liquidity from Open Payments payment pointer prior to having received a webhook event. This can be used to e.g. withdraw funds from a partially completed incoming payment while still waiting for the remaining funds to be received. */
   createPaymentPointerWithdrawal?: Maybe<PaymentPointerWithdrawalMutationResponse>;
-  /** Create peer */
+  /** Create a peer */
   createPeer: CreatePeerMutationResponse;
-  /** Create liquidity withdrawal from peer */
+  /** Withdraw peer liquidity */
   createPeerLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Create an Open Payments Quote */
   createQuote: QuoteResponse;
-  /** Create an external Open Payments Incoming Payment */
+  /** Create an external Open Payments Incoming Payment. The receiver has a payment pointer on another Rafiki instance. */
   createReceiver: CreateReceiverResponse;
-  /** Delete peer */
+  /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;
   /** Deposit webhook event liquidity */
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
-  /** Posts liquidity withdrawal */
+  /** Post liquidity withdrawal. Withdrawals are two-phase commits and are approved via this mutation. */
   postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
-  /** Revoke request signing key */
+  /** Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward. */
   revokePaymentPointerKey?: Maybe<RevokePaymentPointerKeyMutationResponse>;
+  /** If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events. */
   triggerPaymentPointerEvents: TriggerPaymentPointerEventsMutationResponse;
-  /** Update asset withdrawal threshold */
+  /** Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn. */
   updateAssetWithdrawalThreshold: AssetMutationResponse;
-  /** Update peer */
+  /** Update a peer */
   updatePeer: UpdatePeerMutationResponse;
-  /** Void liquidity withdrawal */
+  /** Void liquidity withdrawal. Withdrawals are two-phase commits and are rejected via this mutation. */
   voidLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Withdraw webhook event liquidity */
   withdrawEventLiquidity?: Maybe<LiquidityMutationResponse>;
@@ -440,17 +509,17 @@ export type MutationCreateReceiverArgs = {
 
 
 export type MutationDeletePeerArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 
 export type MutationDepositEventLiquidityArgs = {
-  eventId: Scalars['String'];
+  eventId: Scalars['ID'];
 };
 
 
 export type MutationPostLiquidityWithdrawalArgs = {
-  withdrawalId: Scalars['String'];
+  withdrawalId: Scalars['ID'];
 };
 
 
@@ -475,12 +544,12 @@ export type MutationUpdatePeerArgs = {
 
 
 export type MutationVoidLiquidityWithdrawalArgs = {
-  withdrawalId: Scalars['String'];
+  withdrawalId: Scalars['ID'];
 };
 
 
 export type MutationWithdrawEventLiquidityArgs = {
-  eventId: Scalars['String'];
+  eventId: Scalars['ID'];
 };
 
 export type MutationResponse = {
@@ -491,17 +560,28 @@ export type MutationResponse = {
 
 export type OutgoingPayment = Model & {
   __typename?: 'OutgoingPayment';
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Human readable description of the outgoing payment that will be visible to the account holder. */
   description?: Maybe<Scalars['String']>;
   error?: Maybe<Scalars['String']>;
+  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: Maybe<Scalars['String']>;
+  /** Outgoing payment id */
   id: Scalars['ID'];
+  /** Id of the payment pointer under which this outgoing payment was created */
   paymentPointerId: Scalars['ID'];
+  /** Quote for this outgoing payment */
   quote?: Maybe<Quote>;
+  /** Amount to receive (fixed receive) */
   receiveAmount: Amount;
+  /** Payment pointer URL of the receiver */
   receiver: Scalars['String'];
+  /** Amount to send (fixed send) */
   sendAmount: Amount;
+  /** Amount already sent */
   sentAmount: Amount;
+  /** Outgoing payment state */
   state: OutgoingPaymentState;
   stateAttempts: Scalars['Int'];
 };
@@ -551,13 +631,21 @@ export type PageInfo = {
 
 export type PaymentPointer = Model & {
   __typename?: 'PaymentPointer';
+  /** Asset of the payment pointer */
   asset: Asset;
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Payment pointer id */
   id: Scalars['ID'];
+  /** List of incoming payments received by this payment pointer */
   incomingPayments?: Maybe<IncomingPaymentConnection>;
+  /** List of outgoing payments sent from this payment pointer */
   outgoingPayments?: Maybe<OutgoingPaymentConnection>;
+  /** Public name associated with the payment pointer */
   publicName?: Maybe<Scalars['String']>;
+  /** List of quotes created at this payment pointer */
   quotes?: Maybe<QuoteConnection>;
+  /** Payment Pointer URL */
   url: Scalars['String'];
 };
 
@@ -587,17 +675,25 @@ export type PaymentPointerQuotesArgs = {
 
 export type PaymentPointerKey = Model & {
   __typename?: 'PaymentPointerKey';
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Internal id of key */
   id: Scalars['ID'];
+  /** Public key */
   jwk: Jwk;
+  /** Id of the payment pointer to which this key belongs to */
   paymentPointerId: Scalars['ID'];
+  /** Indicator whether the key has been revoked */
   revoked: Scalars['Boolean'];
 };
 
 export type PaymentPointerWithdrawal = {
   __typename?: 'PaymentPointerWithdrawal';
+  /** Amount to withdraw */
   amount: Scalars['UInt64'];
+  /** Withdrawal Id */
   id: Scalars['ID'];
+  /** Payment pointer details */
   paymentPointer: PaymentPointer;
 };
 
@@ -612,12 +708,19 @@ export type PaymentPointerWithdrawalMutationResponse = MutationResponse & {
 
 export type Peer = Model & {
   __typename?: 'Peer';
+  /** Asset of peering relationship */
   asset: Asset;
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Peering connection details */
   http: Http;
+  /** Peer id */
   id: Scalars['ID'];
+  /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
+  /** Peer's public name */
   name?: Maybe<Scalars['String']>;
+  /** Peer's ILP address */
   staticIlpAddress: Scalars['String'];
 };
 
@@ -653,7 +756,7 @@ export type Query = {
 
 
 export type QueryAssetArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 
@@ -666,17 +769,17 @@ export type QueryAssetsArgs = {
 
 
 export type QueryOutgoingPaymentArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 
 export type QueryPaymentPointerArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 
 export type QueryPeerArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 
@@ -689,21 +792,32 @@ export type QueryPeersArgs = {
 
 
 export type QueryQuoteArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 export type Quote = {
   __typename?: 'Quote';
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Date-time of expiration */
   expiresAt: Scalars['String'];
+  /** Upper bound of probed exchange rate */
   highEstimatedExchangeRate: Scalars['Float'];
+  /** Quote id */
   id: Scalars['ID'];
+  /** Lower bound of probed exchange rate */
   lowEstimatedExchangeRate: Scalars['Float'];
+  /** Maximum value per packet allowed on the possible routes */
   maxPacketAmount: Scalars['UInt64'];
+  /** Aggregate exchange rate the payment is guaranteed to meet */
   minExchangeRate: Scalars['Float'];
+  /** Id of the payment pointer under which this quote was created */
   paymentPointerId: Scalars['ID'];
+  /** Amount to receive (fixed receive) */
   receiveAmount: Amount;
+  /** Payment pointer URL of the receiver */
   receiver: Scalars['String'];
+  /** Amount to send (fixed send) */
   sendAmount: Amount;
 };
 
@@ -729,15 +843,25 @@ export type QuoteResponse = {
 
 export type Receiver = {
   __typename?: 'Receiver';
+  /** Describes whether the incoming payment has completed receiving funds. */
   completed: Scalars['Boolean'];
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Human readable description of the incoming payment that will be visible to the account holder. */
   description?: Maybe<Scalars['String']>;
+  /** Date-time of expiry. After this time, the incoming payment will accept further payments made to it. */
   expiresAt?: Maybe<Scalars['String']>;
+  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: Maybe<Scalars['String']>;
+  /** Incoming payment URL */
   id: Scalars['String'];
+  /** The maximum amount that should be paid into the payment pointer under this incoming payment. */
   incomingAmount?: Maybe<Amount>;
+  /** Payment pointer URL under which the incoming payment was created */
   paymentPointerUrl: Scalars['String'];
+  /** The total amount that has been paid into the payment pointer under this incoming payment. */
   receivedAmount: Amount;
+  /** Date-time of last update */
   updatedAt: Scalars['String'];
 };
 
@@ -759,21 +883,29 @@ export type TransferMutationResponse = MutationResponse & {
 export type TriggerPaymentPointerEventsMutationResponse = MutationResponse & {
   __typename?: 'TriggerPaymentPointerEventsMutationResponse';
   code: Scalars['String'];
+  /** Number of events triggered */
   count?: Maybe<Scalars['Int']>;
   message: Scalars['String'];
   success: Scalars['Boolean'];
 };
 
 export type UpdateAssetInput = {
-  id: Scalars['String'];
+  /** Asset id */
+  id: Scalars['ID'];
+  /** New minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']>;
 };
 
 export type UpdatePeerInput = {
+  /** New peering connection details */
   http?: InputMaybe<HttpInput>;
-  id: Scalars['String'];
+  /** Peer id */
+  id: Scalars['ID'];
+  /** New maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
+  /** Peer's new public name */
   name?: InputMaybe<Scalars['String']>;
+  /** Peer's new ILP address */
   staticIlpAddress?: InputMaybe<Scalars['String']>;
 };
 
