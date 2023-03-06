@@ -116,7 +116,7 @@ An [Open Payments](./glossary#open-payments) Outgoing Payment failed to send all
 
 #### `payment_pointer.web_monetization`
 
-A [Web Monetization](./glossary#web-monetization) payment has been received via [STREAM](./glossary.md#stream) by a payment pointer. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
+A [Web Monetization](./glossary.md#web-monetization) payment has been received via [STREAM](./glossary.md#stream) by a payment pointer. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
