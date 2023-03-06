@@ -20,6 +20,8 @@ To set this up, set the `IDENTITY_SERVER_SECRET` on the AS environment to a valu
 
 ## Sequence Diagram
 
+This diagram was generated using [Mermaid](https://mermaid.js.org/).
+
 ```
 sequenceDiagram
     Client->>Auth Server: Grant Request (POST /) with access_token and interact
