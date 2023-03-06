@@ -1,0 +1,30 @@
+{
+  "name": "local-http-signatures",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build:deps": "pnpm --filter http-signature-utils build",
+    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
+    "clean": "rm -fr dist/"
+  },
+  "dependencies": {
+    "http-signature-utils": "workspace:../../../packages/http-signature-utils",
+    "koa": "^2.14.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-json": "^2.0.2",
+    "koa-logger": "^3.2.1",
+    "koa-router": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/koa": "2.13.5",
+    "@types/koa-bodyparser": "^4.3.10",
+    "@types/koa-json": "^2.0.20",
+    "@types/koa-logger": "^3.1.2",
+    "@types/koa-router": "^7.4.4",
+    "@types/node": "^18.7.12",
+    "typescript": "^4.9.5"
+  }
+}

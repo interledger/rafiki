@@ -16,6 +16,6 @@ RUN pnpm fetch
 ADD . ./
 RUN pnpm install -r --offline
 
-RUN pnpm --filter http-signature-utils build
+RUN pnpm --filter local-http-signatures build
 
-CMD ["node", "./packages/http-signature-utils/dist/app.js"]
+CMD ["node", "./infrastructure/local/local-http-signatures/dist/app.js"]
