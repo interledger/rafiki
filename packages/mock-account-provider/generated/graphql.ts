@@ -20,18 +20,18 @@ export type AddAssetLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the asset to add liquidity. */
-  assetId: Scalars['ID'];
+  assetId: Scalars['String'];
   /** The id of the transfer. */
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 export type AddPeerLiquidityInput = {
   /** Amount of liquidity to add. */
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
-  id: Scalars['ID'];
+  id: Scalars['String'];
   /** The id of the peer to add liquidity. */
-  peerId: Scalars['ID'];
+  peerId: Scalars['String'];
 };
 
 export enum Alg {
@@ -109,9 +109,9 @@ export type CreateAssetLiquidityWithdrawalInput = {
   /** Amount of withdrawal. */
   amount: Scalars['UInt64'];
   /** The id of the asset to create the withdrawal for. */
-  assetId: Scalars['ID'];
+  assetId: Scalars['String'];
   /** The id of the withdrawal. */
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 export type CreateIncomingPaymentInput = {
@@ -124,7 +124,7 @@ export type CreateIncomingPaymentInput = {
   /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
   /** Id of the payment pointer under which the incoming payment will be created */
-  paymentPointerId: Scalars['ID'];
+  paymentPointerId: Scalars['String'];
 };
 
 export type CreateOutgoingPaymentInput = {
@@ -133,14 +133,14 @@ export type CreateOutgoingPaymentInput = {
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
   /** Id of the payment pointer under which the outgoing payment will be created */
-  paymentPointerId: Scalars['ID'];
+  paymentPointerId: Scalars['String'];
   /** Id of the corresponding quote for that outgoing payment */
-  quoteId: Scalars['ID'];
+  quoteId: Scalars['String'];
 };
 
 export type CreatePaymentPointerInput = {
   /** Asset of the payment pointer */
-  assetId: Scalars['ID'];
+  assetId: Scalars['String'];
   /** Public name associated with the payment pointer */
   publicName?: InputMaybe<Scalars['String']>;
   /** Payment Pointer URL */
@@ -150,7 +150,7 @@ export type CreatePaymentPointerInput = {
 export type CreatePaymentPointerKeyInput = {
   /** Public key */
   jwk: JwkInput;
-  paymentPointerId: Scalars['ID'];
+  paymentPointerId: Scalars['String'];
 };
 
 export type CreatePaymentPointerKeyMutationResponse = MutationResponse & {
@@ -171,14 +171,14 @@ export type CreatePaymentPointerMutationResponse = MutationResponse & {
 
 export type CreatePaymentPointerWithdrawalInput = {
   /** The id of the withdrawal. */
-  id: Scalars['ID'];
+  id: Scalars['String'];
   /** The id of the Open Payments payment pointer to create the withdrawal for. */
-  paymentPointerId: Scalars['ID'];
+  paymentPointerId: Scalars['String'];
 };
 
 export type CreatePeerInput = {
   /** Asset id of peering relationship */
-  assetId: Scalars['ID'];
+  assetId: Scalars['String'];
   /** Peering connection details */
   http: HttpInput;
   /** Maximum packet amount that the peer accepts */
@@ -193,9 +193,9 @@ export type CreatePeerLiquidityWithdrawalInput = {
   /** Amount of withdrawal. */
   amount: Scalars['UInt64'];
   /** The id of the withdrawal. */
-  id: Scalars['ID'];
+  id: Scalars['String'];
   /** The id of the peer to create the withdrawal for. */
-  peerId: Scalars['ID'];
+  peerId: Scalars['String'];
 };
 
 export type CreatePeerMutationResponse = MutationResponse & {
@@ -208,7 +208,7 @@ export type CreatePeerMutationResponse = MutationResponse & {
 
 export type CreateQuoteInput = {
   /** Id of the payment pointer under which the quote will be created */
-  paymentPointerId: Scalars['ID'];
+  paymentPointerId: Scalars['String'];
   /** Amount to receive (fixed receive) */
   receiveAmount?: InputMaybe<AmountInput>;
   /** Payment pointer URL of the receiver */
@@ -509,17 +509,17 @@ export type MutationCreateReceiverArgs = {
 
 
 export type MutationDeletePeerArgs = {
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 
 export type MutationDepositEventLiquidityArgs = {
-  eventId: Scalars['ID'];
+  eventId: Scalars['String'];
 };
 
 
 export type MutationPostLiquidityWithdrawalArgs = {
-  withdrawalId: Scalars['ID'];
+  withdrawalId: Scalars['String'];
 };
 
 
@@ -544,12 +544,12 @@ export type MutationUpdatePeerArgs = {
 
 
 export type MutationVoidLiquidityWithdrawalArgs = {
-  withdrawalId: Scalars['ID'];
+  withdrawalId: Scalars['String'];
 };
 
 
 export type MutationWithdrawEventLiquidityArgs = {
-  eventId: Scalars['ID'];
+  eventId: Scalars['String'];
 };
 
 export type MutationResponse = {
@@ -756,7 +756,7 @@ export type Query = {
 
 
 export type QueryAssetArgs = {
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 
@@ -769,17 +769,17 @@ export type QueryAssetsArgs = {
 
 
 export type QueryOutgoingPaymentArgs = {
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 
 export type QueryPaymentPointerArgs = {
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 
 export type QueryPeerArgs = {
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 
@@ -792,7 +792,7 @@ export type QueryPeersArgs = {
 
 
 export type QueryQuoteArgs = {
-  id: Scalars['ID'];
+  id: Scalars['String'];
 };
 
 export type Quote = {
@@ -891,7 +891,7 @@ export type TriggerPaymentPointerEventsMutationResponse = MutationResponse & {
 
 export type UpdateAssetInput = {
   /** Asset id */
-  id: Scalars['ID'];
+  id: Scalars['String'];
   /** New minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']>;
 };
@@ -900,7 +900,7 @@ export type UpdatePeerInput = {
   /** New peering connection details */
   http?: InputMaybe<HttpInput>;
   /** Peer id */
-  id: Scalars['ID'];
+  id: Scalars['String'];
   /** New maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
   /** Peer's new public name */
