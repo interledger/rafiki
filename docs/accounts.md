@@ -1,20 +1,30 @@
-# Rafiki backend accounts
+# Accounts and Transfers
 
-## Design
+## Accounts
 
-[![](https://mermaid.ink/img/pako:eNqNVD1vwjAQ_SuRBxQkUHcGpCI6dGqqMrXpYJIjWE1sap8HhPjv9Uccx1GQypCc77179-ELN1KJGsiGNJJeztlhX_LM_JQ-eseRVj_Aa-995ZXoGG_yYBT02gHHpYffNDbCwsFI4XctEHL37D09XhgugszTY895riqhOVrZaAZMKcDcPYMiWB2YRqv97iuEq-W3xw6ScnUC6cDhEFCn6sKsMbjTGi2eegZiGJGlTMY1cMKcLGcys4Hj5mUJzoh1QJ8dZnJm6_V2VMAMmBadVuMILtuogodREe0rnRGLfcbivaDrYm6y2cLfgHkPUovYwyJoZC371axmeM2ov18nHFdldJuWbl7Ygk30kD9bjiNZkelWWtFCKGwkqKcDa0DuAEyKsawKPf4zbLSZD4uZLmLa5zbsr3ebL5isSAeyo6w2H_vNukuCZzOJkmyMWcOJ6hZLUvK7oepLTRFezFyFJBuUGlaEahQfV16Fs-fsGTX_FF1wXij_FMIcT7RVcP8DQHN1Og?type=png)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNqNVD1vwjAQ_SuRBxQkUHcGpCI6dGqqMrXpYJIjWE1sap8HhPjv9Uccx1GQypCc77179-ELN1KJGsiGNJJeztlhX_LM_JQ-eseRVj_Aa-995ZXoGG_yYBT02gHHpYffNDbCwsFI4XctEHL37D09XhgugszTY895riqhOVrZaAZMKcDcPYMiWB2YRqv97iuEq-W3xw6ScnUC6cDhEFCn6sKsMbjTGi2eegZiGJGlTMY1cMKcLGcys4Hj5mUJzoh1QJ8dZnJm6_V2VMAMmBadVuMILtuogodREe0rnRGLfcbivaDrYm6y2cLfgHkPUovYwyJoZC371axmeM2ov18nHFdldJuWbl7Ygk30kD9bjiNZkelWWtFCKGwkqKcDa0DuAEyKsawKPf4zbLSZD4uZLmLa5zbsr3ebL5isSAeyo6w2H_vNukuCZzOJkmyMWcOJ6hZLUvK7oepLTRFezFyFJBuUGlaEahQfV16Fs-fsGTX_FF1wXij_FMIcT7RVcP8DQHN1Og)
-
-## Account Types
+Rafiki uses a combination of liquidity and settlement accounts to perform double-entry accounting.
 
 ### Liquidity account
 
 A liquidity account may only hold a positive balance. Rafiki enforces that its total debits MUST NOT exceed its total credits amount.
 
+There is one liquidity account for each of the following resource:
+
+- Asset
+- Peer
+- Payment Pointer (for [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) / [Web Monetization](./glossary.md#web-monetization) receiving)
+- Incoming Payment
+- Outgoing Payment
+
 ### Settlement account
 
 A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](./glossary.md#account-servicing-entity) has deposited into Rafiki.
 
+There is one settlement account for each asset.
+
 ## Transfers
+
+Rafiki transfers perform double-entry accounting. Every transfer increases both the total debits of one account and the total credits of a second account by the same amount.
 
 ### Intra-Rafiki
 
