@@ -52,7 +52,7 @@ services:
       ADMIN_KEY: admin
       PUBLIC_HOST: http://happy-life-bank-backend
       WEBHOOK_URL: http://happy-life-bank/webhooks
-      OPEN_PAYMENTS_URL: http://happy-life-bank
+      OPEN_PAYMENTS_URL: http://happy-life-bank-backend
       PRICES_URL: http://happy-life-bank/prices
       REDIS_URL: redis://redis:6379/1
       QUOTE_URL: http://happy-life-bank/quotes
