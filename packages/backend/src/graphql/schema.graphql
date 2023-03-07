@@ -1,6 +1,6 @@
 type Query {
   "Fetch an asset"
-  asset(id: ID!): Asset
+  asset(id: String!): Asset
 
   "Fetch a page of assets."
   assets(
@@ -15,7 +15,7 @@ type Query {
   ): AssetsConnection!
 
   "Fetch a peer"
-  peer(id: ID!): Peer
+  peer(id: String!): Peer
 
   "Fetch a page of peers."
   peers(
@@ -30,12 +30,13 @@ type Query {
   ): PeersConnection!
 
   "Fetch a payment pointer"
-  paymentPointer(id: ID!): PaymentPointer
+  paymentPointer(id: String!): PaymentPointer
 
   "Fetch an Open Payments quote"
-  quote(id: ID!): Quote
+  quote(id: String!): Quote
+
   "Fetch an Open Payments outgoing payment"
-  outgoingPayment(id: ID!): OutgoingPayment
+  outgoingPayment(id: String!): OutgoingPayment
 }
 
 type Mutation {
@@ -62,7 +63,7 @@ type Mutation {
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
 
   "Delete a peer"
-  deletePeer(id: ID!): DeletePeerMutationResponse!
+  deletePeer(id: String!): DeletePeerMutationResponse!
 
   "Add peer liquidity"
   addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
@@ -75,13 +76,13 @@ type Mutation {
   "Post liquidity withdrawal. Withdrawals are two-phase commits and are approved via this mutation."
   postLiquidityWithdrawal(
     "The id of the liquidity withdrawal to post."
-    withdrawalId: ID!
+    withdrawalId: String!
   ): LiquidityMutationResponse
 
   "Void liquidity withdrawal. Withdrawals are two-phase commits and are rejected via this mutation."
   voidLiquidityWithdrawal(
     "The id of the liquidity withdrawal to void."
-    withdrawalId: ID!
+    withdrawalId: String!
   ): LiquidityMutationResponse
 
   "Create a payment pointer"
@@ -117,10 +118,10 @@ type Mutation {
   ): OutgoingPaymentResponse!
 
   "Deposit webhook event liquidity"
-  depositEventLiquidity(eventId: ID!): LiquidityMutationResponse
+  depositEventLiquidity(eventId: String!): LiquidityMutationResponse
 
   "Withdraw webhook event liquidity"
-  withdrawEventLiquidity(eventId: ID!): LiquidityMutationResponse
+  withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
   "Withdraw liquidity from Open Payments payment pointer prior to having received a webhook event. This can be used to e.g. withdraw funds from a partially completed incoming payment while still waiting for the remaining funds to be received."
   createPaymentPointerWithdrawal(
@@ -166,7 +167,7 @@ input CreateAssetInput {
 
 input UpdateAssetInput {
   "Asset id"
-  id: ID!
+  id: String!
   "New minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
 }
@@ -187,7 +188,7 @@ input CreatePeerInput {
   "Peering connection details"
   http: HttpInput!
   "Asset id of peering relationship"
-  assetId: ID!
+  assetId: String!
   "Peer's ILP address"
   staticIlpAddress: String!
   "Peer's public name"
@@ -196,7 +197,7 @@ input CreatePeerInput {
 
 input UpdatePeerInput {
   "Peer id"
-  id: ID!
+  id: String!
   "New maximum packet amount that the peer accepts"
   maxPacketAmount: UInt64
   "New peering connection details"
@@ -235,45 +236,45 @@ input AssetInput {
 
 input AddPeerLiquidityInput {
   "The id of the peer to add liquidity."
-  peerId: ID!
+  peerId: String!
   "Amount of liquidity to add."
   amount: UInt64!
   "The id of the transfer."
-  id: ID!
+  id: String!
 }
 
 input AddAssetLiquidityInput {
   "The id of the asset to add liquidity."
-  assetId: ID!
+  assetId: String!
   "Amount of liquidity to add."
   amount: UInt64!
   "The id of the transfer."
-  id: ID!
+  id: String!
 }
 
 input CreatePeerLiquidityWithdrawalInput {
   "The id of the peer to create the withdrawal for."
-  peerId: ID!
+  peerId: String!
   "Amount of withdrawal."
   amount: UInt64!
   "The id of the withdrawal."
-  id: ID!
+  id: String!
 }
 
 input CreateAssetLiquidityWithdrawalInput {
   "The id of the asset to create the withdrawal for."
-  assetId: ID!
+  assetId: String!
   "Amount of withdrawal."
   amount: UInt64!
   "The id of the withdrawal."
-  id: ID!
+  id: String!
 }
 
 input CreatePaymentPointerWithdrawalInput {
   "The id of the Open Payments payment pointer to create the withdrawal for."
-  paymentPointerId: ID!
+  paymentPointerId: String!
   "The id of the withdrawal."
-  id: ID!
+  id: String!
 }
 
 input JwkInput {
@@ -290,7 +291,7 @@ input JwkInput {
 }
 
 input CreatePaymentPointerKeyInput {
-  paymentPointerId: ID!
+  paymentPointerId: String!
   "Public key"
   jwk: JwkInput!
 }
@@ -564,7 +565,7 @@ input AmountInput {
 
 input CreateQuoteInput {
   "Id of the payment pointer under which the quote will be created"
-  paymentPointerId: ID!
+  paymentPointerId: String!
   "Amount to send (fixed send)"
   sendAmount: AmountInput
   "Amount to receive (fixed receive)"
@@ -582,9 +583,9 @@ type QuoteResponse {
 
 input CreateOutgoingPaymentInput {
   "Id of the payment pointer under which the outgoing payment will be created"
-  paymentPointerId: ID!
+  paymentPointerId: String!
   "Id of the corresponding quote for that outgoing payment"
-  quoteId: ID!
+  quoteId: String!
   "Human readable description of the outgoing payment that will be visible to the account holder."
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
@@ -593,7 +594,7 @@ input CreateOutgoingPaymentInput {
 
 input CreateIncomingPaymentInput {
   "Id of the payment pointer under which the incoming payment will be created"
-  paymentPointerId: ID!
+  paymentPointerId: String!
   "Expiration date-time"
   expiresAt: String
   "Human readable description of the incoming payment that will be visible to the account holder."
@@ -640,7 +641,7 @@ type CreateReceiverResponse {
 
 input CreatePaymentPointerInput {
   "Asset of the payment pointer"
-  assetId: ID!
+  assetId: String!
   "Payment Pointer URL"
   url: String!
   "Public name associated with the payment pointer"

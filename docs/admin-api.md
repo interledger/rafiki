@@ -122,7 +122,7 @@ Fetch an asset
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -181,7 +181,7 @@ Fetch a peer
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -240,7 +240,7 @@ Fetch a payment pointer
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -254,7 +254,7 @@ Fetch an Open Payments quote
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -268,7 +268,7 @@ Fetch an Open Payments outgoing payment
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 </tbody>
@@ -381,7 +381,7 @@ Delete a peer
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -423,7 +423,7 @@ Post liquidity withdrawal. Withdrawals are two-phase commits and are approved vi
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">withdrawalId</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the liquidity withdrawal to post.
@@ -441,7 +441,7 @@ Void liquidity withdrawal. Withdrawals are two-phase commits and are rejected vi
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">withdrawalId</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the liquidity withdrawal to void.
@@ -561,7 +561,7 @@ Deposit webhook event liquidity
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">eventId</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -575,7 +575,7 @@ Withdraw webhook event liquidity
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">eventId</td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -2484,7 +2484,7 @@ Number of events triggered
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>assetId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the asset to add liquidity.
@@ -2502,7 +2502,7 @@ Amount of liquidity to add.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the transfer.
@@ -2525,7 +2525,7 @@ The id of the transfer.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>peerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the peer to add liquidity.
@@ -2543,7 +2543,7 @@ Amount of liquidity to add.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the transfer.
@@ -2676,7 +2676,7 @@ Minimum amount of liquidity that can be withdrawn from the asset
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>assetId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the asset to create the withdrawal for.
@@ -2694,7 +2694,7 @@ Amount of withdrawal.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the withdrawal.
@@ -2717,7 +2717,7 @@ The id of the withdrawal.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Id of the payment pointer under which the incoming payment will be created
@@ -2776,7 +2776,7 @@ A reference that can be used by external systems to reconcile this payment with 
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Id of the payment pointer under which the outgoing payment will be created
@@ -2785,7 +2785,7 @@ Id of the payment pointer under which the outgoing payment will be created
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>quoteId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Id of the corresponding quote for that outgoing payment
@@ -2826,7 +2826,7 @@ A reference that can be used by external systems to reconcile this payment with 
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>assetId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Asset of the payment pointer
@@ -2867,7 +2867,7 @@ Public name associated with the payment pointer
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -2895,7 +2895,7 @@ Public key
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the Open Payments payment pointer to create the withdrawal for.
@@ -2904,7 +2904,7 @@ The id of the Open Payments payment pointer to create the withdrawal for.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the withdrawal.
@@ -2945,7 +2945,7 @@ Peering connection details
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>assetId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Asset id of peering relationship
@@ -2986,7 +2986,7 @@ Peer's public name
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>peerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the peer to create the withdrawal for.
@@ -3004,7 +3004,7 @@ Amount of withdrawal.
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 The id of the withdrawal.
@@ -3027,7 +3027,7 @@ The id of the withdrawal.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Id of the payment pointer under which the quote will be created
@@ -3282,7 +3282,7 @@ Curve that the key pair is derived from. The only allowed value is `Ed25519`.
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Asset id
@@ -3314,7 +3314,7 @@ New minimum amount of liquidity that can be withdrawn from the asset
 <tbody>
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
-<td valign="top"><a href="#id">ID</a>!</td>
+<td valign="top"><a href="#string">String</a>!</td>
 <td>
 
 Peer id
