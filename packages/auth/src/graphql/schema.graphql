@@ -50,17 +50,26 @@ interface Model {
 }
 
 type Grant implements Model {
+  "Grant id"
   id: ID!
+  "Payment pointer of the granter's account"
   identifier: String!
+  "Payment pointer of the grantee's account"
   client: String!
+  "Access details"
   access: [Access!]!
-  state: String!
+  "State of the grant"
+  state: GrantState!
+  "Date-time of creation"
   createdAt: String!
 }
 
 type Access implements Model {
+  "Access id"
   id: ID!
+  "Payment pointer of a sub-resource of the granter's account (incoming payment, outgoing payment, or quote)"
   identifier: String
+  "Date-time of creation"
   createdAt: String!
 }
 
@@ -74,4 +83,15 @@ interface MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+}
+
+enum GrantState {
+  "grant request was created but grant was not approved yet"
+  pending
+  "grant was approved"
+  granted
+  "grant was revoked"
+  revoked
+  "grant was rejected"
+  rejected
 }
