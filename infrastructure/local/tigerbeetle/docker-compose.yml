@@ -1,0 +1,34 @@
+version: '3'
+services:
+  tigerbeetle:
+    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:621268959801084246679f25416a9451f553fe3697dd4f618f39503322079433
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - tigerbeetle-data:/var/lib/tigerbeetle
+    networks:
+      rafiki:
+        ipv4_address: 10.5.0.50
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -ex
+        DATA_FILE=/var/lib/tigerbeetle/cluster_0_replica_0.tigerbeetle
+        set +e
+        ls $$DATA_FILE
+        DATA_FILE_EXISTS="$$?"
+        set -e
+        echo $$DATA_FILE_EXISTS
+        if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
+          /opt/beta-beetle/tigerbeetle format --cluster=0 --replica=0 $$DATA_FILE; 
+        fi
+        hostname -I
+        ls /var/lib/tigerbeetle
+        /opt/beta-beetle/tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
+volumes:
+  tigerbeetle-data:
+
+networks:
+  rafiki:
+    external: true

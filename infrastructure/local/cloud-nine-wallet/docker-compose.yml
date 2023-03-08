@@ -1,0 +1,118 @@
+version: '3'
+services:
+  mock-account-provider:
+    hostname: cloud-nine-wallet
+    build:
+      context: ../../..
+      dockerfile: ./packages/mock-account-provider/Dockerfile
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3030:80'
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.yml
+      KEY_FILE: /workspace/private-key.pem
+    volumes:
+      - ./seed.yml:/workspace/seed.yml
+      - ./private-key.pem:/workspace/private-key.pem
+    depends_on:
+      - backend
+  backend:
+    hostname: cloud-nine-wallet-backend
+    image: ghcr.io/interledger/rafiki-backend:latest
+    build:
+      context: ../../..
+      dockerfile: ./packages/backend/Dockerfile
+    restart: always
+    privileged: true
+    ports:
+      - '3000:80'
+      - '3001:3001'
+    networks:
+      - rafiki
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 80
+      DATABASE_URL: postgresql://cloud_nine_wallet_backend:cloud_nine_wallet_backend@database/cloud_nine_wallet_backend
+      USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
+      TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
+      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
+      NONCE_REDIS_KEY: test
+      AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-auth:3006
+      AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3006/introspect
+      ILP_ADDRESS: test.cloud-nine-wallet
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      ADMIN_KEY: admin
+      PUBLIC_HOST: http://cloud-nine-wallet-backend
+      OPEN_PAYMENTS_URL: http://cloud-nine-wallet-backend
+      WEBHOOK_URL: http://cloud-nine-wallet/webhooks
+      PRICES_URL: http://cloud-nine-wallet/prices
+      REDIS_URL: redis://redis:6379/0
+      QUOTE_URL: http://cloud-nine-wallet/quotes
+      PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
+    depends_on:
+      - database
+      - redis
+  auth:
+    hostname: cloud-nine-wallet-auth
+    image: ghcr.io/interledger/rafiki-auth:latest
+    build:
+      context: ../../..
+      dockerfile: ./packages/auth/Dockerfile
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3006:3006'
+    environment:
+      NODE_ENV: development
+      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
+      INTROSPECTION_HTTPSIG: "false"
+    depends_on:
+      - database
+  signatures:
+    hostname: cloud-nine-wallet-signatures
+    build:
+      context: ../../..
+      dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile
+    restart: always
+    ports:
+      - '3040:3000'
+    environment:
+      KEY_FILE: /workspace/private-key.pem
+    volumes:
+      - ./private-key.pem:/workspace/private-key.pem
+    networks:
+      - rafiki
+  database:
+    image: 'postgres:15' # use latest official postgres version
+    restart: unless-stopped
+    networks:
+      - rafiki
+    volumes:
+      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+      - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+  redis:
+    image: 'redis:7'
+    restart: unless-stopped
+    networks:
+      - rafiki
+
+volumes:
+  database-data: # named volumes can be managed easier using docker-compose
+
+networks:
+  rafiki:
+    external: true
