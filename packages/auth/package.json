@@ -38,7 +38,7 @@
     "objection-db-errors": "^1.1.2",
     "open-payments": "workspace:*",
     "openapi": "workspace:../openapi",
-    "pg": "^8.9.0",
+    "pg": "^8.10.0",
     "pino": "^8.11.0",
     "pino-pretty": "^9.4.0",
     "testcontainers": "^9.1.3",
