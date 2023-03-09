@@ -37,6 +37,14 @@ A Peer is a counterparty that a given party transacts with. Within the [Interled
 
 The Simple Payments Setup Protocol is a basic protocol for exchanging payment information between payee and payer to facilitate payment over Interledger. For more details, see the [SPSP specification](https://interledger.org/rfcs/0009-simple-payment-setup-protocol).
 
+## STREAM
+
+STREAM is a multiplexed Interledger Transport Protocol that provides for sending multiple “streams” of money and data between two parties using ILP. For more details, see the [STREAM specification](https://interledger.org/rfcs/0029-stream/).
+
 ## Tigerbeetle
 
 TigerBeetle is a distributed financial accounting database designed for mission critical safety and performance. For more information, see the [official website](https://tigerbeetle.com/).
+
+## Web Monetization
+
+Web Monetization is a JavaScript browser API that allows the creation of a payment stream from the user agent to the website. For more details, see the [Web Monetization Website](https://webmonetization.org/).

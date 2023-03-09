@@ -1,7 +1,7 @@
 const requestUrl = request.url
   .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.collectionVariables.get(key))
   .replace(/localhost:([3,4])000/g, (_, key) =>
-    key === '3' ? 'backend' : 'peer-backend'
+    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'
   )
 const requestBody =
   request.method === 'POST' && Object.keys(request.data).length !== 0
