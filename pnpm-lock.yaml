@@ -78,7 +78,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.10
-      '@apollo/server': ^4.4.1
+      '@apollo/server': ^4.5.0
       '@as-integrations/koa': ^0.3.0
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 3.2.1
@@ -124,8 +124,8 @@ importers:
       uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@apollo/server': 4.4.1_graphql@16.6.0
-      '@as-integrations/koa': 0.3.0_5acwatkkdxaxwva6fawbnwayue
+      '@apollo/server': 4.5.0_graphql@16.6.0
+      '@as-integrations/koa': 0.3.0_vqogrwqwnzwnf2mdzikz2evuli
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
@@ -175,7 +175,7 @@ importers:
     specifiers:
       '@adonisjs/fold': ^8.2.0
       '@apollo/client': ^3.7.10
-      '@apollo/server': ^4.4.1
+      '@apollo/server': ^4.5.0
       '@as-integrations/koa': ^0.3.0
       '@faker-js/faker': ^7.6.0
       '@graphql-codegen/cli': 3.2.1
@@ -246,8 +246,8 @@ importers:
       uuid: ^9.0.0
     dependencies:
       '@adonisjs/fold': 8.2.0
-      '@apollo/server': 4.4.1_graphql@16.6.0
-      '@as-integrations/koa': 0.3.0_5acwatkkdxaxwva6fawbnwayue
+      '@apollo/server': 4.5.0_graphql@16.6.0
+      '@as-integrations/koa': 0.3.0_vqogrwqwnzwnf2mdzikz2evuli
       '@faker-js/faker': 7.6.0
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
@@ -638,8 +638,8 @@ packages:
       graphql: 16.6.0
     dev: false
 
-  /@apollo/server/4.4.1_graphql@16.6.0:
-    resolution: {integrity: sha512-KEEM8Q5KvkarPHn6r//nRonVBQ/C69fmkTKHzuL1ZoD7BevdIh7HLeh69wIazC21wrizBHMR+LKIqZuIT9YQVg==}
+  /@apollo/server/4.5.0_graphql@16.6.0:
+    resolution: {integrity: sha512-+7iRp0omJATUrVQ6b4JKi4XUvvuL+hBxu5/Hy6WiZmVNcVm19zzO+xTOlXO8OJBZgd14jZnGRgWx/eZjXEmkXQ==}
     engines: {node: '>=14.16.0'}
     peerDependencies:
       graphql: ^16.6.0
@@ -817,14 +817,14 @@ packages:
       - encoding
     dev: true
 
-  /@as-integrations/koa/0.3.0_5acwatkkdxaxwva6fawbnwayue:
+  /@as-integrations/koa/0.3.0_vqogrwqwnzwnf2mdzikz2evuli:
     resolution: {integrity: sha512-XixgbUaQ/zysaYALasgmEd9OD1x2paYUYBg7CaLll462Lu+PEB89I84z1xRUsCO6M/Y/JcifJ2/kHAoOmBAM3w==}
     engines: {node: '>=14.0'}
     peerDependencies:
       '@apollo/server': ^4.0.0
       koa: ^2.0.0
     dependencies:
-      '@apollo/server': 4.4.1_graphql@16.6.0
+      '@apollo/server': 4.5.0_graphql@16.6.0
       koa: 2.14.1
     dev: false
 
