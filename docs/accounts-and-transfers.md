@@ -64,15 +64,9 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | ---------------- | -------------- |
 | Outgoing Payment | Settlement     |
 
-#### Payments
+#### Payments (Same Asset)
 
-##### Same asset
-
-| Debit Account    | Credit Account   |
-| ---------------- | ---------------- |
-| Outgoing Payment | Incoming Payment |
-
-###### SPSP / Web Monetization
+##### SPSP / Web Monetization
 
 | Debit Account    | Credit Account  |
 | ---------------- | --------------- |
@@ -92,14 +86,14 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | Outgoing Payment | Incoming Payment |
 | Outgoing Payment | Asset Liquidity  |
 
-##### Cross currency
+#### Payments (Cross Currency)
 
 | Debit Account    | Credit Account   | Asset |
 | ---------------- | ---------------- | ----- |
 | Outgoing Payment | Asset Liquidity  | ABC   |
 | Asset Liquidity  | Incoming Payment | XYZ   |
 
-###### SPSP / Web Monetization
+##### SPSP / Web Monetization
 
 | Debit Account    | Credit Account  | Asset |
 | ---------------- | --------------- | ----- |
