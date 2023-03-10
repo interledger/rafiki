@@ -20,7 +20,7 @@ export type Access = Model & {
   createdAt: Scalars['String'];
   /** Access id */
   id: Scalars['ID'];
-  /** Payment pointer of a sub-resource of the granter's account (incoming payment, outgoing payment, or quote) */
+  /** Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote) */
   identifier?: Maybe<Scalars['String']>;
 };
 
@@ -34,7 +34,7 @@ export type Grant = Model & {
   createdAt: Scalars['String'];
   /** Grant id */
   id: Scalars['ID'];
-  /** Payment pointer of the granter's account */
+  /** Payment pointer of the resource owner's account */
   identifier: Scalars['String'];
   /** State of the grant */
   state: GrantState;

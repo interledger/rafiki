@@ -52,7 +52,7 @@ interface Model {
 type Grant implements Model {
   "Grant id"
   id: ID!
-  "Payment pointer of the granter's account"
+  "Payment pointer of the resource owner's account"
   identifier: String!
   "Payment pointer of the grantee's account"
   client: String!
@@ -67,7 +67,7 @@ type Grant implements Model {
 type Access implements Model {
   "Access id"
   id: ID!
-  "Payment pointer of a sub-resource of the granter's account (incoming payment, outgoing payment, or quote)"
+  "Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote)"
   identifier: String
   "Date-time of creation"
   createdAt: String!

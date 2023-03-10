@@ -417,7 +417,7 @@ Withdraw peer liquidity
 <td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
 <td>
 
-Post liquidity withdrawal. Withdrawals are two-phase commits and are approved via this mutation.
+Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation.
 
 </td>
 </tr>
@@ -435,7 +435,7 @@ The id of the liquidity withdrawal to post.
 <td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
 <td>
 
-Void liquidity withdrawal. Withdrawals are two-phase commits and are rejected via this mutation.
+Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation.
 
 </td>
 </tr>
@@ -513,7 +513,7 @@ Create an internal Open Payments Incoming Payment. The receiver has a payment po
 <td valign="top"><a href="#createreceiverresponse">CreateReceiverResponse</a>!</td>
 <td>
 
-Create an external Open Payments Incoming Payment. The receiver has a payment pointer on another Rafiki instance.
+Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance.
 
 </td>
 </tr>
@@ -583,7 +583,7 @@ Withdraw webhook event liquidity
 <td valign="top"><a href="#paymentpointerwithdrawalmutationresponse">PaymentPointerWithdrawalMutationResponse</a></td>
 <td>
 
-Withdraw liquidity from Open Payments payment pointer prior to having received a webhook event. This can be used to e.g. withdraw funds from a partially completed incoming payment while still waiting for the remaining funds to be received.
+Withdraw liquidity from a payment pointer received via Web Monetization.
 
 </td>
 </tr>
@@ -1069,7 +1069,7 @@ Incoming payment state
 <td valign="top"><a href="#string">String</a>!</td>
 <td>
 
-Date-time of expiry. After this time, the incoming payment will accept further payments made to it.
+Date-time of expiry. After this time, the incoming payment will not accept further payments made to it.
 
 </td>
 </tr>
@@ -1096,7 +1096,7 @@ The total amount that has been paid into the payment pointer under this incoming
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Human readable description of the incoming payment that will be visible to the account holder.
+Human readable description of the incoming payment.
 
 </td>
 </tr>
@@ -1382,7 +1382,7 @@ Payment pointer URL of the receiver
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Human readable description of the outgoing payment that will be visible to the account holder.
+Human readable description of the outgoing payment.
 
 </td>
 </tr>
@@ -2296,7 +2296,7 @@ Date-time of expiry. After this time, the incoming payment will accept further p
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Human readable description of the incoming payment that will be visible to the account holder.
+Human readable description of the incoming payment.
 
 </td>
 </tr>
@@ -2738,7 +2738,7 @@ Expiration date-time
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Human readable description of the incoming payment that will be visible to the account holder.
+Human readable description of the incoming payment.
 
 </td>
 </tr>
@@ -2797,7 +2797,7 @@ Id of the corresponding quote for that outgoing payment
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Human readable description of the outgoing payment that will be visible to the account holder.
+Human readable description of the outgoing payment.
 
 </td>
 </tr>
@@ -2966,7 +2966,7 @@ Peer's ILP address
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Peer's public name
+Peer's internal name
 
 </td>
 </tr>
@@ -3098,7 +3098,7 @@ Expiration date-time
 <td valign="top"><a href="#string">String</a></td>
 <td>
 
-Human readable description of the incoming payment that will be visible to the account holder.
+Human readable description of the incoming payment.
 
 </td>
 </tr>

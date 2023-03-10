@@ -115,7 +115,7 @@ export type CreateAssetLiquidityWithdrawalInput = {
 };
 
 export type CreateIncomingPaymentInput = {
-  /** Human readable description of the incoming payment that will be visible to the account holder. */
+  /** Human readable description of the incoming payment. */
   description?: InputMaybe<Scalars['String']>;
   /** Expiration date-time */
   expiresAt?: InputMaybe<Scalars['String']>;
@@ -128,7 +128,7 @@ export type CreateIncomingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentInput = {
-  /** Human readable description of the outgoing payment that will be visible to the account holder. */
+  /** Human readable description of the outgoing payment. */
   description?: InputMaybe<Scalars['String']>;
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
@@ -183,7 +183,7 @@ export type CreatePeerInput = {
   http: HttpInput;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
-  /** Peer's public name */
+  /** Peer's internal name */
   name?: InputMaybe<Scalars['String']>;
   /** Peer's ILP address */
   staticIlpAddress: Scalars['String'];
@@ -218,7 +218,7 @@ export type CreateQuoteInput = {
 };
 
 export type CreateReceiverInput = {
-  /** Human readable description of the incoming payment that will be visible to the account holder. */
+  /** Human readable description of the incoming payment. */
   description?: InputMaybe<Scalars['String']>;
   /** Expiration date-time */
   expiresAt?: InputMaybe<Scalars['String']>;
@@ -286,9 +286,9 @@ export type IncomingPayment = Model & {
   __typename?: 'IncomingPayment';
   /** Date-time of creation */
   createdAt: Scalars['String'];
-  /** Human readable description of the incoming payment that will be visible to the account holder. */
+  /** Human readable description of the incoming payment. */
   description?: Maybe<Scalars['String']>;
-  /** Date-time of expiry. After this time, the incoming payment will accept further payments made to it. */
+  /** Date-time of expiry. After this time, the incoming payment will not accept further payments made to it. */
   expiresAt: Scalars['String'];
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: Maybe<Scalars['String']>;
@@ -412,7 +412,7 @@ export type Mutation = {
   createPaymentPointer: CreatePaymentPointerMutationResponse;
   /** Add a public key to a payment pointer that is used to verify Open Payments requests. */
   createPaymentPointerKey?: Maybe<CreatePaymentPointerKeyMutationResponse>;
-  /** Withdraw liquidity from Open Payments payment pointer prior to having received a webhook event. This can be used to e.g. withdraw funds from a partially completed incoming payment while still waiting for the remaining funds to be received. */
+  /** Withdraw liquidity from a payment pointer received via Web Monetization. */
   createPaymentPointerWithdrawal?: Maybe<PaymentPointerWithdrawalMutationResponse>;
   /** Create a peer */
   createPeer: CreatePeerMutationResponse;
@@ -420,13 +420,13 @@ export type Mutation = {
   createPeerLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Create an Open Payments Quote */
   createQuote: QuoteResponse;
-  /** Create an external Open Payments Incoming Payment. The receiver has a payment pointer on another Rafiki instance. */
+  /** Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance. */
   createReceiver: CreateReceiverResponse;
   /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;
   /** Deposit webhook event liquidity */
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
-  /** Post liquidity withdrawal. Withdrawals are two-phase commits and are approved via this mutation. */
+  /** Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation. */
   postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward. */
   revokePaymentPointerKey?: Maybe<RevokePaymentPointerKeyMutationResponse>;
@@ -436,7 +436,7 @@ export type Mutation = {
   updateAssetWithdrawalThreshold: AssetMutationResponse;
   /** Update a peer */
   updatePeer: UpdatePeerMutationResponse;
-  /** Void liquidity withdrawal. Withdrawals are two-phase commits and are rejected via this mutation. */
+  /** Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation. */
   voidLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Withdraw webhook event liquidity */
   withdrawEventLiquidity?: Maybe<LiquidityMutationResponse>;
@@ -562,7 +562,7 @@ export type OutgoingPayment = Model & {
   __typename?: 'OutgoingPayment';
   /** Date-time of creation */
   createdAt: Scalars['String'];
-  /** Human readable description of the outgoing payment that will be visible to the account holder. */
+  /** Human readable description of the outgoing payment. */
   description?: Maybe<Scalars['String']>;
   error?: Maybe<Scalars['String']>;
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
@@ -847,7 +847,7 @@ export type Receiver = {
   completed: Scalars['Boolean'];
   /** Date-time of creation */
   createdAt: Scalars['String'];
-  /** Human readable description of the incoming payment that will be visible to the account holder. */
+  /** Human readable description of the incoming payment. */
   description?: Maybe<Scalars['String']>;
   /** Date-time of expiry. After this time, the incoming payment will accept further payments made to it. */
   expiresAt?: Maybe<Scalars['String']>;

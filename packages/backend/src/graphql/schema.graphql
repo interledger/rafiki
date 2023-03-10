@@ -73,13 +73,13 @@ type Mutation {
     input: CreatePeerLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Post liquidity withdrawal. Withdrawals are two-phase commits and are approved via this mutation."
+  "Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation."
   postLiquidityWithdrawal(
     "The id of the liquidity withdrawal to post."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
-  "Void liquidity withdrawal. Withdrawals are two-phase commits and are rejected via this mutation."
+  "Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation."
   voidLiquidityWithdrawal(
     "The id of the liquidity withdrawal to void."
     withdrawalId: String!
@@ -106,7 +106,7 @@ type Mutation {
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
-  "Create an external Open Payments Incoming Payment. The receiver has a payment pointer on another Rafiki instance."
+  "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Create an Open Payments Quote"
@@ -123,7 +123,7 @@ type Mutation {
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
-  "Withdraw liquidity from Open Payments payment pointer prior to having received a webhook event. This can be used to e.g. withdraw funds from a partially completed incoming payment while still waiting for the remaining funds to be received."
+  "Withdraw liquidity from a payment pointer received via Web Monetization."
   createPaymentPointerWithdrawal(
     input: CreatePaymentPointerWithdrawalInput!
   ): PaymentPointerWithdrawalMutationResponse
@@ -191,7 +191,7 @@ input CreatePeerInput {
   assetId: String!
   "Peer's ILP address"
   staticIlpAddress: String!
-  "Peer's public name"
+  "Peer's internal name"
   name: String
 }
 
@@ -416,13 +416,13 @@ type IncomingPayment implements Model {
   paymentPointerId: ID!
   "Incoming payment state"
   state: IncomingPaymentState!
-  "Date-time of expiry. After this time, the incoming payment will accept further payments made to it."
+  "Date-time of expiry. After this time, the incoming payment will not accept further payments made to it."
   expiresAt: String!
   "The maximum amount that should be paid into the payment pointer under this incoming payment."
   incomingAmount: Amount
   "The total amount that has been paid into the payment pointer under this incoming payment."
   receivedAmount: Amount!
-  "Human readable description of the incoming payment that will be visible to the account holder."
+  "Human readable description of the incoming payment."
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
@@ -443,7 +443,7 @@ type Receiver {
   receivedAmount: Amount!
   "Date-time of expiry. After this time, the incoming payment will accept further payments made to it."
   expiresAt: String
-  "Human readable description of the incoming payment that will be visible to the account holder."
+  "Human readable description of the incoming payment."
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
@@ -497,7 +497,7 @@ type OutgoingPayment implements Model {
   receiveAmount: Amount!
   "Payment pointer URL of the receiver"
   receiver: String!
-  "Human readable description of the outgoing payment that will be visible to the account holder."
+  "Human readable description of the outgoing payment."
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
@@ -586,7 +586,7 @@ input CreateOutgoingPaymentInput {
   paymentPointerId: String!
   "Id of the corresponding quote for that outgoing payment"
   quoteId: String!
-  "Human readable description of the outgoing payment that will be visible to the account holder."
+  "Human readable description of the outgoing payment."
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
@@ -597,7 +597,7 @@ input CreateIncomingPaymentInput {
   paymentPointerId: String!
   "Expiration date-time"
   expiresAt: String
-  "Human readable description of the incoming payment that will be visible to the account holder."
+  "Human readable description of the incoming payment."
   description: String
   "Maximum amount to be received"
   incomingAmount: AmountInput
@@ -610,7 +610,7 @@ input CreateReceiverInput {
   paymentPointerUrl: String!
   "Expiration date-time"
   expiresAt: String
-  "Human readable description of the incoming payment that will be visible to the account holder."
+  "Human readable description of the incoming payment."
   description: String
   "Maximum amount to be received"
   incomingAmount: AmountInput
