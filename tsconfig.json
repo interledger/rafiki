@@ -19,9 +19,6 @@
       "path": "packages/backend"
     },
     {
-      "path": "packages/frontend"
-    },
-    {
       "path": "infrastructure/local/local-http-signatures"
     }
   ],
