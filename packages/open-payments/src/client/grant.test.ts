@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createGrantRoutes } from './grant'
-import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
+import { OpenAPI, HttpMethod, createOpenAPI } from '@inteledger/openapi'
 import path from 'path'
 import {
   defaultAxiosInstance,

@@ -1,4 +1,4 @@
-import { HttpMethod, ResponseValidator } from 'openapi'
+import { HttpMethod, ResponseValidator } from '@inteledger/openapi'
 import {
   BaseDeps,
   CollectionRequestArgs,

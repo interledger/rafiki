@@ -1,4 +1,4 @@
-import { HttpMethod } from 'openapi'
+import { HttpMethod } from '@inteledger/openapi'
 import { RouteDeps, UnauthenticatedResourceRequestArgs } from '.'
 import { JWKS, PaymentPointer, getRSPath } from '../types'
 import { get } from './requests'
