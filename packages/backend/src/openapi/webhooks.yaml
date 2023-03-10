@@ -84,16 +84,16 @@ components:
           type: string
           format: uuid
         type:
-            type: string
-            enum: 
-              - incoming_payment.completed
-              - incoming_payment.expired
+          type: string
+          enum:
+            - incoming_payment.completed
+            - incoming_payment.expired
         attempts:
           type: integer
         processAt:
           type: string
           format: date-time
-        data: 
+        data:
           type: object
           required:
             - id
@@ -104,29 +104,29 @@ components:
             - receivedAmount
             - completed
           properties:
-            id: 
+            id:
               type: string
               format: uuid
-            paymentPointerId: 
+            paymentPointerId:
               type: string
               format: uuid
             completed:
               type: boolean
-            incomingAmount: 
+            incomingAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            receivedAmount: 
+            receivedAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            description: 
+            description:
               type: string
-            externalRef: 
+            externalRef:
               type: string
-            createdAt: 
+            createdAt:
               type: string
               format: date-time
-            updatedAt: 
+            updatedAt:
               type: string
               format: date-time
-            expiresAt: 
+            expiresAt:
               type: string
               format: date-time
         statusCode:
@@ -145,17 +145,17 @@ components:
           type: string
           format: uuid
         type:
-            type: string
-            enum: 
-              - outgoing_payment.created
-              - outgoing_payment.completed
-              - outgoing_payment.failed
+          type: string
+          enum:
+            - outgoing_payment.created
+            - outgoing_payment.completed
+            - outgoing_payment.failed
         attempts:
           type: integer
         processAt:
           type: string
           format: date-time
-        data: 
+        data:
           type: object
           required:
             - id
@@ -169,10 +169,10 @@ components:
             - stateAttempts
             - balance
           properties:
-            id: 
+            id:
               type: string
               format: uuid
-            paymentPointerId: 
+            paymentPointerId:
               type: string
               format: uuid
             state:
@@ -182,31 +182,31 @@ components:
                 - SENDING
                 - FAILED
                 - COMPLETED
-            sendAmount: 
+            sendAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            sentAmount: 
+            sentAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            description: 
+            description:
               type: string
-            externalRef: 
+            externalRef:
               type: string
-            createdAt: 
-              type: string
-              format: date-time
-            updatedAt: 
+            createdAt:
               type: string
               format: date-time
-            expiresAt: 
+            updatedAt:
               type: string
               format: date-time
-            error: 
+            expiresAt:
               type: string
-            stateAttempts: 
+              format: date-time
+            error:
+              type: string
+            stateAttempts:
               type: integer
-            balance: 
+            balance:
               type: string
               format: uint64
-            peerId: 
+            peerId:
               type: string
               format: uuid
         statusCode:
@@ -225,15 +225,15 @@ components:
           type: string
           format: uuid
         type:
-            type: string
-            enum: 
-              - payment_pointer.web_monetization
+          type: string
+          enum:
+            - payment_pointer.web_monetization
         attempts:
           type: integer
         processAt:
           type: string
           format: date-time
-        data: 
+        data:
           type: object
           required:
             - paymentPointer
@@ -245,13 +245,13 @@ components:
                 - createdAt
                 - received
               properties:
-                id: 
+                id:
                   type: string
                   format: uuid
-                createdAt: 
+                createdAt:
                   type: string
                   format: date-time
-                received: 
+                received:
                   type: string
                   format: uint64
         statusCode:
@@ -271,5 +271,5 @@ components:
         assetId:
           type: string
           format: uuid
-        amount: 
+        amount:
           type: integer
