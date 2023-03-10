@@ -1,6 +1,6 @@
 overwrite: true
 schema: './src/graphql/schema.graphql'
-documents: '../admin/app/**/!(*.d).{ts,tsx}'
+documents: '../frontend/app/**/!(*.d).{ts,tsx}'
 generates:
   src/graphql/generated/graphql.ts:
     plugins:
@@ -27,7 +27,7 @@ generates:
   src/graphql/generated/graphql.schema.json:
     plugins:
       - 'introspection'
-  ../admin/app/generated/graphql.ts:
+  ../frontend/app/generated/graphql.ts:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'
