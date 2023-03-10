@@ -7,7 +7,7 @@ Account Servicing Entities provide and maintain payment accounts. In order to ma
 - prices (exchange rates)
 - fees
 - [webhook events listener](#webhook-events-listener)
-- (optional) [Open Payments Auth Server](#open-payments-auth-server)
+- [Identity Provider](#identity-provider)
 
 Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [payment pointer](#issuing-payment-pointers) in order to be serviced by Rafiki and send or receive Interledger payments.
 
@@ -127,11 +127,11 @@ A [Web Monetization](./glossary.md#web-monetization) payment has been received v
 
 - Action: Withdraw liquidity
 
-## Open Payments Auth Server
+## Identity Provider
 
-The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](./glossary.md#grant-negotiation-authorization-protocol) (GNAP). While Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package--an [Account Servicing Entity](./glossary.md#account-servicing-entity) may implement its own Open Payments Auth Server.
+The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](./glossary.md#grant-negotiation-authorization-protocol) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
 
-Furthermore, the Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
+The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
 
 ## Issuing Payment Pointers
 
