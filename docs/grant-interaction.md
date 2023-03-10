@@ -2,7 +2,7 @@
 
 ## Endpoints
 
-Once a grant is initialized, there are four main endpoints that are used as part of an interaction to authorize the grant, if the AS deems it necessary. The endpoints, in order of their calling, are as follows:
+If the AS deems interaction necessary to issue a grant, there are five main endpoints that are used once a pending grant has been created. The endpoints, in order of their calling, are as follows:
 
 - `GET /interact/:id/:nonce` (made by the client to the AS, establishes an interaction session, redirects browser session to IDP consent screen)
 - `GET /grant/:id/:nonce` (made by the IDP to the AS, secured with `x-idp-secret` header, returns grant info for the consent screen to enumerate )
@@ -20,9 +20,7 @@ To set this up, set the `IDENTITY_SERVER_SECRET` on the AS environment to a valu
 
 ## Sequence Diagram
 
-This diagram was generated using [Mermaid](https://mermaid.js.org/).
-
-```
+```mermaid
 sequenceDiagram
     Client->>Auth Server: Grant Request (POST /) with access_token and interact
     Auth Server-->>Client: 200 Return interact.redirect and continue.(uri/access_token)
