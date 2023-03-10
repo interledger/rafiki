@@ -49,6 +49,7 @@
     "graphql-markdown": "^7.0.0",
     "husky": "^8.0.3",
     "jest": "^29.5.0",
+    "lerna": "^6.5.1",
     "prettier": "^2.8.4",
     "ts-jest": "^29.0.5",
     "ts-node-dev": "^2.0.0",
@@ -64,5 +65,8 @@
     "singleQuote": true,
     "jsxSingleQuote": true,
     "trailingComma": "none"
-  }
+  },
+  "workspaces": [
+    "packages/*"
+  ]
 }

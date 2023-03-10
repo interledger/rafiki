@@ -1,5 +1,6 @@
 {
   "name": "backend",
+  "private": true,
   "scripts": {
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
@@ -83,7 +84,7 @@
     "pino-pretty": "^9.4.0",
     "raw-body": "^2.5.2",
     "tigerbeetle-node": "^0.11.12",
-    "token-introspection": "workspace:*",
+    "token-introspection": "workspace:../token-introspection",
     "uuid": "^9.0.0"
   }
 }

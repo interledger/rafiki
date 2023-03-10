@@ -1,5 +1,6 @@
 {
   "name": "frontend",
+  "private": true,
   "scripts": {
     "test": "jest --passWithNoTests"
   }
