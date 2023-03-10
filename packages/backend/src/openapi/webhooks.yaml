@@ -1,0 +1,275 @@
+openapi: 3.1.0
+info:
+  title: Rafiki Webhooks
+  version: 1.0.0
+webhooks:
+  incomingPaymentCompleted:
+    post:
+      requestBody:
+        description: Notify account servicing entity that an incoming payment was completed and funds should now be withdrawn.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/incomingPayment'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  incomingPaymentExpired:
+    post:
+      requestBody:
+        description: Notify account servicing entity that an incoming payment has expired and funds should now be withdrawn.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/incomingPayment'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  outgoingPaymentCreated:
+    post:
+      requestBody:
+        description: Notify account servicing entity that an outgoing payment was created and should now be funded.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPayment'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  outgoingPaymentCompleted:
+    post:
+      requestBody:
+        description: Notify account servicing entity that an outgoing payment completed. Remaining funds should be withdrawn.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPayment'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  outgoingPaymentFailed:
+    post:
+      requestBody:
+        description: Notify account servicing entity that an outgoing payment failed and won't be retried. Funds should be withdrawn.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/outgoingPayment'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  webMonetization:
+    post:
+      requestBody:
+        description: Notify account servicing entity that a Web Monetization payment was received and funds should be withdrawn.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/webMonetization'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+
+components:
+  schemas:
+    incomingPayment:
+      required:
+        - id
+        - type
+        - attempts
+        - processAt
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+            type: string
+            enum: 
+              - incoming_payment.completed
+              - incoming_payment.expired
+        attempts:
+          type: integer
+        processAt:
+          type: string
+          format: date-time
+        data: 
+          type: object
+          required:
+            - id
+            - paymentPointerId
+            - createdAt
+            - updatedAt
+            - expiresAt
+            - receivedAmount
+            - completed
+          properties:
+            id: 
+              type: string
+              format: uuid
+            paymentPointerId: 
+              type: string
+              format: uuid
+            completed:
+              type: boolean
+            incomingAmount: 
+              $ref: ./schemas.yaml#/components/schemas/amount
+            receivedAmount: 
+              $ref: ./schemas.yaml#/components/schemas/amount
+            description: 
+              type: string
+            externalRef: 
+              type: string
+            createdAt: 
+              type: string
+              format: date-time
+            updatedAt: 
+              type: string
+              format: date-time
+            expiresAt: 
+              type: string
+              format: date-time
+        statusCode:
+          type: integer
+        withdrawal:
+          $ref: '#/components/schemas/withdrawal'
+    outgoingPayment:
+      required:
+        - id
+        - type
+        - attempts
+        - processAt
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+            type: string
+            enum: 
+              - outgoing_payment.created
+              - outgoing_payment.completed
+              - outgoing_payment.failed
+        attempts:
+          type: integer
+        processAt:
+          type: string
+          format: date-time
+        data: 
+          type: object
+          required:
+            - id
+            - paymentPointerId
+            - createdAt
+            - updatedAt
+            - expiresAt
+            - sendAmount
+            - receiveAmount
+            - state
+            - stateAttempts
+            - balance
+          properties:
+            id: 
+              type: string
+              format: uuid
+            paymentPointerId: 
+              type: string
+              format: uuid
+            state:
+              type: string
+              enum:
+                - FUNDING
+                - SENDING
+                - FAILED
+                - COMPLETED
+            sendAmount: 
+              $ref: ./schemas.yaml#/components/schemas/amount
+            sentAmount: 
+              $ref: ./schemas.yaml#/components/schemas/amount
+            description: 
+              type: string
+            externalRef: 
+              type: string
+            createdAt: 
+              type: string
+              format: date-time
+            updatedAt: 
+              type: string
+              format: date-time
+            expiresAt: 
+              type: string
+              format: date-time
+            error: 
+              type: string
+            stateAttempts: 
+              type: integer
+            balance: 
+              type: string
+              format: uint64
+            peerId: 
+              type: string
+              format: uuid
+        statusCode:
+          type: integer
+        withdrawal:
+          $ref: '#/components/schemas/withdrawal'
+    webMonetization:
+      required:
+        - id
+        - type
+        - attempts
+        - processAt
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+            type: string
+            enum: 
+              - payment_pointer.web_monetization
+        attempts:
+          type: integer
+        processAt:
+          type: string
+          format: date-time
+        data: 
+          type: object
+          required:
+            - paymentPointer
+          properties:
+            paymentPointer:
+              type: object
+              required:
+                - id
+                - createdAt
+                - received
+              properties:
+                id: 
+                  type: string
+                  format: uuid
+                createdAt: 
+                  type: string
+                  format: date-time
+                received: 
+                  type: string
+                  format: uint64
+        statusCode:
+          type: integer
+        withdrawal:
+          $ref: '#/components/schemas/withdrawal'
+    withdrawal:
+      type: object
+      required:
+        - accountId: string
+        - assetId: string
+        - amount: bigint
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        assetId:
+          type: string
+          format: uuid
+        amount: 
+          type: integer
