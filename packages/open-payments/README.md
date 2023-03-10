@@ -68,7 +68,7 @@ In order to create the client, three properties need to be provided: `keyId`, th
 | Variable            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `paymentPointerUrl` | The valid payment pointer with which the client making requests will identify itself. A JSON Web Key Set document, including the public key that the client instance will use to protect requests and any user-facing information about the client instance used in interactions, MUST be available at the `{paymentPointerUrl}/jwks.json` url. This will be used as the `client` field during [Grant Creation](https://docs.openpayments.guide/reference/post-request). |
-| `privateKey`        | The the private EdDSA-Ed25519 key bound to the payment pointer, and used to sign the authenticated requests with. As mentioned above, the public JWK document of this key MUST be available at the `{paymentPointerUrl}/jwks.json` url.                                                                                                                                                                                                                                  |
+| `privateKey`        | The private EdDSA-Ed25519 key bound to the payment pointer, and used to sign the authenticated requests with. As mentioned above, the public JWK document of this key MUST be available at the `{paymentPointerUrl}/jwks.json` url.                                                                                                                                                                                                                                  |
 | `keyId`             | The key identifier of the given private key and the corresponding public JWK document.                                                                                                                                                                                                                                                                                                                                                                                   |
 
 > **Note**
@@ -148,7 +148,7 @@ const incomingPayment = await client.incomingPayment.create(
 
 4. Create `Quote`
 
-Then, it'll gets a grant to create a `Quote` on Alice's payment pointer, which will give the amount it'll cost Alice to make the payment (with the ILP fees + her wallet's fees)
+Then, it'll get a grant to create a `Quote` on Alice's payment pointer, which will give the amount it'll cost Alice to make the payment (with the ILP fees + her wallet's fees)
 
 ```ts
 const quoteGrant = await client.grant.request(
@@ -221,7 +221,7 @@ app.post('/open-payment-start', (req, res) => {
 })
 ```
 
-From there on, the webshop can take Alice to a URL (e.g. https://cloud-nine-wallet/interact/../) where she can approve the request for Shoe Shop to create an `OutgoingPayment` on her wallet (i.e. take money out of her account). Once we completes her interaction, she should be redirected to the `interact.finish.uri` url provided in the initial grant request.
+From there on, the Shoe Shop website can take Alice to a URL (e.g. https://cloud-nine-wallet/interact/../) where she can approve the request for Shoe Shop to create an `OutgoingPayment` on her wallet (i.e. take money out of her account). Once she completes her interaction, she should be redirected to the `interact.finish.uri` url provided in the initial grant request.
 
 7. Continue `OutgoingPayment` grant & create the `OutgoingPayment`
 
