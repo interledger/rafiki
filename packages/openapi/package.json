@@ -1,5 +1,5 @@
 {
-  "name": "openapi",
+  "name": "@interledger/openapi",
   "version": "1.0.0@alpha",
   "description": "Validates requests and responses according to an OpenAPI 3.1 schema",
   "author": "Interledger Tech Team <tech@interledger.org>",
