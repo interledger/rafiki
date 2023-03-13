@@ -128,7 +128,11 @@ const incomingPaymentGrant = await client.grant.request(
     }
   }
 )
+```
 
+and creates an `IncomingPayment` using the access token from the grant:
+
+```ts
 const incomingPayment = await client.incomingPayment.create(
   {
     paymentPointer: shoeShopPaymentPointer.authServer,
