@@ -513,7 +513,7 @@ Create an internal Open Payments Incoming Payment. The receiver has a payment po
 <td valign="top"><a href="#createreceiverresponse">CreateReceiverResponse</a>!</td>
 <td>
 
-Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance.
+Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server.
 
 </td>
 </tr>

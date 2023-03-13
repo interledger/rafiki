@@ -420,7 +420,7 @@ export type Mutation = {
   createPeerLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Create an Open Payments Quote */
   createQuote: QuoteResponse;
-  /** Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance. */
+  /** Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server. */
   createReceiver: CreateReceiverResponse;
   /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;

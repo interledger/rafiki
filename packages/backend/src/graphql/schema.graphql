@@ -106,7 +106,7 @@ type Mutation {
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
-  "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance."
+  "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Create an Open Payments Quote"

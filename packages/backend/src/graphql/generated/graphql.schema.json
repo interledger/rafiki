@@ -3013,7 +3013,7 @@
           },
           {
             "name": "createReceiver",
-            "description": "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Rafiki instance.",
+            "description": "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server.",
             "args": [
               {
                 "name": "input",
