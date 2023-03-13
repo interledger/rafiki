@@ -2,7 +2,14 @@
 
 **❗ Rafiki is intended to be run by [Account Servicing Entities](./glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
 
-Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services.
+Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
+
+- prices (exchange rates)
+- fees
+- [webhook events listener](#webhook-events-listener)
+- [Identity Provider](#identity-provider)
+
+Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [payment pointer](#issuing-payment-pointers) in order to be serviced by Rafiki and send or receive Interledger payments.
 
 ## Quotes / Rates and Fees
 
@@ -55,7 +62,7 @@ If the payment is a `FixedSend` payment, this endpoint should deduct its fees fr
 
 The `backend` package requires an environment variable called `QUOTE_URL` which MUST specify the URL of this endpoint.
 
-## Webhook Events
+## Webhook Events Listener
 
 Rafiki itself does not hold any balances but needs to be funded for outgoing transfers and money needs to be withdrawn for incoming transfers. In order to notify the Account Servicing Entity about those transfer events, they need to expose a webhook endpoint that listens for these events and reacts accordingly.
 
@@ -120,8 +127,198 @@ A [Web Monetization](./glossary.md#web-monetization) payment has been received v
 
 - Action: Withdraw liquidity
 
-## Open Payments
+## Identity Provider
 
-The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. They are auth-protected using the [Grant Negotiation Authorization Protocol](./glossary#grant-negotiation-authorization-protocol) (GNAP). While Rafiki comes with a reference implementation of a GNAP server--the `auth` package--an [Account Servicing Entity](./glossary#account-servicing-entity) may implement its own GNAP server.
+The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](./glossary.md#grant-negotiation-authorization-protocol) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
 
-Furthermore, the GNAP server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the GNAP server, see the docs in the `auth` package.
+The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
+
+## Issuing Payment Pointers
+
+A [Payment Pointer](./glossary.md#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](./admin-api.md). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
+
+### Create Asset
+
+Query:
+
+```
+mutation CreateAsset ($input: CreateAssetInput!) {
+  createAsset(input: $input) {
+    code
+    success
+    message
+    asset {
+      id
+      code
+      scale
+    }
+  }
+}
+```
+
+Query Variables:
+
+```
+{
+  "input": {
+    "code": "USD",
+    "scale": 2
+  }
+}
+```
+
+Example Successful Response
+
+```
+{
+  "data": {
+    "createAsset": {
+      "code": "200",
+      "success": true,
+      "message": "Created Asset",
+      "asset": {
+        "id": "0ddc0b7d-1822-4213-948e-915dda58850b",
+        "code": "USD",
+        "scale": 2
+      }
+    }
+  }
+}
+```
+
+### Create Payment Pointer
+
+Query:
+
+```
+mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
+  createPaymentPointer(input: $input) {
+    code
+    success
+    message
+    paymentPointer {
+      id
+      createdAt
+      publicName
+      url
+      asset {
+        code
+        id
+        scale
+      }
+    }
+  }
+}
+```
+
+Query Variables:
+
+```
+{
+  "input": {
+    "assetId": "0ddc0b7d-1822-4213-948e-915dda58850b",
+    "publicName": "Sarah Marshall",
+    "url": "https://example.wallet.com/sarah"
+  }
+}
+```
+
+Example Successful Response
+
+```
+{
+  "data": {
+    "createPaymentPointer": {
+      "code": "200",
+      "success": true,
+      "message": "Created payment pointer",
+      "paymentPointer": {
+        "id": "695e7546-1803-4b45-96b6-6a53f4082018",
+        "createdAt": "2023-03-03T09:07:01.107Z",
+        "publicName": "Sarah Marshall",
+        "url": "https://example.wallet.com/sarah",
+        "asset": {
+          "id": "0ddc0b7d-1822-4213-948e-915dda58850b",
+          "code": "USD",
+          "scale": 2
+        }
+      }
+    }
+  }
+}
+```
+
+The Account Servicing Entity SHOULD store at least the `paymentPointer.id` in their internal database to be able to reference the account and payment pointer.
+
+### Create Payment Pointer Key
+
+In order to use the [Open Payments](./glossary.md#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](./admin-api.md).
+
+Query:
+
+```
+mutation CreatePaymentPointerKey($input: CreatePaymentPointerKeyInput!) {
+  createPaymentPointerKey(input: $input) {
+    code
+    message
+    success
+    paymentPointerKey {
+      id
+      paymentPointerId
+      revoked
+      jwk {
+        alg
+        crv
+        kid
+        kty
+        x
+      }
+      createdAt
+    }
+  }
+}
+```
+
+Query Variables:
+
+```
+{
+  "input": {
+    "jwk": {
+      "kid": "keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5",
+      "x": "ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8",
+      "alg": "EdDSA",
+      "kty": "OKP",
+      "crv": "Ed25519"
+    },
+    "paymentPointerId": "695e7546-1803-4b45-96b6-6a53f4082018"
+  }
+}
+```
+
+Example Successful Response
+
+```
+{
+  "data": {
+    "createPaymentPointerKey": {
+      "code": "200",
+      "message": "Added Key To Payment Pointer",
+      "success": true,
+      "paymentPointerKey": {
+        "id": "f2953571-f10c-44eb-ab41-4450a7ad6771",
+        "paymentPointerId": "695e7546-1803-4b45-96b6-6a53f4082018",
+        "revoked": false,
+        "jwk": {
+          "alg": "EdDSA",
+          "crv": "Ed25519",
+          "kid": "keyid-97a3a431-8ee1-48fc-ac85-70e2f5eba8e5",
+          "kty": "OKP",
+          "x": "ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8"
+        },
+        "createdAt": "2023-03-03T09:26:41.424Z"
+      }
+    }
+  }
+}
+```
