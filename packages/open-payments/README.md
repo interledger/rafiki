@@ -2,7 +2,7 @@
 
 [Open Payments](../../docs/open-payments.md) is an API standard that allows third-parties (with the account holder's consent) to initiate payments and to view the transaction history on the account holder's account.
 
-Open Payments consists of two Open API specifications, a **resource server** which exposes APIs for performing functions against the underlying accounts and an **authorization server** which exposes APIs compliant with the [GNAP](../../docs/glossary.md#grant-negotiation-authorization-protocol) standard for getting grants to access the resource server APIs.
+Open Payments consists of two OpenAPI specifications, a **resource server** which exposes APIs for performing functions against the underlying accounts and an **authorization server** which exposes APIs compliant with the [GNAP](../../docs/glossary.md#grant-negotiation-authorization-protocol) standard for getting grants to access the resource server APIs.
 
 This package provides TypeScript & NodeJS tools for using Open Payments:
 
@@ -148,7 +148,7 @@ const incomingPayment = await client.incomingPayment.create(
 
 4. Create `Quote`
 
-Then, it'll gets a grant to create a `Quote` on Alice's payment pointer, which will give the amount it'll cost Alice to make the payment (with the ILP fees + her wallet's fees)
+Then, it'll get a grant to create a `Quote` on Alice's payment pointer, which will give the amount it'll cost Alice to make the payment (with the ILP fees + her wallet's fees)
 
 ```ts
 const quoteGrant = await client.grant.request(
@@ -221,7 +221,7 @@ app.post('/open-payment-start', (req, res) => {
 })
 ```
 
-From there on, the webshop can take Alice to a URL (e.g. https://cloud-nine-wallet/interact/../) where she can approve the request for Shoe Shop to create an `OutgoingPayment` on her wallet (i.e. take money out of her account). Once we completes her interaction, she should be redirected to the `interact.finish.uri` url provided in the initial grant request.
+From there on, the Shoe Shop website can take Alice to a URL (e.g. https://cloud-nine-wallet/interact/../) where she can approve the request for Shoe Shop to create an `OutgoingPayment` on her wallet (i.e. take money out of her account). Once she completes her interaction, she should be redirected to the `interact.finish.uri` url provided in the initial grant request.
 
 7. Continue `OutgoingPayment` grant & create the `OutgoingPayment`
 
