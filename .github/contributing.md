@@ -101,7 +101,7 @@ Prettier config should not be overridden in any packages.
 [GraphQL Code Generator](https://the-guild.dev/graphql/codegen) is used for generating TypeScript types from `schema.graphql` files.
 
 ```shell
-./<package>/.graphqlconfig # config
+./<package>/codegen.yml # GraphQL Code Generator config
 ```
 
 The `generate` script should be run if a package's `schema.graphql` file is modified.
