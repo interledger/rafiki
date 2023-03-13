@@ -87,11 +87,11 @@ interface MutationResponse {
 
 enum GrantState {
   "grant request was created but grant was not approved yet"
-  pending
+  PENDING
   "grant was approved"
-  granted
+  GRANTED
   "grant was revoked"
-  revoked
+  REVOKED
   "grant was rejected"
-  rejected
+  REJECTED
 }

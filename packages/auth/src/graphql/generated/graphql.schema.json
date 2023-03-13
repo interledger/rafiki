@@ -252,25 +252,25 @@
         "interfaces": null,
         "enumValues": [
           {
-            "name": "granted",
+            "name": "GRANTED",
             "description": "grant was approved",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "pending",
+            "name": "PENDING",
             "description": "grant request was created but grant was not approved yet",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "rejected",
+            "name": "REJECTED",
             "description": "grant was rejected",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
-            "name": "revoked",
+            "name": "REVOKED",
             "description": "grant was revoked",
             "isDeprecated": false,
             "deprecationReason": null

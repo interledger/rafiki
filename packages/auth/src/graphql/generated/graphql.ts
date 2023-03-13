@@ -48,13 +48,13 @@ export type GrantEdge = {
 
 export enum GrantState {
   /** grant was approved */
-  Granted = 'granted',
+  Granted = 'GRANTED',
   /** grant request was created but grant was not approved yet */
-  Pending = 'pending',
+  Pending = 'PENDING',
   /** grant was rejected */
-  Rejected = 'rejected',
+  Rejected = 'REJECTED',
   /** grant was revoked */
-  Revoked = 'revoked'
+  Revoked = 'REVOKED'
 }
 
 export type GrantsConnection = {
