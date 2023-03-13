@@ -40,7 +40,7 @@ export async function loader({ params }: LoaderArgs) {
   })
 }
 
-export default function ViewPeerPage() {
+export default function ViewAssetPage() {
   const { asset } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
@@ -77,7 +77,7 @@ export default function ViewPeerPage() {
                   />
                 </div>
                 <div className='flex justify-end p-4'>
-                  <Button aria-label='save asset informations' type='submit'>
+                  <Button aria-label='save asset information' type='submit'>
                     {isSubmitting ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>

@@ -53,7 +53,7 @@ export default function AssetsPage() {
         </PageHeader>
         <Table>
           <Table.Head
-            columns={['ID', 'Code', 'Scale', 'Withdrawl threshold']}
+            columns={['ID', 'Code', 'Scale', 'Withdrawal threshold']}
           />
           <Table.Body>
             {assets.edges.length ? (

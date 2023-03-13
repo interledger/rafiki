@@ -73,7 +73,7 @@ export default function ViewPeerPage() {
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           {/* Peer General Info*/}
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>General Informations</h3>
+            <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>Created at {peer.createdAt}</p>
             <ErrorPanel errors={response?.errors.general.message} />
           </div>
