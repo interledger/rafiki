@@ -85,6 +85,21 @@ services:
       KEY_FILE: /workspace/private-key.pem
     volumes:
       - ./private-key.pem:/workspace/private-key.pem
+  admin:
+    hostname: happy-life-bank-admin
+    build:
+      context: ../../..
+      dockerfile: ./packages/frontend/Dockerfile
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '4010:4010'
+    environment:
+      PORT: 4010
+      GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+    depends_on:
+      - backend
 
 networks:
   rafiki:
