@@ -23,7 +23,7 @@ const apolloClient = new ApolloClient({
       fetchPolicy: 'no-cache'
     }
   },
-  uri: 'http://localhost:3001/graphql'
+  uri: process.env.GRAPHQL_URL ?? 'http://localhost:3001/graphql'
 })
 
 export { apolloClient }

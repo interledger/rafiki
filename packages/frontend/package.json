@@ -5,7 +5,7 @@
   "scripts": {
     "build": "pnpm tw:build && remix build",
     "dev": "concurrently -c green.bold,blue.bold 'pnpm tw:watch' 'pnpm dev:remix'",
-    "dev:remix": "remix dev",
+    "dev:remix": "PORT=3005 remix dev",
     "lint:fix": "eslint --fix app/",
     "lint:check": "eslint app/",
     "start": "remix-serve build",
