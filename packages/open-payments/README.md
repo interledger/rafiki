@@ -176,11 +176,13 @@ const quote = await client.quote.create(
 // quote.sendAmount.value = '5200'
 ```
 
-5. Get `OutgoingPayment` grant
+5. Create `OutgoingPayment` grant & start interaction flow:
 
 The final step for Amazon's backend system will be to create an `OutgoingPayment` on Alice's wallet. Before this, however, Amazon will need to create an outgoing payment grant, which typically requires some sort of interaction with Alice. Amazon will need to facilitate this interaction with Alice (e.g. redirect her to a webpage with a dialog) to get her consent for creating an `OutgoingPayment` on her account. The detailed sequence for how this is achieved can be found [here](../../docs/grant-interaction.md).
 
-7. Once the grant interaction flow has finished, and Alice has consented to the payment, Amazon can create the `OutgoingPayment` on her account:
+7. Create `OutgoingPayment`:
+
+Once the grant interaction flow has finished, and Alice has consented to the payment, Amazon can create the `OutgoingPayment` on her account:
 
 ```ts
 const outgoingPayment = await client.outgoingPayment.create(
