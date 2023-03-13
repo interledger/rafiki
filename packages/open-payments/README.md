@@ -79,20 +79,20 @@ In order to create the client, three properties need to be provided: `keyId`, th
 
 As mentioned previously, Open Payments APIs can facilitate a payment between two parties.
 
-For example, say Alice wants to purchase a $50 product from a merchant called Shoe Shop. If both parties have Open Payments enabled wallets, where Alice's payment pointer is `https://cloud-nine-wallet/alice`, and Shoe Shop's is `https://happy-life-bank/shoe-shop`, requests during checkout from Shoe Shop's backend would look like this with the client:
+For example, say Alice wants to purchase a $50 product from a merchant called Shoe Shop on the Amazon Marketplace. If both parties have Open Payments enabled wallets, where Alice's payment pointer is `https://cloud-nine-wallet/alice`, and Shoe Shop's is `https://happy-life-bank/shoe-shop`, requests during checkout from Amazon's backend would look like this using the client:
 
 1. Create an Open Payments client
 
-In this case, since Shoe Shop wants to make requests that require authorization, Shoe Shop's backend will need to create an `AuthenticatedClient`:
+In this case, since Amazon Marketplace wants to make requests that require authorization, it will need to create an `AuthenticatedClient`:
 
 ```ts
 import { createAuthenticatedClient } from '@interledger/open-payments'
 
 const client = await createAuthenticatedClient({
-  paymentPointerUrl: 'https://happy-life-bank/shoe-shop',
+  paymentPointerUrl: 'https://amazon.com/usa',
   keyId: KEY_ID,
   privateKey: PRIVATE_KEY
-  // The public JWK with this key (and keyId) would be available at https://happy-life-bank/shoe-shop/jwks.json
+  // The public JWK with this key (and keyId) would be available at https://amazon.com/usa/jwks.json
 })
 ```
 
@@ -112,7 +112,7 @@ const customerPaymentPointer = await client.paymentPointer.get({
 
 3. Create `IncomingPayment`
 
-Shoe Shop's backend gets a grant (if it doesn't have one already) to create an `IncomingPayment` on its wallet:
+Amazon's backend gets a grant to create an `IncomingPayment` on the merchant's wallet:
 
 ```ts
 const incomingPaymentGrant = await client.grant.request(
@@ -178,72 +178,18 @@ const quote = await client.quote.create(
 
 5. Get `OutgoingPayment` grant
 
-The final step for Shoe Shop's backend system will be to create an `OutgoingPayment` on Alice's wallet. Before this, however, Shoe Shop's backend will need to create an outgoing payment grant.
+The final step for Amazon's backend system will be to create an `OutgoingPayment` on Alice's wallet. Before this, however, Amazon will need to create an outgoing payment grant, which typically requires some sort of interaction with Alice. Amazon will need to facilitate this interaction with Alice (e.g. redirect her to a webpage with a dialog) to get her consent for creating an `OutgoingPayment` on her account. The detailed sequence for how this is achieved can be found [here](../../docs/grant-interaction.md).
+
+7. Once the grant interaction flow has finished, and Alice has consented to the payment, Amazon can create the `OutgoingPayment` on her account:
 
 ```ts
-const pendingOutgoingPaymentGrant = await client.grant.request(
-  { url: customerPaymentPointer.authServer },
+const outgoingPayment = await client.outgoingPayment.create(
   {
-    access_token: {
-      access: [
-        {
-          type: 'outgoing-payment',
-          actions: ['create', 'read'],
-          identifier: customerPaymentPointer.id,
-          limits: {
-            sendAmount: quote.sendAmount // This limit will insure Shoe Shop would only be able to create an OutgoingPayment only as high as the quoted amount
-          }
-        }
-      ]
-    },
-    interact: {
-      start: ['redirect'],
-      finish: {
-        method: 'redirect',
-        uri: 'https://shoe-shop/open-payment/complete', // this is where Alice will be redirected to after she accepts (or rejects) the request to pull money out of her account
-        nonce: '456'
-      }
-    }
-  }
+    paymentPointer: alicePaymentPointer.id,
+    accessToken: outgoingPaymentGrant.access_token.value
+  },
+  { quoteId: quote.id, description: 'Your purchase at Shoe Shop' }
 )
 ```
 
-6. Get user confirmation via grant & redirect
-
-Since the `OutgoingPayment` grant is interactive (meaning, Alice needs to consent to Shoe Shop creating an `OutgoingPayment` on her account), Shoe Shop will need to redirect Alice to where the grant points to. Say the open payment request was being processed in an `/open-payment-start` route:
-
-```ts
-app.post('/open-payment-start', (req, res) => {
-  ...
-  res.send({
-    redirectUrl: pendingOutgoingPaymentGrant.interact.redirect // e.g. https://cloud-nine-wallet/interact/...
-  })
-})
-```
-
-From there on, the Shoe Shop website can take Alice to a URL (e.g. https://cloud-nine-wallet/interact/../) where she can approve the request for Shoe Shop to create an `OutgoingPayment` on her wallet (i.e. take money out of her account). Once she completes her interaction, she should be redirected to the `interact.finish.uri` url provided in the initial grant request.
-
-7. Continue `OutgoingPayment` grant & create the `OutgoingPayment`
-
-```ts
-app.post('/open-payment/complete', (req, res) => {
-  const outgoingPaymentGrant = await client.grant.continue(
-    { url: pendingOutgoingPaymentGrant.continue.uri },
-    { interact_ref: response.interact_ref }
-  )
-
-  const outgoingPayment = await client.outgoingPayment.create(
-    {
-      paymentPointer: alicePaymentPointer.id,
-      accessToken: outgoingPaymentGrant.access_token.value
-    },
-    { quoteId: quote.id, description: 'Your purchase at Shoe Shop' }
-  )
-
-  res.send({
-    success: true
-  })
-})
-```
-
-At this point, the Shoe Shop can show to Alice that the payment has been completed.
+At this point, the Amazon can show to Alice that the payment to Shoe Shop has been completed.
