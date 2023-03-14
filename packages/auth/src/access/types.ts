@@ -44,6 +44,16 @@ export function isIncomingPaymentAccessRequest(
   )
 }
 
+export function isQuoteAccessRequest(
+  accessRequest: QuoteRequest
+): accessRequest is QuoteRequest {
+  return (
+    accessRequest.type === AccessType.Quote &&
+    isAction(accessRequest.actions) &&
+    !accessRequest.limits
+  )
+}
+
 // value should hold bigint, serialized as string for requests
 // & storage as jsonb (postgresql.org/docs/current/datatype-json.html) field in postgres
 export interface PaymentAmount {

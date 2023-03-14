@@ -15,7 +15,9 @@ import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import {
   IncomingPaymentRequest,
-  isIncomingPaymentAccessRequest
+  isIncomingPaymentAccessRequest,
+  QuoteRequest,
+  isQuoteAccessRequest
 } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
@@ -146,21 +148,38 @@ async function createGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
-  const isOnlyIncomingPaymentAccessRequest =
-    ctx.request.body.access_token.access
-      .map((acc) => {
-        return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
-      })
-      .every((el) => el === true)
-
-  if (
-    isOnlyIncomingPaymentAccessRequest &&
-    !deps.config.incomingPaymentInteraction
-  ) {
+  if (canSkipInteraction(deps, ctx)) {
     await createGrantInitiation(deps, ctx)
   } else {
     await createPendingGrant(deps, ctx)
   }
+}
+
+function canSkipInteraction(
+  deps: ServiceDependencies,
+  ctx: CreateContext
+): boolean {
+  const isOnlyIncomingPaymentAccessRequest =
+    ctx.request.body.access_token.access
+      .map((acc) =>
+        isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
+      )
+      .every((el) => el === true)
+
+  const isOnlyQuoteAccessRequest = ctx.request.body.access_token.access
+    .map((acc) => isQuoteAccessRequest(acc as QuoteRequest))
+    .every((el) => el === true)
+
+  console.log({
+    quoteInteraction: deps.config.quoteInteraction,
+    incomingPaymentInteraction: deps.config.incomingPaymentInteraction
+  })
+
+  return (
+    (isOnlyIncomingPaymentAccessRequest &&
+      !deps.config.incomingPaymentInteraction) ||
+    (isOnlyQuoteAccessRequest && !deps.config.quoteInteraction)
+  )
 }
 
 async function createGrantInitiation(

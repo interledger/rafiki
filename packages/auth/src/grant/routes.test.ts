@@ -170,54 +170,57 @@ describe('Grant Routes', (): void => {
         scope.done()
       })
 
-      test('Can get a software-only authorization grant', async (): Promise<void> => {
-        const ctx = createContext<CreateContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
+      test.each`
+        accessType
+        ${AccessType.IncomingPayment}
+        ${AccessType.Quote}
+      `(
+        'Can get an grant without interaction for $accessType grants',
+        async ({ accessType }): Promise<void> => {
+          const ctx = createContext<CreateContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              url,
+              method
             },
-            url,
-            method
-          },
-          {}
-        )
-        const body = {
-          access_token: {
-            access: [
-              {
-                type: AccessType.IncomingPayment,
-                actions: [
-                  AccessAction.Create,
-                  AccessAction.Read,
-                  AccessAction.List
-                ],
-                identifier: `https://example.com/${v4()}`
-              }
-            ]
-          },
-          client: CLIENT
-        }
-        ctx.request.body = body
-
-        await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-        expect(ctx.response).toSatisfyApiSpec()
-        expect(ctx.status).toBe(200)
-        expect(ctx.body).toEqual({
-          access_token: {
-            value: expect.any(String),
-            manage: expect.any(String),
-            access: body.access_token.access,
-            expires_in: 600
-          },
-          continue: {
+            {}
+          )
+          const body = {
             access_token: {
-              value: expect.any(String)
+              access: [
+                {
+                  type: accessType,
+                  actions: [AccessAction.Create, AccessAction.Read],
+                  identifier: `https://example.com/${v4()}`
+                }
+              ]
             },
-            uri: expect.any(String)
+            client: CLIENT
           }
-        })
-      })
+          ctx.request.body = body
+
+          await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(200)
+          expect(ctx.body).toEqual({
+            access_token: {
+              value: expect.any(String),
+              manage: expect.any(String),
+              access: body.access_token.access,
+              expires_in: 600
+            },
+            continue: {
+              access_token: {
+                value: expect.any(String)
+              },
+              uri: expect.any(String)
+            }
+          })
+        }
+      )
       test('Does not create grant if token issuance fails', async (): Promise<void> => {
         jest
           .spyOn(accessTokenService, 'create')
