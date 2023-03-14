@@ -170,11 +170,6 @@ function canSkipInteraction(
     .map((acc) => isQuoteAccessRequest(acc as QuoteRequest))
     .every((el) => el === true)
 
-  console.log({
-    quoteInteraction: deps.config.quoteInteraction,
-    incomingPaymentInteraction: deps.config.incomingPaymentInteraction
-  })
-
   return (
     (isOnlyIncomingPaymentAccessRequest &&
       !deps.config.incomingPaymentInteraction) ||
