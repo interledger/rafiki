@@ -35,7 +35,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     ])
     .withWaitStrategy(
       Wait.forLogMessage(
-        `info(main): 0: formatted: cluster=${tigerbeetleClusterId}`
+        /info\(main\): [0-9]{1,2}: formatted: cluster=[0-9]{1,2} replica_count=[0-9]{1,2}/
       )
     )
     .start()
