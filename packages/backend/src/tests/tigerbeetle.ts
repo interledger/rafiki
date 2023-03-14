@@ -31,11 +31,12 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       'format',
       '--cluster=' + tigerbeetleClusterId,
       '--replica=0',
+      '--replica-count=1',
       `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
     .withWaitStrategy(
       Wait.forLogMessage(
-        /info\(main\): [0-9]{1,2}: formatted: cluster=[0-9]{1,2} replica_count=[0-9]{1,2}/
+        `info(main): 0: formatted: cluster=${tigerbeetleClusterId} replica_count=1`
       )
     )
     .start()
