@@ -16,19 +16,28 @@ export type Scalars = {
 
 export type Access = Model & {
   __typename?: 'Access';
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Access id */
   id: Scalars['ID'];
+  /** Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote) */
   identifier?: Maybe<Scalars['String']>;
 };
 
 export type Grant = Model & {
   __typename?: 'Grant';
+  /** Access details */
   access: Array<Access>;
+  /** Payment pointer of the grantee's account */
   client: Scalars['String'];
+  /** Date-time of creation */
   createdAt: Scalars['String'];
+  /** Grant id */
   id: Scalars['ID'];
+  /** Payment pointer of the resource owner's account */
   identifier: Scalars['String'];
-  state: Scalars['String'];
+  /** State of the grant */
+  state: GrantState;
 };
 
 export type GrantEdge = {
@@ -36,6 +45,17 @@ export type GrantEdge = {
   cursor: Scalars['String'];
   node: Grant;
 };
+
+export enum GrantState {
+  /** grant was approved */
+  Granted = 'GRANTED',
+  /** grant request was created but grant was not approved yet */
+  Pending = 'PENDING',
+  /** grant was rejected */
+  Rejected = 'REJECTED',
+  /** grant was revoked */
+  Revoked = 'REVOKED'
+}
 
 export type GrantsConnection = {
   __typename?: 'GrantsConnection';
@@ -183,6 +203,7 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
   GrantEdge: ResolverTypeWrapper<Partial<GrantEdge>>;
+  GrantState: ResolverTypeWrapper<Partial<GrantState>>;
   GrantsConnection: ResolverTypeWrapper<Partial<GrantsConnection>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
@@ -230,7 +251,7 @@ export type GrantResolvers<ContextType = any, ParentType extends ResolversParent
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   identifier?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  state?: Resolver<ResolversTypes['GrantState'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

@@ -9,7 +9,7 @@ importers:
       '@jest/types': ^29.5.0
       '@swc/core': ^1.3.39
       '@swc/jest': ^0.2.24
-      '@types/jest': ^29.4.0
+      '@types/jest': ^29.4.1
       '@typescript-eslint/eslint-plugin': ^5.54.1
       '@typescript-eslint/parser': ^5.54.1
       eslint: ^8.36.0
@@ -27,7 +27,7 @@ importers:
       '@jest/types': 29.5.0
       '@swc/core': 1.3.40
       '@swc/jest': 0.2.24_@swc+core@1.3.40
-      '@types/jest': 29.4.0
+      '@types/jest': 29.4.1
       '@typescript-eslint/eslint-plugin': 5.54.1_4rfaf6mlw2mmutqjcopwvbftpu
       '@typescript-eslint/parser': 5.54.1_vgl77cfdswitgr47lm5swmv43m
       eslint: 8.36.0
@@ -90,7 +90,7 @@ importers:
       '@graphql-tools/schema': ^9.0.17
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
-      '@types/jest': ^29.4.0
+      '@types/jest': ^29.4.1
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa-session': ^5.10.6
@@ -109,7 +109,7 @@ importers:
       koa-bodyparser: ^4.3.0
       koa-session: ^6.4.0
       nock: ^13.3.0
-      node-mocks-http: ^1.12.1
+      node-mocks-http: ^1.12.2
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
       open-payments: workspace:*
@@ -140,7 +140,7 @@ importers:
       koa: 2.14.1
       koa-bodyparser: 4.3.0
       koa-session: 6.4.0
-      node-mocks-http: 1.12.1
+      node-mocks-http: 1.12.2
       objection: 3.0.1_knex@2.4.1
       objection-db-errors: 1.1.2_objection@3.0.1
       open-payments: link:../open-payments
@@ -158,7 +158,7 @@ importers:
       '@graphql-codegen/introspection': 3.0.1_graphql@16.6.0
       '@graphql-codegen/typescript': 3.0.1_graphql@16.6.0
       '@graphql-codegen/typescript-resolvers': 3.1.0_graphql@16.6.0
-      '@types/jest': 29.4.0
+      '@types/jest': 29.4.1
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10
       '@types/koa-session': 5.10.6
@@ -190,7 +190,7 @@ importers:
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
-      '@types/jest': ^29.4.0
+      '@types/jest': ^29.4.1
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa__cors': ^3.3.1
@@ -208,7 +208,7 @@ importers:
       extensible-error: ^1.0.2
       fishery: ^2.2.2
       graphql: ^16.6.0
-      graphql-scalars: ^1.20.1
+      graphql-scalars: ^1.20.4
       graphql-tools: ^8.3.19
       http-signature-utils: workspace:../http-signature-utils
       ilp-packet: 3.1.4-alpha.2
@@ -224,7 +224,7 @@ importers:
       koa-bodyparser: ^4.3.0
       luxon: ^3.3.0
       nock: ^13.3.0
-      node-mocks-http: ^1.12.1
+      node-mocks-http: ^1.12.2
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
       oer-utils: 5.1.3-alpha.2
@@ -264,7 +264,7 @@ importers:
       extensible-error: 1.0.2
       fishery: 2.2.2
       graphql: 16.6.0
-      graphql-scalars: 1.20.1_graphql@16.6.0
+      graphql-scalars: 1.20.4_graphql@16.6.0
       graphql-tools: 8.3.19_onqnqwb3ubg5opvemcqf7c2qhy
       http-signature-utils: link:../http-signature-utils
       ilp-packet: 3.1.4-alpha.2
@@ -295,7 +295,7 @@ importers:
       '@graphql-codegen/introspection': 3.0.1_graphql@16.6.0
       '@graphql-codegen/typescript': 3.0.1_graphql@16.6.0
       '@graphql-codegen/typescript-resolvers': 3.1.0_graphql@16.6.0
-      '@types/jest': 29.4.0
+      '@types/jest': 29.4.1
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10
       '@types/koa__cors': 3.3.1
@@ -309,7 +309,7 @@ importers:
       ilp-protocol-stream: 2.7.1
       jest-openapi: 0.14.2
       nock: 13.3.0
-      node-mocks-http: 1.12.1
+      node-mocks-http: 1.12.2
       openapi-types: 12.1.0
       react: 18.2.0
       rosie: 2.1.0
@@ -415,13 +415,13 @@ importers:
   packages/openapi:
     specifiers:
       '@apidevtools/json-schema-ref-parser': ^10.1.0
-      '@types/jest': ^29.4.0
+      '@types/jest': ^29.4.1
       '@types/koa': 2.13.5
       '@types/uuid': ^9.0.0
       ajv: ^8.12.0
       ajv-formats: ^2.1.1
       koa: ^2.14.1
-      node-mocks-http: ^1.12.1
+      node-mocks-http: ^1.12.2
       openapi-default-setter: ^12.1.0
       openapi-request-coercer: ^12.1.0
       openapi-request-validator: ^12.1.0
@@ -439,11 +439,11 @@ importers:
       openapi-response-validator: 12.1.0
       openapi-types: 12.1.0
     devDependencies:
-      '@types/jest': 29.4.0
+      '@types/jest': 29.4.1
       '@types/koa': 2.13.5
       '@types/uuid': 9.0.0
       koa: 2.14.1
-      node-mocks-http: 1.12.1
+      node-mocks-http: 1.12.2
       typescript: 4.9.5
       uuid: 9.0.0
 
@@ -3354,7 +3354,7 @@ packages:
       '@graphql-tools/utils': 9.2.1_graphql@16.6.0
       graphql: 16.6.0
       resolve-from: 5.0.0
-      tslib: 2.4.1
+      tslib: 2.5.0
 
   /@graphql-tools/json-file-loader/7.4.3_graphql@16.6.0:
     resolution: {integrity: sha512-YihARAoaGJnYakDAaUkdZ6GsvGcyZRdZK2qx9FWkqtpHt02FLCBpcjjLq/cpM0N6K0ecqzh/dYSVD7MthUFXQg==}
@@ -3692,13 +3692,6 @@ packages:
       jest-mock: 29.5.0
     dev: true
 
-  /@jest/expect-utils/29.4.2:
-    resolution: {integrity: sha512-Dd3ilDJpBnqa0GiPN7QrudVs0cczMMHtehSo2CSTjm3zdHx0RcpmhFNVEltuEFeqfLIyWKFI224FsMSQ/nsJQA==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      jest-get-type: 29.4.2
-    dev: true
-
   /@jest/expect-utils/29.5.0:
     resolution: {integrity: sha512-fmKzsidoXQT2KwnrwE0SQq3uj8Z763vzR8LnLBwC2qYWEFpjX8daRsk6rHUM1QvNlEW/UJXNXm59ztmJJWs2Mg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -3777,13 +3770,6 @@ packages:
       - supports-color
     dev: true
 
-  /@jest/schemas/29.4.2:
-    resolution: {integrity: sha512-ZrGzGfh31NtdVH8tn0mgJw4khQuNHiKqdzJAFbCaERbyCP9tHlxWuL/mnMu8P7e/+k4puWjI1NOzi/sFsjce/g==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@sinclair/typebox': 0.25.21
-    dev: true
-
   /@jest/schemas/29.4.3:
     resolution: {integrity: sha512-VLYKXQmtmuEz6IxJsrZwzG9NvtkQsWNnWMsKxqWNu3+CnfzJQhp0WDDKWLVV9hLKr0l3SLLFRqcYHjhtyuDVxg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -3849,7 +3835,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
       '@types/yargs': 15.0.14
       chalk: 4.1.2
     dev: true
@@ -4576,7 +4562,7 @@ packages:
     resolution: {integrity: sha512-ALYone6pm6QmwZoAgeyNksccT9Q4AWZQ6PvfwR37GT6r6FWUPguq6sUmNGSMV2Wr761oQoBxwGGa6DR5o1DC9g==}
     dependencies:
       '@types/connect': 3.4.35
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
 
   /@types/bytes/3.1.1:
     resolution: {integrity: sha512-lOGyCnw+2JVPKU3wIV0srU0NyALwTBJlVSx5DfMQOFuuohA8y9S8orImpuIQikZ0uIQ8gehrRjxgQC1rLRi11w==}
@@ -4598,7 +4584,7 @@ packages:
   /@types/connect/3.4.35:
     resolution: {integrity: sha512-cdeYyv4KWoEgpBISTxWvqYsVy444DOqehiF3fM3ne10AmJ62RSyNkUnxMJXHQWRQQX2eR94m5y1IZyDwBjV9FQ==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
 
   /@types/content-disposition/0.5.5:
     resolution: {integrity: sha512-v6LCdKfK6BwcqMo+wYW05rLS12S0ZO0Fl4w1h4aaZMD7bqT3gVUns6FvLJKGZHQmYn3SX55JWGpziwJRwVgutA==}
@@ -4628,7 +4614,7 @@ packages:
   /@types/docker-modem/3.0.2:
     resolution: {integrity: sha512-qC7prjoEYR2QEe6SmCVfB1x3rfcQtUr1n4x89+3e0wSTMQ/KYCyf+/RAA9n2tllkkNc6//JMUZePdFRiGIWfaQ==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
       '@types/ssh2': 1.11.5
 
   /@types/dockerode/3.3.14:
@@ -4672,7 +4658,7 @@ packages:
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
     dependencies:
       '@types/minimatch': 3.0.5
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
 
   /@types/graceful-fs/4.1.6:
     resolution: {integrity: sha512-Sig0SNORX9fdW+bQuTEovKj3uHcUL6LQKbCrrqb1X7J6/ReAbhCXRAhc+SMejhLELFj2QcyuxmUooZ4bt5ReSw==}
@@ -4718,11 +4704,11 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest/29.4.0:
-    resolution: {integrity: sha512-VaywcGQ9tPorCX/Jkkni7RWGFfI11whqzs8dvxF41P17Z+z872thvEvlIbznjPJ02kl1HMX3LmLOonsj2n7HeQ==}
+  /@types/jest/29.4.1:
+    resolution: {integrity: sha512-zDQSWXG+ZkEvs2zFFMszePhx4euKz+Yt3Gg1P+RHjfJBinTTr6L2DEyovO4V/WrKXuF0Dgn56GWGZPDa6TW9eQ==}
     dependencies:
-      expect: 29.4.1
-      pretty-format: 29.4.1
+      expect: 29.5.0
+      pretty-format: 29.5.0
     dev: true
 
   /@types/js-yaml/4.0.5:
@@ -4747,7 +4733,7 @@ packages:
   /@types/jsonwebtoken/8.5.9:
     resolution: {integrity: sha512-272FMnFGzAVMGtu9tkr29hRL6bZj4Zs1KZNeHLnKqAvp06tAIcarTMwOh8/8bz4FmKRcMxZhZNeUAQsNLoiPhg==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
     dev: true
 
   /@types/keygrip/1.0.2:
@@ -4933,7 +4919,7 @@ packages:
     resolution: {integrity: sha512-whjk1EDJPcAR2kYHRbFl/lKeeKYTi05A15K9bnLInCVroNDCtXce57xKdI0/rQaA3K+6q0eFyUBPmqfSndUZdQ==}
     dependencies:
       '@types/caseless': 0.12.2
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
       '@types/tough-cookie': 4.0.2
       form-data: 2.5.1
     dev: true
@@ -4959,23 +4945,23 @@ packages:
     resolution: {integrity: sha512-z5xyF6uh8CbjAu9760KDKsH2FcDxZ2tFCsA4HIMWE6IkiYMXfVoa+4f9KX+FN0ZLsaMw1WNG2ETLA6N+/YA+cg==}
     dependencies:
       '@types/mime': 3.0.1
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
 
   /@types/ssh2-streams/0.1.9:
     resolution: {integrity: sha512-I2J9jKqfmvXLR5GomDiCoHrEJ58hAOmFrekfFqmCFd+A6gaEStvWnPykoWUwld1PNg4G5ag1LwdA+Lz1doRJqg==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
 
   /@types/ssh2/0.5.52:
     resolution: {integrity: sha512-lbLLlXxdCZOSJMCInKH2+9V/77ET2J6NPQHpFI0kda61Dd1KglJs+fPQBchizmzYSOJBgdTajhPqBO1xxLywvg==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
       '@types/ssh2-streams': 0.1.9
 
   /@types/ssh2/1.11.5:
     resolution: {integrity: sha512-RaBsPKr+YP/slH8iR7XfC7chyomU+V57F/gJ5cMSP2n6/YWKVmeRLx7lrkgw4YYLpEW5lXLAdfZJqGo0PXboSA==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
 
   /@types/stack-utils/2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
@@ -4993,7 +4979,7 @@ packages:
     resolution: {integrity: sha512-mu/N4uvfDN2zVQQ5AYJI/g4qxn2bHB6521t1UuH09ShNWjebTqN0ZFuYK9uYjcgmI0dTQEs+Owi1EO6U0OkOZQ==}
     dependencies:
       '@types/cookiejar': 2.1.2
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
     dev: true
 
   /@types/tmp/0.2.3:
@@ -5014,7 +5000,7 @@ packages:
   /@types/ws/8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
     dependencies:
-      '@types/node': 18.11.18
+      '@types/node': 18.15.1
     dev: true
 
   /@types/yargs-parser/21.0.0:
@@ -6164,11 +6150,6 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /ci-info/3.7.1:
-    resolution: {integrity: sha512-4jYS4MOAaCIStSRwiuxc4B8MYhIe676yO1sYGzARnjXkWpmzZMMYxY6zu8WYWDhSuth5zhrQ1rhNSibyyvv4/w==}
-    engines: {node: '>=8'}
-    dev: true
-
   /ci-info/3.8.0:
     resolution: {integrity: sha512-eXTggHWSooYhq49F2opQhuHWgzucfF2YgODK4e1566GQs5BIfP30B0oenwBJHfWxAs2fyPB1s7Mg949zLf61Yw==}
     engines: {node: '>=8'}
@@ -6815,11 +6796,6 @@ packages:
   /diff-sequences/26.6.2:
     resolution: {integrity: sha512-Mv/TDa3nZ9sbc5soK+OoA74BsS3mL37yixCvUAQkiuA4Wz6YtwP/K47n2rv2ovzHZvoiQeA5FTQOschKkEwB0Q==}
     engines: {node: '>= 10.14.2'}
-    dev: true
-
-  /diff-sequences/29.4.2:
-    resolution: {integrity: sha512-R6P0Y6PrsH3n4hUXxL3nns0rbRk6Q33js3ygJBeEpbzLzgcNuJ61+u0RXasFpTKISw99TxUzFnumSnRLsjhLaw==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dev: true
 
   /diff-sequences/29.4.3:
@@ -7582,17 +7558,6 @@ packages:
     engines: {node: '>= 0.8.0'}
     dev: true
 
-  /expect/29.4.1:
-    resolution: {integrity: sha512-OKrGESHOaMxK3b6zxIq9SOW8kEXztKff/Dvg88j4xIJxur1hspEbedVkR3GpHe5LO+WB2Qw7OWN0RMTdp6as5A==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/expect-utils': 29.4.2
-      jest-get-type: 29.4.2
-      jest-matcher-utils: 29.4.2
-      jest-message-util: 29.4.2
-      jest-util: 29.4.2
-    dev: true
-
   /expect/29.5.0:
     resolution: {integrity: sha512-yM7xqUrCO2JdpFo4XpM82t+PJBFybdqoQuJLDGeDX2ij8NZzqRHyu3Hp188/JX7SWqud+7t4MUdvcgGBICMHZg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -8269,14 +8234,14 @@ packages:
       - encoding
     dev: true
 
-  /graphql-scalars/1.20.1_graphql@16.6.0:
-    resolution: {integrity: sha512-HCSosMh8l/DVYL3/wCesnZOb+gbiaO/XlZQEIKOkWDJUGBrc15xWAs5TCQVmrycT0tbEInii+J8eoOyMwxx8zg==}
+  /graphql-scalars/1.20.4_graphql@16.6.0:
+    resolution: {integrity: sha512-/hDzWcphV/aV4MEx2pqVMMekBLi9VXYD/HrJSclpOCLkSB/dE3Rb5VVZBXsQhgBxqeCsE7K0PEO2/cWAUzQsrQ==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       graphql: 16.6.0
-      tslib: 2.4.1
+      tslib: 2.5.0
     dev: false
 
   /graphql-tag/2.12.6_graphql@16.6.0:
@@ -8286,7 +8251,7 @@ packages:
       graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
       graphql: 16.6.0
-      tslib: 2.4.1
+      tslib: 2.5.0
 
   /graphql-tools/8.3.19_onqnqwb3ubg5opvemcqf7c2qhy:
     resolution: {integrity: sha512-K/BCebBd6b+iMNREi6TdSsI8Ot0Oiux43c4TixH/a1nOzXl8KDUfEygl6F7W8AHw0ks35UfRSWBIOWhdws9o7Q==}
@@ -9267,16 +9232,6 @@ packages:
       pretty-format: 26.6.2
     dev: true
 
-  /jest-diff/29.4.2:
-    resolution: {integrity: sha512-EK8DSajVtnjx9sa1BkjZq3mqChm2Cd8rIzdXkQMA8e0wuXq53ypz6s5o5V8HRZkoEt2ywJ3eeNWFKWeYr8HK4g==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      chalk: 4.1.2
-      diff-sequences: 29.4.2
-      jest-get-type: 29.4.2
-      pretty-format: 29.4.2
-    dev: true
-
   /jest-diff/29.5.0:
     resolution: {integrity: sha512-LtxijLLZBduXnHSniy0WMdaHjmQnt3g5sa16W4p0HqukYTTsyTW3GD1q41TyGl5YFXj/5B2U6dlh5FM1LIMgxw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9322,11 +9277,6 @@ packages:
     engines: {node: '>= 10.14.2'}
     dev: true
 
-  /jest-get-type/29.4.2:
-    resolution: {integrity: sha512-vERN30V5i2N6lqlFu4ljdTqQAgrkTFMC9xaIIfOPYBw04pufjXRty5RuXBiB1d72tGbURa/UgoiHB90ruOSivg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dev: true
-
   /jest-get-type/29.4.3:
     resolution: {integrity: sha512-J5Xez4nRRMjk8emnTpWrlkyb9pfRQQanDrvWHhsR1+VUfbwxi30eVcZFlcdGInRibU4G5LwHXpI7IRHU0CY+gg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9369,16 +9319,6 @@ packages:
       pretty-format: 26.6.2
     dev: true
 
-  /jest-matcher-utils/29.4.2:
-    resolution: {integrity: sha512-EZaAQy2je6Uqkrm6frnxBIdaWtSYFoR8SVb2sNLAtldswlR/29JAgx+hy67llT3+hXBaLB0zAm5UfeqerioZyg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      chalk: 4.1.2
-      jest-diff: 29.4.2
-      jest-get-type: 29.4.2
-      pretty-format: 29.4.2
-    dev: true
-
   /jest-matcher-utils/29.5.0:
     resolution: {integrity: sha512-lecRtgm/rjIK0CQ7LPQwzCs2VwW6WAahA55YBuI+xqmhm7LAaxokSB8C97yJeYyT+HvQkH741StzpU41wohhWw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9387,21 +9327,6 @@ packages:
       jest-diff: 29.5.0
       jest-get-type: 29.4.3
       pretty-format: 29.5.0
-    dev: true
-
-  /jest-message-util/29.4.2:
-    resolution: {integrity: sha512-SElcuN4s6PNKpOEtTInjOAA8QvItu0iugkXqhYyguRvQoXapg5gN+9RQxLAkakChZA7Y26j6yUCsFWN+hlKD6g==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@babel/code-frame': 7.18.6
-      '@jest/types': 29.5.0
-      '@types/stack-utils': 2.0.1
-      chalk: 4.1.2
-      graceful-fs: 4.2.10
-      micromatch: 4.0.5
-      pretty-format: 29.4.2
-      slash: 3.0.0
-      stack-utils: 2.0.6
     dev: true
 
   /jest-message-util/29.5.0:
@@ -9567,18 +9492,6 @@ packages:
       semver: 7.3.8
     transitivePeerDependencies:
       - supports-color
-    dev: true
-
-  /jest-util/29.4.2:
-    resolution: {integrity: sha512-wKnm6XpJgzMUSRFB7YF48CuwdzuDIHenVuoIb1PLuJ6F+uErZsuDkU+EiExkChf6473XcawBrSfDSnXl+/YG4g==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/types': 29.5.0
-      '@types/node': 18.11.18
-      chalk: 4.1.2
-      ci-info: 3.7.1
-      graceful-fs: 4.2.10
-      picomatch: 2.3.1
     dev: true
 
   /jest-util/29.5.0:
@@ -10970,8 +10883,8 @@ packages:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
     dev: true
 
-  /node-mocks-http/1.12.1:
-    resolution: {integrity: sha512-jrA7Sn3qI6GsHgWtUW3gMj0vO6Yz0nJjzg3jRZYjcfj4tzi8oWPauDK1qHVJoAxTbwuDHF1JiM9GISZ/ocI/ig==}
+  /node-mocks-http/1.12.2:
+    resolution: {integrity: sha512-xhWwC0dh35R9rf0j3bRZXuISXdHxxtMx0ywZQBwjrg3yl7KpRETzogfeCamUIjltpn0Fxvs/ZhGJul1vPLrdJQ==}
     engines: {node: '>=0.6'}
     dependencies:
       accepts: 1.3.8
@@ -11830,24 +11743,6 @@ packages:
       ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
-    dev: true
-
-  /pretty-format/29.4.1:
-    resolution: {integrity: sha512-dt/Z761JUVsrIKaY215o1xQJBGlSmTx/h4cSqXqjHLnU1+Kt+mavVE7UgqJJO5ukx5HjSswHfmXz4LjS2oIJfg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/schemas': 29.4.2
-      ansi-styles: 5.2.0
-      react-is: 18.2.0
-    dev: true
-
-  /pretty-format/29.4.2:
-    resolution: {integrity: sha512-qKlHR8yFVCbcEWba0H0TOC8dnLlO4vPlyEjRPw31FZ2Rupy9nLa8ZLbYny8gWEl8CkEhJqAE6IzdNELTBVcBEg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/schemas': 29.4.2
-      ansi-styles: 5.2.0
-      react-is: 18.2.0
     dev: true
 
   /pretty-format/29.5.0:
