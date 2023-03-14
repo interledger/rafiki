@@ -159,22 +159,16 @@ function canSkipInteraction(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): boolean {
-  const isOnlyIncomingPaymentAccessRequest =
-    ctx.request.body.access_token.access
-      .map((acc) =>
-        isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
-      )
-      .every((el) => el === true)
+  const skipIncomingPaymentInteraction =
+    ctx.request.body.access_token.access.every(
+      isIncomingPaymentAccessRequest
+    ) && !deps.config.incomingPaymentInteraction
 
-  const isOnlyQuoteAccessRequest = ctx.request.body.access_token.access
-    .map((acc) => isQuoteAccessRequest(acc as QuoteRequest))
-    .every((el) => el === true)
+  const skipQuoteInteraction =
+    ctx.request.body.access_token.access.every(isQuoteAccessRequest) &&
+    !deps.config.quoteInteraction
 
-  return (
-    (isOnlyIncomingPaymentAccessRequest &&
-      !deps.config.incomingPaymentInteraction) ||
-    (isOnlyQuoteAccessRequest && !deps.config.quoteInteraction)
-  )
+  return skipIncomingPaymentInteraction || skipQuoteInteraction
 }
 
 async function createGrantInitiation(

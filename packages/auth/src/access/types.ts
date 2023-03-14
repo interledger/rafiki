@@ -35,7 +35,7 @@ export function isAction(actions: AccessAction[]): actions is AccessAction[] {
 }
 
 export function isIncomingPaymentAccessRequest(
-  accessRequest: IncomingPaymentRequest
+  accessRequest: AccessRequest
 ): accessRequest is IncomingPaymentRequest {
   return (
     accessRequest.type === AccessType.IncomingPayment &&
@@ -45,7 +45,7 @@ export function isIncomingPaymentAccessRequest(
 }
 
 export function isQuoteAccessRequest(
-  accessRequest: QuoteRequest
+  accessRequest: AccessRequest
 ): accessRequest is QuoteRequest {
   return (
     accessRequest.type === AccessType.Quote &&
