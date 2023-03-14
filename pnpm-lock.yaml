@@ -7,7 +7,7 @@ importers:
       '@commitlint/cli': ^17.4.4
       '@commitlint/config-conventional': ^17.4.4
       '@jest/types': ^29.5.0
-      '@swc/core': ^1.3.39
+      '@swc/core': 1.3.39
       '@swc/jest': ^0.2.24
       '@types/jest': ^29.4.1
       '@typescript-eslint/eslint-plugin': ^5.55.0
@@ -238,7 +238,7 @@ importers:
       react: ~18.2.0
       rosie: ^2.1.0
       testcontainers: ^9.1.3
-      tigerbeetle-node: ^0.11.12
+      tigerbeetle-node: ^0.12.18
       tmp: ^0.2.1
       token-introspection: workspace:*
       ts-node: ^10.9.1
@@ -286,7 +286,7 @@ importers:
       pino: 8.11.0
       pino-pretty: 9.4.0
       raw-body: 2.5.2
-      tigerbeetle-node: 0.11.12
+      tigerbeetle-node: 0.12.21
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
@@ -12774,10 +12774,9 @@ packages:
       readable-stream: 3.6.0
     dev: true
 
-  /tigerbeetle-node/0.11.12:
-    resolution: {integrity: sha512-WP2lyfoirywip9VksHaMh9c6UzoHVcac/WPQonWqRZf2xiKQRwO5/Dg19B+o+plpfCqDKCL/u1pGq63pE6jmBA==}
+  /tigerbeetle-node/0.12.21:
+    resolution: {integrity: sha512-85tUuMakMriHgQ2y+qb2bktGPsqQ75Y2/dDz9Bi9j0XzdF5M6VfYLby6pqIxSifPeeEwcE0my2uZDvvZ3V1OQg==}
     engines: {node: '>=14.0.0'}
-    requiresBuild: true
     dev: false
 
   /tildify/2.0.0:
