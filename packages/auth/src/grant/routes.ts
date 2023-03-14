@@ -147,7 +147,7 @@ async function createGrant(
   ctx: CreateContext
 ): Promise<void> {
   if (canSkipInteraction(deps, ctx)) {
-    await createGrantInitiation(deps, ctx)
+    await createApprovedGrant(deps, ctx)
   } else {
     await createPendingGrant(deps, ctx)
   }
@@ -157,19 +157,15 @@ function canSkipInteraction(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): boolean {
-  const skipIncomingPaymentInteraction =
-    ctx.request.body.access_token.access.every(
-      isIncomingPaymentAccessRequest
-    ) && !deps.config.incomingPaymentInteraction
-
-  const skipQuoteInteraction =
-    ctx.request.body.access_token.access.every(isQuoteAccessRequest) &&
-    !deps.config.quoteInteraction
-
-  return skipIncomingPaymentInteraction || skipQuoteInteraction
+  return ctx.request.body.access_token.access.every(
+    (access) =>
+      (isIncomingPaymentAccessRequest(access) &&
+        !deps.config.incomingPaymentInteraction) ||
+      (isQuoteAccessRequest(access) && !deps.config.quoteInteraction)
+  )
 }
 
-async function createGrantInitiation(
+async function createApprovedGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
