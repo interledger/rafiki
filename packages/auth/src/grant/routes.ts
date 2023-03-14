@@ -14,9 +14,7 @@ import { toOpenPaymentsAccess } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import {
-  IncomingPaymentRequest,
   isIncomingPaymentAccessRequest,
-  QuoteRequest,
   isQuoteAccessRequest
 } from '../access/types'
 import { IAppConfig } from '../config/app'
