@@ -76,6 +76,89 @@ importers:
       '@types/node': 18.11.18
       typescript: 4.9.5
 
+  packages/@interledger/http-signature-utils:
+    specifiers:
+      '@types/node': ^18.7.12
+      '@types/uuid': ^9.0.0
+      http-message-signatures: ^0.1.2
+      httpbis-digest-headers: github:interledger/httpbis-digest-headers
+      jose: ^4.13.1
+      typescript: ^4.9.5
+      uuid: ^9.0.0
+    dependencies:
+      http-message-signatures: 0.1.2
+      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
+      jose: 4.13.1
+      uuid: 9.0.0
+    devDependencies:
+      '@types/node': 18.11.18
+      '@types/uuid': 9.0.0
+      typescript: 4.9.5
+
+  packages/@interledger/open-payments:
+    specifiers:
+      '@interledger/http-signature-utils': workspace:*
+      '@interledger/openapi': workspace:*
+      '@types/node': ^18.7.12
+      '@types/uuid': ^9.0.0
+      axios: ^1.3.4
+      base64url: ^3.0.1
+      http-message-signatures: ^0.1.2
+      nock: ^13.3.0
+      openapi-typescript: ^4.5.0
+      pino: ^8.11.0
+      typescript: ^4.9.5
+      uuid: ^9.0.0
+    dependencies:
+      '@interledger/http-signature-utils': link:../http-signature-utils
+      '@interledger/openapi': link:../openapi
+      axios: 1.3.4
+      http-message-signatures: 0.1.2
+      pino: 8.11.0
+      uuid: 9.0.0
+    devDependencies:
+      '@types/node': 18.11.18
+      '@types/uuid': 9.0.0
+      base64url: 3.0.1
+      nock: 13.3.0
+      openapi-typescript: 4.5.0
+      typescript: 4.9.5
+
+  packages/@interledger/openapi:
+    specifiers:
+      '@apidevtools/json-schema-ref-parser': ^10.1.0
+      '@types/jest': ^29.4.0
+      '@types/koa': 2.13.5
+      '@types/uuid': ^9.0.0
+      ajv: ^8.12.0
+      ajv-formats: ^2.1.1
+      koa: ^2.14.1
+      node-mocks-http: ^1.12.1
+      openapi-default-setter: ^12.1.0
+      openapi-request-coercer: ^12.1.0
+      openapi-request-validator: ^12.1.0
+      openapi-response-validator: ^12.1.0
+      openapi-types: ^12.1.0
+      typescript: ^4.9.5
+      uuid: ^9.0.0
+    dependencies:
+      '@apidevtools/json-schema-ref-parser': 10.1.0
+      ajv: 8.12.0
+      ajv-formats: 2.1.1_ajv@8.12.0
+      openapi-default-setter: 12.1.0
+      openapi-request-coercer: 12.1.0
+      openapi-request-validator: 12.1.0
+      openapi-response-validator: 12.1.0
+      openapi-types: 12.1.0
+    devDependencies:
+      '@types/jest': 29.4.0
+      '@types/koa': 2.13.5
+      '@types/uuid': 9.0.0
+      koa: 2.14.1
+      node-mocks-http: 1.12.1
+      typescript: 4.9.5
+      uuid: 9.0.0
+
   packages/auth:
     specifiers:
       '@adonisjs/fold': ^8.2.0
@@ -131,7 +214,7 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
-      '@interledger/open-payments': link:../open-payments
+      '@interledger/open-payments': link:../@interledger/open-payments
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
@@ -323,25 +406,6 @@ importers:
   packages/frontend:
     specifiers: {}
 
-  packages/http-signature-utils:
-    specifiers:
-      '@types/node': ^18.7.12
-      '@types/uuid': ^9.0.0
-      http-message-signatures: ^0.1.2
-      httpbis-digest-headers: github:interledger/httpbis-digest-headers
-      jose: ^4.13.1
-      typescript: ^4.9.5
-      uuid: ^9.0.0
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      jose: 4.13.1
-      uuid: 9.0.0
-    devDependencies:
-      '@types/node': 18.11.9
-      '@types/uuid': 9.0.0
-      typescript: 4.9.5
-
   packages/mock-account-provider:
     specifiers:
       '@apollo/client': ^3.7.10
@@ -384,70 +448,6 @@ importers:
       '@types/react-dom': 18.0.11
       eslint: 8.35.0
       typescript: 4.9.5
-
-  packages/open-payments:
-    specifiers:
-      '@interledger/http-signature-utils': workspace:../http-signature-utils
-      '@interledger/openapi': workspace:../openapi
-      '@types/node': ^18.7.12
-      '@types/uuid': ^9.0.0
-      axios: ^1.3.4
-      base64url: ^3.0.1
-      http-message-signatures: ^0.1.2
-      nock: ^13.3.0
-      openapi-typescript: ^4.5.0
-      pino: ^8.11.0
-      typescript: ^4.9.5
-      uuid: ^9.0.0
-    dependencies:
-      '@interledger/http-signature-utils': link:../http-signature-utils
-      '@interledger/openapi': link:../openapi
-      axios: 1.3.4
-      http-message-signatures: 0.1.2
-      pino: 8.11.0
-      uuid: 9.0.0
-    devDependencies:
-      '@types/node': 18.7.13
-      '@types/uuid': 9.0.0
-      base64url: 3.0.1
-      nock: 13.3.0
-      openapi-typescript: 4.5.0
-      typescript: 4.9.5
-
-  packages/openapi:
-    specifiers:
-      '@apidevtools/json-schema-ref-parser': ^10.1.0
-      '@types/jest': ^29.4.0
-      '@types/koa': 2.13.5
-      '@types/uuid': ^9.0.0
-      ajv: ^8.12.0
-      ajv-formats: ^2.1.1
-      koa: ^2.14.1
-      node-mocks-http: ^1.12.1
-      openapi-default-setter: ^12.1.0
-      openapi-request-coercer: ^12.1.0
-      openapi-request-validator: ^12.1.0
-      openapi-response-validator: ^12.1.0
-      openapi-types: ^12.1.0
-      typescript: ^4.9.5
-      uuid: ^9.0.0
-    dependencies:
-      '@apidevtools/json-schema-ref-parser': 10.1.0
-      ajv: 8.12.0
-      ajv-formats: 2.1.1_ajv@8.12.0
-      openapi-default-setter: 12.1.0
-      openapi-request-coercer: 12.1.0
-      openapi-request-validator: 12.1.0
-      openapi-response-validator: 12.1.0
-      openapi-types: 12.1.0
-    devDependencies:
-      '@types/jest': 29.4.0
-      '@types/koa': 2.13.5
-      '@types/uuid': 9.0.0
-      koa: 2.14.1
-      node-mocks-http: 1.12.1
-      typescript: 4.9.5
-      uuid: 9.0.0
 
   packages/token-introspection:
     specifiers:
@@ -3284,13 +3284,6 @@ packages:
       jest-mock: 29.5.0
     dev: true
 
-  /@jest/expect-utils/29.4.2:
-    resolution: {integrity: sha512-Dd3ilDJpBnqa0GiPN7QrudVs0cczMMHtehSo2CSTjm3zdHx0RcpmhFNVEltuEFeqfLIyWKFI224FsMSQ/nsJQA==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      jest-get-type: 29.4.2
-    dev: true
-
   /@jest/expect-utils/29.5.0:
     resolution: {integrity: sha512-fmKzsidoXQT2KwnrwE0SQq3uj8Z763vzR8LnLBwC2qYWEFpjX8daRsk6rHUM1QvNlEW/UJXNXm59ztmJJWs2Mg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -4753,8 +4746,8 @@ packages:
   /@types/jest/29.4.0:
     resolution: {integrity: sha512-VaywcGQ9tPorCX/Jkkni7RWGFfI11whqzs8dvxF41P17Z+z872thvEvlIbznjPJ02kl1HMX3LmLOonsj2n7HeQ==}
     dependencies:
-      expect: 29.4.1
-      pretty-format: 29.4.1
+      expect: 29.5.0
+      pretty-format: 29.5.0
     dev: true
 
   /@types/js-yaml/4.0.5:
@@ -4919,10 +4912,6 @@ packages:
   /@types/node/18.7.12:
     resolution: {integrity: sha512-caqFX7GwvZ4KLnhpI9CfiMkgHKp6kvFAIgpkha0cjO7bAQvB6dWe+q3fTHmm7fQvv59pd4tPj77nriq2M6U2dw==}
     dev: false
-
-  /@types/node/18.7.13:
-    resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
-    dev: true
 
   /@types/normalize-package-data/2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
@@ -7138,11 +7127,6 @@ packages:
     engines: {node: '>= 10.14.2'}
     dev: true
 
-  /diff-sequences/29.4.2:
-    resolution: {integrity: sha512-R6P0Y6PrsH3n4hUXxL3nns0rbRk6Q33js3ygJBeEpbzLzgcNuJ61+u0RXasFpTKISw99TxUzFnumSnRLsjhLaw==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dev: true
-
   /diff-sequences/29.4.3:
     resolution: {integrity: sha512-ofrBgwpPhCD85kMKtE9RYFFq6OC1A89oW2vvgWZNCwxrUpRUILopY7lsYyMDSjc8g6U6aiO0Qubg6r4Wgt5ZnA==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -7974,17 +7958,6 @@ packages:
   /exit/0.1.2:
     resolution: {integrity: sha512-Zk/eNKV2zbjpKzrsQ+n1G6poVbErQxJ0LBOJXaKZ1EViLzH+hrLu9cdXI4zw9dBQJslwBEpbQ2P1oS7nDxs6jQ==}
     engines: {node: '>= 0.8.0'}
-    dev: true
-
-  /expect/29.4.1:
-    resolution: {integrity: sha512-OKrGESHOaMxK3b6zxIq9SOW8kEXztKff/Dvg88j4xIJxur1hspEbedVkR3GpHe5LO+WB2Qw7OWN0RMTdp6as5A==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/expect-utils': 29.4.2
-      jest-get-type: 29.4.2
-      jest-matcher-utils: 29.4.2
-      jest-message-util: 29.4.2
-      jest-util: 29.4.2
     dev: true
 
   /expect/29.5.0:
@@ -9873,16 +9846,6 @@ packages:
       pretty-format: 26.6.2
     dev: true
 
-  /jest-diff/29.4.2:
-    resolution: {integrity: sha512-EK8DSajVtnjx9sa1BkjZq3mqChm2Cd8rIzdXkQMA8e0wuXq53ypz6s5o5V8HRZkoEt2ywJ3eeNWFKWeYr8HK4g==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      chalk: 4.1.2
-      diff-sequences: 29.4.2
-      jest-get-type: 29.4.2
-      pretty-format: 29.5.0
-    dev: true
-
   /jest-diff/29.5.0:
     resolution: {integrity: sha512-LtxijLLZBduXnHSniy0WMdaHjmQnt3g5sa16W4p0HqukYTTsyTW3GD1q41TyGl5YFXj/5B2U6dlh5FM1LIMgxw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9928,11 +9891,6 @@ packages:
     engines: {node: '>= 10.14.2'}
     dev: true
 
-  /jest-get-type/29.4.2:
-    resolution: {integrity: sha512-vERN30V5i2N6lqlFu4ljdTqQAgrkTFMC9xaIIfOPYBw04pufjXRty5RuXBiB1d72tGbURa/UgoiHB90ruOSivg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dev: true
-
   /jest-get-type/29.4.3:
     resolution: {integrity: sha512-J5Xez4nRRMjk8emnTpWrlkyb9pfRQQanDrvWHhsR1+VUfbwxi30eVcZFlcdGInRibU4G5LwHXpI7IRHU0CY+gg==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9975,16 +9933,6 @@ packages:
       pretty-format: 26.6.2
     dev: true
 
-  /jest-matcher-utils/29.4.2:
-    resolution: {integrity: sha512-EZaAQy2je6Uqkrm6frnxBIdaWtSYFoR8SVb2sNLAtldswlR/29JAgx+hy67llT3+hXBaLB0zAm5UfeqerioZyg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      chalk: 4.1.2
-      jest-diff: 29.4.2
-      jest-get-type: 29.4.2
-      pretty-format: 29.4.2
-    dev: true
-
   /jest-matcher-utils/29.5.0:
     resolution: {integrity: sha512-lecRtgm/rjIK0CQ7LPQwzCs2VwW6WAahA55YBuI+xqmhm7LAaxokSB8C97yJeYyT+HvQkH741StzpU41wohhWw==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -9993,21 +9941,6 @@ packages:
       jest-diff: 29.5.0
       jest-get-type: 29.4.3
       pretty-format: 29.5.0
-    dev: true
-
-  /jest-message-util/29.4.2:
-    resolution: {integrity: sha512-SElcuN4s6PNKpOEtTInjOAA8QvItu0iugkXqhYyguRvQoXapg5gN+9RQxLAkakChZA7Y26j6yUCsFWN+hlKD6g==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@babel/code-frame': 7.18.6
-      '@jest/types': 29.5.0
-      '@types/stack-utils': 2.0.1
-      chalk: 4.1.2
-      graceful-fs: 4.2.10
-      micromatch: 4.0.5
-      pretty-format: 29.4.2
-      slash: 3.0.0
-      stack-utils: 2.0.6
     dev: true
 
   /jest-message-util/29.5.0:
@@ -10177,18 +10110,6 @@ packages:
 
   /jest-util/29.4.1:
     resolution: {integrity: sha512-bQy9FPGxVutgpN4VRc0hk6w7Hx/m6L53QxpDreTZgJd9gfx/AV2MjyPde9tGyZRINAUrSv57p2inGBu2dRLmkQ==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/types': 29.5.0
-      '@types/node': 18.11.18
-      chalk: 4.1.2
-      ci-info: 3.7.1
-      graceful-fs: 4.2.10
-      picomatch: 2.3.1
-    dev: true
-
-  /jest-util/29.4.2:
-    resolution: {integrity: sha512-wKnm6XpJgzMUSRFB7YF48CuwdzuDIHenVuoIb1PLuJ6F+uErZsuDkU+EiExkChf6473XcawBrSfDSnXl+/YG4g==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.5.0
@@ -12310,8 +12231,8 @@ packages:
       kleur: 4.1.5
       meow: 9.0.0
       mime: 3.0.0
-      node-fetch: 2.6.7
-      prettier: 2.8.3
+      node-fetch: 2.6.9
+      prettier: 2.8.4
       slash: 3.0.0
       tiny-glob: 0.2.9
     transitivePeerDependencies:
@@ -13023,12 +12944,6 @@ packages:
     hasBin: true
     dev: true
 
-  /prettier/2.8.3:
-    resolution: {integrity: sha512-tJ/oJ4amDihPoufT5sM0Z1SKEuKay8LfVAMlbbhnnkvt6BUserZylqo2PN+p9KeljLr0OHa2rXHU1T8reeoTrw==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
-    dev: true
-
   /prettier/2.8.4:
     resolution: {integrity: sha512-vIS4Rlc2FNh0BySk3Wkd6xmwxB0FpOndW5fisM5H8hsZSxU2VWVB5CWIkIjWvrHjIhxk2g3bfMKM87zNTrZddw==}
     engines: {node: '>=10.13.0'}
@@ -13052,24 +12967,6 @@ packages:
       ansi-regex: 5.0.1
       ansi-styles: 5.2.0
       react-is: 17.0.2
-    dev: true
-
-  /pretty-format/29.4.1:
-    resolution: {integrity: sha512-dt/Z761JUVsrIKaY215o1xQJBGlSmTx/h4cSqXqjHLnU1+Kt+mavVE7UgqJJO5ukx5HjSswHfmXz4LjS2oIJfg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/schemas': 29.4.3
-      ansi-styles: 5.2.0
-      react-is: 18.2.0
-    dev: true
-
-  /pretty-format/29.4.2:
-    resolution: {integrity: sha512-qKlHR8yFVCbcEWba0H0TOC8dnLlO4vPlyEjRPw31FZ2Rupy9nLa8ZLbYny8gWEl8CkEhJqAE6IzdNELTBVcBEg==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    dependencies:
-      '@jest/schemas': 29.4.3
-      ansi-styles: 5.2.0
-      react-is: 18.2.0
     dev: true
 
   /pretty-format/29.5.0:
