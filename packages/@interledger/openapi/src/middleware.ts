@@ -1,4 +1,4 @@
-import { OpenAPI, RequestOptions, isValidationError } from './'
+import { OpenAPI, RequestOptions, isValidationError } from '.'
 
 import Koa from 'koa'
 
