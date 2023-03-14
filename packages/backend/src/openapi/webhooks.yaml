@@ -13,7 +13,7 @@ webhooks:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/incomingPayment'
+              $ref: '#/components/schemas/incomingPaymentEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -24,7 +24,7 @@ webhooks:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/incomingPayment'
+              $ref: '#/components/schemas/incomingPaymentEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -35,7 +35,7 @@ webhooks:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/outgoingPayment'
+              $ref: '#/components/schemas/outgoingPaymentEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -46,7 +46,7 @@ webhooks:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/outgoingPayment'
+              $ref: '#/components/schemas/outgoingPaymentEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -57,7 +57,7 @@ webhooks:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/outgoingPayment'
+              $ref: '#/components/schemas/outgoingPaymentEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -68,14 +68,14 @@ webhooks:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/webMonetization'
+              $ref: '#/components/schemas/webMonetizationEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
 
 components:
   schemas:
-    incomingPayment:
+    incomingPaymentEvent:
       required:
         - id
         - type
@@ -136,7 +136,7 @@ components:
           type: integer
         withdrawal:
           $ref: '#/components/schemas/withdrawal'
-    outgoingPayment:
+    outgoingPaymentEvent:
       required:
         - id
         - type
@@ -216,7 +216,7 @@ components:
           type: integer
         withdrawal:
           $ref: '#/components/schemas/withdrawal'
-    webMonetization:
+    webMonetizationEvent:
       required:
         - id
         - type
