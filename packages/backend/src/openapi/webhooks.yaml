@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: Rafiki Webhooks
   version: 1.0.0
+  description: 'Webhook Events fired by Rafiki'
+  contact:
+    email: tech@interledger.org
 webhooks:
   incomingPaymentCompleted:
     post:
