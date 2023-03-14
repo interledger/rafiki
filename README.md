@@ -82,6 +82,9 @@ pnpm -r build
 # build specific package (e.g. backend):
 pnpm --filter backend build
 
+# generate types from specific package GraphQL schema:
+pnpm --filter backend generate
+
 # run individual tests (e.g. backend)
 pnpm --filter backend test
 
