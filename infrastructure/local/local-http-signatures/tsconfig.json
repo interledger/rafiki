@@ -7,5 +7,10 @@
     "declaration": true,
     "strict": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../../../packages/http-signature-utils"
+    }
+  ]
 }

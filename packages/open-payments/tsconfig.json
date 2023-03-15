@@ -4,8 +4,17 @@
     "lib": ["ES2020"],
     "outDir": "./dist",
     "rootDir": "./src",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts", "src/test/*"]
+  "exclude": ["**/*.test.ts"],
+  "references": [
+    {
+      "path": "../openapi"
+    },
+    {
+      "path": "../http-signature-utils"
+    }
+  ]
 }

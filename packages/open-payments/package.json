@@ -7,8 +7,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build:deps": "pnpm --filter openapi build && pnpm --filter http-signature-utils build",
-    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "build": "tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp ./src/openapi/*.yaml ./dist/openapi/",
     "fetch-schemas": "./scripts/fetch-schemas.sh",

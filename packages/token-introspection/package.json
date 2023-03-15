@@ -7,8 +7,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build:deps": "pnpm --filter openapi build",
-    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "build": "tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp -r ./src/openapi ./dist/",
     "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",

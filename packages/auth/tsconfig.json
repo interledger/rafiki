@@ -7,5 +7,19 @@
     "declaration": true
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts"]
+  "exclude": ["**/*.test.ts"],
+  "references": [
+    {
+      "path": "../openapi"
+    },
+    {
+      "path": "../token-introspection"
+    },
+    {
+      "path": "../open-payments"
+    },
+    {
+      "path": "../http-signature-utils"
+    }
+  ]
 }

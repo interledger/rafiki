@@ -5,5 +5,19 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../openapi"
+    },
+    {
+      "path": "../token-introspection"
+    },
+    {
+      "path": "../open-payments"
+    },
+    {
+      "path": "../http-signature-utils"
+    }
+  ]
 }
