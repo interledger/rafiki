@@ -1,6 +1,5 @@
 {
-  "name": "token-introspection",
-  "private": true,
+  "name": "@interledger/token-introspection",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
