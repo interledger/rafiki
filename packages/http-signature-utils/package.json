@@ -1,6 +1,6 @@
 {
   "name": "@interledger/http-signature-utils",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.1-alpha.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
