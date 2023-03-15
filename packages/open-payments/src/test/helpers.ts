@@ -20,7 +20,7 @@ import {
 } from '../types'
 import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
-import { ResponseValidator } from 'openapi'
+import { ResponseValidator } from '@interledger/openapi'
 
 export const silentLogger = createLogger({
   level: 'silent'

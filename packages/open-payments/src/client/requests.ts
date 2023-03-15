@@ -1,8 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 import { KeyLike } from 'crypto'
-import { ResponseValidator } from 'openapi'
+import { ResponseValidator } from '@interledger/openapi'
 import { BaseDeps } from '.'
-import { createHeaders } from 'http-signature-utils'
+import { createHeaders } from '@interledger/http-signature-utils'
 
 interface GetArgs {
   url: string

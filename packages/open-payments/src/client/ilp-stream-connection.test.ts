@@ -1,5 +1,5 @@
 import { createILPStreamConnectionRoutes } from './ilp-stream-connection'
-import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
+import { OpenAPI, HttpMethod, createOpenAPI } from '@interledger/openapi'
 import path from 'path'
 import {
   defaultAxiosInstance,

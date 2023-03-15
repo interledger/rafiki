@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createTokenRoutes, revokeToken, rotateToken } from './token'
-import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
+import { OpenAPI, HttpMethod, createOpenAPI } from '@interledger/openapi'
 import path from 'path'
 import nock from 'nock'
 import {

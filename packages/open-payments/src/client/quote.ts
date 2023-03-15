@@ -1,4 +1,4 @@
-import { HttpMethod, ResponseValidator } from 'openapi'
+import { HttpMethod, ResponseValidator } from '@interledger/openapi'
 import {
   ResourceRequestArgs,
   CollectionRequestArgs,
