@@ -17,10 +17,10 @@ export enum FinishMethod {
 }
 
 export enum GrantState {
-  Pending = 'pending',
-  Granted = 'granted',
-  Revoked = 'revoked',
-  Rejected = 'rejected'
+  Pending = 'PENDING',
+  Granted = 'GRANTED',
+  Revoked = 'REVOKED',
+  Rejected = 'REJECTED'
 }
 
 export class Grant extends BaseModel {

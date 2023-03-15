@@ -96,6 +96,20 @@ Eslint config should not be overridden in any packages.
 
 Prettier config should not be overridden in any packages.
 
+#### GraphQL type generation
+
+[GraphQL Code Generator](https://the-guild.dev/graphql/codegen) is used for generating TypeScript types from `schema.graphql` files.
+
+```shell
+./<package>/codegen.yml # GraphQL Code Generator config
+```
+
+The `generate` script should be run if a package's `schema.graphql` file is modified.
+
+```shell
+pnpm --filter <package> generate
+```
+
 #### Testing
 
 [Jest](https://jestjs.io/) is used for testing.
