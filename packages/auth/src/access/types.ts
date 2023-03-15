@@ -1,4 +1,4 @@
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType } from '@interledger/open-payments'
 
 interface BaseAccessRequest {
   actions: AccessAction[]

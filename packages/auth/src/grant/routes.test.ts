@@ -30,7 +30,7 @@ import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
 import { ClientService } from '../client/service'
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType } from '@interledger/open-payments'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',

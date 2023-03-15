@@ -3,7 +3,11 @@ import nock from 'nock'
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
 import { Knex } from 'knex'
-import { JWK, generateTestKeys, TestKeys } from 'http-signature-utils'
+import {
+  JWK,
+  generateTestKeys,
+  TestKeys
+} from '@interledger/http-signature-utils'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { truncateTables } from '../tests/tableManager'
@@ -21,7 +25,7 @@ import {
   grantInitiationHttpsigMiddleware
 } from './middleware'
 import { AccessTokenService } from '../accessToken/service'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessType, AccessAction } from '@interledger/open-payments'
 import { ContinueContext, CreateContext } from '../grant/routes'
 
 describe('Signature Service', (): void => {

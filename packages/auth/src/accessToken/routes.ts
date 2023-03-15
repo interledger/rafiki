@@ -1,5 +1,5 @@
 import { Logger } from 'pino'
-import { TokenInfo } from 'token-introspection'
+import { TokenInfo } from '@interledger/token-introspection'
 import { Access, toOpenPaymentsAccess } from '../access/model'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'

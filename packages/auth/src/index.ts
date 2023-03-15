@@ -13,8 +13,8 @@ import { createGrantService } from './grant/service'
 import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
-import { createOpenAPI } from 'openapi'
-import { createUnauthenticatedClient as createOpenPaymentsClient } from 'open-payments'
+import { createOpenAPI } from '@interledger/openapi'
+import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 
 const container = initIocContainer(Config)
 const app = new App(container)
