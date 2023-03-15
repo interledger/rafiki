@@ -1,5 +1,5 @@
 {
-  "name": "http-signature-utils",
+  "name": "@interledger/http-signature-utils",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
