@@ -83,7 +83,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter openapi test
+      - run: pnpm --filter @interledger/openapi test
 
   mock-account-provider:
     runs-on: ubuntu-latest
@@ -101,14 +101,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter open-payments build:deps
-      - run: pnpm --filter open-payments test
+      - run: pnpm --filter @interledger/open-payments build:deps
+      - run: pnpm --filter @interledger/open-payments test
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
       - name: Validate Open API specs
         run: |
-          npx @stoplight/spectral-cli lint ./packages/open-payments/openapi/*.yaml
+          npx @stoplight/spectral-cli lint ./packages/@interledger/open-payments/openapi/*.yaml
 
   http-signature-utils:
     runs-on: ubuntu-latest
@@ -117,7 +117,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter http-signature-utils test
+      - run: pnpm --filter @interledger/http-signature-utils test
 
   local-http-signatures:
     runs-on: ubuntu-latest
@@ -135,14 +135,14 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter token-introspection build:deps
-      - run: pnpm --filter token-introspection test
+      - run: pnpm --filter @interledger/token-introspection build:deps
+      - run: pnpm --filter @interledger/token-introspection test
       - name: AsyncAPI extension
         run: |
           echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
       - name: Validate Open API specs
         run: |
-          npx @stoplight/spectral-cli lint ./packages/token-introspection/openapi/*.yaml
+          npx @stoplight/spectral-cli lint ./packages/@interledger/token-introspection/openapi/*.yaml
 
   build:
     runs-on: ubuntu-latest
