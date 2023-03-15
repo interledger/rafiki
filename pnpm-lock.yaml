@@ -93,7 +93,7 @@ importers:
       '@types/jest': ^29.4.2
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
-      '@types/koa-session': ^5.10.6
+      '@types/koa-session': ^6.4.0
       '@types/koa__cors': ^4.0.0
       '@types/koa__router': ^12.0.0
       '@types/uuid': ^9.0.0
@@ -161,7 +161,7 @@ importers:
       '@types/jest': 29.4.2
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': 4.3.10
-      '@types/koa-session': 5.10.6
+      '@types/koa-session': 6.4.0
       '@types/koa__cors': 4.0.0
       '@types/koa__router': 12.0.0
       '@types/uuid': 9.0.0
@@ -4385,8 +4385,8 @@ packages:
       '@types/koa': 2.13.5
     dev: true
 
-  /@types/koa-session/5.10.6:
-    resolution: {integrity: sha512-p4rgkeRmiJu8XGC3eH2duRCNgnLUl6sjadEXH/AsieH/9fqYfXSZoZNC9CAe+FQK+QmM76hVyvuJ5Jrl5xxNeA==}
+  /@types/koa-session/6.4.0:
+    resolution: {integrity: sha512-2fOAxHIwn/fU6rANaYMRVRGTzKpKlqxJryqF3jnjrzSCLIf2q2L3qtVd1bHlTqiBPYS3B76WacmfzT1LoiHAHA==}
     dependencies:
       '@types/cookies': 0.7.7
       '@types/koa': 2.13.5
