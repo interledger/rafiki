@@ -10,7 +10,7 @@ import {
   createHeaders,
   Headers,
   RequestLike
-} from 'http-signature-utils'
+} from '@interledger/http-signature-utils'
 
 type AppContext<TResponseBody = unknown> = Koa.ParameterizedContext<
   Koa.DefaultState,
