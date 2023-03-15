@@ -11,7 +11,7 @@
     "clean": "rm -fr dist/"
   },
   "dependencies": {
-    "http-signature-utils": "workspace:../../../packages/http-signature-utils",
+    "@interledger/http-signature-utils": "workspace:../../../packages/http-signature-utils",
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.4.0",
     "koa-json": "^2.0.2",
