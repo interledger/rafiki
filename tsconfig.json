@@ -1,16 +1,16 @@
 {
   "references": [
     {
-      "path": "packages/http-signature-utils"
+      "path": "packages/@interledger/http-signature-utils"
     },
     {
-      "path": "packages/openapi"
+      "path": "packages/@interledger/openapi"
     },
     {
-      "path": "packages/open-payments"
+      "path": "packages/@interledger/open-payments"
     },
     {
-      "path": "packages/token-introspection"
+      "path": "packages/@interledger/token-introspection"
     },
     {
       "path": "packages/auth"
