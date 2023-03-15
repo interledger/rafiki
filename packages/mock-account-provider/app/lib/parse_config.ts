@@ -1,7 +1,7 @@
 import type * as crypto from 'crypto'
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
-import { parseOrProvisionKey } from 'http-signature-utils'
+import { parseOrProvisionKey } from '@interledger/http-signature-utils'
 
 export interface Self {
   graphqlUrl: string

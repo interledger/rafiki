@@ -3,7 +3,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build:deps": "pnpm --filter http-signature-utils build",
+    "build:deps": "pnpm --filter @interledger/http-signature-utils build",
     "build": "pnpm build:deps && remix build",
     "dev": "PORT=3300 remix dev",
     "start": "remix-serve build"
@@ -17,7 +17,7 @@
     "@types/uuid": "^9.0.0",
     "axios": "^1.3.4",
     "graphql": "^16.6.0",
-    "http-signature-utils": "workspace:../http-signature-utils",
+    "@interledger/http-signature-utils": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.0",

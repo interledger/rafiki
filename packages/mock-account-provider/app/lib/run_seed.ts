@@ -8,7 +8,7 @@ import {
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
-import { generateJwk } from 'http-signature-utils'
+import { generateJwk } from '@interledger/http-signature-utils'
 
 export async function setupFromSeed(config: Config): Promise<void> {
   const { asset } = await createAsset(
