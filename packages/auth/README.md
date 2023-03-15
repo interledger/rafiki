@@ -3,7 +3,7 @@
 The authorization server used to issue authorizations for Open Payments actions.
 Implements Open Payments authorization endpoints in accordance with the GNAP spec for an AS:
 
-- https://github.com/interledger/open-payments/tree/main/openapi/auth-server.yaml
+- https://github.com/interledger/open-payments/blob/v1.0/openapi/auth-server.yaml
 - https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol
 
 ## Local Development
