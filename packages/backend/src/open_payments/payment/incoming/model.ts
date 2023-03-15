@@ -15,7 +15,7 @@ import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
-} from 'open-payments'
+} from '@interledger/open-payments'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentExpired = 'incoming_payment.expired',

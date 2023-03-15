@@ -1,7 +1,7 @@
 import { StreamCredentials } from '@interledger/stream-receiver'
 import base64url from 'base64url'
 import { IlpAddress } from 'ilp-packet'
-import { ILPStreamConnection } from 'open-payments'
+import { ILPStreamConnection } from '@interledger/open-payments'
 import { IncomingPayment } from '../payment/incoming/model'
 
 export abstract class ConnectionBase {

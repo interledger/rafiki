@@ -5,7 +5,7 @@ import {
   isPendingGrant,
   AccessType,
   AccessAction
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { ConnectionService } from '../connection/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'

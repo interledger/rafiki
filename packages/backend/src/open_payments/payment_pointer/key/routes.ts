@@ -1,4 +1,4 @@
-import { generateJwk, JWK } from 'http-signature-utils'
+import { generateJwk, JWK } from '@interledger/http-signature-utils'
 
 import { PaymentPointerKeysContext } from '../../../app'
 import { IAppConfig } from '../../../config/app'

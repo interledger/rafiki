@@ -1,7 +1,7 @@
 import { Grant } from './model'
 import { AuthServerService } from '../authServer/service'
 import { BaseService } from '../../shared/baseService'
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType } from '@interledger/open-payments'
 
 export interface GrantService {
   create(options: CreateOptions): Promise<Grant>

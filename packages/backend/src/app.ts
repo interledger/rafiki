@@ -47,17 +47,21 @@ import { QuoteService } from './open_payments/quote/service'
 import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
-import { createValidatorMiddleware, HttpMethod, isHttpMethod } from 'openapi'
+import {
+  createValidatorMiddleware,
+  HttpMethod,
+  isHttpMethod
+} from '@interledger/openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import {
   AccessAction,
   AccessType,
   AuthenticatedClient,
   PaginationArgs
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { ReceiverService } from './open_payments/receiver/service'
-import { Client as TokenIntrospectionClient } from 'token-introspection'
+import { Client as TokenIntrospectionClient } from '@interledger/token-introspection'
 
 export interface AppContextData {
   logger: Logger

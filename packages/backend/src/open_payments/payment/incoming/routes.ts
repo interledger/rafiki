@@ -24,7 +24,7 @@ import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { PaymentPointer } from '../../payment_pointer/model'
 
 // Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
