@@ -1,4 +1,4 @@
-import { HttpMethod } from '@inteledger/openapi'
+import { HttpMethod } from '@interledger/openapi'
 import { RouteDeps, UnauthenticatedResourceRequestArgs } from '.'
 import { getRSPath, ILPStreamConnection } from '../types'
 import { get } from './requests'

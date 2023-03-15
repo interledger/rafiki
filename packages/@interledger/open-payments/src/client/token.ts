@@ -1,4 +1,4 @@
-import { HttpMethod, ResponseValidator } from '@inteledger/openapi'
+import { HttpMethod, ResponseValidator } from '@interledger/openapi'
 import { ResourceRequestArgs, RouteDeps } from '.'
 import { getASPath, AccessToken } from '../types'
 import { deleteRequest, post } from './requests'

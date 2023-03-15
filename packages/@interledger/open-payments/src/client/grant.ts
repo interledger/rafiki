@@ -1,4 +1,4 @@
-import { HttpMethod } from '@inteledger/openapi'
+import { HttpMethod } from '@interledger/openapi'
 import {
   ResourceRequestArgs,
   RouteDeps,

@@ -8,7 +8,7 @@ import {
   validateCreatedIncomingPayment,
   validateIncomingPayment
 } from './incoming-payment'
-import { OpenAPI, HttpMethod, createOpenAPI } from '@inteledger/openapi'
+import { OpenAPI, HttpMethod, createOpenAPI } from '@interledger/openapi'
 import {
   defaultAxiosInstance,
   mockILPStreamConnection,
