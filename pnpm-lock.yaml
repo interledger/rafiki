@@ -53,7 +53,7 @@ importers:
       '@types/node': ^18.7.12
       http-signature-utils: workspace:../../../packages/http-signature-utils
       koa: ^2.14.1
-      koa-bodyparser: ^4.3.0
+      koa-bodyparser: ^4.4.0
       koa-json: ^2.0.2
       koa-logger: ^3.2.1
       koa-router: ^12.0.0
@@ -61,7 +61,7 @@ importers:
     dependencies:
       http-signature-utils: link:../../../packages/http-signature-utils
       koa: 2.14.1
-      koa-bodyparser: 4.3.0
+      koa-bodyparser: 4.4.0
       koa-json: 2.0.2
       koa-logger: 3.2.1
       koa-router: 12.0.0
@@ -106,7 +106,7 @@ importers:
       jest-openapi: ^0.14.2
       knex: ^2.4
       koa: ^2.14.1
-      koa-bodyparser: ^4.3.0
+      koa-bodyparser: ^4.4.0
       koa-session: ^6.4.0
       nock: ^13.3.0
       node-mocks-http: ^1.12.2
@@ -138,7 +138,7 @@ importers:
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       knex: 2.4.1_pg@8.10.0
       koa: 2.14.1
-      koa-bodyparser: 4.3.0
+      koa-bodyparser: 4.4.0
       koa-session: 6.4.0
       node-mocks-http: 1.12.2
       objection: 3.0.1_knex@2.4.1
@@ -221,7 +221,7 @@ importers:
       json-canonicalize: ^1.0.4
       knex: ^2.4
       koa: ^2.14.1
-      koa-bodyparser: ^4.3.0
+      koa-bodyparser: ^4.4.0
       luxon: ^3.3.0
       nock: ^13.3.0
       node-mocks-http: ^1.12.2
@@ -275,7 +275,7 @@ importers:
       json-canonicalize: 1.0.4
       knex: 2.4.1_pg@8.10.0
       koa: 2.14.1
-      koa-bodyparser: 4.3.0
+      koa-bodyparser: 4.4.0
       luxon: 3.3.0
       objection: 3.0.1_knex@2.4.1
       objection-db-errors: 1.1.2_objection@3.0.1
@@ -9524,8 +9524,8 @@ packages:
       - supports-color
     dev: false
 
-  /koa-bodyparser/4.3.0:
-    resolution: {integrity: sha512-uyV8G29KAGwZc4q/0WUAjH+Tsmuv9ImfBUF2oZVyZtaeo0husInagyn/JH85xMSxM0hEk/mbCII5ubLDuqW/Rw==}
+  /koa-bodyparser/4.4.0:
+    resolution: {integrity: sha512-AXPY7wwKZUmbgb8VkTEUFoRNOlx6aWRJwEnQD+zfNf33/7KSAkN4Oo9BqlIk80D+5TvuqlhpQT5dPVcyxl5Zsw==}
     engines: {node: '>=8.0.0'}
     dependencies:
       co-body: 6.1.0
