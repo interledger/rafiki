@@ -80,7 +80,7 @@
     "openapi": "workspace:../openapi",
     "pg": "^8.10.0",
     "pino": "^8.11.0",
-    "pino-pretty": "^9.4.0",
+    "pino-pretty": "^10.0.0",
     "raw-body": "^2.5.2",
     "tigerbeetle-node": "^0.12.18",
     "token-introspection": "workspace:*",
