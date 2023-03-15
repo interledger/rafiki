@@ -88,6 +88,10 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.16
       '@graphql-tools/load': ^7.8.13
       '@graphql-tools/schema': ^9.0.17
+      '@interledger/http-signature-utils': workspace:../http-signature-utils
+      '@interledger/open-payments': workspace:../open-payments
+      '@interledger/openapi': workspace:../openapi
+      '@interledger/token-introspection': workspace:../token-introspection
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@types/jest': ^29.4.2
@@ -101,7 +105,6 @@ importers:
       axios: ^1.3.4
       cross-fetch: ^3.1.4
       graphql: ^16.6.0
-      http-signature-utils: workspace:../http-signature-utils
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
       knex: ^2.4
@@ -112,14 +115,11 @@ importers:
       node-mocks-http: ^1.12.2
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
-      open-payments: workspace:*
-      openapi: workspace:../openapi
       openapi-types: ^12.1.0
       pg: ^8.10.0
       pino: ^8.11.0
       pino-pretty: ^10.0.0
       testcontainers: ^9.1.3
-      token-introspection: workspace:*
       typescript: ^4.9.5
       uuid: ^9.0.0
     dependencies:
@@ -129,12 +129,15 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
+      '@interledger/http-signature-utils': link:../http-signature-utils
+      '@interledger/open-payments': link:../open-payments
+      '@interledger/openapi': link:../openapi
+      '@interledger/token-introspection': link:../token-introspection
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
       axios: 1.3.4
       graphql: 16.6.0
-      http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       knex: 2.4.1_pg@8.10.0
       koa: 2.14.1
@@ -143,13 +146,10 @@ importers:
       node-mocks-http: 1.12.2
       objection: 3.0.1_knex@2.4.1
       objection-db-errors: 1.1.2_objection@3.0.1
-      open-payments: link:../open-payments
-      openapi: link:../openapi
       pg: 8.10.0
       pino: 8.11.0
       pino-pretty: 10.0.0
       testcontainers: 9.1.3
-      token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
       '@apollo/client': 3.7.10_graphql@16.6.0
@@ -185,8 +185,12 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.16
       '@graphql-tools/load': ^7.8.13
       '@graphql-tools/schema': ^9.0.17
+      '@interledger/http-signature-utils': workspace:../http-signature-utils
+      '@interledger/open-payments': workspace:../open-payments
+      '@interledger/openapi': workspace:../openapi
       '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': ^0.3.3-alpha.3
+      '@interledger/token-introspection': workspace:../token-introspection
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@poppinss/file-generator': ^1.0.2
@@ -210,7 +214,6 @@ importers:
       graphql: ^16.6.0
       graphql-scalars: ^1.20.4
       graphql-tools: ^8.3.19
-      http-signature-utils: workspace:../http-signature-utils
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ccp: ^1.2.3
       ilp-protocol-ildcp: ^2.2.3
@@ -228,8 +231,6 @@ importers:
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
       oer-utils: 5.1.3-alpha.2
-      open-payments: workspace:../open-payments
-      openapi: workspace:../openapi
       openapi-types: ^12.1.0
       pg: ^8.10.0
       pino: ^8.11.0
@@ -240,7 +241,6 @@ importers:
       testcontainers: ^9.1.3
       tigerbeetle-node: ^0.12.18
       tmp: ^0.2.1
-      token-introspection: workspace:*
       ts-node: ^10.9.1
       typescript: ^4.9.5
       uuid: ^9.0.0
@@ -252,8 +252,12 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
+      '@interledger/http-signature-utils': link:../http-signature-utils
+      '@interledger/open-payments': link:../open-payments
+      '@interledger/openapi': link:../openapi
       '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': 0.3.3-alpha.3
+      '@interledger/token-introspection': link:../token-introspection
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       '@poppinss/file-generator': 1.0.2
@@ -266,7 +270,6 @@ importers:
       graphql: 16.6.0
       graphql-scalars: 1.20.4_graphql@16.6.0
       graphql-tools: 8.3.19_onqnqwb3ubg5opvemcqf7c2qhy
-      http-signature-utils: link:../http-signature-utils
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ccp: 1.2.3
       ilp-protocol-ildcp: 2.2.3
@@ -280,14 +283,11 @@ importers:
       objection: 3.0.1_knex@2.4.1
       objection-db-errors: 1.1.2_objection@3.0.1
       oer-utils: 5.1.3-alpha.2
-      open-payments: link:../open-payments
-      openapi: link:../openapi
       pg: 8.10.0
       pino: 8.11.0
       pino-pretty: 10.0.0
       raw-body: 2.5.2
       tigerbeetle-node: 0.12.21
-      token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
       '@apollo/client': 3.7.10_onqnqwb3ubg5opvemcqf7c2qhy
@@ -385,23 +385,23 @@ importers:
 
   packages/open-payments:
     specifiers:
+      '@interledger/http-signature-utils': workspace:../http-signature-utils
+      '@interledger/openapi': workspace:../openapi
       '@types/node': ^18.7.12
       '@types/uuid': ^9.0.0
       axios: ^1.3.4
       base64url: ^3.0.1
       http-message-signatures: ^0.1.2
-      http-signature-utils: workspace:../http-signature-utils
       nock: ^13.3.0
-      openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.11.0
       typescript: ^4.9.5
       uuid: ^9.0.0
     dependencies:
+      '@interledger/http-signature-utils': link:../http-signature-utils
+      '@interledger/openapi': link:../openapi
       axios: 1.3.4
       http-message-signatures: 0.1.2
-      http-signature-utils: link:../http-signature-utils
-      openapi: link:../openapi
       pino: 8.11.0
       uuid: 9.0.0
     devDependencies:
@@ -449,17 +449,17 @@ importers:
 
   packages/token-introspection:
     specifiers:
+      '@interledger/openapi': workspace:../openapi
       '@types/node': ^18.7.12
       axios: ^1.3.4
       nock: ^13.3.0
-      openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.11.0
       typescript: ^4.9.5
       uuid: ^8.3.2
     dependencies:
+      '@interledger/openapi': link:../openapi
       axios: 1.3.4
-      openapi: link:../openapi
       pino: 8.11.0
     devDependencies:
       '@types/node': 18.11.9
