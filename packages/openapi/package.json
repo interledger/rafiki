@@ -1,5 +1,5 @@
 {
-  "name": "openapi",
+  "name": "@interledger/openapi",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
