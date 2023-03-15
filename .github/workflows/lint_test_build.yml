@@ -48,7 +48,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter backend build:deps
+      - run: pnpm --filter backend build
       - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test
 
   frontend:
@@ -67,7 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter auth build:deps
+      - run: pnpm --filter auth build
       - run: pnpm --filter auth test
       - name: AsyncAPI extension
         run: |
@@ -101,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter open-payments build:deps
+      - run: pnpm --filter open-payments build
       - run: pnpm --filter open-payments test
       - name: AsyncAPI extension
         run: |
@@ -135,7 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter token-introspection build:deps
+      - run: pnpm --filter token-introspection build
       - run: pnpm --filter token-introspection test
       - name: AsyncAPI extension
         run: |
