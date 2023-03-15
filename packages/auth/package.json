@@ -31,7 +31,7 @@
     "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
     "knex": "^2.4",
     "koa": "^2.14.1",
-    "koa-bodyparser": "^4.3.0",
+    "koa-bodyparser": "^4.4.0",
     "koa-session": "^6.4.0",
     "node-mocks-http": "^1.12.2",
     "objection": "^3.0.1",
