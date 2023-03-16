@@ -7,7 +7,7 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build": "tsc --build tsconfig.json && pnpm copy-files",
+    "build": "pnpm clean && rm -fr tsconfig.tsbuildinfo && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "copy-files": "cp ./src/openapi/*.yaml ./dist/openapi/",
     "fetch-schemas": "./scripts/fetch-schemas.sh",

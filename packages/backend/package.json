@@ -5,7 +5,7 @@
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
     "build": "tsc --build tsconfig.json && pnpm copy-files",
-    "clean": "rm -fr dist/",
+    "clean": "rm -fr dist/ && rm -fr tsconfig.tsbuildinfo",
     "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/",
     "prepack": "pnpm build"
   },

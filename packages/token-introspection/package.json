@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "tsc --build tsconfig.json && pnpm copy-files",
-    "clean": "rm -fr dist/",
+    "clean": "rm -fr dist/ && rm -fr tsconfig.tsbuildinfo",
     "copy-files": "cp -r ./src/openapi ./dist/",
     "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "prepack": "pnpm build",

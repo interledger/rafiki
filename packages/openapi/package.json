@@ -8,7 +8,7 @@
   "scripts": {
     "test": "jest --passWithNoTests",
     "build": "pnpm clean && tsc --build tsconfig.json",
-    "clean": "rm -fr dist/",
+    "clean": "rm -fr dist/ && rm -fr tsconfig.tsbuildinfo",
     "prepack": "pnpm build"
   },
   "dependencies": {
