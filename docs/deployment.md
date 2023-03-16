@@ -198,6 +198,7 @@ $ helm install ...
 | `IDENTITY_SERVER_DOMAIN`       | `http://localhost:3030/mock-idp/`                                | endpoint of the identity server controlled by the Account Servicing Entity |
 | `IDENTITY_SERVER_SECRET`       | `replace-me`                                                     | API key                                                                    |
 | `INCOMING_PAYMENT_INTERACTION` | `false`                                                          | flag - incoming payments grants are interactive or not                     |
+| `QUOTE_INTERACTION`            | `false`                                                          | flag - quote grants are interactive or not                                 |
 | `INTROSPECTION_HTTPSIG`        | `false`                                                          | flag - check http signature on introspection requests                      |
 | `LOG_LEVEL`                    | `info`                                                           | [Pino Log Level](https://getpino.io/#/docs/api?id=levels)                  |
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |

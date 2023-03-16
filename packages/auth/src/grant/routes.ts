@@ -14,8 +14,8 @@ import { toOpenPaymentsAccess } from '../access/model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
 import {
-  IncomingPaymentRequest,
-  isIncomingPaymentAccessRequest
+  isIncomingPaymentAccessRequest,
+  isQuoteAccessRequest
 } from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
@@ -146,24 +146,26 @@ async function createGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
-  const isOnlyIncomingPaymentAccessRequest =
-    ctx.request.body.access_token.access
-      .map((acc) => {
-        return isIncomingPaymentAccessRequest(acc as IncomingPaymentRequest)
-      })
-      .every((el) => el === true)
-
-  if (
-    isOnlyIncomingPaymentAccessRequest &&
-    !deps.config.incomingPaymentInteraction
-  ) {
-    await createGrantInitiation(deps, ctx)
+  if (canSkipInteraction(deps, ctx)) {
+    await createApprovedGrant(deps, ctx)
   } else {
     await createPendingGrant(deps, ctx)
   }
 }
 
-async function createGrantInitiation(
+function canSkipInteraction(
+  deps: ServiceDependencies,
+  ctx: CreateContext
+): boolean {
+  return ctx.request.body.access_token.access.every(
+    (access) =>
+      (isIncomingPaymentAccessRequest(access) &&
+        !deps.config.incomingPaymentInteraction) ||
+      (isQuoteAccessRequest(access) && !deps.config.quoteInteraction)
+  )
+}
+
+async function createApprovedGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
