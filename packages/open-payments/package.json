@@ -1,6 +1,6 @@
 {
   "name": "@interledger/open-payments",
-  "version": "1.0.1-alpha.0",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,8 +28,8 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@interledger/http-signature-utils": "workspace:../http-signature-utils",
-    "@interledger/openapi": "workspace:../openapi",
+    "@interledger/http-signature-utils": "1.0.0",
+    "@interledger/openapi": "1.0.0",
     "axios": "^1.3.4",
     "http-message-signatures": "^0.1.2",
     "pino": "^8.11.0",

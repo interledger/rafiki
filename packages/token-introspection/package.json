@@ -1,6 +1,6 @@
 {
-  "name": "@interledger/token-introspection",
-  "version": "1.0.1-alpha.0",
+  "name": "token-introspection",
+  "private":"true",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
