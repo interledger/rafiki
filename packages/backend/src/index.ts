@@ -1,6 +1,5 @@
 import { EventEmitter } from 'events'
 import { Server } from 'http'
-import path from 'path'
 import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
@@ -37,8 +36,10 @@ import { createIncomingPaymentService } from './open_payments/payment/incoming/s
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './connector'
-import { createOpenAPI } from 'openapi'
-import { createAuthenticatedClient as createOpenPaymentsClient } from 'open-payments'
+import {
+  createAuthenticatedClient as createOpenPaymentsClient,
+  getResourceServerOpenApi
+} from 'open-payments'
 import { createConnectionService } from './open_payments/connection/service'
 import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
@@ -125,11 +126,8 @@ export function initIocContainer(
     })
   })
   container.singleton('openApi', async () => {
-    const resourceServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/resource-server.yaml')
-    )
     return {
-      resourceServerSpec
+      resourceServerSpec: await getResourceServerOpenApi()
     }
   })
   container.singleton('openPaymentsClient', async (deps) => {
