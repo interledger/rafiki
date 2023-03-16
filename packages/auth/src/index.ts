@@ -14,7 +14,11 @@ import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
 import { createOpenAPI } from 'openapi'
-import { createUnauthenticatedClient as createOpenPaymentsClient } from 'open-payments'
+import {
+  createUnauthenticatedClient as createOpenPaymentsClient,
+  getAuthServerOpenApi
+} from 'open-payments'
+import { getTokenIntrospectionOpenApi } from 'token-introspection'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -122,19 +126,12 @@ export function initIocContainer(
   })
 
   container.singleton('openApi', async () => {
-    const authServerSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/auth-server.yaml')
-    )
-    const idpSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/id-provider.yaml')
-    )
-    const tokenIntrospectionSpec = await createOpenAPI(
-      path.resolve(__dirname, './openapi/token-introspection.yaml')
-    )
     return {
-      authServerSpec,
-      idpSpec,
-      tokenIntrospectionSpec
+      authServerSpec: await getAuthServerOpenApi(),
+      idpSpec: await createOpenAPI(
+        path.resolve(__dirname, './openapi/id-provider.yaml')
+      ),
+      tokenIntrospectionSpec: await getTokenIntrospectionOpenApi()
     }
   })
 
