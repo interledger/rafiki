@@ -1,8 +1,8 @@
 import axios, { AxiosInstance } from 'axios'
-import { createOpenAPI, OpenAPI } from 'openapi'
-import path from 'path'
+import { OpenAPI } from 'openapi'
 import createLogger, { Logger } from 'pino'
 import config from '../config'
+import { getTokenIntrospectionOpenApi } from '../openapi'
 import { createIntrospectionRoutes, IntrospectionRoutes } from './introspection'
 
 export interface BaseDeps {
@@ -28,9 +28,7 @@ export const createClient = async (args: CreateClientArgs): Promise<Client> => {
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
-  const openApi = await createOpenAPI(
-    path.resolve(__dirname, '../openapi/token-introspection.yaml')
-  )
+  const openApi = await getTokenIntrospectionOpenApi()
   const logger = args?.logger ?? createLogger()
 
   return createIntrospectionRoutes({
