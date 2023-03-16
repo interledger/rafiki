@@ -30,6 +30,7 @@ import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
 import { ClientService } from '../client/service'
+import { withConfigOverride } from '../tests/helpers'
 import { AccessAction, AccessType } from 'open-payments'
 
 export const TEST_CLIENT_DISPLAY = {
@@ -101,6 +102,7 @@ describe('Grant Routes', (): void => {
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
+
     appContainer = await createTestApp(deps)
 
     grantRoutes = await deps.use('grantRoutes')
@@ -126,6 +128,115 @@ describe('Grant Routes', (): void => {
     describe('/create', (): void => {
       const url = '/'
       const method = 'POST'
+
+      describe('non-interactive grants', () => {
+        describe('with interaction flags disabled', () => {
+          test.each`
+            accessTypes                                       | description
+            ${[AccessType.IncomingPayment]}                   | ${'grant for incoming payments'}
+            ${[AccessType.Quote]}                             | ${'grant for quotes'}
+            ${[AccessType.IncomingPayment, AccessType.Quote]} | ${'grant for incoming payments and quotes'}
+          `(
+            `can get $description`,
+            withConfigOverride(
+              () => config,
+              {
+                incomingPaymentInteraction: false,
+                quoteInteraction: false
+              },
+              async ({ accessTypes }): Promise<void> => {
+                const ctx = createContext<CreateContext>(
+                  {
+                    headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json'
+                    },
+                    url,
+                    method
+                  },
+                  {}
+                )
+                const body = {
+                  access_token: {
+                    access: accessTypes.map((accessType) => ({
+                      type: accessType,
+                      actions: [AccessAction.Create, AccessAction.Read],
+                      identifier: `https://example.com/${v4()}`
+                    }))
+                  },
+                  client: CLIENT
+                }
+                ctx.request.body = body
+
+                await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
+                expect(ctx.response).toSatisfyApiSpec()
+                expect(ctx.status).toBe(200)
+                expect(ctx.body).toEqual({
+                  access_token: {
+                    value: expect.any(String),
+                    manage: expect.any(String),
+                    access: body.access_token.access,
+                    expires_in: 600
+                  },
+                  continue: {
+                    access_token: {
+                      value: expect.any(String)
+                    },
+                    uri: expect.any(String)
+                  }
+                })
+              }
+            )
+          )
+        })
+
+        describe('with interaction flags enabled', () => {
+          test.each`
+            accessTypes                                       | description
+            ${[AccessType.IncomingPayment]}                   | ${'grant for incoming payments'}
+            ${[AccessType.Quote]}                             | ${'grant for quotes'}
+            ${[AccessType.IncomingPayment, AccessType.Quote]} | ${'grant for incoming payments and quotes'}
+          `(
+            `cannot get $description`,
+            withConfigOverride(
+              () => config,
+              {
+                incomingPaymentInteraction: true,
+                quoteInteraction: true
+              },
+              async ({ accessTypes }): Promise<void> => {
+                const ctx = createContext<CreateContext>(
+                  {
+                    headers: {
+                      Accept: 'application/json',
+                      'Content-Type': 'application/json'
+                    },
+                    url,
+                    method
+                  },
+                  {}
+                )
+                const body = {
+                  access_token: {
+                    access: accessTypes.map((accessType) => ({
+                      type: accessType,
+                      actions: [AccessAction.Create, AccessAction.Read],
+                      identifier: `https://example.com/${v4()}`
+                    }))
+                  },
+                  client: CLIENT
+                }
+                ctx.request.body = body
+
+                await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+                  status: 400,
+                  error: 'interaction_required'
+                })
+              }
+            )
+          )
+        })
+      })
 
       test('Can initiate a grant request', async (): Promise<void> => {
         const scope = nock(CLIENT).get('/').reply(200, {
@@ -170,57 +281,6 @@ describe('Grant Routes', (): void => {
         scope.done()
       })
 
-      test.each`
-        accessType
-        ${AccessType.IncomingPayment}
-        ${AccessType.Quote}
-      `(
-        'Can get an grant without interaction for $accessType grants',
-        async ({ accessType }): Promise<void> => {
-          const ctx = createContext<CreateContext>(
-            {
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-              },
-              url,
-              method
-            },
-            {}
-          )
-          const body = {
-            access_token: {
-              access: [
-                {
-                  type: accessType,
-                  actions: [AccessAction.Create, AccessAction.Read],
-                  identifier: `https://example.com/${v4()}`
-                }
-              ]
-            },
-            client: CLIENT
-          }
-          ctx.request.body = body
-
-          await expect(grantRoutes.create(ctx)).resolves.toBeUndefined()
-          expect(ctx.response).toSatisfyApiSpec()
-          expect(ctx.status).toBe(200)
-          expect(ctx.body).toEqual({
-            access_token: {
-              value: expect.any(String),
-              manage: expect.any(String),
-              access: body.access_token.access,
-              expires_in: 600
-            },
-            continue: {
-              access_token: {
-                value: expect.any(String)
-              },
-              uri: expect.any(String)
-            }
-          })
-        }
-      )
       test('Does not create grant if token issuance fails', async (): Promise<void> => {
         jest
           .spyOn(accessTokenService, 'create')
