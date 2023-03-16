@@ -66,7 +66,7 @@ paths:
                   type: string
                   description: The access token value presented to the RS by the client instance.
                 access:
-                  $ref: ./schemas.yaml#/components/schemas/access
+                  $ref: ./auth-server.yaml#/components/schemas/access
               required:
                 - access_token
             examples:
@@ -87,7 +87,7 @@ components:
         grant:
           type: string
         access:
-          $ref: ./schemas.yaml#/components/schemas/access
+          $ref: ./auth-server.yaml#/components/schemas/access
         client:
           title: client
           type: string
