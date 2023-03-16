@@ -146,15 +146,10 @@ describe('Grant Routes', (): void => {
               `can${interactionFlagsEnabled ? 'not' : ''} get $description`,
               withConfigOverride(
                 () => config,
-                interactionFlagsEnabled
-                  ? {
-                      incomingPaymentInteraction: true,
-                      quoteInteraction: true
-                    }
-                  : {
-                      incomingPaymentInteraction: false,
-                      quoteInteraction: false
-                    },
+                {
+                  incomingPaymentInteraction: interactionFlagsEnabled,
+                  quoteInteraction: interactionFlagsEnabled
+                },
                 async ({ accessTypes }): Promise<void> => {
                   const ctx = createContext<CreateContext>(
                     {
