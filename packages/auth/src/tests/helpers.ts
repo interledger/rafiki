@@ -7,7 +7,7 @@ export function withConfigOverride(
 ) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (...args: any[]) => {
-    let config = getConfig()
+    const config = getConfig()
     const savedConfig = Object.assign({}, config)
 
     Object.assign(config, configOverride)
