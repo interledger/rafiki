@@ -27,6 +27,8 @@ export {
   UnauthenticatedClient
 } from './client'
 
+export { getAuthServerOpenApi, getResourceServerOpenApi } from './openapi'
+
 export {
   mockILPStreamConnection,
   mockPaymentPointer,

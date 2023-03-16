@@ -1,6 +1,5 @@
 import { KeyLike } from 'crypto'
-import { createOpenAPI, OpenAPI } from 'openapi'
-import path from 'path'
+import { OpenAPI } from 'openapi'
 import createLogger, { Logger } from 'pino'
 import config from '../config'
 import {
@@ -24,6 +23,7 @@ import {
 } from './outgoing-payment'
 import { createTokenRoutes, TokenRoutes } from './token'
 import { createQuoteRoutes, QuoteRoutes } from './quote'
+import { getAuthServerOpenApi, getResourceServerOpenApi } from '../openapi'
 
 export interface BaseDeps {
   axiosInstance: AxiosInstance
@@ -65,12 +65,10 @@ const createDeps = async (
     requestTimeoutMs:
       args?.requestTimeoutMs ?? config.DEFAULT_REQUEST_TIMEOUT_MS
   })
-  const resourceServerOpenApi = await createOpenAPI(
-    path.resolve(__dirname, '../openapi/resource-server.yaml')
-  )
-  const authServerOpenApi = await createOpenAPI(
-    path.resolve(__dirname, '../openapi/auth-server.yaml')
-  )
+
+  const resourceServerOpenApi = await getResourceServerOpenApi()
+  const authServerOpenApi = await getAuthServerOpenApi()
+
   const logger = args?.logger ?? createLogger()
   return {
     axiosInstance,
