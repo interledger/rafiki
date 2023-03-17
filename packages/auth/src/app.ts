@@ -37,7 +37,7 @@ import {
   RevokeContext,
   RotateContext
 } from './accessToken/routes'
-import { createValidatorMiddleware, HttpMethod } from 'openapi'
+import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
 
 import {
   grantInitiationHttpsigMiddleware,
