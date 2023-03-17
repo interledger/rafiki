@@ -3,8 +3,7 @@
   "private": "true",
   "sideEffects": false,
   "scripts": {
-    "build:deps": "pnpm --filter http-signature-utils build",
-    "build": "pnpm build:deps && remix build",
+    "build": "remix build",
     "dev": "PORT=3300 remix dev",
     "start": "remix-serve build"
   },
