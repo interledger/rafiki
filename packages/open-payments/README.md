@@ -6,10 +6,10 @@ Open Payments consists of two OpenAPI specifications, a **resource server** whic
 
 This package provides TypeScript & NodeJS tools for using Open Payments:
 
-- Exported TypeScript types generated directly from the Open Payments Open API specifications
+- Exported TypeScript types generated directly from the Open Payments OpenAPI specifications
 - A NodeJS client that exposes Open Payment APIs:
   - Signs requests with provided key
-  - Validates responses against Open API specs
+  - Validates responses against OpenAPI specs
 
 ## Who is this package for?
 
@@ -68,7 +68,7 @@ In order to create the client, three properties need to be provided: `keyId`, th
 | Variable            | Description                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `paymentPointerUrl` | The valid payment pointer with which the client making requests will identify itself. A JSON Web Key Set document that includes the public key that the client instance will use to protect requests MUST be available at the `{paymentPointerUrl}/jwks.json` url. This will be used as the `client` field during [Grant Creation](https://docs.openpayments.guide/reference/post-request). |
-| `privateKey`        | The the private EdDSA-Ed25519 key bound to the payment pointer, and used to sign the authenticated requests with. As mentioned above, a public JWK document signed with this key MUST be available at the `{paymentPointerUrl}/jwks.json` url.                                                                                                                                              |
+| `privateKey`        | The private EdDSA-Ed25519 key bound to the payment pointer, and used to sign the authenticated requests with. As mentioned above, a public JWK document signed with this key MUST be available at the `{paymentPointerUrl}/jwks.json` url.                                                                                                                                              |
 | `keyId`             | The key identifier of the given private key and the corresponding public JWK document.                                                                                                                                                                                                                                                                                                      |
 
 > **Note**
@@ -184,7 +184,7 @@ const quote = await client.quote.create(
 
 The final step for Amazon's backend system will be to create an `OutgoingPayment` on Alice's wallet. Before this, however, Amazon will need to create an outgoing payment grant, which typically requires some sort of interaction with Alice. Amazon will need to facilitate this interaction with Alice (e.g. redirect her to a webpage with a dialog) to get her consent for creating an `OutgoingPayment` on her account. The detailed sequence for how this is achieved can be found [here](../../docs/grant-interaction.md).
 
-7. Create `OutgoingPayment`:
+6. Create `OutgoingPayment`:
 
 Once the grant interaction flow has finished, and Alice has consented to the payment, Amazon can create the `OutgoingPayment` on her account:
 
