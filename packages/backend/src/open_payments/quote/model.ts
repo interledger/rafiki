@@ -7,7 +7,7 @@ import {
   PaymentPointerSubresource
 } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
-import { Quote as OpenPaymentsQuote } from 'open-payments'
+import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 
 export class Quote extends PaymentPointerSubresource {
   public static readonly tableName = 'quotes'

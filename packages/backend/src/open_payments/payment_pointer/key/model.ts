@@ -1,6 +1,6 @@
 import { BaseModel } from '../../../shared/baseModel'
 
-import { JWK } from 'http-signature-utils'
+import { JWK } from '@interledger/http-signature-utils'
 import { Pojo } from 'objection'
 
 export class PaymentPointerKey extends BaseModel {

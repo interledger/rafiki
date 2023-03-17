@@ -9,7 +9,7 @@ import { Amount, serializeAmount } from '../../open_payments/amount'
 import {
   mockIncomingPaymentWithConnection,
   mockPaymentPointer
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { CreateReceiverResponse } from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
 import { Receiver } from '../../open_payments/receiver/model'
