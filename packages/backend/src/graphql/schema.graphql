@@ -1,7 +1,4 @@
 type Query {
-  "Fetch a payment pointer"
-  paymentPointer(id: String!): PaymentPointer
-
   "Fetch an asset"
   asset(id: String!): Asset
 
@@ -32,71 +29,85 @@ type Query {
     last: Int
   ): PeersConnection!
 
+  "Fetch a payment pointer"
+  paymentPointer(id: String!): PaymentPointer
+
   "Fetch an Open Payments quote"
   quote(id: String!): Quote
+
   "Fetch an Open Payments outgoing payment"
   outgoingPayment(id: String!): OutgoingPayment
 }
 
 type Mutation {
-  "Create payment pointer"
-  createPaymentPointer(
-    input: CreatePaymentPointerInput!
-  ): CreatePaymentPointerMutationResponse!
-
-  triggerPaymentPointerEvents(
-    limit: Int!
-  ): TriggerPaymentPointerEventsMutationResponse!
-
-  "Create asset"
+  "Create an asset"
   createAsset(input: CreateAssetInput!): AssetMutationResponse!
 
-  "Update asset withdrawal threshold"
+  "Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn."
   updateAssetWithdrawalThreshold(
     input: UpdateAssetInput!
   ): AssetMutationResponse!
 
-  "Create peer"
+  "Add asset liquidity"
+  addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
+
+  "Withdraw asset liquidity"
+  createAssetLiquidityWithdrawal(
+    input: CreateAssetLiquidityWithdrawalInput!
+  ): LiquidityMutationResponse
+
+  "Create a peer"
   createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
 
-  "Update peer"
+  "Update a peer"
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
 
-  "Delete peer"
+  "Delete a peer"
   deletePeer(id: String!): DeletePeerMutationResponse!
 
   "Add peer liquidity"
   addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
 
-  "Add asset liquidity"
-  addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
-
-  "Create liquidity withdrawal from peer"
+  "Withdraw peer liquidity"
   createPeerLiquidityWithdrawal(
     input: CreatePeerLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Create liquidity withdrawal from asset"
-  createAssetLiquidityWithdrawal(
-    input: CreateAssetLiquidityWithdrawalInput!
-  ): LiquidityMutationResponse
-
-  "Create liquidity withdrawal from Open Payments payment pointer"
-  createPaymentPointerWithdrawal(
-    input: CreatePaymentPointerWithdrawalInput!
-  ): PaymentPointerWithdrawalMutationResponse
-
-  "Posts liquidity withdrawal"
+  "Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation."
   postLiquidityWithdrawal(
     "The id of the liquidity withdrawal to post."
     withdrawalId: String!
   ): LiquidityMutationResponse
 
-  "Void liquidity withdrawal"
+  "Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation."
   voidLiquidityWithdrawal(
     "The id of the liquidity withdrawal to void."
     withdrawalId: String!
   ): LiquidityMutationResponse
+
+  "Create a payment pointer"
+  createPaymentPointer(
+    input: CreatePaymentPointerInput!
+  ): CreatePaymentPointerMutationResponse!
+
+  "Add a public key to a payment pointer that is used to verify Open Payments requests."
+  createPaymentPointerKey(
+    input: CreatePaymentPointerKeyInput!
+  ): CreatePaymentPointerKeyMutationResponse
+
+  "Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward."
+  revokePaymentPointerKey(
+    "Internal id of key"
+    id: String!
+  ): RevokePaymentPointerKeyMutationResponse
+
+  "Create an internal Open Payments Incoming Payment. The receiver has a payment pointer on this Rafiki instance."
+  createIncomingPayment(
+    input: CreateIncomingPaymentInput!
+  ): IncomingPaymentResponse!
+
+  "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server."
+  createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Create an Open Payments Quote"
   createQuote(input: CreateQuoteInput!): QuoteResponse!
@@ -106,27 +117,22 @@ type Mutation {
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
-  "Create an internal Open Payments Incoming Payment"
-  createIncomingPayment(
-    input: CreateIncomingPaymentInput!
-  ): IncomingPaymentResponse!
-
-  "Create an external Open Payments Incoming Payment"
-  createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
-
   "Deposit webhook event liquidity"
   depositEventLiquidity(eventId: String!): LiquidityMutationResponse
 
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
 
-  "Create payment pointer key"
-  createPaymentPointerKey(
-    input: CreatePaymentPointerKeyInput!
-  ): CreatePaymentPointerKeyMutationResponse
+  "Withdraw liquidity from a payment pointer received via Web Monetization."
+  createPaymentPointerWithdrawal(
+    input: CreatePaymentPointerWithdrawalInput!
+  ): PaymentPointerWithdrawalMutationResponse
 
-  "Revoke request signing key"
-  revokePaymentPointerKey(id: String!): RevokePaymentPointerKeyMutationResponse
+  "If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events."
+  triggerPaymentPointerEvents(
+    "Maximum number of events being triggered (n)."
+    limit: Int!
+  ): TriggerPaymentPointerEventsMutationResponse!
 }
 
 type PageInfo {
@@ -151,13 +157,18 @@ type AssetEdge {
 }
 
 input CreateAssetInput {
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
   code: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
   scale: UInt8!
+  "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
 }
 
 input UpdateAssetInput {
+  "Asset id"
   id: String!
+  "New minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
 }
 
@@ -172,37 +183,54 @@ type PeerEdge {
 }
 
 input CreatePeerInput {
+  "Maximum packet amount that the peer accepts"
   maxPacketAmount: UInt64
+  "Peering connection details"
   http: HttpInput!
+  "Asset id of peering relationship"
   assetId: String!
+  "Peer's ILP address"
   staticIlpAddress: String!
+  "Peer's internal name"
   name: String
 }
 
 input UpdatePeerInput {
+  "Peer id"
   id: String!
+  "New maximum packet amount that the peer accepts"
   maxPacketAmount: UInt64
+  "New peering connection details"
   http: HttpInput
+  "Peer's new ILP address"
   staticIlpAddress: String
+  "Peer's new public name"
   name: String
 }
 
 input HttpInput {
+  "Incoming connection details"
   incoming: HttpIncomingInput
+  "Outgoing connection details"
   outgoing: HttpOutgoingInput!
 }
 
 input HttpIncomingInput {
+  "Array of auth tokens accepted by this Rafiki instance"
   authTokens: [String!]!
 }
 
 input HttpOutgoingInput {
+  "Auth token to present at the peering Rafiki instance"
   authToken: String!
+  "Peer's connection endpoint"
   endpoint: String!
 }
 
 input AssetInput {
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
   code: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
   scale: UInt8!
 }
 
@@ -250,23 +278,34 @@ input CreatePaymentPointerWithdrawalInput {
 }
 
 input JwkInput {
+  "Key id"
   kid: String!
+  "Base64 url-encoded public key."
   x: String!
+  "Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`."
   alg: Alg!
+  "Key type. The only allowed value is `OKP`."
   kty: Kty!
+  "Curve that the key pair is derived from. The only allowed value is `Ed25519`."
   crv: Crv!
 }
 
 input CreatePaymentPointerKeyInput {
   paymentPointerId: String!
+  "Public key"
   jwk: JwkInput!
 }
 
 type Asset implements Model {
+  "Asset id"
   id: ID!
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
   code: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
   scale: UInt8!
+  "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Date-time of creation"
   createdAt: String!
 }
 
@@ -286,29 +325,44 @@ enum LiquidityError {
 }
 
 type Peer implements Model {
+  "Peer id"
   id: ID!
+  "Maximum packet amount that the peer accepts"
   maxPacketAmount: UInt64
+  "Peering connection details"
   http: Http!
+  "Asset of peering relationship"
   asset: Asset!
+  "Peer's ILP address"
   staticIlpAddress: String!
+  "Peer's public name"
   name: String
+  "Date-time of creation"
   createdAt: String!
 }
 
 type Http {
+  "Outgoing connection details"
   outgoing: HttpOutgoing!
 }
 
 type HttpOutgoing {
+  "Auth token to present at the peering Rafiki instance"
   authToken: String!
+  "Peer's connection endpoint"
   endpoint: String!
 }
 
 type PaymentPointer implements Model {
+  "Payment pointer id"
   id: ID!
+  "Asset of the payment pointer"
   asset: Asset!
+  "Payment Pointer URL"
   url: String!
+  "Public name associated with the payment pointer"
   publicName: String
+  "List of incoming payments received by this payment pointer"
   incomingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -319,6 +373,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): IncomingPaymentConnection
+  "List of quotes created at this payment pointer"
   quotes(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -329,6 +384,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): QuoteConnection
+  "List of outgoing payments sent from this payment pointer"
   outgoingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -339,6 +395,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): OutgoingPaymentConnection
+  "Date-time of creation"
   createdAt: String!
 }
 
@@ -353,27 +410,46 @@ type IncomingPaymentEdge {
 }
 
 type IncomingPayment implements Model {
+  "Incoming Payment id"
   id: ID!
+  "Id of the payment pointer under which this incoming payment was created"
   paymentPointerId: ID!
+  "Incoming payment state"
   state: IncomingPaymentState!
+  "Date-time of expiry. After this time, the incoming payment will not accept further payments made to it."
   expiresAt: String!
+  "The maximum amount that should be paid into the payment pointer under this incoming payment."
   incomingAmount: Amount
+  "The total amount that has been paid into the payment pointer under this incoming payment."
   receivedAmount: Amount!
+  "Human readable description of the incoming payment."
   description: String
+  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Date-time of creation"
   createdAt: String!
 }
 
 type Receiver {
+  "Incoming payment URL"
   id: String!
+  "Payment pointer URL under which the incoming payment was created"
   paymentPointerUrl: String!
+  "Describes whether the incoming payment has completed receiving funds."
   completed: Boolean!
+  "The maximum amount that should be paid into the payment pointer under this incoming payment."
   incomingAmount: Amount
+  "The total amount that has been paid into the payment pointer under this incoming payment."
   receivedAmount: Amount!
+  "Date-time of expiry. After this time, the incoming payment will accept further payments made to it."
   expiresAt: String
+  "Human readable description of the incoming payment."
   description: String
+  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Date-time of creation"
   createdAt: String!
+  "Date-time of last update"
   updatedAt: String!
 }
 
@@ -390,7 +466,9 @@ enum IncomingPaymentState {
 
 type Amount {
   value: UInt64!
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
   assetCode: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
   assetScale: UInt8!
 }
 
@@ -405,18 +483,29 @@ type OutgoingPaymentEdge {
 }
 
 type OutgoingPayment implements Model {
+  "Outgoing payment id"
   id: ID!
+  "Id of the payment pointer under which this outgoing payment was created"
   paymentPointerId: ID!
+  "Outgoing payment state"
   state: OutgoingPaymentState!
   error: String
   stateAttempts: Int!
+  "Amount to send (fixed send)"
   sendAmount: Amount!
+  "Amount to receive (fixed receive)"
   receiveAmount: Amount!
+  "Payment pointer URL of the receiver"
   receiver: String!
+  "Human readable description of the outgoing payment."
   description: String
+  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Quote for this outgoing payment"
   quote: Quote
+  "Amount already sent"
   sentAmount: Amount!
+  "Date-time of creation"
   createdAt: String!
 }
 
@@ -442,29 +531,46 @@ type QuoteEdge {
 }
 
 type Quote {
+  "Quote id"
   id: ID!
+  "Id of the payment pointer under which this quote was created"
   paymentPointerId: ID!
+  "Payment pointer URL of the receiver"
   receiver: String!
+  "Amount to send (fixed send)"
   sendAmount: Amount!
+  "Amount to receive (fixed receive)"
   receiveAmount: Amount!
+  "Maximum value per packet allowed on the possible routes"
   maxPacketAmount: UInt64!
+  "Aggregate exchange rate the payment is guaranteed to meet"
   minExchangeRate: Float!
+  "Lower bound of probed exchange rate"
   lowEstimatedExchangeRate: Float!
+  "Upper bound of probed exchange rate"
   highEstimatedExchangeRate: Float!
+  "Date-time of creation"
   createdAt: String!
+  "Date-time of expiration"
   expiresAt: String!
 }
 
 input AmountInput {
   value: UInt64!
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
   assetCode: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
   assetScale: UInt8!
 }
 
 input CreateQuoteInput {
+  "Id of the payment pointer under which the quote will be created"
   paymentPointerId: String!
+  "Amount to send (fixed send)"
   sendAmount: AmountInput
+  "Amount to receive (fixed receive)"
   receiveAmount: AmountInput
+  "Payment pointer URL of the receiver"
   receiver: String!
 }
 
@@ -476,25 +582,39 @@ type QuoteResponse {
 }
 
 input CreateOutgoingPaymentInput {
+  "Id of the payment pointer under which the outgoing payment will be created"
   paymentPointerId: String!
+  "Id of the corresponding quote for that outgoing payment"
   quoteId: String!
+  "Human readable description of the outgoing payment."
   description: String
+  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
 }
 
 input CreateIncomingPaymentInput {
+  "Id of the payment pointer under which the incoming payment will be created"
   paymentPointerId: String!
+  "Expiration date-time"
   expiresAt: String
+  "Human readable description of the incoming payment."
   description: String
+  "Maximum amount to be received"
   incomingAmount: AmountInput
+  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
 }
 
 input CreateReceiverInput {
+  "Receiving payment pointer URL"
   paymentPointerUrl: String!
+  "Expiration date-time"
   expiresAt: String
+  "Human readable description of the incoming payment."
   description: String
+  "Maximum amount to be received"
   incomingAmount: AmountInput
+  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
 }
 
@@ -520,8 +640,11 @@ type CreateReceiverResponse {
 }
 
 input CreatePaymentPointerInput {
+  "Asset of the payment pointer"
   assetId: String!
+  "Payment Pointer URL"
   url: String!
+  "Public name associated with the payment pointer"
   publicName: String
 }
 
@@ -538,24 +661,37 @@ enum Crv {
 }
 
 type Jwk {
+  "Key id"
   kid: String!
+  "Base64 url-encoded public key."
   x: String!
+  "Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`."
   alg: Alg!
+  "Key type. The only allowed value is `OKP`."
   kty: Kty!
+  "Curve that the key pair is derived from. The only allowed value is `Ed25519`."
   crv: Crv!
 }
 
 type PaymentPointerKey implements Model {
+  "Internal id of key"
   id: ID!
+  "Id of the payment pointer to which this key belongs to"
   paymentPointerId: ID!
+  "Public key"
   jwk: Jwk!
+  "Indicator whether the key has been revoked"
   revoked: Boolean!
+  "Date-time of creation"
   createdAt: String!
 }
 
 type PaymentPointerWithdrawal {
+  "Withdrawal Id"
   id: ID!
+  "Amount to withdraw"
   amount: UInt64!
+  "Payment pointer details"
   paymentPointer: PaymentPointer!
 }
 
@@ -575,6 +711,7 @@ type TriggerPaymentPointerEventsMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
+  "Number of events triggered"
   count: Int
 }
 

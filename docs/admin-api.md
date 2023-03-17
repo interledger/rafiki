@@ -112,20 +112,6 @@ The Admin API is a GraphQL API. It allows [Account Servicing Entities'](./glossa
 </thead>
 <tbody>
 <tr>
-<td colspan="2" valign="top"><strong>paymentPointer</strong></td>
-<td valign="top"><a href="#paymentpointer">PaymentPointer</a></td>
-<td>
-
-Fetch a payment pointer
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#string">String</a>!</td>
-<td></td>
-</tr>
-<tr>
 <td colspan="2" valign="top"><strong>asset</strong></td>
 <td valign="top"><a href="#asset">Asset</a></td>
 <td>
@@ -244,6 +230,20 @@ Paginating backwards: The last **n** elements from the page.
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>paymentPointer</strong></td>
+<td valign="top"><a href="#paymentpointer">PaymentPointer</a></td>
+<td>
+
+Fetch a payment pointer
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">id</td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td></td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>quote</strong></td>
 <td valign="top"><a href="#quote">Quote</a></td>
 <td>
@@ -287,35 +287,11 @@ Fetch an Open Payments outgoing payment
 </thead>
 <tbody>
 <tr>
-<td colspan="2" valign="top"><strong>createPaymentPointer</strong></td>
-<td valign="top"><a href="#createpaymentpointermutationresponse">CreatePaymentPointerMutationResponse</a>!</td>
-<td>
-
-Create payment pointer
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#createpaymentpointerinput">CreatePaymentPointerInput</a>!</td>
-<td></td>
-</tr>
-<tr>
-<td colspan="2" valign="top"><strong>triggerPaymentPointerEvents</strong></td>
-<td valign="top"><a href="#triggerpaymentpointereventsmutationresponse">TriggerPaymentPointerEventsMutationResponse</a>!</td>
-<td></td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">limit</td>
-<td valign="top"><a href="#int">Int</a>!</td>
-<td></td>
-</tr>
-<tr>
 <td colspan="2" valign="top"><strong>createAsset</strong></td>
 <td valign="top"><a href="#assetmutationresponse">AssetMutationResponse</a>!</td>
 <td>
 
-Create asset
+Create an asset
 
 </td>
 </tr>
@@ -329,7 +305,7 @@ Create asset
 <td valign="top"><a href="#assetmutationresponse">AssetMutationResponse</a>!</td>
 <td>
 
-Update asset withdrawal threshold
+Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn.
 
 </td>
 </tr>
@@ -339,11 +315,39 @@ Update asset withdrawal threshold
 <td></td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>addAssetLiquidity</strong></td>
+<td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
+<td>
+
+Add asset liquidity
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">input</td>
+<td valign="top"><a href="#addassetliquidityinput">AddAssetLiquidityInput</a>!</td>
+<td></td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>createAssetLiquidityWithdrawal</strong></td>
+<td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
+<td>
+
+Withdraw asset liquidity
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">input</td>
+<td valign="top"><a href="#createassetliquiditywithdrawalinput">CreateAssetLiquidityWithdrawalInput</a>!</td>
+<td></td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>createPeer</strong></td>
 <td valign="top"><a href="#createpeermutationresponse">CreatePeerMutationResponse</a>!</td>
 <td>
 
-Create peer
+Create a peer
 
 </td>
 </tr>
@@ -357,7 +361,7 @@ Create peer
 <td valign="top"><a href="#updatepeermutationresponse">UpdatePeerMutationResponse</a>!</td>
 <td>
 
-Update peer
+Update a peer
 
 </td>
 </tr>
@@ -371,7 +375,7 @@ Update peer
 <td valign="top"><a href="#deletepeermutationresponse">DeletePeerMutationResponse</a>!</td>
 <td>
 
-Delete peer
+Delete a peer
 
 </td>
 </tr>
@@ -395,25 +399,11 @@ Add peer liquidity
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>addAssetLiquidity</strong></td>
-<td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
-<td>
-
-Add asset liquidity
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#addassetliquidityinput">AddAssetLiquidityInput</a>!</td>
-<td></td>
-</tr>
-<tr>
 <td colspan="2" valign="top"><strong>createPeerLiquidityWithdrawal</strong></td>
 <td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
 <td>
 
-Create liquidity withdrawal from peer
+Withdraw peer liquidity
 
 </td>
 </tr>
@@ -423,39 +413,11 @@ Create liquidity withdrawal from peer
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>createAssetLiquidityWithdrawal</strong></td>
-<td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
-<td>
-
-Create liquidity withdrawal from asset
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#createassetliquiditywithdrawalinput">CreateAssetLiquidityWithdrawalInput</a>!</td>
-<td></td>
-</tr>
-<tr>
-<td colspan="2" valign="top"><strong>createPaymentPointerWithdrawal</strong></td>
-<td valign="top"><a href="#paymentpointerwithdrawalmutationresponse">PaymentPointerWithdrawalMutationResponse</a></td>
-<td>
-
-Create liquidity withdrawal from Open Payments payment pointer
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#createpaymentpointerwithdrawalinput">CreatePaymentPointerWithdrawalInput</a>!</td>
-<td></td>
-</tr>
-<tr>
 <td colspan="2" valign="top"><strong>postLiquidityWithdrawal</strong></td>
 <td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
 <td>
 
-Posts liquidity withdrawal
+Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation.
 
 </td>
 </tr>
@@ -473,7 +435,7 @@ The id of the liquidity withdrawal to post.
 <td valign="top"><a href="#liquiditymutationresponse">LiquidityMutationResponse</a></td>
 <td>
 
-Void liquidity withdrawal
+Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation.
 
 </td>
 </tr>
@@ -485,6 +447,80 @@ Void liquidity withdrawal
 The id of the liquidity withdrawal to void.
 
 </td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>createPaymentPointer</strong></td>
+<td valign="top"><a href="#createpaymentpointermutationresponse">CreatePaymentPointerMutationResponse</a>!</td>
+<td>
+
+Create a payment pointer
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">input</td>
+<td valign="top"><a href="#createpaymentpointerinput">CreatePaymentPointerInput</a>!</td>
+<td></td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>createPaymentPointerKey</strong></td>
+<td valign="top"><a href="#createpaymentpointerkeymutationresponse">CreatePaymentPointerKeyMutationResponse</a></td>
+<td>
+
+Add a public key to a payment pointer that is used to verify Open Payments requests.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">input</td>
+<td valign="top"><a href="#createpaymentpointerkeyinput">CreatePaymentPointerKeyInput</a>!</td>
+<td></td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>revokePaymentPointerKey</strong></td>
+<td valign="top"><a href="#revokepaymentpointerkeymutationresponse">RevokePaymentPointerKeyMutationResponse</a></td>
+<td>
+
+Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">id</td>
+<td valign="top"><a href="#string">String</a>!</td>
+<td>
+
+Internal id of key
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>createIncomingPayment</strong></td>
+<td valign="top"><a href="#incomingpaymentresponse">IncomingPaymentResponse</a>!</td>
+<td>
+
+Create an internal Open Payments Incoming Payment. The receiver has a payment pointer on this Rafiki instance.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">input</td>
+<td valign="top"><a href="#createincomingpaymentinput">CreateIncomingPaymentInput</a>!</td>
+<td></td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>createReceiver</strong></td>
+<td valign="top"><a href="#createreceiverresponse">CreateReceiverResponse</a>!</td>
+<td>
+
+Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server.
+
+</td>
+</tr>
+<tr>
+<td colspan="2" align="right" valign="top">input</td>
+<td valign="top"><a href="#createreceiverinput">CreateReceiverInput</a>!</td>
+<td></td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createQuote</strong></td>
@@ -512,34 +548,6 @@ Create an Open Payments Outgoing Payment
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
 <td valign="top"><a href="#createoutgoingpaymentinput">CreateOutgoingPaymentInput</a>!</td>
-<td></td>
-</tr>
-<tr>
-<td colspan="2" valign="top"><strong>createIncomingPayment</strong></td>
-<td valign="top"><a href="#incomingpaymentresponse">IncomingPaymentResponse</a>!</td>
-<td>
-
-Create an internal Open Payments Incoming Payment
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#createincomingpaymentinput">CreateIncomingPaymentInput</a>!</td>
-<td></td>
-</tr>
-<tr>
-<td colspan="2" valign="top"><strong>createReceiver</strong></td>
-<td valign="top"><a href="#createreceiverresponse">CreateReceiverResponse</a>!</td>
-<td>
-
-Create an external Open Payments Incoming Payment
-
-</td>
-</tr>
-<tr>
-<td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#createreceiverinput">CreateReceiverInput</a>!</td>
 <td></td>
 </tr>
 <tr>
@@ -571,32 +579,36 @@ Withdraw webhook event liquidity
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>createPaymentPointerKey</strong></td>
-<td valign="top"><a href="#createpaymentpointerkeymutationresponse">CreatePaymentPointerKeyMutationResponse</a></td>
+<td colspan="2" valign="top"><strong>createPaymentPointerWithdrawal</strong></td>
+<td valign="top"><a href="#paymentpointerwithdrawalmutationresponse">PaymentPointerWithdrawalMutationResponse</a></td>
 <td>
 
-Create payment pointer key
+Withdraw liquidity from a payment pointer received via Web Monetization.
 
 </td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">input</td>
-<td valign="top"><a href="#createpaymentpointerkeyinput">CreatePaymentPointerKeyInput</a>!</td>
+<td valign="top"><a href="#createpaymentpointerwithdrawalinput">CreatePaymentPointerWithdrawalInput</a>!</td>
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>revokePaymentPointerKey</strong></td>
-<td valign="top"><a href="#revokepaymentpointerkeymutationresponse">RevokePaymentPointerKeyMutationResponse</a></td>
+<td colspan="2" valign="top"><strong>triggerPaymentPointerEvents</strong></td>
+<td valign="top"><a href="#triggerpaymentpointereventsmutationresponse">TriggerPaymentPointerEventsMutationResponse</a>!</td>
 <td>
 
-Revoke request signing key
+If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events.
 
 </td>
 </tr>
 <tr>
-<td colspan="2" align="right" valign="top">id</td>
-<td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td colspan="2" align="right" valign="top">limit</td>
+<td valign="top"><a href="#int">Int</a>!</td>
+<td>
+
+Maximum number of events being triggered (n).
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -623,12 +635,20 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>assetCode</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>assetScale</strong></td>
 <td valign="top"><a href="#uint8">UInt8</a>!</td>
-<td></td>
+<td>
+
+Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -648,27 +668,47 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Asset id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>code</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>scale</strong></td>
 <td valign="top"><a href="#uint8">UInt8</a>!</td>
-<td></td>
+<td>
+
+Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>withdrawalThreshold</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
-<td></td>
+<td>
+
+Minimum amount of liquidity that can be withdrawn from the asset
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -943,7 +983,11 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>outgoing</strong></td>
 <td valign="top"><a href="#httpoutgoing">HttpOutgoing</a>!</td>
-<td></td>
+<td>
+
+Outgoing connection details
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -963,12 +1007,20 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>authToken</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Auth token to present at the peering Rafiki instance
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>endpoint</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Peer's connection endpoint
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -988,47 +1040,83 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Incoming Payment id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer under which this incoming payment was created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>state</strong></td>
 <td valign="top"><a href="#incomingpaymentstate">IncomingPaymentState</a>!</td>
-<td></td>
+<td>
+
+Incoming payment state
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>expiresAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of expiry. After this time, the incoming payment will not accept further payments made to it.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>incomingAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a></td>
-<td></td>
+<td>
+
+The maximum amount that should be paid into the payment pointer under this incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receivedAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+The total amount that has been paid into the payment pointer under this incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>description</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Human readable description of the incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>externalRef</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1133,27 +1221,47 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>kid</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Key id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>x</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Base64 url-encoded public key.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>alg</strong></td>
 <td valign="top"><a href="#alg">Alg</a>!</td>
-<td></td>
+<td>
+
+Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>kty</strong></td>
 <td valign="top"><a href="#kty">Kty</a>!</td>
-<td></td>
+<td>
+
+Key type. The only allowed value is `OKP`.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>crv</strong></td>
 <td valign="top"><a href="#crv">Crv</a>!</td>
-<td></td>
+<td>
+
+Curve that the key pair is derived from. The only allowed value is `Ed25519`.
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1208,17 +1316,29 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Outgoing payment id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer under which this outgoing payment was created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>state</strong></td>
 <td valign="top"><a href="#outgoingpaymentstate">OutgoingPaymentState</a>!</td>
-<td></td>
+<td>
+
+Outgoing payment state
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>error</strong></td>
@@ -1233,42 +1353,74 @@ Revoke request signing key
 <tr>
 <td colspan="2" valign="top"><strong>sendAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+Amount to send (fixed send)
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receiveAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+Amount to receive (fixed receive)
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receiver</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Payment pointer URL of the receiver
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>description</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Human readable description of the outgoing payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>externalRef</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>quote</strong></td>
 <td valign="top"><a href="#quote">Quote</a></td>
-<td></td>
+<td>
+
+Quote for this outgoing payment
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>sentAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+Amount already sent
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1424,27 +1576,47 @@ Paginating backwards: the cursor to continue.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Payment pointer id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>asset</strong></td>
 <td valign="top"><a href="#asset">Asset</a>!</td>
-<td></td>
+<td>
+
+Asset of the payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>url</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Payment Pointer URL
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>publicName</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Public name associated with the payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>incomingPayments</strong></td>
 <td valign="top"><a href="#incomingpaymentconnection">IncomingPaymentConnection</a></td>
-<td></td>
+<td>
+
+List of incoming payments received by this payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">after</td>
@@ -1485,7 +1657,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>quotes</strong></td>
 <td valign="top"><a href="#quoteconnection">QuoteConnection</a></td>
-<td></td>
+<td>
+
+List of quotes created at this payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">after</td>
@@ -1526,7 +1702,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>outgoingPayments</strong></td>
 <td valign="top"><a href="#outgoingpaymentconnection">OutgoingPaymentConnection</a></td>
-<td></td>
+<td>
+
+List of outgoing payments sent from this payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" align="right" valign="top">after</td>
@@ -1567,7 +1747,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1587,27 +1771,47 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Internal id of key
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer to which this key belongs to
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>jwk</strong></td>
 <td valign="top"><a href="#jwk">Jwk</a>!</td>
-<td></td>
+<td>
+
+Public key
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>revoked</strong></td>
 <td valign="top"><a href="#boolean">Boolean</a>!</td>
-<td></td>
+<td>
+
+Indicator whether the key has been revoked
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1627,17 +1831,29 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Withdrawal Id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>amount</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a>!</td>
-<td></td>
+<td>
+
+Amount to withdraw
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointer</strong></td>
 <td valign="top"><a href="#paymentpointer">PaymentPointer</a>!</td>
-<td></td>
+<td>
+
+Payment pointer details
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1697,37 +1913,65 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Peer id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>maxPacketAmount</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
-<td></td>
+<td>
+
+Maximum packet amount that the peer accepts
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>http</strong></td>
 <td valign="top"><a href="#http">Http</a>!</td>
-<td></td>
+<td>
+
+Peering connection details
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>asset</strong></td>
 <td valign="top"><a href="#asset">Asset</a>!</td>
-<td></td>
+<td>
+
+Asset of peering relationship
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>staticIlpAddress</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Peer's ILP address
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>name</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Peer's public name
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1797,57 +2041,101 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Quote id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#id">ID</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer under which this quote was created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receiver</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Payment pointer URL of the receiver
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>sendAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+Amount to send (fixed send)
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receiveAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+Amount to receive (fixed receive)
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>maxPacketAmount</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a>!</td>
-<td></td>
+<td>
+
+Maximum value per packet allowed on the possible routes
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>minExchangeRate</strong></td>
 <td valign="top"><a href="#float">Float</a>!</td>
-<td></td>
+<td>
+
+Aggregate exchange rate the payment is guaranteed to meet
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>lowEstimatedExchangeRate</strong></td>
 <td valign="top"><a href="#float">Float</a>!</td>
-<td></td>
+<td>
+
+Lower bound of probed exchange rate
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>highEstimatedExchangeRate</strong></td>
 <td valign="top"><a href="#float">Float</a>!</td>
-<td></td>
+<td>
+
+Upper bound of probed exchange rate
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>expiresAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of expiration
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -1952,52 +2240,92 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Incoming payment URL
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerUrl</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Payment pointer URL under which the incoming payment was created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>completed</strong></td>
 <td valign="top"><a href="#boolean">Boolean</a>!</td>
-<td></td>
+<td>
+
+Describes whether the incoming payment has completed receiving funds.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>incomingAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a></td>
-<td></td>
+<td>
+
+The maximum amount that should be paid into the payment pointer under this incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receivedAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
-<td></td>
+<td>
+
+The total amount that has been paid into the payment pointer under this incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>expiresAt</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Date-time of expiry. After this time, the incoming payment will accept further payments made to it.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>description</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Human readable description of the incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>externalRef</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>createdAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of creation
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>updatedAt</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Date-time of last update
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2097,7 +2425,11 @@ Paginating backwards: The last **n** elements from the page.
 <tr>
 <td colspan="2" valign="top"><strong>count</strong></td>
 <td valign="top"><a href="#int">Int</a></td>
-<td></td>
+<td>
+
+Number of events triggered
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2240,12 +2572,20 @@ The id of the transfer.
 <tr>
 <td colspan="2" valign="top"><strong>assetCode</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>assetScale</strong></td>
 <td valign="top"><a href="#uint8">UInt8</a>!</td>
-<td></td>
+<td>
+
+Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2264,12 +2604,20 @@ The id of the transfer.
 <tr>
 <td colspan="2" valign="top"><strong>code</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>scale</strong></td>
 <td valign="top"><a href="#uint8">UInt8</a>!</td>
-<td></td>
+<td>
+
+Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2288,17 +2636,29 @@ The id of the transfer.
 <tr>
 <td colspan="2" valign="top"><strong>code</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>scale</strong></td>
 <td valign="top"><a href="#uint8">UInt8</a>!</td>
-<td></td>
+<td>
+
+Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>withdrawalThreshold</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
-<td></td>
+<td>
+
+Minimum amount of liquidity that can be withdrawn from the asset
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2358,27 +2718,47 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer under which the incoming payment will be created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>expiresAt</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Expiration date-time
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>description</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Human readable description of the incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>incomingAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
-<td></td>
+<td>
+
+Maximum amount to be received
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>externalRef</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2397,22 +2777,38 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer under which the outgoing payment will be created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>quoteId</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Id of the corresponding quote for that outgoing payment
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>description</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Human readable description of the outgoing payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>externalRef</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2431,17 +2827,29 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>assetId</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Asset of the payment pointer
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>url</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Payment Pointer URL
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>publicName</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Public name associated with the payment pointer
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2465,7 +2873,11 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>jwk</strong></td>
 <td valign="top"><a href="#jwkinput">JwkInput</a>!</td>
-<td></td>
+<td>
+
+Public key
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2516,27 +2928,47 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>maxPacketAmount</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
-<td></td>
+<td>
+
+Maximum packet amount that the peer accepts
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>http</strong></td>
 <td valign="top"><a href="#httpinput">HttpInput</a>!</td>
-<td></td>
+<td>
+
+Peering connection details
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>assetId</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Asset id of peering relationship
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>staticIlpAddress</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Peer's ILP address
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>name</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Peer's internal name
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2596,22 +3028,38 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerId</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Id of the payment pointer under which the quote will be created
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>sendAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
-<td></td>
+<td>
+
+Amount to send (fixed send)
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receiveAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
-<td></td>
+<td>
+
+Amount to receive (fixed receive)
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>receiver</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Payment pointer URL of the receiver
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2630,27 +3078,47 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>paymentPointerUrl</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Receiving payment pointer URL
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>expiresAt</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Expiration date-time
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>description</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Human readable description of the incoming payment.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>incomingAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
-<td></td>
+<td>
+
+Maximum amount to be received
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>externalRef</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2669,7 +3137,11 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>authTokens</strong></td>
 <td valign="top">[<a href="#string">String</a>!]!</td>
-<td></td>
+<td>
+
+Array of auth tokens accepted by this Rafiki instance
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2688,12 +3160,20 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>incoming</strong></td>
 <td valign="top"><a href="#httpincominginput">HttpIncomingInput</a></td>
-<td></td>
+<td>
+
+Incoming connection details
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>outgoing</strong></td>
 <td valign="top"><a href="#httpoutgoinginput">HttpOutgoingInput</a>!</td>
-<td></td>
+<td>
+
+Outgoing connection details
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2712,12 +3192,20 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>authToken</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Auth token to present at the peering Rafiki instance
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>endpoint</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Peer's connection endpoint
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2736,27 +3224,47 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>kid</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Key id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>x</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Base64 url-encoded public key.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>alg</strong></td>
 <td valign="top"><a href="#alg">Alg</a>!</td>
-<td></td>
+<td>
+
+Cryptographic algorithm family used with the key. The only allowed value is `EdDSA`.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>kty</strong></td>
 <td valign="top"><a href="#kty">Kty</a>!</td>
-<td></td>
+<td>
+
+Key type. The only allowed value is `OKP`.
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>crv</strong></td>
 <td valign="top"><a href="#crv">Crv</a>!</td>
-<td></td>
+<td>
+
+Curve that the key pair is derived from. The only allowed value is `Ed25519`.
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2775,12 +3283,20 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Asset id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>withdrawalThreshold</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
-<td></td>
+<td>
+
+New minimum amount of liquidity that can be withdrawn from the asset
+
+</td>
 </tr>
 </tbody>
 </table>
@@ -2799,27 +3315,47 @@ The id of the withdrawal.
 <tr>
 <td colspan="2" valign="top"><strong>id</strong></td>
 <td valign="top"><a href="#string">String</a>!</td>
-<td></td>
+<td>
+
+Peer id
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>maxPacketAmount</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
-<td></td>
+<td>
+
+New maximum packet amount that the peer accepts
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>http</strong></td>
 <td valign="top"><a href="#httpinput">HttpInput</a></td>
-<td></td>
+<td>
+
+New peering connection details
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>staticIlpAddress</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Peer's new ILP address
+
+</td>
 </tr>
 <tr>
 <td colspan="2" valign="top"><strong>name</strong></td>
 <td valign="top"><a href="#string">String</a></td>
-<td></td>
+<td>
+
+Peer's new public name
+
+</td>
 </tr>
 </tbody>
 </table>
