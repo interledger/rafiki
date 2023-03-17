@@ -79,20 +79,20 @@ In order to create the client, three properties need to be provided: `keyId`, th
 
 As mentioned previously, Open Payments APIs can facilitate a payment between two parties.
 
-For example, say Alice wants to purchase a $50 product from a merchant called Shoe Shop on the Amazon Marketplace. If both parties have Open Payments enabled wallets, where Alice's payment pointer is `https://cloud-nine-wallet/alice`, and Shoe Shop's is `https://happy-life-bank/shoe-shop`, requests during checkout from Amazon's backend would look like this using the client:
+For example, say Alice wants to purchase a $50 product from a merchant called Shoe Shop on the Online Marketplace. If both parties have Open Payments enabled wallets, where Alice's payment pointer is `https://cloud-nine-wallet/alice`, and Shoe Shop's is `https://happy-life-bank/shoe-shop`, requests during checkout from Online Marketplace's backend would look like this using the client:
 
 1. Create an Open Payments client
 
-In this case, since Amazon Marketplace wants to make requests that require authorization, it will need to create an `AuthenticatedClient`:
+In this case, since Online Marketplace wants to make requests that require authorization, it will need to create an `AuthenticatedClient`:
 
 ```ts
 import { createAuthenticatedClient } from '@interledger/open-payments'
 
 const client = await createAuthenticatedClient({
-  paymentPointerUrl: 'https://amazon.com/usa',
+  paymentPointerUrl: 'https://online-marketplace.com/usa',
   keyId: KEY_ID,
   privateKey: PRIVATE_KEY
-  // The public JWK with this key (and keyId) would be available at https://amazon.com/usa/jwks.json
+  // The public JWK with this key (and keyId) would be available at https://online-marketplace.com/usa/jwks.json
 })
 ```
 
@@ -112,7 +112,7 @@ const customerPaymentPointer = await client.paymentPointer.get({
 
 3. Create `IncomingPayment`
 
-Amazon's backend gets a grant to create an `IncomingPayment` on the merchant's wallet:
+Online Marketplace's backend gets a grant to create an `IncomingPayment` on the merchant's wallet:
 
 ```ts
 const incomingPaymentGrant = await client.grant.request(
@@ -182,11 +182,11 @@ const quote = await client.quote.create(
 
 5. Create `OutgoingPayment` grant & start interaction flow:
 
-The final step for Amazon's backend system will be to create an `OutgoingPayment` on Alice's wallet. Before this, however, Amazon will need to create an outgoing payment grant, which typically requires some sort of interaction with Alice. Amazon will need to facilitate this interaction with Alice (e.g. redirect her to a webpage with a dialog) to get her consent for creating an `OutgoingPayment` on her account. The detailed sequence for how this is achieved can be found [here](../../docs/grant-interaction.md).
+The final step for Online Marketplace's backend system will be to create an `OutgoingPayment` on Alice's wallet. Before this, however, Online Marketplace will need to create an outgoing payment grant, which typically requires some sort of interaction with Alice. Online Marketplace will need to facilitate this interaction with Alice (e.g. redirect her to a webpage with a dialog) to get her consent for creating an `OutgoingPayment` on her account. The detailed sequence for how this is achieved can be found [here](../../docs/grant-interaction.md).
 
 6. Create `OutgoingPayment`:
 
-Once the grant interaction flow has finished, and Alice has consented to the payment, Amazon can create the `OutgoingPayment` on her account:
+Once the grant interaction flow has finished, and Alice has consented to the payment, Online Marketplace can create the `OutgoingPayment` on her account:
 
 ```ts
 const outgoingPayment = await client.outgoingPayment.create(
@@ -198,4 +198,4 @@ const outgoingPayment = await client.outgoingPayment.create(
 )
 ```
 
-At this point, the Amazon can show to Alice that the payment to Shoe Shop has been completed.
+At this point, the Online Marketplace can show to Alice that the payment to Shoe Shop has been completed.
