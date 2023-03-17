@@ -68,7 +68,7 @@ In order to create the client, three properties need to be provided: `keyId`, th
 | Variable            | Description                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `paymentPointerUrl` | The valid payment pointer with which the client making requests will identify itself. A JSON Web Key Set document that includes the public key that the client instance will use to protect requests MUST be available at the `{paymentPointerUrl}/jwks.json` url. This will be used as the `client` field during [Grant Creation](https://docs.openpayments.guide/reference/post-request). |
-| `privateKey`        | The private EdDSA-Ed25519 key bound to the payment pointer, and used to sign the authenticated requests with. As mentioned above, a public JWK document signed with this key MUST be available at the `{paymentPointerUrl}/jwks.json` url.                                                                                                                                              |
+| `privateKey`        | The private EdDSA-Ed25519 key bound to the payment pointer, and used to sign the authenticated requests with. As mentioned above, a public JWK document signed with this key MUST be available at the `{paymentPointerUrl}/jwks.json` url.                                                                                                                                                  |
 | `keyId`             | The key identifier of the given private key and the corresponding public JWK document.                                                                                                                                                                                                                                                                                                      |
 
 > **Note**
@@ -156,7 +156,7 @@ Then, it'll get a grant to create a `Quote` on Alice's payment pointer, which wi
 
 ```ts
 const quoteGrant = await client.grant.request(
-  { url: alicePaymentPointer.authServer },
+  { url: customerPaymentPointer.authServer },
   {
     access_token: {
       access: [
@@ -191,7 +191,7 @@ Once the grant interaction flow has finished, and Alice has consented to the pay
 ```ts
 const outgoingPayment = await client.outgoingPayment.create(
   {
-    paymentPointer: alicePaymentPointer.id,
+    paymentPointer: customerPaymentPointer.id,
     accessToken: outgoingPaymentGrant.access_token.value
   },
   { quoteId: quote.id, description: 'Your purchase at Shoe Shop' }
