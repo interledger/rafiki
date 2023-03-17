@@ -1,6 +1,6 @@
 {
   "name": "token-introspection",
-  "private":"true",
+  "private": "true",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
