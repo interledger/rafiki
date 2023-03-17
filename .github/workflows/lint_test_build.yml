@@ -101,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter open-payments build
+      # - run: pnpm --filter open-payments build
       - run: pnpm --filter open-payments test
       - name: AsyncAPI extension
         run: |
