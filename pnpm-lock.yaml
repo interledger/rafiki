@@ -118,7 +118,7 @@ importers:
       pg: ^8.10.0
       pino: ^8.11.0
       pino-pretty: ^10.0.0
-      testcontainers: ^9.1.3
+      testcontainers: ^9.2.1
       token-introspection: workspace:*
       typescript: ^4.9.5
       uuid: ^9.0.0
@@ -148,7 +148,7 @@ importers:
       pg: 8.10.0
       pino: 8.11.0
       pino-pretty: 10.0.0
-      testcontainers: 9.1.3
+      testcontainers: 9.2.1
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
@@ -237,7 +237,7 @@ importers:
       raw-body: ^2.5.2
       react: ~18.2.0
       rosie: ^2.1.0
-      testcontainers: ^9.1.3
+      testcontainers: ^9.2.1
       tigerbeetle-node: ^0.12.18
       tmp: ^0.2.1
       token-introspection: workspace:*
@@ -313,7 +313,7 @@ importers:
       openapi-types: 12.1.0
       react: 18.2.0
       rosie: 2.1.0
-      testcontainers: 9.1.3
+      testcontainers: 9.2.1
       tmp: 0.2.1
       ts-node: 10.9.1_bdgp3l2zgaopogaavxusmetvge
       typescript: 4.9.5
@@ -4129,10 +4129,10 @@ packages:
       '@types/estree': 1.0.0
     dev: true
 
-  /@types/archiver/5.3.1:
-    resolution: {integrity: sha512-wKYZaSXaDvTZuInAWjCeGG7BEAgTWG2zZW0/f7IYFcoHB2X2d9lkVFnrOlXl3W6NrvO6Ml3FLLu8Uksyymcpnw==}
+  /@types/archiver/5.3.2:
+    resolution: {integrity: sha512-IctHreBuWE5dvBDz/0WeKtyVKVRs4h75IblxOACL92wU66v+HGAfEYAOyXkOFphvRJMhuXdI9huDXpX0FC6lCw==}
     dependencies:
-      '@types/glob': 7.2.0
+      '@types/readdir-glob': 1.1.0
 
   /@types/aria-query/4.2.2:
     resolution: {integrity: sha512-HnYpAE1Y6kRyKM/XkEuiRQhTHvkzMBurTHnpFLYLBGPIylZNPs9jJcuOOYWxPLJCSEtmZT0Y8rHDokKN7rRTig==}
@@ -4226,8 +4226,8 @@ packages:
       '@types/node': 18.11.18
       '@types/ssh2': 1.11.5
 
-  /@types/dockerode/3.3.14:
-    resolution: {integrity: sha512-PUTwtySPzCbjZ/uqRMBWKHtLGqBAlhnLitzHuom19NEX0KBYsQXqbVlig+zbUgYQU1paDeQURXj7QNglh1RI6A==}
+  /@types/dockerode/3.3.15:
+    resolution: {integrity: sha512-az35KbxZZUCRgCoXqJUEvEbsOL3L7UbItuHSYoZ0uo/MWuNc03y7XMBVSCLLvxpxWK8X8pM5PoM0F/5TFHDF0g==}
     dependencies:
       '@types/docker-modem': 3.0.2
       '@types/node': 18.11.18
@@ -4268,6 +4268,7 @@ packages:
     dependencies:
       '@types/minimatch': 3.0.5
       '@types/node': 18.11.18
+    dev: true
 
   /@types/graceful-fs/4.1.6:
     resolution: {integrity: sha512-Sig0SNORX9fdW+bQuTEovKj3uHcUL6LQKbCrrqb1X7J6/ReAbhCXRAhc+SMejhLELFj2QcyuxmUooZ4bt5ReSw==}
@@ -4453,6 +4454,7 @@ packages:
 
   /@types/minimatch/3.0.5:
     resolution: {integrity: sha512-Klz949h02Gz2uZCMGwDUSDS1YBlTdDDgbWHi+81l29tQALUtvz4rAYi5uoVhE5Lagoq6DeqAUlbrHvW/mXDgdQ==}
+    dev: true
 
   /@types/minimist/1.2.2:
     resolution: {integrity: sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==}
@@ -4520,6 +4522,11 @@ packages:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
       csstype: 3.1.0
+
+  /@types/readdir-glob/1.1.0:
+    resolution: {integrity: sha512-taqbpEGEu0Vx6+9PQ4XtqAUAMRyLCE7H6p4Pkp+R/90y/phddtCwb7XRLa8MYf1OxmiL2ZqXwZF1gOT7LyGGCg==}
+    dependencies:
+      '@types/node': 18.11.18
 
   /@types/request/2.48.8:
     resolution: {integrity: sha512-whjk1EDJPcAR2kYHRbFl/lKeeKYTi05A15K9bnLInCVroNDCtXce57xKdI0/rQaA3K+6q0eFyUBPmqfSndUZdQ==}
@@ -6411,8 +6418,8 @@ packages:
     transitivePeerDependencies:
       - supports-color
 
-  /dockerode/3.3.4:
-    resolution: {integrity: sha512-3EUwuXnCU+RUlQEheDjmBE0B7q66PV9Rw5NiH1sXwINq0M9c5ERP9fxgkw36ZHOtzf4AGEEYySnkx/sACC9EgQ==}
+  /dockerode/3.3.5:
+    resolution: {integrity: sha512-/0YNa3ZDNeLr/tSckmD69+Gq+qVNhvKfAHNeZJBnp7EOP6RGKV8ORrJHkUn20So5wU+xxT7+1n5u8PjHbfjbSA==}
     engines: {node: '>= 8.0'}
     dependencies:
       '@balena/dockerignore': 1.0.2
@@ -12580,19 +12587,19 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers/9.1.3:
-    resolution: {integrity: sha512-Kw7GZC8nD84Uuq2oxa2Ln9F5vIALWIZoQHywOGuiiVthSHzOVl4CtebO25whMf3CrVICwy8CBUimvSdVgU9N7g==}
+  /testcontainers/9.2.1:
+    resolution: {integrity: sha512-emmYuKE9ooswnPBVCItdk4tRpZGwIfAatZuhGJ8c2HFaNhVsuPfepoDeYuuoselfxdKCYM0RfqMxfkbt7shB0Q==}
     engines: {node: '>= 10.16'}
     dependencies:
       '@balena/dockerignore': 1.0.2
-      '@types/archiver': 5.3.1
-      '@types/dockerode': 3.3.14
+      '@types/archiver': 5.3.2
+      '@types/dockerode': 3.3.15
       archiver: 5.3.1
       async-lock: 1.4.0
       byline: 5.0.0
       debug: 4.3.4
       docker-compose: 0.23.19
-      dockerode: 3.3.4
+      dockerode: 3.3.5
       get-port: 5.1.1
       node-fetch: 2.6.9
       properties-reader: 2.2.0
