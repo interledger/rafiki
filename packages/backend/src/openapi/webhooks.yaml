@@ -243,4 +243,3 @@ components:
                 received:
                   type: string
                   format: uint64
-
