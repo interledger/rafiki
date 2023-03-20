@@ -104,7 +104,7 @@ importers:
       http-signature-utils: workspace:../http-signature-utils
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
-      knex: ^2.4
+      knex: ^2.4.2
       koa: ^2.14.1
       koa-bodyparser: ^4.4.0
       koa-session: ^6.4.0
@@ -136,12 +136,12 @@ importers:
       graphql: 16.6.0
       http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      knex: 2.4.1_pg@8.10.0
+      knex: 2.4.2_pg@8.10.0
       koa: 2.14.1
       koa-bodyparser: 4.4.0
       koa-session: 6.4.0
       node-mocks-http: 1.12.2
-      objection: 3.0.1_knex@2.4.1
+      objection: 3.0.1_knex@2.4.2
       objection-db-errors: 1.1.2_objection@3.0.1
       open-payments: link:../open-payments
       openapi: link:../openapi
@@ -219,7 +219,7 @@ importers:
       iso8601-duration: ^2.1.1
       jest-openapi: ^0.14.2
       json-canonicalize: ^1.0.4
-      knex: ^2.4
+      knex: ^2.4.2
       koa: ^2.14.1
       koa-bodyparser: ^4.4.0
       luxon: ^3.3.0
@@ -273,11 +273,11 @@ importers:
       ioredis: 5.3.1
       iso8601-duration: 2.1.1
       json-canonicalize: 1.0.4
-      knex: 2.4.1_pg@8.10.0
+      knex: 2.4.2_pg@8.10.0
       koa: 2.14.1
       koa-bodyparser: 4.4.0
       luxon: 3.3.0
-      objection: 3.0.1_knex@2.4.1
+      objection: 3.0.1_knex@2.4.2
       objection-db-errors: 1.1.2_objection@3.0.1
       oer-utils: 5.1.3-alpha.2
       open-payments: link:../open-payments
@@ -9337,8 +9337,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  /knex/2.4.1_pg@8.10.0:
-    resolution: {integrity: sha512-5wylehvnTOE8EdypPFakccA1zgo6Lp+TNultncvBUCUD0PasY+PLVa9qPrTFCioxPSPVha1u9ye2niAVVbLM0Q==}
+  /knex/2.4.2_pg@8.10.0:
+    resolution: {integrity: sha512-tMI1M7a+xwHhPxjbl/H9K1kHX+VncEYcvCx5K00M16bWvpYPKAZd6QrCu68PtHAdIZNQPWZn0GVhqVBEthGWCg==}
     engines: {node: '>=12'}
     hasBin: true
     peerDependencies:
@@ -10592,10 +10592,10 @@ packages:
       objection: '>= 0.9.1'
     dependencies:
       db-errors: 0.2.3
-      objection: 3.0.1_knex@2.4.1
+      objection: 3.0.1_knex@2.4.2
     dev: false
 
-  /objection/3.0.1_knex@2.4.1:
+  /objection/3.0.1_knex@2.4.2:
     resolution: {integrity: sha512-rqNnyQE+C55UHjdpTOJEKQHJGZ/BGtBBtgxdUpKG4DQXRUmqxfmgS/MhPWxB9Pw0mLSVLEltr6soD4c0Sddy0Q==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -10603,7 +10603,7 @@ packages:
     dependencies:
       ajv: 8.12.0
       db-errors: 0.2.3
-      knex: 2.4.1_pg@8.10.0
+      knex: 2.4.2_pg@8.10.0
     dev: false
 
   /oer-utils/5.1.2:
