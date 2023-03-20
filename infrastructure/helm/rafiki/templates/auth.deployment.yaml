@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rafiki.fullname" . }}-auth
+  labels:
+{{ include "rafiki.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.auth.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: {{ .Values.auth.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.auth.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rafiki.name" . }}-auth
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rafiki.name" . }}-auth
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.auth.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{ if .Values.auth.serviceAccount.create }}
+      serviceAccountName: {{ template "auth.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.auth.podSecurityContext | nindent 8 }}
+    {{ end }}
+      volumes:
+    {{ if .Values.auth.serviceAccount.create }}
+        - name: {{ include "rafiki.fullname" . }}-auth-sa-key
+          secret:
+            secretName: {{ include "rafiki.fullname" . }}-auth-sa-key
+    {{ end }}
+      containers:
+        - name: {{ .Chart.Name }}-auth
+          securityContext:
+            {{- toYaml .Values.auth.securityContext | nindent 12 }}
+          image: {{ include "auth.image" . }}
+          imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
+          args: ["app"]
+          envFrom:
+          - configMapRef:
+              name: {{ include "auth.name" . }}
+          env:
+          - name: AUTH_DATABASE_URL
+            value: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
+          ports:
+            - name: http
+              containerPort: {{ .Values.auth.port }}
+              protocol: TCP
+           #livenessProbe:
+           #  failureThreshold: 15
+           #  initialDelaySeconds: 30
+           #  periodSeconds: 10
+           #  timeoutSeconds: 10
+           #  httpGet:
+           #    path: /healthz
+           #    port: admin
+           #readinessProbe:
+           #  failureThreshold: 3
+           #  initialDelaySeconds: 5
+           #  periodSeconds: 5
+           #  timeoutSeconds: 5
+           #  httpGet:
+           #    path: /healthz
+           #    port: http
+          resources:
+            {{- toYaml .Values.auth.resources | nindent 12 }}

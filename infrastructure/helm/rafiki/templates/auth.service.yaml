@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "auth.name" . }}
+  labels:
+    app: {{ include "rafiki.name" . }}
+    chart: {{ include "rafiki.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.auth.port }}
+      targetPort: {{ .Values.auth.port }}
+      protocol: TCP
+      name: http
+  selector:
+    app: {{ include "auth.name" . }}
+    release: {{ .Release.Name }}

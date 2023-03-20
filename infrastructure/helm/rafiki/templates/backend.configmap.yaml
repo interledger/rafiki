@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "backend.name" . }}
+  labels:
+{{ include "rafiki.labels" . | indent 4 }}
+data: 
+  NODE_ENV: development
+  LOG_LEVEL: debug
+  ADMIN_PORT: "{{ .Values.backend.adminPort }}"
+  OPEN_PAYMENTS_PORT: "{{ .Values.backend.openPaymentsPort }}"
+  USE_TIGERBEETLE: false 
+  TIGERBEETLE_CLUSTER_ID: none
+  TIGERBEETLE_REPLICA_ADDRESSES: none
+  NONCE_REDIS_KEY: test
+  STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+  ADMIN_KEY: admin

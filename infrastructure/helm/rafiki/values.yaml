@@ -1,0 +1,70 @@
+postgresql:
+  auth:
+    postgresPassword: 'overridethisvalue'
+  replication:
+    enabled: false
+  metrics:
+    enabled: false
+  primary:
+    persistence:
+      enabled: true
+
+redis:
+  auth:
+    enabled: true
+    password: 'overridethisvalue'
+
+backend:
+  openPaymentsPort: 80
+  adminPort: 3001
+  image:
+    repository: ghcr.io/interledger/rafiki-backend
+    tag: 'latest'
+    digest: ''
+    pullPolicy: IfNotPresent
+  rollingUpdate:
+    maxSurge: 100%
+    maxUnavailable: 50%
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ''
+  podSecurityContext:
+    {}
+    # fsGroup: 2000
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 450m
+    requests:
+      memory: 800Mi
+      cpu: 300m
+
+auth:
+  port: 3006
+  image:
+    repository: ghcr.io/interledger/rafiki-auth
+    tag: 'latest'
+    digest: ''
+    pullPolicy: IfNotPresent
+  rollingUpdate:
+    maxSurge: 100%
+    maxUnavailable: 50%
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ''
+  podSecurityContext:
+    {}
+    # fsGroup: 2000
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 450m
+    requests:
+      memory: 800Mi
+      cpu: 300m

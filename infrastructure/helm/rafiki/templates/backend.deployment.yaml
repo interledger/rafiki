@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rafiki.fullname" . }}-backend
+  labels:
+{{ include "rafiki.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: {{ .Values.auth.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.auth.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rafiki.name" . }}-backend
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rafiki.name" . }}-backend
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.backend.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{ if .Values.backend.serviceAccount.create }}
+      serviceAccountName: {{ template "backend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.backend.podSecurityContext | nindent 8 }}
+    {{ end }}
+      volumes:
+    {{ if .Values.backend.serviceAccount.create }}
+        - name: {{ include "rafiki.fullname" . }}-backend-sa-key
+          secret:
+            secretName: {{ include "rafiki.fullname" . }}-backend-sa-key
+    {{ end }}
+      containers:
+        - name: {{ .Chart.Name }}-backend
+          securityContext:
+            {{- toYaml .Values.backend.securityContext | nindent 12 }}
+          image: {{ include "backend.image" . }}
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          args: ["app"]
+          envFrom:
+          - configMapRef:
+              name: {{ include "rafiki.fullname" . }}-backend
+          env:
+          - name: ILP_ADDRESS
+            value: test.cloud-nine-wallet
+          - name: PUBLIC_HOST
+            value: http://cloud-nine-wallet-backend
+          - name: OPEN_PAYMENTS_URL
+            value: http://cloud-nine-wallet-backend
+          - name: WEBHOOK_URL
+            value: http://cloud-nine-wallet/webhooks
+          - name: PRICES_URL
+            value: http://cloud-nine-wallet/prices
+          - name: REDIS_URL
+            value: redis://redis:6379/0
+          - name: QUOTE_URL
+            value: http://cloud-nine-wallet/quotes
+          - name: PAYMENT_POINTER_URL
+            value: https://cloud-nine-wallet-backend/.well-known/pay
+          - name: DATABASE_URL
+            value: postgresql://cloud_nine_wallet_backend:cloud_nine_wallet_backend@database/cloud_nine_wallet_backend
+          - name: AUTH_SERVER_GRANT_URL
+            value: http://cloud-nine-wallet-auth:3006
+          - name: AUTH_SERVER_INTROSPECTION_URL
+            value: http://cloud-nine-wallet-auth:3006/introspect
+          ports:
+            - name: open-payments
+              containerPort: {{ .Values.backend.openPaymentsPort }}
+              protocol: TCP
+            - name: admin
+              containerPort: {{ .Values.backend.adminPort }}
+              protocol: TCP
+           #livenessProbe:
+           #  failureThreshold: 15
+           #  initialDelaySeconds: 30
+           #  periodSeconds: 10
+           #  timeoutSeconds: 10
+           #  httpGet:
+           #    path: /healthz
+           #    port: admin
+           #readinessProbe:
+           #  failureThreshold: 3
+           #  initialDelaySeconds: 5
+           #  periodSeconds: 5
+           #  timeoutSeconds: 5
+           #  httpGet:
+           #    path: /healthz
+           #    port: http
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
