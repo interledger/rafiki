@@ -79,8 +79,6 @@ components:
       required:
         - id
         - type
-        - attempts
-        - processAt
         - data
       properties:
         id:
@@ -91,11 +89,6 @@ components:
           enum:
             - incoming_payment.completed
             - incoming_payment.expired
-        attempts:
-          type: integer
-        processAt:
-          type: string
-          format: date-time
         data:
           type: object
           required:
@@ -132,16 +125,10 @@ components:
             expiresAt:
               type: string
               format: date-time
-        statusCode:
-          type: integer
-        withdrawal:
-          $ref: '#/components/schemas/withdrawal'
     outgoingPaymentEvent:
       required:
         - id
         - type
-        - attempts
-        - processAt
         - data
       properties:
         id:
@@ -153,11 +140,6 @@ components:
             - outgoing_payment.created
             - outgoing_payment.completed
             - outgoing_payment.failed
-        attempts:
-          type: integer
-        processAt:
-          type: string
-          format: date-time
         data:
           type: object
           required:
@@ -212,16 +194,25 @@ components:
             peerId:
               type: string
               format: uuid
-        statusCode:
-          type: integer
         withdrawal:
-          $ref: '#/components/schemas/withdrawal'
+          type: object
+          required:
+            - accountId: string
+            - assetId: string
+            - amount: bigint
+          properties:
+            accountId:
+              type: string
+              format: uuid
+            assetId:
+              type: string
+              format: uuid
+            amount:
+              type: integer
     webMonetizationEvent:
       required:
         - id
         - type
-        - attempts
-        - processAt
         - data
       properties:
         id:
@@ -231,11 +222,6 @@ components:
           type: string
           enum:
             - payment_pointer.web_monetization
-        attempts:
-          type: integer
-        processAt:
-          type: string
-          format: date-time
         data:
           type: object
           required:
@@ -257,22 +243,4 @@ components:
                 received:
                   type: string
                   format: uint64
-        statusCode:
-          type: integer
-        withdrawal:
-          $ref: '#/components/schemas/withdrawal'
-    withdrawal:
-      type: object
-      required:
-        - accountId: string
-        - assetId: string
-        - amount: bigint
-      properties:
-        accountId:
-          type: string
-          format: uuid
-        assetId:
-          type: string
-          format: uuid
-        amount:
-          type: integer
+
