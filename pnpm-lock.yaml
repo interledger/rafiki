@@ -118,7 +118,7 @@ importers:
       pg: ^8.10.0
       pino: ^8.11.0
       pino-pretty: ^10.0.0
-      testcontainers: ^9.2.1
+      testcontainers: ^9.3.0
       token-introspection: workspace:*
       typescript: ^4.9.5
       uuid: ^9.0.0
@@ -148,7 +148,7 @@ importers:
       pg: 8.10.0
       pino: 8.11.0
       pino-pretty: 10.0.0
-      testcontainers: 9.2.1
+      testcontainers: 9.3.0
       token-introspection: link:../token-introspection
       uuid: 9.0.0
     devDependencies:
@@ -237,7 +237,7 @@ importers:
       raw-body: ^2.5.2
       react: ~18.2.0
       rosie: ^2.1.0
-      testcontainers: ^9.2.1
+      testcontainers: ^9.3.0
       tigerbeetle-node: ^0.12.18
       tmp: ^0.2.1
       token-introspection: workspace:*
@@ -313,7 +313,7 @@ importers:
       openapi-types: 12.1.0
       react: 18.2.0
       rosie: 2.1.0
-      testcontainers: 9.2.1
+      testcontainers: 9.3.0
       tmp: 0.2.1
       ts-node: 10.9.1_bdgp3l2zgaopogaavxusmetvge
       typescript: 4.9.5
@@ -12587,8 +12587,8 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers/9.2.1:
-    resolution: {integrity: sha512-emmYuKE9ooswnPBVCItdk4tRpZGwIfAatZuhGJ8c2HFaNhVsuPfepoDeYuuoselfxdKCYM0RfqMxfkbt7shB0Q==}
+  /testcontainers/9.3.0:
+    resolution: {integrity: sha512-KSnLqCfbY3FuCqOAvoJhMMbov2tdnavkahTiOTrXK+jcNiIts5ad7Hcd9LN80GWFLzJ//T6S17GpWxBJKXCj0g==}
     engines: {node: '>= 10.16'}
     dependencies:
       '@balena/dockerignore': 1.0.2
