@@ -194,21 +194,6 @@ components:
             peerId:
               type: string
               format: uuid
-        withdrawal:
-          type: object
-          required:
-            - accountId: string
-            - assetId: string
-            - amount: bigint
-          properties:
-            accountId:
-              type: string
-              format: uuid
-            assetId:
-              type: string
-              format: uuid
-            amount:
-              type: integer
     webMonetizationEvent:
       required:
         - id
