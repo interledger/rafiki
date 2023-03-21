@@ -1,6 +1,6 @@
 # Local HTTP Signatures
 
-This is an app that generates HTTP digests and signatures for Postman, using the [http-signature-utils](../../../packages/http-signature-utils/) package.
+This is an app that generates HTTP digests and signatures for Postman, using the [http-signature-utils](https://github.com/interledger/open-payments/tree/main/packages/http-signature-utils) package.
 
 ## Local Development
 
