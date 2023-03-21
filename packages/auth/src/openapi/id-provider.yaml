@@ -115,7 +115,7 @@ paths:
                 type: object
                 properties:
                   access:
-                    $ref: ./schemas.yaml#/components/schemas/access
+                    $ref: ./auth-server.yaml#/components/schemas/access
         '401':
           description: Unauthorized
         '404':
