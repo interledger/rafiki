@@ -11,6 +11,7 @@
     "preinstall": "npx only-allow pnpm",
     "prepare": "husky install",
     "lint": "eslint --max-warnings=0 --fix .",
+    "fetch-schemas": "./scripts/fetch-schemas.sh",
     "format": "prettier --write . && pnpm lint",
     "format:docs": "prettier --write ./docs/**/*.md",
     "checks": "pnpm check:prettier && pnpm check:lint",
