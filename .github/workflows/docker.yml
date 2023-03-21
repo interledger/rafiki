@@ -13,12 +13,8 @@ jobs:
     strategy:
       matrix:
         package: [auth, backend]
-        platform: [linux/amd64, linux/arm64]
         push:
           - ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
-        exclude:
-          - platform: linux/arm64
-            push: false
     steps:
       - name: Docker meta
         id: meta
@@ -43,10 +39,10 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          push: ${{ matrix.push }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           file: packages/${{ matrix.package }}/Dockerfile
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
