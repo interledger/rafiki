@@ -1,6 +1,5 @@
 {
   "name": "backend",
-  "private": "true",
   "scripts": {
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "knex": "knex",
