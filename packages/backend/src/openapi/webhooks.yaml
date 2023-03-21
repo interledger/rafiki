@@ -153,6 +153,7 @@ components:
             - state
             - stateAttempts
             - balance
+            - receiver
           properties:
             id:
               type: string
@@ -167,6 +168,9 @@ components:
                 - SENDING
                 - FAILED
                 - COMPLETED
+            receiver: 
+              type: string
+              format: uri
             sendAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
             sentAmount:
