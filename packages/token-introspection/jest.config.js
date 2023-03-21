@@ -2,7 +2,7 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const baseConfig = require('../../jest.config.base.js')
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const packageName = 'token-introspection'
+const packageName = require('./package.json').name
 
 module.exports = {
   ...baseConfig,
