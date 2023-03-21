@@ -55,9 +55,9 @@ which is used to process [Open Payments](./glossary.md#open-payments) client key
 
 Additionally, the package includes an app that generates HTTP digests and signatures for the [Postman collection](https://www.postman.com/interledger/workspace/interledger/overview).
 
-### Mock Account Provider
+### Mock Account Servicing Entity
 
-The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an [Account Servicing Entity](./glossary.md#account-servicing-entity). It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
+The `mock-account-servicing-entity` package is a [remix](https://remix.run/) application to mimic an [Account Servicing Entity](./glossary.md#account-servicing-entity). It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
 
 ### Open Payments
 

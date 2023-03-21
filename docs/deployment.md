@@ -8,8 +8,8 @@ These packages include
 
 - `backend` (SPSP, Open Payments APIs, Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-provider` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
-- `http-signature-utils` (request signature generation for Postman)
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
+- `local-http-signatures` (request signature generation for Postman)
 
 These packages depend on the following databases
 
