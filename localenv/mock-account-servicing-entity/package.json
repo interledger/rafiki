@@ -1,5 +1,5 @@
 {
-  "name": "mock-account-provider",
+  "name": "mock-account-servicing-entity",
   "sideEffects": false,
   "scripts": {
     "build:deps": "pnpm --filter http-signature-utils build",
@@ -16,7 +16,7 @@
     "@types/uuid": "^9.0.0",
     "axios": "^1.3.4",
     "graphql": "^16.6.0",
-    "http-signature-utils": "workspace:../http-signature-utils",
+    "http-signature-utils": "workspace:../../packages/http-signature-utils",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.0",

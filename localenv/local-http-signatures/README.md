@@ -24,7 +24,7 @@ In order to build the docker container to run the signature app, run the followi
 
 ```shell
 # from the root
-docker build -f infrastructure/local/local-http-signatures/Dockerfile -t rafiki-signatures .
+docker build -f localenv/local-http-signatures/Dockerfile -t rafiki-signatures .
 ```
 
 The following environment variables can be set.

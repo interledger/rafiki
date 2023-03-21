@@ -30,4 +30,4 @@
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts
 
-'type: localenv': infrastructure/local/*
+'type: localenv': localenv/*

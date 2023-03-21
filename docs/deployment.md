@@ -17,7 +17,7 @@ These packages depend on the following databases
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../infrastructure/local/docker-compose.yml) and [peer2](../infrastructure/local/peer-docker-compose.yml))to start two Mock Account Providers with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/docker-compose.yml) and [peer2](../localenv/peer-docker-compose.yml))to start two Mock Account Providers with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 ### Running the local environment
 

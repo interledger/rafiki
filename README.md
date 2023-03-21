@@ -104,5 +104,5 @@ pnpm check:format
 pnpm check:lint
 ```
 
-The [infrastructure/local](infrastructure/local) directory contains resources for setting up Rafiki in
+The [localenv](localenv) directory contains resources for setting up Rafiki in
 common configurations.
