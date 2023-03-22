@@ -60,17 +60,17 @@ export function createAccountingService(
     logger: deps_.logger.child({ service: 'AccountingService' })
   }
   return {
-    // Model classes that have a corresponding Tigerbeetle liquidity
+    // Model classes that have a corresponding TigerBeetle liquidity
     // account SHOULD implement this LiquidityAccount interface and call
     // createLiquidityAccount for each model instance.
-    // The Tigerbeetle account id will be the model id.
+    // The TigerBeetle account id will be the model id.
     // Such models include:
     //   ../asset/model
     //   ../open_payments/payment_pointer/model
     //   ../open_payments/payment/incoming/model
     //   ../open_payments/payment/outgoing/model
     //   ../peer/model
-    // Asset settlement Tigerbeetle accounts are the only exception.
+    // Asset settlement TigerBeetle accounts are the only exception.
     // Their account id is the corresponding asset's ledger value.
     createLiquidityAccount: (options, accountType) =>
       createLiquidityAccount(deps, options, accountType),
@@ -111,7 +111,7 @@ export async function createLiquidityAccount(
       err instanceof TigerbeetleCreateAccountError &&
       areAllAccountExistsErrors([err.code])
     ) {
-      throw new AccountAlreadyExistsError(`Tigerbeetle error code: ${err.code}`)
+      throw new AccountAlreadyExistsError(`TigerBeetle error code: ${err.code}`)
     }
     throw err
   }
