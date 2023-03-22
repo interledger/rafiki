@@ -1,7 +1,7 @@
 self:
   graphqlUrl: http://happy-life-bank-backend:3001/graphql
   hostname: 'happy-life-bank-backend'
-  mapHostname: 'primary-map'
+  mapHostname: 'primary-mase'
   openPaymentPublishedPort: 4000
 asset:
   code: USD

@@ -1,7 +1,7 @@
 self:
   graphqlUrl: http://localhost:3001/graphql
   hostname: 'backend'
-  mapHostname: 'primary-map'
+  mapHostname: 'primary-mase'
 peers:
   - asset: USD
     scale: 2

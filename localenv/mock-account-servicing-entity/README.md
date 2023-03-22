@@ -55,7 +55,7 @@ rm -rf app
 cp -R ../my-old-remix-app/app app
 ```
 
-# Mock Account Provider
+# Mock Account Servicing Entity
 
 ## Seed file
 

@@ -17,7 +17,7 @@ These packages depend on the following databases
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/docker-compose.yml) and [peer2](../localenv/peer-docker-compose.yml))to start two Mock Account Providers with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/docker-compose.yml) and [peer2](../localenv/peer-docker-compose.yml))to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 ### Running the local environment
 
@@ -38,17 +38,17 @@ pnpm localenv:stop && pnpm localenv:dbvolumes:remove
 pnpm localenv:start
 ```
 
-### Exploring Accounts on Mock account provider
+### Exploring Accounts on Mock Account Servicing Entity
 
-Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Provider called Cloud Nine Wallet.
+Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
 
-![Mock Account Provider Accounts](./img/map-accounts.png)
+![Mock Account Servicing Entity Accounts](./img/map-accounts.png)
 
 The accounts of the second instance (Happy Life Bank) can be found on `localhost:3031`.
 
 When clicking on the Account Name, a list of Transactions appears.
 
-![Mock Account Provider Transactions](./img/map-transactions.png)
+![Mock Account Servicing Entity Transactions](./img/map-transactions.png)
 
 ### Admin APIs
 
