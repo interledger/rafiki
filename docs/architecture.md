@@ -12,7 +12,7 @@ These services rely on four databases:
 
 - A postgres database used by the `backend`
 - A separate postgres database used by `auth`.
-- [Tigerbeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
+- [TigerBeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
 - Redis used by `backend` as a cache to share STREAM connection details across processes.
 
 ## Backend
