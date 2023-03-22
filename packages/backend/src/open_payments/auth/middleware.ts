@@ -1,8 +1,12 @@
-import { getKeyId, RequestLike, validateSignature } from 'http-signature-utils'
+import {
+  getKeyId,
+  RequestLike,
+  validateSignature
+} from '@interledger/http-signature-utils'
 import Koa from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
-import { AccessAction, AccessType, JWKS } from 'open-payments'
+import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
 

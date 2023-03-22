@@ -3,10 +3,7 @@
 'pkg: backend': packages/backend/**/*
 'pkg: frontend': packages/frontend/**/*
 'pkg: auth': packages/auth/**/*
-'pkg: openapi': packages/openapi/**/*
 'pkg: mock-ase': localenv/mock-account-servicing-entity/**/*
-'pkg: open-payments': packages/open-payments/**/*
-'pkg: http-signature-utils': packages/http-signature-utils/**/*
 
 # Add 'type: documentation' label to any change to *.md files
 'type: ci':
@@ -23,9 +20,6 @@
   - packages/backend/src/**/*
   - packages/frontend/src/**/*
   - packages/auth/src/**/*
-  - packages/openapi/src/**/*
-  - packages/open-payments/src/**/*
-  - packages/http-signature-utils/src/**/*
 
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts

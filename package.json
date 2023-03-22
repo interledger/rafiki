@@ -37,7 +37,7 @@
     "docs": "graphql-markdown --update-file ./docs/admin-api.md --heading-level 2 ./packages/backend/src/graphql/schema.graphql"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.4.4",
+    "@commitlint/cli": "^17.5.0",
     "@commitlint/config-conventional": "^17.4.4",
     "@jest/types": "^29.5.0",
     "@swc/core": "1.3.39",

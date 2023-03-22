@@ -31,7 +31,7 @@ import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
 import { ClientService } from '../client/service'
 import { withConfigOverride } from '../tests/helpers'
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType } from '@interledger/open-payments'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',

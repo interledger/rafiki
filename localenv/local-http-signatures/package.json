@@ -6,12 +6,11 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build:deps": "pnpm --filter http-signature-utils build",
-    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json",
+    "build": "pnpm clean && tsc --build tsconfig.json",
     "clean": "rm -fr dist/"
   },
   "dependencies": {
-    "http-signature-utils": "workspace:../../packages/http-signature-utils",
+    "@interledger/http-signature-utils": "1.0.0",
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.4.0",
     "koa-json": "^2.0.2",

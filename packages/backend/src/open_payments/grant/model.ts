@@ -2,7 +2,7 @@ import { Model } from 'objection'
 
 import { AuthServer } from '../authServer/model'
 import { BaseModel } from '../../shared/baseModel'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessType, AccessAction } from '@interledger/open-payments'
 
 export class Grant extends BaseModel {
   public static get tableName(): string {

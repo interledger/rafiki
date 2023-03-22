@@ -1,6 +1,6 @@
 import assert from 'assert'
 import { gql } from '@apollo/client'
-import { generateJwk } from 'http-signature-utils'
+import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createTestApp, TestContainer } from '../../tests/app'

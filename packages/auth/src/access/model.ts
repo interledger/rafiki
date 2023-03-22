@@ -6,7 +6,7 @@ import {
   AccessType,
   AccessAction,
   AccessItem as OpenPaymentsAccessItem
-} from 'open-payments'
+} from '@interledger/open-payments'
 
 export class Access extends BaseModel {
   public static get tableName(): string {

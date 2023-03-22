@@ -3,7 +3,7 @@ import {
   introspectToken,
   validateTokenInfo
 } from './introspection'
-import { OpenAPI, HttpMethod, createOpenAPI } from 'openapi'
+import { OpenAPI, HttpMethod, createOpenAPI } from '@interledger/openapi'
 import {
   defaultAxiosInstance,
   mockOpenApiResponseValidators,

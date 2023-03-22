@@ -1,5 +1,5 @@
 import jestOpenAPI from 'jest-openapi'
-import { generateJwk } from 'http-signature-utils'
+import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { createContext } from '../../../tests/context'

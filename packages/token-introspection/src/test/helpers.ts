@@ -1,7 +1,7 @@
 import createLogger from 'pino'
 import { createAxiosInstance } from '../client'
 import { TokenInfo } from '../types'
-import { ResponseValidator } from 'openapi'
+import { ResponseValidator } from '@interledger/openapi'
 
 export const silentLogger = createLogger({
   level: 'silent'

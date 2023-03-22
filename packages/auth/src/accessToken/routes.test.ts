@@ -16,7 +16,7 @@ import { AccessToken } from './model'
 import { Access } from '../access/model'
 import { AccessTokenRoutes, IntrospectContext } from './routes'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessType, AccessAction } from '@interledger/open-payments'
 import { GrantService } from '../grant/service'
 import { AccessTokenService } from './service'
 

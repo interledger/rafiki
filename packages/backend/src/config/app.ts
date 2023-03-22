@@ -1,7 +1,7 @@
 import * as crypto from 'crypto'
 import * as fs from 'fs'
 import { ConnectionOptions } from 'tls'
-import { parseOrProvisionKey } from 'http-signature-utils'
+import { parseOrProvisionKey } from '@interledger/http-signature-utils'
 
 function envString(name: string, value: string): string {
   const envValue = process.env[name]

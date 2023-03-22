@@ -5,7 +5,7 @@ import {
   validateSignature,
   validateSignatureHeaders,
   RequestLike
-} from 'http-signature-utils'
+} from '@interledger/http-signature-utils'
 
 import { AppContext } from '../app'
 import { ContinueContext, CreateContext, DeleteContext } from '../grant/routes'
