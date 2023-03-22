@@ -125,6 +125,7 @@ components:
             expiresAt:
               type: string
               format: date-time
+      additionalProperties: false
     outgoingPaymentEvent:
       required:
         - id
@@ -198,6 +199,7 @@ components:
             peerId:
               type: string
               format: uuid
+      additionalProperties: false
     webMonetizationEvent:
       required:
         - id
@@ -232,3 +234,4 @@ components:
                 received:
                   type: string
                   format: uint64
+      additionalProperties: false
