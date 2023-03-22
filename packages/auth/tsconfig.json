@@ -9,8 +9,6 @@
     "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.test.ts"], 
-  "references": [
-    { "path": "../token-introspection" }
-  ]
+  "exclude": ["**/*.test.ts"],
+  "references": [{ "path": "../token-introspection" }]
 }
