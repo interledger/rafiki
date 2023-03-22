@@ -25,7 +25,7 @@ pnpm localenv:stop
 pnpm localenv:dbvolumes:remove
 ```
 
-If you want to use Postgres as the accounting database instead of Tigerbeetle, you can append `psql` to the `localenv:` commands:
+If you want to use Postgres as the accounting database instead of TigerBeetle, you can append `psql` to the `localenv:` commands:
 
 ```
 pnpm localenv:psql:start

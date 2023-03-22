@@ -41,7 +41,7 @@ The Simple Payments Setup Protocol is a basic protocol for exchanging payment in
 
 STREAM is a multiplexed Interledger Transport Protocol that provides for sending multiple “streams” of money and data between two parties using ILP. For more details, see the [STREAM specification](https://interledger.org/rfcs/0029-stream/).
 
-## Tigerbeetle
+## TigerBeetle
 
 TigerBeetle is a distributed financial accounting database designed for mission critical safety and performance. For more information, see the [official website](https://tigerbeetle.com/).
 
