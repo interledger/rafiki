@@ -21,11 +21,11 @@ services:
         set -e
         echo $$DATA_FILE_EXISTS
         if [ "$$DATA_FILE_EXISTS" != 0 ]; then 
-          /opt/beta-beetle/tigerbeetle format --cluster=0 --replica=0 $$DATA_FILE; 
+          ./tigerbeetle format --cluster=0 --replica=0 --replica-count=1 $$DATA_FILE; 
         fi
-        hostname -I
+        hostname -i
         ls /var/lib/tigerbeetle
-        /opt/beta-beetle/tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
+        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
 volumes:
   tigerbeetle-data:
 
