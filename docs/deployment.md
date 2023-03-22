@@ -13,7 +13,7 @@ These packages include
 
 These packages depend on the following databases
 
-- Tigerbeetle or Postgres (accounting)
+- TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
@@ -113,7 +113,7 @@ The production environment consists of
 
 and the databases
 
-- Tigerbeetle or Postgres (accounting)
+- TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
@@ -175,9 +175,9 @@ $ helm install ...
 | `SIGNATURE_VERSION`             | `1`                                                         | to generate quote signatures                                             |
 | `SLIPPAGE`                      | `0.01`                                                      | accepted quote fluctuation, default 1%                                   |
 | `STREAM_SECRET`                 | 32 random bytes                                             | seed secret to generate connection secrets                               |
-| `TIGERBEETLE_CLUSTER_ID`        | `0`                                                         | Tigerbeetle cluster id                                                   |
+| `TIGERBEETLE_CLUSTER_ID`        | `0`                                                         | TigerBeetle cluster id                                                   |
 | `TIGERBEETLE_REPLICA_ADDRESSES` | `3004`                                                      | comma separated IP addresses/ports                                       |
-| `USE_TIGERBEETLE`               | `false`                                                     | flag - use Tigerbeetle or Postgres for accounting                        |
+| `USE_TIGERBEETLE`               | `false`                                                     | flag - use TigerBeetle or Postgres for accounting                        |
 | `WEBHOOK_TIMEOUT`               | `2000`                                                      | milliseconds                                                             |
 | `WEBHOOK_URL`                   | `http://127.0.0.1:4001/webhook`                             | endpoint on the Account Servicing Entity that consumes webhook events    |
 | `WEBHOOK_WORKERS`               | `1`                                                         | number of workers processing webhook requests                            |

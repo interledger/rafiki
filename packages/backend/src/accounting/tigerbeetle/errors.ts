@@ -6,7 +6,7 @@ import { AccountId } from './utils'
 
 export class TigerbeetleCreateAccountError extends Error {
   constructor(public code: number) {
-    super(`Tigerbeetle error code: ${code}`)
+    super(`TigerBeetle error code: ${code}`)
     this.name = 'TigerbeetleCreateAccountError'
   }
 }

@@ -12,7 +12,7 @@ These services rely on four databases:
 
 - A postgres database used by the `backend`
 - A separate postgres database used by `auth`.
-- [Tigerbeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
+- [TigerBeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
 - Redis used by `backend` as a cache to share STREAM connection details across processes.
 
 ## Backend
@@ -21,7 +21,7 @@ The `backend` service has four responsibilities:
 
 - Expose REST [Open Payments API](https://docs.openpayments.guide/reference) endpoints for public clients to perform account management tasks.
 - Expose an internal GraphQL Admin API for service operators to manage accounts and application settings like peering relationships.
-- Expose an ILP connector to send and receive STREAM packets with peers.
+- Expose an [ILP connector](./connector.md) to send and receive STREAM packets with peers.
 - Business logic to manage accounts and track balances.
 
 The `backend`'s ILP functionality includes:
