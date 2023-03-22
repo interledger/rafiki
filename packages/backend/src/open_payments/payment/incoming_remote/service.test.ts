@@ -15,10 +15,10 @@ import {
   mockGrant,
   mockPaymentPointer,
   mockIncomingPaymentWithConnection
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
-import { AccessToken } from 'open-payments'
+import { AccessToken } from '@interledger/open-payments'
 import { Grant } from '../../grant/model'
 
 describe('Remote Incoming Payment Service', (): void => {

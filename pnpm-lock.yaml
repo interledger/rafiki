@@ -45,13 +45,13 @@ importers:
 
   infrastructure/local/local-http-signatures:
     specifiers:
+      '@interledger/http-signature-utils': 1.0.0
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa-json': ^2.0.20
       '@types/koa-logger': ^3.1.2
       '@types/koa-router': ^7.4.4
       '@types/node': ^18.7.12
-      http-signature-utils: workspace:../../../packages/http-signature-utils
       koa: ^2.14.1
       koa-bodyparser: ^4.4.0
       koa-json: ^2.0.2
@@ -59,7 +59,7 @@ importers:
       koa-router: ^12.0.0
       typescript: ^4.9.5
     dependencies:
-      http-signature-utils: link:../../../packages/http-signature-utils
+      '@interledger/http-signature-utils': 1.0.0
       koa: 2.14.1
       koa-bodyparser: 4.4.0
       koa-json: 2.0.2
@@ -88,6 +88,9 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.16
       '@graphql-tools/load': ^7.8.13
       '@graphql-tools/schema': ^9.0.17
+      '@interledger/http-signature-utils': 1.0.0
+      '@interledger/open-payments': 1.0.0
+      '@interledger/openapi': 1.0.0
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@types/jest': ^29.5.0
@@ -101,7 +104,6 @@ importers:
       axios: ^1.3.4
       cross-fetch: ^3.1.4
       graphql: ^16.6.0
-      http-signature-utils: workspace:../http-signature-utils
       httpbis-digest-headers: github:interledger/httpbis-digest-headers
       jest-openapi: ^0.14.2
       knex: ^2.4.2
@@ -112,14 +114,12 @@ importers:
       node-mocks-http: ^1.12.2
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
-      open-payments: workspace:*
-      openapi: workspace:../openapi
       openapi-types: ^12.1.0
       pg: ^8.10.0
       pino: ^8.11.0
       pino-pretty: ^10.0.0
       testcontainers: ^9.3.0
-      token-introspection: workspace:*
+      token-introspection: workspace:../token-introspection
       typescript: ^4.9.5
       uuid: ^9.0.0
     dependencies:
@@ -129,12 +129,14 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
+      '@interledger/http-signature-utils': 1.0.0
+      '@interledger/open-payments': 1.0.0
+      '@interledger/openapi': 1.0.0
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
       axios: 1.3.4
       graphql: 16.6.0
-      http-signature-utils: link:../http-signature-utils
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
       knex: 2.4.2_pg@8.10.0
       koa: 2.14.1
@@ -143,8 +145,6 @@ importers:
       node-mocks-http: 1.12.2
       objection: 3.0.1_knex@2.4.2
       objection-db-errors: 1.1.2_objection@3.0.1
-      open-payments: link:../open-payments
-      openapi: link:../openapi
       pg: 8.10.0
       pino: 8.11.0
       pino-pretty: 10.0.0
@@ -185,6 +185,9 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.16
       '@graphql-tools/load': ^7.8.13
       '@graphql-tools/schema': ^9.0.17
+      '@interledger/http-signature-utils': 1.0.0
+      '@interledger/open-payments': 1.0.0
+      '@interledger/openapi': 1.0.0
       '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': ^0.3.3-alpha.3
       '@koa/cors': ^4.0.0
@@ -210,7 +213,6 @@ importers:
       graphql: ^16.6.0
       graphql-scalars: ^1.20.4
       graphql-tools: ^8.3.19
-      http-signature-utils: workspace:../http-signature-utils
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ccp: ^1.2.3
       ilp-protocol-ildcp: ^2.2.3
@@ -228,8 +230,6 @@ importers:
       objection: ^3.0.1
       objection-db-errors: ^1.1.2
       oer-utils: 5.1.3-alpha.2
-      open-payments: workspace:../open-payments
-      openapi: workspace:../openapi
       openapi-types: ^12.1.0
       pg: ^8.10.0
       pino: ^8.11.0
@@ -240,7 +240,7 @@ importers:
       testcontainers: ^9.3.0
       tigerbeetle-node: ^0.12.18
       tmp: ^0.2.1
-      token-introspection: workspace:*
+      token-introspection: workspace:../token-introspection
       ts-node: ^10.9.1
       typescript: ^4.9.5
       uuid: ^9.0.0
@@ -252,6 +252,9 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
+      '@interledger/http-signature-utils': 1.0.0
+      '@interledger/open-payments': 1.0.0
+      '@interledger/openapi': 1.0.0
       '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': 0.3.3-alpha.3
       '@koa/cors': 4.0.0
@@ -266,7 +269,6 @@ importers:
       graphql: 16.6.0
       graphql-scalars: 1.20.4_graphql@16.6.0
       graphql-tools: 8.3.19_onqnqwb3ubg5opvemcqf7c2qhy
-      http-signature-utils: link:../http-signature-utils
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ccp: 1.2.3
       ilp-protocol-ildcp: 2.2.3
@@ -280,8 +282,6 @@ importers:
       objection: 3.0.1_knex@2.4.2
       objection-db-errors: 1.1.2_objection@3.0.1
       oer-utils: 5.1.3-alpha.2
-      open-payments: link:../open-payments
-      openapi: link:../openapi
       pg: 8.10.0
       pino: 8.11.0
       pino-pretty: 10.0.0
@@ -321,28 +321,10 @@ importers:
   packages/frontend:
     specifiers: {}
 
-  packages/http-signature-utils:
-    specifiers:
-      '@types/node': ^18.7.12
-      '@types/uuid': ^9.0.0
-      http-message-signatures: ^0.1.2
-      httpbis-digest-headers: github:interledger/httpbis-digest-headers
-      jose: ^4.13.1
-      typescript: ^4.9.5
-      uuid: ^9.0.0
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      jose: 4.13.1
-      uuid: 9.0.0
-    devDependencies:
-      '@types/node': 18.11.9
-      '@types/uuid': 9.0.0
-      typescript: 4.9.5
-
   packages/mock-account-provider:
     specifiers:
       '@apollo/client': ^3.7.10
+      '@interledger/http-signature-utils': 1.0.0
       '@remix-run/dev': ^1.14.3
       '@remix-run/eslint-config': ^1.14.3
       '@remix-run/node': ^1.14.3
@@ -355,7 +337,6 @@ importers:
       axios: ^1.3.4
       eslint: ^8.36.0
       graphql: ^16.6.0
-      http-signature-utils: workspace:../http-signature-utils
       react: ^18.2.0
       react-dom: ^18.2.0
       typescript: ^4.9.5
@@ -363,6 +344,7 @@ importers:
       yaml: ^2.2.1
     dependencies:
       '@apollo/client': 3.7.10_gdcq4dv6opitr3wbfwyjmanyra
+      '@interledger/http-signature-utils': 1.0.0
       '@remix-run/node': 1.14.3
       '@remix-run/react': 1.14.3_biqbaboplfbrettd7655fr4n2y
       '@remix-run/serve': 1.14.3
@@ -370,7 +352,6 @@ importers:
       '@types/uuid': 9.0.0
       axios: 1.3.4
       graphql: 16.6.0
-      http-signature-utils: link:../http-signature-utils
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       uuid: 9.0.0
@@ -383,83 +364,19 @@ importers:
       eslint: 8.36.0
       typescript: 4.9.5
 
-  packages/open-payments:
-    specifiers:
-      '@types/node': ^18.7.12
-      '@types/uuid': ^9.0.0
-      axios: ^1.3.4
-      base64url: ^3.0.1
-      http-message-signatures: ^0.1.2
-      http-signature-utils: workspace:../http-signature-utils
-      nock: ^13.3.0
-      openapi: workspace:../openapi
-      openapi-typescript: ^4.5.0
-      pino: ^8.11.0
-      typescript: ^4.9.5
-      uuid: ^9.0.0
-    dependencies:
-      axios: 1.3.4
-      http-message-signatures: 0.1.2
-      http-signature-utils: link:../http-signature-utils
-      openapi: link:../openapi
-      pino: 8.11.0
-      uuid: 9.0.0
-    devDependencies:
-      '@types/node': 18.7.13
-      '@types/uuid': 9.0.0
-      base64url: 3.0.1
-      nock: 13.3.0
-      openapi-typescript: 4.5.0
-      typescript: 4.9.5
-
-  packages/openapi:
-    specifiers:
-      '@apidevtools/json-schema-ref-parser': ^10.1.0
-      '@types/jest': ^29.5.0
-      '@types/koa': 2.13.5
-      '@types/uuid': ^9.0.0
-      ajv: ^8.12.0
-      ajv-formats: ^2.1.1
-      koa: ^2.14.1
-      node-mocks-http: ^1.12.2
-      openapi-default-setter: ^12.1.0
-      openapi-request-coercer: ^12.1.0
-      openapi-request-validator: ^12.1.0
-      openapi-response-validator: ^12.1.0
-      openapi-types: ^12.1.0
-      typescript: ^4.9.5
-      uuid: ^9.0.0
-    dependencies:
-      '@apidevtools/json-schema-ref-parser': 10.1.0
-      ajv: 8.12.0
-      ajv-formats: 2.1.1_ajv@8.12.0
-      openapi-default-setter: 12.1.0
-      openapi-request-coercer: 12.1.0
-      openapi-request-validator: 12.1.0
-      openapi-response-validator: 12.1.0
-      openapi-types: 12.1.0
-    devDependencies:
-      '@types/jest': 29.5.0
-      '@types/koa': 2.13.5
-      '@types/uuid': 9.0.0
-      koa: 2.14.1
-      node-mocks-http: 1.12.2
-      typescript: 4.9.5
-      uuid: 9.0.0
-
   packages/token-introspection:
     specifiers:
+      '@interledger/openapi': 1.0.0
       '@types/node': ^18.7.12
       axios: ^1.3.4
       nock: ^13.3.0
-      openapi: workspace:../openapi
       openapi-typescript: ^4.5.0
       pino: ^8.11.0
       typescript: ^4.9.5
       uuid: ^8.3.2
     dependencies:
+      '@interledger/openapi': 1.0.0
       axios: 1.3.4
-      openapi: link:../openapi
       pino: 8.11.0
     devDependencies:
       '@types/node': 18.11.9
@@ -3183,6 +3100,41 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
+  /@interledger/http-signature-utils/1.0.0:
+    resolution: {integrity: sha512-QAfjj1tKwCArrf0jLNqpyhwibEmm/uhOIZmQg1uHim8FQKkufgpavVIievxUNaBTAsdUm0Rnn8odTvgA/nTrxw==}
+    dependencies:
+      http-message-signatures: 0.1.2
+      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
+      jose: 4.13.1
+      uuid: 9.0.0
+    dev: false
+
+  /@interledger/open-payments/1.0.0:
+    resolution: {integrity: sha512-Bj3VTWJkWz0FfrkPNfRnvRKQSY389kzFOoI1Br1lYMi4R59MiLfuM4cqq0oJ17F6irzjxv6ZJhaqvYrFP8b2WQ==}
+    dependencies:
+      '@interledger/http-signature-utils': 1.0.0
+      '@interledger/openapi': 1.0.0
+      axios: 1.3.4
+      http-message-signatures: 0.1.2
+      pino: 8.11.0
+      uuid: 9.0.0
+    transitivePeerDependencies:
+      - debug
+    dev: false
+
+  /@interledger/openapi/1.0.0:
+    resolution: {integrity: sha512-8zFnjtUvEKL+DWtVsk/fAzImMPXb7pDwmoWOSbFYhfrVPWq5HKZ7X09o9rqc5sSRvdeuDTxmH9mvlOKRZlHlKQ==}
+    dependencies:
+      '@apidevtools/json-schema-ref-parser': 10.1.0
+      ajv: 8.12.0
+      ajv-formats: 2.1.1_ajv@8.12.0
+      openapi-default-setter: 12.1.0
+      openapi-request-coercer: 12.1.0
+      openapi-request-validator: 12.1.0
+      openapi-response-validator: 12.1.0
+      openapi-types: 12.1.0
+    dev: false
+
   /@interledger/pay/0.4.0-alpha.9:
     resolution: {integrity: sha512-ScT+hsAFBjpSy68VncSa6wW+VidgviKQE9W9lyiOBCrXfnrwrTdycEXWOG9ShoAYXpA3/FG/dYO9eImAPO5Pzg==}
     dependencies:
@@ -4485,10 +4437,6 @@ packages:
     resolution: {integrity: sha512-caqFX7GwvZ4KLnhpI9CfiMkgHKp6kvFAIgpkha0cjO7bAQvB6dWe+q3fTHmm7fQvv59pd4tPj77nriq2M6U2dw==}
     dev: false
 
-  /@types/node/18.7.13:
-    resolution: {integrity: sha512-46yIhxSe5xEaJZXWdIBP7GU4HDTG8/eo0qd9atdiL+lFpA03y8KS+lkTN834TWJj5767GbWv4n/P6efyTFt1Dw==}
-    dev: true
-
   /@types/normalize-package-data/2.4.1:
     resolution: {integrity: sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==}
     dev: true
@@ -5554,6 +5502,7 @@ packages:
   /base64url/3.0.1:
     resolution: {integrity: sha512-ir1UPr3dkwexU7FdV8qBBbNDRUhMmIekYMFZfi+C/sLNnRESKPl23nB9b2pltqfOQNnGzsDdId90AEtG5tCx4A==}
     engines: {node: '>=6.0.0'}
+    dev: false
 
   /basic-auth/2.0.1:
     resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
@@ -5732,6 +5681,7 @@ packages:
     dependencies:
       mime-types: 2.1.35
       ylru: 1.3.2
+    dev: false
 
   /cacheable-lookup/5.0.4:
     resolution: {integrity: sha512-2/kNscPhpcxrOigMZzbiWF7dz8ilhb/nIHU3EyZiXWXpeq/au8qJ8VhdftMkty3n7Gj6HIGalQG8oiBNB3AJgA==}
@@ -6151,6 +6101,7 @@ packages:
     dependencies:
       depd: 2.0.0
       keygrip: 1.1.0
+    dev: false
 
   /copy-to/2.0.1:
     resolution: {integrity: sha512-3DdaFaU/Zf1AnpLiFDeNCD4TOWe3Zl2RZaTzUvWiIk5ERzcCodOE20Vqq4fzCbNoHURFHT4/us/Lfq+S2zyY4w==}
@@ -6413,6 +6364,7 @@ packages:
 
   /deep-equal/1.0.1:
     resolution: {integrity: sha512-bHtC0iYvWhyaTzvV3CZgPeZQqCOBGyGsVV7v4eevpdkLHfiSrXUdBG+qAuSz4RI70sszvjQ1QSZ98An1yNwpSw==}
+    dev: false
 
   /deep-is/0.1.4:
     resolution: {integrity: sha512-oIPzksmTg4/MriiaYGO+okXDT7ztn/w3Eptv/+gSIdMdKsJo0u4CfYNFJPy+4SKMuCqGw2wxnA+URMg3t8a/bQ==}
@@ -6467,6 +6419,7 @@ packages:
 
   /delegates/1.0.0:
     resolution: {integrity: sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==}
+    dev: false
 
   /denque/2.1.0:
     resolution: {integrity: sha512-HVQE3AAb/pxF8fQAoiqpvg9i3evqug3hoiwakOyZAwJm+6vZehbkYXZ0l4JxS+I3QxM97v5aaRNhj8v5oBhekw==}
@@ -8119,6 +8072,7 @@ packages:
     dependencies:
       deep-equal: 1.0.1
       http-errors: 1.8.1
+    dev: false
 
   /http-cache-semantics/4.1.0:
     resolution: {integrity: sha512-carPklcUh7ROWRK7Cv27RPtdhYhUsela/ue5/jKzjegVvXDqM2ILE9Q2BGn9JZJh1g87cp56su/FgQSzcWS8cQ==}
@@ -8133,6 +8087,7 @@ packages:
       setprototypeof: 1.2.0
       statuses: 1.5.0
       toidentifier: 1.0.1
+    dev: false
 
   /http-errors/2.0.0:
     resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
@@ -9452,6 +9407,7 @@ packages:
     engines: {node: '>= 0.6'}
     dependencies:
       tsscmp: 1.0.6
+    dev: false
 
   /keyv/4.4.1:
     resolution: {integrity: sha512-PzByhNxfBLnSBW2MZi1DF+W5+qB/7BMpOokewqIvqS8GFtP7xHm2oeGU72Y1fhtfOv/FiEnI4+nyViYDmUChnw==}
@@ -9531,6 +9487,7 @@ packages:
 
   /koa-compose/4.1.0:
     resolution: {integrity: sha512-8ODW8TrDuMYvXRwra/Kh7/rJo9BtOfPc6qO8eAfC80CnCvSjSl0bkRM24X6/XBBEyj0v1nRUQ1LyOy3dbqOWXw==}
+    dev: false
 
   /koa-convert/2.0.0:
     resolution: {integrity: sha512-asOvN6bFlSnxewce2e/DK3p4tltyfC4VM7ZwuTuepI7dEQVcvpyFuBcEARu1+Hxg8DIwytce2n7jrZtRlPrARA==}
@@ -9538,6 +9495,7 @@ packages:
     dependencies:
       co: 4.6.0
       koa-compose: 4.1.0
+    dev: false
 
   /koa-is-json/1.0.0:
     resolution: {integrity: sha512-+97CtHAlWDx0ndt0J8y3P12EWLwTLMXIfMnYDev3wOTwH/RpBGMlfn4bDXlMEg1u73K6XRE9BbUp+5ZAYoRYWw==}
@@ -9611,6 +9569,7 @@ packages:
       vary: 1.1.2
     transitivePeerDependencies:
       - supports-color
+    dev: false
 
   /language-subtag-registry/0.3.22:
     resolution: {integrity: sha512-tN0MCzyWnoz/4nHS6uxdlFWoUZT7ABptwKPQ52Ea7URk6vll88bWBVhodtnlfEuCcKWNGoc+uGbw1cwa9IKh/w==}
@@ -10790,6 +10749,7 @@ packages:
 
   /only/0.0.2:
     resolution: {integrity: sha512-Fvw+Jemq5fjjyWz6CpKx6w9s7xxqo3+JCyM0WXWeCSOboZ8ABkyvP8ID4CZuChA/wxSx+XSJmdOm8rGVyJ1hdQ==}
+    dev: false
 
   /open/8.4.0:
     resolution: {integrity: sha512-XgFPPM+B28FtCCgSb9I+s9szOC1vZRSwgWsRUA5ylIxRTgKozqjOCrVOqGsYABPYK5qnfqClxZTFBa8PKt2v6Q==}
@@ -12467,6 +12427,7 @@ packages:
   /statuses/1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
+    dev: false
 
   /statuses/2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
@@ -13027,6 +12988,7 @@ packages:
   /tsscmp/1.0.6:
     resolution: {integrity: sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==}
     engines: {node: '>=0.6.x'}
+    dev: false
 
   /tsutils/3.21.0_typescript@4.9.5:
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
@@ -13326,6 +13288,7 @@ packages:
   /uuid/9.0.0:
     resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
     hasBin: true
+    dev: false
 
   /uvu/0.5.6:
     resolution: {integrity: sha512-+g8ENReyr8YsOc6fv/NVJs2vFdHBnBNdfE49rshrTzDWOlUx4Gq7KOS2GD8eqhy2j+Ejq29+SbKH8yjkAqXqoA==}
@@ -13670,6 +13633,7 @@ packages:
   /ylru/1.3.2:
     resolution: {integrity: sha512-RXRJzMiK6U2ye0BlGGZnmpwJDPgakn6aNQ0A7gHRbD4I0uvK4TW6UqkK1V0pp9jskjJBAXd3dRrbzWkqJ+6cxA==}
     engines: {node: '>= 4.0.0'}
+    dev: false
 
   /yn/3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}

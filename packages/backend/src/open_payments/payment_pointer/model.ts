@@ -1,5 +1,5 @@
 import { Model, Page } from 'objection'
-import { PaymentPointer as OpenPaymentsPaymentPointer } from 'open-payments'
+import { PaymentPointer as OpenPaymentsPaymentPointer } from '@interledger/open-payments'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../connector/core/rafiki'
 import { Asset } from '../../asset/model'

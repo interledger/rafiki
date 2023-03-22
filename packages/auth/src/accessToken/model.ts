@@ -2,7 +2,7 @@ import { Model } from 'objection'
 import { BaseModel } from '../shared/baseModel'
 import { join } from 'path'
 import { Grant } from '../grant/model'
-import { AccessToken as OpenPaymentsAccessToken } from 'open-payments'
+import { AccessToken as OpenPaymentsAccessToken } from '@interledger/open-payments'
 import { Access, toOpenPaymentsAccess } from '../access/model'
 
 // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-3.2.1

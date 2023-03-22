@@ -6,7 +6,7 @@ import { AssetOptions } from '../../asset/service'
 import {
   IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   ILPStreamConnection as OpenPaymentsConnection
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { ConnectionBase } from '../connection/model'
 import { IlpAddress, isValidIlpAddress } from 'ilp-packet'
 

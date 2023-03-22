@@ -9,7 +9,7 @@ import { listSubresource } from '../../payment_pointer/routes'
 import {
   AccessAction,
   OutgoingPayment as OpenPaymentsOutgoingPayment
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { PaymentPointer } from '../../payment_pointer/model'
 
 interface ServiceDependencies {

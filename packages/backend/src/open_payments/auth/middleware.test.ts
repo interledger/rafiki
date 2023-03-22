@@ -3,7 +3,11 @@ import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Client, ActiveTokenInfo } from 'token-introspection'
 import { v4 as uuid } from 'uuid'
-import { generateJwk, createHeaders, JWK } from 'http-signature-utils'
+import {
+  generateJwk,
+  createHeaders,
+  JWK
+} from '@interledger/http-signature-utils'
 
 import {
   createTokenIntrospectionMiddleware,
@@ -18,7 +22,7 @@ import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { setup } from '../payment_pointer/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType } from '@interledger/open-payments'
 
 type AppMiddleware = (
   ctx: PaymentPointerContext,

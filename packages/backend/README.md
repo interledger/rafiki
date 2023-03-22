@@ -19,12 +19,6 @@
 
   and then restart docker.
 
-- [`openapi`](https://github.com/interledger/rafiki/tree/main/packages/openapi):
-
-```shell
-pnpm --filter openapi build
-```
-
 ### Testing
 
 From the monorepo root directory:

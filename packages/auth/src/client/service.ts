@@ -1,5 +1,5 @@
-import { UnauthenticatedClient } from 'open-payments'
-import { JWK } from 'http-signature-utils'
+import { UnauthenticatedClient } from '@interledger/open-payments'
+import { JWK } from '@interledger/http-signature-utils'
 
 import { BaseService } from '../shared/baseService'
 

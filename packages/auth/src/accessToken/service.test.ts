@@ -15,7 +15,7 @@ import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessType, AccessAction } from '@interledger/open-payments'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>

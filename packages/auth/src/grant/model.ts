@@ -5,7 +5,7 @@ import { join } from 'path'
 import {
   PendingGrant as OpenPaymentsPendingGrant,
   Grant as OpenPaymentsGrant
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 
 export enum StartMethod {
