@@ -3,7 +3,12 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "outDir": "./dist",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "composite": true,
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../token-introspection" }
+  ]
 }

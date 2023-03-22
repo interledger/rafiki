@@ -8,8 +8,7 @@
   "scripts": {
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
-    "build:deps": "pnpm --filter token-introspection build",
-    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build",
