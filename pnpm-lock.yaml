@@ -45,7 +45,7 @@ importers:
 
   infrastructure/local/local-http-signatures:
     specifiers:
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@types/koa': 2.13.5
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa-json': ^2.0.20
@@ -59,7 +59,7 @@ importers:
       koa-router: ^12.0.0
       typescript: ^4.9.5
     dependencies:
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       koa: 2.14.1
       koa-bodyparser: 4.4.0
       koa-json: 2.0.2
@@ -88,9 +88,9 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.16
       '@graphql-tools/load': ^7.8.13
       '@graphql-tools/schema': ^9.0.17
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@interledger/open-payments': 1.0.0-alpha.1
-      '@interledger/openapi': 1.0.0-alpha.0
+      '@interledger/openapi': 1.0.0
       '@koa/cors': ^4.0.0
       '@koa/router': ^12.0.0
       '@types/jest': ^29.5.0
@@ -129,9 +129,9 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@interledger/open-payments': 1.0.0-alpha.1
-      '@interledger/openapi': 1.0.0-alpha.0
+      '@interledger/openapi': 1.0.0
       '@koa/cors': 4.0.0
       '@koa/router': 12.0.0
       ajv: 8.12.0
@@ -185,9 +185,9 @@ importers:
       '@graphql-tools/graphql-file-loader': ^7.5.16
       '@graphql-tools/load': ^7.8.13
       '@graphql-tools/schema': ^9.0.17
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@interledger/open-payments': 1.0.0-alpha.1
-      '@interledger/openapi': 1.0.0-alpha.0
+      '@interledger/openapi': 1.0.0
       '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': ^0.3.3-alpha.3
       '@koa/cors': ^4.0.0
@@ -252,9 +252,9 @@ importers:
       '@graphql-tools/graphql-file-loader': 7.5.16_graphql@16.6.0
       '@graphql-tools/load': 7.8.13_graphql@16.6.0
       '@graphql-tools/schema': 9.0.17_graphql@16.6.0
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@interledger/open-payments': 1.0.0-alpha.1
-      '@interledger/openapi': 1.0.0-alpha.0
+      '@interledger/openapi': 1.0.0
       '@interledger/pay': 0.4.0-alpha.9
       '@interledger/stream-receiver': 0.3.3-alpha.3
       '@koa/cors': 4.0.0
@@ -324,7 +324,7 @@ importers:
   packages/mock-account-provider:
     specifiers:
       '@apollo/client': ^3.7.10
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@remix-run/dev': ^1.14.3
       '@remix-run/eslint-config': ^1.14.3
       '@remix-run/node': ^1.14.3
@@ -344,7 +344,7 @@ importers:
       yaml: ^2.2.1
     dependencies:
       '@apollo/client': 3.7.10_gdcq4dv6opitr3wbfwyjmanyra
-      '@interledger/http-signature-utils': 1.0.0-alpha.0
+      '@interledger/http-signature-utils': 1.0.0
       '@remix-run/node': 1.14.3
       '@remix-run/react': 1.14.3_biqbaboplfbrettd7655fr4n2y
       '@remix-run/serve': 1.14.3
@@ -366,7 +366,7 @@ importers:
 
   packages/token-introspection:
     specifiers:
-      '@interledger/openapi': 1.0.0-alpha.0
+      '@interledger/openapi': 1.0.0
       '@types/node': ^18.7.12
       axios: ^1.3.4
       nock: ^13.3.0
@@ -375,7 +375,7 @@ importers:
       typescript: ^4.9.5
       uuid: ^8.3.2
     dependencies:
-      '@interledger/openapi': 1.0.0-alpha.0
+      '@interledger/openapi': 1.0.0
       axios: 1.3.4
       pino: 8.11.0
     devDependencies:
@@ -3100,6 +3100,15 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
+  /@interledger/http-signature-utils/1.0.0:
+    resolution: {integrity: sha512-QAfjj1tKwCArrf0jLNqpyhwibEmm/uhOIZmQg1uHim8FQKkufgpavVIievxUNaBTAsdUm0Rnn8odTvgA/nTrxw==}
+    dependencies:
+      http-message-signatures: 0.1.2
+      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
+      jose: 4.13.1
+      uuid: 9.0.0
+    dev: false
+
   /@interledger/http-signature-utils/1.0.0-alpha.0:
     resolution: {integrity: sha512-uhr4kYoYOZtZAj7wIiB4Qpv2gMfEL8BTDHHPkn8vgQwMvpgd+S3w2Eknv0uSFnXGxz7A8Ov3OLFOkgY54pA/2A==}
     dependencies:
@@ -3120,6 +3129,19 @@ packages:
       uuid: 9.0.0
     transitivePeerDependencies:
       - debug
+    dev: false
+
+  /@interledger/openapi/1.0.0:
+    resolution: {integrity: sha512-8zFnjtUvEKL+DWtVsk/fAzImMPXb7pDwmoWOSbFYhfrVPWq5HKZ7X09o9rqc5sSRvdeuDTxmH9mvlOKRZlHlKQ==}
+    dependencies:
+      '@apidevtools/json-schema-ref-parser': 10.1.0
+      ajv: 8.12.0
+      ajv-formats: 2.1.1_ajv@8.12.0
+      openapi-default-setter: 12.1.0
+      openapi-request-coercer: 12.1.0
+      openapi-request-validator: 12.1.0
+      openapi-response-validator: 12.1.0
+      openapi-types: 12.1.0
     dev: false
 
   /@interledger/openapi/1.0.0-alpha.0:
