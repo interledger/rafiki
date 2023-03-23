@@ -69,7 +69,7 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go throught the interaction flow after requesting a grant for a quote and outgoing payment.
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment.
 
 <video alt="Screen Recoding eCommerce Example" src="./mov/eCom-example.mov" width="560" height="315" controls></video>
 
