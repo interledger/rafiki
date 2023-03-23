@@ -21,10 +21,6 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ghcr.io/${{ github.repository_owner }}/rafiki-${{ matrix.package }}
-          tags: |
-            type=raw,enable={{is_default_branch}},value=latest
-            type=raw,enable=true,value={{ sha }}
-            type=raw,enable=true,value={{ refs }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
