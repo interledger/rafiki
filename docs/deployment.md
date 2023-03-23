@@ -2,7 +2,7 @@
 
 ## Local Environment
 
-We have created a suite of packages that, together, mock an account provider that has deployed Rafiki, exposing an [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](./glossary.md#open-payments) APIs with its required [GNAP](./glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, as well as the STREAM endpoint for receiving Interledger packets. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](./glossary.md#open-payments) APIs with its required [GNAP](./glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, as well as the STREAM endpoint for receiving Interledger packets. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include
 
@@ -17,7 +17,7 @@ These packages depend on the following databases
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/docker-compose.yml) and [peer2](../localenv/peer-docker-compose.yml))to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](../localenv/happy-life-bank/docker-compose.yml))to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 ### Running the local environment
 
@@ -62,11 +62,12 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 
 1. requests a grant to create an incoming payment on Philip Fry's account
 2. creates an incoming payment on Philip Fry's account
-3. requests a grant to create (and read) a quote and an outgoing payment on Grace Franklin's account)
-4. continues the grant request
-5. creates a quote on Grace Franklin's account
-6. creates an outgoing payment on Grace Franklin's account
-7. fetches the outgoing payment on Grace Franklin's account
+3. requests a grant to create (and read) a quote on Grace Franklin's account
+4. creates a quote on Grace Franklin's account
+5. requests a grant to create (and read) an outgoing payment on Grace Franklin's account
+6. continues the grant request
+7. creates an outgoing payment on Grace Franklin's account
+8. fetches the outgoing payment on Grace Franklin's account
 
 Note that one has to go throught the interaction flow after requesting a grant for a quote and outgoing payment.
 

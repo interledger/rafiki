@@ -341,10 +341,10 @@ Example successful response:
 ### Create Payment Pointers to Send and Receive Payments
 
 In this step we will provision payment pointers on the primary and secondary Rafiki instances.
-Payment pointers are not accounts. Rafiki operators must supply their own "account provider"
+Payment pointers are not accounts. Rafiki operators must supply their own "account servicing entity"
 service for actually "holding" currency. Rafiki provides payment pointers--addresses within the
 ILP network to which other nodes on the network can send payments, which will then be routed
-to the account provider system and into the appropriate account.
+to the account servicing entity's system and into the appropriate account.
 
 At the end of this step, we will have two payment pointer IDs: one provisioned on the primary
 instance and one provisioned on the secondary instance. We will use these payment pointer IDs in

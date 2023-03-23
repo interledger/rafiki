@@ -494,7 +494,7 @@
          y="418.5969"
          id="tspan681"><tspan
            style="fill:#151515;stroke:none"
-           id="tspan679">Account Provider</tspan></tspan></text><g
+           id="tspan679">Account Servicing Entity</tspan></tspan></text><g
        id="g9265"
        transform="translate(-122.72465,24.396241)"><rect
          style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-opacity:1"
@@ -511,7 +511,7 @@
            id="tspan9258"
            style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.3"
            x="273.16522"
-           y="142.74965">Account Provider Service</tspan></text></g><g
+           y="142.74965">Account Servicing Entity Service</tspan></text></g><g
        id="g9265-8"
        transform="translate(-77.183503,13.941781)"><rect
          style="fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:0.211904;stroke-opacity:1"
@@ -528,7 +528,7 @@
            id="tspan9258-3"
            style="font-size:2.82222px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.3"
            x="273.16522"
-           y="142.74965">Account Provider IdP</tspan></text></g><path
+           y="142.74965">Account Servicing Entity IdP</tspan></text></g><path
        style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.3;stroke-opacity:1"
        d="m 166.67656,116.72498 11.15342,34.25695"
        id="path10818" /><text
