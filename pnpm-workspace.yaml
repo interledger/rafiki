@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
-  - 'infrastructure/local/local-http-signatures'
+  - 'localenv/local-http-signatures'
+  - 'localenv/mock-account-servicing-entity'
   # exclude packages that are inside test directories
   - '!**/test/**'

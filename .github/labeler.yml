@@ -3,7 +3,7 @@
 'pkg: backend': packages/backend/**/*
 'pkg: frontend': packages/frontend/**/*
 'pkg: auth': packages/auth/**/*
-'pkg: map': packages/mock-account-provider/**/*
+'pkg: mock-ase': localenv/mock-account-servicing-entity/**/*
 
 # Add 'type: documentation' label to any change to *.md files
 'type: ci':
@@ -24,4 +24,4 @@
 # Add 'type: tests' label to any change to *.test.ts files
 'type: tests': packages/**/*.test.ts
 
-'type: localenv': infrastructure/local/*
+'type: localenv': localenv/*

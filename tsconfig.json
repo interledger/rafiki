@@ -13,7 +13,7 @@
       "path": "packages/frontend"
     },
     {
-      "path": "infrastructure/local/local-http-signatures"
+      "path": "localenv/local-http-signatures"
     }
   ],
   "files": [],

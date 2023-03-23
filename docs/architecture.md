@@ -42,10 +42,6 @@ The frontend will host the internal admin interface. The current application is 
 
 ## Additional packages
 
-### Mock Account Provider
-
-The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an [Account Servicing Entity](./glossary.md#account-servicing-entity). It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
-
 ### Token Introspection
 
 The `token-introspection` package is a client library for making [GNAP](./glossary.md#grant-negotiation-authorization-protocol) token introspection requests to the auth server.

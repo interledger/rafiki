@@ -2,13 +2,13 @@
 
 ## Local Environment
 
-We have created a suite of packages that, together, mock an account provider that has deployed Rafiki, exposing an [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](./glossary.md#open-payments) APIs with its required [GNAP](./glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, as well as the STREAM endpoint for receiving Interledger packets. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](./glossary.md#open-payments) APIs with its required [GNAP](./glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, as well as the STREAM endpoint for receiving Interledger packets. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include
 
 - `backend` (SPSP, Open Payments APIs, Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-provider` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
 - `local-http-signatures` (request signature generation for Postman)
 
 These packages depend on the following databases
@@ -17,7 +17,7 @@ These packages depend on the following databases
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../infrastructure/local/docker-compose.yml) and [peer2](../infrastructure/local/peer-docker-compose.yml))to start two Mock Account Providers with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](../localenv/happy-life-bank/docker-compose.yml))to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 ### Running the local environment
 
@@ -38,17 +38,17 @@ pnpm localenv:stop && pnpm localenv:dbvolumes:remove
 pnpm localenv:start
 ```
 
-### Exploring Accounts on Mock account provider
+### Exploring Accounts on Mock Account Servicing Entity
 
-Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Provider called Cloud Nine Wallet.
+Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
 
-![Mock Account Provider Accounts](./img/map-accounts.png)
+![Mock Account Servicing Entity Accounts](./img/map-accounts.png)
 
 The accounts of the second instance (Happy Life Bank) can be found on `localhost:3031`.
 
 When clicking on the Account Name, a list of Transactions appears.
 
-![Mock Account Provider Transactions](./img/map-transactions.png)
+![Mock Account Servicing Entity Transactions](./img/map-transactions.png)
 
 ### Admin APIs
 
@@ -62,13 +62,14 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 
 1. requests a grant to create an incoming payment on Philip Fry's account
 2. creates an incoming payment on Philip Fry's account
-3. requests a grant to create (and read) a quote and an outgoing payment on Grace Franklin's account)
-4. continues the grant request
-5. creates a quote on Grace Franklin's account
-6. creates an outgoing payment on Grace Franklin's account
-7. fetches the outgoing payment on Grace Franklin's account
+3. requests a grant to create (and read) a quote on Grace Franklin's account
+4. creates a quote on Grace Franklin's account
+5. requests a grant to create (and read) an outgoing payment on Grace Franklin's account
+6. continues the grant request
+7. creates an outgoing payment on Grace Franklin's account
+8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go throught the interaction flow after requesting a grant for a quote and outgoing payment.
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment.
 
 <video alt="Screen Recoding eCommerce Example" src="./mov/eCom-example.mov" width="560" height="315" controls></video>
 

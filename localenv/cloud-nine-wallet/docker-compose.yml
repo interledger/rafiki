@@ -1,10 +1,10 @@
 version: '3'
 services:
-  mock-account-provider:
+  mock-account-servicing-entity:
     hostname: cloud-nine-wallet
     build:
-      context: ../../..
-      dockerfile: ./packages/mock-account-provider/Dockerfile
+      context: ../..
+      dockerfile: ./localenv/mock-account-servicing-entity/Dockerfile
     restart: always
     networks:
       - rafiki
@@ -25,7 +25,7 @@ services:
     hostname: cloud-nine-wallet-backend
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
-      context: ../../..
+      context: ../..
       dockerfile: ./packages/backend/Dockerfile
     restart: always
     privileged: true
@@ -64,7 +64,7 @@ services:
     hostname: cloud-nine-wallet-auth
     image: ghcr.io/interledger/rafiki-auth:latest
     build:
-      context: ../../..
+      context: ../..
       dockerfile: ./packages/auth/Dockerfile
     restart: always
     networks:
@@ -80,8 +80,8 @@ services:
   signatures:
     hostname: cloud-nine-wallet-signatures
     build:
-      context: ../../..
-      dockerfile: ./infrastructure/local/local-http-signatures/Dockerfile
+      context: ../..
+      dockerfile: ./localenv/local-http-signatures/Dockerfile
     restart: always
     ports:
       - '3040:3000'

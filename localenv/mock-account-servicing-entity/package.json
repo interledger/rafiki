@@ -1,5 +1,5 @@
 {
-  "name": "mock-account-provider",
+  "name": "mock-account-servicing-entity",
   "sideEffects": false,
   "scripts": {
     "build:deps": "pnpm --filter http-signature-utils build",

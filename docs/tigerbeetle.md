@@ -22,7 +22,7 @@ To use the desired version of TigerBeetle within the production environment, cha
 
 ### Local Environment
 
-To use the desired version of TigerBeetle within the local environment, change the tag in the [tigerbeetle `docker-compose.yml` file](../infrastructure/local/tigerbeetle/docker-compose.yml).
+To use the desired version of TigerBeetle within the local environment, change the tag in the [tigerbeetle `docker-compose.yml` file](../localenv/tigerbeetle/docker-compose.yml).
 
 ### Tests
 

@@ -16,6 +16,6 @@ RUN pnpm fetch
 ADD . ./
 RUN pnpm install -r --offline
 
-RUN pnpm --filter mock-account-provider build
+RUN pnpm --filter local-http-signatures build
 
-CMD pnpm --filter mock-account-provider start
+CMD ["node", "./localenv/local-http-signatures/dist/app.js"]

@@ -12,7 +12,7 @@ generates:
       scalars:
         UInt8: number
         UInt64: bigint
-  ../mock-account-provider/generated/graphql.ts:
+  ../../localenv/mock-account-servicing-entity/generated/graphql.ts:
     plugins:
       - 'typescript'
       - 'typescript-resolvers'
