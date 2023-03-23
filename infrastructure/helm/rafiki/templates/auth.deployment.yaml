@@ -47,7 +47,7 @@ spec:
               name: {{ include "auth.name" . }}
           env:
           - name: AUTH_DATABASE_URL
-            value: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
+            value: postgresql://auth:changeme@{{ include "rafiki.fullname" . }}-postgresql/auth
           ports:
             - name: http
               containerPort: {{ .Values.auth.port }}

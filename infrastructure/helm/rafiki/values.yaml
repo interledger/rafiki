@@ -1,24 +1,23 @@
 postgresql:
-  auth:
-    username: backend
-    database: backend
-    password: overridethisvalue
   replication:
     enabled: false
   metrics:
     enabled: false
   primary:
-    #initdb:
-    #  scripts:
-    #    initialize_backend.sql: |
-    #      CREATE USER backend PASSWORD ;
+    initdb:
+      scripts:
+        initialize_backend.sql: |
+          CREATE USER backend PASSWORD 'changeme';
+          CREATE DATABASE backend OWNER backend;
+        initialize_auth.sql: |
+          CREATE USER auth PASSWORD 'changeme';
+          CREATE DATABASE auth OWNER auth;
     persistence:
       enabled: true
 
 redis:
   auth:
-    enabled: true
-    password: 'overridethisvalue'
+    enabled: false
 
 backend:
   openPaymentsPort: 80
