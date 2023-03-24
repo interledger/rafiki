@@ -12,7 +12,7 @@ import { AccessService } from './service'
 import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
 import { IncomingPaymentRequest, OutgoingPaymentRequest } from './types'
 import { generateNonce, generateToken } from '../shared/utils'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessType, AccessAction } from '@interledger/open-payments'
 import { Access } from './model'
 
 describe('Access Service', (): void => {

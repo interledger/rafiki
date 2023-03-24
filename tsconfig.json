@@ -1,15 +1,6 @@
 {
   "references": [
     {
-      "path": "packages/http-signature-utils"
-    },
-    {
-      "path": "packages/openapi"
-    },
-    {
-      "path": "packages/open-payments"
-    },
-    {
       "path": "packages/token-introspection"
     },
     {
@@ -19,7 +10,7 @@
       "path": "packages/backend"
     },
     {
-      "path": "infrastructure/local/local-http-signatures"
+      "path": "localenv/local-http-signatures"
     }
   ],
   "files": [],

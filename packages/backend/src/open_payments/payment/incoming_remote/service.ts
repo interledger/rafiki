@@ -4,7 +4,7 @@ import {
   isPendingGrant,
   AccessAction,
   PaymentPointer as OpenPaymentsPaymentPointer
-} from 'open-payments'
+} from '@interledger/open-payments'
 import { Grant } from '../../grant/model'
 import { GrantService } from '../../grant/service'
 import { BaseService } from '../../../shared/baseService'

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import * as httpMocks from 'node-mocks-http'
-import { AccessAction } from 'open-payments'
+import { AccessAction } from '@interledger/open-payments'
 import { v4 as uuid } from 'uuid'
 
 import {

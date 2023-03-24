@@ -12,7 +12,7 @@ These services rely on four databases:
 
 - A postgres database used by the `backend`
 - A separate postgres database used by `auth`.
-- [Tigerbeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
+- [TigerBeetle](https://github.com/coilhq/tigerbeetle) used by `backend` for accounting balances at the ILP layer.
 - Redis used by `backend` as a cache to share STREAM connection details across processes.
 
 ## Backend
@@ -21,7 +21,7 @@ The `backend` service has four responsibilities:
 
 - Expose REST [Open Payments API](https://docs.openpayments.guide/reference) endpoints for public clients to perform account management tasks.
 - Expose an internal GraphQL Admin API for service operators to manage accounts and application settings like peering relationships.
-- Expose an ILP connector to send and receive STREAM packets with peers.
+- Expose an [ILP connector](./connector.md) to send and receive STREAM packets with peers.
 - Business logic to manage accounts and track balances.
 
 The `backend`'s ILP functionality includes:
@@ -41,31 +41,6 @@ The `auth` service performs authorization and authentication of incoming request
 The frontend will host the internal admin interface. The current application is a placeholder.
 
 ## Additional packages
-
-### HTTP Signature Utils
-
-The `http-signature-utils` package includes helper functions for
-
-- loading Ed25519 keys from file or creating them
-- generating JWKs from Ed25519 keys
-- creating HTTP signature headers
-- validate and verify HTTP signature headers
-
-which is used to process [Open Payments](./glossary.md#open-payments) client keys and signatures and is based on the proposed IETF standard [HTTP Message Signatures](https://datatracker.ietf.org/doc/draft-ietf-httpbis-message-signatures/).
-
-Additionally, the package includes an app that generates HTTP digests and signatures for the [Postman collection](https://www.postman.com/interledger/workspace/interledger/overview).
-
-### Mock Account Provider
-
-The `mock-account-provider` package is a [remix](https://remix.run/) application to mimic an [Account Servicing Entity](./glossary.md#account-servicing-entity). It is used to test the integration with the Rafiki webhooks and the quoting of outgoing payments.
-
-### Open Payments
-
-The `open-payments` package is a client library for making Open Payments API requests.
-
-### Open API
-
-The `openapi` package is a library for validating requests and responses against an OpenAPI spec.
 
 ### Token Introspection
 

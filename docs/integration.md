@@ -27,7 +27,7 @@ For the quoting to be successful, Rafiki needs to be provided with the current e
 | `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`                           |
 | `rates.<asset_code>` | Number | exchange rate given `base` and `<asset_code>`                                                          |
 
-The response status code for a successful request is a `200`. The `mock-account-provider` includes a [minimalistic example](../packages/mock-account-provider/app/routes/prices.ts).
+The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/prices.ts).
 
 The `backend` package requires an environment variable called `PRICES_URL` which MUST specify the URL of this endpoint.
 
@@ -58,7 +58,7 @@ If the Account Servicing Entity decides to add sending fees, it is required to p
 | `assetCode`   | String                     | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
 | `assetScale`  | Number                     | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
 
-If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-provider` includes a [minimalistic example](../packages/mock-account-provider/app/routes/quotes.ts).
+If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/quotes.ts).
 
 The `backend` package requires an environment variable called `QUOTE_URL` which MUST specify the URL of this endpoint.
 

@@ -11,7 +11,7 @@ import {
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
-import { OutgoingPayment as OpenPaymentsOutgoingPayment } from 'open-payments'
+import { OutgoingPayment as OpenPaymentsOutgoingPayment } from '@interledger/open-payments'
 
 export class OutgoingPaymentGrant extends DbErrors(Model) {
   public static get modelPaths(): string[] {

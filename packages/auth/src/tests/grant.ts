@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker'
 import { v4 as uuid } from 'uuid'
 import { FinishMethod, Grant, StartMethod } from '../grant/model'
 import { generateNonce } from '../shared/utils'
-import { AccessAction, AccessType } from 'open-payments'
+import { AccessAction, AccessType } from '@interledger/open-payments'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 

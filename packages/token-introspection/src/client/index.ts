@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios'
-import { createOpenAPI, OpenAPI } from 'openapi'
+import { createOpenAPI, OpenAPI } from '@interledger/openapi'
 import path from 'path'
 import createLogger, { Logger } from 'pino'
 import config from '../config'

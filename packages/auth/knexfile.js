@@ -4,7 +4,7 @@ module.exports = {
   development: {
     client: 'postgresql',
     connection: {
-      // The database, user and password here match those in the infrastructure/local/docker-compose.yml file
+      // The database, user and password here match those in the localenv/docker-compose.yml file
       database: 'auth',
       user: 'postgres',
       password: 'password'
@@ -24,7 +24,7 @@ module.exports = {
   peerdevelopment: {
     client: 'postgresql',
     connection: {
-      // The database, user and password here match those in the infrastructure/local/peer-docker-compose.yml file
+      // The database, user and password here match those in the localenv/peer-docker-compose.yml file
       database: 'peerauth',
       user: 'postgres',
       password: 'password'

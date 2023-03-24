@@ -28,7 +28,7 @@ export async function createAccounts(
       ledger: account.ledger,
       code: account.code,
       // Credit and debit accounts can both send and receive
-      // but are restricted by their respective Tigerbeetle flags.
+      // but are restricted by their respective TigerBeetle flags.
       // In Rafiki transfers:
       // - the source account's debits increase
       // - the destination account's credits increase

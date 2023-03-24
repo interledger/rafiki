@@ -1,0 +1,38 @@
+name: OpenAPI Validator
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - packages/auth/src/openapi/**
+      - packages/backend/src/openapi/**
+      - packages/token-introspection/src/openapi/**
+  pull_request:
+    branches:
+      - main
+    paths:
+      - packages/auth/src/openapi/**
+      - packages/backend/src/openapi/**
+      - packages/token-introspection/src/openapi/**
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+
+      - name: Lint Open API specs
+        run: |
+          npx prettier --check packages/auth/src/openapi/id-provider.yaml
+          npx prettier --check packages/backend/src/openapi/webhooks.yaml
+          npx prettier --check packages/token-introspection/src/openapi/token-introspection.yaml
+      - name: AsyncAPI extension
+        run: |
+          echo "{\"extends\":[\"spectral:oas\",\"spectral:asyncapi\"]}" >> .spectral.json
+      - name: Validate Open API specs
+        run: |
+          npx @stoplight/spectral-cli lint packages/auth/src/openapi/id-provider.yaml
+          npx @stoplight/spectral-cli lint packages/backend/src/openapi/webhooks.yaml
+          npx @stoplight/spectral-cli lint packages/token-introspection/src/openapi/token-introspection.yaml

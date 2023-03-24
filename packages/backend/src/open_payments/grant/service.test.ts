@@ -10,7 +10,7 @@ import { AppServices } from '../../app'
 import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
-import { AccessType, AccessAction } from 'open-payments'
+import { AccessType, AccessAction } from '@interledger/open-payments'
 import { v4 as uuid } from 'uuid'
 
 describe('Grant Service', (): void => {

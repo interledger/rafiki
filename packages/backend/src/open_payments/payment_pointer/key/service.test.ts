@@ -1,4 +1,4 @@
-import { generateJwk } from 'http-signature-utils'
+import { generateJwk } from '@interledger/http-signature-utils'
 import { v4 as uuid } from 'uuid'
 
 import { PaymentPointerKeyService } from './service'

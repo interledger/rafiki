@@ -17,7 +17,7 @@ export interface components {
     "token-info": {
       active: true;
       grant: string;
-      access: external["schemas.yaml"]["components"]["schemas"]["access"];
+      access: external["auth-server.yaml"]["components"]["schemas"]["access"];
       /**
        * client
        * @description Payment pointer of the client instance that is making this request.
@@ -56,7 +56,7 @@ export interface operations {
         "application/json": {
           /** @description The access token value presented to the RS by the client instance. */
           access_token: string;
-          access?: external["schemas.yaml"]["components"]["schemas"]["access"];
+          access?: external["auth-server.yaml"]["components"]["schemas"]["access"];
         };
       };
     };
@@ -64,17 +64,45 @@ export interface operations {
 }
 
 export interface external {
-  "schemas.yaml": {
-    paths: {};
+  "auth-server.yaml": {
+    paths: {
+      "/": {
+        /** Make a new grant request */
+        post: external["auth-server.yaml"]["operations"]["post-request"];
+        parameters: {};
+      };
+      "/continue/{id}": {
+        /** Continue a grant request during or after user interaction. */
+        post: external["auth-server.yaml"]["operations"]["post-continue"];
+        /** Cancel a grant request or delete a grant client side. */
+        delete: external["auth-server.yaml"]["operations"]["delete-continue"];
+        parameters: {
+          path: {
+            id: string;
+          };
+        };
+      };
+      "/token/{id}": {
+        /** Management endpoint to rotate access token. */
+        post: external["auth-server.yaml"]["operations"]["post-token"];
+        /** Management endpoint to revoke access token. */
+        delete: external["auth-server.yaml"]["operations"]["delete-token"];
+        parameters: {
+          path: {
+            id: string;
+          };
+        };
+      };
+    };
     components: {
       schemas: {
         /** @description A description of the rights associated with this access token. */
-        access: external["schemas.yaml"]["components"]["schemas"]["access-item"][];
+        access: external["auth-server.yaml"]["components"]["schemas"]["access-item"][];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
         "access-item":
-          | external["schemas.yaml"]["components"]["schemas"]["access-incoming"]
-          | external["schemas.yaml"]["components"]["schemas"]["access-outgoing"]
-          | external["schemas.yaml"]["components"]["schemas"]["access-quote"];
+          | external["auth-server.yaml"]["components"]["schemas"]["access-incoming"]
+          | external["auth-server.yaml"]["components"]["schemas"]["access-outgoing"]
+          | external["auth-server.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
         "access-incoming": {
           /** @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. */
@@ -105,7 +133,7 @@ export interface external {
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier: string;
-          limits?: external["schemas.yaml"]["components"]["schemas"]["limits-outgoing"];
+          limits?: external["auth-server.yaml"]["components"]["schemas"]["limits-outgoing"];
         };
         /** access-quote */
         "access-quote": {
@@ -114,6 +142,235 @@ export interface external {
           /** @description The types of actions the client instance will take at the RS as an array of strings. */
           actions: ("create" | "read" | "read-all")[];
         };
+        /**
+         * access_token
+         * @description A single access token or set of access tokens that the client instance can use to call the RS on behalf of the RO.
+         */
+        access_token: {
+          /** @description The value of the access token as a string.  The value is opaque to the client instance.  The value SHOULD be limited to ASCII characters to facilitate transmission over HTTP headers within other protocols without requiring additional encoding. */
+          value: string;
+          /**
+           * Format: uri
+           * @description The management URI for this access token. This URI MUST NOT include the access token value and SHOULD be different for each access token issued in a request.
+           */
+          manage: string;
+          /** @description The number of seconds in which the access will expire.  The client instance MUST NOT use the access token past this time.  An RS MUST NOT accept an access token past this time. */
+          expires_in?: number;
+          access: external["auth-server.yaml"]["components"]["schemas"]["access"];
+        };
+        /**
+         * client
+         * @description Payment pointer of the client instance that is making this request.
+         *
+         * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
+         *
+         * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the payment pointer + `/jwks.json` url.
+         *
+         * If sending a grant initiation request that requires RO interaction, the payment pointer MUST serve necessary client display information.
+         */
+        client: string;
+        /**
+         * continue
+         * @description If the AS determines that the request can be continued with additional requests, it responds with the continue field.
+         */
+        continue: {
+          /** @description A unique access token for continuing the request, called the "continuation access token". */
+          access_token: {
+            value: string;
+          };
+          /**
+           * Format: uri
+           * @description The URI at which the client instance can make continuation requests.
+           */
+          uri: string;
+          /** @description The amount of time in integer seconds the client instance MUST wait after receiving this request continuation response and calling the continuation URI. */
+          wait?: number;
+        };
+        /**
+         * interact
+         * @description The client instance declares the parameters for interaction methods that it can support using the interact field.
+         */
+        "interact-request": {
+          /** @description Indicates how the client instance can start an interaction. */
+          start: "redirect"[];
+          /** @description Indicates how the client instance can receive an indication that interaction has finished at the AS. */
+          finish?: {
+            /** @description The callback method that the AS will use to contact the client instance. */
+            method: "redirect";
+            /**
+             * Format: uri
+             * @description Indicates the URI that the AS will either send the RO to after interaction or send an HTTP POST request.
+             */
+            uri: string;
+            /** @description Unique value to be used in the calculation of the "hash" query parameter sent to the callback URI, must be sufficiently random to be unguessable by an attacker.  MUST be generated by the client instance as a unique value for this request. */
+            nonce: string;
+          };
+        };
+        /** interact-response */
+        "interact-response": {
+          /**
+           * Format: uri
+           * @description The URI to direct the end user to.
+           */
+          redirect: string;
+          /** @description Unique key to secure the callback. */
+          finish: string;
+        };
+        /**
+         * Interval
+         * @description [ISO8601 repeating interval](https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals)
+         */
+        interval: string;
+        /**
+         * limits-outgoing
+         * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
+         */
+        "limits-outgoing": Partial<unknown> & {
+          receiver?: external["schemas.yaml"]["components"]["schemas"]["receiver"];
+          sendAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
+          receiveAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
+          interval?: external["auth-server.yaml"]["components"]["schemas"]["interval"];
+        };
+      };
+    };
+    operations: {
+      /** Make a new grant request */
+      "post-request": {
+        parameters: {};
+        responses: {
+          /** OK */
+          200: {
+            content: {
+              "application/json":
+                | {
+                    interact: external["auth-server.yaml"]["components"]["schemas"]["interact-response"];
+                    continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
+                  }
+                | {
+                    access_token: external["auth-server.yaml"]["components"]["schemas"]["access_token"];
+                    continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
+                  };
+            };
+          };
+          /** Bad Request */
+          400: unknown;
+          /** Unauthorized */
+          401: unknown;
+          /** Internal Server Error */
+          500: unknown;
+        };
+        requestBody: {
+          content: {
+            "application/json": {
+              access_token: {
+                access: external["auth-server.yaml"]["components"]["schemas"]["access"];
+              };
+              client: external["auth-server.yaml"]["components"]["schemas"]["client"];
+              interact?: external["auth-server.yaml"]["components"]["schemas"]["interact-request"];
+            };
+          };
+        };
+      };
+      /** Continue a grant request during or after user interaction. */
+      "post-continue": {
+        parameters: {
+          path: {
+            id: string;
+          };
+        };
+        responses: {
+          /** Success */
+          200: {
+            content: {
+              "application/json": {
+                access_token?: external["auth-server.yaml"]["components"]["schemas"]["access_token"];
+                continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
+              };
+            };
+          };
+          /** Bad Request */
+          400: unknown;
+          /** Unauthorized */
+          401: unknown;
+          /** Not Found */
+          404: unknown;
+        };
+        requestBody: {
+          content: {
+            "application/json": {
+              /**
+               * @description The interaction reference generated for this
+               * interaction by the AS.
+               */
+              interact_ref: string;
+            };
+          };
+        };
+      };
+      /** Cancel a grant request or delete a grant client side. */
+      "delete-continue": {
+        parameters: {
+          path: {
+            id: string;
+          };
+        };
+        responses: {
+          /** No Content */
+          204: never;
+          /** Bad Request */
+          400: unknown;
+          /** Unauthorized */
+          401: unknown;
+          /** Not Found */
+          404: unknown;
+        };
+      };
+      /** Management endpoint to rotate access token. */
+      "post-token": {
+        parameters: {
+          path: {
+            id: string;
+          };
+        };
+        responses: {
+          /** OK */
+          200: {
+            content: {
+              "application/json": {
+                access_token: external["auth-server.yaml"]["components"]["schemas"]["access_token"];
+              };
+            };
+          };
+          /** Bad Request */
+          400: unknown;
+          /** Unauthorized */
+          401: unknown;
+          /** Not Found */
+          404: unknown;
+        };
+      };
+      /** Management endpoint to revoke access token. */
+      "delete-token": {
+        parameters: {
+          path: {
+            id: string;
+          };
+        };
+        responses: {
+          /** No Content */
+          204: never;
+          /** Bad Request */
+          400: unknown;
+          /** Unauthorized */
+          401: unknown;
+        };
+      };
+    };
+  };
+  "schemas.yaml": {
+    paths: {};
+    components: {
+      schemas: {
         /**
          * amount
          * @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.
@@ -137,23 +394,6 @@ export interface external {
          * @description The scale of amounts denoted in the corresponding asset code.
          */
         assetScale: number;
-        /**
-         * Interval
-         * @description [ISO8601 repeating interval](https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals)
-         */
-        interval: string;
-        /**
-         * limits-outgoing
-         * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
-         */
-        "limits-outgoing": Partial<unknown> & {
-          receiver?: external["schemas.yaml"]["components"]["schemas"]["receiver"];
-          sendAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
-          receiveAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
-          interval?: external["schemas.yaml"]["components"]["schemas"]["interval"];
-        };
-        "list-actions": "list" | "list-all";
-        "read-actions": "read" | "read-all";
         /**
          * Receiver
          * Format: uri

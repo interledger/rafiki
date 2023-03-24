@@ -1,4 +1,4 @@
-import { AccessAction } from 'open-payments'
+import { AccessAction } from '@interledger/open-payments'
 import { Logger } from 'pino'
 import { ReadContext, CreateContext } from '../../app'
 import { IAppConfig } from '../../config/app'
@@ -6,7 +6,7 @@ import { CreateQuoteOptions, QuoteService } from './service'
 import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
-import { Quote as OpenPaymentsQuote } from 'open-payments'
+import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { PaymentPointer } from '../payment_pointer/model'
 
 interface ServiceDependencies {

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker'
 import nock from 'nock'
-import { JWK, generateTestKeys } from 'http-signature-utils'
+import { JWK, generateTestKeys } from '@interledger/http-signature-utils'
 
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'

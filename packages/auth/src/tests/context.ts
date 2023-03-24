@@ -4,7 +4,7 @@ import * as httpMocks from 'node-mocks-http'
 import Koa from 'koa'
 import session from 'koa-session'
 import { IocContract } from '@adonisjs/fold'
-import { createHeaders } from 'http-signature-utils'
+import { createHeaders } from '@interledger/http-signature-utils'
 
 import { AppContext, AppContextData, AppServices } from '../app'
 import { TokenHttpSigContext } from '../accessToken/routes'

@@ -7,10 +7,9 @@
     "dist/**/*"
   ],
   "scripts": {
-    "build:deps": "pnpm --filter openapi build",
-    "build": "pnpm build:deps && pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
+    "build": "pnpm clean && tsc --build tsconfig.json && pnpm copy-files",
     "clean": "rm -fr dist/",
-    "copy-files": "cp -r ./src/openapi ./dist/",
+    "copy-files": "cp -r ./src/openapi/*.yaml ./dist/openapi",
     "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "prepack": "pnpm build",
     "test": "jest --passWithNoTests"
@@ -23,8 +22,8 @@
     "uuid": "^8.3.2"
   },
   "dependencies": {
+    "@interledger/openapi": "1.0.0",
     "axios": "^1.3.4",
-    "openapi": "workspace:../openapi",
     "pino": "^8.11.0"
   }
 }

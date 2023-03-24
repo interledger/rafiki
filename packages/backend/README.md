@@ -19,12 +19,6 @@
 
   and then restart docker.
 
-- [`openapi`](https://github.com/interledger/rafiki/tree/main/packages/openapi):
-
-```shell
-pnpm --filter openapi build
-```
-
 ### Testing
 
 From the monorepo root directory:
@@ -58,37 +52,4 @@ The config is passed to `ioredis` - see https://github.com/luin/ioredis#tls-opti
 
 ### Design
 
-[Source ->](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNp1U8tuwjAQ_JXIBxQk-AEOSI3ooaeCmlObHkyyDRaJTR37ECH-vbt-5AE0B3s9M-udteMrK1UFbMNqzS-nJN8VMsGvs0cPHHl5Bll59E2WqhWyTmOw530L0iw9_W5NrYiOwZw-WGUgdWNAXspSWWnSMM9R2mgMI9d1gHoaA7IH0CkNYZ1nX2kuatAZgGlg-T1J3CHngm6AfQFH-HCgYo_E3fU7aGKjpLlretC4hkngggEmy4TS_FAzWa-3EwNPyOB2bsMxrsyk9KN8hIO3J7uMnY12HeF9z04vWfjjxXnYYzHaXcTkpBG_VlTC9AkPmRNvKJ1cFclxwhukw_xXP_fhWMq-_5Eck2dP1PH-56W38X_xMD4AtmIt6JaLCt_KleCCmROaK9gGw4rrc8EKeUOdvVTcwCv2qTTbGG1hxbg16qOXZVx7zU5wfGVtBC9cfiqFyx_edHD7AzbEK6M)
-<img alt="backend design" src="docs/backend.svg">
-
-### Chart Of Accounts
-
-#### Definitions
-
-| Definition | Description                                         |
-| ---------- | --------------------------------------------------- |
-| Account    | An account that may receive debit/credit transfers. |
-
-#### Overview
-
-| Number | User Story                                             |
-| ------ | ------------------------------------------------------ |
-| 1.     | Create liquidity account.                              |
-| 2.     | Create settlement account.                             |
-| 3.     | Transfer where source ledger match destination ledger. |
-
-#### Events
-
-`DR` - Debit account
-`CR` - Credit account
-`CA` - Create account
-
-```
-DR Participant A Settlement (C)                  30
-      CR Participant A Liquidity                          30
-
-DR Participant B Settlement (C)                 110
-      CR Participant B Liquidity                         110
-```
-
-##### Transfer
+[![](https://mermaid.ink/img/pako:eNqNVD1vwjAQ_SuRBxQkUHcGpCI6dGqqMrXpYJIjWE1sap8HhPjv9Uccx1GQypCc77179-ELN1KJGsiGNJJeztlhX_LM_JQ-eseRVj_Aa-995ZXoGG_yYBT02gHHpYffNDbCwsFI4XctEHL37D09XhgugszTY895riqhOVrZaAZMKcDcPYMiWB2YRqv97iuEq-W3xw6ScnUC6cDhEFCn6sKsMbjTGi2eegZiGJGlTMY1cMKcLGcys4Hj5mUJzoh1QJ8dZnJm6_V2VMAMmBadVuMILtuogodREe0rnRGLfcbivaDrYm6y2cLfgHkPUovYwyJoZC371axmeM2ov18nHFdldJuWbl7Ygk30kD9bjiNZkelWWtFCKGwkqKcDa0DuAEyKsawKPf4zbLSZD4uZLmLa5zbsr3ebL5isSAeyo6w2H_vNukuCZzOJkmyMWcOJ6hZLUvK7oepLTRFezFyFJBuUGlaEahQfV16Fs-fsGTX_FF1wXij_FMIcT7RVcP8DQHN1Og?type=png)](https://mermaid-js.github.io/mermaid-live-editor/edit#pako:eNqNVD1vwjAQ_SuRBxQkUHcGpCI6dGqqMrXpYJIjWE1sap8HhPjv9Uccx1GQypCc77179-ELN1KJGsiGNJJeztlhX_LM_JQ-eseRVj_Aa-995ZXoGG_yYBT02gHHpYffNDbCwsFI4XctEHL37D09XhgugszTY895riqhOVrZaAZMKcDcPYMiWB2YRqv97iuEq-W3xw6ScnUC6cDhEFCn6sKsMbjTGi2eegZiGJGlTMY1cMKcLGcys4Hj5mUJzoh1QJ8dZnJm6_V2VMAMmBadVuMILtuogodREe0rnRGLfcbivaDrYm6y2cLfgHkPUovYwyJoZC371axmeM2ov18nHFdldJuWbl7Ygk30kD9bjiNZkelWWtFCKGwkqKcDa0DuAEyKsawKPf4zbLSZD4uZLmLa5zbsr3ebL5isSAeyo6w2H_vNukuCZzOJkmyMWcOJ6hZLUvK7oepLTRFezFyFJBuUGlaEahQfV16Fs-fsGTX_FF1wXij_FMIcT7RVcP8DQHN1Og)

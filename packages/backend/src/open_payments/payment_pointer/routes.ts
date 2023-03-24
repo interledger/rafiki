@@ -1,4 +1,4 @@
-import { AccessAction } from 'open-payments'
+import { AccessAction } from '@interledger/open-payments'
 import { PaymentPointerSubresource } from './model'
 import { PaymentPointerSubresourceService } from './service'
 import { PaymentPointerContext, ListContext } from '../../app'
