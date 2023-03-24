@@ -54,11 +54,11 @@ The `pnpm localenv:start` command starts both the primary instance and the secon
 
 (c) Open Payments API - accessible at http://localhost:3000
 
-(d) Open Payments Auth API - accessible at http://localhost:3006
+(d) Rafiki Admin - accessible at http://localhost:3010
 
-(e) Postman Signature Service - accessible at http://localhost:3040
+(e) Open Payments Auth API - accessible at http://localhost:3006
 
-(f) Rafiki Admin - accessible at http://localhost:3010
+(f) Postman Signature Service - accessible at http://localhost:3040
 
 #### Happy Life Bank
 
@@ -68,11 +68,11 @@ The `pnpm localenv:start` command starts both the primary instance and the secon
 
 (i) Open Payments API - accessible at http://localhost:4000
 
-(j) Open Payments Auth API - accessible at http://localhost:4006
+(j) Rafiki Admin - accessible at http://localhost:4010
 
-(k) Postman Signature Service - accessible at http://localhost:3041
+(k) Open Payments Auth API - accessible at http://localhost:4006
 
-(l) Rafiki Admin - accessible at http://localhost:4010
+(l) Postman Signature Service - accessible at http://localhost:3041
 
 #### Database
 
