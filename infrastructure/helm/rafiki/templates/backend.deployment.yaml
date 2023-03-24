@@ -45,25 +45,23 @@ spec:
           envFrom:
           - configMapRef:
               name: {{ include "rafiki.fullname" . }}-backend
+          - secretRef:
+              name: {{ include "rafiki.fullname" . }}-backend-secrets
           env:
           - name: ILP_ADDRESS
-            value: test.cloud-nine-wallet
+            value: {{ .Values.backend.serviceUrls.ILP_ADDRESS }} 
           - name: PUBLIC_HOST
-            value: http://{{ include "rafiki.fullname" . }}-backend
+            value: {{ .Values.backend.serviceUrls.PUBLIC_HOST }} 
           - name: OPEN_PAYMENTS_URL
-            value: http://{{ include "rafiki.fullname" . }}-backend
+            value: {{ .Values.backend.serviceUrls.OPEN_PAYMENTS_URL }} 
           - name: WEBHOOK_URL
-            value: http://cloud-nine-wallet/webhooks
+            value: {{ .Values.backend.serviceUrls.WEBHOOK_URL }} 
           - name: PRICES_URL
-            value: http://cloud-nine-wallet/prices
-          - name: REDIS_URL
-            value: redis://{{ include "rafiki.fullname" . }}-redis-master:6379/0
+            value: {{ .Values.backend.serviceUrls.PRICES_URL }} 
           - name: QUOTE_URL
-            value: http://cloud-nine-wallet/quotes
+            value: {{ .Values.backend.serviceUrls.QUOTE_URL }} 
           - name: PAYMENT_POINTER_URL
-            value: https://cloud-nine-wallet-backend/.well-known/pay
-          - name: DATABASE_URL
-            value: postgresql://backend:changeme@{{ include "rafiki.fullname" . }}-postgresql/backend
+            value: {{ .Values.backend.serviceUrls.PAYMENT_POINTER_URL }} 
           - name: AUTH_SERVER_GRANT_URL
             value: http://{{ include "rafiki.fullname" . }}-auth:3006
           - name: AUTH_SERVER_INTROSPECTION_URL

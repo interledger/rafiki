@@ -5,12 +5,11 @@ This chart deploys
 1. Rafiki backend
 2. Rafiki auth service
 
-It also deploys dependent charts:
-
-1. Postgres
-2. Redis
-
 Some general notes:
 
 * Rafiki-backend uses io_uring. This is allowed in many k8s environments, but it doesn't work in GKE Autopilot clusters.
-* Remember that `helm uninstall` will NOT delete PVCs (the data volumes associated with the dbs. If you delete this chart and reinstall it without manually deleting the PVCs, the databases will continue using the previous PVCs and specifically will not respect changes in postgres user/password/database settings.
+* This chart does not deploy the required redis and postgresql datastores. If you are deploying your databases in k8s, the bitnami [redis](https://github.com/bitnami/charts/tree/main/bitnami/redis) and [postgresql](https://github.com/bitnami/charts/tree/main/bitnami/postgresql) charts are recommended. Installing them separately will make it easier and safer to perform updates on this chart, which contains no stateful components.
+
+Outstanding questions:
+
+There are several URL parameters to backend that refer to the backend service itself: `PUBLIC_HOST`, `OPEN_PAYMENTS_URL`, `PAYMENT_POINTER_URL`. Attention should be paid to whether those are k8s-internal URLs or public URLs.

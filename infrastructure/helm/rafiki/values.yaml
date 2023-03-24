@@ -1,25 +1,21 @@
-postgresql:
-  replication:
-    enabled: false
-  metrics:
-    enabled: false
-  primary:
-    initdb:
-      scripts:
-        initialize_backend.sql: |
-          CREATE USER backend PASSWORD 'changeme';
-          CREATE DATABASE backend OWNER backend;
-        initialize_auth.sql: |
-          CREATE USER auth PASSWORD 'changeme';
-          CREATE DATABASE auth OWNER auth;
-    persistence:
-      enabled: true
-
-redis:
-  auth:
-    enabled: false
+#CREATE USER backend PASSWORD 'changeme';
+#CREATE DATABASE backend OWNER backend;
 
 backend:
+  serviceUrls:
+    ILP_ADDRESS: test.cloud-nine-wallet
+    PUBLIC_HOST: http://rafiki-backend
+    OPEN_PAYMENTS_URL: http://rafiki-backend
+    PAYMENT_POINTER_URL: http://rafiki-backend/.well-known/pay
+    WEBHOOK_URL: http://cloud-nine-wallet/webhooks
+    PRICES_URL: http://cloud-nine-wallet/prices
+    QUOTE_URL: http://cloud-nine-wallet/quotes
+  postgresql:
+    host: "postgres.example.com"
+    port: 5432
+    username: "backend"
+    database: "backend"
+    password: "overridethisValue"
   openPaymentsPort: 80
   adminPort: 3001
   image:
@@ -48,6 +44,16 @@ backend:
       cpu: 300m
 
 auth:
+  redis:
+    host: 'redis.example.com'
+    port: 6739
+    databaseIndex: 0
+  postgresql:
+    host: "postgres.example.com"
+    port: 5432
+    username: "auth"
+    database: "auth"
+    password: "overridethisValue"
   port: 3006
   image:
     repository: ghcr.io/interledger/rafiki-auth
