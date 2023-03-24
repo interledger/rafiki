@@ -119,7 +119,7 @@ export default function ViewPeerPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
-                    aria-label='save general informations'
+                    aria-label='save general information'
                     type='submit'
                     name='intent'
                     value='general'
@@ -135,7 +135,7 @@ export default function ViewPeerPage() {
         {/* Peer HTTP Info */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>HTTP Informations</h3>
+            <h3 className='text-lg font-medium'>HTTP Information</h3>
             <ErrorPanel errors={response?.errors.http.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
@@ -168,7 +168,7 @@ export default function ViewPeerPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
-                    aria-label='save http informations'
+                    aria-label='save http information'
                     type='submit'
                     name='intent'
                     value='http'
@@ -184,7 +184,7 @@ export default function ViewPeerPage() {
         {/* Peer Asset Info */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Asset Informations</h3>
+            <h3 className='text-lg font-medium'>Asset Information</h3>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
@@ -370,7 +370,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   setMessage(session, {
-    content: 'Peer informations were updated.',
+    content: 'Peer information was updated.',
     type: 'success'
   })
 

@@ -31,7 +31,7 @@ export default function CreateAssetPage() {
             {/* Asset General Info */}
             <div className='grid grid-cols-1 px-0 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
               <div className='col-span-1 pt-3'>
-                <h3 className='text-lg font-medium'>General Informations</h3>
+                <h3 className='text-lg font-medium'>General Information</h3>
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>

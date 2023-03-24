@@ -56,7 +56,7 @@ export default function ViewAssetPage() {
         </PageHeader>
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>General Informations</h3>
+            <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>Created at {asset.createdAt}</p>
             <ErrorPanel errors={response?.errors.message} />
           </div>
@@ -129,7 +129,7 @@ export async function action({ request }: ActionArgs) {
   const session = await getSession(request.headers.get('cookie'))
 
   setMessage(session, {
-    content: 'Asset informations were updated.',
+    content: 'Asset information was updated.',
     type: 'success'
   })
 
