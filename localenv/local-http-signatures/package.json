@@ -10,7 +10,7 @@
     "clean": "rm -fr dist/"
   },
   "dependencies": {
-    "@interledger/http-signature-utils": "1.0.0",
+    "@interledger/http-signature-utils": "1.0.1",
     "koa": "^2.14.1",
     "koa-bodyparser": "^4.4.0",
     "koa-json": "^2.0.2",

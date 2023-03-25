@@ -62,7 +62,7 @@
     "graphql": "^16.6.0",
     "graphql-scalars": "^1.20.4",
     "graphql-tools": "^8.3.19",
-    "@interledger/http-signature-utils": "1.0.0",
+    "@interledger/http-signature-utils": "1.0.1",
     "ilp-packet": "3.1.4-alpha.2",
     "ilp-protocol-ccp": "^1.2.3",
     "ilp-protocol-ildcp": "^2.2.3",
