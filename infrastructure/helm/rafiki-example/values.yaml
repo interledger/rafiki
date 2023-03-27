@@ -1,0 +1,105 @@
+#CREATE USER backend PASSWORD 'changeme';
+#CREATE DATABASE backend OWNER backend;
+rafiki:
+  backend:
+    serviceUrls:
+      ILP_ADDRESS: test.cloud-nine-wallet
+      PUBLIC_HOST: http://rafiki-backend
+      OPEN_PAYMENTS_URL: http://rafiki-backend
+      PAYMENT_POINTER_URL: http://rafiki-backend/.well-known/pay
+      WEBHOOK_URL: http://cloud-nine-wallet/webhooks
+      PRICES_URL: http://cloud-nine-wallet/prices
+      QUOTE_URL: http://cloud-nine-wallet/quotes
+    redis:
+      host: "rafiki-example-redis-master"
+      port: 6379
+      databaseIndex: 0
+    postgresql:
+      host: "rafiki-example-postgresql"
+      port: 5432
+      username: "backend"
+      database: "backend"
+      password: "changeme"
+    openPaymentsPort: 80
+    adminPort: 3001
+    image:
+      repository: ghcr.io/interledger/rafiki-backend
+      tag: 'd029ee4'
+      digest: ''
+      pullPolicy: IfNotPresent
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 50%
+    serviceAccount:
+      # Specifies whether a service account should be created
+      create: true
+      # The name of the service account to use.
+      # If not set and create is true, a name is generated using the fullname template
+      name: ''
+    securityContext:
+      {}
+      # privileged: true
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 450m
+      requests:
+        memory: 800Mi
+        cpu: 300m
+
+  auth:
+    redis:
+      host: "rafiki-example-redis-master"
+      port: 6379
+      databaseIndex: 0
+    postgresql:
+      host: "rafiki-example-postgresql"
+      port: 5432
+      username: "auth"
+      database: "auth"
+      password: "changeme"
+    port: 3006
+    image:
+      repository: ghcr.io/interledger/rafiki-auth
+      tag: 'd029ee4'
+      digest: ''
+      pullPolicy: IfNotPresent
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 50%
+    serviceAccount:
+      # Specifies whether a service account should be created
+      create: true
+      # The name of the service account to use.
+      # If not set and create is true, a name is generated using the fullname template
+      name: ''
+    securityContext:
+      {}
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 450m
+      requests:
+        memory: 800Mi
+        cpu: 300m
+
+postgresql:
+  replication:
+    enabled: false
+  metrics:
+    enabled: false
+  primary:
+    initdb:
+      scripts:
+        initialize_backend.sql: |
+          CREATE USER backend PASSWORD 'changeme';
+          CREATE DATABASE backend OWNER backend;
+        initialize_auth.sql: |
+          CREATE USER auth PASSWORD 'changeme';
+          CREATE DATABASE auth OWNER auth;
+    persistence:
+      enabled: true
+
+redis:
+  auth:
+    enabled: false

@@ -1,0 +1,12 @@
+dependencies:
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 17.9.2
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.0.0
+- name: rafiki
+  repository: file://../rafiki
+  version: 0.0.0
+digest: sha256:4b563e07f1580658c01f480536c0ea8cb863c6e9851e76d1cef187cecdba4e3e
+generated: "2023-03-26T22:20:48.948174-04:00"

@@ -28,9 +28,22 @@ If release name contains chart name it will be used as a full name.
 {{- define "backend.name" -}}
 {{ include "rafiki.fullname" . }}-backend
 {{- end -}}
+{{- define "backend.postgresqlUrl" -}}
+postgresql://{{ .Values.backend.postgresql.username }}:{{ .Values.backend.postgresql.password }}@{{ .Values.backend.postgresql.host }}:{{ .Values.backend.postgresql.port | int}}/{{ .Values.backend.postgresql.database }}
+{{- end -}}
+{{- define "backend.redisUrl" -}}
+redis://{{ .Values.backend.redis.host }}:{{ .Values.backend.redis.port }}/{{ .Values.backend.redis.databaseIndex }}
+{{- end -}}
+
 
 {{- define "auth.name" -}}
 {{ include "rafiki.fullname" . }}-auth
+{{- end -}}
+{{- define "auth.postgresqlUrl" -}}
+postgresql://{{ .Values.auth.postgresql.username }}:{{ .Values.auth.postgresql.password }}@{{ .Values.auth.postgresql.host }}:{{ .Values.auth.postgresql.port | int}}/{{ .Values.auth.postgresql.database }}
+{{- end -}}
+{{- define "auth.redisUrl" -}}
+redis://{{ .Values.auth.redis.host }}:{{ .Values.auth.redis.port }}/{{ .Values.auth.redis.databaseIndex }}
 {{- end -}}
 
 {{/*
