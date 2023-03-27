@@ -254,7 +254,7 @@ importers:
       extensible-error: ^1.0.2
       fishery: ^2.2.2
       graphql: ^16.6.0
-      graphql-scalars: ^1.20.4
+      graphql-scalars: ^1.21.3
       graphql-tools: ^8.3.19
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ccp: ^1.2.3
@@ -310,7 +310,7 @@ importers:
       extensible-error: 1.0.2
       fishery: 2.2.2
       graphql: 16.6.0
-      graphql-scalars: 1.20.4_graphql@16.6.0
+      graphql-scalars: 1.21.3_graphql@16.6.0
       graphql-tools: 8.3.19_onqnqwb3ubg5opvemcqf7c2qhy
       ilp-packet: 3.1.4-alpha.2
       ilp-protocol-ccp: 1.2.3
@@ -7756,8 +7756,8 @@ packages:
       - encoding
     dev: true
 
-  /graphql-scalars/1.20.4_graphql@16.6.0:
-    resolution: {integrity: sha512-/hDzWcphV/aV4MEx2pqVMMekBLi9VXYD/HrJSclpOCLkSB/dE3Rb5VVZBXsQhgBxqeCsE7K0PEO2/cWAUzQsrQ==}
+  /graphql-scalars/1.21.3_graphql@16.6.0:
+    resolution: {integrity: sha512-QLWw3BHmqHZMp9JeYmPpjq7JT9aw/H8TpwmWKJEuMSE3+O7Xe7TduQbOLFzbs1q9UxX6CVkc0O1JO/YfkP/pAw==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
