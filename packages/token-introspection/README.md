@@ -5,10 +5,8 @@ This package supports [GNAP](https://datatracker.ietf.org/doc/html/draft-ietf-gn
 It includes:
 
 - Exported TypeScript types generated from a GNAP token introspection OpenAPI specification  
-The OpenAPI specification utilizes schemas from the [Open Payments](../docs/glossary.md#open-payments) [authorization server OpenAPI specification](https://github.com/interledger/open-payments/blob/main/openapi/auth-server.yaml)
+  The OpenAPI specification utilizes schemas from the [Open Payments](../docs/glossary.md#open-payments) [authorization server OpenAPI specification](https://github.com/interledger/open-payments/blob/main/openapi/auth-server.yaml)
 - A NodeJS client for sending token introspection requests
-
-
 
 ## Usage
 
