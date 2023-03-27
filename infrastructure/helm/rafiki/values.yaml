@@ -20,7 +20,7 @@ backend:
   adminPort: 3001
   image:
     repository: ghcr.io/interledger/rafiki-backend
-    tag: 'd029ee4'
+    tag: 'main'
     digest: ''
     pullPolicy: IfNotPresent
   rollingUpdate:
@@ -34,14 +34,13 @@ backend:
     name: ''
   securityContext:
     {}
-    # privileged: true
-  resources:
-    limits:
-      memory: 1Gi
-      cpu: 450m
-    requests:
-      memory: 800Mi
-      cpu: 300m
+#  resources:
+#    limits:
+#      memory: 1Gi
+#      cpu: 450m
+#    requests:
+#      memory: 800Mi
+#      cpu: 300m
 
 auth:
   redis:
@@ -57,7 +56,7 @@ auth:
   port: 3006
   image:
     repository: ghcr.io/interledger/rafiki-auth
-    tag: 'd029ee4'
+    tag: 'main'
     digest: ''
     pullPolicy: IfNotPresent
   rollingUpdate:
@@ -71,10 +70,10 @@ auth:
     name: ''
   securityContext:
     {}
-  resources:
-    limits:
-      memory: 1Gi
-      cpu: 450m
-    requests:
-      memory: 800Mi
-      cpu: 300m
+#  resources:
+#    limits:
+#      memory: 1Gi
+#      cpu: 450m
+#    requests:
+#      memory: 800Mi
+#      cpu: 300m
