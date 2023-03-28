@@ -62,8 +62,8 @@ importers:
   localenv/local-http-signatures:
     dependencies:
       '@interledger/http-signature-utils':
-        specifier: 1.0.1
-        version: 1.0.1
+        specifier: 1.0.3
+        version: 1.0.3
       koa:
         specifier: ^2.14.1
         version: 2.14.1
@@ -108,8 +108,8 @@ importers:
         specifier: ^3.7.10
         version: 3.7.10(graphql@16.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 1.0.1
-        version: 1.0.1
+        specifier: 1.0.3
+        version: 1.0.3
       '@remix-run/node':
         specifier: ^1.14.3
         version: 1.14.3
@@ -184,8 +184,8 @@ importers:
         specifier: ^9.0.17
         version: 9.0.17(graphql@16.6.0)
       '@interledger/http-signature-utils':
-        specifier: 1.0.1
-        version: 1.0.1
+        specifier: 1.0.3
+        version: 1.0.3
       '@interledger/open-payments':
         specifier: 1.0.3
         version: 1.0.3
@@ -329,8 +329,8 @@ importers:
         specifier: ^9.0.17
         version: 9.0.17(graphql@16.6.0)
       '@interledger/http-signature-utils':
-        specifier: 1.0.1
-        version: 1.0.1
+        specifier: 1.0.3
+        version: 1.0.3
       '@interledger/open-payments':
         specifier: 1.0.3
         version: 1.0.3
@@ -3197,15 +3197,6 @@ packages:
   /@humanwhocodes/object-schema@1.2.1:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
-
-  /@interledger/http-signature-utils@1.0.1:
-    resolution: {integrity: sha512-Qez5/oQeFmvq5Gh5JLNMQURB/PrAeEe/o/Dw4wcbF0jrpDTP8cV5/qfBxb1yAGgadgEMmK8VoNGAxIjpvN0lBw==}
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
-      jose: 4.13.1
-      uuid: 9.0.0
-    dev: false
 
   /@interledger/http-signature-utils@1.0.3:
     resolution: {integrity: sha512-jh+sVSvJYdub1gB9OHXIGziKrEiIvoFG3SFjW/fBCWyUabjq0Bt3RYmz5C29GjoKORvYTor+hO2m7e5EtJwdog==}
