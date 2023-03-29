@@ -1,0 +1,23 @@
+name: OpenAPI Validator
+
+on:
+  push:
+    branches:
+      - mk/test-trigger
+    paths:
+      - packages/**/**.graphql
+
+jobs:
+  trigger-rafiki-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Rafiki Dev Update
+        uses: actions/github-script@v5
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: 'rafiki.dev',
+              workflow_id: 'workflows/trigger.yaml',
+              ref: 'mk/test-trigger'
+            });
