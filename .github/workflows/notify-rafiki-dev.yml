@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - mk/test-trigger
-      
+
 jobs:
   trigger-rafiki-dev:
+    permissions:
+      - actions:write
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Rafiki Dev Update
