@@ -9,6 +9,7 @@ jobs:
   trigger-rafiki-dev:
     runs-on: ubuntu-latest
     steps:
+      - name: Trigger Rafiki Dev Update
         uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
