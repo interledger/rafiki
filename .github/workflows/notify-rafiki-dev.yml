@@ -8,7 +8,7 @@ on:
 jobs:
   trigger-rafiki-dev:
     permissions:
-      - actions:write
+      - actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Rafiki Dev Update
