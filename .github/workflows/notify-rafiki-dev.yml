@@ -1,4 +1,4 @@
-name: OpenAPI Validator
+name: Trigger Rafiki Dev 
 
 on:
   push:
@@ -12,11 +12,10 @@ jobs:
       - name: Trigger Rafiki Dev Update
         uses: actions/github-script@v5
         with:
-          github-token: ${{ secrets.PAT_TOKEN }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
+              owner: 'interledger',
               repo: 'rafiki.dev',
-              workflow_id: 'workflows/trigger.yaml',
+              workflow_id: 'workflows/generate-docs',
               ref: 'mk/test-trigger'
             });
