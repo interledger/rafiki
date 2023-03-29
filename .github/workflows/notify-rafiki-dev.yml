@@ -7,13 +7,11 @@ on:
 
 jobs:
   trigger-rafiki-dev:
-    permissions:
-      actions: write
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Rafiki Dev Update
         uses: actions/github-script@v5
         with:
+          github-token: ${{ secrets.PAT_TOKEN }}
           script: |
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
