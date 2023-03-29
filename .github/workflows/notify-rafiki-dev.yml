@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - mk/test-trigger
-    paths:
-      - packages/**/**.graphql
-
+      
 jobs:
   trigger-rafiki-dev:
     runs-on: ubuntu-latest
