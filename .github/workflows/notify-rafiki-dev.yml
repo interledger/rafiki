@@ -3,9 +3,7 @@ name: Notify rafiki.dev
 on:
   push:
     branches:
-      - main
-    paths:
-      - packages/backend/src/**/*.graphql
+      - mk/notify-rafiki-dev
 
 jobs:
   trigger-rafiki-dev:
@@ -20,5 +18,5 @@ jobs:
               owner: 'interledger',
               repo: 'rafiki.dev',
               workflow_id: 'workflows/generate-docs',
-              ref: 'main'
+              ref: 'mk/auto-generate-docs'
             });
