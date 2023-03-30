@@ -17,6 +17,6 @@ jobs:
             await github.rest.actions.createWorkflowDispatch({
               owner: 'interledger',
               repo: 'rafiki.dev',
-              workflow_id: 'workflows/generate-docs',
-              ref: 'mk/auto-generate-docs.yml'
+              workflow_id: 'workflows/generate-docs.yml',
+              ref: 'mk/auto-generate-docs'
             });
