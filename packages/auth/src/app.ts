@@ -436,7 +436,7 @@ export class App {
             .del()
         } catch (err) {
           this.logger.warn(
-            { error: err && err['message'], tableName },
+            { error: err instanceof Error && err.message, tableName },
             'processDatabaseCleanup error'
           )
         }

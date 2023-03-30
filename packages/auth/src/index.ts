@@ -205,8 +205,7 @@ export const start = async (
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const errInfo =
-        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
+      const errInfo = err instanceof Error && error.stack ? err.stack : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -223,8 +222,7 @@ export const start = async (
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const errInfo =
-        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
+      const errInfo = err instanceof Error && error.stack ? err.stack : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
