@@ -9,7 +9,7 @@ name: Build / Release Docker Images
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         package: [auth, backend]
