@@ -6,7 +6,7 @@ on:
       - mk/notify-rafiki-dev
 
 jobs:
-  trigger-rafiki-dev:
+  notify-rafiki-dev:
     runs-on: ubuntu-latest
     steps:
       - name: Notify rafiki.dev
