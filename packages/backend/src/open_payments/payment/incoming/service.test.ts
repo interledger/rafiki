@@ -108,7 +108,7 @@ describe('Incoming Payment Service', (): void => {
           paymentPointerId,
           incomingAmount: {
             value: BigInt(123),
-            assetCode: 'ABC',
+            assetCode: asset.code.split('').reverse().join(''),
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
@@ -122,7 +122,7 @@ describe('Incoming Payment Service', (): void => {
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
-            assetScale: 20
+            assetScale: (asset.scale + 1) % 256
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: 'Test incoming payment',
@@ -137,7 +137,7 @@ describe('Incoming Payment Service', (): void => {
           paymentPointerId,
           incomingAmount: {
             value: BigInt(0),
-            assetCode: 'ABC',
+            assetCode: asset.code,
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
@@ -150,7 +150,7 @@ describe('Incoming Payment Service', (): void => {
           paymentPointerId,
           incomingAmount: {
             value: BigInt(-13),
-            assetCode: 'ABC',
+            assetCode: asset.code,
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
@@ -165,8 +165,8 @@ describe('Incoming Payment Service', (): void => {
         incomingPaymentService.create({
           paymentPointerId,
           incomingAmount: {
-            value: BigInt(0),
-            assetCode: 'ABC',
+            value: BigInt(10),
+            assetCode: asset.code,
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() - 40_000),
