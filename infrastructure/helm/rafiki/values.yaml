@@ -20,7 +20,7 @@ backend:
   adminPort: 3001
   image:
     repository: ghcr.io/interledger/rafiki-backend
-    tag: 'main'
+    tag: 'v1.0.0-alpha'
     digest: ''
     pullPolicy: IfNotPresent
   rollingUpdate:
