@@ -9,7 +9,7 @@ data:
   LOG_LEVEL: debug
   ADMIN_PORT: "{{ .Values.backend.adminPort }}"
   OPEN_PAYMENTS_PORT: "{{ .Values.backend.openPaymentsPort }}"
-  USE_TIGERBEETLE: false 
+  USE_TIGERBEETLE: "false"
   TIGERBEETLE_CLUSTER_ID: none
   TIGERBEETLE_REPLICA_ADDRESSES: none
   NONCE_REDIS_KEY: test

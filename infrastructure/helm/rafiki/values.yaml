@@ -1,11 +1,17 @@
 postgresql:
   auth:
-    postgresPassword: 'overridethisvalue'
+    username: backend
+    database: backend
+    password: overridethisvalue
   replication:
     enabled: false
   metrics:
     enabled: false
   primary:
+    #initdb:
+    #  scripts:
+    #    initialize_backend.sql: |
+    #      CREATE USER backend PASSWORD ;
     persistence:
       enabled: true
 
@@ -19,7 +25,7 @@ backend:
   adminPort: 3001
   image:
     repository: ghcr.io/interledger/rafiki-backend
-    tag: 'latest'
+    tag: 'd029ee4'
     digest: ''
     pullPolicy: IfNotPresent
   rollingUpdate:
@@ -31,9 +37,9 @@ backend:
     # The name of the service account to use.
     # If not set and create is true, a name is generated using the fullname template
     name: ''
-  podSecurityContext:
+  securityContext:
     {}
-    # fsGroup: 2000
+    # privileged: true
   resources:
     limits:
       memory: 1Gi
@@ -46,7 +52,7 @@ auth:
   port: 3006
   image:
     repository: ghcr.io/interledger/rafiki-auth
-    tag: 'latest'
+    tag: 'd029ee4'
     digest: ''
     pullPolicy: IfNotPresent
   rollingUpdate:
@@ -58,9 +64,8 @@ auth:
     # The name of the service account to use.
     # If not set and create is true, a name is generated using the fullname template
     name: ''
-  podSecurityContext:
+  securityContext:
     {}
-    # fsGroup: 2000
   resources:
     limits:
       memory: 1Gi

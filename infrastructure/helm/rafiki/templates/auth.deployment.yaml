@@ -42,7 +42,6 @@ spec:
             {{- toYaml .Values.auth.securityContext | nindent 12 }}
           image: {{ include "auth.image" . }}
           imagePullPolicy: {{ .Values.auth.image.pullPolicy }}
-          args: ["app"]
           envFrom:
           - configMapRef:
               name: {{ include "auth.name" . }}

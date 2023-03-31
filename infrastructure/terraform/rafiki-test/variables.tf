@@ -23,7 +23,7 @@ locals {
       {
         name = "us-west1"
         location = "us-west1-a"
-        node_locations = ["us-west1-a", "us-west1-b","us-west1-c"]
+        node_locations = ["us-west1-a","us-west1-c"]
         machine_type = "n2-standard-2"
         # the "node count" is actually "nodes per node location" count
         node_count = 1

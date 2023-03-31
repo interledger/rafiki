@@ -42,7 +42,6 @@ spec:
             {{- toYaml .Values.backend.securityContext | nindent 12 }}
           image: {{ include "backend.image" . }}
           imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
-          args: ["app"]
           envFrom:
           - configMapRef:
               name: {{ include "rafiki.fullname" . }}-backend
