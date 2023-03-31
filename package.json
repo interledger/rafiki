@@ -33,8 +33,7 @@
     "localenv:psql:stop": "pnpm localenv:cloud-nine-wallet down && pnpm localenv:happy-life-bank down && pnpm localenv:network:remove",
     "localenv:psql:dbvolumes:remove": "docker volume rm cloud-nine-wallet_database-data",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
-    "sanity": "pnpm -r build && pnpm -r test",
-    "docs": "graphql-markdown --update-file ./docs/admin-api.md --heading-level 2 ./packages/backend/src/graphql/schema.graphql"
+    "sanity": "pnpm -r build && pnpm -r test"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.5.1",
@@ -47,7 +46,6 @@
     "@typescript-eslint/parser": "^5.57.0",
     "eslint": "^8.37.0",
     "eslint-config-prettier": "^8.8.0",
-    "graphql-markdown": "^7.0.0",
     "husky": "^8.0.3",
     "jest": "^29.5.0",
     "prettier": "^2.8.7",
