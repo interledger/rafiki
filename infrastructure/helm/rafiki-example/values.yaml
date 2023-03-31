@@ -24,7 +24,7 @@ rafiki:
     adminPort: 3001
     image:
       repository: ghcr.io/interledger/rafiki-backend
-      tag: 'd029ee4'
+      tag: 'v1.0.0-alpha'
       digest: ''
       pullPolicy: IfNotPresent
     rollingUpdate:
@@ -61,7 +61,7 @@ rafiki:
     port: 3006
     image:
       repository: ghcr.io/interledger/rafiki-auth
-      tag: 'd029ee4'
+      tag: 'v1.0.0-alpha'
       digest: ''
       pullPolicy: IfNotPresent
     rollingUpdate:
