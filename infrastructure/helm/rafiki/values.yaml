@@ -56,7 +56,7 @@ auth:
   port: 3006
   image:
     repository: ghcr.io/interledger/rafiki-auth
-    tag: 'main'
+    tag: 'v1.0.0-alpha'
     digest: ''
     pullPolicy: IfNotPresent
   rollingUpdate:
