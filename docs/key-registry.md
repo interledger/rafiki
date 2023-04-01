@@ -2,7 +2,7 @@
 
 ## Sequence Diagram
 
-TODO: add sequence diagram
+![key-registry-diagram](https://user-images.githubusercontent.com/20246798/229255746-290a5a54-1f1e-4c7c-b891-4a27152c743e.png)
 
 ## Basics
 
