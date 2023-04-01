@@ -8,11 +8,11 @@
 
 ### What is the key registry?
 
-A key registry is a list of keys stored by a client. A key is generated and added to the registry by a client and exposed publically at the path `/jwks.json` in anticipation of a grant request on an authorization server (AS).
+A key registry is a list of keys stored by a client that requires access to Open Payments resources protected by an authorization server (AS). A key is generated and added to the registry by a client and the client is represented by a [payment pointer](https://github.com/interledger/rafiki/blob/main/docs/glossary.md#payment-pointer). The payment pointer's associated key registry is exposed publically at the path `PAYMENT_POINTER/jwks.json` in anticipation of a grant request on an AS.
 
 ### What is the purpose of the key registry?
 
-The key registry allows an AS to verify that a client is who they say they are. Because a grant request is completed over multiple HTTP requests it is thus important for a client to provide a way to consistently identify itself across these requests to the AS.
+The key registry allows an AS to verify that a client is who they say they are. Because a grant request is completed over multiple signed HTTP requests it is thus important for a client to provide a way to consistently identify itself across these requests to the AS.
 
 ### How is this achieved?
 
