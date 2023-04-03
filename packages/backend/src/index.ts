@@ -438,8 +438,7 @@ export const start = async (
       logger.info('completed graceful shutdown.')
       process.exit(0)
     } catch (err) {
-      const errInfo =
-        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
+      const errInfo = err instanceof Error && err.stack ? err.stack : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }
@@ -454,8 +453,7 @@ export const start = async (
       logger.info('completed graceful shutdown.')
       process.exit(0)
     } catch (err) {
-      const errInfo =
-        err && typeof err === 'object' && err['stack'] ? err['stack'] : err
+      const errInfo = err instanceof Error && err.stack ? err.stack : err
       logger.error({ error: errInfo }, 'error while shutting down')
       process.exit(1)
     }

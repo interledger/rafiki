@@ -1,4 +1,5 @@
 import { errorToIlpReject, isIlpError, IlpErrorCode } from 'ilp-packet'
+import { HttpError } from 'koa'
 import { ILPContext, ILPMiddleware } from '../rafiki'
 
 /**
@@ -29,7 +30,7 @@ export function createIncomingErrorHandlerMiddleware(
       if (isIlpError(err)) {
         ctx.response.reject = errorToIlpReject(serverAddress, err)
       } else {
-        ctx.services.logger.error(err && err['message'])
+        ctx.services.logger.error(err instanceof HttpError && err.message)
         ctx.response.reject = errorToIlpReject(serverAddress, {
           message: 'unexpected internal error',
           ilpErrorCode: IlpErrorCode.T00_INTERNAL_ERROR,

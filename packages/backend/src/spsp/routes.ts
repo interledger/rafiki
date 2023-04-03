@@ -63,6 +63,6 @@ async function getSPSP(
       receipts_enabled: !!(nonce && secret)
     })
   } catch (err) {
-    ctx.throw(400, err && err['message'])
+    ctx.throw(400, err instanceof Error && err.message)
   }
 }

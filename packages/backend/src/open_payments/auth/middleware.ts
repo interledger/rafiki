@@ -3,8 +3,8 @@ import {
   RequestLike,
   validateSignature
 } from '@interledger/http-signature-utils'
-import Koa from 'koa'
-import { Limits, parseLimits } from '../payment/outgoing/limits'
+import Koa, { HttpError } from 'koa'
+import { AccessLimits, Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
@@ -112,14 +112,18 @@ export function createTokenIntrospectionMiddleware({
       ) {
         ctx.grant = {
           id: tokenInfo.grant,
-          limits: access['limits'] ? parseLimits(access['limits']) : undefined
+          limits: Object.keys(access).includes('limits')
+            ? parseLimits(
+                new Map(Object.entries(access)).get('limits') as AccessLimits
+              )
+            : undefined
         }
       }
       await next()
     } catch (err) {
-      if (err && err['status'] === 401) {
+      if (err instanceof HttpError && err.status === 401) {
         ctx.status = 401
-        ctx.message = err['message']
+        ctx.message = err.message
         ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
       } else {
         throw err
