@@ -1,0 +1,24 @@
+name: Notify rafiki.dev
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - packages/backend/src/**/*.graphql
+
+jobs:
+  notify-rafiki-dev:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify rafiki.dev
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{ secrets.RAFIKI_DEV_GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: 'interledger',
+              repo: 'rafiki.dev',
+              workflow_id: 'generate-docs.yml',
+              ref: 'main'
+            });
