@@ -88,7 +88,7 @@ services:
   admin:
     hostname: happy-life-bank-admin
     build:
-      context: ../../..
+      context: ../..
       dockerfile: ./packages/frontend/Dockerfile
     restart: always
     networks:

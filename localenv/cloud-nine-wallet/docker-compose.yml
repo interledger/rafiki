@@ -112,7 +112,7 @@ services:
   admin:
     hostname: cloud-nine-wallet-admin
     build:
-      context: ../../..
+      context: ../..
       dockerfile: ./packages/frontend/Dockerfile
     restart: always
     networks:
