@@ -191,8 +191,12 @@ describe('Ledger Transfer', (): void => {
         ...baseTransfer
       }
 
-      transfer.creditAccount['ledger' as string] = 1
-      transfer.debitAccount['ledger' as string] = 0
+      Object.assign(transfer.creditAccount, {
+        ledger: 1
+      })
+      Object.assign(transfer.debitAccount, {
+        ledger: 0
+      })
 
       await expect(createTransfers(serviceDeps, [transfer])).resolves.toEqual({
         results: [],

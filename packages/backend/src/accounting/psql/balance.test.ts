@@ -108,7 +108,14 @@ describe('Balances', (): void => {
                   type === 'credit' ? account.id : peerAccount.id,
                 debitAccountId: type === 'credit' ? peerAccount.id : account.id,
                 state,
-                amount: amounts[type][state]
+                amount:
+                  state === 'POSTED'
+                    ? type === 'credit'
+                      ? amounts.credit.POSTED
+                      : amounts.debit.POSTED
+                    : type === 'credit'
+                    ? amounts.credit.PENDING
+                    : amounts.debit.PENDING
               },
               knex
             )
@@ -165,7 +172,14 @@ describe('Balances', (): void => {
                   type === 'credit' ? account.id : peerAccount.id,
                 debitAccountId: type === 'credit' ? peerAccount.id : account.id,
                 state,
-                amount: amounts[type][state]
+                amount:
+                  state === 'POSTED'
+                    ? type === 'credit'
+                      ? amounts.credit.POSTED
+                      : amounts.debit.POSTED
+                    : type === 'credit'
+                    ? amounts.credit.PENDING
+                    : amounts.debit.PENDING
               },
               knex
             )

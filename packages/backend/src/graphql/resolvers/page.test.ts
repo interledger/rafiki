@@ -52,12 +52,18 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
   const toConnection = (query: ApolloQueryResult<T>): Connection<T> => {
     if (query.data) {
       if (parent) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         if (query.data[parent.query]) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           return query.data[parent.query][pagedQuery]
         } else {
           throw new Error(`Parent ${parent.query} was empty`)
         }
       } else {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         return query.data[pagedQuery]
       }
     } else {
