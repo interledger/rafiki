@@ -32,7 +32,7 @@
     "@tailwindcss/forms": "^0.5.3",
     "@types/react": "^18.0.33",
     "@types/react-dom": "^18.0.11",
-    "autoprefixer": "^10.4.13",
+    "autoprefixer": "^10.4.14",
     "concurrently": "^7.6.0",
     "eslint": "^8.35.0",
     "eslint-plugin-jsx-a11y": "^6.7.1",
