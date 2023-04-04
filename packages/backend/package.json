@@ -11,7 +11,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
-    "@apollo/client": "^3.7.10",
+    "@apollo/client": "^3.7.11",
     "@graphql-codegen/cli": "3.2.2",
     "@graphql-codegen/introspection": "3.0.1",
     "@graphql-codegen/typescript": "3.0.2",
@@ -23,7 +23,7 @@
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
     "@types/luxon": "^3.2.0",
-    "@types/react": "^18.0.31",
+    "@types/react": "^18.0.32",
     "@types/rosie": "^0.0.40",
     "@types/tmp": "^0.2.3",
     "@types/uuid": "^9.0.0",
