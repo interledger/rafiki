@@ -11,7 +11,7 @@ name: PR Checks
 
 jobs:
   checkout:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v3
@@ -19,7 +19,7 @@ jobs:
       - run: pnpm checks
 
   graphql:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: checkout
     steps:
       - uses: actions/checkout@v3
@@ -42,7 +42,7 @@ jobs:
         run: exit 1
 
   backend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [checkout, graphql]
     timeout-minutes: 25
     steps:
@@ -52,7 +52,7 @@ jobs:
       - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: checkout
     timeout-minutes: 5
     steps:
@@ -61,7 +61,7 @@ jobs:
       - run: pnpm --filter frontend build
 
   auth:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [checkout, graphql]
     timeout-minutes: 5
     steps:
@@ -77,7 +77,7 @@ jobs:
           npx @stoplight/spectral-cli lint ./packages/auth/openapi/*.yaml
 
   mock-account-servicing-entity:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: checkout
     timeout-minutes: 5
     steps:
@@ -86,7 +86,7 @@ jobs:
       - run: pnpm --filter mock-account-servicing-entity build
 
   local-http-signatures:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: checkout
     timeout-minutes: 5
     steps:
@@ -95,7 +95,7 @@ jobs:
       - run: pnpm --filter local-http-signatures build
 
   token-introspection:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: checkout
     timeout-minutes: 5
     steps:
@@ -110,7 +110,7 @@ jobs:
           npx @stoplight/spectral-cli lint ./packages/token-introspection/openapi/*.yaml
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     timeout-minutes: 5
     needs:
       - backend
@@ -125,7 +125,7 @@ jobs:
       - run: pnpm build
 
   all_pr_checks_passed:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs:
       - build
     steps:

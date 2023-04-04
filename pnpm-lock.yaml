@@ -7,7 +7,6 @@ importers:
       '@commitlint/cli': ^17.5.1
       '@commitlint/config-conventional': ^17.4.4
       '@jest/types': ^29.5.0
-      '@swc/core': 1.3.39
       '@swc/jest': ^0.2.24
       '@types/jest': ^29.5.0
       '@typescript-eslint/eslint-plugin': ^5.57.0
@@ -24,7 +23,6 @@ importers:
       '@commitlint/cli': 17.5.1_@swc+core@1.3.39
       '@commitlint/config-conventional': 17.4.4
       '@jest/types': 29.5.0
-      '@swc/core': 1.3.39
       '@swc/jest': 0.2.24_@swc+core@1.3.39
       '@types/jest': 29.5.0
       '@typescript-eslint/eslint-plugin': 5.57.0_x4rubgibnu7ujqspfqdeho4yiu
@@ -240,7 +238,7 @@ importers:
       '@types/koa-bodyparser': ^4.3.10
       '@types/koa__cors': ^4.0.0
       '@types/koa__router': ^12.0.0
-      '@types/luxon': ^3.2.0
+      '@types/luxon': ^3.2.2
       '@types/react': ^18.0.32
       '@types/rosie': ^0.0.40
       '@types/tmp': ^0.2.3
@@ -343,7 +341,7 @@ importers:
       '@types/koa-bodyparser': 4.3.10
       '@types/koa__cors': 4.0.0
       '@types/koa__router': 12.0.0
-      '@types/luxon': 3.2.0
+      '@types/luxon': 3.2.2
       '@types/react': 18.0.32
       '@types/rosie': 0.0.40
       '@types/tmp': 0.2.3
@@ -4972,8 +4970,8 @@ packages:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
     dev: false
 
-  /@types/luxon/3.2.0:
-    resolution: {integrity: sha512-lGmaGFoaXHuOLXFvuju2bfvZRqxAqkHPx9Y9IQdQABrinJJshJwfNCKV+u7rR3kJbiqfTF/NhOkcxxAFrObyaA==}
+  /@types/luxon/3.2.2:
+    resolution: {integrity: sha512-CuF9hIlsxGpJO4EztrW23/q1L9ctQfb5JM9mnLCJhhA8z81K2b4LTVjQYySXWhFV5SMyUsPYH/IcvvXDCKwa2g==}
     dev: true
 
   /@types/mdast/3.0.10:
