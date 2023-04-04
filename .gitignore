@@ -41,3 +41,9 @@ dist
 **/.terraform
 
 tmp
+
+# Remix
+.cache
+build
+**/public/build
+**/styles/*.css

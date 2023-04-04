@@ -1,6 +1,6 @@
 .next
 public
-generated
+**/generated
 dist
 build
 postman-scripts

@@ -10,9 +10,6 @@
       "path": "packages/backend"
     },
     {
-      "path": "packages/frontend"
-    },
-    {
       "path": "localenv/local-http-signatures"
     }
   ],

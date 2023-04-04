@@ -1,0 +1,15 @@
+extends:
+  - '../../.eslintrc.yml'
+  - '@remix-run/eslint-config/node'
+  - 'plugin:react/recommended'
+  - 'plugin:jsx-a11y/recommended'
+rules:
+  'react/jsx-uses-react': 'off'
+  'react/react-in-jsx-scope': 'off'
+  '@typescript-eslint/quotes': ['warn', 'single', { avoidEscape: true, allowTemplateLiterals: true }]
+  '@typescript-eslint/consistent-type-imports': 'warn'
+  'jsx-a11y/anchor-has-content': 'warn'
+  'jsx-a11y/anchor-is-valid': 'warn'
+settings:
+  react:
+    version: "detect"

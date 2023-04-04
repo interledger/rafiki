@@ -58,7 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter frontend test
+      - run: pnpm --filter frontend build
 
   auth:
     runs-on: ubuntu-22.04
