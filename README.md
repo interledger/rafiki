@@ -42,13 +42,13 @@ Our planning calls are open to our community. We have them every Monday at 16:00
 
 **Google Meet joining info**
 
-Video call link: https://meet.google.com/rdx-xoqn-iiq
+Video call link: https://meet.google.com/sms-fwny-ezc
 
-Or dial: ‪(US) +1 408-831-2432‬ PIN: ‪472 676 485‬#
+Or dial: ‪(GB) +44 20 3956 0467‬ PIN: ‪140 111 239‬#
 
-More phone numbers: https://tel.meet/rdx-xoqn-iiq?pin=3263008843276
+More phone numbers: https://tel.meet/sms-fwny-ezc?pin=5321780226087
 
-[Add to Google Calendar](https://calendar.google.com/event?action=TEMPLATE&tmeid=NXVsMWhsb3NnbG9hbDFkazE0dTBhZGZ1Z25fMjAyMjAzMjFUMTcwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
+[Add to Google Calendar](https://calendar.google.com/calendar/event?action=TEMPLATE&tmeid=YjN1NW5ibDloN2dua2IwM2thOWlrZXRvMTVfMjAyMzA0MTdUMTUwMDAwWiBjX2NqMDI3Z21oc3VqazkxZXZpMjRkOXB2bXQ0QGc&tmsrc=c_cj027gmhsujk91evi24d9pvmt4%40group.calendar.google.com&scp=ALL)
 
 ## Local Development Environment
 
