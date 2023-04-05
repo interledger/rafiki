@@ -4,6 +4,7 @@ This chart deploys
 
 1. Rafiki backend
 2. Rafiki auth service
+3. Rafiki admin UI
 
 Requirements:
 

@@ -46,6 +46,13 @@ postgresql://{{ .Values.auth.postgresql.username }}:{{ .Values.auth.postgresql.p
 redis://{{ .Values.auth.redis.host }}:{{ .Values.auth.redis.port }}/{{ .Values.auth.redis.databaseIndex }}
 {{- end -}}
 
+{{- define "frontend.name" -}}
+{{ include "rafiki.fullname" . }}-frontend
+{{- end -}}
+{{- define "frontend.graphqlUrl" -}}
+http://{{ .Values.backend.serviceUrls.PUBLIC_HOST }}:{{ .Values.backend.adminPort }}/graphql
+{{- end -}}
+
 {{/*
 Create chart name and version as used by the chart label.
 */}}
@@ -68,7 +75,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{/*
-Create the name of the service account to use
+Create the name of the auth service account to use
 */}}
 {{- define "auth.serviceAccountName" -}}
 {{- if .Values.auth.serviceAccount.create -}}
@@ -79,13 +86,24 @@ Create the name of the service account to use
 {{- end -}}
 
 {{/*
-Create the name of the service account to use
+Create the name of the backend service account to use
 */}}
 {{- define "backend.serviceAccountName" -}}
 {{- if .Values.backend.serviceAccount.create -}}
     {{ default (include "backend.name" .) .Values.backend.serviceAccount.name }}
 {{- else -}}
     {{ default "default" .Values.backend.serviceAccount.name }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Create the name of the frontend service account to use
+*/}}
+{{- define "frontend.serviceAccountName" -}}
+{{- if .Values.frontend.serviceAccount.create -}}
+    {{ default (include "frontend.name" .) .Values.frontend.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.frontend.serviceAccount.name }}
 {{- end -}}
 {{- end -}}
 
@@ -112,5 +130,18 @@ Create the auth image
 {{- .Values.auth.image.repository -}}@{{- .Values.auth.image.digest -}}
 {{ else }}
 {{- .Values.auth.image.repository -}}:latest
+{{ end }}
+{{- end -}}
+
+{{/*
+Create the frontend image
+*/}}
+{{- define "frontend.image" -}}
+{{ if .Values.frontend.image.tag }}
+{{- .Values.frontend.image.repository -}}:{{- .Values.frontend.image.tag -}}
+{{ else if .Values.frontend.image.digest }}
+{{- .Values.frontend.image.repository -}}@{{- .Values.frontend.image.digest -}}
+{{ else }}
+{{- .Values.frontend.image.repository -}}:latest
 {{ end }}
 {{- end -}}

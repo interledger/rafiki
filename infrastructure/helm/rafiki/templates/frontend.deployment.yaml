@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "frontend.name" . }}
+  labels:
+{{ include "rafiki.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: {{ .Values.frontend.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.frontend.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rafiki.name" . }}-frontend
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rafiki.name" . }}-frontend
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.frontend.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{ if .Values.frontend.serviceAccount.create }}
+      serviceAccountName: {{ template "frontend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.frontend.podSecurityContext | nindent 8 }}
+    {{ end }}
+      containers:
+        - name: {{ .Chart.Name }}-frontend
+          securityContext:
+            {{- toYaml .Values.frontend.securityContext | nindent 12 }}
+          image: {{ include "frontend.image" . }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          envFrom:
+          - configMapRef:
+              name: {{ include "frontend.name" . }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.frontend.port }}
+              protocol: TCP
+           #livenessProbe:
+           #  failureThreshold: 15
+           #  initialDelaySeconds: 30
+           #  periodSeconds: 10
+           #  timeoutSeconds: 10
+           #  httpGet:
+           #    path: /healthz
+           #    port: admin
+           #readinessProbe:
+           #  failureThreshold: 3
+           #  initialDelaySeconds: 5
+           #  periodSeconds: 5
+           #  timeoutSeconds: 5
+           #  httpGet:
+           #    path: /healthz
+           #    port: http
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
