@@ -6,13 +6,13 @@ We have created a suite of packages that, together, mock an account servicing en
 
 These packages include:
 
-- `backend` (SPSP, Open Payments APIs, Admin APIs, STREAM endpoint)
+- `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
 - `frontend` (UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `local-http-signatures` (request signature generation for Postman)
 
-These packages depend on the following databases
+These packages depend on the following databases:
 
 - TigerBeetle or Postgres (accounting)
 - Postgres (Open Payments resources, auth resources)
@@ -41,11 +41,11 @@ pnpm localenv:start
 
 ### Exploring Accounts on Mock Account Servicing Entity
 
-Navigate to `localhost:3030` to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
+Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
 
 ![Mock Account Servicing Entity Accounts](./img/map-accounts.png)
 
-The accounts of the second instance (Happy Life Bank) can be found on `localhost:3031`.
+The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
 When clicking on the Account Name, a list of Transactions appears.
 
@@ -53,11 +53,11 @@ When clicking on the Account Name, a list of Transactions appears.
 
 ### Admin UI
 
-In order to manage, and view information about the Rafiki instance(s) via a UI, you can navigate to `localhost:3010` (Cloud Nine Wallet) or `localhost:4010` (Happy Life Bank). This `frontend` project runs a Remix app that queries info and executes mutations against the [Admin APIs](#admin-apis)
+In order to manage, and view information about the Rafiki instance(s) via a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
 
 ### Admin APIs
 
-In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on `localhost:3001/graphql` and `localhost:4001:graphql`, respectively), and also via the [Postman collection](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ba745403-c5e8-4893-9dff-bccb72ea0614?ctx=documentation). The Postman collection is configured to use the default endpoints of the local environment.
+In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on [`localhost:3001/graphql`](http://localhost:3001/graphql) and [`localhost:4001/graphql`](http://localhost:4001/graphql), respectively), and also via the [Postman collection](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ba745403-c5e8-4893-9dff-bccb72ea0614?ctx=documentation). The Postman collection is configured to use the default endpoints of the local environment.
 
 ### Open Payments APIs
 
@@ -116,6 +116,7 @@ The production environment consists of
 
 - `backend`
 - (optional but recommended) `auth`
+- (optional but recommended) `frontend`
 
 and the databases
 
@@ -210,3 +211,10 @@ $ helm install ...
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |
 | `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server, same as in `AUTH_SERVER_DOMAIN`    |
 | `WAIT_SECONDS`                 | `5`                                                              | wait time included in `grant.continue`                                     |
+
+#### Frontend
+
+| Variable      | Default                         | Description                           |
+| ------------- | ------------------------------- | ------------------------------------- |
+| `GRAPHQL_URL` | `http://localhost:3001/graphql` | URL for the GraphQL Admin API         |
+| `PORT`        | `3005`                          | Port from which to host the Remix app |
