@@ -20,8 +20,9 @@ rafiki:
       username: "backend"
       database: "backend"
       password: "changeme"
-    openPaymentsPort: 80
     adminPort: 3001
+    connectorPort: 3002
+    openPaymentsPort: 80
     image:
       repository: ghcr.io/interledger/rafiki-backend
       tag: 'v1.0.0-alpha'
@@ -48,10 +49,6 @@ rafiki:
         cpu: 300m
 
   auth:
-    redis:
-      host: "rafiki-example-redis-master"
-      port: 6379
-      databaseIndex: 0
     postgresql:
       host: "rafiki-example-postgresql"
       port: 5432

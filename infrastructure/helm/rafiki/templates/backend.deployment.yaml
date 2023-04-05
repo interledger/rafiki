@@ -73,6 +73,9 @@ spec:
             - name: admin
               containerPort: {{ .Values.backend.adminPort }}
               protocol: TCP
+            - name: connector
+              containerPort: {{ .Values.backend.connectorPort }}
+              protocol: TCP
            #livenessProbe:
            #  failureThreshold: 15
            #  initialDelaySeconds: 30

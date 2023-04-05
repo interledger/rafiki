@@ -8,6 +8,7 @@ data:
   NODE_ENV: development
   LOG_LEVEL: debug
   ADMIN_PORT: "{{ .Values.backend.adminPort }}"
+  CONNECTOR_PORT: "{{ .Values.backend.connectorPort }}"
   OPEN_PAYMENTS_PORT: "{{ .Values.backend.openPaymentsPort }}"
   USE_TIGERBEETLE: "false"
   TIGERBEETLE_CLUSTER_ID: none

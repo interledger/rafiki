@@ -10,14 +10,19 @@ backend:
     WEBHOOK_URL: http://cloud-nine-wallet/webhooks
     PRICES_URL: http://cloud-nine-wallet/prices
     QUOTE_URL: http://cloud-nine-wallet/quotes
+  redis:
+    host: 'redis.example.com'
+    port: 6739
+    databaseIndex: 0
   postgresql:
     host: "postgres.example.com"
     port: 5432
     username: "backend"
     database: "backend"
     password: "overridethisValue"
-  openPaymentsPort: 80
   adminPort: 3001
+  connectorPort: 3002
+  openPaymentsPort: 80
   image:
     repository: ghcr.io/interledger/rafiki-backend
     tag: 'v1.0.0-alpha'
@@ -43,10 +48,6 @@ backend:
 #      cpu: 300m
 
 auth:
-  redis:
-    host: 'redis.example.com'
-    port: 6739
-    databaseIndex: 0
   postgresql:
     host: "postgres.example.com"
     port: 5432
