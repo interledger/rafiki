@@ -4,7 +4,7 @@ import {
   validateSignature
 } from '@interledger/http-signature-utils'
 import Koa, { HttpError } from 'koa'
-import { AccessLimits, Limits, parseLimits } from '../payment/outgoing/limits'
+import { Limits, parseLimits } from '../payment/outgoing/limits'
 import { HttpSigContext, PaymentPointerContext } from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
@@ -112,11 +112,9 @@ export function createTokenIntrospectionMiddleware({
       ) {
         ctx.grant = {
           id: tokenInfo.grant,
-          limits: Object.keys(access).includes('limits')
-            ? parseLimits(
-                new Map(Object.entries(access)).get('limits') as AccessLimits
-              )
-            : undefined
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          limits: access['limits'] ? parseLimits(access['limits']) : undefined
         }
       }
       await next()
