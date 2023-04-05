@@ -45,9 +45,8 @@ spec:
           envFrom:
           - configMapRef:
               name: {{ include "auth.name" . }}
-          env:
-          - name: AUTH_DATABASE_URL
-            value: postgresql://auth:changeme@{{ include "rafiki.fullname" . }}-postgresql/auth
+          - secretRef:
+              name: {{ include "rafiki.fullname" . }}-auth-secrets
           ports:
             - name: http
               containerPort: {{ .Values.auth.port }}
