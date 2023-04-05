@@ -4,12 +4,13 @@
 
 We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](./glossary.md#open-payments) APIs with its required [GNAP](./glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, as well as the STREAM endpoint for receiving Interledger packets. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
-These packages include
+These packages include:
 
 - `backend` (SPSP, Open Payments APIs, Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
 - `local-http-signatures` (request signature generation for Postman)
+- `frontend` (UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 
 These packages depend on the following databases
 
@@ -50,9 +51,13 @@ When clicking on the Account Name, a list of Transactions appears.
 
 ![Mock Account Servicing Entity Transactions](./img/map-transactions.png)
 
+### Admin UI
+
+In order to manage, and view information about the Rafiki instance(s) via a UI, you can navigate to `localhost:3010` (Cloud Nine Wallet) or `localhost:4010` (Happy Life Bank). This `frontend` project runs a Remix app that queries info and executes mutations against the [Admin APIs](#admin-apis)
+
 ### Admin APIs
 
-The Admin APIs can be interacted with either by using the Apollo explorer (on `localhost:3001/graphql` and `localhost:4001:graphql`, respectively), or by using the [Postman collection](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ba745403-c5e8-4893-9dff-bccb72ea0614?ctx=documentation). The Postman collection is configured to use the default endpoints of the local environment.
+In addition to the using the Admin UI for interacting with the Admin APIs, you can also use the Apollo explorer (on `localhost:3001/graphql` and `localhost:4001:graphql`, respectively), and also via the [Postman collection](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ba745403-c5e8-4893-9dff-bccb72ea0614?ctx=documentation). The Postman collection is configured to use the default endpoints of the local environment.
 
 ### Open Payments APIs
 
