@@ -9,7 +9,7 @@ These packages include:
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](./glossary.md#account-servicing-entity))
-- `frontend` (UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
+- `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `local-http-signatures` (request signature generation for Postman)
 
 These packages depend on the following databases:
@@ -18,7 +18,7 @@ These packages depend on the following databases:
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](../localenv/happy-life-bank/docker-compose.yml))to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](../localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](../localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 ### Running the local environment
 
@@ -53,7 +53,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 ### Admin UI
 
-In order to manage, and view information about the Rafiki instance(s) via a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
+In order to manage, and view information about the Rafiki instance(s) using a UI, you can navigate to [`localhost:3010`](http://localhost:3010) (Cloud Nine Wallet) or [`localhost:4010`](http://localhost:4010) (Happy Life Bank). This is the `frontend` project which runs a Remix app for querying info and executing mutations against the Rafiki [Admin APIs](#admin-apis).
 
 ### Admin APIs
 
@@ -70,11 +70,11 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 3. requests a grant to create (and read) a quote on Grace Franklin's account
 4. creates a quote on Grace Franklin's account
 5. requests a grant to create (and read) an outgoing payment on Grace Franklin's account
-6. continues the grant request
+6. continues the grant request (via the interaction flow)
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment.
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](./grant-interaction.md).
 
 <video alt="Screen Recoding eCommerce Example" src="./mov/eCom-example.mov" width="560" height="315" controls></video>
 
