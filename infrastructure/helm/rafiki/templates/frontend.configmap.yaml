@@ -1,10 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "fronted.name" . }}
-  labels: {{ include "rafiki.labels" . | indent 4 }}
+  name: {{ include "frontend.name" . }}
+  labels: 
+{{ include "rafiki.labels" . | indent 4 }}
 data: 
   NODE_ENV: development
   LOG_LEVEL: debug
   PORT: "{{ .Values.frontend.port }}"
-  GRAPHQL_URL: {{ include frontend.graphqlUrl | quote }}
+  GRAPHQL_URL: {{ include "frontend.graphqlUrl" . | quote }}
