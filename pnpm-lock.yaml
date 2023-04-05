@@ -525,8 +525,8 @@ importers:
         specifier: ^3.7.11
         version: 3.7.11(graphql@16.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
-        specifier: ^1.7.11
-        version: 1.7.11(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^1.7.13
+        version: 1.7.13(react-dom@18.2.0)(react@18.2.0)
       '@remix-run/node':
         specifier: ^1.14.1
         version: 1.14.3
@@ -3549,8 +3549,8 @@ packages:
     dependencies:
       graphql: 16.6.0
 
-  /@headlessui/react@1.7.11(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-EaDbVgcyiylhtskZZf4Qb/JiiByY7cYbd0qgZ9xm2pm2X7hKojG0P4TaQYKgPOV3vojPhd/pZyQh3nmRkkcSyw==}
+  /@headlessui/react@1.7.13(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-9n+EQKRtD9266xIHXdY5MfiXPDfYwl7zBM7KOx2Ae3Gdgxy8QML1FkCMjq6AsOf0l6N9uvI4HcFtuFlenaldKg==}
     engines: {node: '>=10'}
     peerDependencies:
       react: ^16 || ^17 || ^18
