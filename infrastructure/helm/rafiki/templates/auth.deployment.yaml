@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "rafiki.fullname" . }}-auth
+  name: {{ include "auth.name" . }}
   labels:
 {{ include "rafiki.labels" . | indent 4 }}
 spec:
