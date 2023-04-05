@@ -1,5 +1,6 @@
 overwrite: true
 schema: './src/graphql/schema.graphql'
+documents: '../frontend/app/**/!(*.d).{ts,tsx}'
 generates:
   src/graphql/generated/graphql.ts:
     plugins:
@@ -26,3 +27,17 @@ generates:
   src/graphql/generated/graphql.schema.json:
     plugins:
       - 'introspection'
+  ../frontend/app/generated/graphql.ts:
+    plugins:
+      - 'typescript'
+      - 'typescript-resolvers'
+      - 'typescript-operations'
+    config:
+      omitOperationSuffix: true
+      defaultMapper: Partial<{T}>
+      # By default it is T | null. But the service code uses typescript's optional types (`foo?: T`) which are `T | undefined`. This saves the trouble of converting them explicitly.
+      inputMaybeValue: T | undefined
+      scalars:
+        UInt8: number
+        UInt64: bigint
+

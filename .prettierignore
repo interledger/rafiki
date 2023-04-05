@@ -10,3 +10,5 @@ Dockerfile
 .gitignore
 .prettierignore
 infrastructure/helm/**
+build
+**/styles/*.css

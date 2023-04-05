@@ -109,6 +109,21 @@ services:
     restart: unless-stopped
     networks:
       - rafiki
+  admin:
+    hostname: cloud-nine-wallet-admin
+    build:
+      context: ../..
+      dockerfile: ./packages/frontend/Dockerfile
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3010:3010'
+    environment:
+      PORT: 3010
+      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+    depends_on:
+      - backend
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
