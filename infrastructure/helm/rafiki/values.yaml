@@ -23,6 +23,8 @@ backend:
   adminPort: 3001
   connectorPort: 3002
   openPaymentsPort: 80
+  # override this value
+  streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU="
   image:
     repository: ghcr.io/interledger/rafiki-backend
     tag: 'v1.0.0-alpha'
