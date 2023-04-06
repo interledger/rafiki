@@ -86,7 +86,7 @@ async function createQuote(
     if (isQuoteError(err)) {
       return ctx.throw(errorToCode[err], errorToMessage[err])
     }
-    deps.logger.debug({ error: err && err['message'] })
+    deps.logger.debug({ error: err instanceof Error && err.message })
     ctx.throw(500, 'Error trying to create quote')
   }
 }

@@ -1,5 +1,5 @@
 import assert from 'assert'
-import nock, { Definition } from 'nock'
+import nock, { Definition, ReplyHeaderValue } from 'nock'
 import { URL } from 'url'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
@@ -98,7 +98,8 @@ describe('Webhook Service', (): void => {
       return nock(webhookUrl.origin)
         .post(webhookUrl.pathname, function (this: Definition, body) {
           assert.ok(this.headers)
-          const signature = this.headers['rafiki-signature']
+          const headers = this.headers as Record<string, ReplyHeaderValue>
+          const signature = headers['rafiki-signature']
           expect(
             generateWebhookSignature(
               body,

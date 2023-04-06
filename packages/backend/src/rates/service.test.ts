@@ -139,8 +139,9 @@ describe('Rates service', function () {
       }
 
       afterEach(async () => {
-        // Await it so that the test can clean up properly.
-        if (service['prefetchRequest']) await service['prefetchRequest']
+        // Await it so that the test can clean up properly. Typecast due to private property.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((<any>service).prefetchRequest) await (<any>service).prefetchRequest
       })
 
       it('caches requests', async () => {
@@ -159,7 +160,8 @@ describe('Rates service', function () {
         jest.advanceTimersByTime(pricesLifetime * 0.5 + 1)
         // ... cache isn't expired yet, but it will be soon
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        expect(service['prefetchRequest']).toBeDefined()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect((<any>service).prefetchRequest).toBeDefined()
         // The prefetch isn't done.
         expect(requestCount).toBe(1)
 
@@ -167,7 +169,8 @@ describe('Rates service', function () {
         jest.advanceTimersByTime(pricesLifetime * 0.5 + 1)
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
         // The prefetch response is promoted to the cache.
-        expect(service['prefetchRequest']).toBeUndefined()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect((<any>service).prefetchRequest).toBeUndefined()
         expect(requestCount).toBe(2)
       })
 
@@ -175,7 +178,8 @@ describe('Rates service', function () {
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
         jest.advanceTimersByTime(pricesLifetime + 1)
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        expect(service['prefetchRequest']).toBeUndefined()
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        expect((<any>service).prefetchRequest).toBeUndefined()
         expect(requestCount).toBe(2)
       })
     })
@@ -188,7 +192,8 @@ describe('Rates service', function () {
       ${['USD']}   | ${'is not a string'}
       ${''}        | ${'is an empty string'}
     `(`throws if base asset $description`, ({ asset }): void => {
-      expect(() => service['checkBaseAsset'](asset)).toThrow()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect(() => (<any>service).checkBaseAsset(asset)).toThrow()
     })
   })
 })

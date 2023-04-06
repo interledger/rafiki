@@ -66,6 +66,7 @@ export class MockIncomingMessage extends Transform {
     const reservedOptions = ['method', 'url', 'headers', 'rawHeaders']
     Object.keys(options).forEach((key) => {
       if (reservedOptions.indexOf(key) === -1) {
+        // @ts-ignore
         this[key] = options[key]
       }
     })
@@ -171,8 +172,8 @@ export class MockServerResponse extends Transform {
     // @ts-ignore
     this.statusMessage = reasonPhrase || STATUS_CODES[statusCode] || 'unknown'
     if (headers) {
-      for (const name in headers) {
-        if (headers[name]) this.setHeader(name, headers[name]!)
+      for (const [name, header] of Object.entries(headers)) {
+        if (name) this.setHeader(name, header!)
       }
     }
     return this

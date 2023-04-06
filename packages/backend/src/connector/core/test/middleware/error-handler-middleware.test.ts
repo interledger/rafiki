@@ -35,9 +35,12 @@ describe('Error Handler Middleware', () => {
   })
 
   test('catches ilp error and converts into ilp reject', async () => {
+    class IlpError extends Error {
+      private ilpErrorCode!: IlpErrorCode
+    }
     const ctx = createILPContext({ services })
-    const errorToBeThrown = new Error('Test Error')
-    errorToBeThrown['ilpErrorCode'] = 'T00'
+    const errorToBeThrown = new IlpError('Test Error')
+    errorToBeThrown['ilpErrorCode'] = IlpErrorCode.T00_INTERNAL_ERROR
     assert.ok(isIlpError(errorToBeThrown))
     const next = jest.fn().mockImplementation(() => {
       throw errorToBeThrown

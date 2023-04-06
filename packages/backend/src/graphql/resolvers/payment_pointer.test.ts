@@ -167,8 +167,12 @@ describe('Payment Pointer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual(errorToCode[error].toString())
-      expect(response.message).toEqual(errorToMessage[error])
+      expect(response.code).toEqual(
+        errorToCode[error as PaymentPointerError].toString()
+      )
+      expect(response.message).toEqual(
+        errorToMessage[error as PaymentPointerError]
+      )
     })
 
     test('500', async (): Promise<void> => {

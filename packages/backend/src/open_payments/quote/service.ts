@@ -282,13 +282,19 @@ export async function startQuote(
   }
 }
 
+type QuoteHeaders = {
+  Accept: string
+  'Content-Type': string
+  'Rafiki-Signature'?: string
+}
+
 export async function finalizeQuote(
   deps: ServiceDependencies,
   quote: Quote,
   receiver: Receiver,
   maxReceiveAmountValue?: bigint
 ): Promise<Quote> {
-  const requestHeaders = {
+  const requestHeaders: QuoteHeaders = {
     Accept: 'application/json',
     'Content-Type': 'application/json'
   }

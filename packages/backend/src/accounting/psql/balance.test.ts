@@ -93,13 +93,13 @@ describe('Balances', (): void => {
           POSTED: 20n,
           PENDING: 10n
         }
-      }
+      } as const
 
-      for (const type of ['credit', 'debit']) {
+      for (const type of ['credit', 'debit'] as const) {
         for (const state of [
           LedgerTransferState.POSTED,
           LedgerTransferState.PENDING
-        ]) {
+        ] as const) {
           test(`gets balances for ${state} ${type}s`, async (): Promise<void> => {
             await createLedgerTransfer(
               {
@@ -148,15 +148,15 @@ describe('Balances', (): void => {
           POSTED: 20n,
           PENDING: 10n
         }
-      }
+      } as const
 
       const promises = []
 
-      for (const type of ['credit', 'debit']) {
+      for (const type of ['credit', 'debit'] as const) {
         for (const state of [
           LedgerTransferState.POSTED,
           LedgerTransferState.PENDING
-        ]) {
+        ] as const) {
           promises.push(
             createLedgerTransfer(
               {

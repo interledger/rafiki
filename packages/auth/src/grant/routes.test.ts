@@ -164,7 +164,7 @@ describe('Grant Routes', (): void => {
                   )
                   const body = {
                     access_token: {
-                      access: accessTypes.map((accessType) => ({
+                      access: accessTypes.map((accessType: AccessType) => ({
                         type: accessType,
                         actions: [AccessAction.Create, AccessAction.Read],
                         identifier: `https://example.com/${v4()}`
