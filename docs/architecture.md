@@ -1,6 +1,6 @@
 # Rafiki Architecture
 
-![Architecture diagram](./img/rafiki-architecture.png)
+![Architecture diagram](./assets/img/rafiki-architecture.png)
 
 Rafiki is a collection of three services that are run together; each one can be scaled horizontally. These services are
 
