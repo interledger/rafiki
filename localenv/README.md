@@ -1,7 +1,5 @@
 # Local Playground
 
-## Introduction
-
 We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../docs/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../docs/glossary.md#open-payments) APIs with its required [GNAP](../docs/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include:
@@ -24,7 +22,7 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 ## Environment overview
 
-![Docker compose environment](./img/localenv-architecture.png)
+![Docker compose environment](./docs/assets/img/localenv-architecture.png)
 
 #### Cloud Nine Wallet
 
@@ -62,13 +60,13 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
 
-![Mock Account Servicing Entity Accounts](./img/map-accounts.png)
+![Mock Account Servicing Entity Accounts](./docs/assets/img/map-accounts.png)
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
 When clicking on the Account Name, a list of Transactions appears.
 
-![Mock Account Servicing Entity Transactions](./img/map-transactions.png)
+![Mock Account Servicing Entity Transactions](./docs/assets/img/map-transactions.png)
 
 ## Running the local environment
 
@@ -143,7 +141,7 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 
 Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](./grant-interaction.md).
 
-<video alt="Screen Recoding eCommerce Example" src="./mov/eCom-example.mov" width="560" height="315" controls></video>
+<video alt="Screen Recoding eCommerce Example" src="./docs/assets/mov/eCom-example.mov" width="560" height="315" controls></video>
 
 #### Admin UI
 
