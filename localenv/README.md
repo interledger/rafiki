@@ -24,7 +24,7 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 ## Environment overview
 
-![Docker compose environment](./local-dev.png)
+![Docker compose environment](./img/localenv-architecture.png)
 
 #### Cloud Nine Wallet
 
