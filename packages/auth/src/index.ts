@@ -243,8 +243,10 @@ export const start = async (
   await app.boot()
   await app.startAdminServer(config.adminPort)
   await app.startAuthServer(config.authPort)
+  await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
-  logger.info(`Auth server listening on ${app.getPort()}`)
+  logger.info(`Auth server listening on ${app.getAuthPort()}`)
+  logger.info(`Introspection server listening on ${app.getIntrospectionPort()}`)
 }
 
 // If this script is run directly, start the server
