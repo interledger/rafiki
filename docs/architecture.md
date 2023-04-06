@@ -1,12 +1,12 @@
 # Rafiki Architecture
 
-![Architecture diagram](./img/rafiki-architecture.svg)
+![Architecture diagram](./img/rafiki-architecture.png)
 
 Rafiki is a collection of three services that are run together; each one can be scaled horizontally. These services are
 
 - [`backend`](../packages/backend): The main service, handling business logic and external communication.
 - [`auth`](../packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
-- [`frontend`](../packages/frontend): Internal admin interface, not yet developed. Eventually, Rafiki operators will be able to manage their Rafiki instance with it.
+- [`frontend`](../packages/frontend): This is an internal admin interface for Rafiki operators to manage their Rafiki instance.
 
 These services rely on four databases:
 
@@ -38,7 +38,7 @@ The `auth` service performs authorization and authentication of incoming request
 
 ## Frontend
 
-The frontend will host the internal admin interface. The current application is a placeholder.
+The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [payment pointers](./glossary.md#payment-pointer), [peering relationships](./glossary.md#peer), and [assets](./glossary.md#asset), among other settings.
 
 ## Additional packages
 
