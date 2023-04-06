@@ -139,13 +139,11 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](./grant-interaction.md).
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../docs/grant-interaction.md).
 
 Example walkthrough:
 
 https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4
-
-
 
 #### Admin UI
 
