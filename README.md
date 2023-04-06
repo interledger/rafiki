@@ -38,7 +38,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Planning Calls
 
-Our planning calls are open to our community. We have them every Monday at 16:00 GMT, via Google Meet.
+Our planning calls are open to our community. We have them every Monday at 15:00 GMT, via Google Meet.
 
 **Google Meet joining info**
 
@@ -76,6 +76,10 @@ pnpm i
 
 ### Local Development
 
+The Rafiki local environment is the best way to explore Rafiki locally. The [localenv](localenv) directory contains instructions for setting up a local playground.
+
+### Useful commands
+
 ```sh
 # build all the packages in the repo:
 pnpm -r build
@@ -103,6 +107,3 @@ pnpm check:format
 # verify lint
 pnpm check:lint
 ```
-
-The [localenv](localenv) directory contains resources for setting up Rafiki in
-common configurations.
