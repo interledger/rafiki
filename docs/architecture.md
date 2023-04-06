@@ -6,7 +6,7 @@ Rafiki is a collection of three services that are run together; each one can be 
 
 - [`backend`](../packages/backend): The main service, handling business logic and external communication.
 - [`auth`](../packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
-- [`frontend`](../packages/frontend): This is an internal admin interface for Rafiki operators to manage their Rafiki instance.
+- [`frontend`](../packages/frontend): An internal admin interface for Rafiki operators to manage their Rafiki instance.
 
 These services rely on four databases:
 
