@@ -141,7 +141,11 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 
 Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](./grant-interaction.md).
 
-<video alt="Screen Recoding eCommerce Example" src="./docs/assets/mov/eCom-example.mov" width="560" height="315" controls></video>
+Example walkthrough:
+
+https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4
+
+
 
 #### Admin UI
 
