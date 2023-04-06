@@ -555,8 +555,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       zod:
-        specifier: ^3.20.2
-        version: 3.20.2
+        specifier: ^3.21.4
+        version: 3.21.4
     devDependencies:
       '@remix-run/dev':
         specifier: ^1.14.1
@@ -15265,8 +15265,8 @@ packages:
       compress-commons: 4.1.1
       readable-stream: 3.6.0
 
-  /zod@3.20.2:
-    resolution: {integrity: sha512-1MzNQdAvO+54H+EaK5YpyEy0T+Ejo/7YLHS93G3RnYWh5gaotGHwGeN/ZO687qEDU2y4CdStQYXVHIgrUl5UVQ==}
+  /zod@3.21.4:
+    resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
     dev: false
 
   /zwitch@2.0.2:
