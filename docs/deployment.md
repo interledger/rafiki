@@ -1,7 +1,5 @@
 # Deploying Rafiki
 
-## Production Environment
-
 The production environment consists of
 
 - `backend`
