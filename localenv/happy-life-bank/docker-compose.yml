@@ -71,7 +71,6 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@database/happy_life_bank_auth
-      INTROSPECTION_HTTPSIG: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
   signatures:
     hostname: happy-life-bank-signatures

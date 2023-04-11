@@ -74,7 +74,6 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
-      INTROSPECTION_HTTPSIG: "false"
     depends_on:
       - database
   signatures:

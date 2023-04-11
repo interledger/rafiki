@@ -43,7 +43,6 @@ export const Config = {
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
-  introspectionHttpsig: envBool('INTROSPECTION_HTTPSIG', false),
   incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
   quoteInteraction: envBool('QUOTE_INTERACTION', false)
 }
