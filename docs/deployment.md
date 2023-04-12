@@ -201,7 +201,7 @@ $ helm install ...
 | `IDENTITY_SERVER_SECRET`       | `replace-me`                                                     | API key                                                                    |
 | `INCOMING_PAYMENT_INTERACTION` | `false`                                                          | flag - incoming payments grants are interactive or not                     |
 | `QUOTE_INTERACTION`            | `false`                                                          | flag - quote grants are interactive or not                                 |
-| `INTROSPECTION_PORT`           | `3007`                                                           | port of this Open Payments Auth Token Introspection Server                 |
+| `INTROSPECTION_PORT`           | `3007`                                                           | port of this Open Payments Auth - Token Introspection Server               |
 | `LOG_LEVEL`                    | `info`                                                           | [Pino Log Level](https://getpino.io/#/docs/api?id=levels)                  |
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |
 | `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server, same as in `AUTH_SERVER_DOMAIN`    |
