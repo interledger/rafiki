@@ -89,7 +89,12 @@ async function createReceiver(
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(
-      { error: error && error['message'] ? error['message'] : 'Unknown error' },
+      {
+        error:
+          error instanceof Error && error.message
+            ? error.message
+            : 'Unknown error'
+      },
       errorMessage
     )
 
@@ -186,7 +191,7 @@ async function getConnection(
     })
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error && error['message'] },
+      { errorMessage: error instanceof Error && error.message },
       'Could not get connection'
     )
 
@@ -243,7 +248,7 @@ async function getIncomingPayment(
     }
   } catch (error) {
     deps.logger.error(
-      { errorMessage: error && error['message'] },
+      { errorMessage: error instanceof Error && error.message },
       'Could not get incoming payment'
     )
     return undefined

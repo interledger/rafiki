@@ -75,12 +75,17 @@ async function processNextWebhookEvent(
   })
 }
 
+type WebhookHeaders = {
+  'Content-Type': string
+  'Rafiki-Signature'?: string
+}
+
 async function sendWebhookEvent(
   deps: ServiceDependencies,
   event: WebhookEvent
 ): Promise<void> {
   try {
-    const requestHeaders = {
+    const requestHeaders: WebhookHeaders = {
       'Content-Type': 'application/json'
     }
 

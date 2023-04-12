@@ -14,6 +14,12 @@ import { randomAsset } from '../tests/asset'
 import { createContext } from '../tests/context'
 import { truncateTables } from '../tests/tableManager'
 
+type SPSPHeader = {
+  Accept: string
+  'Receipt-Nonce'?: string
+  'Receipt-Secret'?: string
+}
+
 describe('SPSP Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
@@ -49,7 +55,7 @@ describe('SPSP Routes', (): void => {
       nonce?: string
       secret?: string
     } = {}): SPSPContext => {
-      const headers = {
+      const headers: SPSPHeader = {
         Accept: 'application/spsp4+json'
       }
       if (nonce) {

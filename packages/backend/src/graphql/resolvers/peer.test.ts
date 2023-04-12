@@ -176,8 +176,8 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual(errorToCode[error].toString())
-      expect(response.message).toEqual(errorToMessage[error])
+      expect(response.code).toEqual(errorToCode[error as PeerError].toString())
+      expect(response.message).toEqual(errorToMessage[error as PeerError])
     })
 
     test('500', async (): Promise<void> => {
@@ -504,8 +504,8 @@ describe('Peer Resolvers', (): void => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual(errorToCode[error].toString())
-      expect(response.message).toEqual(errorToMessage[error])
+      expect(response.code).toEqual(errorToCode[error as PeerError].toString())
+      expect(response.message).toEqual(errorToMessage[error as PeerError])
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {

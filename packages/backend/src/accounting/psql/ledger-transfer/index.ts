@@ -125,7 +125,10 @@ async function updateTransferState(
     await trx.rollback()
 
     const errorMessage = 'Could not void transfer(s)'
-    deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
+    deps.logger.error(
+      { errorMessage: error instanceof Error && error.message },
+      errorMessage
+    )
     return TransferError.UnknownError
   }
 }
@@ -172,7 +175,7 @@ export async function createTransfers(
     } catch (error) {
       const errorMessage = 'Could not create transfer(s)'
       deps.logger.error(
-        { errorMessage: error && error['message'] },
+        { errorMessage: error instanceof Error && error.message },
         errorMessage
       )
       errors.push({ index, error: TransferError.UnknownError })
@@ -192,7 +195,10 @@ export async function createTransfers(
     await trx.rollback()
 
     const errorMessage = 'Could not create transfer(s)'
-    deps.logger.error({ errorMessage: error && error['message'] }, errorMessage)
+    deps.logger.error(
+      { errorMessage: error instanceof Error && error.message },
+      errorMessage
+    )
     return {
       results: [],
       errors: [{ index: -1, error: TransferError.UnknownError }]
