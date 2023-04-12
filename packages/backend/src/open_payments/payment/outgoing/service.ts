@@ -208,7 +208,9 @@ function validatePaymentInterval({
 }): boolean {
   return (
     !limits.paymentInterval ||
-    (limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+    (limits.paymentInterval.start !== null &&
+      limits.paymentInterval.start.toMillis() <= payment.createdAt.getTime() &&
+      limits.paymentInterval.end !== null &&
       payment.createdAt.getTime() < limits.paymentInterval.end.toMillis())
   )
 }
