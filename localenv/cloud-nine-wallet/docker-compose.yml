@@ -46,7 +46,7 @@ services:
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3006/introspect
+      AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
       ILP_ADDRESS: test.cloud-nine-wallet
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
@@ -74,7 +74,6 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
-      INTROSPECTION_HTTPSIG: "false"
     depends_on:
       - database
   signatures:

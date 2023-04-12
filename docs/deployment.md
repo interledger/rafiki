@@ -146,7 +146,7 @@ $ helm install ...
 | ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
 | `ADMIN_PORT`                    | `3001`                                                      | GraphQL Server port                                                      |
 | `AUTH_SERVER_GRANT_URL`         | `http://127.0.0.1:3006`                                     | endpoint to on the Open Payments Auth Server to request a grant          |
-| `AUTH_SERVER_INTROSPECTION_URL` | `http://127.0.0.1:3007/introspect`                          | endpoint to on the Open Payments Auth Server to introspect an auth token |
+| `AUTH_SERVER_INTROSPECTION_URL` | `http://127.0.0.1:3007`                                     | endpoint to on the Open Payments Auth Server to introspect an auth token |
 | `CONNECTOR_PORT`                | `3002`                                                      | STREAM/ILP connector port                                                |
 | `DATABASE_URL`                  | `postgresql://postgres:password@localhost:5432/development` | Postgres database URL                                                    |
 | `ILP_ADDRESS`                   | `test.rafiki`                                               | ILP address of this Rafiki instance                                      |
@@ -193,6 +193,7 @@ $ helm install ...
 | `ACCESS_TOKEN_EXPIRY_SECONDS`  | `10 * 60`                                                        | expiry time for access tokens (default: 10 minutes)                        |
 | `ADMIN_PORT`                   | `3003`                                                           | GraphQL Server port                                                        |
 | `AUTH_DATABASE_URL`            | `postgresql://postgres:password@localhost:5432/auth_development` | Postgres database URL                                                      |
+| `AUTH_PORT`                    | `3006`                                                           | port of this Open Payments Auth Server                                     |
 | `AUTH_SERVER_DOMAIN`           | `http://localhost:3006`                                          | endpoint of this Open Payments Auth Server                                 |
 | `COOKIE_KEY`                   | 32 random bytes                                                  | signed cookie key                                                          |
 | `DATABASE_CLEANUP_WORKERS`     | `1`                                                              | number of workers processing expired or revoked access tokens              |
@@ -200,7 +201,7 @@ $ helm install ...
 | `IDENTITY_SERVER_SECRET`       | `replace-me`                                                     | API key                                                                    |
 | `INCOMING_PAYMENT_INTERACTION` | `false`                                                          | flag - incoming payments grants are interactive or not                     |
 | `QUOTE_INTERACTION`            | `false`                                                          | flag - quote grants are interactive or not                                 |
-| `INTROSPECTION_HTTPSIG`        | `false`                                                          | flag - check http signature on introspection requests                      |
+| `INTROSPECTION_PORT`           | `3007`                                                           | port of this Open Payments Auth - Token Introspection Server               |
 | `LOG_LEVEL`                    | `info`                                                           | [Pino Log Level](https://getpino.io/#/docs/api?id=levels)                  |
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |
 | `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server, same as in `AUTH_SERVER_DOMAIN`    |
