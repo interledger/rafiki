@@ -3,7 +3,7 @@ changelog:
     labels:
       - ignore-for-release
     authors:
-      - renovate
+      - app/renovate
   categories:
     - title: Breaking Changes 🛠
       labels:
