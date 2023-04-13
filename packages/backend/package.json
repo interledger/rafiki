@@ -11,7 +11,7 @@
     "prepack": "pnpm build"
   },
   "devDependencies": {
-    "@apollo/client": "^3.7.11",
+    "@apollo/client": "^3.7.12",
     "@graphql-codegen/cli": "3.3.0",
     "@graphql-codegen/introspection": "3.0.1",
     "@graphql-codegen/typescript": "3.0.3",
