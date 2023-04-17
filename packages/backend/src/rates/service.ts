@@ -130,7 +130,7 @@ class RatesServiceImpl implements RatesService {
     return data
   }
 
-  checkBaseAsset(asset: unknown): void {
+  private checkBaseAsset(asset: unknown): void {
     let errorMessage: string | undefined
     if (!asset) {
       errorMessage = 'Missing base asset'

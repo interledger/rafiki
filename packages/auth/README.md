@@ -25,8 +25,13 @@ docker build -f packages/auth/Dockerfile -t rafiki-auth .
 
 The authorization service extends the following endpoints:
 
-- `POST /auth`: Initializes a grant request for a client.
-- `POST /auth/continue/:id`: Continues a grant request after a resource owner has authorized said grant request.
-- `POST /introspect`: Performs introspection an access token and determines if it is valid.
-- `POST /auth/token/:id`: Rotates an access token and issues a new one.
-- `DEL /auth/token/:id`: Revokes an access token.
+- `POST /`: Initializes a grant request for a client.
+- `POST /continue/:id`: Continues a grant request after a resource owner has authorized said grant request.
+- `POST /token/:id`: Rotates an access token and issues a new one.
+- `DEL /token/:id`: Revokes an access token.
+
+## Introspection endpoint
+
+The introspection service extends the following endpoint:
+
+- `POST /`: Performs introspection of an access token and determines if it is valid.

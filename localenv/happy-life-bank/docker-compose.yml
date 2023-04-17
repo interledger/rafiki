@@ -45,7 +45,7 @@ services:
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3006/introspect
+      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
       ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       PUBLIC_HOST: http://happy-life-bank-backend
@@ -69,7 +69,6 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@database/happy_life_bank_auth
-      INTROSPECTION_HTTPSIG: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
   signatures:
     hostname: happy-life-bank-signatures

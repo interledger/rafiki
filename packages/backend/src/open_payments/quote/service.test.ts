@@ -166,7 +166,8 @@ describe('QuoteService', (): void => {
         .matchHeader('Content-Type', 'application/json')
         .post(quoteUrl.pathname, function (this: Definition, body) {
           assert.ok(this.headers)
-          const signature = this.headers['rafiki-signature']
+          const headerMap = new Map(Object.entries(this.headers))
+          const signature = headerMap.get('rafiki-signature')
           expect(
             generateQuoteSignature(
               body,

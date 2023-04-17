@@ -17,7 +17,9 @@ describe('Ledger Account Model', (): void => {
       'properly maps $liquidityAccountType to $ledgerAccountType',
       async ({ liquidityAccountType, ledgerAccountType }): Promise<void> => {
         expect(
-          mapLiquidityAccountTypeToLedgerAccountType[liquidityAccountType]
+          mapLiquidityAccountTypeToLedgerAccountType[
+            liquidityAccountType as LiquidityAccountType
+          ]
         ).toEqual(ledgerAccountType)
       }
     )

@@ -149,8 +149,8 @@ export default function CreatePeerPage() {
                       >
                         {asset.code} (Scale: {asset.scale} |{' '}
                         {asset.withdrawalThreshold
-                          ? `Withdrawal treshold ${asset.withdrawalThreshold}`
-                          : 'No withdrawal treshold'}
+                          ? `Withdrawal threshold ${asset.withdrawalThreshold}`
+                          : 'No withdrawal threshold'}
                         )
                       </option>
                     ))}

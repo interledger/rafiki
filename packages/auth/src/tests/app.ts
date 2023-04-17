@@ -31,6 +31,7 @@ export const createTestApp = async (
 ): Promise<TestContainer> => {
   const config = await container.use('config')
   config.authPort = 0
+  config.introspectionPort = 0
   config.adminPort = 0
 
   const logger = createLogger({
@@ -96,7 +97,7 @@ export const createTestApp = async (
 
   return {
     app,
-    port: app.getPort(),
+    port: app.getAuthPort(),
     adminPort: app.getAdminPort(),
     knex,
     apolloClient: client,

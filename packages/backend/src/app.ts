@@ -357,16 +357,25 @@ export class App {
           let route: (ctx: AppContext) => Promise<void>
           if (path.includes('incoming-payments')) {
             requestType = AccessType.IncomingPayment
+            // Use of ts-ignore will be obsolete once we get rid of this for-loop, see https://github.com/interledger/rafiki/issues/916
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             route = incomingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('outgoing-payments')) {
             requestType = AccessType.OutgoingPayment
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             route = outgoingPaymentRoutes[actionToRoute[requestAction]]
           } else if (path.includes('quotes')) {
             requestType = AccessType.Quote
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
             route = quoteRoutes[actionToRoute[requestAction]]
           } else {
             if (path.includes('connections')) {
               route = connectionRoutes.get
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore
               router[method](
                 toRouterPath(path),
                 connectionMiddleware,
@@ -386,6 +395,8 @@ export class App {
             }
             continue
           }
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           router[method](
             PAYMENT_POINTER_PATH + toRouterPath(path),
             createPaymentPointerMiddleware(),

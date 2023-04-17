@@ -98,7 +98,8 @@ export interface AppServices {
 export type AppContainer = IocContract<AppServices>
 
 export class App {
-  private server!: Server
+  private authServer!: Server
+  private introspectionServer!: Server
   private adminServer!: Server
   public apolloServer!: ApolloServer
   private closeEmitter!: EventEmitter
@@ -211,8 +212,8 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
-
     const openApi = await this.container.use('openApi')
+
     /* Back-channel GNAP Routes */
     // Grant Initiation
     router.post<DefaultState, CreateContext>(
@@ -267,20 +268,6 @@ export class App {
       }),
       tokenHttpsigMiddleware,
       accessTokenRoutes.revoke
-    )
-
-    /* AS <-> RS Routes */
-    // Token Introspection
-    router.post<DefaultState, IntrospectContext>(
-      '/introspect',
-      createValidatorMiddleware<IntrospectContext>(
-        openApi.tokenIntrospectionSpec,
-        {
-          path: '/',
-          method: HttpMethod.POST
-        }
-      ),
-      accessTokenRoutes.introspect
     )
 
     /* Front Channel Routes */
@@ -343,7 +330,39 @@ export class App {
     koa.use(router.middleware())
     koa.use(router.routes())
 
-    this.server = koa.listen(port)
+    this.authServer = koa.listen(port)
+  }
+
+  public async startIntrospectionServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const router = new Router<DefaultState, AppContext>()
+    router.use(bodyParser())
+    router.get('/healthz', (ctx: AppContext): void => {
+      ctx.status = 200
+    })
+
+    const accessTokenRoutes = await this.container.use('accessTokenRoutes')
+    const openApi = await this.container.use('openApi')
+
+    // Token Introspection
+    router.post<DefaultState, IntrospectContext>(
+      '/',
+      createValidatorMiddleware<IntrospectContext>(
+        openApi.tokenIntrospectionSpec,
+        {
+          path: '/',
+          method: HttpMethod.POST
+        }
+      ),
+      accessTokenRoutes.introspect
+    )
+
+    koa.use(cors())
+    koa.use(router.middleware())
+    koa.use(router.routes())
+
+    this.introspectionServer = koa.listen(port)
   }
 
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
@@ -386,8 +405,14 @@ export class App {
         })
       }
 
-      if (this.server) {
-        this.server.close((): void => {
+      if (this.authServer) {
+        this.authServer.close((): void => {
+          resolve()
+        })
+      }
+
+      if (this.introspectionServer) {
+        this.introspectionServer.close((): void => {
           resolve()
         })
       }
@@ -397,15 +422,19 @@ export class App {
   }
 
   public getAdminPort(): number {
-    const address = this.adminServer?.address()
-    if (address && !(typeof address == 'string')) {
-      return address.port
-    }
-    return 0
+    return this.getPort(this.adminServer)
   }
 
-  public getPort(): number {
-    const address = this.server?.address()
+  public getAuthPort(): number {
+    return this.getPort(this.authServer)
+  }
+
+  public getIntrospectionPort(): number {
+    return this.getPort(this.introspectionServer)
+  }
+
+  private getPort(server: Server): number {
+    const address = server?.address()
     if (address && !(typeof address == 'string')) {
       return address.port
     }
@@ -436,7 +465,7 @@ export class App {
             .del()
         } catch (err) {
           this.logger.warn(
-            { error: err && err['message'], tableName },
+            { error: err instanceof Error && err.message, tableName },
             'processDatabaseCleanup error'
           )
         }

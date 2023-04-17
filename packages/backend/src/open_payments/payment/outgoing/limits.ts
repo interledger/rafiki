@@ -53,7 +53,7 @@ export function getInterval(
     duration = Duration.fromISO(parts[2])
     forward = true
   } else {
-    duration = Duration.fromISO(interval.toDuration().toString())
+    duration = interval.toDuration()
     forward = true
   }
 
@@ -63,6 +63,7 @@ export function getInterval(
 
   for (let i = 1; i < repetitions + 1; i++) {
     let nextInterval: Interval
+    if (interval.start === null || interval.end === null) return
     if (forward) {
       nextInterval = Interval.after(interval.end, duration)
     } else {
