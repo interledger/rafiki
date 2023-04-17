@@ -27,7 +27,7 @@ rafiki:
     streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU="
     image:
       repository: ghcr.io/interledger/rafiki-backend
-      tag: 'v1.0.0-alpha'
+      tag: 'v1.1.0-alpha'
       digest: ''
       pullPolicy: IfNotPresent
     rollingUpdate:
@@ -60,7 +60,7 @@ rafiki:
     port: 3006
     image:
       repository: ghcr.io/interledger/rafiki-auth
-      tag: 'v1.0.0-alpha'
+      tag: 'v1.1.0-alpha'
       digest: ''
       pullPolicy: IfNotPresent
     rollingUpdate:
@@ -87,7 +87,7 @@ rafiki:
     image:
       repository: ghcr.io/interledger/rafiki-frontend
       # Todo: update tag
-      tag: 'v1.0.0-alpha'
+      tag: 'v1.1.0-alpha'
       digest: ''
       pullPolicy: IfNotPresent
     rollingUpdate:
