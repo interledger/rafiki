@@ -56,7 +56,9 @@ auth:
     username: "auth"
     database: "auth"
     password: "overridethisValue"
-  port: 3006
+  adminPort: 3003
+  authPort: 3006
+  introspectionPort: 3007
   image:
     repository: ghcr.io/interledger/rafiki-auth
     tag: 'v1.1.0-alpha'

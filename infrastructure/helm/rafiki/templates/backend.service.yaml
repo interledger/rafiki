@@ -18,6 +18,10 @@ spec:
       targetPort: {{ .Values.backend.openPaymentsPort }}
       protocol: TCP
       name: open-payments
+    - port: {{ .Values.backend.connectorPort}}
+      targetPort: {{ .Values.backend.connectorPort }}
+      protocol: TCP
+      name: connector
   selector:
     app: {{ include "backend.name" . }}
     release: {{ .Release.Name }}

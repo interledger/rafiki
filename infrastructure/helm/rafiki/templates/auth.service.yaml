@@ -10,10 +10,18 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: {{ .Values.auth.port }}
-      targetPort: {{ .Values.auth.port }}
+    - port: {{ .Values.auth.authPort }}
+      targetPort: {{ .Values.auth.authPort }}
       protocol: TCP
-      name: http
+      name: open-payments-auth
+    - port: {{ .Values.auth.adminPort }}
+      targetPort: {{ .Values.auth.adminPort }}
+      protocol: TCP
+      name: admin
+    - port: {{ .Values.auth.introspectionPort }}
+      targetPort: {{ .Values.auth.introspectionPort }}
+      protocol: TCP
+      name: introspection
   selector:
     app: {{ include "auth.name" . }}
     release: {{ .Release.Name }}

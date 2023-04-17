@@ -48,8 +48,14 @@ spec:
           - secretRef:
               name: {{ include "rafiki.fullname" . }}-auth-secrets
           ports:
-            - name: http
-              containerPort: {{ .Values.auth.port }}
+            - name: open-payments-auth
+              containerPort: {{ .Values.auth.authPort }}
+              protocol: TCP
+            - name: admin
+              containerPort: {{ .Values.auth.adminPort }}
+              protocol: TCP
+            - name: introspection
+              containerPort: {{ .Values.auth.introspectionPort }}
               protocol: TCP
            #livenessProbe:
            #  failureThreshold: 15
