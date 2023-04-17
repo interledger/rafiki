@@ -48,7 +48,7 @@ spec:
           - secretRef:
               name: {{ include "rafiki.fullname" . }}-auth-secrets
           ports:
-            - name: open-payments-auth
+            - name: auth
               containerPort: {{ .Values.auth.authPort }}
               protocol: TCP
             - name: admin

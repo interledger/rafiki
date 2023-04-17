@@ -13,7 +13,7 @@ spec:
     - port: {{ .Values.auth.authPort }}
       targetPort: {{ .Values.auth.authPort }}
       protocol: TCP
-      name: open-payments-auth
+      name: auth
     - port: {{ .Values.auth.adminPort }}
       targetPort: {{ .Values.auth.adminPort }}
       protocol: TCP
