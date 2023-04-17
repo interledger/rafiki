@@ -30,7 +30,7 @@
     "@interledger/http-signature-utils": "1.0.3",
     "httpbis-digest-headers": "github:interledger/httpbis-digest-headers",
     "knex": "^2.4.2",
-    "koa": "^2.14.1",
+    "koa": "^2.14.2",
     "koa-bodyparser": "^4.4.0",
     "koa-session": "^6.4.0",
     "node-mocks-http": "^1.12.2",
