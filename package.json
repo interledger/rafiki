@@ -36,8 +36,8 @@
     "sanity": "pnpm -r build && pnpm -r test"
   },
   "devDependencies": {
-    "@commitlint/cli": "^17.5.1",
-    "@commitlint/config-conventional": "^17.4.4",
+    "@commitlint/cli": "^17.6.1",
+    "@commitlint/config-conventional": "^17.6.1",
     "@jest/types": "^29.5.0",
     "@swc/jest": "^0.2.24",
     "@types/jest": "^29.5.0",
