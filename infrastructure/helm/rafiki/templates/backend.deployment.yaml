@@ -65,7 +65,7 @@ spec:
           - name: AUTH_SERVER_GRANT_URL
             value: http://{{ include "rafiki.fullname" . }}-auth:3006
           - name: AUTH_SERVER_INTROSPECTION_URL
-            value: http://{{ include "rafiki.fullname" . }}-auth:3006/introspect
+            value: http://{{ include "rafiki.fullname" . }}-auth:3007
           ports:
             - name: open-payments
               containerPort: {{ .Values.backend.openPaymentsPort }}
