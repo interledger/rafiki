@@ -16,8 +16,6 @@ jobs:
         push:
           - ${{ github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v4
@@ -38,10 +36,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: true
-          context: .
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          file: ./packages/${{ matrix.package }}/Dockerfile
+          file: packages/${{ matrix.package }}/Dockerfile
           platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
