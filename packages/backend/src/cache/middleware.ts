@@ -3,9 +3,12 @@ import { Logger } from 'pino'
 import { CacheDataStore } from './data-stores'
 
 interface CachedRequest {
-  requestResult: unknown
-  requestParams: Record<string, unknown>
-  operationName: string
+  status: 'PENDING' | 'DONE'
+  data?: {
+    requestResult: unknown
+    requestParams: Record<string, unknown>
+    operationName: string
+  }
 }
 
 type Request = () => Promise<unknown>
@@ -17,6 +20,7 @@ interface CacheMiddlewareArgs {
   requestParams: Record<string, unknown>
   operationName: string
   handleParamMismatch: () => never
+  handleConcurrentRequest: () => never
 }
 
 export async function cacheMiddleware(
@@ -25,10 +29,7 @@ export async function cacheMiddleware(
   const {
     deps: { logger, dataStore },
     idempotencyKey,
-    request,
-    operationName,
-    requestParams,
-    handleParamMismatch
+    request
   } = args
   if (!idempotencyKey) {
     logger.info('No idempotencyKey given')
@@ -37,46 +38,98 @@ export async function cacheMiddleware(
 
   const cachedRequest = await dataStore.get(idempotencyKey)
 
-  if (cachedRequest) {
-    let parsedRequest: CachedRequest
+  return cachedRequest
+    ? handleCacheHit({ ...args, idempotencyKey }, cachedRequest)
+    : handleCacheMiss({ ...args, idempotencyKey })
+}
 
-    try {
-      parsedRequest = JSON.parse(cachedRequest)
-    } catch (error) {
-      logger.error('Could not parse cache', { cachedRequest })
+type HandleCacheHitArgs = Omit<CacheMiddlewareArgs, 'idempotencyKey'> & {
+  idempotencyKey: string
+}
 
-      await dataStore.delete(idempotencyKey)
-      return request()
+async function handleCacheHit(
+  args: HandleCacheHitArgs,
+  cachedRequest: string
+): ReturnType<Request> {
+  const {
+    deps: { logger, dataStore },
+    idempotencyKey,
+    request,
+    operationName,
+    requestParams,
+    handleParamMismatch,
+    handleConcurrentRequest
+  } = args
+
+  let parsedRequest: CachedRequest
+
+  try {
+    parsedRequest = JSON.parse(cachedRequest)
+
+    if (parsedRequest.status === 'PENDING') {
+      return handleConcurrentRequest()
     }
+  } catch (error) {
+    logger.error('Could not parse cache', { cachedRequest })
 
-    if (
-      parsedRequest.operationName !== operationName ||
-      !isEqual(
-        parsedRequest.requestParams,
-        JSON.parse(JSON.stringify(requestParams))
-      )
-    ) {
-      logger.error(
-        `Incoming request is different than the original request for idempotencyKey: ${idempotencyKey}`,
-        {
-          requestParams: JSON.parse(JSON.stringify(requestParams)),
-          cachedRequestParams: parsedRequest.requestParams
-        }
-      )
-      return handleParamMismatch()
-    }
-
-    logger.info('Cache hit')
-    return parsedRequest.requestResult
+    await dataStore.delete(idempotencyKey)
+    return request()
   }
 
-  logger.info('Normally resolving')
-  const requestResult = await request()
+  if (
+    parsedRequest.data?.operationName !== operationName ||
+    !isEqual(
+      parsedRequest.data.requestParams,
+      JSON.parse(JSON.stringify(requestParams))
+    )
+  ) {
+    logger.error(
+      `Incoming request is different than the original request for idempotencyKey: ${idempotencyKey}`,
+      {
+        requestParams: JSON.parse(JSON.stringify(requestParams)),
+        cachedRequestParams: parsedRequest.data?.requestParams
+      }
+    )
+    return handleParamMismatch()
+  }
+
+  return parsedRequest.data.requestResult
+}
+
+type HandleCacheMissArgs = HandleCacheHitArgs
+
+async function handleCacheMiss(args: HandleCacheMissArgs) {
+  const {
+    deps: { logger, dataStore },
+    idempotencyKey,
+    request,
+    operationName,
+    requestParams
+  } = args
+
+  logger.info('Cache miss')
+
+  const pendingCache: CachedRequest = {
+    status: 'PENDING'
+  }
+
+  await dataStore.set(idempotencyKey, JSON.stringify(pendingCache))
+
+  let requestResult: unknown
+
+  try {
+    requestResult = await request()
+  } finally {
+    await dataStore.delete(idempotencyKey)
+  }
 
   const toCache: CachedRequest = {
-    requestResult,
-    requestParams,
-    operationName
+    status: 'DONE',
+    data: {
+      requestResult,
+      requestParams,
+      operationName
+    }
   }
 
   await dataStore.set(idempotencyKey, JSON.stringify(toCache))
