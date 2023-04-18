@@ -10,11 +10,8 @@ export function createRedisDataStore(
     async get(key: string): Promise<string | undefined> {
       return (await redisClient.get(key)) || undefined
     },
-    async set(key: string, value: string): Promise<string> {
-      const res = await redisClient.set(key, value)
-      await redisClient.expire(key, this.keyTtlMs)
-
-      return res
+    async set(key: string, value: string): Promise<boolean> {
+      return (await redisClient.set(key, value, 'PX', this.keyTtlMs)) === 'OK'
     },
     async delete(key: string): Promise<boolean> {
       return (await redisClient.del(key)) > 0
