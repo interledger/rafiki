@@ -257,7 +257,9 @@ export class App {
         schema,
         resolvers
       }),
-      idempotencyGraphQLMiddleware(createRedisDataStore(redis, 60 * 60 * 24))
+      idempotencyGraphQLMiddleware(
+        createRedisDataStore(redis, 1000 * 60 * 60 * 24)
+      )
     )
 
     // Setup Apollo
