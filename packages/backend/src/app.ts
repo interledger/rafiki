@@ -62,6 +62,10 @@ import {
 import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { ReceiverService } from './open_payments/receiver/service'
 import { Client as TokenIntrospectionClient } from 'token-introspection'
+import { applyMiddleware } from 'graphql-middleware'
+import { Redis } from 'ioredis'
+import { idempotencyGraphQLMiddleware } from './graphql/middleware'
+import { createRedisDataStore } from './cache/data-stores/redis'
 
 export interface AppContextData {
   logger: Logger
@@ -190,6 +194,7 @@ export interface AppServices {
   paymentPointerKeyService: Promise<PaymentPointerKeyService>
   openPaymentsClient: Promise<AuthenticatedClient>
   tokenIntrospectionClient: Promise<TokenIntrospectionClient>
+  redis: Promise<Redis>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -244,15 +249,20 @@ export class App {
       loaders: [new GraphQLFileLoader()]
     })
 
+    const redis = await this.container.use('redis')
+
     // Add resolvers to the schema
-    const schemaWithResolvers = addResolversToSchema({
-      schema,
-      resolvers
-    })
+    const schemaWithMiddleware = applyMiddleware(
+      addResolversToSchema({
+        schema,
+        resolvers
+      }),
+      idempotencyGraphQLMiddleware(createRedisDataStore(redis, 60 * 60 * 24))
+    )
 
     // Setup Apollo
     this.apolloServer = new ApolloServer({
-      schema: schemaWithResolvers,
+      schema: schemaWithMiddleware,
       plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
 
