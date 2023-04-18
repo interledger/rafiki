@@ -12,7 +12,7 @@ type Request = () => Promise<unknown>
 
 interface CacheMiddlewareArgs {
   deps: { logger: Logger; dataStore: CacheDataStore }
-  idempotencyKey: string | undefined
+  idempotencyKey?: string
   request: Request
   requestParams: Record<string, unknown>
   operationName: string
@@ -38,12 +38,8 @@ export async function cacheMiddleware(
     : handleCacheMiss({ ...args, idempotencyKey })
 }
 
-type HandleCacheHitArgs = Omit<CacheMiddlewareArgs, 'idempotencyKey'> & {
-  idempotencyKey: string
-}
-
 async function handleCacheHit(
-  args: HandleCacheHitArgs,
+  args: Required<CacheMiddlewareArgs>,
   cachedRequest: string
 ): ReturnType<Request> {
   const {
@@ -88,9 +84,7 @@ async function handleCacheHit(
   return parsedRequest.requestResult
 }
 
-type HandleCacheMissArgs = HandleCacheHitArgs
-
-async function handleCacheMiss(args: HandleCacheMissArgs) {
+async function handleCacheMiss(args: Required<CacheMiddlewareArgs>) {
   const {
     deps: { logger, dataStore },
     idempotencyKey,
