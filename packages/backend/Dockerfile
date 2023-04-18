@@ -1,4 +1,4 @@
-FROM node:18.13.0-slim as builder
+FROM --platform=${BUILDPLATFORM:-linux/arm64} node:18.13.0-slim as builder
 
 WORKDIR /workspace
 
