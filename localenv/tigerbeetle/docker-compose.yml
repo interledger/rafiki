@@ -1,7 +1,7 @@
 version: '3'
 services:
   tigerbeetle:
-    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:a1259a4c1e49b3bab3d4cb61160f47dbfb2599964577a0b9144673de9a3bea9d
+    image: ghcr.io/tigerbeetledb/tigerbeetle@sha256:21377d73481f6ef20df7a3aedc15060076987075afeaa8780efcbb8f3bbc0733
     restart: unless-stopped
     privileged: true
     volumes:
