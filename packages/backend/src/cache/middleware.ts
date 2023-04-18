@@ -3,12 +3,9 @@ import { Logger } from 'pino'
 import { CacheDataStore } from './data-stores'
 
 interface CachedRequest {
-  status: 'PENDING' | 'DONE'
-  data?: {
-    requestResult: unknown
-    requestParams: Record<string, unknown>
-    operationName: string
-  }
+  requestResult: unknown
+  requestParams: Record<string, unknown>
+  operationName: string
 }
 
 type Request = () => Promise<unknown>
@@ -20,19 +17,17 @@ interface CacheMiddlewareArgs {
   requestParams: Record<string, unknown>
   operationName: string
   handleParamMismatch: () => never
-  handleConcurrentRequest: () => never
 }
 
 export async function cacheMiddleware(
   args: CacheMiddlewareArgs
 ): ReturnType<Request> {
   const {
-    deps: { logger, dataStore },
+    deps: { dataStore },
     idempotencyKey,
     request
   } = args
   if (!idempotencyKey) {
-    logger.info('No idempotencyKey given')
     return request()
   }
 
@@ -57,18 +52,15 @@ async function handleCacheHit(
     request,
     operationName,
     requestParams,
-    handleParamMismatch,
-    handleConcurrentRequest
+    handleParamMismatch
   } = args
+
+  logger.info('Cache hit')
 
   let parsedRequest: CachedRequest
 
   try {
     parsedRequest = JSON.parse(cachedRequest)
-
-    if (parsedRequest.status === 'PENDING') {
-      return handleConcurrentRequest()
-    }
   } catch (error) {
     logger.error('Could not parse cache', { cachedRequest })
 
@@ -77,9 +69,9 @@ async function handleCacheHit(
   }
 
   if (
-    parsedRequest.data?.operationName !== operationName ||
+    parsedRequest?.operationName !== operationName ||
     !isEqual(
-      parsedRequest.data.requestParams,
+      parsedRequest.requestParams,
       JSON.parse(JSON.stringify(requestParams))
     )
   ) {
@@ -87,13 +79,13 @@ async function handleCacheHit(
       `Incoming request is different than the original request for idempotencyKey: ${idempotencyKey}`,
       {
         requestParams: JSON.parse(JSON.stringify(requestParams)),
-        cachedRequestParams: parsedRequest.data?.requestParams
+        cachedRequestParams: parsedRequest?.requestParams
       }
     )
     return handleParamMismatch()
   }
 
-  return parsedRequest.data.requestResult
+  return parsedRequest.requestResult
 }
 
 type HandleCacheMissArgs = HandleCacheHitArgs
@@ -109,27 +101,19 @@ async function handleCacheMiss(args: HandleCacheMissArgs) {
 
   logger.info('Cache miss')
 
-  const pendingCache: CachedRequest = {
-    status: 'PENDING'
-  }
-
-  await dataStore.set(idempotencyKey, JSON.stringify(pendingCache))
-
   let requestResult: unknown
 
   try {
     requestResult = await request()
-  } finally {
+  } catch (err) {
     await dataStore.delete(idempotencyKey)
+    throw err
   }
 
   const toCache: CachedRequest = {
-    status: 'DONE',
-    data: {
-      requestResult,
-      requestParams,
-      operationName
-    }
+    requestResult,
+    requestParams,
+    operationName
   }
 
   await dataStore.set(idempotencyKey, JSON.stringify(toCache))

@@ -19,11 +19,6 @@ export function idempotencyGraphQLMiddleware(dataStore: CacheDataStore): {
           throw new GraphQLError(
             `Incoming arguments are different than the original request(s) for idempotencyKey: ${args?.input?.idempotencyKey}`
           )
-        },
-        handleConcurrentRequest: () => {
-          throw new GraphQLError(
-            `Concurrent request for idempotencyKey: ${args?.input?.idempotencyKey}`
-          )
         }
       })
     }
