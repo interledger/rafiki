@@ -43,9 +43,9 @@ export async function createAccounts(
       timestamp: 0n
     }))
   )
-  for (const { code } of errors) {
-    if (code !== CreateAccountErrorCode.linked_event_failed) {
-      throw new TigerbeetleCreateAccountError(code)
+  for (const { result } of errors) {
+    if (result !== CreateAccountErrorCode.linked_event_failed) {
+      throw new TigerbeetleCreateAccountError(result)
     }
   }
 }
