@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: Rafiki Exchange Rates
+  version: '1.0'
+  license:
+    name: Apache 2.0
+    identifier: Apache-2.0
+  summary: Integration Endpoint Rafiki expects at the Account Servicing Entity
+  description: 'Rafiki calls this endpoint at the Account Servicing Entity in order to fetch current exchange rates.'
+  contact:
+    email: tech@interledger.org
+servers:
+  - url: 'https://account-servicing-entity.com/rates'
+tags:
+  - name: rates
+    description: Exchange rates
+paths:
+  /:
+    parameters: []
+    get:
+      summary: Fetch exchange rates
+      operationId: get-rates
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rates'
+              examples:
+                Exchange Rates:
+                  value:
+                    base: "USD"
+                    rates:
+                      EUR: 1.1602
+                      ZAR: 17.3792
+        '404':
+          description: Not Found
+      description: Fetch current exchange rate pairs.
+      tags:
+        - rates
+components:
+  schemas:
+    rates:
+      title: rates
+      type: object
+      properties:
+        base:
+          type: string
+        rates:
+          type: object
+          patternProperties:
+            ^[A-Z]{3}$: 
+              type: number
+      required:
+        - base
+        - rates
+  securitySchemes: {}
+security: []
