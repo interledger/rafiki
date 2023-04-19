@@ -53,7 +53,7 @@ services:
       PUBLIC_HOST: http://cloud-nine-wallet-backend
       OPEN_PAYMENTS_URL: http://cloud-nine-wallet-backend
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
-      PRICES_URL: http://cloud-nine-wallet/prices
+      EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
       REDIS_URL: redis://redis:6379/0
       QUOTE_URL: http://cloud-nine-wallet/quotes
       PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay

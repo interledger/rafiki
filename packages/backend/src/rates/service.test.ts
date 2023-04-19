@@ -12,7 +12,7 @@ describe('Rates service', function () {
   let appContainer: TestContainer
   let service: RatesService
   let requestCount = 0
-  const pricesLifetime = 100
+  const exchangeRatesLifetime = 100
   const koa = new Koa()
   koa.use(function (ctx) {
     requestCount++
@@ -30,8 +30,8 @@ describe('Rates service', function () {
 
   beforeAll(async (): Promise<void> => {
     const config = Config
-    config.pricesLifetime = pricesLifetime
-    config.pricesUrl = 'http://127.0.0.1:3210/'
+    config.exchangeRatesLifetime = exchangeRatesLifetime
+    config.exchangeRatesUrl = 'http://127.0.0.1:3210/'
     deps = await initIocContainer(config)
     appContainer = await createTestApp(deps)
     jest.useFakeTimers()
@@ -40,7 +40,7 @@ describe('Rates service', function () {
 
   beforeEach(async (): Promise<void> => {
     // Fast-forward to reset the cache between tests.
-    jest.setSystemTime(Date.now() + pricesLifetime + 1)
+    jest.setSystemTime(Date.now() + exchangeRatesLifetime + 1)
     service = await deps.use('ratesService')
     requestCount = 0
   })
@@ -157,7 +157,7 @@ describe('Rates service', function () {
 
       it('prefetches when the cached request is old', async () => {
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
-        jest.advanceTimersByTime(pricesLifetime * 0.5 + 1)
+        jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
         // ... cache isn't expired yet, but it will be soon
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -166,7 +166,7 @@ describe('Rates service', function () {
         expect(requestCount).toBe(1)
 
         // Invalidate the cache.
-        jest.advanceTimersByTime(pricesLifetime * 0.5 + 1)
+        jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
         // The prefetch response is promoted to the cache.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -176,7 +176,7 @@ describe('Rates service', function () {
 
       it('cannot use an expired cache', async () => {
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
-        jest.advanceTimersByTime(pricesLifetime + 1)
+        jest.advanceTimersByTime(exchangeRatesLifetime + 1)
         await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         expect((<any>service).prefetchRequest).toBeUndefined()

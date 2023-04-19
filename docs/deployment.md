@@ -162,8 +162,8 @@ $ helm install ...
 | `PAYMENT_POINTER_URL`           | `http://127.0.0.1:3001/.well-known/pay`                     | Rafiki instance internal payment pointer                                 |
 | `PAYMENT_POINTER_WORKERS`       | `1`                                                         | number of workers processing payment pointer requests                    |
 | `PAYMENT_POINTER_WORKER_IDLE`   | `200`                                                       | milliseconds                                                             |
-| `PRICES_LIFETIME`               | `15_000`                                                    | milliseconds                                                             |
-| `PRICES_URL`                    | `undefined`                                                 | endpoint on the Account Servicing Entity to request receiver fees        |
+| `EXCHANGE_RATES_LIFETIME`       | `15_000`                                                    | milliseconds                                                             |
+| `EXCHANGE_RATES_URL`            | `undefined`                                                 | endpoint on the Account Servicing Entity to request receiver fees        |
 | `PRIVATE_KEY_FILE`              | `undefined`                                                 | Rafiki instance client private key                                       |
 | `PUBLIC_HOST`                   | `http://127.0.0.1:3001`                                     | (testing) public Host for Open Payments APIs                             |
 | `QUOTE_LIFESPAN`                | `5 * 60_000`                                                | milliseconds                                                             |
