@@ -1,6 +1,6 @@
 {
   "name": "@interledger/rafiki",
-  "version": "1.1.0-alpha",
+  "version": "1.1.1-alpha",
   "private": true,
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
