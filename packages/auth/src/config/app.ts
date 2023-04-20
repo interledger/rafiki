@@ -18,8 +18,9 @@ export type IAppConfig = typeof Config
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
-  authPort: envInt('PORT', 3006),
   adminPort: envInt('ADMIN_PORT', 3003),
+  authPort: envInt('AUTH_PORT', 3006),
+  introspectionPort: envInt('INTROSPECTION_PORT', 3007),
   env: envString('NODE_ENV', 'development'),
   databaseUrl:
     process.env.NODE_ENV === 'test'
@@ -42,7 +43,6 @@ export const Config = {
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
-  introspectionHttpsig: envBool('INTROSPECTION_HTTPSIG', false),
   incomingPaymentInteraction: envBool('INCOMING_PAYMENT_INTERACTION', false),
   quoteInteraction: envBool('QUOTE_INTERACTION', false)
 }
