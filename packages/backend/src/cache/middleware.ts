@@ -31,16 +31,16 @@ export async function cacheMiddleware(
     return request()
   }
 
-  const cachedRequest = await dataStore.get(idempotencyKey)
+  const cachedRequestAsString = await dataStore.get(idempotencyKey)
 
-  return cachedRequest
-    ? handleCacheHit({ ...args, idempotencyKey }, cachedRequest)
+  return cachedRequestAsString
+    ? handleCacheHit({ ...args, idempotencyKey }, cachedRequestAsString)
     : handleCacheMiss({ ...args, idempotencyKey })
 }
 
 async function handleCacheHit(
   args: Required<CacheMiddlewareArgs>,
-  cachedRequest: string
+  cachedRequestAsString: string
 ): ReturnType<Request> {
   const {
     deps: { logger, dataStore },
@@ -51,58 +51,53 @@ async function handleCacheHit(
     handleParamMismatch
   } = args
 
-  logger.info('Cache hit')
-
-  let parsedRequest: CachedRequest
+  let cachedRequest: CachedRequest
 
   try {
-    parsedRequest = JSON.parse(cachedRequest)
+    cachedRequest = JSON.parse(cachedRequestAsString)
   } catch (error) {
-    logger.error('Could not parse cache', { cachedRequest })
+    logger.error('Could not parse cache', { cachedRequestAsString })
 
     await dataStore.delete(idempotencyKey)
     return request()
   }
 
   if (
-    parsedRequest?.operationName !== operationName ||
+    cachedRequest?.operationName !== operationName ||
     !isEqual(
-      parsedRequest.requestParams,
+      cachedRequest.requestParams,
       JSON.parse(JSON.stringify(requestParams))
     )
   ) {
     logger.error(
       `Incoming request is different than the original request for idempotencyKey: ${idempotencyKey}`,
       {
-        requestParams: JSON.parse(JSON.stringify(requestParams)),
-        cachedRequestParams: parsedRequest?.requestParams
+        cachedRequest: {
+          operationName: cachedRequest?.operationName,
+          requestParams: cachedRequest?.requestParams
+        },
+        incomingRequest: {
+          requestParams: JSON.parse(JSON.stringify(requestParams)),
+          operationName
+        }
       }
     )
     return handleParamMismatch()
   }
 
-  return parsedRequest.requestResult
+  return cachedRequest.requestResult
 }
 
 async function handleCacheMiss(args: Required<CacheMiddlewareArgs>) {
   const {
-    deps: { logger, dataStore },
+    deps: { dataStore },
     idempotencyKey,
     request,
     operationName,
     requestParams
   } = args
 
-  logger.info('Cache miss')
-
-  let requestResult: unknown
-
-  try {
-    requestResult = await request()
-  } catch (err) {
-    await dataStore.delete(idempotencyKey)
-    throw err
-  }
+  const requestResult = await request()
 
   const toCache: CachedRequest = {
     requestResult,
