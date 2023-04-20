@@ -601,6 +601,22 @@
             "deprecationReason": null
           },
           {
+            "name": "idempotencyKey",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "scale",
             "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
             "type": {

@@ -163,6 +163,7 @@ input CreateAssetInput {
   scale: UInt8!
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  idempotencyKey: String!
 }
 
 input UpdateAssetInput {

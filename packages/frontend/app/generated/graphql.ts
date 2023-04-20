@@ -99,6 +99,7 @@ export type AssetsConnection = {
 export type CreateAssetInput = {
   /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String'];
+  idempotencyKey: Scalars['String'];
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];
   /** Minimum amount of liquidity that can be withdrawn from the asset */
