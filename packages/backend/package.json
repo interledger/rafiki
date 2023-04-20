@@ -56,7 +56,7 @@
     "@poppinss/file-generator": "^1.0.2",
     "add": "^2.0.6",
     "ajv": "^8.12.0",
-    "axios": "1.3.5",
+    "axios": "1.3.6",
     "base64url": "^3.0.1",
     "extensible-error": "^1.0.2",
     "fishery": "^2.2.2",
