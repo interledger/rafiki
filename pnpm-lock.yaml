@@ -425,7 +425,7 @@ importers:
         specifier: ^2.5.2
         version: 2.5.2
       tigerbeetle-node:
-        specifier: ^0.12.70
+        specifier: ^0.12.76
         version: 0.12.76
       token-introspection:
         specifier: workspace:../token-introspection
