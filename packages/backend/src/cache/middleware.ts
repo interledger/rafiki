@@ -70,7 +70,6 @@ async function handleCacheHit(
     )
   ) {
     logger.error(
-      `Incoming request is different than the original request for idempotencyKey: ${idempotencyKey}`,
       {
         cachedRequest: {
           operationName: cachedRequest?.operationName,
@@ -80,7 +79,8 @@ async function handleCacheHit(
           requestParams: JSON.parse(JSON.stringify(requestParams)),
           operationName
         }
-      }
+      },
+      `Incoming request is different than the original request for idempotencyKey: ${idempotencyKey}`
     )
     return handleParamMismatch()
   }
@@ -90,7 +90,7 @@ async function handleCacheHit(
 
 async function handleCacheMiss(args: Required<CacheMiddlewareArgs>) {
   const {
-    deps: { dataStore },
+    deps: { logger, dataStore },
     idempotencyKey,
     request,
     operationName,
@@ -105,7 +105,14 @@ async function handleCacheMiss(args: Required<CacheMiddlewareArgs>) {
     operationName
   }
 
-  await dataStore.set(idempotencyKey, JSON.stringify(toCache))
+  try {
+    await dataStore.set(idempotencyKey, JSON.stringify(toCache))
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error && error.message ? error.message : error
+
+    logger.error({ errorMessage, toCache }, 'Failed to cache request')
+  }
 
   return requestResult
 }
