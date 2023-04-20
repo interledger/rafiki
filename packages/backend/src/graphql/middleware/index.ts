@@ -17,7 +17,7 @@ export function idempotencyGraphQLMiddleware(dataStore: CacheDataStore): {
         operationName: info.fieldName,
         handleParamMismatch: () => {
           throw new GraphQLError(
-            `Incoming arguments are different than the original request(s) for idempotencyKey: ${args?.input?.idempotencyKey}`
+            `Incoming arguments are different than the original request for idempotencyKey: ${args?.input?.idempotencyKey}`
           )
         }
       })
