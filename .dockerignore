@@ -17,7 +17,6 @@ localenv
 .eslintrc.yml
 .gitattributes
 .gitignore
-.lintstagedrc.js
 .prettierignore
 commitlint.config.js
 jest.config.base.js
