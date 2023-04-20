@@ -21,7 +21,7 @@
     "class-variance-authority": "^0.5.2",
     "graphql": "^16.6.0",
     "ilp-packet": "3.1.4-alpha.2",
-    "isbot": "^3.6.8",
+    "isbot": "^3.6.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "zod": "^3.21.4"
