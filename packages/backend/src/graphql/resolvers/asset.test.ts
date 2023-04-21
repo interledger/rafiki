@@ -55,7 +55,6 @@ describe('Asset Resolvers', (): void => {
       }): Promise<void> => {
         const input: CreateAssetInput = {
           ...randomAsset(),
-          idempotencyKey: uuid(),
           withdrawalThreshold
         }
 
@@ -101,23 +100,15 @@ describe('Asset Resolvers', (): void => {
         await expect(
           assetService.get(response.asset.id)
         ).resolves.toMatchObject({
-          id: response.asset.id,
-          code: input.code,
-          scale: input.scale,
+          ...input,
           withdrawalThreshold: withdrawalThreshold ?? null
         })
       }
     )
 
     test('Returns error for duplicate asset', async (): Promise<void> => {
-      const input: CreateAssetInput = {
-        ...randomAsset(),
-        idempotencyKey: uuid()
-      }
-      await expect(assetService.create(input)).resolves.toMatchObject({
-        code: input.code,
-        scale: input.scale
-      })
+      const input = randomAsset()
+      await expect(assetService.create(input)).resolves.toMatchObject(input)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -169,7 +160,7 @@ describe('Asset Resolvers', (): void => {
             }
           `,
           variables: {
-            input: { ...randomAsset(), idempotencyKey: uuid() }
+            input: randomAsset()
           }
         })
         .then((query): AssetMutationResponse => {
