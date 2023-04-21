@@ -17,7 +17,7 @@ jobs:
             platforms: linux/amd64
           - package: backend
             platforms: linux/amd64,linux/arm64
-          - package: auth
+          - package: frontend
             platforms: linux/amd64
     steps:
       - name: Docker meta
