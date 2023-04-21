@@ -4,7 +4,7 @@
 
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
 
-- prices (exchange rates)
+- exchange rates
 - fees
 - [webhook events listener](#webhook-events-listener)
 - [Identity Provider](#identity-provider)
@@ -15,7 +15,7 @@ Furthermore, each payment account managed by the Account Servicing Entity needs 
 
 Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity.
 
-### Rates (Prices)
+### Exchange Rates
 
 For the quoting to be successful, Rafiki needs to be provided with the current exchange rate by the Account Servicing Entity. The Account Servicing Entity needs to expose an endpoint that accepts a `GET` requests and responds as follows.
 
@@ -27,9 +27,9 @@ For the quoting to be successful, Rafiki needs to be provided with the current e
 | `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`                           |
 | `rates.<asset_code>` | Number | exchange rate given `base` and `<asset_code>`                                                          |
 
-The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/prices.ts).
+The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/rates.ts).
 
-The `backend` package requires an environment variable called `PRICES_URL` which MUST specify the URL of this endpoint.
+The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint.
 
 ### Fees
 
