@@ -32,7 +32,8 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push
+      - name: Build and push backend
+        if: ${{ matrix.package }} == 'backend'
         uses: docker/build-push-action@v4
         with:
           push: true
@@ -40,5 +41,14 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           file: packages/${{ matrix.package }}/Dockerfile
           platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          file: packages/${{ matrix.package }}/Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
