@@ -1,10 +1,9 @@
 **/node_modules
 **/dist
 **/tmp
+**/docs
 
-docs
 infrastructure
-localenv
 
 .github
 .husky
