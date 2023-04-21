@@ -225,7 +225,7 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    Config.exchangeRatesUrl = 'https://test.prices'
+    Config.exchangeRatesUrl = 'https://test.rates'
     nock(Config.exchangeRatesUrl)
       .get('/')
       .reply(200, () => ({

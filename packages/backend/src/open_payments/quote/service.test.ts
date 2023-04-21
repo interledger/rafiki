@@ -67,7 +67,7 @@ describe('QuoteService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    Config.exchangeRatesUrl = 'https://test.prices'
+    Config.exchangeRatesUrl = 'https://test.rates'
     Config.signatureSecret = SIGNATURE_SECRET
     nock(Config.exchangeRatesUrl)
       .get('/')

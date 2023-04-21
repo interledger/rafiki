@@ -27,7 +27,7 @@ For the quoting to be successful, Rafiki needs to be provided with the current e
 | `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`                           |
 | `rates.<asset_code>` | Number | exchange rate given `base` and `<asset_code>`                                                          |
 
-The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/prices.ts).
+The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/rates.ts).
 
 The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint.
 
