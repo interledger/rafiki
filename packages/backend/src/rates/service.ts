@@ -5,7 +5,7 @@ import { convert, ConvertOptions } from './util'
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
 export interface RatesService {
-  prices(): Promise<Prices>
+  rates(): Promise<Rates>
   convert(
     opts: Omit<ConvertOptions, 'exchangeRate'>
   ): Promise<bigint | ConvertError>
@@ -13,18 +13,18 @@ export interface RatesService {
 
 interface ServiceDependencies extends BaseService {
   // If `url` is not set, the connector cannot convert between currencies.
-  pricesUrl?: string
-  // Duration (milliseconds) that the fetched prices are valid.
-  pricesLifetime: number
+  exchangeRatesUrl?: string
+  // Duration (milliseconds) that the fetched rates are valid.
+  exchangeRatesLifetime: number
 }
 
-interface Prices {
+interface Rates {
   [currency: string]: number
 }
 
-interface PricesResponse {
+interface RatesResponse {
   base: string
-  rates: Prices
+  rates: Rates
 }
 
 export enum ConvertError {
@@ -40,9 +40,9 @@ export function createRatesService(deps: ServiceDependencies): RatesService {
 
 class RatesServiceImpl implements RatesService {
   private axios: AxiosInstance
-  private pricesRequest?: Promise<Prices>
-  private pricesExpiry?: Date
-  private prefetchRequest?: Promise<Prices>
+  private ratesRequest?: Promise<Rates>
+  private ratesExpiry?: Date
+  private prefetchRequest?: Promise<Rates>
 
   constructor(private deps: ServiceDependencies) {
     this.axios = Axios.create({
@@ -59,11 +59,11 @@ class RatesServiceImpl implements RatesService {
     if (sameCode && sameScale) return opts.sourceAmount
     if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
 
-    const prices = await this.sharedLoad()
-    const sourcePrice = prices[opts.sourceAsset.code]
+    const rates = await this.sharedLoad()
+    const sourcePrice = rates[opts.sourceAsset.code]
     if (!sourcePrice) return ConvertError.MissingSourceAsset
     if (!isValidPrice(sourcePrice)) return ConvertError.InvalidSourcePrice
-    const destinationPrice = prices[opts.destinationAsset.code]
+    const destinationPrice = rates[opts.destinationAsset.code]
     if (!destinationPrice) return ConvertError.MissingDestinationAsset
     if (!isValidPrice(destinationPrice))
       return ConvertError.InvalidDestinationPrice
@@ -73,19 +73,19 @@ class RatesServiceImpl implements RatesService {
     return convert({ exchangeRate, ...opts })
   }
 
-  async prices(): Promise<Prices> {
+  async rates(): Promise<Rates> {
     return this.sharedLoad()
   }
 
-  private sharedLoad(): Promise<Prices> {
-    if (this.pricesRequest && this.pricesExpiry) {
-      if (this.pricesExpiry < new Date()) {
-        // Already expired: invalidate cached prices.
-        this.pricesRequest = undefined
-        this.pricesExpiry = undefined
+  private sharedLoad(): Promise<Rates> {
+    if (this.ratesRequest && this.ratesExpiry) {
+      if (this.ratesExpiry < new Date()) {
+        // Already expired: invalidate cached rates.
+        this.ratesRequest = undefined
+        this.ratesExpiry = undefined
       } else if (
-        this.pricesExpiry.getTime() <
-        Date.now() + 0.5 * this.deps.pricesLifetime
+        this.ratesExpiry.getTime() <
+        Date.now() + 0.5 * this.deps.exchangeRatesLifetime
       ) {
         // Expiring soon: start prefetch.
         if (!this.prefetchRequest) {
@@ -96,23 +96,23 @@ class RatesServiceImpl implements RatesService {
       }
     }
 
-    if (!this.pricesRequest) {
-      this.pricesRequest =
+    if (!this.ratesRequest) {
+      this.ratesRequest =
         this.prefetchRequest ||
         this.loadNow().catch((err) => {
-          this.pricesRequest = undefined
-          this.pricesExpiry = undefined
+          this.ratesRequest = undefined
+          this.ratesExpiry = undefined
           throw err
         })
     }
-    return this.pricesRequest
+    return this.ratesRequest
   }
 
-  private async loadNow(): Promise<Prices> {
-    const url = this.deps.pricesUrl
+  private async loadNow(): Promise<Rates> {
+    const url = this.deps.exchangeRatesUrl
     if (!url) return {}
 
-    const res = await this.axios.get<PricesResponse>(url).catch((err) => {
+    const res = await this.axios.get<RatesResponse>(url).catch((err) => {
       this.deps.logger.warn({ err: err.message }, 'price request error')
       throw err
     })
@@ -125,8 +125,8 @@ class RatesServiceImpl implements RatesService {
       ...(rates ? rates : {})
     }
 
-    this.pricesRequest = Promise.resolve(data)
-    this.pricesExpiry = new Date(Date.now() + this.deps.pricesLifetime)
+    this.ratesRequest = Promise.resolve(data)
+    this.ratesExpiry = new Date(Date.now() + this.deps.exchangeRatesLifetime)
     return data
   }
 

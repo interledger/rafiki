@@ -218,8 +218,8 @@ export async function startQuote(
   deps: ServiceDependencies,
   options: StartQuoteOptions
 ): Promise<Pay.Quote> {
-  const prices = await deps.ratesService.prices().catch((_err: Error) => {
-    throw new Error('missing prices')
+  const rates = await deps.ratesService.rates().catch((_err: Error) => {
+    throw new Error('missing rates')
   })
 
   const plugin = deps.makeIlpPlugin({
@@ -246,7 +246,7 @@ export async function startQuote(
     const quote = await Pay.startQuote({
       ...quoteOptions,
       slippage: deps.slippage,
-      prices
+      prices: rates
     }).finally(() => {
       return Pay.closeConnection(
         quoteOptions.plugin,
