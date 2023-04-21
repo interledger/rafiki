@@ -163,11 +163,11 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@apollo/server':
-        specifier: ^4.6.0
-        version: 4.6.0(graphql@16.6.0)
+        specifier: ^4.7.0
+        version: 4.7.0(graphql@16.6.0)
       '@as-integrations/koa':
         specifier: ^0.3.0
-        version: 0.3.0(@apollo/server@4.6.0)(koa@2.14.2)
+        version: 0.3.0(@apollo/server@4.7.0)(koa@2.14.2)
       '@graphql-tools/graphql-file-loader':
         specifier: ^7.5.17
         version: 7.5.17(graphql@16.6.0)
@@ -305,11 +305,11 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0
       '@apollo/server':
-        specifier: ^4.6.0
-        version: 4.6.0(graphql@16.6.0)
+        specifier: ^4.7.0
+        version: 4.7.0(graphql@16.6.0)
       '@as-integrations/koa':
         specifier: ^0.3.0
-        version: 0.3.0(@apollo/server@4.6.0)(koa@2.14.2)
+        version: 0.3.0(@apollo/server@4.7.0)(koa@2.14.2)
       '@faker-js/faker':
         specifier: ^7.6.0
         version: 7.6.0
@@ -739,8 +739,8 @@ packages:
       graphql: 16.6.0
     dev: false
 
-  /@apollo/server@4.6.0(graphql@16.6.0):
-    resolution: {integrity: sha512-02dgZ5ywBZP7xVZ+Xf62uEtA0jCYcpD5gEluCADudUSwbGuQTnJ9F056SxOVLpJRM69sWDrOMKF5kncYYH5wSA==}
+  /@apollo/server@4.7.0(graphql@16.6.0):
+    resolution: {integrity: sha512-qPfMnsHHA+U/F3dRAAlyiXWbTjM3U/KoMtS95OrfYKWXbeenW9R82nZISrI3D0cBIYICigZC3DrQVl9M5mYA+g==}
     engines: {node: '>=14.16.0'}
     peerDependencies:
       graphql: ^16.6.0
@@ -918,14 +918,14 @@ packages:
       - encoding
     dev: true
 
-  /@as-integrations/koa@0.3.0(@apollo/server@4.6.0)(koa@2.14.2):
+  /@as-integrations/koa@0.3.0(@apollo/server@4.7.0)(koa@2.14.2):
     resolution: {integrity: sha512-XixgbUaQ/zysaYALasgmEd9OD1x2paYUYBg7CaLll462Lu+PEB89I84z1xRUsCO6M/Y/JcifJ2/kHAoOmBAM3w==}
     engines: {node: '>=14.0'}
     peerDependencies:
       '@apollo/server': ^4.0.0
       koa: ^2.0.0
     dependencies:
-      '@apollo/server': 4.6.0(graphql@16.6.0)
+      '@apollo/server': 4.7.0(graphql@16.6.0)
       koa: 2.14.2
     dev: false
 

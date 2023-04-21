@@ -311,8 +311,8 @@ export function initIocContainer(
     const config = await deps.use('config')
     return createRatesService({
       logger: await deps.use('logger'),
-      pricesUrl: config.pricesUrl,
-      pricesLifetime: config.pricesLifetime
+      exchangeRatesUrl: config.exchangeRatesUrl,
+      exchangeRatesLifetime: config.exchangeRatesLifetime
     })
   })
 

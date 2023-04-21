@@ -47,7 +47,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   }))
   .attr('rates', {
     convert: async (opts) => opts.sourceAmount,
-    prices: () => {
+    rates: () => {
       throw new Error('unimplemented')
     }
   })
