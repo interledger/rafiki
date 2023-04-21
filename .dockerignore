@@ -1,9 +1,5 @@
-
-node_modules
 **/node_modules
 **/dist
-dist
-tmp
 **/tmp
 
 docs
@@ -26,3 +22,5 @@ renovate.json
 **/jest.setup.js
 **/jest.teardown.js
 **/docker-compose.yml
+
+**/*.test.ts
