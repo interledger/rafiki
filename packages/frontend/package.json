@@ -34,7 +34,7 @@
     "@types/react-dom": "^18.0.11",
     "autoprefixer": "^10.4.14",
     "concurrently": "^8.0.1",
-    "eslint": "^8.38.0",
+    "eslint": "^8.39.0",
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.32.2",
     "postcss": "^8.4.23",
