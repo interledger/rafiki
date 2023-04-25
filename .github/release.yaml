@@ -25,4 +25,4 @@ changelog:
           - dependencies
     - title: Dependency Updates
       labels:
-        - "dependencies"
+        - dependencies
