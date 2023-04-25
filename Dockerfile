@@ -9,12 +9,4 @@ WORKDIR /workspace
 RUN corepack enable
 RUN corepack prepare pnpm@7.25.1 --activate
 
-# pnpm fetch does require only lockfile
-COPY pnpm-lock.yaml ./
-RUN pnpm fetch
-
-ADD . ./
-RUN pnpm install -r --offline
-
-RUN pnpm build
 CMD ["true"]

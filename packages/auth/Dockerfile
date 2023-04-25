@@ -1,8 +1,14 @@
-FROM node:18.13.0-slim
+FROM builder
 
 WORKDIR /workspace
 
-COPY --from=builder /workspace/node_modules ./packages/node_modules
-COPY --from=builder /workspace/packages/auth ./packages/auth
+# pnpm fetch does require only lockfile
+COPY pnpm-lock.yaml ./
+RUN pnpm fetch --prod
+
+ADD . ./
+RUN pnpm install -r --offline --prod
+
+RUN pnpm --filter auth build
 
 CMD ["node", "./packages/auth/dist/index.js"]

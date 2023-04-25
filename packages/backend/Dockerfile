@@ -1,8 +1,14 @@
-FROM node:18.13.0-slim
+FROM builder
 
-WORKDIR /root/
+WORKDIR /workspace
 
-COPY --from=builder /workspace/node_modules ./packages/node_modules
-COPY --from=builder /workspace/packages/backend ./packages/backend
+# pnpm fetch does require only lockfile
+COPY pnpm-lock.yaml ./
+RUN pnpm fetch --prod
+
+ADD . ./
+RUN pnpm install -r --offline --prod
+
+RUN pnpm --filter backend build
 
 CMD ["node", "./packages/backend/dist/index.js"]
