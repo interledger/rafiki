@@ -99,6 +99,7 @@ export type AssetsConnection = {
 export type CreateAssetInput = {
   /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];

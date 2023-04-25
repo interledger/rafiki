@@ -602,7 +602,7 @@
           },
           {
             "name": "idempotencyKey",
-            "description": null,
+            "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
             "type": {
               "kind": "SCALAR",
               "name": "String",

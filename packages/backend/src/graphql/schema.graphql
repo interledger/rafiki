@@ -163,6 +163,7 @@ input CreateAssetInput {
   scale: UInt8!
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
 
