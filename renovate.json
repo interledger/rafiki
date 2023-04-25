@@ -12,6 +12,7 @@
   "docker": {
     "enabled": false
   },
+  "labels": ["dependencies"],
   "packageRules": [
     {
       "matchPackageNames": ["@types/node", "node"],
