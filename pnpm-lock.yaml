@@ -272,8 +272,8 @@ importers:
         specifier: ^4.3.10
         version: 4.3.10
       '@types/koa-session':
-        specifier: ^6.4.0
-        version: 6.4.0
+        specifier: ^6.4.1
+        version: 6.4.1
       '@types/koa__cors':
         specifier: ^4.0.0
         version: 4.0.0
@@ -4934,8 +4934,8 @@ packages:
       '@types/koa': 2.13.6
     dev: true
 
-  /@types/koa-session@6.4.0:
-    resolution: {integrity: sha512-2fOAxHIwn/fU6rANaYMRVRGTzKpKlqxJryqF3jnjrzSCLIf2q2L3qtVd1bHlTqiBPYS3B76WacmfzT1LoiHAHA==}
+  /@types/koa-session@6.4.1:
+    resolution: {integrity: sha512-fUXHGKwxzqghBSJLVbJAyHLmICwZQXVo3/cf368YmpcVne/NUmvejylolN4j531KimLApIMWLyP+FnFt9AWQTQ==}
     dependencies:
       '@types/cookies': 0.7.7
       '@types/koa': 2.13.6
