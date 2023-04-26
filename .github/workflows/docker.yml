@@ -17,6 +17,14 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+      - name: Build base
+        uses: docker/build-push-action@v4
+        with:
+          push: false
+          tags: user/rafiki-base:latest
+          file: Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Build
         uses: docker/build-push-action@v4
         with:
@@ -47,6 +55,15 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build base
+        uses: docker/build-push-action@v4
+        with:
+          push: false
+          tags: user/rafiki-base:latest
+          file: Dockerfile
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
