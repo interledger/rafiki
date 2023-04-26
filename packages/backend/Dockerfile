@@ -1,4 +1,4 @@
-FROM rafiki-base AS build
+FROM rafiki-base:latest AS build
 WORKDIR /workspace
 RUN pnpm --filter backend build
 
@@ -6,7 +6,7 @@ FROM build AS assets
 WORKDIR /workspace
 RUN rm -rf node_modules && pnpm recursive exec -- rm -rf ./src ./node_modules
 
-FROM rafiki-base AS prod
+FROM rafiki-base:latest AS prod
 WORKDIR /workspace
 RUN --mount=type=cache,id=pnpm-store,target=/root/.pnpm-store\
   pnpm install --filter "backend..."\
