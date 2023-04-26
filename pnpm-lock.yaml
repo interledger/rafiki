@@ -537,8 +537,8 @@ importers:
         specifier: ^1.14.1
         version: 1.14.3
       class-variance-authority:
-        specifier: ^0.5.2
-        version: 0.5.2(typescript@4.9.5)
+        specifier: ^0.5.3
+        version: 0.5.3(typescript@4.9.5)
       graphql:
         specifier: ^16.6.0
         version: 16.6.0
@@ -6706,8 +6706,8 @@ packages:
     resolution: {integrity: sha512-cOU9usZw8/dXIXKtwa8pM0OTJQuJkxMN6w30csNRUerHfeQ5R6U3kkU/FtJeIf3M202OHfY2U8ccInBG7/xogA==}
     dev: true
 
-  /class-variance-authority@0.5.2(typescript@4.9.5):
-    resolution: {integrity: sha512-j7Qqw3NPbs4IpO80gvdACWmVvHiLLo5MECacUBLnJG17CrLpWaQ7/4OaWX6P0IO1j2nvZ7AuSfBS/ImtEUZJGA==}
+  /class-variance-authority@0.5.3(typescript@4.9.5):
+    resolution: {integrity: sha512-vcMxnya/xxQSvTuXO9FWAOnmLihbzX82fPkQpMUwPHZ4tdopmFlM4X818fMgCPt2L6CirOIbN91vybifdScUVw==}
     peerDependencies:
       typescript: '>= 4.5.5 < 6'
     peerDependenciesMeta:
