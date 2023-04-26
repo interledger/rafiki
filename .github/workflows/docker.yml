@@ -36,8 +36,6 @@ jobs:
       matrix:
         package: [auth, backend, frontend]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Download artifact
@@ -50,13 +48,10 @@ jobs:
           docker load --input /tmp/rafiki-base.tar
           docker image ls -a
       - name: Build
-        uses: docker/build-push-action@v4
-        with:
-          push: false
-          context: .
-          file: packages/${{ matrix.package }}/Dockerfile
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - run: |
+          docker build . \
+            --file packages/${{ matrix.package }}/Dockerfile \
+
 
   build-multiplatform-base:
     runs-on: ubuntu-22.04
