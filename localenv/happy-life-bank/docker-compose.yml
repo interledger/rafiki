@@ -1,7 +1,7 @@
 version: '3'
 services:
   base:
-    image: base
+    image: rafiki-base
     build: 
       context: ../..
       dockerfile: ./Dockerfile

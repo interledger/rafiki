@@ -1,4 +1,4 @@
-FROM node:18.13.0-slim as base
+FROM node:18.13.0-slim as rafiki-base
 WORKDIR /workspace
 RUN corepack enable
 RUN corepack prepare pnpm@7.25.1 --activate
