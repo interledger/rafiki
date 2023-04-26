@@ -1,10 +1,10 @@
 version: '3'
 services:
   base:
-      image: rafiki-base
-      build: 
-        context: ../..
-        dockerfile: ./Dockerfile
+    image: base
+    build: 
+      context: ../..
+      dockerfile: ./Dockerfile
   mock-account-servicing-entity:
     hostname: cloud-nine-wallet
     build:
