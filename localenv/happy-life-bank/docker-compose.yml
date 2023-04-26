@@ -1,7 +1,7 @@
 version: '3'
 services:
-  builder:
-      image: rafiki-builder
+  base:
+      image: rafiki-base
       build: 
         context: ../..
         dockerfile: ./Dockerfile
@@ -63,7 +63,7 @@ services:
       QUOTE_URL: http://happy-life-bank/quotes
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
     depends_on:
-      - builder
+      - base
   auth:
     hostname: happy-life-bank-auth
     image: ghcr.io/interledger/rafiki-auth:latest
@@ -80,7 +80,7 @@ services:
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@database/happy_life_bank_auth
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
     depends_on:
-      - builder
+      - base
   signatures:
     hostname: happy-life-bank-signatures
     build:
@@ -108,7 +108,7 @@ services:
       PORT: 4010
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
     depends_on:
-      - builder
+      - base
       - backend
 
 networks:

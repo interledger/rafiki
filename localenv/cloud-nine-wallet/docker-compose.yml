@@ -1,7 +1,7 @@
 version: '3'
 services:
-  builder:
-      image: rafiki-builder
+  base:
+      image: rafiki-base
       build: 
         context: ../..
         dockerfile: ./Dockerfile
@@ -63,7 +63,7 @@ services:
       QUOTE_URL: http://cloud-nine-wallet/quotes
       PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
     depends_on:
-      - builder
+      - base
       - database
       - redis
   auth:
@@ -81,7 +81,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
     depends_on:
-      - builder
+      - base
       - database
   signatures:
     hostname: cloud-nine-wallet-signatures
@@ -130,7 +130,7 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
     depends_on:
-      - builder
+      - base
       - backend
 
 volumes:
