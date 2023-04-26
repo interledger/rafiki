@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: false
-          context: .
+          tags: rafiki-base:latest
           file: packages/${{ matrix.package }}/Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
