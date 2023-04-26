@@ -1,10 +1,5 @@
 version: '3'
 services:
-  base:
-    image: rafiki-base:latest
-    build: 
-      context: ../..
-      dockerfile: ./Dockerfile
   mock-account-servicing-entity:
     hostname: cloud-nine-wallet
     build:
@@ -63,7 +58,6 @@ services:
       QUOTE_URL: http://cloud-nine-wallet/quotes
       PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
     depends_on:
-      - base
       - database
       - redis
   auth:
@@ -81,7 +75,6 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
     depends_on:
-      - base
       - database
   signatures:
     hostname: cloud-nine-wallet-signatures
@@ -130,7 +123,6 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
     depends_on:
-      - base
       - backend
 
 volumes:
