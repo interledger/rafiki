@@ -48,7 +48,7 @@ export type PaymentError = LifecycleError | Pay.PaymentError
 
 export enum LifecycleError {
   // Rate fetch failed.
-  PricesUnavailable = 'PricesUnavailable',
+  RatesUnavailable = 'RatesUnavailable',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
   // Account asset conflicts with sendAmount asset
@@ -63,7 +63,7 @@ export enum LifecycleError {
 
 const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
   // Lifecycle errors
-  PricesUnavailable: true,
+  RatesUnavailable: true,
   // From @interledger/pay's PaymentError:
   ConnectorError: true,
   EstablishmentFailed: true,

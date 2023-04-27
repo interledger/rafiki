@@ -103,8 +103,8 @@ export async function createTransfers(
     tbTransfers.push(tbTransfer)
   }
   const res = await deps.tigerbeetle.createTransfers(tbTransfers)
-  for (const { index, code } of res) {
-    switch (code) {
+  for (const { index, result } of res) {
+    switch (result) {
       case CreateTransferErrorCode.linked_event_failed:
         break
       // 1st phase
@@ -147,7 +147,7 @@ export async function createTransfers(
       case CreateTransferErrorCode.pending_transfer_already_voided:
         return { index, error: TransferError.AlreadyVoided }
       default:
-        throw new TigerbeetleCreateTransferError(code)
+        throw new TigerbeetleCreateTransferError(result)
     }
   }
 }
