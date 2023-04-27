@@ -13,3 +13,12 @@ data:
   USE_TIGERBEETLE: "false"
   TIGERBEETLE_CLUSTER_ID: none
   TIGERBEETLE_REPLICA_ADDRESSES: none
+  ILP_ADDRESS: "{{ .Values.backend.serviceUrls.ILP_ADDRESS }}"
+  PUBLIC_HOST: "{{ .Values.backend.serviceUrls.PUBLIC_HOST }}"
+  OPEN_PAYMENTS_URL: "{{ .Values.backend.serviceUrls.OPEN_PAYMENTS_URL }}"
+  WEBHOOK_URL: "{{ .Values.backend.serviceUrls.WEBHOOK_URL }}"
+  EXCHANGE_RATES_URL: "{{ .Values.backend.serviceUrls.PRICES_URL }}"
+  QUOTE_URL: "{{ .Values.backend.serviceUrls.QUOTE_URL }}"
+  PAYMENT_POINTER_URL: "{{ .Values.backend.serviceUrls.PAYMENT_POINTER_URL }}"
+  AUTH_SERVER_GRANT_URL: {{ include "auth.grantUrl" . | quote }}
+  AUTH_SERVER_INTROSPECTION_URL: {{ include "auth.introspectionUrl" . | quote }}

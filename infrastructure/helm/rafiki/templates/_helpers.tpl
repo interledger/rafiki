@@ -45,6 +45,12 @@ postgresql://{{ .Values.auth.postgresql.username }}:{{ .Values.auth.postgresql.p
 {{- define "auth.redisUrl" -}}
 redis://{{ .Values.auth.redis.host }}:{{ .Values.auth.redis.port }}/{{ .Values.auth.redis.databaseIndex }}
 {{- end -}}
+{{- define "auth.grantUrl" -}}
+http://{{ include "auth.name" . }}:{{ .Values.auth.authPort }}
+{{- end -}}
+{{- define "auth.introspectionUrl" -}}
+http://{{ include "auth.name" . }}:{{ .Values.auth.introspectionPort }}
+{{- end -}}
 
 {{- define "frontend.name" -}}
 {{ include "rafiki.fullname" . }}-frontend

@@ -47,25 +47,6 @@ spec:
               name: {{ include "backend.name" . }}
           - secretRef:
               name: {{ include "rafiki.fullname" . }}-backend-secrets
-          env:
-          - name: ILP_ADDRESS
-            value: {{ .Values.backend.serviceUrls.ILP_ADDRESS }} 
-          - name: PUBLIC_HOST
-            value: {{ .Values.backend.serviceUrls.PUBLIC_HOST }} 
-          - name: OPEN_PAYMENTS_URL
-            value: {{ .Values.backend.serviceUrls.OPEN_PAYMENTS_URL }} 
-          - name: WEBHOOK_URL
-            value: {{ .Values.backend.serviceUrls.WEBHOOK_URL }} 
-          - name: PRICES_URL
-            value: {{ .Values.backend.serviceUrls.PRICES_URL }} 
-          - name: QUOTE_URL
-            value: {{ .Values.backend.serviceUrls.QUOTE_URL }} 
-          - name: PAYMENT_POINTER_URL
-            value: {{ .Values.backend.serviceUrls.PAYMENT_POINTER_URL }} 
-          - name: AUTH_SERVER_GRANT_URL
-            value: http://{{ include "rafiki.fullname" . }}-auth:3006
-          - name: AUTH_SERVER_INTROSPECTION_URL
-            value: http://{{ include "rafiki.fullname" . }}-auth:3007
           ports:
             - name: open-payments
               containerPort: {{ .Values.backend.openPaymentsPort }}
