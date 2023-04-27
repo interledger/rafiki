@@ -25,7 +25,7 @@ services:
         fi
         hostname -i
         ls /var/lib/tigerbeetle
-        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE 
+        ./tigerbeetle start --addresses=0.0.0.0:4342 $$DATA_FILE
 volumes:
   tigerbeetle-data:
 
