@@ -27,6 +27,8 @@
     "localenv:build": "pnpm localenv:tigerbeetle build && pnpm localenv:cloud-nine-wallet build && pnpm localenv:happy-life-bank build",
     "localenv:start": "pnpm localenv:network:create && pnpm localenv:tigerbeetle up -d && pnpm localenv:cloud-nine-wallet up -d && pnpm localenv:happy-life-bank up -d",
     "localenv:stop": "pnpm localenv:happy-life-bank down && pnpm localenv:cloud-nine-wallet down && pnpm localenv:tigerbeetle down && pnpm localenv:network:remove",
+    "localenv:start:amped": "(pnpm localenv:network:create) && (pnpm localenv:tigerbeetle up -d & pnpm localenv:cloud-nine-wallet up -d & pnpm localenv:happy-life-bank up -d & wait) && (echo rafiki started)",
+    "localenv:stop:amped": "(pnpm localenv:happy-life-bank down & pnpm localenv:cloud-nine-wallet down & pnpm localenv:tigerbeetle down & wait) && (pnpm localenv:network:remove) && (echo rafiki stopped)",
     "localenv:dbvolumes:remove": "docker volume rm cloud-nine-wallet_database-data && docker volume rm tigerbeetle_tigerbeetle-data",
     "localenv:psql:build": "pnpm localenv:cloud-nine-wallet build && pnpm localenv:happy-life-bank build",
     "localenv:psql:start": "pnpm localenv:network:create && pnpm localenv:cloud-nine-wallet up -d && pnpm localenv:happy-life-bank up -d",
