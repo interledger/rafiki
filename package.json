@@ -20,7 +20,7 @@
     "clean": "find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +",
     "build": "tsc --build",
     "localenv:compose": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml ${BEFORE_NETWORK:-}  -f ./localenv/network/docker-compose.yml",
-    "localenv:compose:tb": "BEFORE_NETWORK='-f ./localenv/tigerbeetle/docker-compose.yml --env-file ./localenv/tigerbeetle/.env.tigerbeetle' pnpm localenv:compose",
+    "localenv:compose:tb": "BEFORE_NETWORK='-f ./localenv/tigerbeetle/docker-compose.yml' pnpm localenv:compose",
     "localenv:network:create": "docker network create --driver=bridge --subnet=10.5.0.0/24 --gateway=10.5.0.1 rafiki",
     "localenv:network:remove": "docker network remove rafiki",
     "localenv:cloud-nine-wallet": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml",
