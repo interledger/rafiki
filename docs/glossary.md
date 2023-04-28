@@ -31,7 +31,7 @@ A Payment Pointer is a standardized identifier for a payment account. In the sam
 
 ## Peer
 
-A Peer is a counterparty that a given party transacts with. Within the [Interledger Protocol](#interledger-protocol), connectors maintain peers, or counterparty connectors whom they transact with. For more information, see [the peering documentation](TODO: add once merged).
+A Peer is a counterparty that a given party transacts with. Within the [Interledger Protocol](#interledger-protocol), connectors maintain peers, or counterparty connectors whom they transact with. For more information, see [the peering documentation](./peering.md).
 
 ## Simple Payments Setup Protocol (SPSP)
 

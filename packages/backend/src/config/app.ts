@@ -62,8 +62,8 @@ export const Config = {
     ? process.env.TIGERBEETLE_REPLICA_ADDRESSES.split(',')
     : ['3004'],
 
-  pricesUrl: process.env.PRICES_URL, // optional
-  pricesLifetime: +(process.env.PRICES_LIFETIME || 15_000),
+  exchangeRatesUrl: process.env.EXCHANGE_RATES_URL, // optional
+  exchangeRatesLifetime: +(process.env.EXCHANGE_RATES_LIFETIME || 15_000),
 
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
@@ -77,7 +77,7 @@ export const Config = {
   ),
   authServerIntrospectionUrl: envString(
     'AUTH_SERVER_INTROSPECTION_URL',
-    'http://127.0.0.1:3007/introspect'
+    'http://127.0.0.1:3007/'
   ),
 
   outgoingPaymentWorkers: envInt('OUTGOING_PAYMENT_WORKERS', 4),

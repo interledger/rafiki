@@ -67,9 +67,9 @@ describe('QuoteService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    Config.pricesUrl = 'https://test.prices'
+    Config.exchangeRatesUrl = 'https://test.rates'
     Config.signatureSecret = SIGNATURE_SECRET
-    nock(Config.pricesUrl)
+    nock(Config.exchangeRatesUrl)
       .get('/')
       .reply(200, () => ({
         base: 'USD',
@@ -670,7 +670,7 @@ describe('QuoteService', (): void => {
     it('fails on rate service error', async (): Promise<void> => {
       const ratesService = await deps.use('ratesService')
       jest
-        .spyOn(ratesService, 'prices')
+        .spyOn(ratesService, 'rates')
         .mockImplementation(() => Promise.reject(new Error('fail')))
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: receivingPaymentPointer.id
@@ -682,7 +682,7 @@ describe('QuoteService', (): void => {
           receiver: incomingPayment.getUrl(receivingPaymentPointer),
           sendAmount
         })
-      ).rejects.toThrow('missing prices')
+      ).rejects.toThrow('missing rates')
     })
   })
 })

@@ -27,7 +27,7 @@ Note that two counterparties could have multiple peering relationships that diff
 
 ### Using the Admin Dashboard
 
-_Coming Soon_
+Once the [`frontend`](../packages/frontend/) project is running (typically as part of the [local environment](../localenv/)), you can navgiate to the Peers page, and then press the Create Peer button. You will be prompted to enter the peer information such as the peer's static ILP address, as well as the corresponding HTTP info.
 
 ### Using the Admin API
 

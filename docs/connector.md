@@ -4,7 +4,7 @@ The [`backend`](./architecture.md#backend) includes an [Interledger](./glossary.
 
 The amounts of these packets are used to update account balances in [TigerBeetle](./glossary.md#tigerbeetle). (See [Accounts and Transfers](./accounts-and-transfers.md))
 
-Amounts are adjusted based on the destination/outgoing account's asset and Rafiki's configured exchange [rates service](./integration.md#rates-prices).
+Amounts are adjusted based on the destination/outgoing account's asset and Rafiki's configured exchange [rates service](./integration.md#exchange-rates).
 
 ## Packet Origination
 

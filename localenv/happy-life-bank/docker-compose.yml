@@ -46,15 +46,15 @@ services:
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
       NONCE_REDIS_KEY: test
       AUTH_SERVER_GRANT_URL: http://happy-life-bank-auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3006/introspect
+      AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
       ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
       ADMIN_KEY: admin
       PUBLIC_HOST: http://happy-life-bank-backend
       WEBHOOK_URL: http://happy-life-bank/webhooks
       OPEN_PAYMENTS_URL: http://happy-life-bank-backend
-      PRICES_URL: http://happy-life-bank/prices
       REDIS_URL: redis://shared-redis:6379/1
+      EXCHANGE_RATES_URL: http://happy-life-bank/rates
       QUOTE_URL: http://happy-life-bank/quotes
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
   hl-auth:
@@ -71,7 +71,6 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
-      INTROSPECTION_HTTPSIG: "false"
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
   hl-signatures:
     hostname: happy-life-bank-signatures

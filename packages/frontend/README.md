@@ -2,7 +2,7 @@
 
 ## Development
 
-This project assumes that you have a local Rafiki backend instance up and running. See the `Environment Setup` and `Local Development` sections in the main [README](../../README.md) and the `Local Playground` section in the infrastructure/local [README](../../infrastructure/local/README.md).
+This project assumes that you have a local Rafiki backend instance up and running. Typically, both `backend` and this project would be used within the local Rafiki playground. See the [local environment setup](../../localenv) for more information on how to set it up.
 
 To start the project in development mode, we first need to generate the GraphQL types for our queries and mutations.
 
