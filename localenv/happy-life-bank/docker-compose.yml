@@ -53,8 +53,8 @@ services:
       PUBLIC_HOST: http://happy-life-bank-backend
       WEBHOOK_URL: http://happy-life-bank/webhooks
       OPEN_PAYMENTS_URL: http://happy-life-bank-backend
-      REDIS_URL: redis://shared-redis:6379/1
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
+      REDIS_URL: redis://shared-redis:6379/1
       QUOTE_URL: http://happy-life-bank/quotes
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
   hl-auth:
