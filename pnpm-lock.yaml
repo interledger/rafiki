@@ -474,8 +474,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       '@types/rosie':
-        specifier: ^0.0.41
-        version: 0.0.41
+        specifier: ^0.0.42
+        version: 0.0.42
       '@types/tmp':
         specifier: ^0.2.3
         version: 0.2.3
@@ -5084,8 +5084,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/rosie@0.0.41:
-    resolution: {integrity: sha512-voprNsjZhvruU0YsC+5k/EfSTOBEUBFVKrXMkvW2dk2OWIEtZokueDV7cJa15WT+UJ2I98tNwFZHrQ6uqYkd1A==}
+  /@types/rosie@0.0.42:
+    resolution: {integrity: sha512-E2SDCwF2s42y9871tiHBZmOoa7DjoUeELr36iGSSojobmHlFd8Tob3EtNsLAmQ/G+TZfc8Ycww8EEdRmQIr7Wg==}
     dev: true
 
   /@types/scheduler@0.16.2:
