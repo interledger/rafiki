@@ -154,8 +154,6 @@ export type CreatePaymentPointerInput = {
 };
 
 export type CreatePaymentPointerKeyInput = {
-  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
-  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Public key */
   jwk: JwkInput;
   paymentPointerId: Scalars['String'];

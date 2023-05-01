@@ -334,8 +334,6 @@ input CreatePaymentPointerKeyInput {
   paymentPointerId: String!
   "Public key"
   jwk: JwkInput!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
-  idempotencyKey: String
 }
 
 type Asset implements Model {
