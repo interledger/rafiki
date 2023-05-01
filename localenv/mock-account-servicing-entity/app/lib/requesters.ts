@@ -126,7 +126,8 @@ export async function addPeerLiquidity(
     input: {
       peerId: peerId,
       amount: amount,
-      id: transferUid
+      id: transferUid,
+      idempotencyKey: uuid()
     }
   }
   return apolloClient

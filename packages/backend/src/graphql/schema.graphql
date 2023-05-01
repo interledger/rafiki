@@ -75,14 +75,12 @@ type Mutation {
 
   "Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation."
   postLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to post."
-    withdrawalId: String!
+    input: PostLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation."
   voidLiquidityWithdrawal(
-    "The id of the liquidity withdrawal to void."
-    withdrawalId: String!
+    input: VoidLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
   "Create a payment pointer"
@@ -118,10 +116,14 @@ type Mutation {
   ): OutgoingPaymentResponse!
 
   "Deposit webhook event liquidity"
-  depositEventLiquidity(eventId: String!): LiquidityMutationResponse
+  depositEventLiquidity(
+    input: DepositEventLiquidityInput!
+  ): LiquidityMutationResponse
 
   "Withdraw webhook event liquidity"
-  withdrawEventLiquidity(eventId: String!): LiquidityMutationResponse
+  withdrawEventLiquidity(
+    input: WithdrawEventLiquidityInput!
+  ): LiquidityMutationResponse
 
   "Withdraw liquidity from a payment pointer received via Web Monetization."
   createPaymentPointerWithdrawal(
@@ -243,6 +245,8 @@ input AddPeerLiquidityInput {
   amount: UInt64!
   "The id of the transfer."
   id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
 }
 
 input AddAssetLiquidityInput {
@@ -261,6 +265,8 @@ input CreatePeerLiquidityWithdrawalInput {
   amount: UInt64!
   "The id of the withdrawal."
   id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
 }
 
 input CreateAssetLiquidityWithdrawalInput {
@@ -270,6 +276,36 @@ input CreateAssetLiquidityWithdrawalInput {
   amount: UInt64!
   "The id of the withdrawal."
   id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input PostLiquidityWithdrawalInput {
+  "The id of the liquidity withdrawal to post."
+  withdrawalId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input VoidLiquidityWithdrawalInput {
+  "The id of the liquidity withdrawal to void."
+  withdrawalId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input DepositEventLiquidityInput {
+  "The id of the event to deposit into."
+  eventId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input WithdrawEventLiquidityInput {
+  "The id of the event to withdraw from."
+  eventId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
 }
 
 input CreatePaymentPointerWithdrawalInput {
@@ -277,6 +313,8 @@ input CreatePaymentPointerWithdrawalInput {
   paymentPointerId: String!
   "The id of the withdrawal."
   id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
 }
 
 input JwkInput {
@@ -296,6 +334,9 @@ input CreatePaymentPointerKeyInput {
   paymentPointerId: String!
   "Public key"
   jwk: JwkInput!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
 }
 
 type Asset implements Model {
