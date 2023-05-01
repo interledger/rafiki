@@ -343,7 +343,7 @@ export async function action({ request }: ActionArgs) {
         })
       }
 
-      const response = await deletePeer({ input: { id: result.data.id }})
+      const response = await deletePeer({ input: { id: result.data.id } })
       if (!response?.success) {
         setMessage(session, {
           content: 'Could not delete peer.',
