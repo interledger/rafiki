@@ -63,7 +63,7 @@ type Mutation {
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
 
   "Delete a peer"
-  deletePeer(id: String!): DeletePeerMutationResponse!
+  deletePeer(input: DeletePeerInput!): DeletePeerMutationResponse!
 
   "Add peer liquidity"
   addPeerLiquidity(input: AddPeerLiquidityInput!): LiquidityMutationResponse
@@ -95,8 +95,7 @@ type Mutation {
 
   "Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward."
   revokePaymentPointerKey(
-    "Internal id of key"
-    id: String!
+    input: RevokePaymentPointerKeyInput!
   ): RevokePaymentPointerKeyMutationResponse
 
   "Create an internal Open Payments Incoming Payment. The receiver has a payment pointer on this Rafiki instance."
@@ -132,8 +131,7 @@ type Mutation {
 
   "If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events."
   triggerPaymentPointerEvents(
-    "Maximum number of events being triggered (n)."
-    limit: Int!
+    input: TriggerPaymentPointerEventsInput!
   ): TriggerPaymentPointerEventsMutationResponse!
 }
 
@@ -174,6 +172,8 @@ input UpdateAssetInput {
   id: String!
   "New minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 type PeersConnection {
@@ -197,6 +197,8 @@ input CreatePeerInput {
   staticIlpAddress: String!
   "Peer's internal name"
   name: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 input UpdatePeerInput {
@@ -210,6 +212,8 @@ input UpdatePeerInput {
   staticIlpAddress: String
   "Peer's new public name"
   name: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 input HttpInput {
@@ -229,13 +233,6 @@ input HttpOutgoingInput {
   authToken: String!
   "Peer's connection endpoint"
   endpoint: String!
-}
-
-input AssetInput {
-  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
-  code: String!
-  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
-  scale: UInt8!
 }
 
 input AddPeerLiquidityInput {
@@ -336,6 +333,15 @@ input CreatePaymentPointerKeyInput {
   paymentPointerId: String!
   "Public key"
   jwk: JwkInput!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
+
+input RevokePaymentPointerKeyInput {
+  "Internal id of key"
+  id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 type Asset implements Model {
@@ -381,6 +387,13 @@ type Peer implements Model {
   name: String
   "Date-time of creation"
   createdAt: String!
+}
+
+input DeletePeerInput {
+  # Id of the peer
+  id: ID!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 type Http {
@@ -614,6 +627,8 @@ input CreateQuoteInput {
   receiveAmount: AmountInput
   "Payment pointer URL of the receiver"
   receiver: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 type QuoteResponse {
@@ -632,6 +647,8 @@ input CreateOutgoingPaymentInput {
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 input CreateIncomingPaymentInput {
@@ -645,6 +662,8 @@ input CreateIncomingPaymentInput {
   incomingAmount: AmountInput
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 input CreateReceiverInput {
@@ -658,6 +677,8 @@ input CreateReceiverInput {
   incomingAmount: AmountInput
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 type OutgoingPaymentResponse {
@@ -688,6 +709,8 @@ input CreatePaymentPointerInput {
   url: String!
   "Public name associated with the payment pointer"
   publicName: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 enum Alg {
@@ -726,6 +749,13 @@ type PaymentPointerKey implements Model {
   revoked: Boolean!
   "Date-time of creation"
   createdAt: String!
+}
+
+input TriggerPaymentPointerEventsInput {
+  "Maximum number of events being triggered (n)."
+  limit: Int!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 type PaymentPointerWithdrawal {
