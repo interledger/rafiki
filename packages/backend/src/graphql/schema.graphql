@@ -256,6 +256,8 @@ input AddAssetLiquidityInput {
   amount: UInt64!
   "The id of the transfer."
   id: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
 }
 
 input CreatePeerLiquidityWithdrawalInput {

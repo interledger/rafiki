@@ -23,6 +23,8 @@ export type AddAssetLiquidityInput = {
   assetId: Scalars['String'];
   /** The id of the transfer. */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
 };
 
 export type AddPeerLiquidityInput = {
