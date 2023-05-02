@@ -389,8 +389,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       json-canonicalize:
-        specifier: ^1.0.4
-        version: 1.0.4
+        specifier: ^1.0.5
+        version: 1.0.5
       knex:
         specifier: ^2.4.2
         version: 2.4.2(pg@8.10.0)
@@ -10224,8 +10224,8 @@ packages:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
     dev: true
 
-  /json-canonicalize@1.0.4:
-    resolution: {integrity: sha512-YNr/ePzgReHwlnAm3EVV1pcimwesI+1DZr5v7WBKOc1zE1t7pjxWAPRxJFT3ll6flLIdRe0DPia/8cl2FLAZNA==}
+  /json-canonicalize@1.0.5:
+    resolution: {integrity: sha512-3fyWChA4FSgw6kVZW38PFIOJtPoFUR6MGENN4LUXsWmZOBpU1NaSWTlBhE1/ZTX67gEUzihCfw1wUCWsHDKNyA==}
     dev: false
 
   /json-parse-even-better-errors@2.3.1:
