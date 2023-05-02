@@ -12,14 +12,14 @@ rafiki:
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
       QUOTE_URL: http://cloud-nine-wallet/quotes
     redis:
-      host: 'redis.example.com'
-      port: 6739
+      host: "rafiki-example-redis-master"
+      port: 6379
       databaseIndex: 0
       tlsCaFile: ''
       tlsCertFile: ''
       tlsKeyFile: ''
     postgresql:
-      host: "postgres.example.com"
+      host: "rafiki-example-postgresql"
       port: 5432
       username: "backend"
       database: "backend"
