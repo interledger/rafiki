@@ -1,4 +1,7 @@
-version: '3'
+# This is the last file to be merged by the pnpm localenv:compose command
+# So the whole merged service will use this name to avoid
+# cloud-nine-wallet-hl-xxxxxxx nonsense
+name: 'rafiki-localenv'
 
 networks:
   rafiki:
