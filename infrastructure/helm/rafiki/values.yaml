@@ -24,7 +24,7 @@ backend:
     username: "backend"
     database: "backend"
     password: "overridethisValue"
-  ports:
+  port:
     admin: 3001
     connector: 3002
     openPayments: 80
