@@ -49,13 +49,13 @@ spec:
               name: {{ include "rafiki.fullname" . }}-backend-secrets
           ports:
             - name: open-payments
-              containerPort: {{ .Values.backend.openPaymentsPort }}
+              containerPort: {{ .Values.backend.port.openPayments }}
               protocol: TCP
             - name: admin
-              containerPort: {{ .Values.backend.adminPort }}
+              containerPort: {{ .Values.backend.port.admin }}
               protocol: TCP
             - name: connector
-              containerPort: {{ .Values.backend.connectorPort }}
+              containerPort: {{ .Values.backend.port.connector }}
               protocol: TCP
            #livenessProbe:
            #  failureThreshold: 15

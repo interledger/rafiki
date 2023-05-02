@@ -10,16 +10,16 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: {{ .Values.backend.adminPort }}
-      targetPort: {{ .Values.backend.adminPort }}
+    - port: {{ .Values.backend.port.admin }}
+      targetPort: {{ .Values.backend.port.admin }}
       protocol: TCP
       name: admin
-    - port: {{ .Values.backend.openPaymentsPort }}
-      targetPort: {{ .Values.backend.openPaymentsPort }}
+    - port: {{ .Values.backend.port.openPayments }}
+      targetPort: {{ .Values.backend.port.openPayments }}
       protocol: TCP
       name: open-payments
-    - port: {{ .Values.backend.connectorPort}}
-      targetPort: {{ .Values.backend.connectorPort }}
+    - port: {{ .Values.backend.port.connector}}
+      targetPort: {{ .Values.backend.port.connector }}
       protocol: TCP
       name: connector
   selector:
