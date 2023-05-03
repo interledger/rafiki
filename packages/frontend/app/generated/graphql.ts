@@ -742,6 +742,8 @@ export type Query = {
   asset?: Maybe<Asset>;
   /** Fetch a page of assets. */
   assets: AssetsConnection;
+  /** Fetch an Open Payments incoming payment */
+  incomingPayment?: Maybe<IncomingPayment>;
   /** Fetch an Open Payments outgoing payment */
   outgoingPayment?: Maybe<OutgoingPayment>;
   /** Fetch a payment pointer */
@@ -765,6 +767,11 @@ export type QueryAssetsArgs = {
   before?: InputMaybe<Scalars['String']>;
   first?: InputMaybe<Scalars['Int']>;
   last?: InputMaybe<Scalars['Int']>;
+};
+
+
+export type QueryIncomingPaymentArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -1424,6 +1431,7 @@ export type PeersConnectionResolvers<ContextType = any, ParentType extends Resol
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
+  incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
   paymentPointer?: Resolver<Maybe<ResolversTypes['PaymentPointer']>, ParentType, ContextType, RequireFields<QueryPaymentPointerArgs, 'id'>>;
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
