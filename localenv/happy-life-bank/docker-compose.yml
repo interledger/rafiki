@@ -1,4 +1,4 @@
-version: '3'
+name: hl
 services:
   happy-life-mock-ase:
     hostname: happy-life-bank
