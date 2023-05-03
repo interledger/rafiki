@@ -1,0 +1,18 @@
+# The merged/docker-compose.yml file serves as the final configuration file (-f)
+# for the entire environment. Its purpose is to bring together all individual
+# local environment configurations into a single, unified setup.
+#
+# This file:
+#   1. Sets the name for the merged environment.
+#   2. Orchestrates the shared network configuration for all services which
+#      was set to external
+
+name: 'rafiki'
+
+networks:
+  rafiki:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/24
+          gateway: 10.5.0.1

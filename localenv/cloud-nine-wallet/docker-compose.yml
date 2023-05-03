@@ -1,6 +1,6 @@
 version: '3'
 services:
-  c9-mock-account-servicing-entity:
+  cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
     build:
       context: ../..
@@ -20,8 +20,8 @@ services:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - c9-backend
-  c9-backend:
+      - cloud-nine-backend
+  cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
@@ -60,7 +60,7 @@ services:
     depends_on:
       - shared-database
       - shared-redis
-  c9-auth:
+  cloud-nine-auth:
     hostname: cloud-nine-wallet-auth
     image: ghcr.io/interledger/rafiki-auth:latest
     build:
@@ -76,7 +76,7 @@ services:
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
     depends_on:
       - shared-database
-  c9-signatures:
+  cloud-nine-signatures:
     hostname: cloud-nine-wallet-signatures
     build:
       context: ../..
@@ -108,7 +108,7 @@ services:
     restart: unless-stopped
     networks:
       - rafiki
-  c9-admin:
+  cloud-nine-admin:
     hostname: cloud-nine-wallet-admin
     build:
       context: ../..
@@ -122,7 +122,7 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
     depends_on:
-      - c9-backend
+      - cloud-nine-backend
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

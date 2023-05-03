@@ -1,6 +1,6 @@
 version: '3'
 services:
-  hl-mock-account-servicing-entity:
+  happy-life-mock-ase:
     hostname: happy-life-bank
     build:
       context: ../..
@@ -20,8 +20,8 @@ services:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - hl-backend
-  hl-backend:
+      - happy-life-backend
+  happy-life-backend:
     hostname: happy-life-bank-backend
     image: ghcr.io/interledger/rafiki-backend:latest
     build:
@@ -57,7 +57,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/1
       QUOTE_URL: http://happy-life-bank/quotes
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
-  hl-auth:
+  happy-life-auth:
     hostname: happy-life-bank-auth
     image: ghcr.io/interledger/rafiki-auth:latest
     build:
@@ -72,7 +72,7 @@ services:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
-  hl-signatures:
+  happy-life-signatures:
     hostname: happy-life-bank-signatures
     build:
       context: ../..
@@ -84,7 +84,7 @@ services:
       KEY_FILE: /workspace/private-key.pem
     volumes:
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
-  hl-admin:
+  happy-life-admin:
     hostname: happy-life-bank-admin
     build:
       context: ../..
@@ -98,7 +98,7 @@ services:
       PORT: 4010
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
     depends_on:
-      - hl-backend
+      - happy-life-backend
 
 networks:
   rafiki:
