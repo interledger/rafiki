@@ -229,8 +229,8 @@ importers:
         specifier: ^8.10.0
         version: 8.10.0
       pino:
-        specifier: ^8.12.0
-        version: 8.12.0
+        specifier: ^8.12.1
+        version: 8.12.1
       pino-pretty:
         specifier: ^10.0.0
         version: 10.0.0
@@ -416,8 +416,8 @@ importers:
         specifier: ^8.10.0
         version: 8.10.0
       pino:
-        specifier: ^8.12.0
-        version: 8.12.0
+        specifier: ^8.12.1
+        version: 8.12.1
       pino-pretty:
         specifier: ^10.0.0
         version: 10.0.0
@@ -610,8 +610,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       pino:
-        specifier: ^8.12.0
-        version: 8.12.0
+        specifier: ^8.12.1
+        version: 8.12.1
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -3528,7 +3528,7 @@ packages:
       '@interledger/openapi': 1.0.2
       axios: 1.4.0
       http-message-signatures: 0.1.2
-      pino: 8.12.0
+      pino: 8.12.1
       uuid: 9.0.0
     transitivePeerDependencies:
       - debug
@@ -12198,8 +12198,8 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino@8.12.0:
-    resolution: {integrity: sha512-qHiXP7x9hFnJb0EnrLzD4onHj82Vh91lEtx6UiPT2eNoHD7lwi50CUIz+s0Z7YXgtMc7IIjss4yIIxZu6T1Tdg==}
+  /pino@8.12.1:
+    resolution: {integrity: sha512-n4F7nrEUDH0u5pjlUPkrvsN6oZOhScZWwpWPniwVkMnO6a2DhpnMNWDUlW0SawVICgrNhOf0yTNgw2lYQBsPYA==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
