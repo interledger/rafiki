@@ -64,8 +64,12 @@ import { ReceiverService } from './open_payments/receiver/service'
 import { Client as TokenIntrospectionClient } from 'token-introspection'
 import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
-import { idempotencyGraphQLMiddleware } from './graphql/middleware'
+import {
+  idempotencyGraphQLMiddleware,
+  lockGraphQLMutationMiddleware
+} from './graphql/middleware'
 import { createRedisDataStore } from './cache/data-stores/redis'
+import { createRedisLock } from './cache/lock'
 
 export interface AppContextData {
   logger: Logger
@@ -257,6 +261,7 @@ export class App {
         schema,
         resolvers
       }),
+      lockGraphQLMutationMiddleware(createRedisLock(redis, 2000)),
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, 1000 * 60 * 60 * 24)
       )
