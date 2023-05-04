@@ -13,8 +13,7 @@ backend:
     QUOTE_URL: http://cloud-nine-wallet/quotes
   redis:
     host: 'redis.example.com'
-    port: 6739
-    databaseIndex: 0
+    port: 6379
     tlsCaFile: ''
     tlsCertFile: ''
     tlsKeyFile: ''

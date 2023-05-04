@@ -14,7 +14,6 @@ rafiki:
     redis:
       host: "rafiki-example-redis-master"
       port: 6379
-      databaseIndex: 0
       tlsCaFile: ''
       tlsCertFile: ''
       tlsKeyFile: ''
@@ -23,7 +22,7 @@ rafiki:
       port: 5432
       username: "backend"
       database: "backend"
-      password: "overridethisValue"
+      password: "changeme"
     port:
       admin: 3001
       connector: 3002

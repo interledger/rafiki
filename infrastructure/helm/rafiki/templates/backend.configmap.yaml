@@ -31,6 +31,7 @@ data:
   REDIS_TLS_CA_FILE_PATH: "{{ .Values.backend.tlsCaFile }}"
   REDIS_TLS_CERT_FILE_PATH: "{{ .Values.backend.tlsCertFile }}"
   REDIS_TLS_KEY_FILE_PATH: "{{ .Values.backend.tlsKeyFile }}"
+  REDIS_URL: {{ include "backend.redisUrl" . | quote }}
   SIGNATURE_VERSION: "1"
   SLIPPAGE: "{{ .Values.backend.ilp.slippage }}"
   TIGERBEETLE_CLUSTER_ID: none
