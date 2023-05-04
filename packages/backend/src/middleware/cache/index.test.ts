@@ -1,6 +1,6 @@
 import pino from 'pino'
 import { CacheDataStore } from './data-stores'
-import { cacheMiddleware } from './middleware'
+import { cacheMiddleware } from '.'
 import { v4 as uuid } from 'uuid'
 
 const createTestDataStore = (): CacheDataStore => {

@@ -1,9 +1,9 @@
 import { GraphQLError } from 'graphql'
 import { IMiddleware } from 'graphql-middleware'
 import { ApolloContext } from '../../app'
-import { CacheDataStore } from '../../cache/data-stores'
-import { lockMiddleware, Lock } from '../../cache/lock'
-import { cacheMiddleware } from '../../cache/middleware'
+import { CacheDataStore } from '../../middleware/cache/data-stores'
+import { lockMiddleware, Lock } from '../../middleware/lock'
+import { cacheMiddleware } from '../../middleware/cache'
 
 export function lockGraphQLMutationMiddleware(lock: Lock): {
   Mutation: IMiddleware

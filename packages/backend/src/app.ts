@@ -68,8 +68,8 @@ import {
   idempotencyGraphQLMiddleware,
   lockGraphQLMutationMiddleware
 } from './graphql/middleware'
-import { createRedisDataStore } from './cache/data-stores/redis'
-import { createRedisLock } from './cache/lock'
+import { createRedisDataStore } from './middleware/cache/data-stores/redis'
+import { createRedisLock } from './middleware/lock/redis'
 
 export interface AppContextData {
   logger: Logger
@@ -261,7 +261,9 @@ export class App {
         schema,
         resolvers
       }),
-      lockGraphQLMutationMiddleware(createRedisLock(redis, 2000)),
+      lockGraphQLMutationMiddleware(
+        createRedisLock({ redisClient: redis, keyTtlMs: 2000 })
+      ),
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, 1000 * 60 * 60 * 24)
       )

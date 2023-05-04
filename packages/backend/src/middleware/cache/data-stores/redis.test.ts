@@ -1,6 +1,6 @@
 import { createRedisDataStore } from './redis'
 import Redis from 'ioredis'
-import { Config } from '../../config/app'
+import { Config } from '../../../config/app'
 
 describe('Redis Data Store', (): void => {
   const redis = new Redis(Config.redisUrl, {
