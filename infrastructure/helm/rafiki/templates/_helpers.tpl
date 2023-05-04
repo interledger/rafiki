@@ -43,17 +43,17 @@ redis://{{ .Values.backend.redis.host }}:{{ .Values.backend.redis.port }}
 postgresql://{{ .Values.auth.postgresql.username }}:{{ .Values.auth.postgresql.password }}@{{ .Values.auth.postgresql.host }}:{{ .Values.auth.postgresql.port | int}}/{{ .Values.auth.postgresql.database }}
 {{- end -}}
 {{- define "auth.grantUrl" -}}
-http://{{ include "auth.name" . }}:{{ .Values.auth.authPort }}
+http://{{ include "auth.name" . }}:{{ .Values.auth.port.auth }}
 {{- end -}}
 {{- define "auth.introspectionUrl" -}}
-http://{{ include "auth.name" . }}:{{ .Values.auth.introspectionPort }}
+http://{{ include "auth.name" . }}:{{ .Values.auth.port.introspection }}
 {{- end -}}
 
 {{- define "frontend.name" -}}
 {{ include "rafiki.fullname" . }}-frontend
 {{- end -}}
 {{- define "frontend.graphqlUrl" -}}
-http://{{ .Values.backend.serviceUrls.PUBLIC_HOST }}:{{ .Values.backend.adminPort }}/graphql
+http://{{ .Values.backend.serviceUrls.PUBLIC_HOST }}:{{ .Values.backend.port.admin }}/graphql
 {{- end -}}
 
 {{/*

@@ -10,16 +10,16 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: {{ .Values.auth.authPort }}
-      targetPort: {{ .Values.auth.authPort }}
+    - port: {{ .Values.auth.port.auth }}
+      targetPort: {{ .Values.auth.port.auth }}
       protocol: TCP
       name: auth
-    - port: {{ .Values.auth.adminPort }}
-      targetPort: {{ .Values.auth.adminPort }}
+    - port: {{ .Values.auth.port.admin }}
+      targetPort: {{ .Values.auth.port.admin }}
       protocol: TCP
       name: admin
-    - port: {{ .Values.auth.introspectionPort }}
-      targetPort: {{ .Values.auth.introspectionPort }}
+    - port: {{ .Values.auth.port.introspection }}
+      targetPort: {{ .Values.auth.port.introspection }}
       protocol: TCP
       name: introspection
   selector:

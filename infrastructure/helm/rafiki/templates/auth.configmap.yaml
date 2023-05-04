@@ -5,5 +5,17 @@ metadata:
   labels:
 {{ include "rafiki.labels" . | indent 4 }}
 data: 
-  NODE_ENV: development
-  INTROSPECTION_HTTPSIG: "false"
+  ACCESS_TOKEN_DELETION_DAYS: "{{ .Values.auth.accessToken.deletionDays }}"
+  ACCESS_TOKEN_EXPIRY_SECONDS: "{{ .Values.auth.accessToken.expirySeconds }}"
+  ADMIN_PORT: "{{ .Values.auth.port.admin }}"
+  AUTH_PORT: "{{ .Values.auth.port.auth }}"
+  AUTH_SERVER_DOMAIN: {{ include "auth.grantUrl" . | quote }}
+  DATABASE_CLEANUP_WORKERS: "{{ .Values.auth.workers.cleanup }}"
+  IDENTITY_SERVER_DOMAIN: "{{ .Values.auth.identityServer.domain }}"
+  INCOMING_PAYMENT_INTERACTION: "{{ .Values.auth.interaction.incomingPayment }}"
+  QUOTE_INTERACTION: "{{ .Values.auth.interaction.quote }}"
+  INTROSPECTION_PORT: "{{ .Values.auth.port.introspection }}"
+  LOG_LEVEL: "{{ .Values.auth.logLevel }}"
+  NODE_ENV: "{{ .Values.auth.nodeEnv }}"
+  PORT: "{{ .Values.auth.port.auth }}"
+  WAIT_SECONDS: "{{ .Values.auth.grant.waitSeconds }}"

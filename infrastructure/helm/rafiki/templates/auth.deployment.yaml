@@ -49,13 +49,13 @@ spec:
               name: {{ include "rafiki.fullname" . }}-auth-secrets
           ports:
             - name: auth
-              containerPort: {{ .Values.auth.authPort }}
+              containerPort: {{ .Values.auth.port.auth }}
               protocol: TCP
             - name: admin
-              containerPort: {{ .Values.auth.adminPort }}
+              containerPort: {{ .Values.auth.port.admin }}
               protocol: TCP
             - name: introspection
-              containerPort: {{ .Values.auth.introspectionPort }}
+              containerPort: {{ .Values.auth.port.introspection }}
               protocol: TCP
            #livenessProbe:
            #  failureThreshold: 15
