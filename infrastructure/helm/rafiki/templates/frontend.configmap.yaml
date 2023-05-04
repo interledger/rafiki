@@ -5,7 +5,7 @@ metadata:
   labels: 
 {{ include "rafiki.labels" . | indent 4 }}
 data: 
-  NODE_ENV: development
-  LOG_LEVEL: debug
-  PORT: "{{ .Values.frontend.port }}"
   GRAPHQL_URL: {{ include "frontend.graphqlUrl" . | quote }}
+  LOG_LEVEL: debug
+  NODE_ENV: development
+  PORT: "{{ .Values.frontend.port }}"
