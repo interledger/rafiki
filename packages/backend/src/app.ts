@@ -262,7 +262,10 @@ export class App {
         resolvers
       }),
       lockGraphQLMutationMiddleware(
-        createRedisLock({ redisClient: redis, keyTtlMs: 2000 })
+        createRedisLock({
+          redisClient: redis,
+          keyTtlMs: this.config.graphQLIdempotencyKeyLockMs
+        })
       ),
       idempotencyGraphQLMiddleware(
         createRedisDataStore(redis, 1000 * 60 * 60 * 24)
