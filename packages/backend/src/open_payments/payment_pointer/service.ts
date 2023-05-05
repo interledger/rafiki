@@ -1,4 +1,4 @@
-import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import { ForeignKeyViolationError, TransactionOrKnex, NotFoundError } from 'objection'
 import { URL } from 'url'
 
 import { PaymentPointerError } from './errors'
@@ -13,14 +13,23 @@ import {
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 
-export interface CreateOptions {
+interface Options {
+  publicName?: string
+}
+
+export interface CreateOptions extends Options {
   url: string
   assetId: string
-  publicName?: string
+}
+
+export interface UpdateOptions extends Options {
+  id: string
+  deactivatedAt?: Date
 }
 
 export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
+  update(options: UpdateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
   processNext(): Promise<string | undefined>
@@ -47,6 +56,7 @@ export async function createPaymentPointerService({
   }
   return {
     create: (options) => createPaymentPointer(deps, options),
+    update: (options) => updatePaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
     getByUrl: (url) => getPaymentPointerByUrl(deps, url),
     processNext: () => processNextPaymentPointer(deps),
@@ -97,6 +107,23 @@ async function createPaymentPointer(
       if (err.constraint === 'paymentpointers_assetid_foreign') {
         return PaymentPointerError.UnknownAsset
       }
+    }
+    throw err
+  }
+}
+
+async function updatePaymentPointer(
+  deps: ServiceDependencies,
+  { id, deactivatedAt, publicName }: UpdateOptions
+): Promise<PaymentPointer | PaymentPointerError> {
+  try {
+    return await PaymentPointer.query(deps.knex)
+      .patchAndFetchById(id, { deactivatedAt, publicName })
+      .withGraphFetched('asset')
+      .throwIfNotFound()
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return PaymentPointerError.UnknownAsset
     }
     throw err
   }

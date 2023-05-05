@@ -133,6 +133,65 @@ describe('Open Payments Payment Pointer Service', (): void => {
     })
   })
 
+  describe('Update Payment Pointer', (): void => {
+    const dateNow = new Date()
+    test.each`
+      deactivatedAt    | publicName
+      ${null}          | ${'Public Name 1'}
+      ${dateNow}       | ${null}
+    `(
+      'Payment pointer deactivatedAt and publicName can be updated to $deactivatedAt and $publicName',
+      async ({ deactivatedAt, publicName }): Promise<void> => {
+        const { id } = await createPaymentPointer(deps)
+        const updatedPaymentPointer = await paymentPointerService.update({
+          id,
+          deactivatedAt,
+          publicName
+        })
+        assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+        expect(updatedPaymentPointer.deactivatedAt).toEqual(deactivatedAt)
+        expect(updatedPaymentPointer.publicName).toEqual(publicName)
+        await expect(paymentPointerService.get(id)).resolves.toEqual(updatedPaymentPointer)
+      }
+    )
+
+    test('Payment pointer fields can be updated independently', async (): Promise<void> => {
+      const initialName = 'Initial Name'
+      const paymentPointer = await createPaymentPointer(deps, { publicName: initialName })
+      
+      // publicName only
+      const newName = 'New Name'
+      let updatedPaymentPointer = await paymentPointerService.update({
+        id: paymentPointer.id,
+        publicName: newName
+      })
+      assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+      expect(updatedPaymentPointer.deactivatedAt).toEqual(null)
+      expect(updatedPaymentPointer.publicName).toEqual(newName)
+      await expect(paymentPointerService.get(paymentPointer.id)).resolves.toEqual(updatedPaymentPointer)
+
+      // deactivatedAt only
+      updatedPaymentPointer = await paymentPointerService.update({
+        id: paymentPointer.id,
+        deactivatedAt: dateNow
+      })
+      assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+      expect(updatedPaymentPointer.deactivatedAt).toEqual(dateNow)
+      expect(updatedPaymentPointer.publicName).toEqual(newName)
+      await expect(paymentPointerService.get(paymentPointer.id)).resolves.toEqual(updatedPaymentPointer)
+    })
+
+    test('Cannot update unknown payment pointer', async (): Promise<void> => {
+      await expect(
+        paymentPointerService.update({
+          id: uuid(),
+          deactivatedAt: new Date(),
+          publicName: 'Some Public Name'
+        })
+      ).resolves.toEqual(PaymentPointerError.UnknownAsset)
+    })
+  })
+
   describe('Get Payment Pointer By Url', (): void => {
     test('Can retrieve payment pointer by url', async (): Promise<void> => {
       const paymentPointer = await createPaymentPointer(deps)
