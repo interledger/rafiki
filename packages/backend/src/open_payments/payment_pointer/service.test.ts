@@ -94,7 +94,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${'https://alice.me'}    | ${'with a url without a path'}
       ${'https://alice.me/'}   | ${'with a url without a path'}
     `(
-      'Payment pointer cannot be created %description (%url)',
+      'Payment pointer cannot be created $description ($url)',
       async ({ url }): Promise<void> => {
         await expect(
           paymentPointerService.create({
