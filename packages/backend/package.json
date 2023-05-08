@@ -80,7 +80,7 @@
     "@interledger/open-payments": "1.0.3",
     "@interledger/openapi": "1.0.2",
     "pg": "^8.10.0",
-    "pino": "^8.12.1",
+    "pino": "^8.14.1",
     "pino-pretty": "^10.0.0",
     "raw-body": "^2.5.2",
     "tigerbeetle-node": "^0.12.76",
