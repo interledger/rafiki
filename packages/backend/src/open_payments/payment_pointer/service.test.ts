@@ -60,14 +60,18 @@ describe('Open Payments Payment Pointer Service', (): void => {
     })
 
     test.each`
-      publicName                | description
-      ${undefined}              | ${''}
-      ${faker.name.firstName()} | ${'with publicName'}
+      publicName                | deactivatedAt                           | description
+      ${undefined}              | ${undefined}                            | ${''}
+      ${faker.name.firstName()} | ${undefined}                            | ${'with publicName'}
+      ${undefined}              | ${new Date('2023-05-01T00:00:00.000Z')} | ${'with deactivatedAt'}
     `(
       'Payment pointer can be created or fetched $description',
-      async ({ publicName }): Promise<void> => {
+      async ({ publicName, deactivatedAt }): Promise<void> => {
         if (publicName) {
           options.publicName = publicName
+        }
+        if (deactivatedAt) {
+          options.deactivatedAt = deactivatedAt
         }
         const paymentPointer = await paymentPointerService.create(options)
         assert.ok(!isPaymentPointerError(paymentPointer))
@@ -136,9 +140,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
   describe('Update Payment Pointer', (): void => {
     const dateNow = new Date()
     test.each`
-      deactivatedAt    | publicName
-      ${null}          | ${'Public Name 1'}
-      ${dateNow}       | ${null}
+      deactivatedAt | publicName
+      ${null}       | ${'Public Name 1'}
+      ${dateNow}    | ${null}
     `(
       'Payment pointer deactivatedAt and publicName can be updated to $deactivatedAt and $publicName',
       async ({ deactivatedAt, publicName }): Promise<void> => {
@@ -151,14 +155,18 @@ describe('Open Payments Payment Pointer Service', (): void => {
         assert.ok(!isPaymentPointerError(updatedPaymentPointer))
         expect(updatedPaymentPointer.deactivatedAt).toEqual(deactivatedAt)
         expect(updatedPaymentPointer.publicName).toEqual(publicName)
-        await expect(paymentPointerService.get(id)).resolves.toEqual(updatedPaymentPointer)
+        await expect(paymentPointerService.get(id)).resolves.toEqual(
+          updatedPaymentPointer
+        )
       }
     )
 
     test('Payment pointer fields can be updated independently', async (): Promise<void> => {
       const initialName = 'Initial Name'
-      const paymentPointer = await createPaymentPointer(deps, { publicName: initialName })
-      
+      const paymentPointer = await createPaymentPointer(deps, {
+        publicName: initialName
+      })
+
       // publicName only
       const newName = 'New Name'
       let updatedPaymentPointer = await paymentPointerService.update({
@@ -168,7 +176,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
       assert.ok(!isPaymentPointerError(updatedPaymentPointer))
       expect(updatedPaymentPointer.deactivatedAt).toEqual(null)
       expect(updatedPaymentPointer.publicName).toEqual(newName)
-      await expect(paymentPointerService.get(paymentPointer.id)).resolves.toEqual(updatedPaymentPointer)
+      await expect(
+        paymentPointerService.get(paymentPointer.id)
+      ).resolves.toEqual(updatedPaymentPointer)
 
       // deactivatedAt only
       updatedPaymentPointer = await paymentPointerService.update({
@@ -178,7 +188,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
       assert.ok(!isPaymentPointerError(updatedPaymentPointer))
       expect(updatedPaymentPointer.deactivatedAt).toEqual(dateNow)
       expect(updatedPaymentPointer.publicName).toEqual(newName)
-      await expect(paymentPointerService.get(paymentPointer.id)).resolves.toEqual(updatedPaymentPointer)
+      await expect(
+        paymentPointerService.get(paymentPointer.id)
+      ).resolves.toEqual(updatedPaymentPointer)
     })
 
     test('Cannot update unknown payment pointer', async (): Promise<void> => {

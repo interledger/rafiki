@@ -87,4 +87,22 @@ describe('Payment Pointer Middleware', (): void => {
     expect(next).toHaveBeenCalled()
     expect(ctx.paymentPointer).toBeUndefined()
   })
+
+  test('returns 404 for deactivated payment pointer', async (): Promise<void> => {
+    const deactivatedAt = new Date()
+    deactivatedAt.setDate(deactivatedAt.getDate() - 1)
+
+    const paymentPointer = await createPaymentPointer(deps, { deactivatedAt })
+    const paymentPointerUrl = new URL(paymentPointer.url)
+    ctx.request.headers.host = paymentPointerUrl.host
+    ctx.request.url = `${paymentPointerUrl.pathname}/endpoint`
+    // Strip preceding forward slash
+    ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+
+    await expect(middleware(ctx, next)).rejects.toMatchObject({
+      status: 404,
+      message: 'Not Found'
+    })
+    expect(next).not.toHaveBeenCalled()
+  })
 })

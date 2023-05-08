@@ -1,4 +1,8 @@
-import { ForeignKeyViolationError, TransactionOrKnex, NotFoundError } from 'objection'
+import {
+  ForeignKeyViolationError,
+  TransactionOrKnex,
+  NotFoundError
+} from 'objection'
 import { URL } from 'url'
 
 import { PaymentPointerError } from './errors'
@@ -15,6 +19,7 @@ import { AccountingService } from '../../accounting/service'
 
 interface Options {
   publicName?: string
+  deactivatedAt?: Date
 }
 
 export interface CreateOptions extends Options {
@@ -24,7 +29,6 @@ export interface CreateOptions extends Options {
 
 export interface UpdateOptions extends Options {
   id: string
-  deactivatedAt?: Date
 }
 
 export interface PaymentPointerService {
@@ -99,7 +103,8 @@ async function createPaymentPointer(
       .insertAndFetch({
         url: options.url,
         publicName: options.publicName,
-        assetId: options.assetId
+        assetId: options.assetId,
+        deactivatedAt: options.deactivatedAt
       })
       .withGraphFetched('asset')
   } catch (err) {
