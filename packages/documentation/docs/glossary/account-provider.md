@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Account Provider
 
-An account provider is an entity that provides accounts to [account holders](../concepts/account-holder).
+An account provider is an entity that provides accounts to [account holders](./account-holder.md).
 
 An example of an account provider is a bank, a cryptocurrency wallet, a mobile money provider.
 
