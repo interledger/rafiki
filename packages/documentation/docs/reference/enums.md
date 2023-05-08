@@ -9,8 +9,6 @@ sidebar_position: 6
 
 ## Alg
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -27,8 +25,6 @@ sidebar_position: 6
 
 ## Crv
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -44,8 +40,6 @@ sidebar_position: 6
 </table>
 
 ## IncomingPaymentState
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -81,8 +75,6 @@ sidebar_position: 6
 
 ## Kty
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -98,8 +90,6 @@ sidebar_position: 6
 </table>
 
 ## LiquidityError
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
@@ -183,8 +173,6 @@ sidebar_position: 6
 
 ## OutgoingPaymentState
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -216,4 +204,3 @@ sidebar_position: 6
 </tr>
 </tbody>
 </table>
-

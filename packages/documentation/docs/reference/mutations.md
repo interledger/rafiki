@@ -512,4 +512,3 @@ eventId<br />
 </tr>
 </tbody>
 </table>
-
