@@ -268,7 +268,7 @@ export class App {
         })
       ),
       idempotencyGraphQLMiddleware(
-        createRedisDataStore(redis, 1000 * 60 * 60 * 24)
+        createRedisDataStore(redis, this.config.graphQLIdempotencyKeyTtlMs)
       )
     )
 

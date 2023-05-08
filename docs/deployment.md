@@ -43,6 +43,7 @@ $ helm install ...
 | `AUTH_SERVER_INTROSPECTION_URL`   | `http://127.0.0.1:3007`                                     | endpoint to on the Open Payments Auth Server to introspect an auth token |
 | `CONNECTOR_PORT`                  | `3002`                                                      | STREAM/ILP connector port                                                |
 | `DATABASE_URL`                    | `postgresql://postgres:password@localhost:5432/development` | Postgres database URL                                                    |
+| `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`  | `86400000`                                                  | TTL for idempotencyKey on GraphQL mutations (Admin API). Default: 24hrs  |
 | `GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS` | `2000`                                                      | TTL for idempotencyKey concurrency lock on GraphQL mutations (Admin API) |
 | `ILP_ADDRESS`                     | `test.rafiki`                                               | ILP address of this Rafiki instance                                      |
 | `INCOMING_PAYMENT_WORKERS`        | `1`                                                         | number of workers processing incoming payment requests                   |

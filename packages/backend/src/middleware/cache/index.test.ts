@@ -10,8 +10,8 @@ const createTestDataStore = (): CacheDataStore => {
     async get(key): Promise<string | undefined> {
       return map.get(key)
     },
-    async delete(key): Promise<boolean> {
-      return map.delete(key)
+    async delete(key): Promise<void> {
+      map.delete(key)
     },
     async set(key: string, value: string): Promise<boolean> {
       map.set(key, value)
