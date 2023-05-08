@@ -50,13 +50,14 @@ describe('Redis Data Store', (): void => {
   })
 
   describe('delete', (): void => {
-    test('returns false if no key deleted', async () => {
-      await expect(dataStore.delete('foo')).resolves.toBe(false)
+    test('deletes key', async () => {
+      await expect(dataStore.set('foo', 'bar')).resolves.toBe(true)
+      await expect(dataStore.delete('foo')).resolves.toBeUndefined()
+      await expect(dataStore.get('foo')).resolves.toBeUndefined()
     })
 
-    test('returns true if key was deleted', async () => {
-      await expect(dataStore.set('foo', 'bar')).resolves.toBe(true)
-      await expect(dataStore.delete('foo')).resolves.toBe(true)
+    test('does not throw if deleting unset key', async () => {
+      await expect(dataStore.delete('foo')).resolves.toBeUndefined()
     })
   })
 })
