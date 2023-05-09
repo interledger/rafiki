@@ -50,6 +50,12 @@ export class PaymentPointer
   public processAt!: Date | null
   public deactivatedAt!: Date | null
 
+  public get status() {
+    return !this.deactivatedAt || new Date(this.deactivatedAt) > new Date()
+      ? PaymentPointerStatus.ACTIVE
+      : PaymentPointerStatus.INACTIVE
+  }
+
   public async onCredit({
     totalReceived,
     withdrawalThrottleDelay
@@ -99,10 +105,19 @@ export class PaymentPointer
       authServer
     }
   }
+
+  public isActive() {
+    return this.status === PaymentPointerStatus.ACTIVE
+  }
 }
 
 export enum PaymentPointerEventType {
   PaymentPointerWebMonetization = 'payment_pointer.web_monetization'
+}
+
+export enum PaymentPointerStatus {
+  INACTIVE = 'INACTIVE',
+  ACTIVE = 'ACTIVE'
 }
 
 export type PaymentPointerData = {

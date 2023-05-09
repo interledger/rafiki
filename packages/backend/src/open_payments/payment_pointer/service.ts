@@ -12,14 +12,14 @@ import {
   PaymentPointerEventType,
   GetOptions,
   ListOptions,
-  PaymentPointerSubresource
+  PaymentPointerSubresource,
+  PaymentPointerStatus
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 
 interface Options {
   publicName?: string
-  deactivatedAt?: Date
 }
 
 export interface CreateOptions extends Options {
@@ -29,7 +29,10 @@ export interface CreateOptions extends Options {
 
 export interface UpdateOptions extends Options {
   id: string
+  status?: PaymentPointerStatus
 }
+
+type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
 
 export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
@@ -103,8 +106,7 @@ async function createPaymentPointer(
       .insertAndFetch({
         url: options.url,
         publicName: options.publicName,
-        assetId: options.assetId,
-        deactivatedAt: options.deactivatedAt
+        assetId: options.assetId
       })
       .withGraphFetched('asset')
   } catch (err) {
@@ -119,11 +121,17 @@ async function createPaymentPointer(
 
 async function updatePaymentPointer(
   deps: ServiceDependencies,
-  { id, deactivatedAt, publicName }: UpdateOptions
+  { id, status, publicName }: UpdateOptions
 ): Promise<PaymentPointer | PaymentPointerError> {
   try {
+    const update: UpdateInput = { publicName }
+    if (status) {
+      update.deactivatedAt =
+        status === PaymentPointerStatus.INACTIVE ? new Date() : null
+    }
+
     return await PaymentPointer.query(deps.knex)
-      .patchAndFetchById(id, { deactivatedAt, publicName })
+      .patchAndFetchById(id, update)
       .withGraphFetched('asset')
       .throwIfNotFound()
   } catch (err) {
