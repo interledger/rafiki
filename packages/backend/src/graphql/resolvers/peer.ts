@@ -135,7 +135,7 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
   ): Promise<ResolversTypes['DeletePeerMutationResponse']> => {
     const peerService = await ctx.container.use('peerService')
     return peerService
-      .delete(args.id)
+      .delete(args.input.id)
       .then((peer: Peer | undefined) =>
         peer
           ? {
@@ -152,7 +152,7 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
       .catch((error) => {
         ctx.logger.error(
           {
-            id: args.id,
+            id: args.input.id,
             error
           },
           'error deleting peer'

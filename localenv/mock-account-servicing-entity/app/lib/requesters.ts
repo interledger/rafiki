@@ -1,14 +1,16 @@
 import { gql } from '@apollo/client'
 import type {
-  CreateAssetMutationResponse,
+  AssetMutationResponse,
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
   PaymentPointer,
   CreatePaymentPointerKeyMutationResponse,
   CreatePaymentPointerKeyInput,
-  CreatePaymentPointerInput
+  CreatePaymentPointerInput,
+  JwkInput
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
+import { v4 as uuid } from 'uuid'
 
 export interface GraphqlQueryConfig {
   resource: string
@@ -26,7 +28,7 @@ export interface GraphqlResponseElement {
 export async function createAsset(
   code: string,
   scale: number
-): Promise<CreateAssetMutationResponse> {
+): Promise<AssetMutationResponse> {
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
       createAsset(input: $input) {
@@ -52,8 +54,7 @@ export async function createAsset(
       mutation: createAssetMutation,
       variables: createAssetInput
     })
-    .then(({ data }): CreateAssetMutationResponse => {
-      console.log(data)
+    .then(({ data }): AssetMutationResponse => {
       if (!data.createAsset.success) {
         throw new Error('Data was empty')
       }
@@ -126,7 +127,8 @@ export async function addPeerLiquidity(
     input: {
       peerId: peerId,
       amount: amount,
-      id: transferUid
+      id: transferUid,
+      idempotencyKey: uuid()
     }
   }
   return apolloClient
@@ -208,7 +210,7 @@ export async function createPaymentPointerKey({
   `
   const createPaymentPointerKeyInput: CreatePaymentPointerKeyInput = {
     paymentPointerId,
-    jwk
+    jwk: jwk as unknown as JwkInput
   }
 
   return apolloClient
