@@ -326,8 +326,10 @@ describe('Payment Pointer Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation TriggerPaymentPointerEvents($limit: Int!) {
-                triggerPaymentPointerEvents(limit: $limit) {
+              mutation TriggerPaymentPointerEvents(
+                $input: TriggerPaymentPointerEventsInput!
+              ) {
+                triggerPaymentPointerEvents(input: $input) {
                   code
                   success
                   message
@@ -336,7 +338,10 @@ describe('Payment Pointer Resolvers', (): void => {
               }
             `,
             variables: {
-              limit
+              input: {
+                limit,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): TriggerPaymentPointerEventsMutationResponse => {
@@ -373,8 +378,10 @@ describe('Payment Pointer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation TriggerPaymentPointerEvents($limit: Int!) {
-              triggerPaymentPointerEvents(limit: $limit) {
+            mutation TriggerPaymentPointerEvents(
+              $input: TriggerPaymentPointerEventsInput!
+            ) {
+              triggerPaymentPointerEvents(input: $input) {
                 code
                 success
                 message
@@ -383,7 +390,9 @@ describe('Payment Pointer Resolvers', (): void => {
             }
           `,
           variables: {
-            limit: 1
+            input: {
+              limit: 1
+            }
           }
         })
         .then((query): TriggerPaymentPointerEventsMutationResponse => {

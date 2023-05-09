@@ -568,8 +568,8 @@ describe('Peer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation DeletePeer($id: String!) {
-              deletePeer(id: $id) {
+            mutation DeletePeer($input: DeletePeerInput!) {
+              deletePeer(input: $input) {
                 code
                 success
                 message
@@ -577,7 +577,9 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            id: peer.id
+            input: {
+              id: peer.id
+            }
           }
         })
         .then((query): UpdatePeerMutationResponse => {
@@ -598,8 +600,8 @@ describe('Peer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation DeletePeer($id: String!) {
-              deletePeer(id: $id) {
+            mutation DeletePeer($input: DeletePeerInput!) {
+              deletePeer(input: $input) {
                 code
                 success
                 message
@@ -607,7 +609,9 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            id: uuid()
+            input: {
+              id: uuid()
+            }
           }
         })
         .then((query): UpdatePeerMutationResponse => {
@@ -633,8 +637,8 @@ describe('Peer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation DeletePeer($id: String!) {
-              deletePeer(id: $id) {
+            mutation DeletePeer($input: DeletePeerInput!) {
+              deletePeer(input: $input) {
                 code
                 success
                 message
@@ -642,7 +646,9 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            id: peer.id
+            input: {
+              id: peer.id
+            }
           }
         })
         .then((query): UpdatePeerMutationResponse => {
