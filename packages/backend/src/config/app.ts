@@ -102,7 +102,9 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', ''))
+  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
+
+  graphQLIdempotencyKeyTtlMs: envInt('GRAPHQL_IDEMPOTENCY_KEY_TTL_MS', 86400000)
 }
 
 function parseRedisTlsConfig(
