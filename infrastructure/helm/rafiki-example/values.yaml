@@ -44,6 +44,7 @@ rafiki:
       paymentPointer: 1
       webhook: 1
     workerIdle: 200
+    idempotencyTTL: 86400000
 
   auth:
     postgresql:

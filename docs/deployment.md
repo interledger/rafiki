@@ -93,6 +93,7 @@ $ helm repo add ...
 | backend.workers.paymentPointer          | `PAYMENT_POINTER_WORKERS`                         |
 | backend.workers.webhook                 | `WEBHOOK_WORKERS`                                 |
 | backend.workerIdle                      | worker idle time in milliseconds                  |
+| backend.idempotencyTTL                  | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
 | frontend.port                           | `PORT`                                            |
 
 ### Environment Variables
