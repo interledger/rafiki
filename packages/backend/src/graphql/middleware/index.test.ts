@@ -11,6 +11,7 @@ import { truncateTables } from '../../tests/tableManager'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
 import { AssetMutationResponse, CreateAssetInput } from '../generated/graphql'
+import { GraphQLError } from 'graphql'
 
 describe('GraphQL Middleware', (): void => {
   let deps: IocContract<AppServices>
@@ -203,6 +204,56 @@ describe('GraphQL Middleware', (): void => {
       ).rejects.toThrow(
         `Incoming arguments are different than the original request for idempotencyKey: ${idempotencyKey}`
       )
+    })
+  })
+
+  describe('lockGraphQLMutationMiddleware', (): void => {
+    test('throws error on concurrent call with same key', async (): Promise<void> => {
+      const input: CreateAssetInput = {
+        ...randomAsset(),
+        idempotencyKey: uuid()
+      }
+
+      const createAssetSpy = jest.spyOn(assetService, 'create')
+
+      const [firstRequest, secondRequest, thirdRequest] =
+        await Promise.allSettled([
+          callCreateAssetMutation(input),
+          callCreateAssetMutation(input),
+          callCreateAssetMutation(input)
+        ])
+
+      assert.ok('value' in firstRequest)
+
+      expect(firstRequest).toEqual({
+        status: 'fulfilled',
+        value: {
+          __typename: 'AssetMutationResponse',
+          message: 'Created Asset',
+          success: true,
+          code: '200',
+          asset: {
+            __typename: 'Asset',
+            id: firstRequest.value?.asset?.id,
+            code: input.code,
+            scale: input.scale,
+            withdrawalThreshold: null
+          }
+        }
+      })
+      expect(secondRequest).toEqual({
+        status: 'rejected',
+        reason: new GraphQLError(
+          `Concurrent request for idempotencyKey: ${input.idempotencyKey}`
+        )
+      })
+      expect(thirdRequest).toEqual({
+        status: 'rejected',
+        reason: new GraphQLError(
+          `Concurrent request for idempotencyKey: ${input.idempotencyKey}`
+        )
+      })
+      expect(createAssetSpy).toHaveBeenCalledTimes(1)
     })
   })
 })
