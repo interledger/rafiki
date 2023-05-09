@@ -89,10 +89,14 @@ describe('Payment Pointer Middleware', (): void => {
   })
 
   test('returns 404 for deactivated payment pointer', async (): Promise<void> => {
-    const deactivatedAt = new Date()
-    deactivatedAt.setDate(deactivatedAt.getDate() - 1)
+    const paymentPointer = await createPaymentPointer(deps)
 
-    const paymentPointer = await createPaymentPointer(deps, { deactivatedAt })
+    const deactivatesAt = new Date()
+    deactivatesAt.setDate(deactivatesAt.getDate() - 1)
+    await paymentPointer
+      .$query(appContainer.knex)
+      .patch({ deactivatesAt: new Date() })
+
     const paymentPointerUrl = new URL(paymentPointer.url)
     ctx.request.headers.host = paymentPointerUrl.host
     ctx.request.url = `${paymentPointerUrl.pathname}/endpoint`
