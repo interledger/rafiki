@@ -9,6 +9,7 @@ import type {
   CreatePaymentPointerInput
 } from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
+import { v4 as uuid } from 'uuid'
 
 export interface GraphqlQueryConfig {
   resource: string
@@ -126,7 +127,8 @@ export async function addPeerLiquidity(
     input: {
       peerId: peerId,
       amount: amount,
-      id: transferUid
+      id: transferUid,
+      idempotencyKey: uuid()
     }
   }
   return apolloClient
