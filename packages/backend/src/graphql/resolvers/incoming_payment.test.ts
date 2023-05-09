@@ -13,6 +13,11 @@ import { truncateTables } from '../../tests/tableManager'
 import { v4 as uuid } from 'uuid'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
 import {
+  IncomingPayment as IncomingPaymentModel,
+  IncomingPaymentState
+} from '../../open_payments/payment/incoming/model'
+import {
+  IncomingPayment,
   IncomingPaymentResponse,
   IncomingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
@@ -267,6 +272,129 @@ describe('Incoming Payment Resolver', (): void => {
       expect(query.success).toBe(false)
       expect(query.message).toBe('Error trying to create incoming payment')
       expect(query.payment).toBeNull()
+    })
+  })
+
+  describe('Query.incomingPayment', (): void => {
+    let payment: IncomingPaymentModel
+
+    const createPayment = async (options: {
+      paymentPointerId: string
+      description?: string
+      externalRef?: string
+    }): Promise<IncomingPaymentModel> => {
+      return await createIncomingPayment(deps, {
+        ...options,
+        incomingAmount: {
+          value: BigInt(56),
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
+      })
+    }
+
+    describe.each`
+      description  | externalRef  | desc
+      ${'rent'}    | ${undefined} | ${'description'}
+      ${undefined} | ${'202201'}  | ${'externalRef'}
+    `('$desc', ({ description, externalRef }): void => {
+      beforeEach(async (): Promise<void> => {
+        const { id: paymentPointerId } = await createPaymentPointer(deps, {
+          assetId: asset.id
+        })
+        payment = await createPayment({
+          paymentPointerId,
+          description,
+          externalRef
+        })
+      })
+
+      // Query with each payment state
+      const states: IncomingPaymentState[] = Object.values(IncomingPaymentState)
+      test.each(states)('200 - %s', async (state): Promise<void> => {
+        const expiresAt = new Date()
+        jest
+          .spyOn(incomingPaymentService, 'get')
+          .mockImplementation(async () => {
+            const updatedPayment = payment
+            updatedPayment.state = state
+            updatedPayment.expiresAt = expiresAt
+            return updatedPayment
+          })
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query IncomingPayment($paymentId: String!) {
+                incomingPayment(id: $paymentId) {
+                  id
+                  paymentPointerId
+                  state
+                  expiresAt
+                  incomingAmount {
+                    value
+                    assetCode
+                    assetScale
+                  }
+                  receivedAmount {
+                    value
+                    assetCode
+                    assetScale
+                  }
+                  description
+                  externalRef
+                  createdAt
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): IncomingPayment => query.data?.incomingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          paymentPointerId: payment.paymentPointerId,
+          state,
+          expiresAt: expiresAt.toISOString(),
+          incomingAmount: {
+            value: payment.incomingAmount?.value.toString(),
+            assetCode: payment.incomingAmount?.assetCode,
+            assetScale: payment.incomingAmount?.assetScale,
+            __typename: 'Amount'
+          },
+          receivedAmount: {
+            value: payment.receivedAmount.value.toString(),
+            assetCode: payment.receivedAmount.assetCode,
+            assetScale: payment.receivedAmount.assetScale,
+            __typename: 'Amount'
+          },
+          description: description ?? null,
+          externalRef: externalRef ?? null,
+          createdAt: payment.createdAt.toISOString(),
+          __typename: 'IncomingPayment'
+        })
+      })
+    })
+
+    test('404', async (): Promise<void> => {
+      jest
+        .spyOn(incomingPaymentService, 'get')
+        .mockImplementation(async () => undefined)
+
+      await expect(
+        appContainer.apolloClient.query({
+          query: gql`
+            query IncomingPayment($paymentId: String!) {
+              incomingPayment(id: $paymentId) {
+                id
+              }
+            }
+          `,
+          variables: { paymentId: uuid() }
+        })
+      ).rejects.toThrow('payment does not exist')
     })
   })
 })
