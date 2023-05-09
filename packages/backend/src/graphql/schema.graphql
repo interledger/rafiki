@@ -37,6 +37,9 @@ type Query {
 
   "Fetch an Open Payments outgoing payment"
   outgoingPayment(id: String!): OutgoingPayment
+
+  "Fetch an Open Payments incoming payment"
+  incomingPayment(id: String!): IncomingPayment
 }
 
 type Mutation {

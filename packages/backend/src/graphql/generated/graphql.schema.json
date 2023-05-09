@@ -5008,6 +5008,35 @@
             "deprecationReason": null
           },
           {
+            "name": "incomingPayment",
+            "description": "Fetch an Open Payments incoming payment",
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "OBJECT",
+              "name": "IncomingPayment",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "outgoingPayment",
             "description": "Fetch an Open Payments outgoing payment",
             "args": [
