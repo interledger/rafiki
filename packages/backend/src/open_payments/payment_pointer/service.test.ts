@@ -147,7 +147,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
         const paymentPointer = await createPaymentPointer(deps)
 
         if (initialStatus === PaymentPointerStatus.INACTIVE) {
-          await paymentPointer.$query(knex).patch({ deactivatedAt: new Date() })
+          await paymentPointer.$query(knex).patch({ deactivatesAt: new Date() })
         }
 
         const updatedPaymentPointer = await paymentPointerService.update({
@@ -166,7 +166,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
           (typeof status === 'undefined' &&
             initialStatus === PaymentPointerStatus.INACTIVE)
         ) {
-          expect(updatedPaymentPointer.deactivatedAt).toBeDefined()
+          expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
           expect(updatedPaymentPointer.isActive()).toEqual(false)
           expect(updatedPaymentPointer.status).toEqual(
             PaymentPointerStatus.INACTIVE
@@ -177,7 +177,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
           (typeof status === 'undefined' &&
             initialStatus === PaymentPointerStatus.ACTIVE)
         ) {
-          expect(updatedPaymentPointer.deactivatedAt).toBe(null)
+          expect(updatedPaymentPointer.deactivatesAt).toBe(null)
           expect(updatedPaymentPointer.isActive()).toEqual(true)
           expect(updatedPaymentPointer.status).toEqual(
             PaymentPointerStatus.ACTIVE
@@ -206,7 +206,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
         publicName: newName
       })
       assert.ok(!isPaymentPointerError(updatedPaymentPointer))
-      expect(updatedPaymentPointer.deactivatedAt).toEqual(null)
+      expect(updatedPaymentPointer.deactivatesAt).toEqual(null)
       expect(updatedPaymentPointer.publicName).toEqual(newName)
       await expect(
         paymentPointerService.get(paymentPointer.id)
@@ -218,7 +218,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
         status: PaymentPointerStatus.INACTIVE
       })
       assert.ok(!isPaymentPointerError(updatedPaymentPointer))
-      expect(updatedPaymentPointer.deactivatedAt).toBeDefined()
+      expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
       expect(updatedPaymentPointer.isActive()).toEqual(false)
       expect(updatedPaymentPointer.status).toEqual(
         PaymentPointerStatus.INACTIVE

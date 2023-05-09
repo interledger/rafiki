@@ -48,10 +48,10 @@ export class PaymentPointer
   // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `paymentPointer.id`
   public totalEventsAmount!: bigint
   public processAt!: Date | null
-  public deactivatedAt!: Date | null
+  public deactivatesAt!: Date | null
 
   public get status() {
-    return !this.deactivatedAt || new Date(this.deactivatedAt) > new Date()
+    return !this.deactivatesAt || new Date(this.deactivatesAt) > new Date()
       ? PaymentPointerStatus.ACTIVE
       : PaymentPointerStatus.INACTIVE
   }
