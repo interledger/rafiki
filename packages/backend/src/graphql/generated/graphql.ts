@@ -653,7 +653,7 @@ export type PaymentPointer = Model & {
   /** List of quotes created at this payment pointer */
   quotes?: Maybe<QuoteConnection>;
   /** Status of the payment pointer */
-  status?: PaymentPointerStatus;
+  status?: Maybe<PaymentPointerStatus>;
   /** Payment Pointer URL */
   url: Scalars['String'];
 };
