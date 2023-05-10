@@ -23,7 +23,7 @@ import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../..'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { Config, IAppConfig } from '../../config/app'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
 
@@ -369,12 +369,10 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
 describe('Payment Pointer Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {

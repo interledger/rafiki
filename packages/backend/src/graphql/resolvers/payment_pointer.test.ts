@@ -272,6 +272,7 @@ describe('Payment Pointer Resolvers', (): void => {
       assert.ok(updatedPaymentPointer)
 
       const {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         deactivatesAt,
         updatedAt: originalUpdatedAt,
         ...originalRest
