@@ -14,11 +14,8 @@ export function createPaymentPointerMiddleware() {
       const paymentPointer = await paymentPointerService.getByUrl(
         ctx.paymentPointerUrl
       )
-      const isPaymentPointerInactive =
-        paymentPointer?.deactivatesAt &&
-        new Date(paymentPointer.deactivatesAt) < new Date()
 
-      if (!paymentPointer || isPaymentPointerInactive) {
+      if (!paymentPointer || !paymentPointer.isActive()) {
         ctx.throw(404)
       }
       ctx.paymentPointer = paymentPointer
