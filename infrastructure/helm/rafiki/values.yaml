@@ -46,7 +46,9 @@ backend:
     paymentPointer: 1
     webhook: 1
   workerIdle: 200
-  idempotencyTTL: 86400000
+  idempotency:
+    keyTTL: 86400000
+    keyLock: 2000
   image:
     repository: ghcr.io/interledger/rafiki-backend
     tag: 'v1.0.0-alpha.1'
