@@ -137,16 +137,16 @@ describe('Open Payments Payment Pointer Service', (): void => {
   describe('Update Payment Pointer', (): void => {
     test.each`
       initialStatus                    | status                           | publicName
-      ${PaymentPointerStatus.ACTIVE}   | ${undefined}                     | ${'Public Name 1'}
-      ${PaymentPointerStatus.ACTIVE}   | ${PaymentPointerStatus.INACTIVE} | ${'Public Name 2'}
-      ${PaymentPointerStatus.INACTIVE} | ${PaymentPointerStatus.ACTIVE}   | ${null}
-      ${PaymentPointerStatus.INACTIVE} | ${undefined}                     | ${null}
+      ${PaymentPointerStatus.Active}   | ${undefined}                     | ${'Public Name 1'}
+      ${PaymentPointerStatus.Active}   | ${PaymentPointerStatus.Inactive} | ${'Public Name 2'}
+      ${PaymentPointerStatus.Inactive} | ${PaymentPointerStatus.Active}   | ${null}
+      ${PaymentPointerStatus.Inactive} | ${undefined}                     | ${null}
     `(
       'Payment pointer status and publicName can be updated to $status and $publicName from initial status of: $initialStatus',
       async ({ initialStatus, status, publicName }): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
 
-        if (initialStatus === PaymentPointerStatus.INACTIVE) {
+        if (initialStatus === PaymentPointerStatus.Inactive) {
           await paymentPointer.$query(knex).patch({ deactivatesAt: new Date() })
         }
 
@@ -162,25 +162,25 @@ describe('Open Payments Payment Pointer Service', (): void => {
         // check status. should be whatever the update input is, or the original value if not updated
         let statusChecked = false
         if (
-          status === PaymentPointerStatus.INACTIVE ||
+          status === PaymentPointerStatus.Inactive ||
           (typeof status === 'undefined' &&
-            initialStatus === PaymentPointerStatus.INACTIVE)
+            initialStatus === PaymentPointerStatus.Inactive)
         ) {
           expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
           expect(updatedPaymentPointer.isActive()).toEqual(false)
           expect(updatedPaymentPointer.status).toEqual(
-            PaymentPointerStatus.INACTIVE
+            PaymentPointerStatus.Inactive
           )
           statusChecked = true
         } else if (
-          status === PaymentPointerStatus.ACTIVE ||
+          status === PaymentPointerStatus.Active ||
           (typeof status === 'undefined' &&
-            initialStatus === PaymentPointerStatus.ACTIVE)
+            initialStatus === PaymentPointerStatus.Active)
         ) {
           expect(updatedPaymentPointer.deactivatesAt).toBe(null)
           expect(updatedPaymentPointer.isActive()).toEqual(true)
           expect(updatedPaymentPointer.status).toEqual(
-            PaymentPointerStatus.ACTIVE
+            PaymentPointerStatus.Active
           )
           statusChecked = true
         }
@@ -215,13 +215,13 @@ describe('Open Payments Payment Pointer Service', (): void => {
       // status only
       updatedPaymentPointer = await paymentPointerService.update({
         id: paymentPointer.id,
-        status: PaymentPointerStatus.INACTIVE
+        status: PaymentPointerStatus.Inactive
       })
       assert.ok(!isPaymentPointerError(updatedPaymentPointer))
       expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
       expect(updatedPaymentPointer.isActive()).toEqual(false)
       expect(updatedPaymentPointer.status).toEqual(
-        PaymentPointerStatus.INACTIVE
+        PaymentPointerStatus.Inactive
       )
       expect(updatedPaymentPointer.publicName).toEqual(newName)
       await expect(
@@ -233,7 +233,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       await expect(
         paymentPointerService.update({
           id: uuid(),
-          status: PaymentPointerStatus.INACTIVE,
+          status: PaymentPointerStatus.Inactive,
           publicName: 'Some Public Name'
         })
       ).resolves.toEqual(PaymentPointerError.UnknownAsset)

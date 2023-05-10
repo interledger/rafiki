@@ -57,6 +57,37 @@ export const createPaymentPointer: MutationResolvers<ApolloContext>['createPayme
         message: 'Error trying to create payment pointer'
       }))
   }
+export const updatePaymentPointer: MutationResolvers<ApolloContext>['updatePaymentPointer'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['UpdatePaymentPointerMutationResponse']> => {
+    const paymentPointerService = await ctx.container.use(
+      'paymentPointerService'
+    )
+    return paymentPointerService
+      .update(args.input)
+      .then((paymentPointerOrError: PaymentPointer | PaymentPointerError) =>
+        isPaymentPointerError(paymentPointerOrError)
+          ? {
+              code: errorToCode[paymentPointerOrError].toString(),
+              success: false,
+              message: errorToMessage[paymentPointerOrError]
+            }
+          : {
+              code: '200',
+              success: true,
+              message: 'Updated payment pointer',
+              paymentPointer: paymentPointerToGraphql(paymentPointerOrError)
+            }
+      )
+      .catch(() => ({
+        code: '500',
+        success: false,
+        message: 'Error trying to update payment pointer'
+      }))
+  }
 
 export const triggerPaymentPointerEvents: MutationResolvers<ApolloContext>['triggerPaymentPointerEvents'] =
   async (
@@ -98,5 +129,6 @@ export const paymentPointerToGraphql = (
   url: paymentPointer.url,
   asset: assetToGraphql(paymentPointer.asset),
   publicName: paymentPointer.publicName ?? undefined,
-  createdAt: new Date(+paymentPointer.createdAt).toISOString()
+  createdAt: new Date(+paymentPointer.createdAt).toISOString(),
+  status: paymentPointer.status
 })

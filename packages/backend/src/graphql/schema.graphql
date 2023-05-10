@@ -93,6 +93,11 @@ type Mutation {
     input: CreatePaymentPointerInput!
   ): CreatePaymentPointerMutationResponse!
 
+  "Update a payment pointer"
+  updatePaymentPointer(
+    input: UpdatePaymentPointerInput!
+  ): UpdatePaymentPointerMutationResponse!
+
   "Add a public key to a payment pointer that is used to verify Open Payments requests."
   createPaymentPointerKey(
     input: CreatePaymentPointerKeyInput!
@@ -400,6 +405,15 @@ type PaymentPointer implements Model {
   ): OutgoingPaymentConnection
   "Date-time of creation"
   createdAt: String!
+  "Status of the payment pointer"
+  status: PaymentPointerStatus
+}
+
+enum PaymentPointerStatus {
+  "Status after deactivating"
+  INACTIVE
+  "Default status"
+  ACTIVE
 }
 
 type IncomingPaymentConnection {
@@ -651,6 +665,15 @@ input CreatePaymentPointerInput {
   publicName: String
 }
 
+input UpdatePaymentPointerInput {
+  "ID of payment pointer to update"
+  id: ID!
+  "New public name for payment pointer"
+  publicName: String
+  "New status to set the payment pointer to"
+  status: PaymentPointerStatus
+}
+
 enum Alg {
   EdDSA
 }
@@ -704,6 +727,13 @@ interface Model {
 }
 
 type CreatePaymentPointerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  paymentPointer: PaymentPointer
+}
+
+type UpdatePaymentPointerMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

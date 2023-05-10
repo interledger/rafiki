@@ -52,8 +52,8 @@ export class PaymentPointer
 
   public get status() {
     return !this.deactivatesAt || new Date(this.deactivatesAt) > new Date()
-      ? PaymentPointerStatus.ACTIVE
-      : PaymentPointerStatus.INACTIVE
+      ? PaymentPointerStatus.Active
+      : PaymentPointerStatus.Inactive
   }
 
   public async onCredit({
@@ -107,7 +107,7 @@ export class PaymentPointer
   }
 
   public isActive() {
-    return this.status === PaymentPointerStatus.ACTIVE
+    return this.status === PaymentPointerStatus.Active
   }
 }
 
@@ -116,8 +116,8 @@ export enum PaymentPointerEventType {
 }
 
 export enum PaymentPointerStatus {
-  INACTIVE = 'INACTIVE',
-  ACTIVE = 'ACTIVE'
+  Inactive = 'INACTIVE',
+  Active = 'ACTIVE'
 }
 
 export type PaymentPointerData = {

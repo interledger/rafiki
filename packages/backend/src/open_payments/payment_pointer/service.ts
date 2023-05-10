@@ -127,7 +127,7 @@ async function updatePaymentPointer(
     const update: UpdateInput = { publicName }
     if (status) {
       update.deactivatesAt =
-        status === PaymentPointerStatus.INACTIVE ? new Date() : null
+        status === PaymentPointerStatus.Inactive ? new Date() : null
     }
 
     return await PaymentPointer.query(deps.knex)

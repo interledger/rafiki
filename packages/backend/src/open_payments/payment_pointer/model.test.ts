@@ -395,17 +395,17 @@ describe('Payment Pointer Model', (): void => {
     const deactivatesAtCases = [
       {
         value: null,
-        expectedStatus: PaymentPointerStatus.ACTIVE,
+        expectedStatus: PaymentPointerStatus.Active,
         expectedIsActive: true
       },
       {
         value: getDateRelativeToToday(1),
-        expectedStatus: PaymentPointerStatus.ACTIVE,
+        expectedStatus: PaymentPointerStatus.Active,
         expectedIsActive: true
       },
       {
         value: getDateRelativeToToday(-1),
-        expectedStatus: PaymentPointerStatus.INACTIVE,
+        expectedStatus: PaymentPointerStatus.Inactive,
         expectedIsActive: false
       }
     ]

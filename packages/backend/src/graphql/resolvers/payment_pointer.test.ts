@@ -28,7 +28,9 @@ import {
   CreatePaymentPointerInput,
   CreatePaymentPointerMutationResponse,
   TriggerPaymentPointerEventsMutationResponse,
-  PaymentPointer
+  PaymentPointer,
+  PaymentPointerStatus,
+  UpdatePaymentPointerMutationResponse
 } from '../generated/graphql'
 
 describe('Payment Pointer Resolvers', (): void => {
@@ -213,6 +215,159 @@ describe('Payment Pointer Resolvers', (): void => {
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe('Error trying to create payment pointer')
+    })
+  })
+
+  describe('Update Payment Pointer', (): void => {
+    let paymentPointer: PaymentPointerModel
+
+    beforeEach(async (): Promise<void> => {
+      paymentPointer = await createPaymentPointer(deps)
+    })
+
+    test('Can update a payment pointer', async (): Promise<void> => {
+      const updateOptions = {
+        id: paymentPointer.id,
+        status: PaymentPointerStatus.Inactive,
+        publicName: 'Public Payment Pointer'
+      }
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdatePaymentPointer($input: UpdatePaymentPointerInput!) {
+              updatePaymentPointer(input: $input) {
+                code
+                success
+                message
+                paymentPointer {
+                  id
+                  status
+                  publicName
+                }
+              }
+            }
+          `,
+          variables: {
+            input: updateOptions
+          }
+        })
+        .then((query): UpdatePaymentPointerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePaymentPointer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      expect(response.paymentPointer).toEqual({
+        __typename: 'PaymentPointer',
+        ...updateOptions
+      })
+
+      const updatedPaymentPointer = await paymentPointerService.get(
+        paymentPointer.id
+      )
+      assert.ok(updatedPaymentPointer)
+
+      const {
+        deactivatesAt,
+        updatedAt: originalUpdatedAt,
+        ...originalRest
+      } = paymentPointer
+      expect(updatedPaymentPointer).toMatchObject({
+        ...originalRest,
+        ...updateOptions
+      })
+      expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
+      expect(updatedPaymentPointer.updatedAt.getTime()).toBeGreaterThan(
+        originalUpdatedAt.getTime()
+      )
+    })
+
+    test.each`
+      error
+      ${PaymentPointerError.InvalidUrl}
+      ${PaymentPointerError.UnknownAsset}
+    `('4XX - $error', async ({ error }): Promise<void> => {
+      jest.spyOn(paymentPointerService, 'update').mockResolvedValueOnce(error)
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdatePaymentPointer($input: UpdatePaymentPointerInput!) {
+              updatePaymentPointer(input: $input) {
+                code
+                success
+                message
+                paymentPointer {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: paymentPointer.id,
+              status: PaymentPointerStatus.Inactive
+            }
+          }
+        })
+        .then((query): UpdatePaymentPointerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePaymentPointer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual(
+        errorToCode[error as PaymentPointerError].toString()
+      )
+      expect(response.message).toEqual(
+        errorToMessage[error as PaymentPointerError]
+      )
+    })
+
+    test('Returns error if unexpected error', async (): Promise<void> => {
+      jest
+        .spyOn(paymentPointerService, 'update')
+        .mockImplementationOnce(async () => {
+          throw new Error('unexpected')
+        })
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation UpdatePaymentPointer($input: UpdatePaymentPointerInput!) {
+              updatePaymentPointer(input: $input) {
+                code
+                success
+                message
+                paymentPointer {
+                  id
+                }
+              }
+            }
+          `,
+          variables: {
+            input: {
+              id: paymentPointer.id,
+              status: PaymentPointerStatus.Inactive
+            }
+          }
+        })
+        .then((query): UpdatePaymentPointerMutationResponse => {
+          if (query.data) {
+            return query.data.updatePaymentPointer
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('500')
+      expect(response.message).toEqual('Error trying to update payment pointer')
     })
   })
 
