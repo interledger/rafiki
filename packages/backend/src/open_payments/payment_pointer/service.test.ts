@@ -193,40 +193,46 @@ describe('Open Payments Payment Pointer Service', (): void => {
       }
     )
 
-    test('Payment pointer fields can be updated independently', async (): Promise<void> => {
+    describe('Payment pointer fields can be updated independently', (): void => {
+      let paymentPointer: PaymentPointer
       const initialName = 'Initial Name'
-      const paymentPointer = await createPaymentPointer(deps, {
-        publicName: initialName
+
+      beforeEach(async (): Promise<void> => {
+        paymentPointer = await createPaymentPointer(deps, {
+          publicName: initialName
+        })
       })
 
-      // publicName only
-      const newName = 'New Name'
-      let updatedPaymentPointer = await paymentPointerService.update({
-        id: paymentPointer.id,
-        publicName: newName
+      test('publicName', async (): Promise<void> => {
+        const newName = 'New Name'
+        const updatedPaymentPointer = await paymentPointerService.update({
+          id: paymentPointer.id,
+          publicName: newName
+        })
+        assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+        expect(updatedPaymentPointer.deactivatesAt).toEqual(null)
+        expect(updatedPaymentPointer.publicName).toEqual(newName)
+        await expect(
+          paymentPointerService.get(paymentPointer.id)
+        ).resolves.toEqual(updatedPaymentPointer)
       })
-      assert.ok(!isPaymentPointerError(updatedPaymentPointer))
-      expect(updatedPaymentPointer.deactivatesAt).toEqual(null)
-      expect(updatedPaymentPointer.publicName).toEqual(newName)
-      await expect(
-        paymentPointerService.get(paymentPointer.id)
-      ).resolves.toEqual(updatedPaymentPointer)
 
-      // status only
-      updatedPaymentPointer = await paymentPointerService.update({
-        id: paymentPointer.id,
-        status: PaymentPointerStatus.Inactive
+      test('status', async (): Promise<void> => {
+        const updatedPaymentPointer = await paymentPointerService.update({
+          id: paymentPointer.id,
+          status: PaymentPointerStatus.Inactive
+        })
+        assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+        expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
+        expect(updatedPaymentPointer.isActive()).toEqual(false)
+        expect(updatedPaymentPointer.status).toEqual(
+          PaymentPointerStatus.Inactive
+        )
+        expect(updatedPaymentPointer.publicName).toEqual(initialName)
+        await expect(
+          paymentPointerService.get(paymentPointer.id)
+        ).resolves.toEqual(updatedPaymentPointer)
       })
-      assert.ok(!isPaymentPointerError(updatedPaymentPointer))
-      expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
-      expect(updatedPaymentPointer.isActive()).toEqual(false)
-      expect(updatedPaymentPointer.status).toEqual(
-        PaymentPointerStatus.Inactive
-      )
-      expect(updatedPaymentPointer.publicName).toEqual(newName)
-      await expect(
-        paymentPointerService.get(paymentPointer.id)
-      ).resolves.toEqual(updatedPaymentPointer)
     })
 
     test('Cannot update unknown payment pointer', async (): Promise<void> => {
