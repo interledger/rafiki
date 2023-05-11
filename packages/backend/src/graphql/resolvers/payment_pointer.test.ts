@@ -291,6 +291,7 @@ describe('Payment Pointer Resolvers', (): void => {
       error
       ${PaymentPointerError.InvalidUrl}
       ${PaymentPointerError.UnknownAsset}
+      ${PaymentPointerError.UnknownPaymentPointer}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(paymentPointerService, 'update').mockResolvedValueOnce(error)
       const response = await appContainer.apolloClient

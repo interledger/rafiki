@@ -136,7 +136,7 @@ async function updatePaymentPointer(
       .throwIfNotFound()
   } catch (err) {
     if (err instanceof NotFoundError) {
-      return PaymentPointerError.UnknownAsset
+      return PaymentPointerError.UnknownPaymentPointer
     }
     throw err
   }

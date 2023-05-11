@@ -236,7 +236,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
           status: PaymentPointerStatus.Inactive,
           publicName: 'Some Public Name'
         })
-      ).resolves.toEqual(PaymentPointerError.UnknownAsset)
+      ).resolves.toEqual(PaymentPointerError.UnknownPaymentPointer)
     })
   })
 
