@@ -39,9 +39,9 @@
     "@interledger/open-payments": "1.0.3",
     "@interledger/openapi": "1.0.2",
     "pg": "^8.10.0",
-    "pino": "^8.12.1",
+    "pino": "^8.14.1",
     "pino-pretty": "^10.0.0",
-    "testcontainers": "^9.6.0",
+    "testcontainers": "^9.7.0",
     "token-introspection": "workspace:../token-introspection",
     "uuid": "^9.0.0"
   },

@@ -271,7 +271,9 @@ export const postLiquidityWithdrawal: MutationResolvers<ApolloContext>['postLiqu
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.postWithdrawal(args.withdrawalId)
+    const error = await accountingService.postWithdrawal(
+      args.input.withdrawalId
+    )
     if (error) {
       return errorToResponse(error)
     }
@@ -289,7 +291,9 @@ export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiqu
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     const accountingService = await ctx.container.use('accountingService')
-    const error = await accountingService.voidWithdrawal(args.withdrawalId)
+    const error = await accountingService.voidWithdrawal(
+      args.input.withdrawalId
+    )
     if (error) {
       return errorToResponse(error)
     }
@@ -315,7 +319,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     try {
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getEvent(args.eventId)
+      const event = await webhookService.getEvent(args.input.eventId)
       if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
         return responses[LiquidityError.InvalidId]
       }
@@ -341,7 +345,7 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     } catch (error) {
       ctx.logger.error(
         {
-          eventId: args.eventId,
+          eventId: args.input.eventId,
           error
         },
         'error depositing liquidity'
@@ -362,7 +366,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
     try {
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getEvent(args.eventId)
+      const event = await webhookService.getEvent(args.input.eventId)
       if (!event || !event.withdrawal) {
         return responses[LiquidityError.InvalidId]
       }
@@ -392,7 +396,7 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     } catch (error) {
       ctx.logger.error(
         {
-          eventId: args.eventId,
+          eventId: args.input.eventId,
           error
         },
         'error withdrawing liquidity'

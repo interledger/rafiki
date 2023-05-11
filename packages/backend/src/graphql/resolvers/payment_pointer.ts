@@ -99,7 +99,7 @@ export const triggerPaymentPointerEvents: MutationResolvers<ApolloContext>['trig
       const paymentPointerService = await ctx.container.use(
         'paymentPointerService'
       )
-      const count = await paymentPointerService.triggerEvents(args.limit)
+      const count = await paymentPointerService.triggerEvents(args.input.limit)
       return {
         code: '200',
         success: true,
@@ -109,7 +109,7 @@ export const triggerPaymentPointerEvents: MutationResolvers<ApolloContext>['trig
     } catch (error) {
       ctx.logger.error(
         {
-          options: args.limit,
+          options: args.input.limit,
           error
         },
         'error triggering payment pointer events'

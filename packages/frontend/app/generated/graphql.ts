@@ -23,6 +23,8 @@ export type AddAssetLiquidityInput = {
   assetId: Scalars['String'];
   /** The id of the transfer. */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
 };
 
 export type AddPeerLiquidityInput = {
@@ -30,6 +32,8 @@ export type AddPeerLiquidityInput = {
   amount: Scalars['UInt64'];
   /** The id of the transfer. */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
   /** The id of the peer to add liquidity. */
   peerId: Scalars['String'];
 };
@@ -75,13 +79,6 @@ export type AssetEdge = {
   node: Asset;
 };
 
-export type AssetInput = {
-  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
-  code: Scalars['String'];
-  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
-  scale: Scalars['UInt8'];
-};
-
 export type AssetMutationResponse = MutationResponse & {
   __typename?: 'AssetMutationResponse';
   asset?: Maybe<Asset>;
@@ -99,6 +96,8 @@ export type AssetsConnection = {
 export type CreateAssetInput = {
   /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
   code: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];
   /** Minimum amount of liquidity that can be withdrawn from the asset */
@@ -112,6 +111,8 @@ export type CreateAssetLiquidityWithdrawalInput = {
   assetId: Scalars['String'];
   /** The id of the withdrawal. */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
 };
 
 export type CreateIncomingPaymentInput = {
@@ -121,6 +122,8 @@ export type CreateIncomingPaymentInput = {
   expiresAt?: InputMaybe<Scalars['String']>;
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
   /** Id of the payment pointer under which the incoming payment will be created */
@@ -132,6 +135,8 @@ export type CreateOutgoingPaymentInput = {
   description?: InputMaybe<Scalars['String']>;
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Id of the payment pointer under which the outgoing payment will be created */
   paymentPointerId: Scalars['String'];
   /** Id of the corresponding quote for that outgoing payment */
@@ -141,6 +146,8 @@ export type CreateOutgoingPaymentInput = {
 export type CreatePaymentPointerInput = {
   /** Asset of the payment pointer */
   assetId: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Public name associated with the payment pointer */
   publicName?: InputMaybe<Scalars['String']>;
   /** Payment Pointer URL */
@@ -148,6 +155,8 @@ export type CreatePaymentPointerInput = {
 };
 
 export type CreatePaymentPointerKeyInput = {
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Public key */
   jwk: JwkInput;
   paymentPointerId: Scalars['String'];
@@ -172,6 +181,8 @@ export type CreatePaymentPointerMutationResponse = MutationResponse & {
 export type CreatePaymentPointerWithdrawalInput = {
   /** The id of the withdrawal. */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
   /** The id of the Open Payments payment pointer to create the withdrawal for. */
   paymentPointerId: Scalars['String'];
 };
@@ -181,6 +192,8 @@ export type CreatePeerInput = {
   assetId: Scalars['String'];
   /** Peering connection details */
   http: HttpInput;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
   /** Peer's internal name */
@@ -194,6 +207,8 @@ export type CreatePeerLiquidityWithdrawalInput = {
   amount: Scalars['UInt64'];
   /** The id of the withdrawal. */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
   /** The id of the peer to create the withdrawal for. */
   peerId: Scalars['String'];
 };
@@ -207,6 +222,8 @@ export type CreatePeerMutationResponse = MutationResponse & {
 };
 
 export type CreateQuoteInput = {
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Id of the payment pointer under which the quote will be created */
   paymentPointerId: Scalars['String'];
   /** Amount to receive (fixed receive) */
@@ -224,6 +241,8 @@ export type CreateReceiverInput = {
   expiresAt?: InputMaybe<Scalars['String']>;
   /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
   externalRef?: InputMaybe<Scalars['String']>;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
   /** Receiving payment pointer URL */
@@ -242,11 +261,24 @@ export enum Crv {
   Ed25519 = 'Ed25519'
 }
 
+export type DeletePeerInput = {
+  id: Scalars['ID'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
+};
+
 export type DeletePeerMutationResponse = MutationResponse & {
   __typename?: 'DeletePeerMutationResponse';
   code: Scalars['String'];
   message: Scalars['String'];
   success: Scalars['Boolean'];
+};
+
+export type DepositEventLiquidityInput = {
+  /** The id of the event to deposit into. */
+  eventId: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
 };
 
 export type Http = {
@@ -511,27 +543,27 @@ export type MutationCreateReceiverArgs = {
 
 
 export type MutationDeletePeerArgs = {
-  id: Scalars['String'];
+  input: DeletePeerInput;
 };
 
 
 export type MutationDepositEventLiquidityArgs = {
-  eventId: Scalars['String'];
+  input: DepositEventLiquidityInput;
 };
 
 
 export type MutationPostLiquidityWithdrawalArgs = {
-  withdrawalId: Scalars['String'];
+  input: PostLiquidityWithdrawalInput;
 };
 
 
 export type MutationRevokePaymentPointerKeyArgs = {
-  id: Scalars['String'];
+  input: RevokePaymentPointerKeyInput;
 };
 
 
 export type MutationTriggerPaymentPointerEventsArgs = {
-  limit: Scalars['Int'];
+  input: TriggerPaymentPointerEventsInput;
 };
 
 
@@ -551,12 +583,12 @@ export type MutationUpdatePeerArgs = {
 
 
 export type MutationVoidLiquidityWithdrawalArgs = {
-  withdrawalId: Scalars['String'];
+  input: VoidLiquidityWithdrawalInput;
 };
 
 
 export type MutationWithdrawEventLiquidityArgs = {
-  eventId: Scalars['String'];
+  input: WithdrawEventLiquidityInput;
 };
 
 export type MutationResponse = {
@@ -752,6 +784,13 @@ export type PeersConnection = {
   pageInfo: PageInfo;
 };
 
+export type PostLiquidityWithdrawalInput = {
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
+  /** The id of the liquidity withdrawal to post. */
+  withdrawalId: Scalars['String'];
+};
+
 export type Query = {
   __typename?: 'Query';
   /** Fetch an asset */
@@ -888,6 +927,13 @@ export type Receiver = {
   updatedAt: Scalars['String'];
 };
 
+export type RevokePaymentPointerKeyInput = {
+  /** Internal id of key */
+  id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
+};
+
 export type RevokePaymentPointerKeyMutationResponse = MutationResponse & {
   __typename?: 'RevokePaymentPointerKeyMutationResponse';
   code: Scalars['String'];
@@ -903,6 +949,13 @@ export type TransferMutationResponse = MutationResponse & {
   success: Scalars['Boolean'];
 };
 
+export type TriggerPaymentPointerEventsInput = {
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
+  /** Maximum number of events being triggered (n). */
+  limit: Scalars['Int'];
+};
+
 export type TriggerPaymentPointerEventsMutationResponse = MutationResponse & {
   __typename?: 'TriggerPaymentPointerEventsMutationResponse';
   code: Scalars['String'];
@@ -915,6 +968,8 @@ export type TriggerPaymentPointerEventsMutationResponse = MutationResponse & {
 export type UpdateAssetInput = {
   /** Asset id */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** New minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']>;
 };
@@ -941,6 +996,8 @@ export type UpdatePeerInput = {
   http?: InputMaybe<HttpInput>;
   /** Peer id */
   id: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** New maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']>;
   /** Peer's new public name */
@@ -955,6 +1012,20 @@ export type UpdatePeerMutationResponse = MutationResponse & {
   message: Scalars['String'];
   peer?: Maybe<Peer>;
   success: Scalars['Boolean'];
+};
+
+export type VoidLiquidityWithdrawalInput = {
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
+  /** The id of the liquidity withdrawal to void. */
+  withdrawalId: Scalars['String'];
+};
+
+export type WithdrawEventLiquidityInput = {
+  /** The id of the event to withdraw from. */
+  eventId: Scalars['String'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey: Scalars['String'];
 };
 
 
@@ -1035,7 +1106,6 @@ export type ResolversTypes = {
   AmountInput: ResolverTypeWrapper<Partial<AmountInput>>;
   Asset: ResolverTypeWrapper<Partial<Asset>>;
   AssetEdge: ResolverTypeWrapper<Partial<AssetEdge>>;
-  AssetInput: ResolverTypeWrapper<Partial<AssetInput>>;
   AssetMutationResponse: ResolverTypeWrapper<Partial<AssetMutationResponse>>;
   AssetsConnection: ResolverTypeWrapper<Partial<AssetsConnection>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
@@ -1055,7 +1125,9 @@ export type ResolversTypes = {
   CreateReceiverInput: ResolverTypeWrapper<Partial<CreateReceiverInput>>;
   CreateReceiverResponse: ResolverTypeWrapper<Partial<CreateReceiverResponse>>;
   Crv: ResolverTypeWrapper<Partial<Crv>>;
+  DeletePeerInput: ResolverTypeWrapper<Partial<DeletePeerInput>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
+  DepositEventLiquidityInput: ResolverTypeWrapper<Partial<DepositEventLiquidityInput>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
@@ -1091,15 +1163,18 @@ export type ResolversTypes = {
   Peer: ResolverTypeWrapper<Partial<Peer>>;
   PeerEdge: ResolverTypeWrapper<Partial<PeerEdge>>;
   PeersConnection: ResolverTypeWrapper<Partial<PeersConnection>>;
+  PostLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<PostLiquidityWithdrawalInput>>;
   Query: ResolverTypeWrapper<{}>;
   Quote: ResolverTypeWrapper<Partial<Quote>>;
   QuoteConnection: ResolverTypeWrapper<Partial<QuoteConnection>>;
   QuoteEdge: ResolverTypeWrapper<Partial<QuoteEdge>>;
   QuoteResponse: ResolverTypeWrapper<Partial<QuoteResponse>>;
   Receiver: ResolverTypeWrapper<Partial<Receiver>>;
+  RevokePaymentPointerKeyInput: ResolverTypeWrapper<Partial<RevokePaymentPointerKeyInput>>;
   RevokePaymentPointerKeyMutationResponse: ResolverTypeWrapper<Partial<RevokePaymentPointerKeyMutationResponse>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
+  TriggerPaymentPointerEventsInput: ResolverTypeWrapper<Partial<TriggerPaymentPointerEventsInput>>;
   TriggerPaymentPointerEventsMutationResponse: ResolverTypeWrapper<Partial<TriggerPaymentPointerEventsMutationResponse>>;
   UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
@@ -1108,6 +1183,8 @@ export type ResolversTypes = {
   UpdatePaymentPointerMutationResponse: ResolverTypeWrapper<Partial<UpdatePaymentPointerMutationResponse>>;
   UpdatePeerInput: ResolverTypeWrapper<Partial<UpdatePeerInput>>;
   UpdatePeerMutationResponse: ResolverTypeWrapper<Partial<UpdatePeerMutationResponse>>;
+  VoidLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<VoidLiquidityWithdrawalInput>>;
+  WithdrawEventLiquidityInput: ResolverTypeWrapper<Partial<WithdrawEventLiquidityInput>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -1118,7 +1195,6 @@ export type ResolversParentTypes = {
   AmountInput: Partial<AmountInput>;
   Asset: Partial<Asset>;
   AssetEdge: Partial<AssetEdge>;
-  AssetInput: Partial<AssetInput>;
   AssetMutationResponse: Partial<AssetMutationResponse>;
   AssetsConnection: Partial<AssetsConnection>;
   Boolean: Partial<Scalars['Boolean']>;
@@ -1137,7 +1213,9 @@ export type ResolversParentTypes = {
   CreateQuoteInput: Partial<CreateQuoteInput>;
   CreateReceiverInput: Partial<CreateReceiverInput>;
   CreateReceiverResponse: Partial<CreateReceiverResponse>;
+  DeletePeerInput: Partial<DeletePeerInput>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
+  DepositEventLiquidityInput: Partial<DepositEventLiquidityInput>;
   Float: Partial<Scalars['Float']>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
@@ -1168,15 +1246,18 @@ export type ResolversParentTypes = {
   Peer: Partial<Peer>;
   PeerEdge: Partial<PeerEdge>;
   PeersConnection: Partial<PeersConnection>;
+  PostLiquidityWithdrawalInput: Partial<PostLiquidityWithdrawalInput>;
   Query: {};
   Quote: Partial<Quote>;
   QuoteConnection: Partial<QuoteConnection>;
   QuoteEdge: Partial<QuoteEdge>;
   QuoteResponse: Partial<QuoteResponse>;
   Receiver: Partial<Receiver>;
+  RevokePaymentPointerKeyInput: Partial<RevokePaymentPointerKeyInput>;
   RevokePaymentPointerKeyMutationResponse: Partial<RevokePaymentPointerKeyMutationResponse>;
   String: Partial<Scalars['String']>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
+  TriggerPaymentPointerEventsInput: Partial<TriggerPaymentPointerEventsInput>;
   TriggerPaymentPointerEventsMutationResponse: Partial<TriggerPaymentPointerEventsMutationResponse>;
   UInt8: Partial<Scalars['UInt8']>;
   UInt64: Partial<Scalars['UInt64']>;
@@ -1185,6 +1266,8 @@ export type ResolversParentTypes = {
   UpdatePaymentPointerMutationResponse: Partial<UpdatePaymentPointerMutationResponse>;
   UpdatePeerInput: Partial<UpdatePeerInput>;
   UpdatePeerMutationResponse: Partial<UpdatePeerMutationResponse>;
+  VoidLiquidityWithdrawalInput: Partial<VoidLiquidityWithdrawalInput>;
+  WithdrawEventLiquidityInput: Partial<WithdrawEventLiquidityInput>;
 };
 
 export type AmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['Amount'] = ResolversParentTypes['Amount']> = {
@@ -1343,16 +1426,16 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   createPeerLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreatePeerLiquidityWithdrawalArgs, 'input'>>;
   createQuote?: Resolver<ResolversTypes['QuoteResponse'], ParentType, ContextType, RequireFields<MutationCreateQuoteArgs, 'input'>>;
   createReceiver?: Resolver<ResolversTypes['CreateReceiverResponse'], ParentType, ContextType, RequireFields<MutationCreateReceiverArgs, 'input'>>;
-  deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'id'>>;
-  depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'eventId'>>;
-  postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'withdrawalId'>>;
-  revokePaymentPointerKey?: Resolver<Maybe<ResolversTypes['RevokePaymentPointerKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokePaymentPointerKeyArgs, 'id'>>;
-  triggerPaymentPointerEvents?: Resolver<ResolversTypes['TriggerPaymentPointerEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerPaymentPointerEventsArgs, 'limit'>>;
+  deletePeer?: Resolver<ResolversTypes['DeletePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationDeletePeerArgs, 'input'>>;
+  depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'input'>>;
+  postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'input'>>;
+  revokePaymentPointerKey?: Resolver<Maybe<ResolversTypes['RevokePaymentPointerKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokePaymentPointerKeyArgs, 'input'>>;
+  triggerPaymentPointerEvents?: Resolver<ResolversTypes['TriggerPaymentPointerEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerPaymentPointerEventsArgs, 'input'>>;
   updateAssetWithdrawalThreshold?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetWithdrawalThresholdArgs, 'input'>>;
   updatePaymentPointer?: Resolver<ResolversTypes['UpdatePaymentPointerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePaymentPointerArgs, 'input'>>;
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;
-  voidLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationVoidLiquidityWithdrawalArgs, 'withdrawalId'>>;
-  withdrawEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationWithdrawEventLiquidityArgs, 'eventId'>>;
+  voidLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationVoidLiquidityWithdrawalArgs, 'input'>>;
+  withdrawEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationWithdrawEventLiquidityArgs, 'input'>>;
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
@@ -1688,7 +1771,7 @@ export type UpdatePeerMutationVariables = Exact<{
 export type UpdatePeerMutation = { __typename?: 'Mutation', updatePeer: { __typename?: 'UpdatePeerMutationResponse', code: string, success: boolean, message: string } };
 
 export type DeletePeerMutationVariables = Exact<{
-  id: Scalars['String'];
+  input: DeletePeerInput;
 }>;
 
 
