@@ -977,6 +977,8 @@ export type UpdateAssetInput = {
 export type UpdatePaymentPointerInput = {
   /** ID of payment pointer to update */
   id: Scalars['ID'];
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']>;
   /** New public name for payment pointer */
   publicName?: InputMaybe<Scalars['String']>;
   /** New status to set the payment pointer to */

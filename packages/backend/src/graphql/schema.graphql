@@ -737,6 +737,8 @@ input UpdatePaymentPointerInput {
   publicName: String
   "New status to set the payment pointer to"
   status: PaymentPointerStatus
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 enum Alg {
