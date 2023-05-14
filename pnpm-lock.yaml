@@ -284,8 +284,8 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       cross-fetch:
-        specifier: ^3.1.4
-        version: 3.1.5
+        specifier: ^3.1.6
+        version: 3.1.6
       jest-openapi:
         specifier: ^0.14.2
         version: 0.14.2
@@ -492,8 +492,8 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       cross-fetch:
-        specifier: ^3.1.4
-        version: 3.1.5
+        specifier: ^3.1.6
+        version: 3.1.6
       ilp-protocol-stream:
         specifier: ^2.7.1
         version: 2.7.1
@@ -918,7 +918,7 @@ packages:
     resolution: {integrity: sha512-xhlTqH0m31mnsG0tIP4ETgfSB6gXDaYYsUWTrlUV93fFQPI9dd8hE0Ot6MHLCtqgB32hwJAC3YZMWlXZw7AleA==}
     engines: {node: '>=14'}
     dependencies:
-      node-fetch: 2.6.9
+      node-fetch: 2.6.11
     transitivePeerDependencies:
       - encoding
     dev: true
@@ -5745,7 +5745,7 @@ packages:
       event-target-polyfill: 0.0.3
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
-      node-fetch: 2.6.9
+      node-fetch: 2.6.11
       undici: 5.14.0
       web-streams-polyfill: 3.2.1
     transitivePeerDependencies:
@@ -5760,7 +5760,7 @@ packages:
       busboy: 1.6.0
       form-data-encoder: 1.7.2
       formdata-node: 4.4.1
-      node-fetch: 2.6.9
+      node-fetch: 2.6.11
       undici: 5.14.0
       web-streams-polyfill: 3.2.1
     transitivePeerDependencies:
@@ -7098,10 +7098,10 @@ packages:
     resolution: {integrity: sha512-dcKFX3jn0MpIaXjisoRvexIJVEKzaq7z2rZKxf+MSr9TkdmHmsU4m2lcLojrj/FHl8mk5VxMmYA+ftRkP/3oKQ==}
     dev: true
 
-  /cross-fetch@3.1.5:
-    resolution: {integrity: sha512-lvb1SBsI0Z7GDwmuid+mU3kWVBwTVUbe7S0H52yaaAdQOXq2YktTCZdlAcNKFzE6QtRz0snpw9bNiPeOIkkQvw==}
+  /cross-fetch@3.1.6:
+    resolution: {integrity: sha512-riRvo06crlE8HiqOwIpQhxwdOk4fOeR7FVM/wXoxchFEqMNUjvbs3bfo4OTgMEMHzppd4DxFBDbyySj8Cv781g==}
     dependencies:
-      node-fetch: 2.6.7
+      node-fetch: 2.6.11
     transitivePeerDependencies:
       - encoding
     dev: true
@@ -8343,7 +8343,7 @@ packages:
   /fbjs@3.0.4:
     resolution: {integrity: sha512-ucV0tDODnGV3JCnnkmoszb5lf4bNpzjv80K41wd4k798Etq+UYD0y0TIfalLjZoKgjive6/adkRnszwapiDgBQ==}
     dependencies:
-      cross-fetch: 3.1.5
+      cross-fetch: 3.1.6
       fbjs-css-vars: 1.0.2
       loose-envify: 1.4.0
       object-assign: 4.1.1
@@ -8865,7 +8865,7 @@ packages:
       graphql: 14 - 16
     dependencies:
       '@graphql-typed-document-node/core': 3.1.1(graphql@16.6.0)
-      cross-fetch: 3.1.5
+      cross-fetch: 3.1.6
       extract-files: 9.0.0
       form-data: 3.0.1
       graphql: 16.6.0
@@ -9720,7 +9720,7 @@ packages:
   /isomorphic-fetch@3.0.0:
     resolution: {integrity: sha512-qvUtwJ3j6qwsF3jLxkZ72qCgjMysPzDfeV240JHiGZsANBYd+EEuu35v7dfrJ9Up0Ak07D7GGSkGhCHTqg/5wA==}
     dependencies:
-      node-fetch: 2.6.9
+      node-fetch: 2.6.11
       whatwg-fetch: 3.6.2
     transitivePeerDependencies:
       - encoding
@@ -11562,6 +11562,18 @@ packages:
   /node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
+    dev: true
+
+  /node-fetch@2.6.11:
+    resolution: {integrity: sha512-4I6pdBY1EthSqDmJkiNk3JIT8cswwR9nfeW/cPdUagJYEQG7R95WRH74wpz7ma8Gh/9dI9FP+OU+0E4FvtA55w==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
+    dependencies:
+      whatwg-url: 5.0.0
     dev: true
 
   /node-fetch@2.6.7:
