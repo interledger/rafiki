@@ -51,7 +51,7 @@ describe('Payment Pointer Routes', (): void => {
 
     test('returns 200 with an open payments payment pointer', async (): Promise<void> => {
       const paymentPointer = await createPaymentPointer(deps, {
-        publicName: faker.name.firstName()
+        publicName: faker.person.firstName()
       })
 
       const ctx = createContext<PaymentPointerContext>({

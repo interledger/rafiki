@@ -6,18 +6,18 @@ import {
 } from '../test/mocks/accounting-service'
 
 const assetCode = faker.finance.currencyCode().toString().toUpperCase()
-const assetScale = faker.datatype.number(6)
+const assetScale = faker.number.int(6)
 
 const accountAttrs = {
-  id: faker.datatype.uuid,
+  id: faker.string.uuid,
   asset: {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
     code: assetCode,
     scale: assetScale,
-    ledger: faker.datatype.number(),
+    ledger: faker.number.int(),
     asset: {
-      id: faker.datatype.uuid(),
-      ledger: faker.datatype.number()
+      id: faker.string.uuid(),
+      ledger: faker.number.int()
     }
   },
   balance: 0n
@@ -38,10 +38,10 @@ export const IncomingPeerFactory = Factory.define<MockIncomingAccount>(
   .attrs({
     http: () => ({
       incoming: {
-        authTokens: [faker.datatype.string(32)]
+        authTokens: [faker.string.sample(32)]
       }
     }),
-    maxPacketAmount: BigInt(faker.datatype.number())
+    maxPacketAmount: BigInt(faker.number.int())
   })
   .attr('staticIlpAddress', ['id'], (id: string) => {
     return `test.${id}`
@@ -54,7 +54,7 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
   .attrs({
     http: () => ({
       outgoing: {
-        authToken: faker.datatype.string(32),
+        authToken: faker.string.sample(32),
         endpoint: faker.internet.url()
       }
     })
