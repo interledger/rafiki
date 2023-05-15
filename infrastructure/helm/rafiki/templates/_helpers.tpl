@@ -53,7 +53,7 @@ http://{{ include "auth.name" . }}:{{ .Values.auth.port.introspection }}
 {{ include "rafiki.fullname" . }}-frontend
 {{- end -}}
 {{- define "frontend.graphqlUrl" -}}
-http://{{ .Values.backend.serviceUrls.PUBLIC_HOST }}:{{ .Values.backend.port.admin }}/graphql
+{{ .Values.backend.serviceUrls.PUBLIC_HOST }}:{{ .Values.backend.port.admin }}/graphql
 {{- end -}}
 
 {{/*

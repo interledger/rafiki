@@ -3,9 +3,9 @@ rafiki:
     nodeEnv: development
     logLevel: debug
     serviceUrls:
-      PUBLIC_HOST: http://rafiki-backend
-      OPEN_PAYMENTS_URL: http://rafiki-backend
-      PAYMENT_POINTER_URL: http://rafiki-backend/.well-known/pay
+      PUBLIC_HOST: http://rafiki-example-backend
+      OPEN_PAYMENTS_URL: http://rafiki-example-backend
+      PAYMENT_POINTER_URL: http://rafiki-example-backend/.well-known/pay
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
       QUOTE_URL: http://cloud-nine-wallet/quotes
