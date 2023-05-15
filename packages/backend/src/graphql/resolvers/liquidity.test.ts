@@ -88,7 +88,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               peerId: peer.id,
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -122,7 +123,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid v4',
               peerId: peer.id,
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -157,7 +159,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               peerId: uuid(),
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -200,7 +203,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               peerId: peer.id,
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -235,7 +239,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid v4',
               peerId: peer.id,
-              amount: '0'
+              amount: '0',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -278,7 +283,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               assetId: asset.id,
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -312,7 +318,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid',
               assetId: asset.id,
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -347,7 +354,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               assetId: uuid(),
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -390,7 +398,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               assetId: asset.id,
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -425,7 +434,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               assetId: asset.id,
-              amount: '0'
+              amount: '0',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -478,7 +488,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               peerId: peer.id,
-              amount: startingBalance.toString()
+              amount: startingBalance.toString(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -514,7 +525,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               peerId: uuid(),
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -551,7 +563,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid',
               peerId: peer.id,
-              amount: startingBalance.toString()
+              amount: startingBalance.toString(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -596,7 +609,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               peerId: peer.id,
-              amount: startingBalance.toString()
+              amount: startingBalance.toString(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -638,7 +652,8 @@ describe('Liquidity Resolvers', (): void => {
               input: {
                 id: uuid(),
                 peerId: peer.id,
-                amount: amount.toString()
+                amount: amount.toString(),
+                idempotencyKey: uuid()
               }
             }
           })
@@ -692,7 +707,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               assetId: asset.id,
-              amount: startingBalance.toString()
+              amount: startingBalance.toString(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -728,7 +744,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: uuid(),
               assetId: uuid(),
-              amount: '100'
+              amount: '100',
+              idempotencyKey: uuid()
             }
           }
         })
@@ -765,7 +782,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id: 'not a uuid',
               assetId: asset.id,
-              amount: startingBalance.toString()
+              amount: startingBalance.toString(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -810,7 +828,8 @@ describe('Liquidity Resolvers', (): void => {
             input: {
               id,
               assetId: asset.id,
-              amount: startingBalance.toString()
+              amount: startingBalance.toString(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -852,7 +871,8 @@ describe('Liquidity Resolvers', (): void => {
               input: {
                 id: uuid(),
                 assetId: asset.id,
-                amount: amount.toString()
+                amount: amount.toString(),
+                idempotencyKey: uuid()
               }
             }
           })
@@ -916,7 +936,8 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id,
-              paymentPointerId: paymentPointer.id
+              paymentPointerId: paymentPointer.id,
+              idempotencyKey: uuid()
             }
           }
         })
@@ -961,7 +982,8 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              paymentPointerId: uuid()
+              paymentPointerId: uuid(),
+              idempotencyKey: uuid()
             }
           }
         })
@@ -1001,7 +1023,8 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id: 'not a uuid',
-              paymentPointerId: paymentPointer.id
+              paymentPointerId: paymentPointer.id,
+              idempotencyKey: uuid()
             }
           }
         })
@@ -1049,7 +1072,8 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id,
-              paymentPointerId: paymentPointer.id
+              paymentPointerId: paymentPointer.id,
+              idempotencyKey: uuid()
             }
           }
         })
@@ -1096,7 +1120,8 @@ describe('Liquidity Resolvers', (): void => {
           variables: {
             input: {
               id: uuid(),
-              paymentPointerId: paymentPointer.id
+              paymentPointerId: paymentPointer.id,
+              idempotencyKey: uuid()
             }
           }
         })
@@ -1145,8 +1170,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation PostLiquidityWithdrawal($withdrawalId: String!) {
-                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal(
+                $input: PostLiquidityWithdrawalInput!
+              ) {
+                postLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1155,7 +1182,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId
+              input: {
+                withdrawalId,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1175,8 +1205,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation PostLiquidityWithdrawal($withdrawalId: String!) {
-                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal(
+                $input: PostLiquidityWithdrawalInput!
+              ) {
+                postLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1185,7 +1217,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId: uuid()
+              input: {
+                withdrawalId: uuid(),
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1206,8 +1241,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation PostLiquidityWithdrawal($withdrawalId: String!) {
-                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal(
+                $input: PostLiquidityWithdrawalInput!
+              ) {
+                postLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1216,7 +1253,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId: 'not a uuid'
+              input: {
+                withdrawalId: 'not a uuid',
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1240,8 +1280,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation postLiquidityWithdrawal($withdrawalId: String!) {
-                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal(
+                $input: PostLiquidityWithdrawalInput!
+              ) {
+                postLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1250,7 +1292,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId
+              input: {
+                withdrawalId,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1274,8 +1319,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation postLiquidityWithdrawal($withdrawalId: String!) {
-                postLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation PostLiquidityWithdrawal(
+                $input: PostLiquidityWithdrawalInput!
+              ) {
+                postLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1284,7 +1331,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId
+              input: {
+                withdrawalId,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1333,8 +1383,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
-                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal(
+                $input: VoidLiquidityWithdrawalInput!
+              ) {
+                voidLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1343,7 +1395,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId
+              input: {
+                withdrawalId,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1363,8 +1418,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
-                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal(
+                $input: VoidLiquidityWithdrawalInput!
+              ) {
+                voidLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1373,7 +1430,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId: uuid()
+              input: {
+                withdrawalId: uuid(),
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1394,8 +1454,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
-                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal(
+                $input: VoidLiquidityWithdrawalInput!
+              ) {
+                voidLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1404,7 +1466,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId: 'not a uuid'
+              input: {
+                withdrawalId: 'not a uuid',
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1428,8 +1493,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation VoidLiquidityWithdrawal($withdrawalId: String!) {
-                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation VoidLiquidityWithdrawal(
+                $input: VoidLiquidityWithdrawalInput!
+              ) {
+                voidLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1438,7 +1505,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId
+              input: {
+                withdrawalId,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1462,8 +1532,10 @@ describe('Liquidity Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation voidLiquidityWithdrawal($withdrawalId: String!) {
-                voidLiquidityWithdrawal(withdrawalId: $withdrawalId) {
+              mutation voidLiquidityWithdrawal(
+                $input: VoidLiquidityWithdrawalInput!
+              ) {
+                voidLiquidityWithdrawal(input: $input) {
                   code
                   success
                   message
@@ -1472,7 +1544,10 @@ describe('Liquidity Resolvers', (): void => {
               }
             `,
             variables: {
-              withdrawalId
+              input: {
+                withdrawalId,
+                idempotencyKey: uuid()
+              }
             }
           })
           .then((query): LiquidityMutationResponse => {
@@ -1547,8 +1622,10 @@ describe('Liquidity Resolvers', (): void => {
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
-                  mutation DepositLiquidity($eventId: String!) {
-                    depositEventLiquidity(eventId: $eventId) {
+                  mutation DepositLiquidity(
+                    $input: DepositEventLiquidityInput!
+                  ) {
+                    depositEventLiquidity(input: $input) {
                       code
                       success
                       message
@@ -1557,7 +1634,10 @@ describe('Liquidity Resolvers', (): void => {
                   }
                 `,
                 variables: {
-                  eventId
+                  input: {
+                    eventId,
+                    idempotencyKey: uuid()
+                  }
                 }
               })
               .then((query): LiquidityMutationResponse => {
@@ -1586,8 +1666,10 @@ describe('Liquidity Resolvers', (): void => {
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
-                  mutation DepositLiquidity($eventId: String!) {
-                    depositEventLiquidity(eventId: $eventId) {
+                  mutation DepositLiquidity(
+                    $input: DepositEventLiquidityInput!
+                  ) {
+                    depositEventLiquidity(input: $input) {
                       code
                       success
                       message
@@ -1596,7 +1678,10 @@ describe('Liquidity Resolvers', (): void => {
                   }
                 `,
                 variables: {
-                  eventId: uuid()
+                  input: {
+                    eventId: uuid(),
+                    idempotencyKey: uuid()
+                  }
                 }
               })
               .then((query): LiquidityMutationResponse => {
@@ -1624,8 +1709,10 @@ describe('Liquidity Resolvers', (): void => {
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
-                  mutation DepositLiquidity($eventId: String!) {
-                    depositEventLiquidity(eventId: $eventId) {
+                  mutation DepositLiquidity(
+                    $input: DepositEventLiquidityInput!
+                  ) {
+                    depositEventLiquidity(input: $input) {
                       code
                       success
                       message
@@ -1634,7 +1721,10 @@ describe('Liquidity Resolvers', (): void => {
                   }
                 `,
                 variables: {
-                  eventId
+                  input: {
+                    eventId,
+                    idempotencyKey: uuid()
+                  }
                 }
               })
               .then((query): LiquidityMutationResponse => {
@@ -1730,8 +1820,10 @@ describe('Liquidity Resolvers', (): void => {
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
-                  mutation WithdrawLiquidity($eventId: String!) {
-                    withdrawEventLiquidity(eventId: $eventId) {
+                  mutation WithdrawLiquidity(
+                    $input: WithdrawEventLiquidityInput!
+                  ) {
+                    withdrawEventLiquidity(input: $input) {
                       code
                       success
                       message
@@ -1740,7 +1832,10 @@ describe('Liquidity Resolvers', (): void => {
                   }
                 `,
                 variables: {
-                  eventId
+                  input: {
+                    eventId,
+                    idempotencyKey: uuid()
+                  }
                 }
               })
               .then((query): LiquidityMutationResponse => {
@@ -1760,8 +1855,10 @@ describe('Liquidity Resolvers', (): void => {
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
-                  mutation WithdrawLiquidity($eventId: String!) {
-                    withdrawEventLiquidity(eventId: $eventId) {
+                  mutation WithdrawLiquidity(
+                    $input: WithdrawEventLiquidityInput!
+                  ) {
+                    withdrawEventLiquidity(input: $input) {
                       code
                       success
                       message
@@ -1770,7 +1867,10 @@ describe('Liquidity Resolvers', (): void => {
                   }
                 `,
                 variables: {
-                  eventId: uuid()
+                  input: {
+                    eventId: uuid(),
+                    idempotencyKey: uuid()
+                  }
                 }
               })
               .then((query): LiquidityMutationResponse => {
@@ -1794,8 +1894,10 @@ describe('Liquidity Resolvers', (): void => {
             const response = await appContainer.apolloClient
               .mutate({
                 mutation: gql`
-                  mutation WithdrawLiquidity($eventId: String!) {
-                    withdrawEventLiquidity(eventId: $eventId) {
+                  mutation WithdrawLiquidity(
+                    $input: WithdrawEventLiquidityInput!
+                  ) {
+                    withdrawEventLiquidity(input: $input) {
                       code
                       success
                       message
@@ -1804,7 +1906,10 @@ describe('Liquidity Resolvers', (): void => {
                   }
                 `,
                 variables: {
-                  eventId
+                  input: {
+                    eventId,
+                    idempotencyKey: uuid()
+                  }
                 }
               })
               .then((query): LiquidityMutationResponse => {

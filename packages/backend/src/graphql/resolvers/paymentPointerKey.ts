@@ -19,7 +19,7 @@ export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePa
       const paymentPointerKeyService = await ctx.container.use(
         'paymentPointerKeyService'
       )
-      const key = await paymentPointerKeyService.revoke(args.id)
+      const key = await paymentPointerKeyService.revoke(args.input.id)
       if (!key) {
         return {
           code: '404',
@@ -37,7 +37,7 @@ export const revokePaymentPointerKey: MutationResolvers<ApolloContext>['revokePa
     } catch (error) {
       ctx.logger.error(
         {
-          options: args.id,
+          options: args.input.id,
           error
         },
         'error revoking payment pointer key'
