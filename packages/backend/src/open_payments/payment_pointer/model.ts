@@ -51,7 +51,7 @@ export class PaymentPointer
   public deactivatedAt!: Date | null
 
   public get isActive() {
-    return !this.deactivatedAt || new Date(this.deactivatedAt) > new Date()
+    return !this.deactivatedAt || this.deactivatedAt > new Date()
   }
 
   public async onCredit({
