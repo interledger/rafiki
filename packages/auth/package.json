@@ -51,7 +51,7 @@
     "@graphql-codegen/introspection": "3.0.1",
     "@graphql-codegen/typescript": "3.0.4",
     "@graphql-codegen/typescript-resolvers": "3.2.1",
-    "@faker-js/faker": "^7.6.0",
+    "@faker-js/faker": "^8.0.0",
     "@types/jest": "^29.5.1",
     "@types/koa": "2.13.6",
     "@types/koa-bodyparser": "^4.3.10",
