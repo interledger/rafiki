@@ -8,7 +8,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - port: {{ .Values.backend.port.admin }}
       targetPort: {{ .Values.backend.port.admin }}
