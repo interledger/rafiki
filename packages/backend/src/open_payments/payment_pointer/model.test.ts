@@ -382,40 +382,40 @@ describe('Payment Pointer Model', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('deactivatesAt', () => {
+  describe('deactivatedAt', () => {
     const getDateRelativeToToday = (daysFromToday: number) => {
       const d = new Date()
       d.setDate(d.getDate() + daysFromToday)
       return d
     }
 
-    const deactivatesAtCases = [
+    const deactivatedAtCases = [
       {
         value: null,
         expectedIsActive: true,
-        description: 'No deactivatesAt is active'
+        description: 'No deactivatedAt is active'
       },
       {
         value: getDateRelativeToToday(1),
         expectedIsActive: true,
-        description: 'Future deactivatesAt is inactive'
+        description: 'Future deactivatedAt is inactive'
       },
       {
         value: getDateRelativeToToday(-1),
         expectedIsActive: false,
-        description: 'Past deactivatesAt is inactive'
+        description: 'Past deactivatedAt is inactive'
       }
     ]
 
-    test.each(deactivatesAtCases)(
+    test.each(deactivatedAtCases)(
       '$description',
       async ({ value, expectedIsActive }) => {
         const paymentPointer = await createPaymentPointer(deps)
         if (value) {
           await paymentPointer
             .$query(appContainer.knex)
-            .patch({ deactivatesAt: value })
-          assert.ok(paymentPointer.deactivatesAt === value)
+            .patch({ deactivatedAt: value })
+          assert.ok(paymentPointer.deactivatedAt === value)
         }
         expect(paymentPointer.isActive).toEqual(expectedIsActive)
       }

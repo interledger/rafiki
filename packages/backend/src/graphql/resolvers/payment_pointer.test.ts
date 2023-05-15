@@ -273,7 +273,7 @@ describe('Payment Pointer Resolvers', (): void => {
 
       const {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        deactivatesAt,
+        deactivatedAt,
         updatedAt: originalUpdatedAt,
         ...originalRest
       } = paymentPointer
@@ -281,7 +281,7 @@ describe('Payment Pointer Resolvers', (): void => {
         ...originalRest,
         publicName: updateOptions.publicName
       })
-      expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
+      expect(updatedPaymentPointer.deactivatedAt).toBeDefined()
       expect(updatedPaymentPointer.isActive).toBe(false)
       expect(updatedPaymentPointer.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()

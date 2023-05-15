@@ -16,7 +16,7 @@ exports.up = function (knex) {
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
-    table.timestamp('deactivatesAt').nullable()
+    table.timestamp('deactivatedAt').nullable()
 
     table.index('processAt')
   })

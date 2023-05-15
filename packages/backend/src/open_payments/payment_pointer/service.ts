@@ -32,7 +32,7 @@ export interface UpdateOptions extends Options {
   status?: PaymentPointerStatus
 }
 
-type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatesAt?: Date | null }
+type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
 
 export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
@@ -126,7 +126,7 @@ async function updatePaymentPointer(
   try {
     const update: UpdateInput = { publicName }
     if (status) {
-      update.deactivatesAt =
+      update.deactivatedAt =
         status === PaymentPointerStatus.Inactive ? new Date() : null
     }
 
