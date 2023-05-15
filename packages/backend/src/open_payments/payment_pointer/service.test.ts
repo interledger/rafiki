@@ -6,8 +6,7 @@ import { isPaymentPointerError, PaymentPointerError } from './errors'
 import {
   PaymentPointer,
   PaymentPointerEvent,
-  PaymentPointerEventType,
-  PaymentPointerStatus
+  PaymentPointerEventType
 } from './model'
 import {
   CreateOptions,
@@ -24,6 +23,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
+import { PaymentPointerStatus } from '../../graphql/generated/graphql'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -136,17 +136,17 @@ describe('Open Payments Payment Pointer Service', (): void => {
 
   describe('Update Payment Pointer', (): void => {
     test.each`
-      initialStatus                    | status                           | publicName
-      ${PaymentPointerStatus.Active}   | ${undefined}                     | ${'Public Name 1'}
-      ${PaymentPointerStatus.Active}   | ${PaymentPointerStatus.Inactive} | ${'Public Name 2'}
-      ${PaymentPointerStatus.Inactive} | ${PaymentPointerStatus.Active}   | ${null}
-      ${PaymentPointerStatus.Inactive} | ${undefined}                     | ${null}
+      initialIsActive | status                           | publicName
+      ${true}         | ${undefined}                     | ${'Public Name 1'}
+      ${true}         | ${PaymentPointerStatus.Inactive} | ${'Public Name 2'}
+      ${false}        | ${PaymentPointerStatus.Active}   | ${null}
+      ${false}        | ${undefined}                     | ${null}
     `(
-      'Payment pointer status and publicName can be updated to $status and $publicName from initial status of: $initialStatus',
-      async ({ initialStatus, status, publicName }): Promise<void> => {
+      'Payment pointer  with initial isActive of $initialIsActive can be updated with status of $status and publicName of $publicName',
+      async ({ initialIsActive, status, publicName }): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
 
-        if (initialStatus === PaymentPointerStatus.Inactive) {
+        if (!initialIsActive) {
           await paymentPointer.$query(knex).patch({ deactivatesAt: new Date() })
         }
 
@@ -163,25 +163,17 @@ describe('Open Payments Payment Pointer Service', (): void => {
         let statusChecked = false
         if (
           status === PaymentPointerStatus.Inactive ||
-          (typeof status === 'undefined' &&
-            initialStatus === PaymentPointerStatus.Inactive)
+          (typeof status === 'undefined' && !initialIsActive)
         ) {
           expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
-          expect(updatedPaymentPointer.isActive()).toEqual(false)
-          expect(updatedPaymentPointer.status).toEqual(
-            PaymentPointerStatus.Inactive
-          )
+          expect(updatedPaymentPointer.isActive).toEqual(false)
           statusChecked = true
         } else if (
           status === PaymentPointerStatus.Active ||
-          (typeof status === 'undefined' &&
-            initialStatus === PaymentPointerStatus.Active)
+          (typeof status === 'undefined' && initialIsActive)
         ) {
           expect(updatedPaymentPointer.deactivatesAt).toBe(null)
-          expect(updatedPaymentPointer.isActive()).toEqual(true)
-          expect(updatedPaymentPointer.status).toEqual(
-            PaymentPointerStatus.Active
-          )
+          expect(updatedPaymentPointer.isActive).toEqual(true)
           statusChecked = true
         }
         // ensure all cases are checked
@@ -224,10 +216,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
         })
         assert.ok(!isPaymentPointerError(updatedPaymentPointer))
         expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
-        expect(updatedPaymentPointer.isActive()).toEqual(false)
-        expect(updatedPaymentPointer.status).toEqual(
-          PaymentPointerStatus.Inactive
-        )
+        expect(updatedPaymentPointer.isActive).toEqual(false)
         expect(updatedPaymentPointer.publicName).toEqual(initialName)
         await expect(
           paymentPointerService.get(paymentPointer.id)

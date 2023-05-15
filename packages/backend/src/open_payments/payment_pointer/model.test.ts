@@ -7,8 +7,7 @@ import {
   PaymentPointer,
   PaymentPointerSubresource,
   GetOptions,
-  ListOptions,
-  PaymentPointerStatus
+  ListOptions
 } from './model'
 import { Grant } from '../auth/middleware'
 import {
@@ -383,7 +382,7 @@ describe('Payment Pointer Model', (): void => {
     await appContainer.shutdown()
   })
 
-  describe(`deactivatedAt cases @ ${new Date().toISOString()}`, () => {
+  describe('deactivatesAt', () => {
     const getDateRelativeToToday = (daysFromToday: number) => {
       const d = new Date()
       d.setDate(d.getDate() + daysFromToday)
@@ -393,24 +392,24 @@ describe('Payment Pointer Model', (): void => {
     const deactivatesAtCases = [
       {
         value: null,
-        expectedStatus: PaymentPointerStatus.Active,
-        expectedIsActive: true
+        expectedIsActive: true,
+        description: 'No deactivatesAt is active'
       },
       {
         value: getDateRelativeToToday(1),
-        expectedStatus: PaymentPointerStatus.Active,
-        expectedIsActive: true
+        expectedIsActive: true,
+        description: 'Future deactivatesAt is inactive'
       },
       {
         value: getDateRelativeToToday(-1),
-        expectedStatus: PaymentPointerStatus.Inactive,
-        expectedIsActive: false
+        expectedIsActive: false,
+        description: 'Past deactivatesAt is inactive'
       }
     ]
 
     test.each(deactivatesAtCases)(
-      'For a deactivatesAt of $value, status should be $expectedStatus and isActive should be $expectedIsActive',
-      async ({ value, expectedStatus, expectedIsActive }) => {
+      '$description',
+      async ({ value, expectedIsActive }) => {
         const paymentPointer = await createPaymentPointer(deps)
         if (value) {
           await paymentPointer
@@ -418,8 +417,7 @@ describe('Payment Pointer Model', (): void => {
             .patch({ deactivatesAt: value })
           assert.ok(paymentPointer.deactivatesAt === value)
         }
-        expect(paymentPointer.status).toEqual(expectedStatus)
-        expect(paymentPointer.isActive()).toEqual(expectedIsActive)
+        expect(paymentPointer.isActive).toEqual(expectedIsActive)
       }
     )
   })

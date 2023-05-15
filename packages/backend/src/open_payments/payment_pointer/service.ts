@@ -12,11 +12,11 @@ import {
   PaymentPointerEventType,
   GetOptions,
   ListOptions,
-  PaymentPointerSubresource,
-  PaymentPointerStatus
+  PaymentPointerSubresource
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
+import { PaymentPointerStatus } from '../../graphql/generated/graphql'
 
 interface Options {
   publicName?: string

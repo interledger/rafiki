@@ -15,7 +15,7 @@ export function createPaymentPointerMiddleware() {
         ctx.paymentPointerUrl
       )
 
-      if (!paymentPointer?.isActive()) {
+      if (!paymentPointer?.isActive) {
         ctx.throw(404)
       }
       ctx.paymentPointer = paymentPointer

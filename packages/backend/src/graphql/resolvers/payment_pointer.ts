@@ -3,7 +3,8 @@ import {
   QueryResolvers,
   ResolversTypes,
   PaymentPointer as SchemaPaymentPointer,
-  MutationResolvers
+  MutationResolvers,
+  PaymentPointerStatus
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -130,5 +131,7 @@ export const paymentPointerToGraphql = (
   asset: assetToGraphql(paymentPointer.asset),
   publicName: paymentPointer.publicName ?? undefined,
   createdAt: new Date(+paymentPointer.createdAt).toISOString(),
-  status: paymentPointer.status
+  status: paymentPointer.isActive
+    ? PaymentPointerStatus.Active
+    : PaymentPointerStatus.Inactive
 })

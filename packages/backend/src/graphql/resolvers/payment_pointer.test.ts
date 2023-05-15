@@ -279,9 +279,10 @@ describe('Payment Pointer Resolvers', (): void => {
       } = paymentPointer
       expect(updatedPaymentPointer).toMatchObject({
         ...originalRest,
-        ...updateOptions
+        publicName: updateOptions.publicName
       })
       expect(updatedPaymentPointer.deactivatesAt).toBeDefined()
+      expect(updatedPaymentPointer.isActive).toBe(false)
       expect(updatedPaymentPointer.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       )
