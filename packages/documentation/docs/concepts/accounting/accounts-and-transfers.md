@@ -12,7 +12,7 @@ There is one liquidity account for each of the following resource:
 
 - Asset
 - Peer
-- Payment Pointer (for [SPSP](./glossary/spsp) / [Web Monetization](./glossary/web-monetization) receiving)
+- Payment Pointer (for [SPSP](../../reference/glossary#spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
 

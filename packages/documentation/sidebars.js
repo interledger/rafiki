@@ -48,8 +48,7 @@ const docs = [
       },
       'concepts/account-servicing-entity',
       'concepts/asset',
-      'concepts/payment-pointer',
-      'concepts/web-monetization'
+      'concepts/payment-pointer'
     ]
   },
   {

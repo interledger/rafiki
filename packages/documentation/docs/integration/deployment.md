@@ -12,7 +12,7 @@ and the databases
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-To integrate Rafiki with your own services, view the [integration documentation](./integration).
+To integrate Rafiki with your own services, view the [integration documentation](../integration/getting-started.md).
 
 ### Running the production environment
 

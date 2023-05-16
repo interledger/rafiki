@@ -4,9 +4,9 @@
 
 Rafiki is a collection of three services that are run together; each one can be scaled horizontally. These services are
 
-- [`backend`](../packages/backend): The main service, handling business logic and external communication.
-- [`auth`](../packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
-- [`frontend`](../packages/frontend): An internal admin interface for Rafiki operators to manage their Rafiki instance.
+- [`backend`](https://github.com/interledger/rafiki/tree/main/packages/backend): The main service, handling business logic and external communication.
+- [`auth`](https://github.com/interledger/rafiki/tree/main/packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
+- [`frontend`](https://github.com/interledger/rafiki/tree/main/packages/frontend): An internal admin interface for Rafiki operators to manage their Rafiki instance.
 
 These services rely on four databases:
 

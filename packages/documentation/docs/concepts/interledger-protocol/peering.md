@@ -2,7 +2,7 @@
 
 ## What is a peer / a peering relationship?
 
-A peer is a counterparty that a given party transacts with. Within the [Interledger Protocol](./interledger-protocol), connectors maintain peers, or counterparty connectors whom they transact with. The Interledger network is a graph of nodes (connectors) that have peered with one another by establishing a means of exchanging ILP packets and a means of paying one another for the successful forwarding and delivery of the packets. A connector may extend a given peer a limited line of credit, or none at all, depending upon their trustworthiness.
+A peer is a counterparty that a given party transacts with. Within the Interledger Protocol, connectors maintain peers, or counterparty connectors whom they transact with. The Interledger network is a graph of nodes (connectors) that have peered with one another by establishing a means of exchanging ILP packets and a means of paying one another for the successful forwarding and delivery of the packets. A connector may extend a given peer a limited line of credit, or none at all, depending upon their trustworthiness.
 
 Rafiki includes an implementation of such a connector.
 
@@ -25,11 +25,11 @@ Note that two counterparties could have multiple peering relationships that diff
 
 ### Using the Admin Dashboard
 
-Once the [`frontend`](../packages/frontend/) project is running (typically as part of the [local environment](../localenv/)), you can navgiate to the Peers page, and then press the Create Peer button. You will be prompted to enter the peer information such as the peer's static ILP address, as well as the corresponding HTTP info.
+Once the [`frontend`](https://github.com/interledger/rafiki/blob/main/packages/frontend) project is running (typically as part of the [local environment](https://github.com/interledger/rafiki/blob/main/localenv)), you can navgiate to the Peers page, and then press the Create Peer button. You will be prompted to enter the peer information such as the peer's static ILP address, as well as the corresponding HTTP info.
 
 ### Using the Admin API
 
-This section describes the process for setting up peering between two Rafiki instances using the [Admin API](./admin-api.md). The examples are given for one instance, the other instance would have to run the corresponding API calls.
+This section describes the process for setting up peering between two Rafiki instances using the [Admin API](../../integration/management.md). The examples are given for one instance, the other instance would have to run the corresponding API calls.
 
 Assume the following peering relationship
 

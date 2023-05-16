@@ -2,9 +2,9 @@
 
 The [`backend`](../../introduction/architecture.md#backend) includes an [Interledger](../../reference/glossary.md#interledger-protocol) connector for sending and receiving [STREAM](../../reference/glossary.md#stream) packets.
 
-The amounts of these packets are used to update account balances in [TigerBeetle](../../reference/glossary.md#tigerbeetle). (See [Accounts and Transfers](./accounts-and-transfers.md))
+The amounts of these packets are used to update account balances in [TigerBeetle](../../reference/glossary.md#tigerbeetle). (See [Accounts and Transfers](../accounting/accounts-and-transfers.md))
 
-Amounts are adjusted based on the destination/outgoing account's asset and Rafiki's configured exchange [rates service](./integration.md#exchange-rates).
+Amounts are adjusted based on the destination/outgoing account's asset and Rafiki's configured exchange [rates service](../../integration/getting-started.md#exchange-rates).
 
 ## Packet Origination
 
@@ -15,7 +15,7 @@ The connector receives incoming ILP packets via:
 
 ### Incoming HTTP
 
-The `backend` includes an HTTP server listening on the configured [`CONNECTOR_PORT`](./deployment.md#backend).
+The `backend` includes an HTTP server listening on the configured [`CONNECTOR_PORT`](../../integration/deployment.md#backend).
 
 An incoming ILP packet over HTTP is only accepted if it is from a configured [peer](./peering.md) and accompanied by the peer's incoming HTTP `authToken`.
 
@@ -31,7 +31,7 @@ An ILP packet may either terminate at the local Rafiki's STREAM server or contin
 
 ### Local STREAM Server
 
-The connector attempts to extract and decode the payment tag from a received ILP packet's destination address. If it is successfully able to match the tag with a locally managed [Open Payments](../../reference/glossary.md#open-payments) [payment pointer](../../reference/glossary.md#payment-pointer) or [incoming payment](https://docs.openpayments.guide/reference/create-incoming-payment), it will not forward the packet. The connector will credit the corresponding balance as well as track the total amount received for the STREAM connection in [Redis](./architecture.md) in order to support [STREAM receipts](https://interledger.org/rfcs/0039-stream-receipts/).
+The connector attempts to extract and decode the payment tag from a received ILP packet's destination address. If it is successfully able to match the tag with a locally managed [Open Payments](../../reference/glossary.md#open-payments) [payment pointer](../../reference/glossary.md#payment-pointer) or [incoming payment](https://docs.openpayments.guide/reference/create-incoming-payment), it will not forward the packet. The connector will credit the corresponding balance as well as track the total amount received for the STREAM connection in [Redis](../../introduction/architecture.md) in order to support [STREAM receipts](https://interledger.org/rfcs/0039-stream-receipts/).
 
 Packets addressed to a payment pointer happen via [SPSP](../../reference/glossary.md#payment-pointer), often for [Web Monetization](../../reference/glossary.md#web-monetization)
 

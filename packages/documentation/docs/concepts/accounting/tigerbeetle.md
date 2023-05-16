@@ -18,12 +18,12 @@ pnpm --filter backend up tigerbeetle-node@0.12.24
 
 ### Production Environment - Helm charts
 
-To use the desired version of TigerBeetle within the production environment, change the tag in the [helm `values.yaml` file](../infrastructure/helm/tigerbeetle/values.yaml).
+To use the desired version of TigerBeetle within the production environment, change the tag in the [helm `values.yaml` file](https://github.com/interledger/rafiki/blob/main/infrastructure/helm/tigerbeetle/values.yaml).
 
 ### Local Environment
 
-To use the desired version of TigerBeetle within the local environment, change the tag in the [tigerbeetle `docker-compose.yml` file](../localenv/tigerbeetle/docker-compose.yml).
+To use the desired version of TigerBeetle within the local environment, change the tag in the [tigerbeetle `docker-compose.yml` file](https://github.com/interledger/rafiki/blob/main/localenv/tigerbeetle/docker-compose.yml).
 
 ### Tests
 
-To use the desired version of TigerBeetle within the Rafiki tests, change the tag in the [tigerbeetle test setup](../packages/backend/src/tests/tigerbeetle.ts).
+To use the desired version of TigerBeetle within the Rafiki tests, change the tag in the [tigerbeetle test setup](https://github.com/interledger/rafiki/blob/main/packages/backend/src/tests/tigerbeetle.ts).

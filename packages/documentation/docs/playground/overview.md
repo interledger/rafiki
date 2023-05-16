@@ -1,12 +1,12 @@
 # Overview
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../docs/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../docs/glossary.md#open-payments) APIs with its required [GNAP](../docs/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../reference/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../reference/glossary.md#open-payments) APIs with its required [GNAP](../reference/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../docs/glossary.md#account-servicing-entity))
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../reference/glossary.md#account-servicing-entity))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `local-http-signatures` (request signature generation for Postman)
 
@@ -16,7 +16,7 @@ These packages depend on the following databases:
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](./cloud-nine-wallet/docker-compose.yml) and [peer2](./happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 This environment will set up an playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
@@ -72,7 +72,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 ### Dependencies
 
-- [Rafiki local environment setup](../README.md#environment-setup)
+- [Rafiki local environment setup](https://github.com/interledger/rafiki/blob/main/README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
 - [compose plugin](https://docs.docker.com/compose/install/compose-plugin/)
 - [postman](https://www.postman.com/downloads/)
@@ -104,7 +104,7 @@ pnpm localenv:psql:dbvolumes:remove
 ```
 
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
-its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
+its own docker compose files ([Cloud Nine Wallet](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)).
 The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
 as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
 both include the `local-signature-utils` signature generation app for Postman.
@@ -139,7 +139,7 @@ The Examples folder in the Postman collection includes an [eCommerce example](ht
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../docs/grant-interaction.md).
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../concepts/open-payments/grant-interaction.md).
 
 Example walkthrough:
 
