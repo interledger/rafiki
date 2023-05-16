@@ -49,6 +49,7 @@ createdAt<br />
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
 - [CreatePaymentPointerMutationResponse](objects#createpaymentpointermutationresponse)
+- [UpdatePaymentPointerMutationResponse](objects#updatepaymentpointermutationresponse)
 - [TriggerPaymentPointerEventsMutationResponse](objects#triggerpaymentpointereventsmutationresponse)
 - [AssetMutationResponse](objects#assetmutationresponse)
 - [CreatePeerMutationResponse](objects#createpeermutationresponse)
