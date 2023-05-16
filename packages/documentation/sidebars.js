@@ -33,7 +33,6 @@ const docs = [
         label: 'Open Payments',
         items: [
           'concepts/open-payments/overview',
-          'concepts/open-payments/gnap',
           'concepts/open-payments/key-registry',
           'concepts/open-payments/grant-interaction'
         ]
@@ -47,8 +46,7 @@ const docs = [
         ]
       },
       'concepts/account-servicing-entity',
-      'concepts/asset',
-      'concepts/payment-pointer'
+      'concepts/asset'
     ]
   },
   {
