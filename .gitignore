@@ -47,3 +47,7 @@ tmp
 build
 **/public/build
 **/styles/*.css
+
+# Docusaurus
+.docusaurus
+.cache-loader
