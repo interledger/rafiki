@@ -3,7 +3,6 @@
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const lightCodeTheme = require('prism-react-renderer/themes/github')
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
 /** @type {import('@docusaurus/types').Config} */
@@ -58,7 +57,7 @@ const config = {
             type: 'docSidebar',
             position: 'left',
             sidebarId: 'reference',
-            label: 'API Reference'
+            label: 'API'
           },
           {
             href: 'https://github.com/interledger/rafiki',

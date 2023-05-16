@@ -2,11 +2,9 @@
 
 ## What is a peer / a peering relationship?
 
-The Interledger network is a graph of nodes (connectors) that have peered with one another by establishing a means of exchanging ILP packets and a means of paying one another for the successful forwarding and delivery of the packets.
+A peer is a counterparty that a given party transacts with. Within the [Interledger Protocol](./interledger-protocol), connectors maintain peers, or counterparty connectors whom they transact with. The Interledger network is a graph of nodes (connectors) that have peered with one another by establishing a means of exchanging ILP packets and a means of paying one another for the successful forwarding and delivery of the packets. A connector may extend a given peer a limited line of credit, or none at all, depending upon their trustworthiness.
 
 Rafiki includes an implementation of such a connector.
-
-In the Interledger protocol, connectors maintain peers, or counterparty connectors whom they transact with. A connector may extend a given peer a limited line of credit, or none at all, depending upon their trustworthiness.
 
 ## What are the requirements for peering?
 
