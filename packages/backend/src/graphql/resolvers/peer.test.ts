@@ -35,16 +35,16 @@ describe('Peer Resolvers', (): void => {
     assetId: asset.id,
     http: {
       incoming: {
-        authTokens: [faker.datatype.string(32)]
+        authTokens: [faker.string.sample(32)]
       },
       outgoing: {
-        authToken: faker.datatype.string(32),
-        endpoint: faker.internet.url()
+        authToken: faker.string.sample(32),
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
-    name: faker.name.fullName()
+    name: faker.person.fullName()
   })
 
   beforeAll(async (): Promise<void> => {
@@ -394,15 +394,15 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: '100',
         http: {
           incoming: {
-            authTokens: [faker.datatype.string(32)]
+            authTokens: [faker.string.sample(32)]
           },
           outgoing: {
-            authToken: faker.datatype.string(32),
-            endpoint: faker.internet.url()
+            authToken: faker.string.sample(32),
+            endpoint: faker.internet.url({ appendSlash: false })
           }
         },
         staticIlpAddress: 'g.rafiki.' + peer.id,
-        name: faker.name.fullName()
+        name: faker.person.fullName()
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient

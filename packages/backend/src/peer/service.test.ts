@@ -26,16 +26,16 @@ describe('Peer Service', (): void => {
     assetId: asset.id,
     http: {
       incoming: {
-        authTokens: [faker.datatype.string(32)]
+        authTokens: [faker.string.sample(32)]
       },
       outgoing: {
-        authToken: faker.datatype.string(32),
-        endpoint: faker.internet.url()
+        authToken: faker.string.sample(32),
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
-    name: faker.name.fullName()
+    name: faker.person.fullName()
   })
 
   beforeAll(async (): Promise<void> => {
@@ -62,12 +62,12 @@ describe('Peer Service', (): void => {
         assetId: asset.id,
         http: {
           outgoing: {
-            authToken: faker.datatype.string(32),
-            endpoint: faker.internet.url()
+            authToken: faker.string.sample(32),
+            endpoint: faker.internet.url({ appendSlash: false })
           }
         },
         staticIlpAddress: 'test.' + uuid(),
-        name: faker.name.fullName()
+        name: faker.person.fullName()
       }
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
@@ -127,7 +127,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Cannot create a peer with duplicate incoming tokens', async (): Promise<void> => {
-      const incomingToken = faker.datatype.string(32)
+      const incomingToken = faker.string.sample(32)
 
       const options = randomPeer()
       assert.ok(options.http.incoming)
@@ -138,7 +138,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Cannot create a peer with duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = faker.datatype.string(32)
+      const incomingToken = faker.string.sample(32)
 
       {
         const options = randomPeer()
@@ -216,7 +216,7 @@ describe('Peer Service', (): void => {
     })
 
     test('Returns error for duplicate incoming token', async (): Promise<void> => {
-      const incomingToken = faker.datatype.string(32)
+      const incomingToken = faker.string.sample(32)
       await createPeer(deps, {
         http: {
           incoming: {
@@ -243,7 +243,7 @@ describe('Peer Service', (): void => {
 
     test('Returns error for duplicate incoming tokens', async (): Promise<void> => {
       const peer = await createPeer(deps)
-      const incomingToken = faker.datatype.string(32)
+      const incomingToken = faker.string.sample(32)
       const updateOptions: UpdateOptions = {
         id: peer.id,
         http: {
@@ -324,7 +324,7 @@ describe('Peer Service', (): void => {
 
   describe('Get Peer by Incoming Token', (): void => {
     test('Can retrieve peer by incoming token', async (): Promise<void> => {
-      const incomingToken = faker.datatype.string(32)
+      const incomingToken = faker.string.sample(32)
       const peer = await createPeer(deps, {
         http: {
           incoming: {

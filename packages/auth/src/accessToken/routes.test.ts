@@ -48,7 +48,7 @@ describe('Access Token Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  const CLIENT = faker.internet.url()
+  const CLIENT = faker.internet.url({ appendSlash: false })
 
   const BASE_GRANT = {
     state: GrantState.Pending,

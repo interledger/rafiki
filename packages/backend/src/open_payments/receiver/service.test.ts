@@ -224,7 +224,7 @@ describe('Receiver Service', (): void => {
       `('remote ($description)', ({ existingGrant }): void => {
         let paymentPointer: OpenPaymentsPaymentPointer
         let incomingPayment: OpenPaymentsIncomingPayment
-        const authServer = faker.internet.url()
+        const authServer = faker.internet.url({ appendSlash: false })
         const INCOMING_PAYMENT_PATH = 'incoming-payments'
         const grantOptions = {
           accessType: AccessType.IncomingPayment,
