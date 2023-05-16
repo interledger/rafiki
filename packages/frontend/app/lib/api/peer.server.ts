@@ -149,8 +149,8 @@ export const deletePeer = async (args: MutationDeletePeerArgs) => {
     DeletePeerMutationVariables
   >({
     mutation: gql`
-      mutation DeletePeerMutation($id: String!) {
-        deletePeer(id: $id) {
+      mutation DeletePeerMutation($input: DeletePeerInput!) {
+        deletePeer(input: $input) {
           code
           success
           message

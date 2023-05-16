@@ -12,7 +12,8 @@ import {
 } from './asset'
 import {
   getPaymentPointerIncomingPayments,
-  createIncomingPayment
+  createIncomingPayment,
+  getIncomingPayment
 } from './incoming_payment'
 import { getQuote, createQuote, getPaymentPointerQuotes } from './quote'
 import {
@@ -47,6 +48,7 @@ export const resolvers: Resolvers = {
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
+    incomingPayment: getIncomingPayment,
     peer: getPeer,
     peers: getPeers,
     quote: getQuote

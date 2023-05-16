@@ -2,7 +2,8 @@ import {
   ResolversTypes,
   PaymentPointerResolvers,
   MutationResolvers,
-  IncomingPayment as SchemaIncomingPayment
+  IncomingPayment as SchemaIncomingPayment,
+  QueryResolvers
 } from '../generated/graphql'
 import { IncomingPayment } from '../../open_payments/payment/incoming/model'
 import {
@@ -14,6 +15,18 @@ import {
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
+
+export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
+  async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    const payment = await incomingPaymentService.get({
+      id: args.id
+    })
+    if (!payment) throw new Error('payment does not exist')
+    return paymentToGraphql(payment)
+  }
 
 export const getPaymentPointerIncomingPayments: PaymentPointerResolvers<ApolloContext>['incomingPayments'] =
   async (

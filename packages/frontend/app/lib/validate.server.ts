@@ -73,8 +73,8 @@ export const createAssetSchema = z
         invalid_type_error: 'Max packet amount is expected to be a number.'
       })
       .int()
-      .positive()
-      .max(255, { message: 'Scale should be between 0 and 255' })
+      .min(0, { message: 'Scale should be from 0 to 255' })
+      .max(255, { message: 'Scale should be from 0 to 255' })
   })
   .merge(updateAssetSchema)
   .omit({ id: true })

@@ -171,8 +171,10 @@ describe('Payment Pointer Key Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation revokePaymentPointerKey($id: String!) {
-              revokePaymentPointerKey(id: $id) {
+            mutation revokePaymentPointerKey(
+              $input: RevokePaymentPointerKeyInput!
+            ) {
+              revokePaymentPointerKey(input: $input) {
                 code
                 success
                 message
@@ -192,7 +194,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
             }
           `,
           variables: {
-            id: key.id
+            input: {
+              id: key.id
+            }
           }
         })
         .then((query): RevokePaymentPointerKeyMutationResponse => {
@@ -222,8 +226,10 @@ describe('Payment Pointer Key Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation revokePaymentPointerKey($id: String!) {
-              revokePaymentPointerKey(id: $id) {
+            mutation revokePaymentPointerKey(
+              $input: RevokePaymentPointerKeyInput!
+            ) {
+              revokePaymentPointerKey(input: $input) {
                 code
                 success
                 message
@@ -235,7 +241,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
             }
           `,
           variables: {
-            id: uuid()
+            input: {
+              id: uuid()
+            }
           }
         })
         .then((query): RevokePaymentPointerKeyMutationResponse => {

@@ -3,6 +3,7 @@ import type { LiquidityMutationResponse } from 'generated/graphql'
 import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
+import { v4 as uuid } from 'uuid'
 
 export enum EventType {
   IncomingPaymentCompleted = 'incoming_payment.completed',
@@ -83,8 +84,8 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation DepositLiquidity($eventId: String!) {
-          depositEventLiquidity(eventId: $eventId) {
+        mutation DepositEventLiquidity($input: DepositEventLiquidityInput!) {
+          depositEventLiquidity(input: $input) {
             code
             success
             message
@@ -93,7 +94,10 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
         }
       `,
       variables: {
-        eventId: wh.id
+        input: {
+          eventId: wh.id,
+          idempotencyKey: uuid()
+        }
       }
     })
     .then((query): LiquidityMutationResponse => {
@@ -130,8 +134,8 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation WithdrawLiquidity($eventId: String!) {
-          withdrawEventLiquidity(eventId: $eventId) {
+        mutation WithdrawEventLiquidity($input: WithdrawEventLiquidityInput!) {
+          withdrawEventLiquidity(input: $input) {
             code
             success
             message
@@ -140,7 +144,10 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
         }
       `,
       variables: {
-        eventId: wh.id
+        input: {
+          eventId: wh.id,
+          idempotencyKey: uuid()
+        }
       }
     })
     .then((query): LiquidityMutationResponse => {
