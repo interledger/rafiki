@@ -83,13 +83,13 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
   `(
     'Common PaymentPointerSubresource get/getPaymentPointerPage ($description)',
     ({ withClient }): void => {
-      const resourceClient = faker.internet.url()
+      const resourceClient = faker.internet.url({ appendSlash: false })
 
       describe.each`
-        client                  | match    | description
-        ${resourceClient}       | ${true}  | ${GetOption.Matching}
-        ${faker.internet.url()} | ${false} | ${GetOption.Conflicting}
-        ${undefined}            | ${true}  | ${GetOption.Unspecified}
+        client                                        | match    | description
+        ${resourceClient}                             | ${true}  | ${GetOption.Matching}
+        ${faker.internet.url({ appendSlash: false })} | ${false} | ${GetOption.Conflicting}
+        ${undefined}                                  | ${true}  | ${GetOption.Unspecified}
       `('$description client', ({ client, match, description }): void => {
         // Do not test matching client if model has no client
         if (withClient || description !== GetOption.Matching) {

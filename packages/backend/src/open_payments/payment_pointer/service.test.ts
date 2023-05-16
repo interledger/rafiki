@@ -61,9 +61,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
     })
 
     test.each`
-      publicName                | description
-      ${undefined}              | ${''}
-      ${faker.name.firstName()} | ${'with publicName'}
+      publicName                  | description
+      ${undefined}                | ${''}
+      ${faker.person.firstName()} | ${'with publicName'}
     `(
       'Payment pointer can be created or fetched $description',
       async ({ publicName }): Promise<void> => {

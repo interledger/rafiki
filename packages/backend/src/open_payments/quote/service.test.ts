@@ -236,7 +236,7 @@ describe('QuoteService', (): void => {
         let options: CreateQuoteOptions
         let incomingPayment: IncomingPayment
         let expected: ExpectedQuote
-        const client = faker.internet.url()
+        const client = faker.internet.url({ appendSlash: false })
 
         beforeEach(async (): Promise<void> => {
           incomingPayment = await createIncomingPayment(deps, {
