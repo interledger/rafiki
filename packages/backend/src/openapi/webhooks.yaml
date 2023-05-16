@@ -87,6 +87,7 @@ components:
         type:
           type: string
           enum:
+            - incoming_payment.created
             - incoming_payment.completed
             - incoming_payment.expired
         data:

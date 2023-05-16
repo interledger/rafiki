@@ -80,6 +80,7 @@ The endpoint accepts a `POST` request with
 
 | Value                              | Description                                                                 |
 | ---------------------------------- | --------------------------------------------------------------------------- |
+| `incoming_payment.created`         | Incoming payment has been created.                                          |
 | `incoming_payment.completed`       | Incoming payment is complete and doesn't accept any incoming funds anymore. |
 | `incoming_payment.expired`         | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
 | `outgoing_payment.created`         | Outgoing payment was created.                                               |
@@ -90,6 +91,12 @@ The endpoint accepts a `POST` request with
 The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
 
 ### Event Handlers
+
+#### `incoming_payment.created`
+
+An [Open Payments](./glossary#open-payments) Incoming Payment was created. This is for information purposes only and does not require an action.
+
+- Action: None
 
 #### `incoming_payment.completed`
 

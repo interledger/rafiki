@@ -141,6 +141,11 @@ async function createIncomingPayment(
     })
     .withGraphFetched('[asset, paymentPointer]')
 
+  await IncomingPaymentEvent.query(trx || deps.knex).insertAndFetch({
+    type: IncomingPaymentEventType.IncomingPaymentCreated,
+    data: incomingPayment.toData(BigInt(0))
+  })
+
   return await addReceivedAmount(deps, incomingPayment, BigInt(0))
 }
 
