@@ -33,7 +33,7 @@ describe('Auth Server Service', (): void => {
 
   describe('getOrCreate', (): void => {
     test('Auth server can be created or fetched', async (): Promise<void> => {
-      const url = faker.internet.url()
+      const url = faker.internet.url({ appendSlash: false })
       await expect(
         AuthServer.query(knex).findOne({ url })
       ).resolves.toBeUndefined()

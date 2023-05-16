@@ -316,7 +316,7 @@ describe('OutgoingPaymentService', (): void => {
           grant = {
             id: uuid()
           }
-          client = faker.internet.url()
+          client = faker.internet.url({ appendSlash: false })
           if (grantOption === GrantOption.Existing) {
             await OutgoingPaymentGrant.query(knex).insertAndFetch({
               id: grant.id

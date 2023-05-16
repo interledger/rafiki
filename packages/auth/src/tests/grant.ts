@@ -10,7 +10,7 @@ export async function createGrant(
   deps: IocContract<AppServices>
 ): Promise<Grant> {
   const grantService = await deps.use('grantService')
-  const CLIENT = faker.internet.url()
+  const CLIENT = faker.internet.url({ appendSlash: false })
   const BASE_GRANT_ACCESS = {
     actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
     identifier: `https://example.com/${uuid()}`

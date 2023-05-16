@@ -35,16 +35,16 @@ describe('Peer Resolvers', (): void => {
     assetId: asset.id,
     http: {
       incoming: {
-        authTokens: [faker.datatype.string(32)]
+        authTokens: [faker.string.sample(32)]
       },
       outgoing: {
-        authToken: faker.datatype.string(32),
-        endpoint: faker.internet.url()
+        authToken: faker.string.sample(32),
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
-    name: faker.name.fullName()
+    name: faker.person.fullName()
   })
 
   beforeAll(async (): Promise<void> => {
@@ -394,15 +394,15 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: '100',
         http: {
           incoming: {
-            authTokens: [faker.datatype.string(32)]
+            authTokens: [faker.string.sample(32)]
           },
           outgoing: {
-            authToken: faker.datatype.string(32),
-            endpoint: faker.internet.url()
+            authToken: faker.string.sample(32),
+            endpoint: faker.internet.url({ appendSlash: false })
           }
         },
         staticIlpAddress: 'g.rafiki.' + peer.id,
-        name: faker.name.fullName()
+        name: faker.person.fullName()
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient
@@ -568,8 +568,8 @@ describe('Peer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation DeletePeer($id: String!) {
-              deletePeer(id: $id) {
+            mutation DeletePeer($input: DeletePeerInput!) {
+              deletePeer(input: $input) {
                 code
                 success
                 message
@@ -577,7 +577,9 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            id: peer.id
+            input: {
+              id: peer.id
+            }
           }
         })
         .then((query): UpdatePeerMutationResponse => {
@@ -598,8 +600,8 @@ describe('Peer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation DeletePeer($id: String!) {
-              deletePeer(id: $id) {
+            mutation DeletePeer($input: DeletePeerInput!) {
+              deletePeer(input: $input) {
                 code
                 success
                 message
@@ -607,7 +609,9 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            id: uuid()
+            input: {
+              id: uuid()
+            }
           }
         })
         .then((query): UpdatePeerMutationResponse => {
@@ -633,8 +637,8 @@ describe('Peer Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation DeletePeer($id: String!) {
-              deletePeer(id: $id) {
+            mutation DeletePeer($input: DeletePeerInput!) {
+              deletePeer(input: $input) {
                 code
                 success
                 message
@@ -642,7 +646,9 @@ describe('Peer Resolvers', (): void => {
             }
           `,
           variables: {
-            id: peer.id
+            input: {
+              id: peer.id
+            }
           }
         })
         .then((query): UpdatePeerMutationResponse => {

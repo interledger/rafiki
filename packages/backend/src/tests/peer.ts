@@ -18,8 +18,8 @@ export async function createPeer(
     assetId: options.assetId || (await createAsset(deps)).id,
     http: {
       outgoing: options.http?.outgoing || {
-        authToken: faker.datatype.string(32),
-        endpoint: faker.internet.url()
+        authToken: faker.string.sample(32),
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     staticIlpAddress: options.staticIlpAddress || 'test.' + uuid()

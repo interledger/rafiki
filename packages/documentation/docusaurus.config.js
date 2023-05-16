@@ -68,13 +68,6 @@ const config = {
         ]
       },
       footer: {
-        logo: {
-          alt: 'Rafiki Dev Logo',
-          src: 'img/rafiki.png',
-          href: 'https://github.com/interledger/rafiki',
-          width: 50,
-          height: 56
-        },
         copyright: `Copyright © ${new Date().getFullYear()} Interledger Foundation. Built with Docusaurus.`
       },
       prism: {
