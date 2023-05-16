@@ -239,8 +239,8 @@ importers:
         specifier: ^3.7.14
         version: 3.7.14(graphql@16.6.0)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^8.0.1
+        version: 8.0.1
       '@graphql-codegen/cli':
         specifier: 3.3.1
         version: 3.3.1(@babel/core@7.20.12)(@types/node@18.11.9)(graphql@16.6.0)
@@ -302,8 +302,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0(@apollo/server@4.7.1)(koa@2.14.2)
       '@faker-js/faker':
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^8.0.1
+        version: 8.0.1
       '@graphql-tools/graphql-file-loader':
         specifier: ^7.5.17
         version: 7.5.17(graphql@16.6.0)
@@ -2688,8 +2688,8 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@faker-js/faker@8.0.0:
-    resolution: {integrity: sha512-XDR8sApuf78GHx8mLXl3KL/q7eB52A963UGejVbdbj3OZtfGlNwp0J78b7apVzqRi0GF8l9g3eSkkaL2UmU9Aw==}
+  /@faker-js/faker@8.0.1:
+    resolution: {integrity: sha512-kbh5MenpTN9U0B4QcOI1NoTPlZHniSYQ3BHbhAnPjJGAmmFqxoxTE4sGdpy7ZOO9038DPGCuhXyMkjOr05uVwA==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
 
   /@gar/promisify@1.1.3:
