@@ -44,7 +44,7 @@ describe('Access Service', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: generateNonce(),
-    client: faker.internet.url(),
+    client: faker.internet.url({ appendSlash: false }),
     interactId: v4(),
     interactRef: generateNonce(),
     interactNonce: generateNonce()

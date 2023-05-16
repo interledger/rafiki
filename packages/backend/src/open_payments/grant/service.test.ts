@@ -48,7 +48,7 @@ describe('Grant Service', (): void => {
     `('$description', ({ existingAuthServer }): void => {
       let authServerId: string | undefined
       let grant: Grant | undefined
-      const authServerUrl = faker.internet.url()
+      const authServerUrl = faker.internet.url({ appendSlash: false })
 
       beforeEach(async (): Promise<void> => {
         if (existingAuthServer) {
@@ -87,7 +87,9 @@ describe('Grant Service', (): void => {
         async ({ expiresIn }): Promise<void> => {
           const options: CreateOptions = {
             accessToken: uuid(),
-            managementUrl: `${faker.internet.url()}/${uuid()}`,
+            managementUrl: `${faker.internet.url({
+              appendSlash: false
+            })}/${uuid()}`,
             authServer: authServerUrl,
             accessType: AccessType.IncomingPayment,
             accessActions: [AccessAction.ReadAll]
@@ -112,8 +114,10 @@ describe('Grant Service', (): void => {
     test('cannot fetch non-existing grant', async (): Promise<void> => {
       const options: CreateOptions = {
         accessToken: uuid(),
-        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
-        authServer: faker.internet.url(),
+        managementUrl: `${faker.internet.url({
+          appendSlash: false
+        })}/gt5hy6ju7ki8`,
+        authServer: faker.internet.url({ appendSlash: false }),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll]
       }
@@ -121,7 +125,7 @@ describe('Grant Service', (): void => {
       await expect(
         grantService.get({
           ...options,
-          authServer: faker.internet.url()
+          authServer: faker.internet.url({ appendSlash: false })
         })
       ).resolves.toBeUndefined()
       await expect(
@@ -142,7 +146,7 @@ describe('Grant Service', (): void => {
       const options: CreateOptions = {
         accessToken: uuid(),
         managementUrl: '',
-        authServer: faker.internet.url(),
+        authServer: faker.internet.url({ appendSlash: false }),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll]
       }
@@ -160,11 +164,13 @@ describe('Grant Service', (): void => {
     let grant: Grant
     beforeEach(async (): Promise<void> => {
       const options = {
-        authServer: faker.internet.url(),
+        authServer: faker.internet.url({ appendSlash: false }),
         accessType: AccessType.IncomingPayment,
         accessActions: [AccessAction.ReadAll],
         accessToken: uuid(),
-        managementUrl: `${faker.internet.url()}/gt5hy6ju7ki8`,
+        managementUrl: `${faker.internet.url({
+          appendSlash: false
+        })}/gt5hy6ju7ki8`,
         expiresIn
       }
       grant = await grantService.create(options)
@@ -178,7 +184,9 @@ describe('Grant Service', (): void => {
       async ({ expiresIn }): Promise<void> => {
         const updateOptions = {
           accessToken: uuid(),
-          managementUrl: `${faker.internet.url()}/${uuid()}`,
+          managementUrl: `${faker.internet.url({
+            appendSlash: false
+          })}/${uuid()}`,
           expiresIn
         }
         const updatedGrant = await grantService.update(grant, updateOptions)

@@ -28,7 +28,7 @@ describe('Grant Service', (): void => {
     grantService = await deps.use('grantService')
   })
 
-  const CLIENT = faker.internet.url()
+  const CLIENT = faker.internet.url({ appendSlash: false })
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert({

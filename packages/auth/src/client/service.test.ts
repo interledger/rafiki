@@ -31,13 +31,15 @@ describe('Client Service', (): void => {
 
   describe('get', (): void => {
     test('can retrieve client display info', async (): Promise<void> => {
-      const scope = nock(TEST_CLIENT_DISPLAY.uri).get('/').reply(200, {
-        id: TEST_CLIENT_DISPLAY.uri,
-        publicName: TEST_CLIENT_DISPLAY.name,
-        assetCode: 'USD',
-        assetScale: 9,
-        authServer: faker.internet.url()
-      })
+      const scope = nock(TEST_CLIENT_DISPLAY.uri)
+        .get('/')
+        .reply(200, {
+          id: TEST_CLIENT_DISPLAY.uri,
+          publicName: TEST_CLIENT_DISPLAY.name,
+          assetCode: 'USD',
+          assetScale: 9,
+          authServer: faker.internet.url({ appendSlash: false })
+        })
 
       await expect(clientService.get(TEST_CLIENT_DISPLAY.uri)).resolves.toEqual(
         TEST_CLIENT_DISPLAY
@@ -72,12 +74,14 @@ describe('Client Service', (): void => {
     })
 
     test('cannot retrieve display if missing public name', async (): Promise<void> => {
-      const scope = nock(TEST_CLIENT_DISPLAY.uri).get('/').reply(200, {
-        id: TEST_CLIENT_DISPLAY.uri,
-        assetCode: 'USD',
-        assetScale: 9,
-        authServer: faker.internet.url()
-      })
+      const scope = nock(TEST_CLIENT_DISPLAY.uri)
+        .get('/')
+        .reply(200, {
+          id: TEST_CLIENT_DISPLAY.uri,
+          assetCode: 'USD',
+          assetScale: 9,
+          authServer: faker.internet.url({ appendSlash: false })
+        })
 
       await expect(
         clientService.get(TEST_CLIENT_DISPLAY.uri)
@@ -99,7 +103,7 @@ describe('Client Service', (): void => {
     test.each([0, 1, 2])(
       'can retrieve key from client jwks (%i)',
       async (i: number): Promise<void> => {
-        const client = faker.internet.url()
+        const client = faker.internet.url({ appendSlash: false })
         const key = keys[i]
         const scope = nock(client).get('/jwks.json').reply(200, {
           keys
@@ -117,7 +121,7 @@ describe('Client Service', (): void => {
     )
 
     test('cannot retrieve unknown key id', async (): Promise<void> => {
-      const client = faker.internet.url()
+      const client = faker.internet.url({ appendSlash: false })
       const scope = nock(client).get('/jwks.json').reply(200, {
         keys
       })
@@ -135,7 +139,7 @@ describe('Client Service', (): void => {
     test.each([400, 500])(
       'cannot retrieve key from unsuccessful request',
       async (status: number): Promise<void> => {
-        const client = faker.internet.url()
+        const client = faker.internet.url({ appendSlash: false })
         const scope = nock(client).get('/jwks.json').reply(status)
 
         await expect(
@@ -150,7 +154,7 @@ describe('Client Service', (): void => {
     )
 
     test('cannot retrieve key from invalid client jwks', async (): Promise<void> => {
-      const client = faker.internet.url()
+      const client = faker.internet.url({ appendSlash: false })
       const scope = nock(client).get('/jwks.json').reply(200, {
         'bad news': 'no keys here'
       })
