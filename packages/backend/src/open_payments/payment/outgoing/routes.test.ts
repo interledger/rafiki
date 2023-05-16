@@ -155,9 +155,9 @@ describe('Outgoing Payment Routes', (): void => {
       })
 
     describe.each`
-      grant             | client                  | description
-      ${{ id: uuid() }} | ${faker.internet.url()} | ${'grant'}
-      ${undefined}      | ${undefined}            | ${'no grant'}
+      grant             | client                                        | description
+      ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
+      ${undefined}      | ${undefined}                                  | ${'no grant'}
     `('create ($description)', ({ grant, client }): void => {
       test.each`
         description  | externalRef  | desc

@@ -31,7 +31,7 @@ import { ContinueContext, CreateContext } from '../grant/routes'
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  const CLIENT = faker.internet.url()
+  const CLIENT = faker.internet.url({ appendSlash: false })
   let testKeys: TestKeys
   let testClientKey: JWK
 

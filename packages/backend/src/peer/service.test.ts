@@ -30,7 +30,7 @@ describe('Peer Service', (): void => {
       },
       outgoing: {
         authToken: faker.string.sample(32),
-        endpoint: faker.internet.url()
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     maxPacketAmount: BigInt(100),
@@ -63,7 +63,7 @@ describe('Peer Service', (): void => {
         http: {
           outgoing: {
             authToken: faker.string.sample(32),
-            endpoint: faker.internet.url()
+            endpoint: faker.internet.url({ appendSlash: false })
           }
         },
         staticIlpAddress: 'test.' + uuid(),

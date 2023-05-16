@@ -19,7 +19,7 @@ export async function createPeer(
     http: {
       outgoing: options.http?.outgoing || {
         authToken: faker.string.sample(32),
-        endpoint: faker.internet.url()
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     staticIlpAddress: options.staticIlpAddress || 'test.' + uuid()

@@ -38,7 +38,7 @@ export const TEST_CLIENT_DISPLAY = {
   uri: 'https://example.com'
 }
 
-const CLIENT = faker.internet.url()
+const CLIENT = faker.internet.url({ appendSlash: false })
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,

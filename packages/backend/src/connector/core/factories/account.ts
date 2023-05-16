@@ -55,7 +55,7 @@ export const OutgoingPeerFactory = Factory.define<MockOutgoingAccount>(
     http: () => ({
       outgoing: {
         authToken: faker.string.sample(32),
-        endpoint: faker.internet.url()
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     })
   })

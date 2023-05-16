@@ -157,9 +157,9 @@ describe('Quote Routes', (): void => {
     })
 
     describe.each`
-      client                  | description
-      ${faker.internet.url()} | ${'client'}
-      ${undefined}            | ${'no client'}
+      client                                        | description
+      ${faker.internet.url({ appendSlash: false })} | ${'client'}
+      ${undefined}                                  | ${'no client'}
     `('returns the quote on success ($description)', ({ client }): void => {
       test.each`
         sendAmount   | receiveAmount | description

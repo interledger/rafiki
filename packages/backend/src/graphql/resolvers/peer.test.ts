@@ -39,7 +39,7 @@ describe('Peer Resolvers', (): void => {
       },
       outgoing: {
         authToken: faker.string.sample(32),
-        endpoint: faker.internet.url()
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     maxPacketAmount: BigInt(100),
@@ -398,7 +398,7 @@ describe('Peer Resolvers', (): void => {
           },
           outgoing: {
             authToken: faker.string.sample(32),
-            endpoint: faker.internet.url()
+            endpoint: faker.internet.url({ appendSlash: false })
           }
         },
         staticIlpAddress: 'g.rafiki.' + peer.id,
