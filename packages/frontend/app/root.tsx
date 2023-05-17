@@ -16,7 +16,7 @@ import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
 import { commitSession, getSession, type Message } from './lib/message.server'
-import tailwind from './styles/main.css'
+import tailwind from './styles/tailwind.css'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
