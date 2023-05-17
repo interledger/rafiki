@@ -12,10 +12,15 @@ import { Pagination } from '../shared/baseModel'
 // Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
 
+type GetPageOptions = {
+  pagination?: Pagination,
+  type?: string
+}
+
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
   processNext(): Promise<string | undefined>
-  getPage(pagination?: Pagination): Promise<WebhookEvent[]>
+  getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -32,7 +37,7 @@ export async function createWebhookService(
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
     processNext: () => processNextWebhookEvent(deps),
-    getPage: (pagination?) => getWebhookEventsPage(deps, pagination)
+    getPage: (options) => getWebhookEventsPage(deps, options)
   }
 }
 
@@ -166,7 +171,14 @@ export function generateWebhookSignature(
 
 async function getWebhookEventsPage(
   deps: ServiceDependencies,
-  pagination?: Pagination
+  options?: GetPageOptions,
 ): Promise<WebhookEvent[]> {
-  return await WebhookEvent.query(deps.knex).getPage(pagination)
+  const { type, pagination } = options ?? {} 
+  const query = WebhookEvent.query(deps.knex)
+
+  if (type) {
+    query.where({type: type})
+  }
+
+  return await query.getPage(pagination)
 }
