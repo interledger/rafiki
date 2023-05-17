@@ -48,7 +48,7 @@ export async function loader() {
       hasNextPage = false
     }
   }
-  assets.push({ label: 'test', value: 'test' })
+
   return json({ assets })
 }
 
