@@ -46,5 +46,5 @@ Now you can access the application on [http://localhost:3005](http://localhost:3
     - `api`: GraphQL queries and mutations
   - `routes`: outer layer of the application
   - `shared`: utilility functions or types
-  - `styles`: CSS files 
+  - `styles`: CSS files
 - `public`: static files and assets that are served to the browser
