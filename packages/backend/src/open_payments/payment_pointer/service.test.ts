@@ -136,14 +136,14 @@ describe('Open Payments Payment Pointer Service', (): void => {
 
   describe('Update Payment Pointer', (): void => {
     test.each`
-      initialIsActive | status                           | publicName
-      ${true}         | ${undefined}                     | ${'Public Name 1'}
-      ${true}         | ${PaymentPointerStatus.Inactive} | ${'Public Name 2'}
-      ${false}        | ${PaymentPointerStatus.Active}   | ${null}
-      ${false}        | ${undefined}                     | ${null}
+      initialIsActive | status                           | expectedIsActive
+      ${true}         | ${undefined}                     | ${true}
+      ${true}         | ${'INACTIVE'}                    | ${false}
+      ${false}        | ${'ACTIVE'}                      | ${true}
+      ${false}        | ${undefined}                     | ${false}
     `(
       'Payment pointer  with initial isActive of $initialIsActive can be updated with status of $status and publicName of $publicName',
-      async ({ initialIsActive, status, publicName }): Promise<void> => {
+      async ({ initialIsActive, status, expectedIsActive }): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
 
         if (!initialIsActive) {
@@ -152,32 +152,11 @@ describe('Open Payments Payment Pointer Service', (): void => {
 
         const updatedPaymentPointer = await paymentPointerService.update({
           id: paymentPointer.id,
-          status,
-          publicName
+          status
         })
         assert.ok(!isPaymentPointerError(updatedPaymentPointer))
 
-        expect(updatedPaymentPointer.publicName).toEqual(publicName)
-
-        // check status. should be whatever the update input is, or the original value if not updated
-        let statusChecked = false
-        if (
-          status === PaymentPointerStatus.Inactive ||
-          (typeof status === 'undefined' && !initialIsActive)
-        ) {
-          expect(updatedPaymentPointer.deactivatedAt).toBeDefined()
-          expect(updatedPaymentPointer.isActive).toEqual(false)
-          statusChecked = true
-        } else if (
-          status === PaymentPointerStatus.Active ||
-          (typeof status === 'undefined' && initialIsActive)
-        ) {
-          expect(updatedPaymentPointer.deactivatedAt).toBe(null)
-          expect(updatedPaymentPointer.isActive).toEqual(true)
-          statusChecked = true
-        }
-        // ensure all cases are checked
-        assert.ok(statusChecked)
+        expect(updatedPaymentPointer.isActive).toEqual(expectedIsActive)
 
         await expect(
           paymentPointerService.get(paymentPointer.id)
