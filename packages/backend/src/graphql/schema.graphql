@@ -42,7 +42,7 @@ type Query {
   incomingPayment(id: String!): IncomingPayment
 
   "Fetch a page of webhook events"
-  webhookEvents(input: GetWebhookEventsInput): WebhookEventsConnection
+  webhookEvents(input: GetWebhookEventsInput!): WebhookEventsConnection!
 }
 
 type Mutation {
@@ -780,6 +780,8 @@ type WebhookEvent implements Model {
   type: String!
   "Stringified JSON data"
   data: String!
+  "Date-time of creation"
+  createdAt: String!
 }
 
 type WebhookEventsConnection {
@@ -794,10 +796,10 @@ type WebhookEventsEdge {
 
 input GetWebhookEventsInput {
   type: String
-  pagination: PaginationOpts
+  pagination: PaginationInput
 }
 
-type PaginationOpts {
+input PaginationInput {
   "Paginating forwards: the cursor before the the requested page."
   after: String
   "Paginating backwards: the cursor after the the requested page."
