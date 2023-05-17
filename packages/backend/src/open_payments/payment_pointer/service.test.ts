@@ -136,11 +136,11 @@ describe('Open Payments Payment Pointer Service', (): void => {
 
   describe('Update Payment Pointer', (): void => {
     test.each`
-      initialIsActive | status                           | expectedIsActive
-      ${true}         | ${undefined}                     | ${true}
-      ${true}         | ${'INACTIVE'}                    | ${false}
-      ${false}        | ${'ACTIVE'}                      | ${true}
-      ${false}        | ${undefined}                     | ${false}
+      initialIsActive | status        | expectedIsActive
+      ${true}         | ${undefined}  | ${true}
+      ${true}         | ${'INACTIVE'} | ${false}
+      ${false}        | ${'ACTIVE'}   | ${true}
+      ${false}        | ${undefined}  | ${false}
     `(
       'Payment pointer  with initial isActive of $initialIsActive can be updated with status of $status and publicName of $publicName',
       async ({ initialIsActive, status, expectedIsActive }): Promise<void> => {
