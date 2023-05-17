@@ -15,18 +15,14 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-
   i18n: {
     defaultLocale: 'en',
     locales: ['en']
   },
-
   markdown: {
     mermaid: true
   },
-
   themes: ['@docusaurus/theme-mermaid'],
-
   presets: [
     [
       'classic',
@@ -44,7 +40,6 @@ const config = {
       })
     ]
   ],
-
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -81,7 +76,6 @@ const config = {
         darkTheme: darkCodeTheme
       }
     }),
-
   plugins: [
     [
       'docusaurus-graphql-plugin',
