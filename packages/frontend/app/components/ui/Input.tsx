@@ -14,7 +14,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const id = props.id ?? useId()
 
     return (
-      <div >
+      <div>
         {label && (
           <Label htmlFor={id} required={props.required ?? false}>
             {label}

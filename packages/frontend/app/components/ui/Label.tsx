@@ -1,8 +1,4 @@
-import {
-  type ComponentProps,
-  forwardRef,
-  type ReactNode
-} from 'react'
+import { type ComponentProps, forwardRef, type ReactNode } from 'react'
 
 type LabelProps = Omit<ComponentProps<'label'>, 'children'> & {
   children: ReactNode

@@ -48,7 +48,7 @@ export async function loader() {
       hasNextPage = false
     }
   }
-
+  assets.push({ label: 'test', value: 'test' })
   return json({ assets })
 }
 
@@ -144,6 +144,7 @@ export default function CreatePeerPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Select
                     options={assets}
+                    error={response?.errors.fieldErrors.asset}
                     name='asset'
                     placeholder='Select asset...'
                     label='Asset'

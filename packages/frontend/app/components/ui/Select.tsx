@@ -3,6 +3,7 @@ import { Combobox, Transition } from '@headlessui/react'
 import { Input } from './Input'
 import { Check, Chevron } from '../icons'
 import { Label } from './Label'
+import { FieldError } from './FieldError'
 
 export type SelectOption = {
   label: string
@@ -16,6 +17,7 @@ type SelectProps = {
   label?: string
   disabled?: boolean
   required?: boolean
+  error?: string | string[]
 }
 
 export const Select = ({
@@ -23,6 +25,7 @@ export const Select = ({
   name,
   placeholder,
   label,
+  error,
   disabled = false,
   required = false
 }: SelectProps) => {
@@ -45,11 +48,13 @@ export const Select = ({
 
   return (
     <Combobox
-      name={name}
       value={internalValue}
       onChange={setInternalValue}
       disabled={disabled}
     >
+      {name ? (
+        <input type='hidden' name={name} value={internalValue.value} />
+      ) : null}
       <div className='relative'>
         {label ? (
           <Combobox.Label as={Label} htmlFor={id} required={required}>
@@ -75,6 +80,7 @@ export const Select = ({
             )}
           </Combobox.Button>
         </div>
+        {error ? <FieldError error={error} /> : null}
         <Transition
           as={Fragment}
           leave='transition ease-in duration-100'
