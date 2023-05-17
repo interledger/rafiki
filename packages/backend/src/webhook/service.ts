@@ -5,6 +5,7 @@ import { canonicalize } from 'json-canonicalize'
 import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
+import { Pagination } from '../shared/baseModel'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -14,6 +15,7 @@ export const RETRY_BACKOFF_MS = 10_000
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
   processNext(): Promise<string | undefined>
+  getPage(pagination?: Pagination): Promise<WebhookEvent[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -29,7 +31,8 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
-    processNext: () => processNextWebhookEvent(deps)
+    processNext: () => processNextWebhookEvent(deps),
+    getPage: (pagination?) => getWebhookEventsPage(deps, pagination)
   }
 }
 
@@ -159,4 +162,11 @@ export function generateWebhookSignature(
   const digest = hmac.digest('hex')
 
   return `t=${timestamp}, v${version}=${digest}`
+}
+
+async function getWebhookEventsPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination
+): Promise<WebhookEvent[]> {
+  return await WebhookEvent.query(deps.knex).getPage(pagination)
 }
