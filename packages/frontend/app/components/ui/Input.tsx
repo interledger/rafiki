@@ -11,10 +11,10 @@ type InputProps = Omit<ComponentPropsWithoutRef<'input'>, 'className'> & {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, type, error, ...props }, ref) => {
-    const id = useId()
+    const id = props.id ?? useId()
 
     return (
-      <div>
+      <div >
         {label && (
           <Label htmlFor={id} required={props.required ?? false}>
             {label}
