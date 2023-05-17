@@ -29,7 +29,7 @@ export interface CreateOptions extends Options {
 
 export interface UpdateOptions extends Options {
   id: string
-  status?: PaymentPointerStatus
+  status?: 'ACTIVE' | 'INACTIVE'
 }
 
 type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
