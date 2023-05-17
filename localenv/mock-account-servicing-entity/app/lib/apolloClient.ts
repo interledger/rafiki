@@ -6,7 +6,7 @@ import {
   InMemoryCache
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
-import { CONFIG } from './parse_config'
+import { CONFIG } from './parse_config.server'
 import { onError } from '@apollo/client/link/error'
 
 const httpLink = createHttpLink({
