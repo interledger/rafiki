@@ -141,7 +141,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${false}        | ${'ACTIVE'}   | ${true}
       ${false}        | ${undefined}  | ${false}
     `(
-      'Payment pointer  with initial isActive of $initialIsActive can be updated with status of $status and publicName of $publicName',
+      'Payment pointer with initial isActive of $initialIsActive can be updated with $status status ',
       async ({ initialIsActive, status, expectedIsActive }): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
 
