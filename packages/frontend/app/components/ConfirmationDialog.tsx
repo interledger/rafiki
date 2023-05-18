@@ -18,7 +18,7 @@ type ConfirmationDialogProps = {
   keyword: string
   message?: string
   confirmButtonText: string
-  onConfirm?: () => void
+  onConfirm: () => void
   onCancel?: () => void
 }
 
@@ -33,7 +33,7 @@ export const ConfirmationDialog = forwardRef<
     const [isOpen, setIsOpen] = useState(false)
     const [confirmationPrompt, setConfirmationPrompt] = useState('')
 
-    const cancelButtonRef = useRef<HTMLButtonElement>(null)
+    const inputRef = useRef<HTMLInputElement>(null)
 
     const display = () => {
       setIsOpen(true)
@@ -65,7 +65,7 @@ export const ConfirmationDialog = forwardRef<
           <Dialog
             as='div'
             className='relative z-10'
-            initialFocus={cancelButtonRef}
+            initialFocus={inputRef}
             onClose={() => cancelHandler()}
           >
             <Transition.Child
@@ -129,6 +129,7 @@ export const ConfirmationDialog = forwardRef<
                           </p>
                           <Input
                             value={confirmationPrompt}
+                            ref={inputRef}
                             onChange={(e) =>
                               setConfirmationPrompt(e.currentTarget.value)
                             }
