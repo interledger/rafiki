@@ -5324,13 +5324,9 @@
                 "name": "input",
                 "description": null,
                 "type": {
-                  "kind": "NON_NULL",
-                  "name": null,
-                  "ofType": {
-                    "kind": "INPUT_OBJECT",
-                    "name": "GetWebhookEventsInput",
-                    "ofType": null
-                  }
+                  "kind": "INPUT_OBJECT",
+                  "name": "GetWebhookEventsInput",
+                  "ofType": null
                 },
                 "defaultValue": null,
                 "isDeprecated": false,

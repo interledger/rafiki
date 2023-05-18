@@ -861,7 +861,7 @@ export type QueryQuoteArgs = {
 
 
 export type QueryWebhookEventsArgs = {
-  input: GetWebhookEventsInput;
+  input?: InputMaybe<GetWebhookEventsInput>;
 };
 
 export type Quote = {
@@ -1577,7 +1577,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
-  webhookEvents?: Resolver<ResolversTypes['WebhookEventsConnection'], ParentType, ContextType, RequireFields<QueryWebhookEventsArgs, 'input'>>;
+  webhookEvents?: Resolver<ResolversTypes['WebhookEventsConnection'], ParentType, ContextType, Partial<QueryWebhookEventsArgs>>;
 };
 
 export type QuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quote'] = ResolversParentTypes['Quote']> = {

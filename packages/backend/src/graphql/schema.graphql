@@ -42,7 +42,7 @@ type Query {
   incomingPayment(id: String!): IncomingPayment
 
   "Fetch a page of webhook events"
-  webhookEvents(input: GetWebhookEventsInput!): WebhookEventsConnection!
+  webhookEvents(input: GetWebhookEventsInput): WebhookEventsConnection!
 }
 
 type Mutation {

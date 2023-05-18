@@ -15,8 +15,8 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
     ctx
   ): Promise<ResolversTypes['WebhookEventsConnection']> => {
     const getPageOptions = {
-      type: args.input.type,
-      pagination: args.input.pagination
+      type: args.input?.type,
+      pagination: args.input?.pagination
     }
     const webhookService = await ctx.container.use('webhookService')
     const webhookEvents = await webhookService.getPage(getPageOptions)
