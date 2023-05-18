@@ -16,7 +16,6 @@ import {
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
-import { PaymentPointerStatus } from '../../graphql/generated/graphql'
 
 interface Options {
   publicName?: string
@@ -126,8 +125,7 @@ async function updatePaymentPointer(
   try {
     const update: UpdateInput = { publicName }
     if (status) {
-      update.deactivatedAt =
-        status === PaymentPointerStatus.Inactive ? new Date() : null
+      update.deactivatedAt = status === 'INACTIVE' ? new Date() : null
     }
 
     return await PaymentPointer.query(deps.knex)

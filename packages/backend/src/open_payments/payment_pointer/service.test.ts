@@ -23,7 +23,6 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
-import { PaymentPointerStatus } from '../../graphql/generated/graphql'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -191,7 +190,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       test('status', async (): Promise<void> => {
         const updatedPaymentPointer = await paymentPointerService.update({
           id: paymentPointer.id,
-          status: PaymentPointerStatus.Inactive
+          status: 'INACTIVE'
         })
         assert.ok(!isPaymentPointerError(updatedPaymentPointer))
         expect(updatedPaymentPointer.deactivatedAt).toBeDefined()
@@ -207,7 +206,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       await expect(
         paymentPointerService.update({
           id: uuid(),
-          status: PaymentPointerStatus.Inactive,
+          status: 'INACTIVE',
           publicName: 'Some Public Name'
         })
       ).resolves.toEqual(PaymentPointerError.UnknownPaymentPointer)
