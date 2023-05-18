@@ -15,7 +15,7 @@ import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
-import { commitSession, getSession, type Message } from './lib/message.server'
+import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/main.css'
 
 export const meta: MetaFunction = () => ({
@@ -25,7 +25,7 @@ export const meta: MetaFunction = () => ({
 })
 
 export const loader = async ({ request }: LoaderArgs) => {
-  const session = await getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
   const message = session.get('message') as Message
 
   if (!message) {
@@ -35,7 +35,11 @@ export const loader = async ({ request }: LoaderArgs) => {
   return json(
     { message },
     {
-      headers: { 'Set-Cookie': await commitSession(session) }
+      headers: {
+        'Set-Cookie': await messageStorage.destroySession(session, {
+          maxAge: -1
+        })
+      }
     }
   )
 }
