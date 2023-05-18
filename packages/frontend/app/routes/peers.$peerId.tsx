@@ -97,7 +97,6 @@ export default function ViewPeerPage() {
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>Created at {peer.createdAt}</p>
             <ErrorPanel errors={response?.errors.general.message} />
-            <button onClick={() => dialogRef.current?.display()}>a</button>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace>
