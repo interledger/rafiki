@@ -3,7 +3,7 @@ import { forwardRef } from 'react'
 import { ButtonOrLink, type ButtonOrLinkProps } from './ButtonOrLink'
 
 const buttonStyles = cva(
-  'inline-flex items-center justify-center focus:outline-none disabled:cursor-not-allowed disabled:pointer-events-none',
+  'inline-flex items-center justify-center focus:outline-none disabled:cursor-not-allowed',
   {
     variants: {
       intent: {

@@ -8,10 +8,16 @@ import {
   Form,
   useActionData,
   useLoaderData,
-  useNavigation
+  useNavigation,
+  useSubmit
 } from '@remix-run/react'
+import { type FormEvent, useRef, useState } from 'react'
 import { z } from 'zod'
 import { DangerZone, PageHeader } from '~/components'
+import {
+  ConfirmationDialog,
+  type ConfirmationDialogRef
+} from '~/components/ConfirmationDialog'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
@@ -47,9 +53,24 @@ export async function loader({ params }: LoaderArgs) {
 export default function ViewPeerPage() {
   const { peer } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
+  const [formData, setFormData] = useState<FormData>()
+  const submit = useSubmit()
   const { state } = useNavigation()
+  const dialogRef = useRef<ConfirmationDialogRef>(null)
 
   const isSubmitting = state === 'submitting'
+
+  const submitHandler = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setFormData(new FormData(event.currentTarget))
+    dialogRef.current?.display()
+  }
+
+  const onConfirm = () => {
+    if (formData) {
+      submit(formData, { method: 'post' })
+    }
+  }
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -76,6 +97,7 @@ export default function ViewPeerPage() {
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>Created at {peer.createdAt}</p>
             <ErrorPanel errors={response?.errors.general.message} />
+            <button onClick={() => dialogRef.current?.display()}>a</button>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace>
@@ -217,20 +239,22 @@ export default function ViewPeerPage() {
         {/* Peer Asset Info - END */}
         {/* DELETE PEER - Danger zone */}
         <DangerZone title='Delete Peer'>
-          <Form method='post'>
+          <Form method='post' onSubmit={submitHandler}>
             <Input type='hidden' name='id' value={peer.id} />
-            <Button
-              type='submit'
-              intent='danger'
-              name='intent'
-              value='delete'
-              aria-label='delete peer'
-            >
+            <Input type='hidden' name='intent' value='delete' />
+            <Button type='submit' intent='danger' aria-label='delete peer'>
               Delete peer
             </Button>
           </Form>
         </DangerZone>
       </div>
+      <ConfirmationDialog
+        ref={dialogRef}
+        onConfirm={onConfirm}
+        title='Delete Peer'
+        keyword='delete peer'
+        confirmButtonText='Delete this peer'
+      />
     </div>
   )
 }
@@ -363,7 +387,6 @@ export async function action({ request }: ActionArgs) {
       return redirect('/peers', {
         headers: { 'Set-Cookie': await commitSession(session) }
       })
-      break
     }
     default:
       throw json(null, { status: 400, statusText: 'Invalid intent.' })
