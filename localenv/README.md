@@ -91,7 +91,7 @@ pnpm localenv:compose up
 pnpm localenv:compose down --volumes
 ```
 
-If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:` commands:
+If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
 
 ```
 pnpm localenv:compose:psql up
