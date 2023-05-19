@@ -100,7 +100,7 @@ pnpm localenv:compose:psql down --volumes
 
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
 its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
-The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `xxx-backend` and `xxx-auth`, as well
+The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
 as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
 both include the `local-signature-utils` signature generation app for Postman.
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
