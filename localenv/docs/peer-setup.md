@@ -4,7 +4,7 @@ This document assumes that you are running both the primary and secondary instan
 of rafiki using the docker compose files in this directory. It describes the process for
 setting up peering between them. If at any time your Rafiki instances become misconfigured,
 the only way to get back to a working state covered in this document is to destroy the
-docker compose stacks and their associated database volumes (e.g. 
+docker compose stacks and their associated database volumes (e.g.
 with `pnpm localenv:compose down --volumes`).
 
 ### Load the graphql playgrounds in a browser
