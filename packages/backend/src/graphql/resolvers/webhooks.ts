@@ -19,9 +19,11 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
       pagination: args.input?.pagination
     }
     const webhookService = await ctx.container.use('webhookService')
-    const webhookEvents = await webhookService.getPage(getPageOptions)
+    const getPageFn = () => webhookService.getPage(getPageOptions)
+    const webhookEvents = await getPageFn()
+    // TODO: test this... probably wrong because getPageInfo cant account for filters
     const pageInfo = await getPageInfo(
-      (pagination: Pagination) => webhookService.getPage(getPageOptions),
+      (pagination: Pagination) => getPageFn(),
       webhookEvents
     )
     return {

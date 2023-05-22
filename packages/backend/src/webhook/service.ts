@@ -177,7 +177,7 @@ async function getWebhookEventsPage(
   const query = WebhookEvent.query(deps.knex)
 
   if (type) {
-    query.where({type: type})
+    query.where({type})
   }
 
   return await query.getPage(pagination)
