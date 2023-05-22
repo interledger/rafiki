@@ -6,13 +6,8 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { PageHeader } from '~/components/PageHeader'
-import {
-  Button,
-  ErrorPanel,
-  Input,
-  Select,
-  type SelectOption
-} from '~/components/ui'
+import { Button, ErrorPanel, Input, Select } from '~/components/ui'
+import type { ListAssetsQuery } from '~/generated/graphql'
 import { listAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
@@ -20,7 +15,7 @@ import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
 export async function loader() {
-  let assets: SelectOption[] = []
+  let assets: ListAssetsQuery['assets']['edges'] = []
   let hasNextPage = true
   let after: string | undefined
 
@@ -28,13 +23,7 @@ export async function loader() {
     const response = await listAssets({ first: 100, after })
 
     if (response.edges) {
-      assets = [
-        ...assets,
-        ...response.edges.map((edge) => ({
-          label: `${edge.node.code} (Scale: ${edge.node.scale})`,
-          value: edge.node.id
-        }))
-      ]
+      assets = [...assets, ...response.edges]
     }
 
     if (response.pageInfo.hasNextPage) {
@@ -42,7 +31,7 @@ export async function loader() {
       if (response.pageInfo.endCursor) {
         after = response?.pageInfo?.endCursor
       } else {
-        after = assets[assets.length - 1].value
+        after = assets[assets.length - 1].node.id
       }
     } else {
       hasNextPage = false
@@ -143,7 +132,10 @@ export default function CreatePeerPage() {
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
                   <Select
-                    options={assets}
+                    options={assets.map((asset) => ({
+                      value: asset.node.id,
+                      label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                    }))}
                     error={response?.errors.fieldErrors.asset}
                     name='asset'
                     placeholder='Select asset...'
