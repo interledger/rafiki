@@ -26,6 +26,7 @@ import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
   addAssetLiquidity,
   addPeerLiquidity,
+  getLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
   createPaymentPointerWithdrawal,
@@ -52,7 +53,8 @@ export const resolvers: Resolvers = {
     incomingPayment: getIncomingPayment,
     peer: getPeer,
     peers: getPeers,
-    quote: getQuote
+    quote: getQuote,
+    liquidity: getLiquidity
   },
   PaymentPointer: {
     incomingPayments: getPaymentPointerIncomingPayments,

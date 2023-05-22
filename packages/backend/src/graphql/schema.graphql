@@ -40,6 +40,9 @@ type Query {
 
   "Fetch an Open Payments incoming payment"
   incomingPayment(id: String!): IncomingPayment
+
+  "Fetch asset or peer liquidity"
+  liquidity(id: String!): Liquidity
 }
 
 type Mutation {
@@ -395,6 +398,13 @@ type Peer implements Model {
   name: String
   "Date-time of creation"
   createdAt: String!
+}
+
+type Liquidity {
+  "Resource id (asset or peer)"
+  id: String!
+  "Liquidity balance"
+  balance: UInt64!
 }
 
 input DeletePeerInput {

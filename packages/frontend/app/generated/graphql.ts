@@ -398,6 +398,14 @@ export enum Kty {
   Okp = 'OKP'
 }
 
+export type Liquidity = {
+  __typename?: 'Liquidity';
+  /** Liquidity balance */
+  balance: Scalars['UInt64'];
+  /** Resource id (asset or peer) */
+  id: Scalars['String'];
+};
+
 export enum LiquidityError {
   AlreadyPosted = 'AlreadyPosted',
   AlreadyVoided = 'AlreadyVoided',
@@ -799,6 +807,8 @@ export type Query = {
   assets: AssetsConnection;
   /** Fetch an Open Payments incoming payment */
   incomingPayment?: Maybe<IncomingPayment>;
+  /** Fetch asset or peer liquidity */
+  liquidity?: Maybe<Liquidity>;
   /** Fetch an Open Payments outgoing payment */
   outgoingPayment?: Maybe<OutgoingPayment>;
   /** Fetch a payment pointer */
@@ -826,6 +836,11 @@ export type QueryAssetsArgs = {
 
 
 export type QueryIncomingPaymentArgs = {
+  id: Scalars['String'];
+};
+
+
+export type QueryLiquidityArgs = {
   id: Scalars['String'];
 };
 
@@ -1146,6 +1161,7 @@ export type ResolversTypes = {
   Jwk: ResolverTypeWrapper<Partial<Jwk>>;
   JwkInput: ResolverTypeWrapper<Partial<JwkInput>>;
   Kty: ResolverTypeWrapper<Partial<Kty>>;
+  Liquidity: ResolverTypeWrapper<Partial<Liquidity>>;
   LiquidityError: ResolverTypeWrapper<Partial<LiquidityError>>;
   LiquidityMutationResponse: ResolverTypeWrapper<Partial<LiquidityMutationResponse>>;
   Model: ResolversTypes['Asset'] | ResolversTypes['IncomingPayment'] | ResolversTypes['OutgoingPayment'] | ResolversTypes['PaymentPointer'] | ResolversTypes['PaymentPointerKey'] | ResolversTypes['Peer'];
@@ -1232,6 +1248,7 @@ export type ResolversParentTypes = {
   Int: Partial<Scalars['Int']>;
   Jwk: Partial<Jwk>;
   JwkInput: Partial<JwkInput>;
+  Liquidity: Partial<Liquidity>;
   LiquidityMutationResponse: Partial<LiquidityMutationResponse>;
   Model: ResolversParentTypes['Asset'] | ResolversParentTypes['IncomingPayment'] | ResolversParentTypes['OutgoingPayment'] | ResolversParentTypes['PaymentPointer'] | ResolversParentTypes['PaymentPointerKey'] | ResolversParentTypes['Peer'];
   Mutation: {};
@@ -1400,6 +1417,12 @@ export type JwkResolvers<ContextType = any, ParentType extends ResolversParentTy
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type LiquidityResolvers<ContextType = any, ParentType extends ResolversParentTypes['Liquidity'] = ResolversParentTypes['Liquidity']> = {
+  balance?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type LiquidityMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['LiquidityMutationResponse'] = ResolversParentTypes['LiquidityMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['LiquidityError']>, ParentType, ContextType>;
@@ -1557,6 +1580,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   asset?: Resolver<Maybe<ResolversTypes['Asset']>, ParentType, ContextType, RequireFields<QueryAssetArgs, 'id'>>;
   assets?: Resolver<ResolversTypes['AssetsConnection'], ParentType, ContextType, Partial<QueryAssetsArgs>>;
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
+  liquidity?: Resolver<Maybe<ResolversTypes['Liquidity']>, ParentType, ContextType, RequireFields<QueryLiquidityArgs, 'id'>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
   paymentPointer?: Resolver<Maybe<ResolversTypes['PaymentPointer']>, ParentType, ContextType, RequireFields<QueryPaymentPointerArgs, 'id'>>;
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
@@ -1678,6 +1702,7 @@ export type Resolvers<ContextType = any> = {
   IncomingPaymentEdge?: IncomingPaymentEdgeResolvers<ContextType>;
   IncomingPaymentResponse?: IncomingPaymentResponseResolvers<ContextType>;
   Jwk?: JwkResolvers<ContextType>;
+  Liquidity?: LiquidityResolvers<ContextType>;
   LiquidityMutationResponse?: LiquidityMutationResponseResolvers<ContextType>;
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;

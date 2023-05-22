@@ -39,6 +39,7 @@ import { createPeer } from '../../tests/peer'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEvent } from '../../webhook/model'
 import {
+  Liquidity,
   LiquidityError,
   LiquidityMutationResponse,
   PaymentPointerWithdrawalMutationResponse
@@ -62,6 +63,63 @@ describe('Liquidity Resolvers', (): void => {
     await truncateTables(knex)
     await appContainer.apolloClient.stop()
     await appContainer.shutdown()
+  })
+
+  describe('Get liquidity', (): void => {
+    let asset: Asset
+    let peer: Peer
+
+    beforeEach(async (): Promise<void> => {
+      asset = await createAsset(deps)
+      peer = await createPeer(deps, { assetId: asset.id })
+    })
+
+    test.each`
+      type
+      ${'asset'}
+      ${'peer'}
+    `('Can get liquidity balance - $type', async ({ type }): Promise<void> => {
+      const query = async () =>
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query Liquidity($id: String!) {
+                liquidity(id: $id) {
+                  id
+                  balance
+                }
+              }
+            `,
+            variables: {
+              id: type === 'asset' ? asset.id : peer.id
+            }
+          })
+          .then((query): Liquidity => {
+            if (query.data) {
+              console.log(query.data)
+              return query.data.liquidity
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+      await expect(query()).resolves.toEqual({
+        __typename: 'Liquidity',
+        id: type === 'asset' ? asset.id : peer.id,
+        balance: '0'
+      })
+
+      await accountingService.createDeposit({
+        id: uuid(),
+        account: type === 'asset' ? asset : peer,
+        amount: BigInt(100)
+      })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Liquidity',
+        id: type === 'asset' ? asset.id : peer.id,
+        balance: '100'
+      })
+    })
   })
 
   describe('Add peer liquidity', (): void => {
