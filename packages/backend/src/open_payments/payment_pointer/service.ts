@@ -1,4 +1,8 @@
-import { ForeignKeyViolationError, TransactionOrKnex } from 'objection'
+import {
+  ForeignKeyViolationError,
+  TransactionOrKnex,
+  NotFoundError
+} from 'objection'
 import { URL } from 'url'
 
 import { PaymentPointerError } from './errors'
@@ -13,14 +17,25 @@ import {
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
 
-export interface CreateOptions {
-  url: string
-  assetId: string
+interface Options {
   publicName?: string
 }
 
+export interface CreateOptions extends Options {
+  url: string
+  assetId: string
+}
+
+export interface UpdateOptions extends Options {
+  id: string
+  status?: 'ACTIVE' | 'INACTIVE'
+}
+
+type UpdateInput = Omit<UpdateOptions, 'id'> & { deactivatedAt?: Date | null }
+
 export interface PaymentPointerService {
   create(options: CreateOptions): Promise<PaymentPointer | PaymentPointerError>
+  update(options: UpdateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
   processNext(): Promise<string | undefined>
@@ -47,6 +62,7 @@ export async function createPaymentPointerService({
   }
   return {
     create: (options) => createPaymentPointer(deps, options),
+    update: (options) => updatePaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
     getByUrl: (url) => getPaymentPointerByUrl(deps, url),
     processNext: () => processNextPaymentPointer(deps),
@@ -97,6 +113,28 @@ async function createPaymentPointer(
       if (err.constraint === 'paymentpointers_assetid_foreign') {
         return PaymentPointerError.UnknownAsset
       }
+    }
+    throw err
+  }
+}
+
+async function updatePaymentPointer(
+  deps: ServiceDependencies,
+  { id, status, publicName }: UpdateOptions
+): Promise<PaymentPointer | PaymentPointerError> {
+  try {
+    const update: UpdateInput = { publicName }
+    if (status) {
+      update.deactivatedAt = status === 'INACTIVE' ? new Date() : null
+    }
+
+    return await PaymentPointer.query(deps.knex)
+      .patchAndFetchById(id, update)
+      .withGraphFetched('asset')
+      .throwIfNotFound()
+  } catch (err) {
+    if (err instanceof NotFoundError) {
+      return PaymentPointerError.UnknownPaymentPointer
     }
     throw err
   }

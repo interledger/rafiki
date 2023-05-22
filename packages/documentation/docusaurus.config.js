@@ -1,10 +1,14 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const lightCodeTheme = require('prism-react-renderer/themes/github')
+const lightCodeTheme = require('prism-react-renderer').themes.github
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const darkCodeTheme = require('prism-react-renderer/themes/dracula')
+const darkCodeTheme = require('prism-react-renderer').themes.dracula
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
