@@ -119,18 +119,20 @@ pnpm localenv:compose down --volumes
 
 ### Commands
 
-| Command | Description |
-| --- | --- |
-| `pnpm localenv:compose config` | Show all merged config (with Tigerbeetle) |
-| `pnpm localenv:compose up` | Start (with Tigerbeetle) |
-| `pnpm localenv:compose up -d` | Start (with Tigerbeetle) detached |
-| `pnpm localenv:compose down` | Down (with Tigerbeetle) |
-| `pnpm localenv:compose down --volumes` | Down and kill volumes (with Tigerbeetle) |
-| `pnpm localenv:compose config` | Show all merged config |
-| `pnpm localenv:compose:psql up` | Start (with Postgresql) |
-| `pnpm localenv:compose:psql up -d` | Start (with Postgresql) detached |
-| `pnpm localenv:compose:psql down` | Down (with Postgresql) |
-| `pnpm localenv:compose:psql down --volumes` | Down (with Postgresql) and kill volumes |
+| Command                                     | Description                                 |
+|---------------------------------------------|---------------------------------------------|
+| `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
+| `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
+| `pnpm localenv:compose up -d`               | Start (with Tigerbeetle) detached           |
+| `pnpm localenv:compose down`                | Down (with Tigerbeetle)                     |
+| `pnpm localenv:compose down --volumes`      | Down and kill volumes (with Tigerbeetle)    |
+| `pnpm localenv:compose config`              | Show all merged config                      |
+| `pnpm localenv:compose build`               | Build all the containers (with Tigerbeetle) |
+| `pnpm localenv:compose:psql up`             | Start (with Postgresql)                     |
+| `pnpm localenv:compose:psql up -d`          | Start (with Postgresql) detached            |
+| `pnpm localenv:compose:psql down`           | Down (with Postgresql)                      |
+| `pnpm localenv:compose:psql down --volumes` | Down (with Postgresql) and kill volumes     |
+| `pnpm localenv:compose:psql build`          | Build all the containers (with Postgresql)  |
 
 ### Usage
 
