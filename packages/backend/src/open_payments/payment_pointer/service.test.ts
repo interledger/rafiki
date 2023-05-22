@@ -60,9 +60,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
     })
 
     test.each`
-      publicName                | description
-      ${undefined}              | ${''}
-      ${faker.name.firstName()} | ${'with publicName'}
+      publicName                  | description
+      ${undefined}                | ${''}
+      ${faker.person.firstName()} | ${'with publicName'}
     `(
       'Payment pointer can be created or fetched $description',
       async ({ publicName }): Promise<void> => {
@@ -94,7 +94,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${'https://alice.me'}    | ${'with a url without a path'}
       ${'https://alice.me/'}   | ${'with a url without a path'}
     `(
-      'Payment pointer cannot be created %description (%url)',
+      'Payment pointer cannot be created $description ($url)',
       async ({ url }): Promise<void> => {
         await expect(
           paymentPointerService.create({
@@ -130,6 +130,64 @@ describe('Open Payments Payment Pointer Service', (): void => {
       await expect(
         accountingService.getBalance(paymentPointer.id)
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Update Payment Pointer', (): void => {
+    test.each`
+      initialIsActive | status        | expectedIsActive
+      ${true}         | ${undefined}  | ${true}
+      ${true}         | ${'INACTIVE'} | ${false}
+      ${false}        | ${'ACTIVE'}   | ${true}
+      ${false}        | ${undefined}  | ${false}
+    `(
+      'Payment pointer with initial isActive of $initialIsActive can be updated with $status status ',
+      async ({ initialIsActive, status, expectedIsActive }): Promise<void> => {
+        const paymentPointer = await createPaymentPointer(deps)
+
+        if (!initialIsActive) {
+          await paymentPointer.$query(knex).patch({ deactivatedAt: new Date() })
+        }
+
+        const updatedPaymentPointer = await paymentPointerService.update({
+          id: paymentPointer.id,
+          status
+        })
+        assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+
+        expect(updatedPaymentPointer.isActive).toEqual(expectedIsActive)
+
+        await expect(
+          paymentPointerService.get(paymentPointer.id)
+        ).resolves.toEqual(updatedPaymentPointer)
+      }
+    )
+
+    test('publicName', async (): Promise<void> => {
+      const paymentPointer = await createPaymentPointer(deps, {
+        publicName: 'Initial Name'
+      })
+      const newName = 'New Name'
+      const updatedPaymentPointer = await paymentPointerService.update({
+        id: paymentPointer.id,
+        publicName: newName
+      })
+      assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+      expect(updatedPaymentPointer.deactivatedAt).toEqual(null)
+      expect(updatedPaymentPointer.publicName).toEqual(newName)
+      await expect(
+        paymentPointerService.get(paymentPointer.id)
+      ).resolves.toEqual(updatedPaymentPointer)
+    })
+
+    test('Cannot update unknown payment pointer', async (): Promise<void> => {
+      await expect(
+        paymentPointerService.update({
+          id: uuid(),
+          status: 'INACTIVE',
+          publicName: 'Some Public Name'
+        })
+      ).resolves.toEqual(PaymentPointerError.UnknownPaymentPointer)
     })
   })
 

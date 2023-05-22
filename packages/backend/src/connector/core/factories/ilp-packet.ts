@@ -7,7 +7,7 @@ export const IlpPrepareFactory = Factory.define<IlpPrepare>('IlpPrepare').attrs(
   {
     amount: faker.finance.amount(1, 100, 0),
     data: Buffer.alloc(0),
-    destination: 'test.rafiki.' + faker.name.firstName(),
+    destination: 'test.rafiki.' + faker.person.firstName(),
     expiresAt: new Date(Date.now() + 10 * 1000),
     executionCondition: STATIC_CONDITION
   }
@@ -21,7 +21,7 @@ export const IlpFulfillFactory = Factory.define<IlpFulfill>('IlpFulFill').attrs(
 )
 
 export const IlpRejectFactory = Factory.define<IlpReject>('IlpReject').attrs({
-  triggeredBy: 'test.rafiki.' + faker.name.firstName(),
+  triggeredBy: 'test.rafiki.' + faker.person.firstName(),
   code: 'F02',
   message: 'Peer unreachable',
   data: Buffer.alloc(0)
