@@ -5,7 +5,6 @@ import {
   WebhookEvent as SchemaWebhookEvent
 } from '../generated/graphql'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 
 export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
@@ -22,10 +21,7 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
     const getPageFn = () => webhookService.getPage(getPageOptions)
     const webhookEvents = await getPageFn()
     // TODO: test this... probably wrong because getPageInfo cant account for filters
-    const pageInfo = await getPageInfo(
-      (pagination: Pagination) => getPageFn(),
-      webhookEvents
-    )
+    const pageInfo = await getPageInfo(() => getPageFn(), webhookEvents)
     return {
       pageInfo,
       edges: webhookEvents.map((webhookEvent: WebhookEvent) => ({

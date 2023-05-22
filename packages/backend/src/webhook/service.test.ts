@@ -101,17 +101,17 @@ describe('Webhook Service', (): void => {
       createModel: () => createWebhookEvent(deps),
       getPage: (pagination?: Pagination) =>
         webhookService.getPage({ pagination })
-        // TODO: Make this work with filtering? eg: webhookService.getPage({ pagination, type: 'event1' })
-        // Currently does not work with filters unless you increase the # of models created 
-        // in getPageTests such that there are ~20+ samples for the event type when filtering.
-        // Not a great fix, because technically increasing amount of models created doesnt garuntee
-        // enough isntances of each event type. Would probably be best to somehow pass in created models
-        // or override function to create models in beforeEach.
+      // TODO: Make this work with filtering? eg: webhookService.getPage({ pagination, type: 'event1' })
+      // Currently does not work with filters unless you increase the # of models created
+      // in getPageTests such that there are ~20+ samples for the event type when filtering.
+      // Not a great fix, because technically increasing amount of models created doesnt garuntee
+      // enough isntances of each event type. Would probably be best to somehow pass in created models
+      // or override function to create models in beforeEach.
     })
   })
 
   describe('getWebhookEventsPage', (): void => {
-    let eventInserts = [
+    const eventInserts = [
       {
         id: uuid(),
         type: 'pagination_filtering.X',
@@ -143,7 +143,7 @@ describe('Webhook Service', (): void => {
         data: {}
       }
     ]
-    
+
     beforeEach(async (): Promise<void> => {
       for (const eventInsert of eventInserts) {
         await WebhookEvent.query(knex).insert(eventInsert)
@@ -155,25 +155,32 @@ describe('Webhook Service', (): void => {
       const allWebhookEvents = await WebhookEvent.query(knex)
       expect(webhookEvents.length).toBe(allWebhookEvents.length)
     })
-        
-    const uniqueTypes = Array.from(new Set(eventInserts.map(event => event.type)))
-    test.each(uniqueTypes)(
-      'Filter by type: %s',
-      async (type) => {
-        const webhookEvents = await webhookService.getPage({type})
-        const expectedLength = eventInserts.filter(event => event.type === type).length
-        expect(webhookEvents.length).toBe(expectedLength)
+
+    const uniqueTypes = Array.from(
+      new Set(eventInserts.map((event) => event.type))
+    )
+    test.each(uniqueTypes)('Filter by type: %s', async (type) => {
+      const webhookEvents = await webhookService.getPage({ type })
+      const expectedLength = eventInserts.filter(
+        (event) => event.type === type
+      ).length
+      expect(webhookEvents.length).toBe(expectedLength)
     })
 
     test('Can paginate and filter', async (): Promise<void> => {
       // TODO: test in getPageTests instead?
       const type = 'pagination_filtering.Y'
       const idsOfTypeY = eventInserts
-        .filter(event => event.type === type)
-        .map(event => event.id)      
-      const page = await webhookService.getPage({type, pagination: { first: 10, after: idsOfTypeY[0]}})
+        .filter((event) => event.type === type)
+        .map((event) => event.id)
+      const page = await webhookService.getPage({
+        type,
+        pagination: { first: 10, after: idsOfTypeY[0] }
+      })
       expect(page[0].id).toBe(idsOfTypeY[1])
-      expect(page.filter(event => event.type === type).length).toBe(page.length)
+      expect(page.filter((event) => event.type === type).length).toBe(
+        page.length
+      )
     })
   })
 

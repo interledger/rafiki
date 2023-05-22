@@ -13,7 +13,7 @@ import { Pagination } from '../shared/baseModel'
 export const RETRY_BACKOFF_MS = 10_000
 
 type GetPageOptions = {
-  pagination?: Pagination,
+  pagination?: Pagination
   type?: string
 }
 
@@ -171,13 +171,13 @@ export function generateWebhookSignature(
 
 async function getWebhookEventsPage(
   deps: ServiceDependencies,
-  options?: GetPageOptions,
+  options?: GetPageOptions
 ): Promise<WebhookEvent[]> {
-  const { type, pagination } = options ?? {} 
+  const { type, pagination } = options ?? {}
   const query = WebhookEvent.query(deps.knex)
 
   if (type) {
-    query.where({type})
+    query.where({ type })
   }
 
   return await query.getPage(pagination)
