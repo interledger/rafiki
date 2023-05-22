@@ -6,7 +6,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { ExclamationTriangle, X } from './icons'
+import { ExclamationTriangle, XIcon } from './icons'
 import { Button, Input } from './ui'
 
 export type ConfirmationDialogRef = {
@@ -35,12 +35,14 @@ export const ConfirmationDialog = forwardRef<
 
     const inputRef = useRef<HTMLInputElement>(null)
 
-    const display = () => {
+    const display = (): void => {
       setIsOpen(true)
     }
 
-    const confirmHandler = () => {
-      if (confirmationPrompt === keyword) {
+    const isCorrectPrompt = (): boolean => confirmationPrompt === keyword
+
+    const confirmHandler = (): void => {
+      if (isCorrectPrompt()) {
         setIsOpen(false)
         setConfirmationPrompt('')
         if (onConfirm) {
@@ -49,7 +51,7 @@ export const ConfirmationDialog = forwardRef<
       }
     }
 
-    const cancelHandler = () => {
+    const cancelHandler = (): void => {
       setIsOpen(false)
       setConfirmationPrompt('')
       if (onCancel) {
@@ -99,7 +101,7 @@ export const ConfirmationDialog = forwardRef<
                         onClick={() => cancelHandler()}
                       >
                         <span className='sr-only'>Close</span>
-                        <X className='h-8 w-8' aria-hidden='true' />
+                        <XIcon className='h-8 w-8' aria-hidden='true' />
                       </button>
                     </div>
                     <div>
@@ -141,7 +143,7 @@ export const ConfirmationDialog = forwardRef<
                             intent='danger'
                             onClick={() => confirmHandler()}
                             className='w-full'
-                            disabled={!(confirmationPrompt === keyword)}
+                            disabled={!isCorrectPrompt()}
                           >
                             {confirmButtonText}
                           </Button>

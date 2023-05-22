@@ -251,7 +251,7 @@ export default function ViewPeerPage() {
         ref={dialogRef}
         onConfirm={onConfirm}
         title='Delete Peer'
-        keyword='delete peer'
+        keyword={peer.name || 'delete peer'}
         confirmButtonText='Delete this peer'
       />
     </div>

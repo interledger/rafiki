@@ -126,7 +126,7 @@ export const Info = (props: SVGProps<SVGSVGElement>) => {
   )
 }
 
-export const X = (props: SVGProps<SVGSVGElement>) => {
+export const XIcon = (props: SVGProps<SVGSVGElement>) => {
   return (
     <svg
       xmlns='http://www.w3.org/2000/svg'
