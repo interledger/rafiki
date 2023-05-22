@@ -23,7 +23,6 @@ services:
       - backend
   backend:
     hostname: cloud-nine-wallet-backend
-    image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile
@@ -62,7 +61,6 @@ services:
       - redis
   auth:
     hostname: cloud-nine-wallet-auth
-    image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
