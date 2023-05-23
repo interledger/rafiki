@@ -23,7 +23,6 @@ services:
       - happy-life-backend
   happy-life-backend:
     hostname: happy-life-bank-backend
-    image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile
@@ -59,7 +58,6 @@ services:
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
   happy-life-auth:
     hostname: happy-life-bank-auth
-    image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
