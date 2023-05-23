@@ -160,7 +160,7 @@ describe('Webhook Service', (): void => {
       new Set(eventInserts.map((event) => event.type))
     )
     test.each(uniqueTypes)('Filter by type: %s', async (type) => {
-      const webhookEvents = await webhookService.getPage({ type })
+      const webhookEvents = await webhookService.getPage({ filter: { type } })
       const expectedLength = eventInserts.filter(
         (event) => event.type === type
       ).length
@@ -174,8 +174,8 @@ describe('Webhook Service', (): void => {
         .filter((event) => event.type === type)
         .map((event) => event.id)
       const page = await webhookService.getPage({
-        type,
-        pagination: { first: 10, after: idsOfTypeY[0] }
+        pagination: { first: 10, after: idsOfTypeY[0] },
+        filter: { type }
       })
       expect(page[0].id).toBe(idsOfTypeY[1])
       expect(page.filter((event) => event.type === type).length).toBe(

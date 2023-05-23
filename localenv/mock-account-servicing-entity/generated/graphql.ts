@@ -281,11 +281,6 @@ export type DepositEventLiquidityInput = {
   idempotencyKey: Scalars['String'];
 };
 
-export type GetWebhookEventsInput = {
-  pagination?: InputMaybe<PaginationInput>;
-  type?: InputMaybe<Scalars['String']>;
-};
-
 export type Http = {
   __typename?: 'Http';
   /** Outgoing connection details */
@@ -666,17 +661,6 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']>;
 };
 
-export type PaginationInput = {
-  /** Paginating forwards: the cursor before the the requested page. */
-  after?: InputMaybe<Scalars['String']>;
-  /** Paginating backwards: the cursor after the the requested page. */
-  before?: InputMaybe<Scalars['String']>;
-  /** Paginating forwards: The first **n** elements from the page. */
-  first?: InputMaybe<Scalars['Int']>;
-  /** Paginating backwards: The last **n** elements from the page. */
-  last?: InputMaybe<Scalars['Int']>;
-};
-
 export type PaymentPointer = Model & {
   __typename?: 'PaymentPointer';
   /** Asset of the payment pointer */
@@ -861,7 +845,11 @@ export type QueryQuoteArgs = {
 
 
 export type QueryWebhookEventsArgs = {
-  input?: InputMaybe<GetWebhookEventsInput>;
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  filter?: InputMaybe<WebhookEventFilter>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
 };
 
 export type Quote = {
@@ -1023,6 +1011,10 @@ export type WebhookEvent = Model & {
   type: Scalars['String'];
 };
 
+export type WebhookEventFilter = {
+  type?: InputMaybe<Scalars['String']>;
+};
+
 export type WebhookEventsConnection = {
   __typename?: 'WebhookEventsConnection';
   edges: Array<WebhookEventsEdge>;
@@ -1143,7 +1135,6 @@ export type ResolversTypes = {
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
   DepositEventLiquidityInput: ResolverTypeWrapper<Partial<DepositEventLiquidityInput>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
-  GetWebhookEventsInput: ResolverTypeWrapper<Partial<GetWebhookEventsInput>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
   HttpInput: ResolverTypeWrapper<Partial<HttpInput>>;
@@ -1170,7 +1161,6 @@ export type ResolversTypes = {
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   OutgoingPaymentState: ResolverTypeWrapper<Partial<OutgoingPaymentState>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
-  PaginationInput: ResolverTypeWrapper<Partial<PaginationInput>>;
   PaymentPointer: ResolverTypeWrapper<Partial<PaymentPointer>>;
   PaymentPointerKey: ResolverTypeWrapper<Partial<PaymentPointerKey>>;
   PaymentPointerWithdrawal: ResolverTypeWrapper<Partial<PaymentPointerWithdrawal>>;
@@ -1198,6 +1188,7 @@ export type ResolversTypes = {
   UpdatePeerMutationResponse: ResolverTypeWrapper<Partial<UpdatePeerMutationResponse>>;
   VoidLiquidityWithdrawalInput: ResolverTypeWrapper<Partial<VoidLiquidityWithdrawalInput>>;
   WebhookEvent: ResolverTypeWrapper<Partial<WebhookEvent>>;
+  WebhookEventFilter: ResolverTypeWrapper<Partial<WebhookEventFilter>>;
   WebhookEventsConnection: ResolverTypeWrapper<Partial<WebhookEventsConnection>>;
   WebhookEventsEdge: ResolverTypeWrapper<Partial<WebhookEventsEdge>>;
   WithdrawEventLiquidityInput: ResolverTypeWrapper<Partial<WithdrawEventLiquidityInput>>;
@@ -1233,7 +1224,6 @@ export type ResolversParentTypes = {
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
   DepositEventLiquidityInput: Partial<DepositEventLiquidityInput>;
   Float: Partial<Scalars['Float']>;
-  GetWebhookEventsInput: Partial<GetWebhookEventsInput>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
   HttpInput: Partial<HttpInput>;
@@ -1256,7 +1246,6 @@ export type ResolversParentTypes = {
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
-  PaginationInput: Partial<PaginationInput>;
   PaymentPointer: Partial<PaymentPointer>;
   PaymentPointerKey: Partial<PaymentPointerKey>;
   PaymentPointerWithdrawal: Partial<PaymentPointerWithdrawal>;
@@ -1284,6 +1273,7 @@ export type ResolversParentTypes = {
   UpdatePeerMutationResponse: Partial<UpdatePeerMutationResponse>;
   VoidLiquidityWithdrawalInput: Partial<VoidLiquidityWithdrawalInput>;
   WebhookEvent: Partial<WebhookEvent>;
+  WebhookEventFilter: Partial<WebhookEventFilter>;
   WebhookEventsConnection: Partial<WebhookEventsConnection>;
   WebhookEventsEdge: Partial<WebhookEventsEdge>;
   WithdrawEventLiquidityInput: Partial<WithdrawEventLiquidityInput>;
