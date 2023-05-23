@@ -1,12 +1,12 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../docs/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../docs/glossary.md#open-payments) APIs with its required [GNAP](../docs/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../packages/documentation/docs/reference/glossary.md#open-payments) APIs with its required [GNAP](../packages/documentation/docs/reference/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../docs/glossary.md#account-servicing-entity))
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../packages/documentation/docs/reference/glossary.md#account-servicing-entity))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `local-http-signatures` (request signature generation for Postman)
 
@@ -74,7 +74,6 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](../README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- [compose plugin](https://docs.docker.com/compose/install/compose-plugin/)
 - [postman](https://www.postman.com/downloads/)
 
 ### Setup
