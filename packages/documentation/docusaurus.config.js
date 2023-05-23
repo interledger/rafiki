@@ -19,12 +19,14 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-
   i18n: {
     defaultLocale: 'en',
     locales: ['en']
   },
-
+  markdown: {
+    mermaid: true
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   presets: [
     [
       'classic',
@@ -42,7 +44,6 @@ const config = {
       })
     ]
   ],
-
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -62,7 +63,7 @@ const config = {
             type: 'docSidebar',
             position: 'left',
             sidebarId: 'reference',
-            label: 'API Reference'
+            label: 'API'
           },
           {
             href: 'https://github.com/interledger/rafiki',
@@ -79,7 +80,6 @@ const config = {
         darkTheme: darkCodeTheme
       }
     }),
-
   plugins: [
     [
       'docusaurus-graphql-plugin',

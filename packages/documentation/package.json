@@ -16,8 +16,9 @@
     "docs:graphql:generate": "npx docusaurus docs:generate:graphql"
   },
   "dependencies": {
-    "@docusaurus/core": "2.4.0",
-    "@docusaurus/preset-classic": "2.4.0",
+    "@docusaurus/core": "2.4.1",
+    "@docusaurus/preset-classic": "2.4.1",
+    "@docusaurus/theme-mermaid": "^2.4.1",
     "@mdx-js/react": "^1.6.22",
     "clsx": "^1.2.1",
     "docusaurus-graphql-plugin": "^0.9.0",
@@ -26,8 +27,8 @@
     "react-dom": "^17.0.2"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "2.4.0",
-    "@docusaurus/types": "^2.4.0",
+    "@docusaurus/module-type-aliases": "2.4.1",
+    "@docusaurus/types": "^2.4.1",
     "@tsconfig/docusaurus": "^1.0.7",
     "typescript": "^4.7.4"
   },
@@ -42,8 +43,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "engines": {
-    "node": ">=16.14"
   }
 }

@@ -1,6 +1,6 @@
-# Integrate with Rafiki
+# Getting Started
 
-**❗ Rafiki is intended to be run by [Account Servicing Entities](./glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
+**❗ Rafiki is intended to be run by [Account Servicing Entities](../reference/glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
 
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
 
@@ -27,7 +27,7 @@ For the quoting to be successful, Rafiki needs to be provided with the current e
 | `rates`              | Object | Object containing `<asset_code : exchange_rate>` pairs, e.g. `{EUR: 1.1602}`                           |
 | `rates.<asset_code>` | Number | exchange rate given `base` and `<asset_code>`                                                          |
 
-The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/rates.ts).
+The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](https://github.com/interledger/rafiki/blob/main/localenv/mock-account-servicing-entity/app/routes/rates.ts).
 
 The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint.
 
@@ -58,7 +58,7 @@ If the Account Servicing Entity decides to add sending fees, it is required to p
 | `assetCode`   | String                     | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
 | `assetScale`  | Number                     | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
 
-If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-servicing-entity` includes a [minimalistic example](../localenv/mock-account-servicing-entity/app/routes/quotes.ts).
+If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-servicing-entity` includes a [minimalistic example](https://github.com/interledger/rafiki/blob/main/localenv/mock-account-servicing-entity/app/routes/quotes.ts).
 
 The `backend` package requires an environment variable called `QUOTE_URL` which MUST specify the URL of this endpoint.
 
@@ -93,49 +93,49 @@ The `backend` package requires an environment variable called `WEBHOOK_URL` whic
 
 #### `incoming_payment.completed`
 
-An [Open Payments](./glossary#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
+An [Open Payments](../reference/glossary.md#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
 #### `incoming_payment.expired`
 
-An [Open Payments](./glossary#open-payments) Incoming Payment has expired, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
+An [Open Payments](../reference/glossary.md#open-payments) Incoming Payment has expired, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
 #### `outgoing_payment.created`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment has been created. It requires liquidity to be processed. The Account Servicing Entity SHOULD reserve the maximum requisite funds for the payment attempt on the payer's account.
+An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment has been created. It requires liquidity to be processed. The Account Servicing Entity SHOULD reserve the maximum requisite funds for the payment attempt on the payer's account.
 
 - Action: Deposit liquidity
 
 #### `outgoing_payment.completed`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment was completed, i.e. it won't send any further funds. The Account Servicing Entity SHOULD withdraw any excess liquidity and deposit it into the payer's account.
+An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment was completed, i.e. it won't send any further funds. The Account Servicing Entity SHOULD withdraw any excess liquidity and deposit it into the payer's account.
 
 - Action: Withdraw liquidity
 
 #### `outgoing_payment.failed`
 
-An [Open Payments](./glossary#open-payments) Outgoing Payment failed to send all (or any) of the funds and won't re-try. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and return it to the payer's account.
+An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment failed to send all (or any) of the funds and won't re-try. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and return it to the payer's account.
 
 - Action: Withdraw liquidity
 
 #### `payment_pointer.web_monetization`
 
-A [Web Monetization](./glossary.md#web-monetization) payment has been received via [STREAM](./glossary.md#stream) by a payment pointer. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
+A [Web Monetization](../reference/glossary.md#web-monetization) payment has been received via [STREAM](../reference/glossary.md#stream) by a payment pointer. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
 
 - Action: Withdraw liquidity
 
 ## Identity Provider
 
-The Rafiki `backend` exposes the [Open Payments](./glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](./glossary.md#grant-negotiation-authorization-protocol) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
+The Rafiki `backend` exposes the [Open Payments](../reference/glossary.md#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](../reference/glossary.md#gnap) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
 
 The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
 
 ## Issuing Payment Pointers
 
-A [Payment Pointer](./glossary.md#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](./admin-api.md). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
+A [Payment Pointer](../reference/glossary.md#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](../integration/management.md). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
 
 ### Create Asset
 
@@ -252,7 +252,7 @@ The Account Servicing Entity SHOULD store at least the `paymentPointer.id` in th
 
 ### Create Payment Pointer Key
 
-In order to use the [Open Payments](./glossary.md#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](./admin-api.md).
+In order to use the [Open Payments](../reference/glossary.md#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](../integration/management.md).
 
 Query:
 
