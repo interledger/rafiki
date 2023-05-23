@@ -23,10 +23,15 @@ export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   )
   return {
     pageInfo,
-    edges: assets.map((asset: Asset) => ({
-      cursor: asset.id,
-      node: assetToGraphql(asset)
-    }))
+    edges: await Promise.all(
+      assets.map(async (asset: Asset) => {
+        const balance = await getBalance(ctx, asset.id)
+        return {
+          cursor: asset.id,
+          node: assetToGraphql(asset, balance)
+        }
+      })
+    )
   }
 }
 
@@ -40,7 +45,8 @@ export const getAsset: QueryResolvers<ApolloContext>['asset'] = async (
   if (!asset) {
     throw new Error('No asset')
   }
-  return assetToGraphql(asset)
+  const balance = await getBalance(ctx, args.id)
+  return assetToGraphql(asset, balance)
 }
 
 export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
@@ -68,7 +74,7 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
         code: '200',
         success: true,
         message: 'Created Asset',
-        asset: assetToGraphql(assetOrError)
+        asset: assetToGraphql(assetOrError, BigInt(0))
       }
     } catch (error) {
       ctx.logger.error(
@@ -110,11 +116,12 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
             throw new Error(`AssetError: ${assetOrError}`)
         }
       }
+      const balance = await getBalance(ctx, assetOrError.id)
       return {
         code: '200',
         success: true,
         message: 'Updated Asset Withdrawal Threshold',
-        asset: assetToGraphql(assetOrError)
+        asset: assetToGraphql(assetOrError, balance)
       }
     } catch (error) {
       ctx.logger.error(
@@ -132,10 +139,26 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
     }
   }
 
-export const assetToGraphql = (asset: Asset): SchemaAsset => ({
+export const getBalance = async (
+  ctx: ApolloContext,
+  id: string
+): Promise<bigint> => {
+  const accountingService = await ctx.container.use('accountingService')
+  const balance = await accountingService.getBalance(id)
+  if (balance === undefined) {
+    throw new Error('No liquidity account found')
+  }
+  return balance
+}
+
+export const assetToGraphql = (
+  asset: Asset,
+  balance?: bigint
+): SchemaAsset => ({
   id: asset.id,
   code: asset.code,
   scale: asset.scale,
+  liquidity: balance,
   withdrawalThreshold: asset.withdrawalThreshold,
   createdAt: new Date(+asset.createdAt).toISOString()
 })

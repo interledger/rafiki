@@ -1,4 +1,4 @@
-import { assetToGraphql } from './asset'
+import { assetToGraphql, getBalance } from './asset'
 import {
   QueryResolvers,
   ResolversTypes,
@@ -29,10 +29,15 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   )
   return {
     pageInfo,
-    edges: peers.map((peer: Peer) => ({
-      cursor: peer.id,
-      node: peerToGraphql(peer)
-    }))
+    edges: await Promise.all(
+      peers.map(async (peer: Peer) => {
+        const balance = await getBalance(ctx, peer.id)
+        return {
+          cursor: peer.id,
+          node: peerToGraphql(peer, balance)
+        }
+      })
+    )
   }
 }
 
@@ -46,7 +51,8 @@ export const getPeer: QueryResolvers<ApolloContext>['peer'] = async (
   if (!peer) {
     throw new Error('No peer')
   }
-  return peerToGraphql(peer)
+  const balance = await getBalance(ctx, args.id)
+  return peerToGraphql(peer, balance)
 }
 
 export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
@@ -69,7 +75,7 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
               code: '200',
               success: true,
               message: 'Created ILP Peer',
-              peer: peerToGraphql(peerOrError)
+              peer: peerToGraphql(peerOrError, BigInt(0))
             }
       )
       .catch((error) => {
@@ -94,37 +100,37 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
     args,
     ctx
   ): Promise<ResolversTypes['UpdatePeerMutationResponse']> => {
-    const peerService = await ctx.container.use('peerService')
-    return peerService
-      .update(args.input)
-      .then((peerOrError: Peer | PeerError) =>
-        isPeerError(peerOrError)
-          ? {
-              code: errorToCode[peerOrError].toString(),
-              success: false,
-              message: errorToMessage[peerOrError]
-            }
-          : {
-              code: '200',
-              success: true,
-              message: 'Updated ILP Peer',
-              peer: peerToGraphql(peerOrError)
-            }
-      )
-      .catch((error) => {
-        ctx.logger.error(
-          {
-            options: args.input,
-            error
-          },
-          'error updating peer'
-        )
+    try {
+      const peerService = await ctx.container.use('peerService')
+      const peerOrError = await peerService.update(args.input)
+      if (isPeerError(peerOrError)) {
         return {
-          code: '500',
-          message: 'Error trying to update peer',
-          success: false
+          code: errorToCode[peerOrError].toString(),
+          success: false,
+          message: errorToMessage[peerOrError]
         }
-      })
+      }
+      const balance = await getBalance(ctx, peerOrError.id)
+      return {
+        code: '200',
+        success: true,
+        message: 'Updated ILP Peer',
+        peer: peerToGraphql(peerOrError, balance)
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          options: args.input,
+          error
+        },
+        'error updating peer'
+      )
+      return {
+        code: '500',
+        message: 'Error trying to update peer',
+        success: false
+      }
+    }
   }
 
 export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
@@ -165,12 +171,13 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
       })
   }
 
-export const peerToGraphql = (peer: Peer): SchemaPeer => ({
+export const peerToGraphql = (peer: Peer, balance?: bigint): SchemaPeer => ({
   id: peer.id,
   maxPacketAmount: peer.maxPacketAmount,
   http: peer.http,
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
   name: peer.name,
+  liquidity: balance,
   createdAt: new Date(+peer.createdAt).toISOString()
 })
