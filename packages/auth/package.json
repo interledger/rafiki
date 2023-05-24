@@ -20,9 +20,9 @@
     "@apollo/server": "^4.7.1",
     "@as-integrations/koa": "^1.0.0",
     "graphql": "^16.6.0",
-    "@graphql-tools/graphql-file-loader": "^7.5.17",
-    "@graphql-tools/load": "^7.8.14",
-    "@graphql-tools/schema": "^9.0.19",
+    "@graphql-tools/graphql-file-loader": "^8.0.0",
+    "@graphql-tools/load": "^8.0.0",
+    "@graphql-tools/schema": "^10.0.0",
     "@koa/cors": "^4.0.0",
     "@koa/router": "^12.0.0",
     "ajv": "^8.12.0",
@@ -62,7 +62,7 @@
     "cross-fetch": "^3.1.6",
     "jest-openapi": "^0.14.2",
     "nock": "^13.3.1",
-    "openapi-types": "^12.1.0",
+    "openapi-types": "^12.1.1",
     "typescript": "^4.9.5"
   }
 }

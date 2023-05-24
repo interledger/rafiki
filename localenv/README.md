@@ -1,12 +1,12 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../docs/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../docs/glossary.md#open-payments) APIs with its required [GNAP](../docs/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../packages/documentation/docs/reference/glossary.md#open-payments) APIs with its required [GNAP](../packages/documentation/docs/reference/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../docs/glossary.md#account-servicing-entity))
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../packages/documentation/docs/reference/glossary.md#account-servicing-entity))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `local-http-signatures` (request signature generation for Postman)
 
@@ -74,7 +74,6 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](../README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- [compose plugin](https://docs.docker.com/compose/install/compose-plugin/)
 - [postman](https://www.postman.com/downloads/)
 
 ### Setup
@@ -82,25 +81,20 @@ When clicking on the Account Name, a list of Transactions appears.
 The following should be run from the root of the project.
 
 ```
-// If you have spun up this environment before then run
-pnpm localenv:stop && pnpm localenv:dbvolumes:remove
+// If you have spun up the environment before, remember to first tear down and remove volumes!
 
-// Start the local environment
-pnpm localenv:start
+// start the local environment
+pnpm localenv:compose up
 
-// tear down
-pnpm localenv:stop
-
-// delete database volumes (containers must be removed first with e.g. pnpm localenv:stop)
-pnpm localenv:dbvolumes:remove
+// tear down and remove volumes
+pnpm localenv:compose down --volumes
 ```
 
-If you want to use Postgres as the accounting database instead of TigerBeetle, you can append `psql` to the `localenv:` commands:
+If you want to use Postgres as the accounting database instead of TigerBeetle, you can use the `psql` variant of the `localenv:compose` commands:
 
 ```
-pnpm localenv:psql:start
-pnpm localenv:psql:stop
-pnpm localenv:psql:dbvolumes:remove
+pnpm localenv:compose:psql up
+pnpm localenv:compose:psql down --volumes
 ```
 
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
@@ -110,17 +104,34 @@ as the required data stores tigerbeetle (if enabled), redis, and postgres, so it
 both include the `local-signature-utils` signature generation app for Postman.
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
-The `pnpm localenv:start` command starts both the primary instance and the secondary.
+The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
 
 ### Shutting down
 
 ```
 // tear down
-pnpm localenv:stop
+pnpm localenv:compose down
 
-// delete database volumes (containers must be removed first with e.g. pnpm localenv:stop)
-pnpm localenv:dbvolumes:remove
+// tear down and delete database volumes
+pnpm localenv:compose down --volumes
 ```
+
+### Commands
+
+| Command                                     | Description                                 |
+| ------------------------------------------- | ------------------------------------------- |
+| `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
+| `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
+| `pnpm localenv:compose up -d`               | Start (with Tigerbeetle) detached           |
+| `pnpm localenv:compose down`                | Down (with Tigerbeetle)                     |
+| `pnpm localenv:compose down --volumes`      | Down and kill volumes (with Tigerbeetle)    |
+| `pnpm localenv:compose:psql config`         | Show all merged config (with Postgresql)    |
+| `pnpm localenv:compose build`               | Build all the containers (with Tigerbeetle) |
+| `pnpm localenv:compose:psql up`             | Start (with Postgresql)                     |
+| `pnpm localenv:compose:psql up -d`          | Start (with Postgresql) detached            |
+| `pnpm localenv:compose:psql down`           | Down (with Postgresql)                      |
+| `pnpm localenv:compose:psql down --volumes` | Down (with Postgresql) and kill volumes     |
+| `pnpm localenv:compose:psql build`          | Build all the containers (with Postgresql)  |
 
 ### Usage
 
