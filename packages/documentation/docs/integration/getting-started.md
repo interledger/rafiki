@@ -94,7 +94,7 @@ The `backend` package requires an environment variable called `WEBHOOK_URL` whic
 
 #### `incoming_payment.created`
 
-An [Open Payments](./glossary#open-payments) Incoming Payment was created. This is for information purposes only and does not require an action.
+An [Open Payments](../reference/glossary.md#open-payments) Incoming Payment was created. This is for information purposes only and does not require an action.
 
 - Action: None
 
