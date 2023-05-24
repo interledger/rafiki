@@ -1,10 +1,14 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const lightCodeTheme = require('prism-react-renderer/themes/github')
+const lightCodeTheme = require('prism-react-renderer').themes.github
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const darkCodeTheme = require('prism-react-renderer/themes/dracula')
+const darkCodeTheme = require('prism-react-renderer').themes.dracula
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -15,12 +19,14 @@ const config = {
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-
   i18n: {
     defaultLocale: 'en',
     locales: ['en']
   },
-
+  markdown: {
+    mermaid: true
+  },
+  themes: ['@docusaurus/theme-mermaid'],
   presets: [
     [
       'classic',
@@ -38,7 +44,6 @@ const config = {
       })
     ]
   ],
-
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
@@ -58,7 +63,7 @@ const config = {
             type: 'docSidebar',
             position: 'left',
             sidebarId: 'reference',
-            label: 'API Reference'
+            label: 'API'
           },
           {
             href: 'https://github.com/interledger/rafiki',
@@ -75,7 +80,6 @@ const config = {
         darkTheme: darkCodeTheme
       }
     }),
-
   plugins: [
     [
       'docusaurus-graphql-plugin',

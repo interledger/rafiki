@@ -1,35 +1,129 @@
-import { forwardRef, useId, type ComponentPropsWithoutRef } from 'react'
-import { FieldError } from './FieldError'
+import { Fragment, useId, useState } from 'react'
+import { Combobox, Transition } from '@headlessui/react'
+import { Input } from './Input'
+import { Check, Chevron } from '../icons'
 import { Label } from './Label'
+import { FieldError } from './FieldError'
 
-type SelectProps = Omit<ComponentPropsWithoutRef<'select'>, 'className'> & {
+export type SelectOption = {
+  label: string
+  value: string
+}
+
+type SelectProps = {
+  options: SelectOption[]
+  placeholder: string
+  name?: string
   label?: string
+  disabled?: boolean
+  required?: boolean
   error?: string | string[]
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, children, ...props }, ref) => {
-    const id = useId()
+export const Select = ({
+  options,
+  name,
+  placeholder,
+  label,
+  error,
+  disabled = false,
+  required = false
+}: SelectProps) => {
+  const id = useId()
+  const [internalValue, setInternalValue] = useState<SelectOption>({
+    label: '',
+    value: ''
+  })
+  const [searchTerm, setSearchTerm] = useState('')
 
-    return (
-      <div>
-        {label && (
-          <Label htmlFor={id} required={props.required ?? false}>
+  const filteredOptions =
+    searchTerm === ''
+      ? options
+      : options.filter((option) =>
+          option.label
+            .toLowerCase()
+            .replace(/\s+/g, '')
+            .includes(searchTerm.toLowerCase().replace(/\s+/g, ''))
+        )
+
+  return (
+    <Combobox
+      value={internalValue}
+      onChange={setInternalValue}
+      disabled={disabled}
+    >
+      {name ? (
+        <input type='hidden' name={name} value={internalValue.value} />
+      ) : null}
+      <div className='relative'>
+        {label ? (
+          <Combobox.Label as={Label} htmlFor={id} required={required}>
             {label}
-          </Label>
-        )}
-        <select
-          id={id}
-          ref={ref}
-          className='block w-full rounded-md border border-tealish/50 transition-colors pr-10 duration-150 placeholder:font-extralight focus:border-tealish focus:outline-none focus:ring-0 disabled:bg-mercury'
-          {...props}
+          </Combobox.Label>
+        ) : null}
+        <div className='relative'>
+          <Combobox.Input
+            as={Input}
+            id={id}
+            required={required}
+            displayValue={(option: SelectOption) => option.label}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder={placeholder}
+          />
+          <Combobox.Button className='absolute inset-y-0 right-0 flex items-center pr-2'>
+            {({ open }) => (
+              <Chevron
+                className='text-tealish w-5 h-5 transition-all duration-100'
+                direction={open ? 'down' : 'left'}
+                strokeWidth={3}
+              />
+            )}
+          </Combobox.Button>
+        </div>
+        {error ? <FieldError error={error} /> : null}
+        <Transition
+          as={Fragment}
+          leave='transition ease-in duration-100'
+          leaveFrom='opacity-100'
+          leaveTo='opacity-0'
+          afterLeave={() => setSearchTerm('')}
         >
-          {children}
-        </select>
-        <FieldError error={error} />
+          <Combobox.Options className='absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 shadow-lg focus:outline-none'>
+            {filteredOptions.length === 0 && searchTerm !== '' ? (
+              <div className='select-none py-2 px-4 text-tealish'>
+                Nothing found.
+              </div>
+            ) : (
+              filteredOptions.map((option) => (
+                <Combobox.Option
+                  key={option.value}
+                  className={({ active }) =>
+                    `relative select-none py-2 px-4 ${active && 'bg-pearl'}`
+                  }
+                  value={option}
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`block truncate ${
+                          selected ? 'font-medium' : 'font-normal'
+                        }`}
+                      >
+                        {option.label}
+                      </span>
+                      {selected ? (
+                        <span className='absolute inset-y-0 right-0 flex items-center pr-3'>
+                          <Check className='w-6 h-6' />
+                        </span>
+                      ) : null}
+                    </>
+                  )}
+                </Combobox.Option>
+              ))
+            )}
+          </Combobox.Options>
+        </Transition>
       </div>
-    )
-  }
-)
-
-Select.displayName = 'Select'
+    </Combobox>
+  )
+}
