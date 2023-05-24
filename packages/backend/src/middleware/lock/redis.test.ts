@@ -77,7 +77,7 @@ describe('Redis Lock', (): void => {
 
       await expect(redisLock.acquire(key)).resolves.toBe(true)
       await expect(redis.get(`lock:${key}`)).resolves.toBeDefined()
-      await new Promise((resolve) => setTimeout(resolve, redisLockTtlMs))
+      await new Promise((resolve) => setTimeout(resolve, redisLockTtlMs + 10))
       await expect(redis.get(`lock:${key}`)).resolves.toBeFalsy()
       await expect(redisLock.acquire(key)).resolves.toBe(true)
     })
