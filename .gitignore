@@ -46,7 +46,6 @@ tmp
 .cache
 build
 **/public/build
-**/styles/*.css
 
 # Docusaurus
 .docusaurus
