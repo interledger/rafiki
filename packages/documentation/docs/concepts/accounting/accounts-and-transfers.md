@@ -12,13 +12,13 @@ There is one liquidity account for each of the following resource:
 
 - Asset
 - Peer
-- Payment Pointer (for [SPSP](./glossary.md#simple-payments-setup-protocol-spsp) / [Web Monetization](./glossary.md#web-monetization) receiving)
+- Payment Pointer (for [SPSP](../../reference/glossary#spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
 
 ### Settlement account
 
-A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](./glossary.md#account-servicing-entity) has deposited into Rafiki.
+A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](./glossary/a ccount-servicing-entity) has deposited into Rafiki.
 
 There is one settlement account for each asset.
 

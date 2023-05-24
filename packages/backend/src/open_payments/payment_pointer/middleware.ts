@@ -14,7 +14,8 @@ export function createPaymentPointerMiddleware() {
       const paymentPointer = await paymentPointerService.getByUrl(
         ctx.paymentPointerUrl
       )
-      if (!paymentPointer) {
+
+      if (!paymentPointer?.isActive) {
         ctx.throw(404)
       }
       ctx.paymentPointer = paymentPointer

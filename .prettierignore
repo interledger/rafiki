@@ -12,3 +12,5 @@ Dockerfile
 infrastructure/helm/**
 build
 **/styles/*.css
+.docusaurus
+.cache-loader

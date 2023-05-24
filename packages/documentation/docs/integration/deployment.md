@@ -1,4 +1,4 @@
-# Deploying Rafiki
+# Deployment
 
 The production environment consists of
 
@@ -12,7 +12,7 @@ and the databases
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-To integrate Rafiki with your own services, view the [integration documentation](./integration.md).
+To integrate Rafiki with your own services, view the [integration documentation](../integration/getting-started.md).
 
 ### Running the production environment
 
