@@ -4,22 +4,22 @@
 
 ## What is Rafiki?
 
-Rafiki is open source software that allows an [Account Servicing Entity](./docs/glossary.md#account-servicing-entity) to enable [Interledger](./docs/glossary.md#interledger-protocol) functionality on its users' accounts.
+Rafiki is open source software that allows an [Account Servicing Entity](./packages/documentation/docs/reference/glossary.md#account-servicing-entity) to enable [Interledger](./packages/documentation/docs/reference/glossary.md#interledger-protocol) functionality on its users' accounts.
 
 This includes
 
-- sending and receiving payments (via [SPSP](./docs/glossary.md#simple-payments-setup-protocol-spsp) and [Open Payments](./docs/glossary.md#open-payments))
-- allowing third-party access to initiate payments and view transation data (via [Open Payments](./docs/glossary.md#open-payments))
+- sending and receiving payments (via [SPSP](./packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) and [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments))
+- allowing third-party access to initiate payments and view transation data (via [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments))
 
-**❗ Rafiki is intended to be run by [Account Servicing Entities](./docs/glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
+**❗ Rafiki is intended to be run by [Account Servicing Entities](./packages/documentation/docs/reference/glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
 
-Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](./docs/glossary.md#tigerbeetle), and several APIs:
+Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](./packages/documentation/docs/reference/glossary.md#tigerbeetle), and several APIs:
 
-- the [Admin API](./docs/admin-api.md) to create [peering relationships](./docs/glossary.md#peer), add supported [assets](./docs/glossary.md#asset), and issue [payment pointers](./docs/glossary.md#payment-pointer)
-- the [Open Payments](./docs/glossary.md#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
-- the [SPSP](./docs/glossary.md#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
+- the [Admin API](./docs/admin-api.md) to create [peering relationships](./packages/documentation/docs/reference/glossary.md#peer), add supported [assets](./packages/documentation/docs/reference/glossary.md#asset), and issue [payment pointers](./packages/documentation/docs/reference/glossary.md#payment-pointer)
+- the [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
+- the [SPSP](./packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
 
-Additionally, this package also includes a reference implementation of a [GNAP](./docs/glossary.md#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](./docs/glossary.md#open-payments) API. For more information on the architecture, check out the [Architecture documentation](./docs/architecture.md).
+Additionally, this package also includes a reference implementation of a [GNAP](./packages/documentation/docs/reference/glossary.md#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments) API. For more information on the architecture, check out the [Architecture documentation](./packages/documentation/docs/introduction/architecture.md).
 
 ### New to Interledger?
 
