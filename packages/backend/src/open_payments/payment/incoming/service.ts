@@ -141,7 +141,7 @@ async function createIncomingPayment(
     })
     .withGraphFetched('[asset, paymentPointer]')
 
-  await IncomingPaymentEvent.query(trx || deps.knex).insertAndFetch({
+  await IncomingPaymentEvent.query(trx || deps.knex).insert({
     type: IncomingPaymentEventType.IncomingPaymentCreated,
     data: incomingPayment.toData(BigInt(0))
   })
@@ -239,7 +239,7 @@ async function handleDeactivated(
         : IncomingPaymentEventType.IncomingPaymentCompleted
     deps.logger.trace({ type }, 'creating incoming payment webhook event')
 
-    await IncomingPaymentEvent.query(deps.knex).insertAndFetch({
+    await IncomingPaymentEvent.query(deps.knex).insert({
       type,
       data: incomingPayment.toData(amountReceived),
       withdrawal: {
