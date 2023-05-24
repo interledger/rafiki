@@ -44,7 +44,7 @@ describe('Redis Data Store', (): void => {
     test('keys expire properly', async () => {
       await expect(dataStore.set('foo', 'bar')).resolves.toBe(true)
       await expect(dataStore.get('foo')).resolves.toBe('bar')
-      await new Promise((resolve) => setTimeout(resolve, ttlMs + 10))
+      await new Promise((resolve) => setTimeout(resolve, ttlMs + 2))
       await expect(dataStore.get('foo')).resolves.toBeUndefined()
     })
   })
