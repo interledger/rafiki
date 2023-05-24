@@ -3,7 +3,7 @@ import { cx } from 'class-variance-authority'
 import type { FC } from 'react'
 import { Fragment, useEffect } from 'react'
 import { type Message } from '~/lib/message.server'
-import { CheckCircleSolid, X, XCircleSolid } from './icons'
+import { CheckCircleSolid, XIcon, XCircleSolid } from './icons'
 
 interface SnackbarProps {
   id: string
@@ -74,7 +74,7 @@ export const Snackbar: FC<SnackbarProps> = ({
               className='-mr-2 text-gray-500 hover:text-gray-900'
               onClick={() => onClose()}
             >
-              <X className='w-5 h-5' />
+              <XIcon className='w-5 h-5' />
               <span className='sr-only'>Close notification</span>
             </button>
           </div>
