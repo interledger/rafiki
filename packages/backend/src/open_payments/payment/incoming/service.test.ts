@@ -69,10 +69,15 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test.each`
-      client                  | incomingAmount | expiresAt                        | description                | externalRef
-      ${undefined}            | ${false}       | ${undefined}                     | ${undefined}               | ${undefined}
-      ${faker.internet.url()} | ${true}        | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      client                                        | incomingAmount | expiresAt                        | description                | externalRef
+      ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}               | ${undefined}
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
     `('An incoming payment can be created', async (options): Promise<void> => {
+      await expect(
+        IncomingPaymentEvent.query(knex).where({
+          type: IncomingPaymentEventType.IncomingPaymentCreated
+        })
+      ).resolves.toHaveLength(0)
       const incomingPayment = await incomingPaymentService.create({
         paymentPointerId,
         ...options,
@@ -84,6 +89,11 @@ describe('Incoming Payment Service', (): void => {
         asset,
         processAt: new Date(incomingPayment.expiresAt.getTime())
       })
+      await expect(
+        IncomingPaymentEvent.query(knex).where({
+          type: IncomingPaymentEventType.IncomingPaymentCreated
+        })
+      ).resolves.toHaveLength(1)
     })
 
     test('Cannot create incoming payment for nonexistent payment pointer', async (): Promise<void> => {

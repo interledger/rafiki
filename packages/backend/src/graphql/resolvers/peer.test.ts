@@ -24,33 +24,36 @@ import {
   PeersConnection,
   UpdatePeerMutationResponse
 } from '../generated/graphql'
+import { AccountingService } from '../../accounting/service'
 
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let peerService: PeerService
+  let accountingService: AccountingService
   let asset: Asset
 
   const randomPeer = (): CreatePeerInput => ({
     assetId: asset.id,
     http: {
       incoming: {
-        authTokens: [faker.datatype.string(32)]
+        authTokens: [faker.string.sample(32)]
       },
       outgoing: {
-        authToken: faker.datatype.string(32),
-        endpoint: faker.internet.url()
+        authToken: faker.string.sample(32),
+        endpoint: faker.internet.url({ appendSlash: false })
       }
     },
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
-    name: faker.name.fullName()
+    name: faker.person.fullName()
   })
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
+    accountingService = await deps.use('accountingService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -91,6 +94,7 @@ describe('Peer Resolvers', (): void => {
                     }
                   }
                   staticIlpAddress
+                  liquidity
                   name
                 }
               }
@@ -128,6 +132,7 @@ describe('Peer Resolvers', (): void => {
         },
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         staticIlpAddress: peer.staticIlpAddress,
+        liquidity: '0',
         name: peer.name
       })
       delete peer.http.incoming
@@ -221,41 +226,43 @@ describe('Peer Resolvers', (): void => {
   describe('Peer Queries', (): void => {
     test('Can get a peer', async (): Promise<void> => {
       const peer = await createPeer(deps, randomPeer())
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Peer($peerId: String!) {
-              peer(id: $peerId) {
-                id
-                asset {
-                  code
-                  scale
-                }
-                maxPacketAmount
-                http {
-                  outgoing {
-                    authToken
-                    endpoint
+      const query = async () =>
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query Peer($peerId: String!) {
+                peer(id: $peerId) {
+                  id
+                  asset {
+                    code
+                    scale
                   }
+                  maxPacketAmount
+                  http {
+                    outgoing {
+                      authToken
+                      endpoint
+                    }
+                  }
+                  staticIlpAddress
+                  liquidity
+                  name
                 }
-                staticIlpAddress
-                name
               }
+            `,
+            variables: {
+              peerId: peer.id
             }
-          `,
-          variables: {
-            peerId: peer.id
-          }
-        })
-        .then((query): GraphQLPeer => {
-          if (query.data) {
-            return query.data.peer
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+          })
+          .then((query): GraphQLPeer => {
+            if (query.data) {
+              return query.data.peer
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
 
-      expect(query).toEqual({
+      await expect(query()).resolves.toEqual({
         __typename: 'Peer',
         id: peer.id,
         asset: {
@@ -272,6 +279,34 @@ describe('Peer Resolvers', (): void => {
         },
         staticIlpAddress: peer.staticIlpAddress,
         maxPacketAmount: peer.maxPacketAmount?.toString(),
+        liquidity: '0',
+        name: peer.name
+      })
+
+      await accountingService.createDeposit({
+        id: uuid(),
+        account: peer,
+        amount: BigInt(100)
+      })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Peer',
+        id: peer.id,
+        asset: {
+          __typename: 'Asset',
+          code: peer.asset.code,
+          scale: peer.asset.scale
+        },
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            ...peer.http.outgoing
+          }
+        },
+        staticIlpAddress: peer.staticIlpAddress,
+        maxPacketAmount: peer.maxPacketAmount?.toString(),
+        liquidity: '100',
         name: peer.name
       })
     })
@@ -394,15 +429,15 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: '100',
         http: {
           incoming: {
-            authTokens: [faker.datatype.string(32)]
+            authTokens: [faker.string.sample(32)]
           },
           outgoing: {
-            authToken: faker.datatype.string(32),
-            endpoint: faker.internet.url()
+            authToken: faker.string.sample(32),
+            endpoint: faker.internet.url({ appendSlash: false })
           }
         },
         staticIlpAddress: 'g.rafiki.' + peer.id,
-        name: faker.name.fullName()
+        name: faker.person.fullName()
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient

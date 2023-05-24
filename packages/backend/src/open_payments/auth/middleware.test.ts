@@ -144,7 +144,7 @@ describe('Auth Middleware', (): void => {
         if (identifierOption === IdentifierOption.Matching) {
           identifier = ctx.paymentPointer.url
         } else if (identifierOption === IdentifierOption.Conflicting) {
-          identifier = faker.internet.url()
+          identifier = faker.internet.url({ appendSlash: false })
         }
       })
 
@@ -153,7 +153,7 @@ describe('Auth Middleware', (): void => {
       ): ActiveTokenInfo => ({
         active: true,
         grant: uuid(),
-        client: faker.internet.url(),
+        client: faker.internet.url({ appendSlash: false }),
         access: access ?? [
           {
             type: 'incoming-payment',
@@ -370,7 +370,7 @@ describe('HTTP Signature Middleware', (): void => {
   `('$description', ({ body }): void => {
     beforeEach(async (): Promise<void> => {
       const method = body ? 'POST' : 'GET'
-      const url = faker.internet.url()
+      const url = faker.internet.url({ appendSlash: false })
       const keyId = uuid()
       const privateKey = generateKeyPairSync('ed25519').privateKey
       const request = {
@@ -399,7 +399,7 @@ describe('HTTP Signature Middleware', (): void => {
         url
       })
       ctx.container = deps
-      ctx.client = faker.internet.url()
+      ctx.client = faker.internet.url({ appendSlash: false })
       key = generateJwk({
         keyId,
         privateKey

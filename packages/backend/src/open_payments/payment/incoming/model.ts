@@ -18,6 +18,7 @@ import {
 } from '@interledger/open-payments'
 
 export enum IncomingPaymentEventType {
+  IncomingPaymentCreated = 'incoming_payment.created',
   IncomingPaymentExpired = 'incoming_payment.expired',
   IncomingPaymentCompleted = 'incoming_payment.completed'
 }

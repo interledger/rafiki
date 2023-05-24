@@ -6,6 +6,7 @@ import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 
 export enum EventType {
+  IncomingPaymentCreated = 'incoming_payment.created',
   IncomingPaymentCompleted = 'incoming_payment.completed',
   IncomingPaymentExpired = 'incoming_payment.expired',
   OutgoingPaymentCreated = 'outgoing_payment.created',

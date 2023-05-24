@@ -48,6 +48,11 @@ export class PaymentPointer
   // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `paymentPointer.id`
   public totalEventsAmount!: bigint
   public processAt!: Date | null
+  public deactivatedAt!: Date | null
+
+  public get isActive() {
+    return !this.deactivatedAt || this.deactivatedAt > new Date()
+  }
 
   public async onCredit({
     totalReceived,

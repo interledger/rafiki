@@ -1,6 +1,6 @@
-version: '3'
+name: c9
 services:
-  mock-account-servicing-entity:
+  cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
     build:
       context: ../..
@@ -17,13 +17,12 @@ services:
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./seed.yml:/workspace/seed.yml
-      - ./private-key.pem:/workspace/private-key.pem
+      - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
+      - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - backend
-  backend:
+      - cloud-nine-backend
+  cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
-    image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile
@@ -40,7 +39,7 @@ services:
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
-      DATABASE_URL: postgresql://cloud_nine_wallet_backend:cloud_nine_wallet_backend@database/cloud_nine_wallet_backend
+      DATABASE_URL: postgresql://cloud_nine_wallet_backend:cloud_nine_wallet_backend@shared-database/cloud_nine_wallet_backend
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
@@ -52,15 +51,14 @@ services:
       OPEN_PAYMENTS_URL: http://cloud-nine-wallet-backend
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
-      REDIS_URL: redis://redis:6379/0
+      REDIS_URL: redis://shared-redis:6379/0
       QUOTE_URL: http://cloud-nine-wallet/quotes
       PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
     depends_on:
-      - database
-      - redis
-  auth:
+      - shared-database
+      - shared-redis
+  cloud-nine-auth:
     hostname: cloud-nine-wallet-auth
-    image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
@@ -71,10 +69,10 @@ services:
       - '3006:3006'
     environment:
       NODE_ENV: development
-      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@database/cloud_nine_wallet_auth
+      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
     depends_on:
-      - database
-  signatures:
+      - shared-database
+  cloud-nine-signatures:
     hostname: cloud-nine-wallet-signatures
     build:
       context: ../..
@@ -85,28 +83,28 @@ services:
     environment:
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./private-key.pem:/workspace/private-key.pem
+      - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
     networks:
       - rafiki
-  database:
+  shared-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
     networks:
       - rafiki
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
-      - ./dbinit.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../cloud-nine-wallet/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - '5432:5432'
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres
-  redis:
+  shared-redis:
     image: 'redis:7'
     restart: unless-stopped
     networks:
       - rafiki
-  admin:
+  cloud-nine-admin:
     hostname: cloud-nine-wallet-admin
     build:
       context: ../..
@@ -120,7 +118,7 @@ services:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
     depends_on:
-      - backend
+      - cloud-nine-backend
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

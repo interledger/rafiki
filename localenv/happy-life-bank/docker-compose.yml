@@ -1,6 +1,6 @@
-version: '3'
+name: hl
 services:
-  mock-account-servicing-entity:
+  happy-life-mock-ase:
     hostname: happy-life-bank
     build:
       context: ../..
@@ -17,13 +17,12 @@ services:
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./seed.yml:/workspace/seed.yml
-      - ./private-key.pem:/workspace/private-key.pem
+      - ../happy-life-bank/seed.yml:/workspace/seed.yml
+      - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
     depends_on:
-      - backend
-  backend:
+      - happy-life-backend
+  happy-life-backend:
     hostname: happy-life-bank-backend
-    image: ghcr.io/interledger/rafiki-backend:latest
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile
@@ -40,7 +39,7 @@ services:
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
       OPEN_PAYMENTS_PORT: 80
-      DATABASE_URL: postgresql://happy_life_bank_backend:happy_life_bank_backend@database/happy_life_bank_backend
+      DATABASE_URL: postgresql://happy_life_bank_backend:happy_life_bank_backend@shared-database/happy_life_bank_backend
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
@@ -52,12 +51,11 @@ services:
       WEBHOOK_URL: http://happy-life-bank/webhooks
       OPEN_PAYMENTS_URL: http://happy-life-bank-backend
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
-      REDIS_URL: redis://redis:6379/1
+      REDIS_URL: redis://shared-redis:6379/1
       QUOTE_URL: http://happy-life-bank/quotes
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
-  auth:
+  happy-life-auth:
     hostname: happy-life-bank-auth
-    image: ghcr.io/interledger/rafiki-auth:latest
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
@@ -68,9 +66,9 @@ services:
       - "4006:3006"
     environment:
       NODE_ENV: development
-      AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@database/happy_life_bank_auth
+      AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
-  signatures:
+  happy-life-signatures:
     hostname: happy-life-bank-signatures
     build:
       context: ../..
@@ -81,8 +79,8 @@ services:
     environment:
       KEY_FILE: /workspace/private-key.pem
     volumes:
-      - ./private-key.pem:/workspace/private-key.pem
-  admin:
+      - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
+  happy-life-admin:
     hostname: happy-life-bank-admin
     build:
       context: ../..
@@ -96,7 +94,7 @@ services:
       PORT: 4010
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
     depends_on:
-      - backend
+      - happy-life-backend
 
 networks:
   rafiki:

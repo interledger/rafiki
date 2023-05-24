@@ -2,7 +2,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { NavLink } from '@remix-run/react'
 import { cx } from 'class-variance-authority'
 import { Fragment, useState } from 'react'
-import { Bars, X } from './icons'
+import { Bars, XIcon } from './icons'
 
 const navigation = [
   {
@@ -56,7 +56,7 @@ export const Sidebar = () => {
                 <div className='flex flex-shrink-0 items-center justify-between px-4'>
                   <img className='w-8' src='/logo.svg' alt='Logo' />
                   <button type='button' onClick={() => setSidebarIsOpen(false)}>
-                    <X className='h-8 w-8 text-tealish' />
+                    <XIcon className='h-8 w-8 text-tealish' />
                   </button>
                 </div>
                 <div className='mt-5 h-0 flex-1 overflow-y-auto'>

@@ -2,6 +2,7 @@ import { Resolvers } from '../generated/graphql'
 import {
   getPaymentPointer,
   createPaymentPointer,
+  updatePaymentPointer,
   triggerPaymentPointerEvents
 } from './payment_pointer'
 import {
@@ -23,6 +24,8 @@ import {
 } from './outgoing_payment'
 import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
+  getAssetLiquidity,
+  getPeerLiquidity,
   addAssetLiquidity,
   addPeerLiquidity,
   createAssetLiquidityWithdrawal,
@@ -43,6 +46,12 @@ import { createReceiver } from './receiver'
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
   UInt64: GraphQLBigInt,
+  Asset: {
+    liquidity: getAssetLiquidity
+  },
+  Peer: {
+    liquidity: getPeerLiquidity
+  },
   Query: {
     paymentPointer: getPaymentPointer,
     asset: getAsset,
@@ -62,6 +71,7 @@ export const resolvers: Resolvers = {
     createPaymentPointerKey,
     revokePaymentPointerKey,
     createPaymentPointer,
+    updatePaymentPointer,
     triggerPaymentPointerEvents,
     createAsset,
     updateAssetWithdrawalThreshold,
