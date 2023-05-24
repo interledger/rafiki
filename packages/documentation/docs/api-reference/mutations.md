@@ -319,8 +319,8 @@ Delete a peer
 <tbody>
 <tr>
 <td>
-id<br />
-<a href="scalars#string"><code>String!</code></a>
+input<br />
+<a href="inputObjects#deletepeerinput"><code>DeletePeerInput!</code></a>
 </td>
 <td>
 
@@ -342,8 +342,8 @@ Deposit webhook event liquidity
 <tbody>
 <tr>
 <td>
-eventId<br />
-<a href="scalars#string"><code>String!</code></a>
+input<br />
+<a href="inputObjects#depositeventliquidityinput"><code>DepositEventLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -365,11 +365,11 @@ Post liquidity withdrawal. Withdrawals are two-phase commits and are committed v
 <tbody>
 <tr>
 <td>
-withdrawalId<br />
-<a href="scalars#string"><code>String!</code></a>
+input<br />
+<a href="inputObjects#postliquiditywithdrawalinput"><code>PostLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
-<p>The id of the liquidity withdrawal to post.</p>
+
 </td>
 </tr>
 </tbody>
@@ -388,11 +388,11 @@ Revoke a public key associated with a payment pointer. Open Payment requests usi
 <tbody>
 <tr>
 <td>
-id<br />
-<a href="scalars#string"><code>String!</code></a>
+input<br />
+<a href="inputObjects#revokepaymentpointerkeyinput"><code>RevokePaymentPointerKeyInput!</code></a>
 </td>
 <td>
-<p>Internal id of key</p>
+
 </td>
 </tr>
 </tbody>
@@ -411,11 +411,11 @@ If automatic withdrawal of funds received via Web Monetization by the payment po
 <tbody>
 <tr>
 <td>
-limit<br />
-<a href="scalars#int"><code>Int!</code></a>
+input<br />
+<a href="inputObjects#triggerpaymentpointereventsinput"><code>TriggerPaymentPointerEventsInput!</code></a>
 </td>
 <td>
-<p>Maximum number of events being triggered (n).</p>
+
 </td>
 </tr>
 </tbody>
@@ -436,6 +436,29 @@ Update an asset's withdrawal threshold. The withdrawal threshold indicates the M
 <td>
 input<br />
 <a href="inputObjects#updateassetinput"><code>UpdateAssetInput!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## updatePaymentPointer
+
+**Type:** [UpdatePaymentPointerMutationResponse!](objects#updatepaymentpointermutationresponse)
+
+Update a payment pointer
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+input<br />
+<a href="inputObjects#updatepaymentpointerinput"><code>UpdatePaymentPointerInput!</code></a>
 </td>
 <td>
 
@@ -480,11 +503,11 @@ Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back
 <tbody>
 <tr>
 <td>
-withdrawalId<br />
-<a href="scalars#string"><code>String!</code></a>
+input<br />
+<a href="inputObjects#voidliquiditywithdrawalinput"><code>VoidLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
-<p>The id of the liquidity withdrawal to void.</p>
+
 </td>
 </tr>
 </tbody>
@@ -503,8 +526,8 @@ Withdraw webhook event liquidity
 <tbody>
 <tr>
 <td>
-eventId<br />
-<a href="scalars#string"><code>String!</code></a>
+input<br />
+<a href="inputObjects#withdraweventliquidityinput"><code>WithdrawEventLiquidityInput!</code></a>
 </td>
 <td>
 

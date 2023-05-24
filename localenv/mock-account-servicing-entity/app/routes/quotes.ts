@@ -1,7 +1,7 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 
-import { CONFIG } from '~/lib/parse_config'
+import { CONFIG } from '~/lib/parse_config.server'
 
 export type Amount = {
   value: string // bigint

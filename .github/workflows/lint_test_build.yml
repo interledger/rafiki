@@ -43,13 +43,13 @@ jobs:
 
   backend:
     runs-on: ubuntu-22.04
-    needs: [checkout, graphql]
+    needs: [checkout]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
-      - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test
+      - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test:ci
 
   frontend:
     runs-on: ubuntu-22.04
@@ -62,7 +62,7 @@ jobs:
 
   auth:
     runs-on: ubuntu-22.04
-    needs: [checkout, graphql]
+    needs: [checkout]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3

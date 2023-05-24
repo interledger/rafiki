@@ -6,8 +6,8 @@ import {
   useNavigation
 } from '@remix-run/react'
 import { PageHeader } from '~/components/PageHeader'
-import { Button, ErrorPanel, Input } from '~/components/ui'
-import { type Asset } from '~/generated/graphql'
+import { Button, ErrorPanel, Input, Select } from '~/components/ui'
+import type { ListAssetsQuery } from '~/generated/graphql'
 import { listAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { commitSession, getSession, setMessage } from '~/lib/message.server'
@@ -15,15 +15,15 @@ import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
 export async function loader() {
-  let assets: Asset[] = []
+  let assets: ListAssetsQuery['assets']['edges'] = []
   let hasNextPage = true
   let after: string | undefined
 
   while (hasNextPage) {
-    const response = await listAssets({ after })
+    const response = await listAssets({ first: 100, after })
 
     if (response.edges) {
-      assets = [...assets, ...response.edges.map((edge) => edge.node)]
+      assets = [...assets, ...response.edges]
     }
 
     if (response.pageInfo.hasNextPage) {
@@ -31,7 +31,7 @@ export async function loader() {
       if (response.pageInfo.endCursor) {
         after = response?.pageInfo?.endCursor
       } else {
-        after = assets[assets.length - 1].id
+        after = assets[assets.length - 1].node.id
       }
     } else {
       hasNextPage = false
@@ -131,30 +131,17 @@ export default function CreatePeerPage() {
               </div>
               <div className='md:col-span-2 bg-white rounded-md shadow-md'>
                 <div className='w-full p-4 space-y-3'>
-                  <Input
+                  <Select
+                    options={assets.map((asset) => ({
+                      value: asset.node.id,
+                      label: `${asset.node.code} (Scale: ${asset.node.scale})`
+                    }))}
+                    error={response?.errors.fieldErrors.asset}
                     name='asset'
+                    placeholder='Select asset...'
                     label='Asset'
-                    placeholder='Select asset'
                     required
-                    autoComplete='off'
-                    list='assets'
-                    error={response?.errors?.fieldErrors?.asset}
                   />
-                  <datalist id='assets'>
-                    {assets.map((asset) => (
-                      <option
-                        className='bg-red-200'
-                        key={asset.id}
-                        value={asset.id}
-                      >
-                        {asset.code} (Scale: {asset.scale} |{' '}
-                        {asset.withdrawalThreshold
-                          ? `Withdrawal threshold ${asset.withdrawalThreshold}`
-                          : 'No withdrawal threshold'}
-                        )
-                      </option>
-                    ))}
-                  </datalist>
                 </div>
               </div>
             </div>
