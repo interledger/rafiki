@@ -42,7 +42,7 @@ export const peerHttpInfoSchema = z
 
 export const peerAssetInfoSchema = z
   .object({
-    asset: z.string()
+    asset: z.string().uuid({ message: 'Invalid asset.' })
   })
   .merge(uuidSchema)
 
