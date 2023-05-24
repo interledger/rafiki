@@ -24,7 +24,7 @@ Dependencies:
 
 Rafiki cannot be run by itself but needs at least a Postgres and a Redis instance running with it. If you prefer to use Tigerbeetle instead of Postgres for accounting, a Tigerbeetle instance is required as well.
 
-An example Chart including Rafiki, Postgres, and Redis can be found [here](../infrastructure/helm/rafiki-example/).
+An example Chart including Rafiki, Postgres, and Redis can be found [here](../../../../infrastructure/helm/rafiki-example/).
 
 <!-- TODO: add chart to packages -->
 
