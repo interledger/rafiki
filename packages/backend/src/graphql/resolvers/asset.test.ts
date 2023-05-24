@@ -20,16 +20,19 @@ import {
   AssetsConnection,
   CreateAssetInput
 } from '../generated/graphql'
+import { AccountingService } from '../../accounting/service'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
+  let accountingService: AccountingService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
+    accountingService = await deps.use('accountingService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -70,6 +73,7 @@ describe('Asset Resolvers', (): void => {
                     id
                     code
                     scale
+                    liquidity
                     withdrawalThreshold
                   }
                 }
@@ -95,6 +99,7 @@ describe('Asset Resolvers', (): void => {
           id: response.asset.id,
           code: input.code,
           scale: input.scale,
+          liquidity: '0',
           withdrawalThreshold: expectedWithdrawalThreshold
         })
         await expect(
@@ -184,36 +189,55 @@ describe('Asset Resolvers', (): void => {
       })
       assert.ok(!isAssetError(asset))
       assert.ok(asset.withdrawalThreshold)
-      const query = await appContainer.apolloClient
-        .query({
-          query: gql`
-            query Asset($assetId: String!) {
-              asset(id: $assetId) {
-                id
-                code
-                scale
-                withdrawalThreshold
-                createdAt
+      const query = async () =>
+        await appContainer.apolloClient
+          .query({
+            query: gql`
+              query Asset($assetId: String!) {
+                asset(id: $assetId) {
+                  id
+                  code
+                  scale
+                  liquidity
+                  withdrawalThreshold
+                  createdAt
+                }
               }
+            `,
+            variables: {
+              assetId: asset.id
             }
-          `,
-          variables: {
-            assetId: asset.id
-          }
-        })
-        .then((query): Asset => {
-          if (query.data) {
-            return query.data.asset
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+          })
+          .then((query): Asset => {
+            if (query.data) {
+              return query.data.asset
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
 
-      expect(query).toEqual({
+      await expect(query()).resolves.toEqual({
         __typename: 'Asset',
         id: asset.id,
         code: asset.code,
         scale: asset.scale,
+        liquidity: '0',
+        withdrawalThreshold: asset.withdrawalThreshold.toString(),
+        createdAt: new Date(+asset.createdAt).toISOString()
+      })
+
+      await accountingService.createDeposit({
+        id: uuid(),
+        account: asset,
+        amount: BigInt(100)
+      })
+
+      await expect(query()).resolves.toEqual({
+        __typename: 'Asset',
+        id: asset.id,
+        code: asset.code,
+        scale: asset.scale,
+        liquidity: '100',
         withdrawalThreshold: asset.withdrawalThreshold.toString(),
         createdAt: new Date(+asset.createdAt).toISOString()
       })

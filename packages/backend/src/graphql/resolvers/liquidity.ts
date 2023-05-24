@@ -4,7 +4,9 @@ import {
   MutationResolvers,
   LiquidityError,
   LiquidityMutationResponse,
-  PaymentPointerWithdrawalMutationResponse
+  PaymentPointerWithdrawalMutationResponse,
+  AssetResolvers,
+  PeerResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -15,6 +17,28 @@ import {
   isPaymentEvent,
   PaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
+
+export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
+    return await getLiquidity(ctx, parent.id as string)
+  }
+
+export const getPeerLiquidity: PeerResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
+    return await getLiquidity(ctx, parent.id as string)
+  }
+
+const getLiquidity = async (
+  ctx: ApolloContext,
+  id: string
+): Promise<bigint> => {
+  const accountingService = await ctx.container.use('accountingService')
+  const liquidity = await accountingService.getBalance(id)
+  if (liquidity === undefined) {
+    throw new Error('No liquidity account found')
+  }
+  return liquidity
+}
 
 export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidity'] =
   async (
