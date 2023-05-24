@@ -43,7 +43,7 @@ jobs:
 
   backend:
     runs-on: ubuntu-22.04
-    needs: [checkout, graphql]
+    needs: [checkout]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
@@ -62,7 +62,7 @@ jobs:
 
   auth:
     runs-on: ubuntu-22.04
-    needs: [checkout, graphql]
+    needs: [checkout]
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v3
