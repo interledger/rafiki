@@ -10,9 +10,21 @@ import {
   ListOptions
 } from './model'
 import { Grant } from '../auth/middleware'
-import { PaymentPointerContext, ReadContext, ListContext } from '../../app'
+import {
+  PaymentPointerContext,
+  ReadContext,
+  ListContext,
+  AppServices
+} from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
 import { createContext } from '../../tests/context'
+import { createPaymentPointer } from '../../tests/paymentPointer'
+import { truncateTables } from '../../tests/tableManager'
+import { initIocContainer } from '../..'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { Config } from '../../config/app'
+import { IocContract } from '@adonisjs/fold'
+import assert from 'assert'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -353,4 +365,60 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   }
 }
 
-test.todo('test suite must contain at least one test')
+describe('Payment Pointer Model', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+  })
+
+  afterEach(async (): Promise<void> => {
+    await truncateTables(appContainer.knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  describe('deactivatedAt', () => {
+    const getDateRelativeToToday = (daysFromToday: number) => {
+      const d = new Date()
+      d.setDate(d.getDate() + daysFromToday)
+      return d
+    }
+
+    const deactivatedAtCases = [
+      {
+        value: null,
+        expectedIsActive: true,
+        description: 'No deactivatedAt is active'
+      },
+      {
+        value: getDateRelativeToToday(1),
+        expectedIsActive: true,
+        description: 'Future deactivatedAt is inactive'
+      },
+      {
+        value: getDateRelativeToToday(-1),
+        expectedIsActive: false,
+        description: 'Past deactivatedAt is inactive'
+      }
+    ]
+
+    test.each(deactivatedAtCases)(
+      '$description',
+      async ({ value, expectedIsActive }) => {
+        const paymentPointer = await createPaymentPointer(deps)
+        if (value) {
+          await paymentPointer
+            .$query(appContainer.knex)
+            .patch({ deactivatedAt: value })
+          assert.ok(paymentPointer.deactivatedAt === value)
+        }
+        expect(paymentPointer.isActive).toEqual(expectedIsActive)
+      }
+    )
+  })
+})

@@ -1,12 +1,12 @@
-# Rafiki Architecture
+# Architecture
 
-![Architecture diagram](./assets/img/rafiki-architecture.png)
+![Architecture diagram](/docs/assets/rafiki-architecture.png)
 
 Rafiki is a collection of three services that are run together; each one can be scaled horizontally. These services are
 
-- [`backend`](../packages/backend): The main service, handling business logic and external communication.
-- [`auth`](../packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
-- [`frontend`](../packages/frontend): An internal admin interface for Rafiki operators to manage their Rafiki instance.
+- [`backend`](https://github.com/interledger/rafiki/tree/main/packages/backend): The main service, handling business logic and external communication.
+- [`auth`](https://github.com/interledger/rafiki/tree/main/packages/auth): The service used for Grant Authorization and authentication. Rafiki provides this as a reference implementation, with the understanding that Rafiki operators can use and deploy their own service for authorization and authentication.
+- [`frontend`](https://github.com/interledger/rafiki/tree/main/packages/frontend): An internal admin interface for Rafiki operators to manage their Rafiki instance.
 
 These services rely on four databases:
 
@@ -21,7 +21,7 @@ The `backend` service has four responsibilities:
 
 - Expose REST [Open Payments API](https://docs.openpayments.guide/reference) endpoints for public clients to perform account management tasks.
 - Expose an internal GraphQL Admin API for service operators to manage accounts and application settings like peering relationships.
-- Expose an [ILP connector](./connector.md) to send and receive STREAM packets with peers.
+- Expose an [ILP connector](../concepts/interledger-protocol/connector.md) to send and receive STREAM packets with peers.
 - Business logic to manage accounts and track balances.
 
 The `backend`'s ILP functionality includes:
@@ -38,10 +38,10 @@ The `auth` service performs authorization and authentication of incoming request
 
 ## Frontend
 
-The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [payment pointers](./glossary.md#payment-pointer), [peering relationships](./glossary.md#peer), and [assets](./glossary.md#asset), among other settings.
+The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [payment pointers](../reference/glossary.md#payment-pointer), [peering relationships](../reference/glossary.md#peer), and [assets](../reference/glossary.md#asset), among other settings.
 
 ## Additional packages
 
 ### Token Introspection
 
-The `token-introspection` package is a client library for making [GNAP](./glossary.md#grant-negotiation-authorization-protocol) token introspection requests to the auth server.
+The `token-introspection` package is a client library for making [GNAP](../reference/glossary.md#grant-negotiation-authorization-protocol) token introspection requests to the auth server.
