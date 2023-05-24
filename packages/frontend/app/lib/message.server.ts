@@ -1,27 +1,25 @@
-import type { Session } from '@remix-run/node'
+import { type SessionData } from '@remix-run/node'
 import { createCookieSessionStorage } from '@remix-run/node'
 
-export type MessageType = 'success' | 'error' | 'info'
+const ONE_MINUTE_IN_S = 60
+
+export type MessageType = 'success' | 'error'
 export type Message = { content: string; type: MessageType }
+export type MessageStorageFlashData = {
+  message: Message
+}
 
-const ONE_YEAR = 1000 * 60 * 60 * 24 * 365
-
-export const { commitSession, getSession } = createCookieSessionStorage({
+export const messageStorage = createCookieSessionStorage<
+  SessionData,
+  MessageStorageFlashData
+>({
   cookie: {
     name: '__message',
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
-    expires: new Date(Date.now() + ONE_YEAR),
-    secrets: ['MY_SUPER_SECRET_TOKEN'],
-    secure: true
+    maxAge: ONE_MINUTE_IN_S,
+    secrets: 'MY_SUPER_SECRET_TOKEN',
+    secure: process.env.NODE_ENV === 'production'
   }
 })
-
-export function setMessage(session: Session, message: Message) {
-  session.flash('message', message)
-}
-
-export function setErrorMessage(session: Session, message: string) {
-  session.flash('message', message)
-}

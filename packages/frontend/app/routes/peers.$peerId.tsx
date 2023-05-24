@@ -20,7 +20,7 @@ import {
 } from '~/components/ConfirmationDialog'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
-import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { messageStorage } from '~/lib/message.server'
 import {
   peerGeneralInfoSchema,
   peerHttpInfoSchema,
@@ -283,7 +283,7 @@ export async function action({ request }: ActionArgs) {
     }
   }
 
-  const session = await getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
   const formData = await request.formData()
   const intent = formData.get('intent')
   formData.delete('intent')
@@ -356,47 +356,47 @@ export async function action({ request }: ActionArgs) {
     case 'delete': {
       const result = uuidSchema.safeParse(Object.fromEntries(formData))
       if (!result.success) {
-        setMessage(session, {
+        session.flash('message', {
           content: 'Invalid peer ID.',
           type: 'error'
         })
 
         return redirect('.', {
-          headers: { 'Set-Cookie': await commitSession(session) }
+          headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
         })
       }
 
       const response = await deletePeer({ input: { id: result.data.id } })
       if (!response?.success) {
-        setMessage(session, {
+        session.flash('message', {
           content: 'Could not delete peer.',
           type: 'error'
         })
 
         return redirect('.', {
-          headers: { 'Set-Cookie': await commitSession(session) }
+          headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
         })
       }
 
-      setMessage(session, {
+      session.flash('message', {
         content: 'Peer was deleted.',
         type: 'success'
       })
 
       return redirect('/peers', {
-        headers: { 'Set-Cookie': await commitSession(session) }
+        headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
       })
     }
     default:
       throw json(null, { status: 400, statusText: 'Invalid intent.' })
   }
 
-  setMessage(session, {
+  session.flash('message', {
     content: 'Peer information was updated.',
     type: 'success'
   })
 
   return redirect('.', {
-    headers: { 'Set-Cookie': await commitSession(session) }
+    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
   })
 }

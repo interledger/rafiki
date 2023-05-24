@@ -14,7 +14,7 @@ import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import { getAsset, updateAsset } from '~/lib/api/asset.server'
-import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { messageStorage } from '~/lib/message.server'
 import { updateAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
@@ -126,14 +126,14 @@ export async function action({ request }: ActionArgs) {
     return json({ ...actionResponse }, { status: 400 })
   }
 
-  const session = await getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
 
-  setMessage(session, {
-    content: 'Asset information was updated.',
+  session.flash('message', {
+    content: 'Asset information was updated',
     type: 'success'
   })
 
   return redirect('.', {
-    headers: { 'Set-Cookie': await commitSession(session) }
+    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
   })
 }

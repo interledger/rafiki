@@ -10,7 +10,7 @@ import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import type { ListAssetsQuery } from '~/generated/graphql'
 import { listAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
-import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { messageStorage } from '~/lib/message.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
@@ -206,14 +206,14 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const session = await getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
 
-  setMessage(session, {
+  session.flash('message', {
     content: 'Peer created.',
     type: 'success'
   })
 
   return redirect(`/peers/${response.peer?.id}`, {
-    headers: { 'Set-Cookie': await commitSession(session) }
+    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
   })
 }
