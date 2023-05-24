@@ -6,7 +6,7 @@ import { WebhookEvent } from '../webhook/model'
 import { sample } from 'lodash'
 import { EventPayload } from '../webhook/service'
 
-const webhookEventTypes = ['event1', 'event2', 'event3']
+export const webhookEventTypes = ['event1', 'event2', 'event3'] as const
 
 export function randomWebhookEvent(): EventPayload {
   return {
