@@ -831,7 +831,11 @@ type WebhookEventsEdge {
 }
 
 input WebhookEventFilter {
-  type: String
+  type: FilterString
+}
+
+input FilterString {
+  in: [String!]!
 }
 
 interface Model {

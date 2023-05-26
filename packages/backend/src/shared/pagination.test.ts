@@ -383,7 +383,7 @@ describe('Pagination', (): void => {
                 if (pagination.last) pagination.before = webhookEvents[cursor]
                 else pagination.after = webhookEvents[cursor]
               }
-              const getPageOpts = { pagination, filter: { type: eventType } }
+              const getPageOpts = { pagination, filter: { type: { in: [eventType] } } }
               const page = await webhookService.getPage(getPageOpts)
               const pageInfo = await getPageInfo(
                 (pagination) =>

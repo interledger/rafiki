@@ -6,6 +6,7 @@ import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/baseModel'
+import { FilterString } from '../shared/filters'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -13,7 +14,7 @@ import { Pagination } from '../shared/baseModel'
 export const RETRY_BACKOFF_MS = 10_000
 
 interface WebhookEventFilter {
-  type?: string
+  type?: FilterString
 }
 
 interface GetPageOptions {
@@ -178,11 +179,11 @@ async function getWebhookEventsPage(
   options?: GetPageOptions
 ): Promise<WebhookEvent[]> {
   const { filter, pagination } = options ?? {}
-  const { type } = filter ?? {}
+
   const query = WebhookEvent.query(deps.knex)
 
-  if (type) {
-    query.where({ type })
+  if (filter?.type?.in && filter.type.in.length > 0) {
+    query.whereIn('type', filter.type.in)
   }
 
   return await query.getPage(pagination)

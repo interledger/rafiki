@@ -281,6 +281,10 @@ export type DepositEventLiquidityInput = {
   idempotencyKey: Scalars['String'];
 };
 
+export type FilterString = {
+  in: Array<Scalars['String']>;
+};
+
 export type Http = {
   __typename?: 'Http';
   /** Outgoing connection details */
@@ -1047,7 +1051,7 @@ export type WebhookEvent = Model & {
 };
 
 export type WebhookEventFilter = {
-  type?: InputMaybe<Scalars['String']>;
+  type?: InputMaybe<FilterString>;
 };
 
 export type WebhookEventsConnection = {
@@ -1169,6 +1173,7 @@ export type ResolversTypes = {
   DeletePeerInput: ResolverTypeWrapper<Partial<DeletePeerInput>>;
   DeletePeerMutationResponse: ResolverTypeWrapper<Partial<DeletePeerMutationResponse>>;
   DepositEventLiquidityInput: ResolverTypeWrapper<Partial<DepositEventLiquidityInput>>;
+  FilterString: ResolverTypeWrapper<Partial<FilterString>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
   HttpIncomingInput: ResolverTypeWrapper<Partial<HttpIncomingInput>>;
@@ -1261,6 +1266,7 @@ export type ResolversParentTypes = {
   DeletePeerInput: Partial<DeletePeerInput>;
   DeletePeerMutationResponse: Partial<DeletePeerMutationResponse>;
   DepositEventLiquidityInput: Partial<DepositEventLiquidityInput>;
+  FilterString: Partial<FilterString>;
   Float: Partial<Scalars['Float']>;
   Http: Partial<Http>;
   HttpIncomingInput: Partial<HttpIncomingInput>;
