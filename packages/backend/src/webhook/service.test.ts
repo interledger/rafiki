@@ -160,12 +160,12 @@ describe('Webhook Service', (): void => {
       new Set(eventInserts.map((event) => event.type))
     )
     test.each(uniqueTypes)('Filter by type: %s', async (type) => {
-      const webhookEvents = await webhookService.getPage({ 
-        filter: { 
-          type: { 
-            in: [type] 
-          } 
-        } 
+      const webhookEvents = await webhookService.getPage({
+        filter: {
+          type: {
+            in: [type]
+          }
+        }
       })
       const expectedLength = eventInserts.filter(
         (event) => event.type === type
