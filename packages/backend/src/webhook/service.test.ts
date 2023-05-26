@@ -101,12 +101,6 @@ describe('Webhook Service', (): void => {
       createModel: () => createWebhookEvent(deps),
       getPage: (pagination?: Pagination) =>
         webhookService.getPage({ pagination })
-      // TODO: Make this work with filtering? eg: webhookService.getPage({ pagination, type: 'event1' })
-      // Currently does not work with filters unless you increase the # of models created
-      // in getPageTests such that there are ~20+ samples for the event type when filtering.
-      // Not a great fix, because technically increasing amount of models created doesnt garuntee
-      // enough isntances of each event type. Would probably be best to somehow pass in created models
-      // or override function to create models in beforeEach.
     })
   })
 
@@ -174,7 +168,6 @@ describe('Webhook Service', (): void => {
     })
 
     test('Can paginate and filter', async (): Promise<void> => {
-      // TODO: test in getPageTests instead?
       const type = 'pagination_filtering.Y'
       const filter = { type: { in: [type] } }
       const idsOfTypeY = eventInserts

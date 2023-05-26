@@ -19,11 +19,6 @@ import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { createPeer } from '../tests/peer'
 import { WebhookService } from '../webhook/service'
-import {
-  createWebhookEvent,
-  randomWebhookEvent,
-  webhookEventTypes
-} from '../tests/webhook'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -338,68 +333,6 @@ describe('Pagination', (): void => {
               hasNextPage,
               hasPreviousPage
             })
-          }
-        )
-      })
-      describe('webhookEvents', (): void => {
-        test.each`
-          num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
-          ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
-          ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
-          ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
-          ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
-          ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
-        `(
-          '$num webhookEvents, pagination $pagination with cursor $cursor',
-          async ({
-            num,
-            pagination,
-            cursor,
-            start,
-            end,
-            hasNextPage,
-            hasPreviousPage
-          }): Promise<void> => {
-            const webhookEventsByType: { [key: string]: string[] } = {}
-            webhookEventTypes.forEach((eventType) => {
-              webhookEventsByType[eventType] = []
-            })
-
-            for (let i = 0; i < num; i++) {
-              for (const webhookEventType of webhookEventTypes) {
-                const newEvent = {
-                  ...randomWebhookEvent(),
-                  type: webhookEventType
-                }
-                const webhookEvent = await createWebhookEvent(deps, newEvent)
-                webhookEventsByType[webhookEventType].push(webhookEvent.id)
-              }
-            }
-
-            for (const [eventType, webhookEvents] of Object.entries(
-              webhookEventsByType
-            )) {
-              if (cursor) {
-                if (pagination.last) pagination.before = webhookEvents[cursor]
-                else pagination.after = webhookEvents[cursor]
-              }
-              const getPageOpts = {
-                pagination,
-                filter: { type: { in: [eventType] } }
-              }
-              const page = await webhookService.getPage(getPageOpts)
-              const pageInfo = await getPageInfo(
-                (pagination) =>
-                  webhookService.getPage({ ...getPageOpts, pagination }),
-                page
-              )
-              expect(pageInfo).toEqual({
-                startCursor: webhookEvents[start],
-                endCursor: webhookEvents[end],
-                hasNextPage,
-                hasPreviousPage
-              })
-            }
           }
         )
       })
