@@ -30,8 +30,10 @@ import {
   TriggerPaymentPointerEventsMutationResponse,
   PaymentPointer,
   PaymentPointerStatus,
-  UpdatePaymentPointerMutationResponse
+  UpdatePaymentPointerMutationResponse,
+  PaymentPointersConnection
 } from '../generated/graphql'
+import { getPageTests } from './page.test'
 
 describe('Payment Pointer Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -449,6 +451,64 @@ describe('Payment Pointer Resolvers', (): void => {
         })
 
       await expect(gqlQuery).rejects.toThrow(ApolloError)
+    })
+
+    getPageTests({
+      getClient: () => appContainer.apolloClient,
+      createModel: () => createPaymentPointer(deps),
+      pagedQuery: 'paymentPointers'
+    })
+
+    test('Can get page of payment pointers', async (): Promise<void> => {
+      const paymentPointers: PaymentPointerModel[] = []
+      for (let i = 0; i < 2; i++) {
+        paymentPointers.push(await createPaymentPointer(deps))
+      }
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query PaymentPointers {
+              paymentPointers {
+                edges {
+                  node {
+                    id
+                    asset {
+                      code
+                      scale
+                    }
+                    url
+                    publicName
+                  }
+                  cursor
+                }
+              }
+            }
+          `
+        })
+        .then((query): PaymentPointersConnection => {
+          if (query.data) {
+            return query.data.paymentPointers
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        const paymentPointer = paymentPointers[idx]
+        expect(edge.cursor).toEqual(paymentPointer.id)
+        expect(edge.node).toEqual({
+          __typename: 'PaymentPointer',
+          id: paymentPointer.id,
+          asset: {
+            __typename: 'Asset',
+            code: paymentPointer.asset.code,
+            scale: paymentPointer.asset.scale
+          },
+          url: paymentPointer.url,
+          publicName: paymentPointer.publicName
+        })
+      })
     })
   })
 
