@@ -47,6 +47,9 @@ rafiki:
     idempotency:
       keyTTL: 86400000
       keyLock: 2000
+    image:
+      repository: rafiki-cloud-nine-backend
+      tag: 'latest'
 
   auth:
     postgresql:
@@ -73,9 +76,15 @@ rafiki:
     cookieKey: ''
     workers: 
       cleanup: 1
+    image:
+      repository: rafiki-cloud-nine-auth
+      tag: 'latest'
 
   frontend:
     port: 3010
+    image:
+      repository: rafiki-cloud-nine-admin
+      tag: 'latest'
 
 postgresql:
   replication:
