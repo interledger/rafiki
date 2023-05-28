@@ -6,7 +6,11 @@ import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { Pagination } from '../shared/baseModel'
-import { FilterString } from '../shared/filters'
+import {
+  FilterString,
+  FilterToKnexWhereConfig,
+  mapFilterToKnexWhere
+} from '../shared/filters'
 
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
@@ -19,7 +23,7 @@ interface WebhookEventFilter {
 
 interface GetPageOptions {
   pagination?: Pagination
-  filter?: WebhookEventFilter
+  filterConfigs?: FilterToKnexWhereConfig
 }
 
 export interface WebhookService {
@@ -178,13 +182,27 @@ async function getWebhookEventsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ): Promise<WebhookEvent[]> {
-  const { filter, pagination } = options ?? {}
+  const { filterConfigs, pagination } = options ?? {}
 
-  const query = WebhookEvent.query(deps.knex)
+  // filterConfigs something like: [
+  //   {
+  //     name: 'type',
+  //     type: FilterType.String,
+  //     filter: {
+  //       in: ['something'],
+  //       startsWith: 'a'
+  //     }
+  //   },
+  //   {
+  //     name: 'amount',
+  //     type: FilterType.String,
+  //     filter: {
+  //       gte: 1
+  //     }
+  //   }
+  // ]
 
-  if (filter?.type?.in && filter.type.in.length > 0) {
-    query.whereIn('type', filter.type.in)
-  }
-
-  return await query.getPage(pagination)
+  return await WebhookEvent.query(deps.knex)
+    .where((builder) => mapFilterToKnexWhere(builder, filterConfigs))
+    .getPage(pagination)
 }

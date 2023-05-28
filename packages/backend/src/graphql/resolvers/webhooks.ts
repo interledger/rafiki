@@ -12,9 +12,16 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
   async (
     parent,
     args,
-    ctx
+    ctx,
+    info
   ): Promise<ResolversTypes['WebhookEventsConnection']> => {
-    const { filter, ...pagination } = args
+    const { filter, ...pagination } = args;
+
+    // TODO: 
+    // const filterToKnexWhereConfig = getFilterToKnexWhereConfig(info)
+    // const getPageFn = (pagination_: Pagination) =>
+    //  webhookService.getPage({ pagination: pagination_, filterToKnexWhereConfig })
+    
     const webhookService = await ctx.container.use('webhookService')
     const getPageFn = (pagination_: Pagination) =>
       webhookService.getPage({ pagination: pagination_, filter })
