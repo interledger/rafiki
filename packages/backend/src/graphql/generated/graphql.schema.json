@@ -347,6 +347,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidity",
+            "description": "Available liquidity",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "scale",
             "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
             "args": [],
@@ -4828,6 +4840,18 @@
                 "name": "ID",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidity",
+            "description": "Available liquidity",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

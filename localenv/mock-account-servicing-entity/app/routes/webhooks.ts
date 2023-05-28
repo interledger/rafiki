@@ -25,6 +25,8 @@ export async function action({ request }: ActionArgs) {
       case EventType.OutgoingPaymentFailed:
         await handleOutgoingPaymentCompletedFailed(wh)
         break
+      case EventType.IncomingPaymentCreated:
+        break
       case EventType.IncomingPaymentCompleted:
       case EventType.IncomingPaymentExpired:
         await handleIncomingPaymentCompletedExpired(wh)

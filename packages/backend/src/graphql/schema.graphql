@@ -373,6 +373,8 @@ type Asset implements Model {
   code: String!
   "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
   scale: UInt8!
+  "Available liquidity"
+  liquidity: UInt64
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
   "Date-time of creation"
@@ -407,6 +409,8 @@ type Peer implements Model {
   staticIlpAddress: String!
   "Peer's public name"
   name: String
+  "Available liquidity"
+  liquidity: UInt64
   "Date-time of creation"
   createdAt: String!
 }

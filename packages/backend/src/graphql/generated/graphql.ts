@@ -67,6 +67,8 @@ export type Asset = Model & {
   createdAt: Scalars['String'];
   /** Asset id */
   id: Scalars['ID'];
+  /** Available liquidity */
+  liquidity?: Maybe<Scalars['UInt64']>;
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8'];
   /** Minimum amount of liquidity that can be withdrawn from the asset */
@@ -768,6 +770,8 @@ export type Peer = Model & {
   http: Http;
   /** Peer id */
   id: Scalars['ID'];
+  /** Available liquidity */
+  liquidity?: Maybe<Scalars['UInt64']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: Maybe<Scalars['UInt64']>;
   /** Peer's public name */
@@ -1336,6 +1340,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1588,6 +1593,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;

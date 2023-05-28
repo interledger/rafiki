@@ -182,7 +182,7 @@ export const sendWebhookEvent = async (
         amount: balance
       }
     : undefined
-  await PaymentEvent.query(deps.knex).insertAndFetch({
+  await PaymentEvent.query(deps.knex).insert({
     type,
     data: payment.toData({ amountSent, balance }),
     withdrawal
