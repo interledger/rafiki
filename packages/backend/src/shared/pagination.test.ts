@@ -18,7 +18,6 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { createPeer } from '../tests/peer'
-import { WebhookService } from '../webhook/service'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -246,11 +245,9 @@ describe('Pagination', (): void => {
     describe('non-payment pointer resources', (): void => {
       let assetService: AssetService
       let peerService: PeerService
-      let webhookService: WebhookService
       beforeEach(async (): Promise<void> => {
         assetService = await deps.use('assetService')
         peerService = await deps.use('peerService')
-        webhookService = await deps.use('webhookService')
       })
       describe('assets', (): void => {
         test.each`

@@ -7,7 +7,6 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
-import { WebhookService } from '../../webhook/service'
 import {
   createWebhookEvent,
   randomWebhookEvent,
@@ -18,12 +17,10 @@ import { WebhookEvent } from '../../webhook/model'
 describe('Webhook Events Query', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let webhookService: WebhookService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    webhookService = await deps.use('webhookService')
   })
 
   afterEach(async (): Promise<void> => {
