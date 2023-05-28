@@ -154,14 +154,11 @@ describe('Webhook Service', (): void => {
     })
 
     test('Can paginate and filter', async (): Promise<void> => {
-      console.log('webhooKEvents query', await WebhookEvent.query(knex))
-      console.log({ 'webhookEvents.length': webhookEvents.length })
       const type = webhookEventTypes[1]
       const filter = { type: { in: [type] } }
       const idsOfTypeY = webhookEvents
         .filter((event) => event.type === type)
         .map((event) => event.id)
-      console.log({ webhookEvents, idsOfTypeY })
       const page = await webhookService.getPage({
         pagination: { first: 10, after: idsOfTypeY[0] },
         filter
