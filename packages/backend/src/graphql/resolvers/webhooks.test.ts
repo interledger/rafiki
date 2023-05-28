@@ -8,7 +8,11 @@ import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
 import { WebhookService } from '../../webhook/service'
-import { createWebhookEvent, randomWebhookEvent, webhookEventTypes } from '../../tests/webhook'
+import {
+  createWebhookEvent,
+  randomWebhookEvent,
+  webhookEventTypes
+} from '../../tests/webhook'
 import { WebhookEvent } from '../../webhook/model'
 
 describe('Webhook Events Query', (): void => {
@@ -43,12 +47,17 @@ describe('Webhook Events Query', (): void => {
 
     for (let i = 0; i < webhookEventTypes.length; i++) {
       for (let j = 0; j < numOfEachEventType; j++) {
-        webhookEvents.push(await createWebhookEvent(deps, randomWebhookEvent({type: webhookEventTypes[i]})))
+        webhookEvents.push(
+          await createWebhookEvent(
+            deps,
+            randomWebhookEvent({ type: webhookEventTypes[i] })
+          )
+        )
       }
     }
 
     const filter = {
-      type: { 
+      type: {
         in: [webhookEventTypes[0], webhookEventTypes[1]]
       }
     }
@@ -56,8 +65,8 @@ describe('Webhook Events Query', (): void => {
     const query = await appContainer.apolloClient
       .query({
         query: gql`
-          query WebhookEvents($filter: WebhookEventFilter){
-            webhookEvents(filter: $filter){
+          query WebhookEvents($filter: WebhookEventFilter) {
+            webhookEvents(filter: $filter) {
               edges {
                 node {
                   id
