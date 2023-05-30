@@ -1,4 +1,8 @@
-lockfileVersion: '6.0'
+lockfileVersion: '6.1'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
 
 importers:
 
@@ -362,8 +366,8 @@ importers:
         specifier: ^6.1.34
         version: 6.1.34(graphql@16.6.0)
       graphql-scalars:
-        specifier: ^1.22.0
-        version: 1.22.0(graphql@16.6.0)
+        specifier: ^1.22.1
+        version: 1.22.1(graphql@16.6.0)
       graphql-tools:
         specifier: ^9.0.0
         version: 9.0.0(graphql@16.6.0)(react@18.2.0)
@@ -10752,8 +10756,8 @@ packages:
       - encoding
     dev: true
 
-  /graphql-scalars@1.22.0(graphql@16.6.0):
-    resolution: {integrity: sha512-t3r6c/cMF6OP64oN+YYVwempyMA4tbI/JdWWDdPN1U45IgpIfPZmJdO+wvPPoptxL9Lr/7jmgRFRsAUg66DFmA==}
+  /graphql-scalars@1.22.1(graphql@16.6.0):
+    resolution: {integrity: sha512-PurWR2/a78EpYapRyPttBDfjIdsSg7q5or6cTaaGyZSV/VDh3o/6m6/BIpvGKGvmE3sY94UrLOZaCHskF5MuiA==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
@@ -14971,7 +14975,7 @@ packages:
     dependencies:
       lilconfig: 2.1.0
       postcss: 8.4.24
-      yaml: 2.3.0
+      yaml: 2.3.1
     dev: true
 
   /postcss-loader@7.3.0(postcss@8.4.23)(webpack@5.82.0):
