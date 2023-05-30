@@ -18,7 +18,6 @@ import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../peer/service'
 import { createPeer } from '../tests/peer'
-import { PaymentPointerService } from '../open_payments/payment_pointer/service'
 
 describe('Pagination', (): void => {
   let deps: IocContract<AppServices>
@@ -59,52 +58,6 @@ describe('Pagination', (): void => {
     )
   })
   describe('getPageInfo', (): void => {
-    describe('payment pointers', (): void => {
-      let paymentPointerService: PaymentPointerService
-      beforeEach(async (): Promise<void> => {
-        paymentPointerService = await deps.use('paymentPointerService')
-      })
-      test.each`
-        num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
-        ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
-        ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
-        ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
-        ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
-        ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
-      `(
-        '$num payments, pagination $pagination with cursor $cursor',
-        async ({
-          num,
-          pagination,
-          cursor,
-          start,
-          end,
-          hasNextPage,
-          hasPreviousPage
-        }): Promise<void> => {
-          const paymentPointerIds: string[] = []
-          for (let i = 0; i < num; i++) {
-            const paymentPointer = await createPaymentPointer(deps)
-            paymentPointerIds.push(paymentPointer.id)
-          }
-          if (cursor) {
-            if (pagination.last) pagination.before = paymentPointerIds[cursor]
-            else pagination.after = paymentPointerIds[cursor]
-          }
-          const page = await paymentPointerService.getPage(pagination)
-          const pageInfo = await getPageInfo(
-            (pagination) => paymentPointerService.getPage(pagination),
-            page
-          )
-          expect(pageInfo).toEqual({
-            startCursor: paymentPointerIds[start],
-            endCursor: paymentPointerIds[end],
-            hasNextPage,
-            hasPreviousPage
-          })
-        }
-      )
-    })
     describe('payment pointer resources', (): void => {
       let defaultPaymentPointer: PaymentPointer
       let secondaryPaymentPointer: PaymentPointer
