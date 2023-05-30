@@ -23,5 +23,5 @@ spec:
       protocol: TCP
       name: introspection
   selector:
-    app: {{ include "auth.name" . }}
-    release: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "rafiki.name" . }}-auth
+    app.kubernetes.io/instance: {{ .Release.Name }}

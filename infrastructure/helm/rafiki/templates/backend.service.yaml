@@ -23,5 +23,5 @@ spec:
       protocol: TCP
       name: connector
   selector:
-    app: {{ include "backend.name" . }}
-    release: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "rafiki.name" . }}-backend
+    app.kubernetes.io/instance: {{ .Release.Name }}

@@ -15,5 +15,5 @@ spec:
       protocol: TCP
       name: http
   selector:
-    app: {{ include "frontend.name" . }}
-    release: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ include "rafiki.name" . }}-frontend
+    app.kubernetes.io/instance: {{ .Release.Name }}
