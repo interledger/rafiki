@@ -47,7 +47,7 @@
     "@adonisjs/fold": "^8.2.0",
     "@apollo/server": "^4.7.1",
     "@as-integrations/koa": "^1.0.0",
-    "@faker-js/faker": "^8.0.1",
+    "@faker-js/faker": "^8.0.2",
     "@interledger/http-signature-utils": "1.0.3",
     "@interledger/open-payments": "1.0.3",
     "@interledger/openapi": "1.0.2",
