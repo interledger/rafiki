@@ -14971,7 +14971,7 @@ packages:
     dependencies:
       lilconfig: 2.1.0
       postcss: 8.4.24
-      yaml: 2.3.0
+      yaml: 2.3.1
     dev: true
 
   /postcss-loader@7.3.0(postcss@8.4.23)(webpack@5.82.0):
