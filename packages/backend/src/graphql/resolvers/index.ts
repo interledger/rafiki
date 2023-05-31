@@ -1,6 +1,7 @@
 import { Resolvers } from '../generated/graphql'
 import {
   getPaymentPointer,
+  getPaymentPointers,
   createPaymentPointer,
   updatePaymentPointer,
   triggerPaymentPointerEvents
@@ -54,6 +55,7 @@ export const resolvers: Resolvers = {
   },
   Query: {
     paymentPointer: getPaymentPointer,
+    paymentPointers: getPaymentPointers,
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
