@@ -24,6 +24,8 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
 import { getPageInfo } from '../../shared/pagination'
+import { getPageTests } from '../../shared/baseModel.test'
+import { Pagination } from '../../shared/baseModel'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -256,6 +258,13 @@ describe('Open Payments Payment Pointer Service', (): void => {
         })
       }
     )
+    describe('getPage', (): void => {
+      getPageTests({
+        createModel: () => createPaymentPointer(deps),
+        getPage: (pagination?: Pagination) =>
+          paymentPointerService.getPage(pagination)
+      })
+    })
   })
 
   describe('onCredit', (): void => {
