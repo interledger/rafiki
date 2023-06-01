@@ -508,7 +508,9 @@ describe('OutgoingPaymentService', (): void => {
           validDestination: false
         })
         const paymentPointer = await createPaymentPointer(deps)
-        const paymentPointerUpdated = await PaymentPointer.query(knex).patchAndFetchById(paymentPointer.id, { deactivatedAt: new Date() })
+        const paymentPointerUpdated = await PaymentPointer.query(
+          knex
+        ).patchAndFetchById(paymentPointer.id, { deactivatedAt: new Date() })
         assert.ok(!paymentPointerUpdated.isActive)
         await expect(
           outgoingPaymentService.create({
