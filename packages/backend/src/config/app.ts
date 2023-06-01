@@ -105,7 +105,12 @@ export const Config = {
   privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
 
   graphQLIdempotencyKeyLockMs: envInt('GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS', 2000),
-  graphQLIdempotencyKeyTtlMs: envInt('GRAPHQL_IDEMPOTENCY_KEY_TTL_MS', 86400000)
+  graphQLIdempotencyKeyTtlMs: envInt(
+    'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
+    86400000
+  ),
+
+  gracePeriodMs: envInt('GRACE_PERIOD_MS', 86400000)
 }
 
 function parseRedisTlsConfig(

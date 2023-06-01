@@ -119,6 +119,9 @@ async function createIncomingPayment(
   if (!paymentPointer) {
     return IncomingPaymentError.UnknownPaymentPointer
   }
+  if (!paymentPointer.isActive) {
+    return IncomingPaymentError.InactivePaymentPointer
+  }
   if (incomingAmount) {
     if (
       incomingAmount.assetCode !== paymentPointer.asset.code ||

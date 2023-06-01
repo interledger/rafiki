@@ -24,6 +24,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { Amount } from '../../amount'
 import { getTests } from '../../payment_pointer/model.test'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -184,6 +185,27 @@ describe('Incoming Payment Service', (): void => {
           externalRef: '#123'
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
+    })
+
+    test('Cannot create incoming payment with inactive payment pointer', async (): Promise<void> => {
+      const paymentPointer = await PaymentPointer.query(knex).patchAndFetchById(
+        paymentPointerId,
+        { deactivatedAt: new Date() }
+      )
+      assert.ok(!paymentPointer.isActive)
+      await expect(
+        incomingPaymentService.create({
+          paymentPointerId,
+          incomingAmount: {
+            value: BigInt(10),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InactivePaymentPointer)
     })
   })
 

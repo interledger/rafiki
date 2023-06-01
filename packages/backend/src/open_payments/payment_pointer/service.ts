@@ -16,6 +16,11 @@ import {
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../payment/incoming/model'
+import { IAppConfig } from '../../config/app'
 
 interface Options {
   publicName?: string
@@ -45,12 +50,14 @@ export interface PaymentPointerService {
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
+  config: IAppConfig
 }
 
 export async function createPaymentPointerService({
   logger,
   knex,
-  accountingService
+  accountingService,
+  config
 }: ServiceDependencies): Promise<PaymentPointerService> {
   const log = logger.child({
     service: 'PaymentPointerService'
@@ -58,7 +65,8 @@ export async function createPaymentPointerService({
   const deps: ServiceDependencies = {
     logger: log,
     knex,
-    accountingService
+    accountingService,
+    config
   }
   return {
     create: (options) => createPaymentPointer(deps, options),
@@ -124,12 +132,28 @@ async function updatePaymentPointer(
 ): Promise<PaymentPointer | PaymentPointerError> {
   try {
     const update: UpdateInput = { publicName }
-    if (status) {
-      update.deactivatedAt = status === 'INACTIVE' ? new Date() : null
+    const paymentPointer = await PaymentPointer.query(deps.knex)
+      .findById(id)
+      .throwIfNotFound()
+
+    if (status === 'INACTIVE' && paymentPointer.isActive) {
+      update.deactivatedAt = new Date()
+      const expiresAt = new Date(Date.now() + deps.config.gracePeriodMs)
+
+      await IncomingPayment.query(deps.knex)
+        .patch({ expiresAt })
+        .where('paymentPointerId', id)
+        .whereIn('state', [
+          IncomingPaymentState.Pending,
+          IncomingPaymentState.Processing
+        ])
+    } else if (status === 'ACTIVE' && !paymentPointer.isActive) {
+      update.deactivatedAt = null
     }
 
-    return await PaymentPointer.query(deps.knex)
-      .patchAndFetchById(id, update)
+    return await paymentPointer
+      .$query(deps.knex)
+      .patchAndFetch(update)
       .withGraphFetched('asset')
       .throwIfNotFound()
   } catch (err) {

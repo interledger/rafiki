@@ -220,7 +220,8 @@ export function initIocContainer(
     return await createPaymentPointerService({
       knex: await deps.use('knex'),
       logger: logger,
-      accountingService: await deps.use('accountingService')
+      accountingService: await deps.use('accountingService'),
+      config: await deps.use('config')
     })
   })
   container.singleton('spspRoutes', async (deps) => {
