@@ -21,6 +21,7 @@ import {
   IncomingPaymentState
 } from '../payment/incoming/model'
 import { IAppConfig } from '../../config/app'
+import { Pagination } from '../../shared/baseModel'
 
 interface Options {
   publicName?: string
@@ -43,6 +44,7 @@ export interface PaymentPointerService {
   update(options: UpdateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
+  getPage(pagination?: Pagination): Promise<PaymentPointer[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
 }
@@ -73,6 +75,7 @@ export async function createPaymentPointerService({
     update: (options) => updatePaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
     getByUrl: (url) => getPaymentPointerByUrl(deps, url),
+    getPage: (pagination?) => getPaymentPointerPage(deps, pagination),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
   }
@@ -181,6 +184,15 @@ async function getPaymentPointerByUrl(
     .findOne({ url })
     .withGraphFetched('asset')
   return paymentPointer || undefined
+}
+
+async function getPaymentPointerPage(
+  deps: ServiceDependencies,
+  pagination?: Pagination
+): Promise<PaymentPointer[]> {
+  return await PaymentPointer.query(deps.knex)
+    .getPage(pagination)
+    .withGraphFetched('asset')
 }
 
 // Returns the id of the processed payment pointer (if any).

@@ -24,6 +24,9 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
 import { createIncomingPayment } from '../../tests/incomingPayment'
+import { getPageInfo } from '../../shared/pagination'
+import { getPageTests } from '../../shared/baseModel.test'
+import { Pagination } from '../../shared/baseModel'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -246,6 +249,56 @@ describe('Open Payments Payment Pointer Service', (): void => {
       await expect(
         paymentPointerService.getByUrl('test.nope')
       ).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Payment Pointer pagination', (): void => {
+    test.each`
+      num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+      ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+      ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+      ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+      ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+      ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+    `(
+      '$num payments, pagination $pagination with cursor $cursor',
+      async ({
+        num,
+        pagination,
+        cursor,
+        start,
+        end,
+        hasNextPage,
+        hasPreviousPage
+      }): Promise<void> => {
+        const paymentPointerIds: string[] = []
+        for (let i = 0; i < num; i++) {
+          const paymentPointer = await createPaymentPointer(deps)
+          paymentPointerIds.push(paymentPointer.id)
+        }
+        if (cursor) {
+          if (pagination.last) pagination.before = paymentPointerIds[cursor]
+          else pagination.after = paymentPointerIds[cursor]
+        }
+        const page = await paymentPointerService.getPage(pagination)
+        const pageInfo = await getPageInfo(
+          (pagination) => paymentPointerService.getPage(pagination),
+          page
+        )
+        expect(pageInfo).toEqual({
+          startCursor: paymentPointerIds[start],
+          endCursor: paymentPointerIds[end],
+          hasNextPage,
+          hasPreviousPage
+        })
+      }
+    )
+    describe('getPage', (): void => {
+      getPageTests({
+        createModel: () => createPaymentPointer(deps),
+        getPage: (pagination?: Pagination) =>
+          paymentPointerService.getPage(pagination)
+      })
     })
   })
 
