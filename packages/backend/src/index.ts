@@ -365,7 +365,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       receiverService: await deps.use('receiverService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      peerService: await deps.use('peerService')
+      peerService: await deps.use('peerService'),
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {

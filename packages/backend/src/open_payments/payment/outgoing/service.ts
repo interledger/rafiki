@@ -25,7 +25,7 @@ import {
 import { PeerService } from '../../../peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
-import { PaymentPointerSubresourceService } from '../../payment_pointer/service'
+import { PaymentPointerService, PaymentPointerSubresourceService } from '../../payment_pointer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -50,6 +50,7 @@ export interface ServiceDependencies extends BaseService {
   receiverService: ReceiverService
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  paymentPointerService: PaymentPointerService
 }
 
 export async function createOutgoingPaymentService(
@@ -95,8 +96,13 @@ async function createOutgoingPayment(
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
   const grantId = options.grant?.id
+  const paymentPointerId = options.paymentPointerId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      const paymentPointerSender = await deps.paymentPointerService.get(paymentPointerId)
+      if (!paymentPointerSender) throw OutgoingPaymentError.UnknownPaymentPointer
+      if (!paymentPointerSender.isActive) throw OutgoingPaymentError.InactivePaymentPointer
+
       if (grantId) {
         await OutgoingPaymentGrant.query(trx)
           .insert({
@@ -108,7 +114,7 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
-          paymentPointerId: options.paymentPointerId,
+          paymentPointerId,
           description: options.description,
           externalRef: options.externalRef,
           state: OutgoingPaymentState.Funding,
