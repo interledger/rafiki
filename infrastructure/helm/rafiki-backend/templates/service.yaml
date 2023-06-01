@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rafiki-backend.fullname" . }}
+  labels:
+    app: {{ include "rafiki-backend.name" . }}
+    chart: {{ include "rafiki-backend.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.port.admin }}
+      targetPort: {{ .Values.port.admin }}
+      protocol: TCP
+      name: admin
+    - port: {{ .Values.port.openPayments }}
+      targetPort: {{ .Values.port.openPayments }}
+      protocol: TCP
+      name: open-payments
+    - port: {{ .Values.port.connector}}
+      targetPort: {{ .Values.port.connector }}
+      protocol: TCP
+      name: connector
+  selector:
+    app.kubernetes.io/name: {{ include "rafiki-backend.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}

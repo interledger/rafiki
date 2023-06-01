@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rafiki-backend.fullname" . }}
+  labels:
+{{ include "rafiki-backend.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: 
+      maxSurge: {{ .Values.rollingUpdate.maxSurge }}
+      maxUnavailable: {{ .Values.rollingUpdate.maxUnavailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "rafiki-backend.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "rafiki-backend.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{ if .Values.serviceAccount.create }}
+      serviceAccountName: {{ template "backend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+    {{ end }}
+      volumes:
+    {{ if .Values.serviceAccount.create }}
+        - name: {{ include "rafiki-backend.fullname" . }}-sa-key
+          secret:
+            secretName: {{ include "rafiki-backend.fullname" . }}-sa-key
+    {{ end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: {{ include "backend.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom:
+          - configMapRef:
+              name: {{ include "rafiki-backend.fullname" . }}
+          - secretRef:
+              name: {{ include "rafiki-backend.fullname" . }}-secrets
+          ports:
+            - name: open-payments
+              containerPort: {{ .Values.port.openPayments }}
+              protocol: TCP
+            - name: admin
+              containerPort: {{ .Values.port.admin }}
+              protocol: TCP
+            - name: connector
+              containerPort: {{ .Values.port.connector }}
+              protocol: TCP
+           #livenessProbe:
+           #  failureThreshold: 15
+           #  initialDelaySeconds: 30
+           #  periodSeconds: 10
+           #  timeoutSeconds: 10
+           #  httpGet:
+           #    path: /healthz
+           #    port: admin
+           #readinessProbe:
+           #  failureThreshold: 3
+           #  initialDelaySeconds: 5
+           #  periodSeconds: 5
+           #  timeoutSeconds: 5
+           #  httpGet:
+           #    path: /healthz
+           #    port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

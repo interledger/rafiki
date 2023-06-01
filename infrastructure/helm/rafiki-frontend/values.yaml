@@ -1,0 +1,26 @@
+serviceUrls:
+  GRAPHQL_URL: http://rafiki-backend:3001/graphql
+port: 3010
+image:
+  repository: ghcr.io/interledger/rafiki-frontend
+  tag: 'v1.0.0-alpha.1'
+  digest: ''
+  pullPolicy: IfNotPresent
+rollingUpdate:
+  maxSurge: 100%
+  maxUnavailable: 50%
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+securityContext:
+  {}
+#  resources:
+#    limits:
+#      memory: 1Gi
+#      cpu: 450m
+#    requests:
+#      memory: 800Mi
+#      cpu: 300m

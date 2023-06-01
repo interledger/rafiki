@@ -1,0 +1,72 @@
+nodeEnv: development
+logLevel: debug
+serviceUrls:
+  PUBLIC_HOST: http://rafiki-backend
+  OPEN_PAYMENTS_URL: http://rafiki-backend
+  PAYMENT_POINTER_URL: http://rafiki-backend/.well-known/pay
+  WEBHOOK_URL: http://cloud-nine-wallet/webhooks
+  EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
+  QUOTE_URL: http://cloud-nine-wallet/quotes
+  AUTH_SERVER_GRANT_URL: http://rafiki-auth:3006
+  AUTH_SERVER_INTROSPECTION_URL: http://rafiki-auth:3007
+redis:
+  host: 'redis.example.com'
+  port: 6379
+  tlsCaFile: ''
+  tlsCertFile: ''
+  tlsKeyFile: ''
+postgresql:
+  host: "postgres.example.com"
+  port: 5432
+  username: "backend"
+  database: "backend"
+  password: "overridethisValue"
+port:
+  admin: 3001
+  connector: 3002
+  openPayments: 80
+ilp:
+  address: test.cloud-nine-wallet # override this value
+  streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=" # override this value
+  slippage: 0.01
+key:
+  id: rafiki
+  file: ''
+quoteSignatureSecret: "overridethisValue"
+withdrawalThrottleDelay: ''
+lifetime: 
+  exchangeRate: 15000
+  quote: 300000
+  webhook: 200
+workers:
+  incomingPayment: 1
+  outgoingPayment: 4
+  paymentPointer: 1
+  webhook: 1
+workerIdle: 200
+idempotency:
+  keyTTL: 86400000
+  keyLock: 2000
+image:
+  repository: ghcr.io/interledger/rafiki-backend
+  tag: 'v1.0.0-alpha.1'
+  digest: ''
+  pullPolicy: IfNotPresent
+rollingUpdate:
+  maxSurge: 100%
+  maxUnavailable: 50%
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ''
+securityContext:
+  {}
+#  resources:
+#    limits:
+#      memory: 1Gi
+#      cpu: 450m
+#    requests:
+#      memory: 800Mi
+#      cpu: 300m

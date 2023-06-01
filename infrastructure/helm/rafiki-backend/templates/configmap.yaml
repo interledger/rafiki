@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "rafiki-backend.fullname" . }}
+  labels:
+{{ include "rafiki-backend.labels" . | indent 4 }}
+data: 
+  ADMIN_PORT: "{{ .Values.port.admin }}"
+  AUTH_SERVER_GRANT_URL: "{{ .Values.serviceUrls.AUTH_SERVER_GRANT_URL }}"
+  AUTH_SERVER_INTROSPECTION_URL: "{{ .Values.serviceUrls.AUTH_SERVER_INTROSPECTION_URL }}"
+  CONNECTOR_PORT: "{{ .Values.port.connector }}"
+  EXCHANGE_RATES_LIFETIME: "{{ .Values.lifetime.exchangeRate }}"
+  EXCHANGE_RATES_URL: "{{ .Values.serviceUrls.EXCHANGE_RATES_URL }}"
+  GRAPHQL_IDEMPOTENCY_KEY_TTL_MS: "{{ .Values.idempotency.keyTTL}}"
+  GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS: "{{ .Values.idempotency.keyLock}}"
+  ILP_ADDRESS: "{{ .Values.ilp.address }}"
+  INCOMING_PAYMENT_WORKERS: "{{ .Values.workers.incomingPayment }}"
+  INCOMING_PAYMENT_WORKER_IDLE: "{{ .Values.workerIdle }}"
+  KEY_ID: "{{ .Values.key.id }}"
+  LOG_LEVEL: "{{ .Values.logLevel }}"
+  NODE_ENV: "{{ .Values.nodeEnv }}"
+  OPEN_PAYMENTS_PORT: "{{ .Values.port.openPayments }}"
+  OPEN_PAYMENTS_URL: "{{ .Values.serviceUrls.OPEN_PAYMENTS_URL }}"
+  OUTGOING_PAYMENT_WORKERS: "{{ .Values.workers.outgoingPayment }}"
+  OUTGOING_PAYMENT_WORKER_IDLE: "{{ .Values.workerIdle }}"
+  PAYMENT_POINTER_URL: "{{ .Values.serviceUrls.PAYMENT_POINTER_URL }}"
+  PAYMENT_POINTER_WORKERS: "{{ .Values.workers.paymentPointer }}"
+  PAYMENT_POINTER_WORKER_IDLE: "{{ .Values.workerIdle }}"
+  PRIVATE_KEY_FILE: "{{ .Values.key.file }}"
+  PUBLIC_HOST: "{{ .Values.serviceUrls.PUBLIC_HOST }}"
+  QUOTE_LIFESPAN: "{{ .Values.lifetime.quote }}"
+  QUOTE_URL: "{{ .Values.serviceUrls.QUOTE_URL }}"
+  REDIS_TLS_CA_FILE_PATH: "{{ .Values.tlsCaFile }}"
+  REDIS_TLS_CERT_FILE_PATH: "{{ .Values.tlsCertFile }}"
+  REDIS_TLS_KEY_FILE_PATH: "{{ .Values.tlsKeyFile }}"
+  REDIS_URL: {{ include "backend.redisUrl" . | quote }}
+  SIGNATURE_VERSION: "1"
+  SLIPPAGE: "{{ .Values.ilp.slippage }}"
+  TIGERBEETLE_CLUSTER_ID: none
+  TIGERBEETLE_REPLICA_ADDRESSES: none
+  USE_TIGERBEETLE: "false"
+  WEBHOOK_TIMEOUT:  "{{ .Values.lifetime.webhook }}"
+  WEBHOOK_URL: "{{ .Values.serviceUrls.WEBHOOK_URL }}"
+  WEBHOOK_WORKERS: "{{ .Values.workers.webhook }}"
+  WEBHOOK_WORKER_IDLE: "{{ .Values.workerIdle }}"
+  WITHDRAWAL_THROTTLE_DELAY: "{{ .Values.withdrawalThrottleDelay }}"
