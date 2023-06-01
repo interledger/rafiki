@@ -1762,7 +1762,7 @@ export type GetAssetQueryVariables = Exact<{
 }>;
 
 
-export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, createdAt: string } | null };
+export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, liquidity?: bigint | null, withdrawalThreshold?: bigint | null, createdAt: string } | null };
 
 export type ListAssetsQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']>;
@@ -1788,12 +1788,19 @@ export type UpdateAssetMutationVariables = Exact<{
 
 export type UpdateAssetMutation = { __typename?: 'Mutation', updateAssetWithdrawalThreshold: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
 
+export type AddAssetLiquidityMutationVariables = Exact<{
+  input: AddAssetLiquidityInput;
+}>;
+
+
+export type AddAssetLiquidityMutation = { __typename?: 'Mutation', addAssetLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
 
 
-export type GetPeerQuery = { __typename?: 'Query', peer?: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, maxPacketAmount?: bigint | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null }, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string, authToken: string } } } | null };
+export type GetPeerQuery = { __typename?: 'Query', peer?: { __typename?: 'Peer', id: string, name?: string | null, staticIlpAddress: string, maxPacketAmount?: bigint | null, liquidity?: bigint | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null }, http: { __typename?: 'Http', outgoing: { __typename?: 'HttpOutgoing', endpoint: string, authToken: string } } } | null };
 
 export type ListPeersQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']>;
@@ -1825,3 +1832,10 @@ export type DeletePeerMutationVariables = Exact<{
 
 
 export type DeletePeerMutation = { __typename?: 'Mutation', deletePeer: { __typename?: 'DeletePeerMutationResponse', code: string, success: boolean, message: string } };
+
+export type AddPeerLiquidityMutationVariables = Exact<{
+  input: AddPeerLiquidityInput;
+}>;
+
+
+export type AddPeerLiquidityMutation = { __typename?: 'Mutation', addPeerLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };

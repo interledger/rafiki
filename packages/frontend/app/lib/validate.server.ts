@@ -78,3 +78,19 @@ export const createAssetSchema = z
   })
   .merge(updateAssetSchema)
   .omit({ id: true })
+
+const liquidityAmountSchema = z.coerce
+  .bigint({
+    invalid_type_error: 'Amount  is expected to be a number.'
+  })
+  .positive()
+
+export const addPeerLiquiditySchema = z.object({
+  amount: liquidityAmountSchema,
+  peerId: z.string().uuid()
+})
+
+export const addAssetLiquiditySchema = z.object({
+  amount: liquidityAmountSchema,
+  assetId: z.string().uuid()
+})
