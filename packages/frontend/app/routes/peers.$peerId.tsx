@@ -6,6 +6,7 @@ import {
 } from '@remix-run/node'
 import {
   Form,
+  Outlet,
   useActionData,
   useLoaderData,
   useNavigation,
@@ -236,6 +237,29 @@ export default function ViewPeerPage() {
           </div>
         </div>
         {/* Peer Asset Info - END */}
+        {/* Peer Liquidity Info */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Liquidity Information</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='w-full p-4 flex justify-between items-center'>
+              <div>
+                <p className='font-medium'>Amount</p>
+                <p className='mt-1'>{peer.liquidity ?? 'No liquidity'}</p>
+              </div>
+              <Button
+                aria-label='add peer liquidity page'
+                preventScrollReset
+                type='button'
+                to={`/peers/${peer.id}/liquidity`}
+              >
+                Add liquidity
+              </Button>
+            </div>
+          </div>
+        </div>
+        {/* Peer Liquidity Info - END */}
         {/* DELETE PEER - Danger zone */}
         <DangerZone title='Delete Peer'>
           <Form method='post' onSubmit={submitHandler}>
@@ -254,6 +278,7 @@ export default function ViewPeerPage() {
         keyword={peer.name || 'delete peer'}
         confirmButtonText='Delete this peer'
       />
+      <Outlet />
     </div>
   )
 }

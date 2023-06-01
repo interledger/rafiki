@@ -85,6 +85,28 @@ export default function ViewAssetPage() {
             </Form>
           </div>
         </div>
+        {/* Asset Liquidity Info */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Liquidity Information</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='w-full p-4 flex justify-between items-center'>
+              <div>
+                <p className='font-medium'>Amount</p>
+                <p className='mt-1'>{asset.liquidity ?? 'No liquidity'}</p>
+              </div>
+              <Button
+                aria-label='go to asset page'
+                type='button'
+                to={`/assets/${asset.id}`}
+              >
+                Add Liquidity
+              </Button>
+            </div>
+          </div>
+        </div>
+        {/* Peer Liquidity Info - END */}
       </div>
     </div>
   )
