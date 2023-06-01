@@ -1,5 +1,8 @@
 import { gql } from '@apollo/client'
 import type {
+  AddAssetLiquidityInput,
+  AddAssetLiquidityMutation,
+  AddAssetLiquidityMutationVariables,
   CreateAssetInput,
   CreateAssetMutation,
   CreateAssetMutationVariables,
@@ -26,6 +29,7 @@ export const getAsset = async (args: QueryAssetArgs) => {
           id
           code
           scale
+          liquidity
           withdrawalThreshold
           createdAt
         }
@@ -118,4 +122,27 @@ export const updateAsset = async (args: UpdateAssetInput) => {
   })
 
   return response.data?.updateAssetWithdrawalThreshold
+}
+
+export const addAssetLiquidity = async (args: AddAssetLiquidityInput) => {
+  const response = await apolloClient.mutate<
+    AddAssetLiquidityMutation,
+    AddAssetLiquidityMutationVariables
+  >({
+    mutation: gql`
+      mutation AddAssetLiquidityMutation($input: AddAssetLiquidityInput!) {
+        addAssetLiquidity(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.addAssetLiquidity
 }

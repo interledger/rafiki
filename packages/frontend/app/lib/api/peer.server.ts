@@ -1,5 +1,8 @@
 import { gql } from '@apollo/client'
 import type {
+  AddPeerLiquidityInput,
+  AddPeerLiquidityMutation,
+  AddPeerLiquidityMutationVariables,
   CreatePeerInput,
   CreatePeerMutation,
   CreatePeerMutationVariables,
@@ -30,6 +33,7 @@ export const getPeer = async (args: QueryPeerArgs) => {
           name
           staticIlpAddress
           maxPacketAmount
+          liquidity
           createdAt
           asset {
             id
@@ -161,4 +165,27 @@ export const deletePeer = async (args: MutationDeletePeerArgs) => {
   })
 
   return response.data?.deletePeer
+}
+
+export const addPeerLiquidity = async (args: AddPeerLiquidityInput) => {
+  const response = await apolloClient.mutate<
+    AddPeerLiquidityMutation,
+    AddPeerLiquidityMutationVariables
+  >({
+    mutation: gql`
+      mutation AddPeerLiquidityMutation($input: AddPeerLiquidityInput!) {
+        addPeerLiquidity(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.addPeerLiquidity
 }
