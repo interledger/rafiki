@@ -102,13 +102,13 @@ async function createOutgoingPayment(
   const paymentPointerId = options.paymentPointerId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      const paymentPointerSender = await deps.paymentPointerService.get(
+      const paymentPointer = await deps.paymentPointerService.get(
         paymentPointerId
       )
-      if (!paymentPointerSender) {
+      if (!paymentPointer) {
         throw OutgoingPaymentError.UnknownPaymentPointer
       }
-      if (!paymentPointerSender.isActive) {
+      if (!paymentPointer.isActive) {
         throw OutgoingPaymentError.InactivePaymentPointer
       }
 
