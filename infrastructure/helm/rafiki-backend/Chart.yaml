@@ -1,5 +1,5 @@
 apiVersion: v2
-name: rafiki
+name: rafiki-backend
 description: Rafiki Backend Service - Helm chart
 
 # A chart can be either an 'application' or a 'library' chart.
