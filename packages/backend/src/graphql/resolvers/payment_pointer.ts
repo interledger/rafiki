@@ -14,6 +14,31 @@ import {
   errorToMessage
 } from '../../open_payments/payment_pointer/errors'
 import { PaymentPointer } from '../../open_payments/payment_pointer/model'
+import { getPageInfo } from '../../shared/pagination'
+import { Pagination } from '../../shared/baseModel'
+
+export const getPaymentPointers: QueryResolvers<ApolloContext>['paymentPointers'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['PaymentPointersConnection']> => {
+    const paymentPointerService = await ctx.container.use(
+      'paymentPointerService'
+    )
+    const paymentPointers = await paymentPointerService.getPage(args)
+    const pageInfo = await getPageInfo(
+      (pagination: Pagination) => paymentPointerService.getPage(pagination),
+      paymentPointers
+    )
+    return {
+      pageInfo,
+      edges: paymentPointers.map((paymentPointer: PaymentPointer) => ({
+        cursor: paymentPointer.id,
+        node: paymentPointerToGraphql(paymentPointer)
+      }))
+    }
+  }
 
 export const getPaymentPointer: QueryResolvers<ApolloContext>['paymentPointer'] =
   async (parent, args, ctx): Promise<ResolversTypes['PaymentPointer']> => {

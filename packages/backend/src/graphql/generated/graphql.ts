@@ -720,6 +720,12 @@ export type PaymentPointerQuotesArgs = {
   last?: InputMaybe<Scalars['Int']>;
 };
 
+export type PaymentPointerEdge = {
+  __typename?: 'PaymentPointerEdge';
+  cursor: Scalars['String'];
+  node: PaymentPointer;
+};
+
 export type PaymentPointerKey = Model & {
   __typename?: 'PaymentPointerKey';
   /** Date-time of creation */
@@ -758,6 +764,12 @@ export type PaymentPointerWithdrawalMutationResponse = MutationResponse & {
   message: Scalars['String'];
   success: Scalars['Boolean'];
   withdrawal?: Maybe<PaymentPointerWithdrawal>;
+};
+
+export type PaymentPointersConnection = {
+  __typename?: 'PaymentPointersConnection';
+  edges: Array<PaymentPointerEdge>;
+  pageInfo: PageInfo;
 };
 
 export type Peer = Model & {
@@ -811,6 +823,8 @@ export type Query = {
   outgoingPayment?: Maybe<OutgoingPayment>;
   /** Fetch a payment pointer */
   paymentPointer?: Maybe<PaymentPointer>;
+  /** Fetch a page of payment pointers. */
+  paymentPointers: PaymentPointersConnection;
   /** Fetch a peer */
   peer?: Maybe<Peer>;
   /** Fetch a page of peers. */
@@ -847,6 +861,14 @@ export type QueryOutgoingPaymentArgs = {
 
 export type QueryPaymentPointerArgs = {
   id: Scalars['String'];
+};
+
+
+export type QueryPaymentPointersArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
 };
 
 
@@ -1206,10 +1228,12 @@ export type ResolversTypes = {
   OutgoingPaymentState: ResolverTypeWrapper<Partial<OutgoingPaymentState>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
   PaymentPointer: ResolverTypeWrapper<Partial<PaymentPointer>>;
+  PaymentPointerEdge: ResolverTypeWrapper<Partial<PaymentPointerEdge>>;
   PaymentPointerKey: ResolverTypeWrapper<Partial<PaymentPointerKey>>;
   PaymentPointerStatus: ResolverTypeWrapper<Partial<PaymentPointerStatus>>;
   PaymentPointerWithdrawal: ResolverTypeWrapper<Partial<PaymentPointerWithdrawal>>;
   PaymentPointerWithdrawalMutationResponse: ResolverTypeWrapper<Partial<PaymentPointerWithdrawalMutationResponse>>;
+  PaymentPointersConnection: ResolverTypeWrapper<Partial<PaymentPointersConnection>>;
   Peer: ResolverTypeWrapper<Partial<Peer>>;
   PeerEdge: ResolverTypeWrapper<Partial<PeerEdge>>;
   PeersConnection: ResolverTypeWrapper<Partial<PeersConnection>>;
@@ -1295,9 +1319,11 @@ export type ResolversParentTypes = {
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
   PaymentPointer: Partial<PaymentPointer>;
+  PaymentPointerEdge: Partial<PaymentPointerEdge>;
   PaymentPointerKey: Partial<PaymentPointerKey>;
   PaymentPointerWithdrawal: Partial<PaymentPointerWithdrawal>;
   PaymentPointerWithdrawalMutationResponse: Partial<PaymentPointerWithdrawalMutationResponse>;
+  PaymentPointersConnection: Partial<PaymentPointersConnection>;
   Peer: Partial<Peer>;
   PeerEdge: Partial<PeerEdge>;
   PeersConnection: Partial<PeersConnection>;
@@ -1563,6 +1589,12 @@ export type PaymentPointerResolvers<ContextType = any, ParentType extends Resolv
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PaymentPointerEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointerEdge'] = ResolversParentTypes['PaymentPointerEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['PaymentPointer'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type PaymentPointerKeyResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointerKey'] = ResolversParentTypes['PaymentPointerKey']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1585,6 +1617,12 @@ export type PaymentPointerWithdrawalMutationResponseResolvers<ContextType = any,
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   withdrawal?: Resolver<Maybe<ResolversTypes['PaymentPointerWithdrawal']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type PaymentPointersConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentPointersConnection'] = ResolversParentTypes['PaymentPointersConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['PaymentPointerEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -1618,6 +1656,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   incomingPayment?: Resolver<Maybe<ResolversTypes['IncomingPayment']>, ParentType, ContextType, RequireFields<QueryIncomingPaymentArgs, 'id'>>;
   outgoingPayment?: Resolver<Maybe<ResolversTypes['OutgoingPayment']>, ParentType, ContextType, RequireFields<QueryOutgoingPaymentArgs, 'id'>>;
   paymentPointer?: Resolver<Maybe<ResolversTypes['PaymentPointer']>, ParentType, ContextType, RequireFields<QueryPaymentPointerArgs, 'id'>>;
+  paymentPointers?: Resolver<ResolversTypes['PaymentPointersConnection'], ParentType, ContextType, Partial<QueryPaymentPointersArgs>>;
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
@@ -1768,9 +1807,11 @@ export type Resolvers<ContextType = any> = {
   OutgoingPaymentResponse?: OutgoingPaymentResponseResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   PaymentPointer?: PaymentPointerResolvers<ContextType>;
+  PaymentPointerEdge?: PaymentPointerEdgeResolvers<ContextType>;
   PaymentPointerKey?: PaymentPointerKeyResolvers<ContextType>;
   PaymentPointerWithdrawal?: PaymentPointerWithdrawalResolvers<ContextType>;
   PaymentPointerWithdrawalMutationResponse?: PaymentPointerWithdrawalMutationResponseResolvers<ContextType>;
+  PaymentPointersConnection?: PaymentPointersConnectionResolvers<ContextType>;
   Peer?: PeerResolvers<ContextType>;
   PeerEdge?: PeerEdgeResolvers<ContextType>;
   PeersConnection?: PeersConnectionResolvers<ContextType>;
