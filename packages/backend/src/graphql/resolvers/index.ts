@@ -43,6 +43,7 @@ import {
   revokePaymentPointerKey
 } from './paymentPointerKey'
 import { createReceiver } from './receiver'
+import { getWebhookEvents } from './webhooks'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -62,7 +63,8 @@ export const resolvers: Resolvers = {
     incomingPayment: getIncomingPayment,
     peer: getPeer,
     peers: getPeers,
-    quote: getQuote
+    quote: getQuote,
+    webhookEvents: getWebhookEvents
   },
   PaymentPointer: {
     incomingPayments: getPaymentPointerIncomingPayments,
