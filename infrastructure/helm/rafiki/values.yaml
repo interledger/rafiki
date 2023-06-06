@@ -8,6 +8,8 @@ rafiki-backend:
     WEBHOOK_URL: http://cloud-nine-wallet/webhooks
     EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
     QUOTE_URL: http://cloud-nine-wallet/quotes
+    AUTH_SERVER_GRANT_URL: http://rafiki-rafiki-auth:3006
+    AUTH_SERVER_INTROSPECTION_URL: http://rafiki-rafiki-auth:3007
   redis:
     host: "rafiki-redis-master"
     port: 6379
