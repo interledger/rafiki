@@ -141,7 +141,9 @@ async function updatePaymentPointer(
 
     if (status === 'INACTIVE' && paymentPointer.isActive) {
       update.deactivatedAt = new Date()
-      const expiresAt = new Date(Date.now() + deps.config.gracePeriodMs)
+      const expiresAt = new Date(
+        Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
+      )
 
       await IncomingPayment.query(deps.knex)
         .patch({ expiresAt })

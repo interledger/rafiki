@@ -110,7 +110,10 @@ export const Config = {
     86400000
   ),
 
-  gracePeriodMs: envInt('GRACE_PERIOD_MS', 86400000)
+  paymentPointerDeactivationPaymentGracePeriodMs: envInt(
+    'PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD',
+    86400000
+  )
 }
 
 function parseRedisTlsConfig(

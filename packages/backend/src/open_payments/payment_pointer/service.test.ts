@@ -214,7 +214,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
       const incomingPaymentUpdated = await incomingPayment.$query(knex)
 
       expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
-        expiresAt.getTime() + config.gracePeriodMs - duration
+        expiresAt.getTime() +
+          config.paymentPointerDeactivationPaymentGracePeriodMs -
+          duration
       )
     })
 
