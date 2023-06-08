@@ -1,9 +1,4 @@
-import {
-  json,
-  redirect,
-  type ActionArgs,
-  type LoaderArgs
-} from '@remix-run/node'
+import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
 import {
   Form,
   Outlet,
@@ -15,7 +10,7 @@ import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import { getAsset, updateAsset } from '~/lib/api/asset.server'
-import { messageStorage } from '~/lib/message.server'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
@@ -152,12 +147,12 @@ export async function action({ request }: ActionArgs) {
 
   const session = await messageStorage.getSession(request.headers.get('cookie'))
 
-  session.flash('message', {
-    content: 'Asset information was updated',
-    type: 'success'
-  })
-
-  return redirect('.', {
-    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: 'Asset information was updated',
+      type: 'success'
+    },
+    location: '.'
   })
 }
