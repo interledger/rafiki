@@ -47,7 +47,6 @@ describe('Open Payments Payment Pointer Service', (): void => {
 
   afterEach(async (): Promise<void> => {
     jest.useRealTimers()
-    jest.restoreAllMocks()
     await truncateTables(knex)
   })
 
@@ -190,8 +189,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
     test('Deactivating updates expiry dates of existing incoming payments', async (): Promise<void> => {
       const paymentPointer = await createPaymentPointer(deps)
 
-      const nowMs = new Date('2023-06-01T00:00:00Z').getTime()
-      jest.spyOn(Date, 'now').mockImplementation(() => nowMs)
+      const now = new Date('2023-06-01T00:00:00Z').getTime()
+      jest.useFakeTimers({now})
+
       const duration = 30_000
       const expiresAt = new Date(Date.now() + duration)
 
