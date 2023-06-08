@@ -1,9 +1,4 @@
-import {
-  json,
-  redirect,
-  type ActionArgs,
-  type LoaderArgs
-} from '@remix-run/node'
+import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
 import {
   Form,
   Outlet,
@@ -21,7 +16,7 @@ import {
 } from '~/components/ConfirmationDialog'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
-import { messageStorage } from '~/lib/message.server'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
   peerGeneralInfoSchema,
   peerHttpInfoSchema,
@@ -381,47 +376,47 @@ export async function action({ request }: ActionArgs) {
     case 'delete': {
       const result = uuidSchema.safeParse(Object.fromEntries(formData))
       if (!result.success) {
-        session.flash('message', {
-          content: 'Invalid peer ID.',
-          type: 'error'
-        })
-
-        return redirect('.', {
-          headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+        return setMessageAndRedirect({
+          session,
+          message: {
+            content: 'Invalid peer ID.',
+            type: 'error'
+          },
+          location: '.'
         })
       }
 
       const response = await deletePeer({ input: { id: result.data.id } })
       if (!response?.success) {
-        session.flash('message', {
-          content: 'Could not delete peer.',
-          type: 'error'
-        })
-
-        return redirect('.', {
-          headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+        return setMessageAndRedirect({
+          session,
+          message: {
+            content: 'Could not delete peer.',
+            type: 'error'
+          },
+          location: '.'
         })
       }
 
-      session.flash('message', {
-        content: 'Peer was deleted.',
-        type: 'success'
-      })
-
-      return redirect('/peers', {
-        headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+      return setMessageAndRedirect({
+        session,
+        message: {
+          content: 'Peer was deleted.',
+          type: 'success'
+        },
+        location: '/peers'
       })
     }
     default:
       throw json(null, { status: 400, statusText: 'Invalid intent.' })
   }
 
-  session.flash('message', {
-    content: 'Peer information was updated.',
-    type: 'success'
-  })
-
-  return redirect('.', {
-    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: 'Peer information was updated.',
+      type: 'success'
+    },
+    location: '.'
   })
 }

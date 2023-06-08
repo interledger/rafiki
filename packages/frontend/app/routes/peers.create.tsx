@@ -1,4 +1,4 @@
-import { json, redirect, type ActionArgs } from '@remix-run/node'
+import { json, type ActionArgs } from '@remix-run/node'
 import {
   Form,
   useActionData,
@@ -10,7 +10,7 @@ import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import type { ListAssetsQuery } from '~/generated/graphql'
 import { listAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
-import { messageStorage } from '~/lib/message.server'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
@@ -208,12 +208,12 @@ export async function action({ request }: ActionArgs) {
 
   const session = await messageStorage.getSession(request.headers.get('cookie'))
 
-  session.flash('message', {
-    content: 'Peer created.',
-    type: 'success'
-  })
-
-  return redirect(`/peers/${response.peer?.id}`, {
-    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: 'Peer created.',
+      type: 'success'
+    },
+    location: `/peers/${response.peer?.id}`
   })
 }
