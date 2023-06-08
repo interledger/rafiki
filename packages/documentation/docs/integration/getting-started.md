@@ -86,6 +86,7 @@ The endpoint accepts a `POST` request with
 | `outgoing_payment.created`         | Outgoing payment was created.                                               |
 | `outgoing_payment.completed`       | Outgoing payment is complete.                                               |
 | `outgoing_payment.failed`          | Outgoing payment failed.                                                    |
+| `payment_pointer.not_found`        | A requested payment pointer was not found                                   |
 | `payment_pointer.web_monetization` | Web Monetization payments received via STREAM.                              |
 
 The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
@@ -127,6 +128,12 @@ An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment was 
 An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment failed to send all (or any) of the funds and won't re-try. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and return it to the payer's account.
 
 - Action: Withdraw liquidity
+
+#### `payment_pointer.not_found`
+
+A [Payment Pointer](../reference/glossary.md#payment-pointer) was requested (via the [Open Payments API](../reference/glossary.md#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can do a lookup for a relevant account in their system, and create a Payment Pointer. The initial request for the Payment Pointer will succeed if the Account Servicing Entity creates it within the configurable [`PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`](./deployment.md#backend) variable.
+
+- Action: Create Payment Pointer
 
 #### `payment_pointer.web_monetization`
 
