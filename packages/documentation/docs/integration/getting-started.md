@@ -131,7 +131,7 @@ An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment fail
 
 #### `payment_pointer.not_found`
 
-A [Payment Pointer](../reference/glossary.md#payment-pointer) was requested (via the [Open Payments API](../reference/glossary.md#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and create a Payment Pointer. The initial request for the Payment Pointer will succeed if the Account Servicing Entity creates it within the configurable [`PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`](./deployment.md#backend) timeframe.
+A [payment pointer](../reference/glossary.md#payment-pointer) was requested (via the [Open Payments API](../reference/glossary.md#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and [create](#issuing-payment-pointers) a payment pointer. The initial request for the payment pointer will succeed if the Account Servicing Entity creates it within the configurable [`PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`](./deployment.md#backend) timeframe.
 
 - Action: Create Payment Pointer
 
