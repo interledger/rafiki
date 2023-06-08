@@ -4,7 +4,7 @@ import { Form, useNavigate, useNavigation } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
-import { addPeerLiquidity } from '~/lib/api/peer.server'
+import { addAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 
@@ -41,7 +41,7 @@ export default function PeerAddLiquidity() {
                 as='h3'
                 className='font-semibold leading-6 text-lg text-center'
               >
-                Add peer liquidity
+                Add asset liquidity
               </Dialog.Title>
               <div className='mt-2'>
                 <Form method='post' replace preventScrollReset>
@@ -72,13 +72,13 @@ export default function PeerAddLiquidity() {
 
 export async function action({ request, params }: ActionArgs) {
   const session = await messageStorage.getSession(request.headers.get('cookie'))
-  const peerId = params.peerId
+  const assetId = params.assetId
 
-  if (!peerId) {
+  if (!assetId) {
     return setMessageAndRedirect({
       session,
       message: {
-        content: 'Missing peer ID',
+        content: 'Missing asset ID',
         type: 'error'
       },
       location: '.'
@@ -99,8 +99,8 @@ export async function action({ request, params }: ActionArgs) {
     })
   }
 
-  const response = await addPeerLiquidity({
-    peerId,
+  const response = await addAssetLiquidity({
+    assetId,
     amount: result.data,
     id: v4(),
     idempotencyKey: v4()
@@ -112,7 +112,7 @@ export async function action({ request, params }: ActionArgs) {
       message: {
         content:
           response?.message ??
-          'Could not add peer liquidity. Please try again!',
+          'Could not add asset liquidity. Please try again!',
         type: 'error'
       },
       location: '.'

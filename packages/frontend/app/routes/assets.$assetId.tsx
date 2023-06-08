@@ -6,6 +6,7 @@ import {
 } from '@remix-run/node'
 import {
   Form,
+  Outlet,
   useActionData,
   useLoaderData,
   useNavigation
@@ -61,7 +62,7 @@ export default function ViewAssetPage() {
             <ErrorPanel errors={response?.errors.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace>
+            <Form method='post' replace preventScrollReset>
               <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={asset.id} />
@@ -99,7 +100,7 @@ export default function ViewAssetPage() {
               <Button
                 aria-label='go to asset page'
                 type='button'
-                to={`/assets/${asset.id}`}
+                to={`/assets/${asset.id}/liquidity`}
               >
                 Add Liquidity
               </Button>
@@ -108,6 +109,7 @@ export default function ViewAssetPage() {
         </div>
         {/* Peer Liquidity Info - END */}
       </div>
+      <Outlet />
     </div>
   )
 }
