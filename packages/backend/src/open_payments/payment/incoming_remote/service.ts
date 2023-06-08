@@ -74,9 +74,9 @@ async function create(
         incomingAmount: args.incomingAmount
           ? serializeAmount(args.incomingAmount)
           : undefined,
-        description: args.description,
+        description: args.description ?? undefined,
         expiresAt: args.expiresAt?.toISOString(),
-        externalRef: args.externalRef
+        externalRef: args.externalRef ?? undefined
       }
     )
   } catch (error) {
