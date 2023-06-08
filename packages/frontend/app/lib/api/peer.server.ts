@@ -4,6 +4,7 @@ import type {
   AddPeerLiquidityMutation,
   AddPeerLiquidityMutationVariables,
   CreatePeerInput,
+  CreatePeerLiquidityWithdrawalInput,
   CreatePeerMutation,
   CreatePeerMutationVariables,
   DeletePeerMutation,
@@ -17,7 +18,9 @@ import type {
   QueryPeersArgs,
   UpdatePeerInput,
   UpdatePeerMutation,
-  UpdatePeerMutationVariables
+  UpdatePeerMutationVariables,
+  WithdrawPeerLiquidity,
+  WithdrawPeerLiquidityVariables
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
@@ -188,4 +191,31 @@ export const addPeerLiquidity = async (args: AddPeerLiquidityInput) => {
   })
 
   return response.data?.addPeerLiquidity
+}
+
+export const withdrawPeerLiquidity = async (
+  args: CreatePeerLiquidityWithdrawalInput
+) => {
+  const response = await apolloClient.mutate<
+    WithdrawPeerLiquidity,
+    WithdrawPeerLiquidityVariables
+  >({
+    mutation: gql`
+      mutation WithdrawPeerLiquidity(
+        $input: CreatePeerLiquidityWithdrawalInput!
+      ) {
+        createPeerLiquidityWithdrawal(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.createPeerLiquidityWithdrawal
 }

@@ -4,6 +4,7 @@ import type {
   AddAssetLiquidityMutation,
   AddAssetLiquidityMutationVariables,
   CreateAssetInput,
+  CreateAssetLiquidityWithdrawalInput,
   CreateAssetMutation,
   CreateAssetMutationVariables,
   GetAssetQuery,
@@ -14,7 +15,9 @@ import type {
   QueryAssetsArgs,
   UpdateAssetInput,
   UpdateAssetMutation,
-  UpdateAssetMutationVariables
+  UpdateAssetMutationVariables,
+  WithdrawAssetLiquidity,
+  WithdrawAssetLiquidityVariables
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
@@ -145,4 +148,31 @@ export const addAssetLiquidity = async (args: AddAssetLiquidityInput) => {
   })
 
   return response.data?.addAssetLiquidity
+}
+
+export const withdrawAssetLiquidity = async (
+  args: CreateAssetLiquidityWithdrawalInput
+) => {
+  const response = await apolloClient.mutate<
+    WithdrawAssetLiquidity,
+    WithdrawAssetLiquidityVariables
+  >({
+    mutation: gql`
+      mutation WithdrawAssetLiquidity(
+        $input: CreateAssetLiquidityWithdrawalInput!
+      ) {
+        createAssetLiquidityWithdrawal(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.createAssetLiquidityWithdrawal
 }

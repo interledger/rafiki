@@ -1795,6 +1795,13 @@ export type AddAssetLiquidityMutationVariables = Exact<{
 
 export type AddAssetLiquidityMutation = { __typename?: 'Mutation', addAssetLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
 
+export type WithdrawAssetLiquidityVariables = Exact<{
+  input: CreateAssetLiquidityWithdrawalInput;
+}>;
+
+
+export type WithdrawAssetLiquidity = { __typename?: 'Mutation', createAssetLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String'];
 }>;
@@ -1839,3 +1846,10 @@ export type AddPeerLiquidityMutationVariables = Exact<{
 
 
 export type AddPeerLiquidityMutation = { __typename?: 'Mutation', addPeerLiquidity?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+
+export type WithdrawPeerLiquidityVariables = Exact<{
+  input: CreatePeerLiquidityWithdrawalInput;
+}>;
+
+
+export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
