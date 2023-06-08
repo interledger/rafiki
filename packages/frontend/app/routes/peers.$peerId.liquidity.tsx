@@ -1,23 +1,15 @@
 import { Dialog } from '@headlessui/react'
-import { type ActionArgs, json, redirect } from '@remix-run/node'
-import {
-  Form,
-  useActionData,
-  useNavigate,
-  useNavigation,
-  useParams
-} from '@remix-run/react'
+import { type ActionArgs } from '@remix-run/node'
+import { Form, useNavigate, useNavigation, useParams } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
 import { addPeerLiquidity } from '~/lib/api/peer.server'
-import { messageStorage } from '~/lib/message.server'
-import { addPeerLiquiditySchema } from '~/lib/validate.server'
-import type { ZodFieldErrors } from '~/shared/types'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
+import { amountSchema } from '~/lib/validate.server'
 
 export default function PeerAddLiquidity() {
   const { peerId } = useParams()
-  const response = useActionData<typeof action>()
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
   const { state } = useNavigation()
@@ -53,7 +45,7 @@ export default function PeerAddLiquidity() {
                 Add peer liquidity
               </Dialog.Title>
               <div className='mt-2'>
-                <Form method='post' replace>
+                <Form method='post' replace preventScrollReset>
                   <fieldset disabled={isSubmitting}>
                     <input type='hidden' name='peerId' value={peerId} />
                     <Input
@@ -61,7 +53,6 @@ export default function PeerAddLiquidity() {
                       type='number'
                       name='amount'
                       label='Amount'
-                      error={response?.errors.fieldErrors.amount}
                     />
                     <div className='flex justify-end py-3'>
                       <Button aria-label='add peer liquidity' type='submit'>
@@ -81,49 +72,61 @@ export default function PeerAddLiquidity() {
   )
 }
 
-export async function action({ request }: ActionArgs) {
-  const actionResponse: {
-    errors: {
-      fieldErrors: ZodFieldErrors<typeof addPeerLiquiditySchema>
-      message: string[]
-    }
-  } = {
-    errors: {
-      fieldErrors: {},
-      message: []
-    }
+export async function action({ request, params }: ActionArgs) {
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
+  const peerId = params.peerId
+
+  if (!peerId) {
+    return setMessageAndRedirect({
+      session,
+      message: {
+        content: 'Missing peer ID',
+        type: 'error'
+      },
+      location: '.'
+    })
   }
 
-  const formData = Object.fromEntries(await request.formData())
-
-  const result = addPeerLiquiditySchema.safeParse(formData)
+  const formData = await request.formData()
+  const result = amountSchema.safeParse(formData.get('amount'))
 
   if (!result.success) {
-    actionResponse.errors.fieldErrors = result.error.flatten().fieldErrors
-    return json({ ...actionResponse }, { status: 400 })
+    return setMessageAndRedirect({
+      session,
+      message: {
+        content: 'Amount is not valid. Please try again!',
+        type: 'error'
+      },
+      location: '.'
+    })
   }
 
   const response = await addPeerLiquidity({
-    ...result.data,
+    peerId,
+    amount: result.data,
     id: v4(),
     idempotencyKey: v4()
   })
 
   if (!response?.success) {
-    actionResponse.errors.message = [
-      response?.message ?? 'Could not add peer liquidity. Please try again!'
-    ]
-    return json({ ...actionResponse }, { status: 400 })
+    return setMessageAndRedirect({
+      session,
+      message: {
+        content:
+          response?.message ??
+          'Could not add peer liquidity. Please try again!',
+        type: 'error'
+      },
+      location: '.'
+    })
   }
 
-  const session = await messageStorage.getSession(request.headers.get('cookie'))
-
-  session.flash('message', {
-    content: response.message,
-    type: 'success'
-  })
-
-  return redirect('.', {
-    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: response.message,
+      type: 'success'
+    },
+    location: '..'
   })
 }
