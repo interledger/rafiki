@@ -98,7 +98,7 @@ export default function ViewAssetPage() {
                 <p className='mt-1'>{asset.liquidity ?? 'No liquidity'}</p>
               </div>
               <Button
-                aria-label='go to asset page'
+                aria-label='add asset liquidity page'
                 type='button'
                 to={`/assets/${asset.id}/add-liquidity`}
               >

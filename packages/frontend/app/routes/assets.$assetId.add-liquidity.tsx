@@ -54,7 +54,7 @@ export default function PeerAddLiquidity() {
                       label='Amount'
                     />
                     <div className='flex justify-end py-3'>
-                      <Button aria-label='add peer liquidity' type='submit'>
+                      <Button aria-label='add asset liquidity' type='submit'>
                         {isSubmitting
                           ? 'Adding liquidity ...'
                           : 'Add liquidity'}
