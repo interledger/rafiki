@@ -5,8 +5,10 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
   "engines": {
-    "node": "18"
-  },
+    "pnpm": "^8.6.1",
+    "npm": "pnpm",
+    "yarn": "pnpm",
+    "node": "^18.14.0"  },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
@@ -41,7 +43,7 @@
     "tigerbeetle-node": {
       "built": true
     }
-  },
+  },  
   "prettier": {
     "semi": false,
     "singleQuote": true,
