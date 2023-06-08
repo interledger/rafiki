@@ -243,14 +243,24 @@ export default function ViewPeerPage() {
                 <p className='font-medium'>Amount</p>
                 <p className='mt-1'>{peer.liquidity ?? 'No liquidity'}</p>
               </div>
-              <Button
-                aria-label='add peer liquidity page'
-                preventScrollReset
-                type='button'
-                to={`/peers/${peer.id}/add-liquidity`}
-              >
-                Add liquidity
-              </Button>
+              <div className='flex space-x-4'>
+                <Button
+                  aria-label='add peer liquidity page'
+                  preventScrollReset
+                  type='button'
+                  to={`/peers/${peer.id}/add-liquidity`}
+                >
+                  Add liquidity
+                </Button>
+                <Button
+                  aria-label='withdraw peer liquidity page'
+                  preventScrollReset
+                  type='button'
+                  to={`/peers/${peer.id}/withdraw-liquidity`}
+                >
+                  Withdraw liquidity
+                </Button>
+              </div>
             </div>
           </div>
         </div>
