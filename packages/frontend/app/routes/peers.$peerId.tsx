@@ -100,7 +100,7 @@ export default function ViewPeerPage() {
             <ErrorPanel errors={response?.errors.general.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace>
+            <Form method='post' replace preventScrollReset>
               <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
@@ -161,7 +161,7 @@ export default function ViewPeerPage() {
             <ErrorPanel errors={response?.errors.http.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace>
+            <Form method='post' replace preventScrollReset>
               <fieldset disabled={isSubmitting}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
