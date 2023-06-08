@@ -55,9 +55,11 @@ export async function setupFromSeed(config: Config): Promise<void> {
     config.seed.accounts.map(async (account: Account) => {
       await mockAccounts.create(
         account.id,
+        account.path,
         account.name,
         asset.code,
-        asset.scale
+        asset.scale,
+        asset.id
       )
       if (account.initialBalance) {
         await mockAccounts.credit(
@@ -66,8 +68,12 @@ export async function setupFromSeed(config: Config): Promise<void> {
           false
         )
       }
+
+      if (account.skipPaymentPointerCreation) {
+        return
+      }
+
       const paymentPointer = await createPaymentPointer(
-        config.seed.self.graphqlUrl,
         account.name,
         `https://${CONFIG.seed.self.hostname}/${account.path}`,
         asset.id
