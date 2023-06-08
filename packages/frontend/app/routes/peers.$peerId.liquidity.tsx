@@ -48,6 +48,7 @@ export default function PeerAddLiquidity() {
                   <fieldset disabled={isSubmitting}>
                     <Input
                       required
+                      min={1}
                       type='number'
                       name='amount'
                       label='Amount'
