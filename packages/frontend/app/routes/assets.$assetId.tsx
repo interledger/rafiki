@@ -100,9 +100,9 @@ export default function ViewAssetPage() {
               <Button
                 aria-label='go to asset page'
                 type='button'
-                to={`/assets/${asset.id}/liquidity`}
+                to={`/assets/${asset.id}/add-liquidity`}
               >
-                Add Liquidity
+                Add liquidity
               </Button>
             </div>
           </div>

@@ -252,7 +252,7 @@ export default function ViewPeerPage() {
                 aria-label='add peer liquidity page'
                 preventScrollReset
                 type='button'
-                to={`/peers/${peer.id}/liquidity`}
+                to={`/peers/${peer.id}/add-liquidity`}
               >
                 Add liquidity
               </Button>
