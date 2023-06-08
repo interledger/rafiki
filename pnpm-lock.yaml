@@ -1,8 +1,4 @@
-lockfileVersion: '6.1'
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
+lockfileVersion: '6.0'
 
 importers:
 
@@ -198,7 +194,7 @@ importers:
         version: 16.6.0
       httpbis-digest-headers:
         specifier: github:interledger/httpbis-digest-headers
-        version: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
+        version: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
       knex:
         specifier: ^2.4.2
         version: 2.4.2(pg@8.11.0)
@@ -4322,7 +4318,7 @@ packages:
     resolution: {integrity: sha512-jh+sVSvJYdub1gB9OHXIGziKrEiIvoFG3SFjW/fBCWyUabjq0Bt3RYmz5C29GjoKORvYTor+hO2m7e5EtJwdog==}
     dependencies:
       http-message-signatures: 0.1.2
-      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284
+      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
       jose: 4.13.1
       uuid: 9.0.0
     dev: false
@@ -19155,8 +19151,8 @@ packages:
     resolution: {integrity: sha512-JZxotl7SxAJH0j7dN4pxsTV6ZLXoLdGME+PsjkL/DaBrVryK9kTGq06GfKrwcSOqypP+fdXGoCHE36b99fWVoA==}
     dev: true
 
-  github.com/interledger/httpbis-digest-headers/787b7af5ba1752337d696a7b1587193058173284:
-    resolution: {tarball: https://codeload.github.com/interledger/httpbis-digest-headers/tar.gz/787b7af5ba1752337d696a7b1587193058173284}
+  github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b:
+    resolution: {tarball: https://codeload.github.com/interledger/httpbis-digest-headers/tar.gz/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b}
     name: httpbis-digest-headers
     version: 1.0.0
     prepare: true
