@@ -60,8 +60,8 @@ $ helm install ...
 | `PAYMENT_POINTER_WORKER_IDLE`          | `200`                                                       | milliseconds                                                                   |
 | `EXCHANGE_RATES_LIFETIME`              | `15_000`                                                    | milliseconds                                                                   |
 | `EXCHANGE_RATES_URL`                   | `undefined`                                                 | endpoint on the Account Servicing Entity to request receiver fees              |
-| `PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`    | `1500`                                                      | timeout in milliseconds the ASE has to create a missing payment pointer before |
-| `PAYMENT_POINTER_POLLING_FREQUENCY_MS` | `100`                                                       | frequency of polling when waiting for ASE to create a missing payment pointer  |
+| `PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`    | `1500`                                                      | milliseconds the ASE has to create a missing payment pointer until timeout     |
+| `PAYMENT_POINTER_POLLING_FREQUENCY_MS` | `100`                                                       | frequency of polling while waiting for ASE to create a missing payment pointer |
 | `PRIVATE_KEY_FILE`                     | `undefined`                                                 | Rafiki instance client private key                                             |
 | `PUBLIC_HOST`                          | `http://127.0.0.1:3001`                                     | (testing) public Host for Open Payments APIs                                   |
 | `QUOTE_LIFESPAN`                       | `5 * 60_000`                                                | milliseconds                                                                   |
