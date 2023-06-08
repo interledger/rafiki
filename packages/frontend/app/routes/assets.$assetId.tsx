@@ -92,13 +92,22 @@ export default function ViewAssetPage() {
                 <p className='font-medium'>Amount</p>
                 <p className='mt-1'>{asset.liquidity ?? 'No liquidity'}</p>
               </div>
-              <Button
-                aria-label='add asset liquidity page'
-                type='button'
-                to={`/assets/${asset.id}/add-liquidity`}
-              >
-                Add liquidity
-              </Button>
+              <div className='flex space-x-4'>
+                <Button
+                  aria-label='add asset liquidity page'
+                  type='button'
+                  to={`/assets/${asset.id}/add-liquidity`}
+                >
+                  Add liquidity
+                </Button>
+                <Button
+                  aria-label='withdraw asset liquidity page'
+                  type='button'
+                  to={`/assets/${asset.id}/withdraw-liquidity`}
+                >
+                  Withdraw liquidity
+                </Button>
+              </div>
             </div>
           </div>
         </div>

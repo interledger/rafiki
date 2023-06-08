@@ -4,11 +4,11 @@ import { Form, useNavigate, useNavigation } from '@remix-run/react'
 import { v4 } from 'uuid'
 import { XIcon } from '~/components/icons'
 import { Button, Input } from '~/components/ui'
-import { addAssetLiquidity } from '~/lib/api/asset.server'
+import { withdrawAssetLiquidity } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
 
-export default function AssetAddLiquidity() {
+export default function AssetWithdrawLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
   const { state } = useNavigation()
@@ -41,7 +41,7 @@ export default function AssetAddLiquidity() {
                 as='h3'
                 className='font-semibold leading-6 text-lg text-center'
               >
-                Add asset liquidity
+                Withdraw asset liquidity
               </Dialog.Title>
               <div className='mt-2'>
                 <Form method='post' replace preventScrollReset>
@@ -56,8 +56,8 @@ export default function AssetAddLiquidity() {
                     <div className='flex justify-end py-3'>
                       <Button aria-label='add asset liquidity' type='submit'>
                         {isSubmitting
-                          ? 'Adding liquidity ...'
-                          : 'Add liquidity'}
+                          ? 'Withdrawing liquidity ...'
+                          : 'Withdraw liquidity'}
                       </Button>
                     </div>
                   </fieldset>
@@ -100,7 +100,7 @@ export async function action({ request, params }: ActionArgs) {
     })
   }
 
-  const response = await addAssetLiquidity({
+  const response = await withdrawAssetLiquidity({
     assetId,
     amount: result.data,
     id: v4(),
@@ -113,7 +113,7 @@ export async function action({ request, params }: ActionArgs) {
       message: {
         content:
           response?.message ??
-          'Could not add asset liquidity. Please try again!',
+          'Could not withdraw asset liquidity. Please try again!',
         type: 'error'
       },
       location: '.'
