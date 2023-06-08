@@ -141,17 +141,7 @@ async function updatePaymentPointer(
 
     if (status === 'INACTIVE' && paymentPointer.isActive) {
       update.deactivatedAt = new Date()
-      const expiresAt = new Date(
-        Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
-      )
-
-      await IncomingPayment.query(deps.knex)
-        .patch({ expiresAt })
-        .where('paymentPointerId', id)
-        .whereIn('state', [
-          IncomingPaymentState.Pending,
-          IncomingPaymentState.Processing
-        ])
+      deactivateOpenIncomingPaymentsByPaymentPointer(deps, id)
     } else if (status === 'ACTIVE' && !paymentPointer.isActive) {
       update.deactivatedAt = null
     }
@@ -290,6 +280,23 @@ async function createWithdrawalEvent(
   await paymentPointer.$query(deps.knex).patch({
     totalEventsAmount: paymentPointer.totalEventsAmount + amount
   })
+}
+
+async function deactivateOpenIncomingPaymentsByPaymentPointer(
+  deps: ServiceDependencies,
+  paymentPointerId: string
+) {
+  await IncomingPayment.query(deps.knex)
+    .patch({
+      expiresAt: new Date(
+        Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
+      )
+    })
+    .where('paymentPointerId', paymentPointerId)
+    .whereIn('state', [
+      IncomingPaymentState.Pending,
+      IncomingPaymentState.Processing
+    ])
 }
 
 export interface CreateSubresourceOptions {
