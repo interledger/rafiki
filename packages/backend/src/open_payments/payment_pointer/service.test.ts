@@ -187,7 +187,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ).resolves.toEqual(updatedPaymentPointer)
     })
 
-    test('Deactivating updates expirey dates of existing incoming payments', async (): Promise<void> => {
+    test('Deactivating updates expiry dates of existing incoming payments', async (): Promise<void> => {
       const paymentPointer = await createPaymentPointer(deps)
 
       const nowMs = new Date('2023-06-01T00:00:00Z').getTime()
