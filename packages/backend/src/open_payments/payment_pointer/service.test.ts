@@ -190,7 +190,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
 
       const now = new Date('2023-06-01T00:00:00Z').getTime()
-      jest.useFakeTimers({now})
+      jest.useFakeTimers({ now })
 
       const duration = 30_000
       const expiresAt = new Date(Date.now() + duration)
