@@ -23,6 +23,7 @@ import {
   uuidSchema
 } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
+import { formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const peerId = params.peerId
@@ -241,7 +242,10 @@ export default function ViewPeerPage() {
             <div className='w-full p-4 flex justify-between items-center'>
               <div>
                 <p className='font-medium'>Amount</p>
-                <p className='mt-1'>{peer.liquidity ?? 'No liquidity'}</p>
+                <p className='mt-1'>
+                  {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
+                  {peer.asset.code}
+                </p>
               </div>
               <div className='flex space-x-4'>
                 <Button

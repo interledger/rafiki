@@ -13,6 +13,7 @@ import { getAsset, updateAsset } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
+import { formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const assetId = params.assetId
@@ -90,7 +91,10 @@ export default function ViewAssetPage() {
             <div className='w-full p-4 flex justify-between items-center'>
               <div>
                 <p className='font-medium'>Amount</p>
-                <p className='mt-1'>{asset.liquidity ?? 'No liquidity'}</p>
+                <p className='mt-1'>
+                  {formatAmount(asset.liquidity ?? '0', asset.scale)}{' '}
+                  {asset.code}
+                </p>
               </div>
               <div className='flex space-x-4'>
                 <Button
