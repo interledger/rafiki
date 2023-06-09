@@ -1,7 +1,7 @@
 import { type ActionArgs } from '@remix-run/node'
 import { useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
-import { LiquidityDialog } from '~/components/ui/LiquidityDialog'
+import { LiquidityDialog } from '~/components/LiquidityDialog'
 import { withdrawPeerLiquidity } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { amountSchema } from '~/lib/validate.server'
