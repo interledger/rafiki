@@ -1,6 +1,6 @@
 type Query {
   "Fetch a page of grants."
-  grants(input: PaginationInput): GrantsConnection!
+  grants(input: PaginationInput, filter: GrantFilter): GrantsConnection!
 }
 
 type Mutation {
@@ -40,6 +40,14 @@ input PaginationInput {
   last: Int
 }
 
+input GrantFilter {
+  identifier: FilterString
+}
+
+input FilterString {
+  in: [String!]!
+}
+
 input RevokeGrantInput {
   grantId: String!
 }
@@ -52,8 +60,6 @@ interface Model {
 type Grant implements Model {
   "Grant id"
   id: ID!
-  "Payment pointer of the resource owner's account"
-  identifier: String!
   "Payment pointer of the grantee's account"
   client: String!
   "Access details"
@@ -69,6 +75,10 @@ type Access implements Model {
   id: ID!
   "Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote)"
   identifier: String
+  "Access type (incoming payment, outgoing payment, or quote)"
+  type: String!
+  "Access action (create, read, list or complete)"
+  actions: [String]!
   "Date-time of creation"
   createdAt: String!
 }

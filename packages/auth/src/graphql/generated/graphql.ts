@@ -16,12 +16,20 @@ export type Scalars = {
 
 export type Access = Model & {
   __typename?: 'Access';
+  /** Access action (create, read, list or complete) */
+  actions: Array<Maybe<Scalars['String']>>;
   /** Date-time of creation */
   createdAt: Scalars['String'];
   /** Access id */
   id: Scalars['ID'];
   /** Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote) */
   identifier?: Maybe<Scalars['String']>;
+  /** Access type (incoming payment, outgoing payment, or quote) */
+  type: Scalars['String'];
+};
+
+export type FilterString = {
+  in: Array<Scalars['String']>;
 };
 
 export type Grant = Model & {
@@ -34,8 +42,6 @@ export type Grant = Model & {
   createdAt: Scalars['String'];
   /** Grant id */
   id: Scalars['ID'];
-  /** Payment pointer of the resource owner's account */
-  identifier: Scalars['String'];
   /** State of the grant */
   state: GrantState;
 };
@@ -44,6 +50,10 @@ export type GrantEdge = {
   __typename?: 'GrantEdge';
   cursor: Scalars['String'];
   node: Grant;
+};
+
+export type GrantFilter = {
+  identifier?: InputMaybe<FilterString>;
 };
 
 export enum GrantState {
@@ -116,6 +126,7 @@ export type Query = {
 
 
 export type QueryGrantsArgs = {
+  filter?: InputMaybe<GrantFilter>;
   input?: InputMaybe<PaginationInput>;
 };
 
@@ -203,8 +214,10 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Access: ResolverTypeWrapper<Partial<Access>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
+  FilterString: ResolverTypeWrapper<Partial<FilterString>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
   GrantEdge: ResolverTypeWrapper<Partial<GrantEdge>>;
+  GrantFilter: ResolverTypeWrapper<Partial<GrantFilter>>;
   GrantState: ResolverTypeWrapper<Partial<GrantState>>;
   GrantsConnection: ResolverTypeWrapper<Partial<GrantsConnection>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
@@ -224,8 +237,10 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Access: Partial<Access>;
   Boolean: Partial<Scalars['Boolean']>;
+  FilterString: Partial<FilterString>;
   Grant: Partial<Grant>;
   GrantEdge: Partial<GrantEdge>;
+  GrantFilter: Partial<GrantFilter>;
   GrantsConnection: Partial<GrantsConnection>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
@@ -241,9 +256,11 @@ export type ResolversParentTypes = {
 };
 
 export type AccessResolvers<ContextType = any, ParentType extends ResolversParentTypes['Access'] = ResolversParentTypes['Access']> = {
+  actions?: Resolver<Array<Maybe<ResolversTypes['String']>>, ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   identifier?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -252,7 +269,6 @@ export type GrantResolvers<ContextType = any, ParentType extends ResolversParent
   client?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  identifier?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['GrantState'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

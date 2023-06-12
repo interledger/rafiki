@@ -48,6 +48,13 @@ describe('Grant Resolvers', (): void => {
         const grant = await createGrant(deps)
         grants.push(grant)
       }
+
+      const filter = {
+        identifier: {
+          in: ['test']
+        }
+      }
+
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -62,7 +69,8 @@ describe('Grant Resolvers', (): void => {
                 }
               }
             }
-          `
+          `,
+          variables: filter
         })
         .then((query): GrantsConnection => {
           if (query.data) {
