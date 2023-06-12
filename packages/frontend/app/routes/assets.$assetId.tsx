@@ -3,6 +3,7 @@ import {
   Form,
   Outlet,
   useActionData,
+  useFormAction,
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
@@ -40,8 +41,11 @@ export async function loader({ params }: LoaderArgs) {
 export default function ViewAssetPage() {
   const { asset } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
-  const { state } = useNavigation()
-  const isSubmitting = state === 'submitting'
+  const navigation = useNavigation()
+  const formAction = useFormAction()
+
+  const isSubmitting = navigation.state === 'submitting'
+  const currentPageAction = isSubmitting && navigation.formAction === formAction
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -59,7 +63,7 @@ export default function ViewAssetPage() {
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
-              <fieldset disabled={isSubmitting}>
+              <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={asset.id} />
                   <Input label='Asset ID' value={asset.id} disabled readOnly />
@@ -75,7 +79,7 @@ export default function ViewAssetPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button aria-label='save asset information' type='submit'>
-                    {isSubmitting ? 'Saving ...' : 'Save'}
+                    {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>

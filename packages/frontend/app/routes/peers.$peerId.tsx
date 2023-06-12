@@ -3,6 +3,7 @@ import {
   Form,
   Outlet,
   useActionData,
+  useFormAction,
   useLoaderData,
   useNavigation,
   useSubmit
@@ -50,12 +51,14 @@ export async function loader({ params }: LoaderArgs) {
 export default function ViewPeerPage() {
   const { peer } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
+  const formAction = useFormAction()
   const [formData, setFormData] = useState<FormData>()
   const submit = useSubmit()
-  const { state } = useNavigation()
+  const navigation = useNavigation()
   const dialogRef = useRef<ConfirmationDialogRef>(null)
 
-  const isSubmitting = state === 'submitting'
+  const isSubmitting = navigation.state === 'submitting'
+  const currentPageAction = isSubmitting && navigation.formAction === formAction
 
   const submitHandler = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -97,7 +100,7 @@ export default function ViewPeerPage() {
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
-              <fieldset disabled={isSubmitting}>
+              <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
                   <Input
@@ -142,7 +145,7 @@ export default function ViewPeerPage() {
                     name='intent'
                     value='general'
                   >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
+                    {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
@@ -158,7 +161,7 @@ export default function ViewPeerPage() {
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
-              <fieldset disabled={isSubmitting}>
+              <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
                   <Input
@@ -191,7 +194,7 @@ export default function ViewPeerPage() {
                     name='intent'
                     value='http'
                   >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
+                    {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
