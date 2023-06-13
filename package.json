@@ -8,7 +8,7 @@
     "pnpm": "^8.6.1",
     "npm": "pnpm",
     "yarn": "pnpm",
-    "node": "^18.14.0"  
+    "node": "^18.14.0"
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
@@ -44,7 +44,7 @@
     "tigerbeetle-node": {
       "built": true
     }
-  },  
+  },
   "prettier": {
     "semi": false,
     "singleQuote": true,
