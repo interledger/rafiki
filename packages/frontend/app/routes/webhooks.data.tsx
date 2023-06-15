@@ -1,15 +1,18 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { useLocation, useNavigate } from '@remix-run/react'
-import { Fragment } from 'react'
+import { Fragment, useEffect } from 'react'
 import { XIcon } from '~/components/icons'
 import { prettify } from '~/shared/utils'
 
-// TODO: redirect to '/webhooks' if the state is missing
 export default function WebhookEventData() {
   const location = useLocation()
   const navigate = useNavigate()
   const state = location.state as { data: string }
-  const dismiss = () => navigate('..', { preventScrollReset: true })
+  const dismiss = () => navigate('/webhooks', { preventScrollReset: true })
+
+  useEffect(() => {
+    if (!state) dismiss()
+  }, [])
 
   return (
     <Transition.Root show={true} as={Fragment}>
@@ -51,7 +54,7 @@ export default function WebhookEventData() {
                 <div className='mt-6 overflow-auto flex-1 text-sm break-words whitespace-pre'>
                   <pre
                     dangerouslySetInnerHTML={{
-                      __html: prettify(state.data)
+                      __html: prettify(state && state.data ? state.data : {})
                     }}
                   />
                 </div>

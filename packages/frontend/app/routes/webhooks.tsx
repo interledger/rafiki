@@ -1,22 +1,24 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { Outlet, useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
+import { DropdownFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
 import { listWebhooks } from '~/lib/api/webhook.server'
-import { paginationSchema } from '~/lib/validate.server'
+import { webhooksSearchParams } from '~/lib/validate.server'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
-  const pagination = paginationSchema.safeParse(
-    Object.fromEntries(url.searchParams.entries())
-  )
+  const searchParams = Object.fromEntries(url.searchParams.entries())
+  const result = webhooksSearchParams.safeParse(searchParams)
 
-  if (!pagination.success) {
-    throw json(null, { status: 400, statusText: 'Invalid pagination.' })
+  if (!result.success) {
+    throw json(null, { status: 400, statusText: 'Invalid result.' })
   }
 
+  const { type, ...pagination } = result.data
   const webhooks = await listWebhooks({
-    ...pagination.data
+    ...pagination,
+    ...(type ? { filter: { type: { in: [type.toString()] } } } : {})
   })
 
   let previousPageUrl = '',
@@ -30,11 +32,11 @@ export const loader = async ({ request }: LoaderArgs) => {
     nextPageUrl = `/webhooks?after=${webhooks.pageInfo.endCursor}`
   }
 
-  return json({ webhooks, previousPageUrl, nextPageUrl })
+  return json({ webhooks, previousPageUrl, nextPageUrl, type })
 }
 
 export default function WebhookEventsPage() {
-  const { webhooks, previousPageUrl, nextPageUrl } =
+  const { webhooks, previousPageUrl, nextPageUrl, type } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
@@ -47,6 +49,21 @@ export default function WebhookEventsPage() {
               <h3 className='text-2xl leading-10'>Webhook Events</h3>
             </div>
           </PageHeader>
+          <div className='p-1'>
+            <h3 className='text-lg'>Filters</h3>
+            <div className='flex items-center'>
+              <DropdownFilter
+                label='Type'
+                value={type}
+                options={[
+                  {
+                    name: 'Outgoing Payment created',
+                    action: () => navigate('?type=outgoing_payment.created')
+                  }
+                ]}
+              />
+            </div>
+          </div>
           <Table>
             <Table.Head columns={['ID', 'Type', 'Data']} />
             <Table.Body>

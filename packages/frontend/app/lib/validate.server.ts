@@ -14,6 +14,31 @@ export const paginationSchema = z
   })
   .partial()
 
+export const paginationSchemaTest = z.object({
+  after: z.string().uuid(),
+  before: z.string().uuid(),
+  first: z.coerce.number().int().positive(),
+  last: z.coerce.number().int().positive()
+})
+
+export enum WebhookEventType {
+  IncomingPaymentCreated = 'incoming_payment.created',
+  IncomingPaymentCompleted = 'incoming_payment.completed',
+  IncomingPaymentExpired = 'incoming_payment.expired',
+  OutgoingPaymentCreated = 'outgoing_payment.created',
+  OutgoingPaymentCompleted = 'outgoing_payment.completed',
+  OutgoingPaymentFailed = 'outgoing_payment.failed'
+}
+
+export const paginationSearchParams = paginationSchemaTest.partial()
+export const webhooksSearchParams = paginationSearchParams
+  .merge(
+    z.object({
+      type: z.nativeEnum(WebhookEventType)
+    })
+  )
+  .partial()
+
 export const peerGeneralInfoSchema = z
   .object({
     name: z.string().optional(),
