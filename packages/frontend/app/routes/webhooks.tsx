@@ -1,5 +1,5 @@
 import { json, type LoaderArgs } from '@remix-run/node'
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import { Outlet, useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
 import { listWebhooks } from '~/lib/api/webhook.server'
@@ -39,54 +39,65 @@ export default function WebhookEventsPage() {
   const navigate = useNavigate()
 
   return (
-    <div className='pt-4 flex flex-col space-y-8'>
-      <div className='flex flex-col rounded-md bg-offwhite px-6'>
-        <PageHeader>
-          <div className='flex-1'>
-            <h3 className='text-2xl leading-10'>Webhook Events</h3>
-          </div>
-        </PageHeader>
-        <Table>
-          <Table.Head columns={['ID', 'Type', 'Data']} />
-          <Table.Body>
-            {webhooks.edges.length ? (
-              webhooks.edges.map((webhook) => (
-                <Table.Row key={webhook.node.id}>
-                  <Table.Cell>{webhook.node.id}</Table.Cell>
-                  <Table.Cell>{webhook.node.type}</Table.Cell>
-                  <Table.Cell>{webhook.node.data}</Table.Cell>
+    <>
+      <div className='pt-4 flex flex-col space-y-8'>
+        <div className='flex flex-col rounded-md bg-offwhite px-6'>
+          <PageHeader>
+            <div className='flex-1'>
+              <h3 className='text-2xl leading-10'>Webhook Events</h3>
+            </div>
+          </PageHeader>
+          <Table>
+            <Table.Head columns={['ID', 'Type', 'Data']} />
+            <Table.Body>
+              {webhooks.edges.length ? (
+                webhooks.edges.map((webhook) => (
+                  <Table.Row key={webhook.node.id}>
+                    <Table.Cell>{webhook.node.id}</Table.Cell>
+                    <Table.Cell>{webhook.node.type}</Table.Cell>
+                    <Table.Cell>
+                        <Button
+                          aria-label='view webhook data'
+                          state={{ data: webhook.node.data }}
+                          to={'/webhooks/data'}
+                        >
+                          View data
+                        </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              ) : (
+                <Table.Row>
+                  <Table.Cell colSpan={4} className='text-center'>
+                    No webhook events found.
+                  </Table.Cell>
                 </Table.Row>
-              ))
-            ) : (
-              <Table.Row>
-                <Table.Cell colSpan={4} className='text-center'>
-                  No webhook events found.
-                </Table.Cell>
-              </Table.Row>
-            )}
-          </Table.Body>
-        </Table>
-        <div className='flex items-center justify-between p-5'>
-          <Button
-            aria-label='go to previous page'
-            disabled={!webhooks.pageInfo.hasPreviousPage}
-            onClick={() => {
-              navigate(previousPageUrl)
-            }}
-          >
-            Previous
-          </Button>
-          <Button
-            aria-label='go to next page'
-            disabled={!webhooks.pageInfo.hasNextPage}
-            onClick={() => {
-              navigate(nextPageUrl)
-            }}
-          >
-            Next
-          </Button>
+              )}
+            </Table.Body>
+          </Table>
+          <div className='flex items-center justify-between p-5'>
+            <Button
+              aria-label='go to previous page'
+              disabled={!webhooks.pageInfo.hasPreviousPage}
+              onClick={() => {
+                navigate(previousPageUrl)
+              }}
+            >
+              Previous
+            </Button>
+            <Button
+              aria-label='go to next page'
+              disabled={!webhooks.pageInfo.hasNextPage}
+              onClick={() => {
+                navigate(nextPageUrl)
+              }}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+      <Outlet />
+    </>
   )
 }
