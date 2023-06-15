@@ -2,8 +2,10 @@ import { Dialog, Transition } from '@headlessui/react'
 import { useLocation, useNavigate } from '@remix-run/react'
 import { Fragment } from 'react'
 import { XIcon } from '~/components/icons'
+import { prettify } from '~/shared/utils'
 
-export default function Index() {
+// TODO: redirect to '/webhooks' if the state is missing
+export default function WebhookEventData() {
   const location = useLocation()
   const navigate = useNavigate()
   const state = location.state as { data: string }
@@ -49,7 +51,7 @@ export default function Index() {
                 <div className='mt-6 overflow-auto flex-1 text-sm break-words whitespace-pre'>
                   <pre
                     dangerouslySetInnerHTML={{
-                      __html: JSON.stringify(JSON.parse(state.data), null, 2)
+                      __html: prettify(state.data)
                     }}
                   />
                 </div>
