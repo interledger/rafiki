@@ -56,13 +56,13 @@ export default function WebhookEventsPage() {
                     <Table.Cell>{webhook.node.id}</Table.Cell>
                     <Table.Cell>{webhook.node.type}</Table.Cell>
                     <Table.Cell>
-                        <Button
-                          aria-label='view webhook data'
-                          state={{ data: webhook.node.data }}
-                          to={'/webhooks/data'}
-                        >
-                          View data
-                        </Button>
+                      <Button
+                        aria-label='view webhook data'
+                        state={{ data: webhook.node.data }}
+                        to={'/webhooks/data'}
+                      >
+                        View data
+                      </Button>
                     </Table.Cell>
                   </Table.Row>
                 ))
