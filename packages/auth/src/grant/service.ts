@@ -22,6 +22,7 @@ interface GrantFilter {
 
 export interface GrantService {
   get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
+  getByIdWithAccess(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteraction(interactId: string): Promise<PendingGrant | undefined>
   getByInteractionSession(
@@ -91,6 +92,7 @@ export async function createGrantService({
   }
   return {
     get: (grantId: string, trx?: Transaction) => get(grantId, trx),
+    getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
@@ -116,6 +118,10 @@ async function get(
   trx?: Transaction
 ): Promise<Grant | undefined> {
   return Grant.query(trx).findById(grantId)
+}
+
+async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
+  return Grant.query().findById(grantId).withGraphJoined('access')
 }
 
 async function issueGrant(

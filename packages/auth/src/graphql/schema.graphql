@@ -1,6 +1,9 @@
 type Query {
   "Fetch a page of grants."
   grants(input: PaginationInput, filter: GrantFilter): GrantsConnection!
+
+  "Fetch a grant"
+  grant(id: String!): Grant!
 }
 
 type Mutation {

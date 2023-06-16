@@ -191,6 +191,12 @@ describe('Grant Service', (): void => {
       await expect(grantService.get(v4())).resolves.toBeUndefined()
       await expect(grantService.getByInteraction(v4())).resolves.toBeUndefined()
     })
+
+    test('Can fetch a grant by id with access', async () => {
+      const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
+      expect(fetchedGrant?.id).toEqual(grant.id)
+      expect(Array.isArray(fetchedGrant?.access)).toBe(true)
+    })
   })
 
   describe('getByInteractiveSession', (): void => {

@@ -120,8 +120,15 @@ export type PaginationInput = {
 
 export type Query = {
   __typename?: 'Query';
+  /** Fetch a grant */
+  grant: Grant;
   /** Fetch a page of grants. */
   grants: GrantsConnection;
+};
+
+
+export type QueryGrantArgs = {
+  id: Scalars['String'];
 };
 
 
@@ -311,6 +318,7 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  grant?: Resolver<ResolversTypes['Grant'], ParentType, ContextType, RequireFields<QueryGrantArgs, 'id'>>;
   grants?: Resolver<ResolversTypes['GrantsConnection'], ParentType, ContextType, Partial<QueryGrantsArgs>>;
 };
 

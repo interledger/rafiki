@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client'
+import { ApolloError, gql } from '@apollo/client'
 import { v4 as uuid } from 'uuid'
 
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -8,13 +8,15 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
+  Grant,
   GrantsConnection,
   RevokeGrantInput,
   RevokeGrantMutationResponse
 } from '../generated/graphql'
 import { Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
-import { createGrant } from '../../tests/grant'
+import { createGrant, getGrantById } from '../../tests/grant'
+import { grantToGraphql } from './grant'
 
 describe('Grant Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -89,6 +91,88 @@ describe('Grant Resolvers', (): void => {
           state: grant.state
         })
       })
+    })
+  })
+
+  describe('Grant By id Queries', (): void => {
+    let grant: GrantModel
+    beforeEach(async (): Promise<void> => {
+      const createdGrant = await createGrant(deps)
+      grant = (await getGrantById(deps, createdGrant.id)) || createdGrant
+    })
+
+    test('Can get a grant', async (): Promise<void> => {
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            query GetGrant($id: String!) {
+              grant(id: $id) {
+                id
+                client
+                state
+                access {
+                  id
+                  identifier
+                  createdAt
+                  actions
+                  type
+                }
+                createdAt
+              }
+            }
+          `,
+          variables: {
+            id: grant?.id
+          }
+        })
+        .then((query): Grant => {
+          if (query.data) {
+            return query.data.grant
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      const expected = grantToGraphql(grant)
+      expected.__typename = 'Grant'
+      expected.access[0].__typename = 'Access'
+
+      expect(response).toStrictEqual(expected)
+    })
+
+    test('Returns error for unknown grant', async (): Promise<void> => {
+      const gqlQuery = appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            query GetGrant($id: String!) {
+              grant(id: $id) {
+                id
+                client
+                state
+                access {
+                  id
+                  identifier
+                  createdAt
+                  actions
+                  type
+                }
+                createdAt
+              }
+            }
+          `,
+          variables: {
+            id: uuid()
+          }
+        })
+        .then((query): Grant => {
+          if (query.data) {
+            return query.data.grant
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      await expect(gqlQuery).rejects.toThrow(ApolloError)
     })
   })
 

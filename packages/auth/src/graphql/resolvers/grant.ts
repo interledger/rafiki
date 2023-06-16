@@ -33,6 +33,21 @@ export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   }
 }
 
+export const getGrantById: QueryResolvers<ApolloContext>['grant'] = async (
+  _,
+  args,
+  ctx
+): Promise<ResolversTypes['Grant']> => {
+  const grantService = await ctx.container.use('grantService')
+  const grant = await grantService.getByIdWithAccess(args.id)
+
+  if (!grant) {
+    throw new Error('No grant')
+  }
+
+  return grantToGraphql(grant)
+}
+
 export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
   async (
     _,
