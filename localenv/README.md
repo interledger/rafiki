@@ -119,7 +119,7 @@ pnpm localenv:compose down --volumes
 ### Commands
 
 | Command                                     | Description                                 |
-|---------------------------------------------|---------------------------------------------|
+| ------------------------------------------- | ------------------------------------------- |
 | `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
 | `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
 | `pnpm localenv:compose up -d`               | Start detached (with Tigerbeetle)           |
