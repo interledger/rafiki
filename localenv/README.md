@@ -22,7 +22,7 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 ## Environment overview
 
-![Docker compose environment](./docs/assets/img/localenv-architecture.png)
+![Docker compose environment](../packages/documentation/static/docs/assets/localenv-architecture.png)
 
 #### Cloud Nine Wallet
 
@@ -60,13 +60,13 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
 
-![Mock Account Servicing Entity Accounts](./docs/assets/img/map-accounts.png)
+![Mock Account Servicing Entity Accounts](../packages/documentation/static/docs/assets/map-accounts.png)
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
 When clicking on the Account Name, a list of Transactions appears.
 
-![Mock Account Servicing Entity Transactions](./docs/assets/img/map-transactions.png)
+![Mock Account Servicing Entity Transactions](../packages/documentation/static/docs/assets/map-transactions.png)
 
 ## Running the local environment
 
@@ -119,10 +119,10 @@ pnpm localenv:compose down --volumes
 ### Commands
 
 | Command                                     | Description                                 |
-| ------------------------------------------- | ------------------------------------------- |
+|---------------------------------------------|---------------------------------------------|
 | `pnpm localenv:compose config`              | Show all merged config (with Tigerbeetle)   |
 | `pnpm localenv:compose up`                  | Start (with Tigerbeetle)                    |
-| `pnpm localenv:compose up -d`               | Start (with Tigerbeetle) detached           |
+| `pnpm localenv:compose up -d`               | Start detached (with Tigerbeetle)           |
 | `pnpm localenv:compose down`                | Down (with Tigerbeetle)                     |
 | `pnpm localenv:compose down --volumes`      | Down and kill volumes (with Tigerbeetle)    |
 | `pnpm localenv:compose:psql config`         | Show all merged config (with Postgresql)    |
@@ -130,7 +130,7 @@ pnpm localenv:compose down --volumes
 | `pnpm localenv:compose:psql up`             | Start (with Postgresql)                     |
 | `pnpm localenv:compose:psql up -d`          | Start (with Postgresql) detached            |
 | `pnpm localenv:compose:psql down`           | Down (with Postgresql)                      |
-| `pnpm localenv:compose:psql down --volumes` | Down (with Postgresql) and kill volumes     |
+| `pnpm localenv:compose:psql down --volumes` | Down and kill volumes (with Postgresql)     |
 | `pnpm localenv:compose:psql build`          | Build all the containers (with Postgresql)  |
 
 ### Usage
