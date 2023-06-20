@@ -108,7 +108,10 @@ async function createIncomingPayment(
 ): Promise<IncomingPayment | IncomingPaymentError> {
   if (!expiresAt) {
     expiresAt = new Date(Date.now() + deps.config.paymentExpiryMaxMs)
-  } else if (expiresAt.getTime() <= Date.now() || expiresAt.getTime() > Date.now() + deps.config.paymentExpiryMaxMs) {
+  } else if (
+    expiresAt.getTime() <= Date.now() ||
+    expiresAt.getTime() > Date.now() + deps.config.paymentExpiryMaxMs
+  ) {
     return IncomingPaymentError.InvalidExpiry
   }
   if (incomingAmount && incomingAmount.value <= 0) {
