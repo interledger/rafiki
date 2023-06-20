@@ -244,7 +244,8 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
-      paymentPointerService: await deps.use('paymentPointerService')
+      paymentPointerService: await deps.use('paymentPointerService'),
+      config: await deps.use('config')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {

@@ -111,9 +111,11 @@ export const Config = {
   ),
 
   paymentPointerDeactivationPaymentGracePeriodMs: envInt(
-    'PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD',
+    'PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS',
     86400000
-  )
+  ),
+
+  paymentExpiryMaxMs: envInt('PAYMENT_EXPIRY_MAX_MS', 2592000000) // 30 days
 }
 
 function parseRedisTlsConfig(

@@ -12,7 +12,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -34,6 +34,7 @@ describe('Incoming Payment Service', (): void => {
   let paymentPointerId: string
   let accountingService: AccountingService
   let asset: Asset
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -41,6 +42,7 @@ describe('Incoming Payment Service', (): void => {
     accountingService = await deps.use('accountingService')
     knex = appContainer.knex
     incomingPaymentService = await deps.use('incomingPaymentService')
+    config = await deps.use('config')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -206,6 +208,22 @@ describe('Incoming Payment Service', (): void => {
           externalRef: '#123'
         })
       ).resolves.toBe(IncomingPaymentError.InactivePaymentPointer)
+    })
+
+    test('Cannot create incoming payment with expiresAt greater than max', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.create({
+          paymentPointerId,
+          incomingAmount: {
+            value: BigInt(123),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + config.paymentExpiryMaxMs + 10_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
   })
 
