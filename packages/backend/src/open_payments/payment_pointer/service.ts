@@ -141,7 +141,7 @@ async function updatePaymentPointer(
 
     if (status === 'INACTIVE' && paymentPointer.isActive) {
       update.deactivatedAt = new Date()
-      deactivateOpenIncomingPaymentsByPaymentPointer(deps, id)
+      await deactivateOpenIncomingPaymentsByPaymentPointer(deps, id)
     } else if (status === 'ACTIVE' && !paymentPointer.isActive) {
       update.deactivatedAt = null
     }
