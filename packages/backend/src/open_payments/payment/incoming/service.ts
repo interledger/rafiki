@@ -107,10 +107,10 @@ async function createIncomingPayment(
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
   if (!expiresAt) {
-    expiresAt = new Date(Date.now() + deps.config.paymentExpiryMaxMs)
+    expiresAt = new Date(Date.now() + deps.config.incomingPaymentExpiryMaxMs)
   } else if (
     expiresAt.getTime() <= Date.now() ||
-    expiresAt.getTime() > Date.now() + deps.config.paymentExpiryMaxMs
+    expiresAt.getTime() > Date.now() + deps.config.incomingPaymentExpiryMaxMs
   ) {
     return IncomingPaymentError.InvalidExpiry
   }

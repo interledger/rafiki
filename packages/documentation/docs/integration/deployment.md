@@ -56,7 +56,7 @@ $ helm install ...
 | `OUTGOING_PAYMENT_WORKERS`                             | `4`                                                         | number of workers processing outgoing payment requests                                                                       |
 | `OUTGOING_PAYMENT_WORKER_IDLE`                         | `200`                                                       |
 | milliseconds                                           |
-| `PAYMENT_EXPIRY_MAX_MS`                                | `86400000`                                                  | Maximum milliseconds into the future incoming payments can be set to on creation. Default: 1 day                             |
+| `INCOMING_PAYMENT_EXPIRY_MAX_MS`                                | `86400000`                                                  | Maximum milliseconds into the future incoming payments can be set to on creation. Default: 1 day                             |
 | `PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS` | `2592000000`                                                | Milliseconds into the future to set expiration of open incoming payments when deactivating payment pointer. Default: 30 days |
 | `PAYMENT_POINTER_URL`                                  | `http://127.0.0.1:3001/.well-known/pay`                     | Rafiki instance internal payment pointer                                                                                     |
 | `PAYMENT_POINTER_WORKERS`                              | `1`                                                         | number of workers processing payment pointer requests                                                                        |

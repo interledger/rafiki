@@ -219,7 +219,9 @@ describe('Incoming Payment Service', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          expiresAt: new Date(Date.now() + config.paymentExpiryMaxMs + 10_000),
+          expiresAt: new Date(
+            Date.now() + config.incomingPaymentExpiryMaxMs + 10_000
+          ),
           description: 'Test incoming payment',
           externalRef: '#123'
         })

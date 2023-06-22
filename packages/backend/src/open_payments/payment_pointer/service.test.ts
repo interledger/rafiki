@@ -192,18 +192,19 @@ describe('Open Payments Payment Pointer Service', (): void => {
         'Updates expiry dates of related incoming payments',
         withConfigOverride(
           () => config,
-          { 
+          {
             paymentPointerDeactivationPaymentGracePeriodMs: 2592000000,
-            paymentExpiryMaxMs: 2592000000 * 3
+            incomingPaymentExpiryMaxMs: 2592000000 * 3
           },
           async (): Promise<void> => {
             const paymentPointer = await createPaymentPointer(deps)
             const now = new Date('2023-06-01T00:00:00Z').getTime()
             jest.useFakeTimers({ now })
-      
-            const duration = config.paymentPointerDeactivationPaymentGracePeriodMs + 10_000
+
+            const duration =
+              config.paymentPointerDeactivationPaymentGracePeriodMs + 10_000
             const expiresAt = new Date(Date.now() + duration)
-      
+
             const incomingPayment = await createIncomingPayment(deps, {
               paymentPointerId: paymentPointer.id,
               incomingAmount: {
@@ -215,13 +216,13 @@ describe('Open Payments Payment Pointer Service', (): void => {
               expiresAt,
               externalRef: '#123'
             })
-      
+
             await paymentPointerService.update({
               id: paymentPointer.id,
               status: 'INACTIVE'
             })
             const incomingPaymentUpdated = await incomingPayment.$query(knex)
-      
+
             expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
               expiresAt.getTime() +
                 config.paymentPointerDeactivationPaymentGracePeriodMs -
@@ -240,10 +241,10 @@ describe('Open Payments Payment Pointer Service', (): void => {
             const paymentPointer = await createPaymentPointer(deps)
             const now = new Date('2023-06-01T00:00:00Z').getTime()
             jest.useFakeTimers({ now })
-      
+
             const duration = 30_000
             const expiresAt = new Date(Date.now() + duration)
-      
+
             const incomingPayment = await createIncomingPayment(deps, {
               paymentPointerId: paymentPointer.id,
               incomingAmount: {
@@ -255,13 +256,13 @@ describe('Open Payments Payment Pointer Service', (): void => {
               expiresAt,
               externalRef: '#123'
             })
-      
+
             await paymentPointerService.update({
               id: paymentPointer.id,
               status: 'INACTIVE'
             })
             const incomingPaymentUpdated = await incomingPayment.$query(knex)
-      
+
             expect(incomingPaymentUpdated.expiresAt).toEqual(expiresAt)
           }
         )
