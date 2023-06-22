@@ -295,7 +295,7 @@ async function deactivateOpenIncomingPaymentsByPaymentPointer(
     .whereIn('state', [
       IncomingPaymentState.Pending,
       IncomingPaymentState.Processing
-        ])
+    ])
     .where('expiresAt', '>', expiresAt)
 }
 
