@@ -115,7 +115,7 @@ export const Config = {
     86400000
   ),
 
-  paymentExpiryMaxMs: envInt('PAYMENT_EXPIRY_MAX_MS', 2592000000) // 30 days
+  incomingPaymentExpiryMaxMs: envInt('INCOMING_PAYMENT_EXPIRY_MAX_MS', 2592000000) // 30 days
 }
 
 function parseRedisTlsConfig(
