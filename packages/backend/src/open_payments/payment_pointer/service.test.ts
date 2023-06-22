@@ -18,14 +18,16 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
+import { createIncomingPayment } from '../../tests/incomingPayment'
 import { getPageInfo } from '../../shared/pagination'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination } from '../../shared/baseModel'
+import { withConfigOverride } from '../../tests/helpers'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -33,6 +35,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
   let paymentPointerService: PaymentPointerService
   let accountingService: AccountingService
   let knex: Knex
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -40,6 +43,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     knex = appContainer.knex
     paymentPointerService = await deps.use('paymentPointerService')
     accountingService = await deps.use('accountingService')
+    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -181,6 +185,88 @@ describe('Open Payments Payment Pointer Service', (): void => {
       await expect(
         paymentPointerService.get(paymentPointer.id)
       ).resolves.toEqual(updatedPaymentPointer)
+    })
+
+    describe('Deactivating payment pointer', (): void => {
+      test(
+        'Updates expiry dates of related incoming payments',
+        withConfigOverride(
+          () => config,
+          {
+            paymentPointerDeactivationPaymentGracePeriodMs: 2592000000,
+            incomingPaymentExpiryMaxMs: 2592000000 * 3
+          },
+          async (): Promise<void> => {
+            const paymentPointer = await createPaymentPointer(deps)
+            const now = new Date('2023-06-01T00:00:00Z').getTime()
+            jest.useFakeTimers({ now })
+
+            const duration =
+              config.paymentPointerDeactivationPaymentGracePeriodMs + 10_000
+            const expiresAt = new Date(Date.now() + duration)
+
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: paymentPointer.id,
+              incomingAmount: {
+                value: BigInt(123),
+                assetCode: paymentPointer.asset.code,
+                assetScale: paymentPointer.asset.scale
+              },
+              description: 'Test incoming payment',
+              expiresAt,
+              externalRef: '#123'
+            })
+
+            await paymentPointerService.update({
+              id: paymentPointer.id,
+              status: 'INACTIVE'
+            })
+            const incomingPaymentUpdated = await incomingPayment.$query(knex)
+
+            expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
+              expiresAt.getTime() +
+                config.paymentPointerDeactivationPaymentGracePeriodMs -
+                duration
+            )
+          }
+        )
+      )
+
+      test(
+        'Does not update expiry dates of related incoming payments when new expiry is greater',
+        withConfigOverride(
+          () => config,
+          { paymentPointerDeactivationPaymentGracePeriodMs: 2592000000 },
+          async (): Promise<void> => {
+            const paymentPointer = await createPaymentPointer(deps)
+            const now = new Date('2023-06-01T00:00:00Z').getTime()
+            jest.useFakeTimers({ now })
+
+            const duration = 30_000
+            const expiresAt = new Date(Date.now() + duration)
+
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: paymentPointer.id,
+              incomingAmount: {
+                value: BigInt(123),
+                assetCode: paymentPointer.asset.code,
+                assetScale: paymentPointer.asset.scale
+              },
+              description: 'Test incoming payment',
+              expiresAt,
+              externalRef: '#123'
+            })
+
+            await paymentPointerService.update({
+              id: paymentPointer.id,
+              status: 'INACTIVE'
+            })
+            const incomingPaymentUpdated = await incomingPayment.$query(knex)
+
+            expect(incomingPaymentUpdated.expiresAt).toEqual(expiresAt)
+          }
+        )
+      )
     })
 
     test('Cannot update unknown payment pointer', async (): Promise<void> => {

@@ -12,7 +12,7 @@ import {
   IncomingPaymentEventType,
   IncomingPaymentState
 } from './model'
-import { Config } from '../../../config/app'
+import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
@@ -24,6 +24,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPaymentError, isIncomingPaymentError } from './errors'
 import { Amount } from '../../amount'
 import { getTests } from '../../payment_pointer/model.test'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 describe('Incoming Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -33,6 +34,7 @@ describe('Incoming Payment Service', (): void => {
   let paymentPointerId: string
   let accountingService: AccountingService
   let asset: Asset
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -40,6 +42,7 @@ describe('Incoming Payment Service', (): void => {
     accountingService = await deps.use('accountingService')
     knex = appContainer.knex
     incomingPaymentService = await deps.use('incomingPaymentService')
+    config = await deps.use('config')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -180,6 +183,45 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() - 40_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
+    })
+
+    test('Cannot create incoming payment with inactive payment pointer', async (): Promise<void> => {
+      const paymentPointer = await PaymentPointer.query(knex).patchAndFetchById(
+        paymentPointerId,
+        { deactivatedAt: new Date() }
+      )
+      assert.ok(!paymentPointer.isActive)
+      await expect(
+        incomingPaymentService.create({
+          paymentPointerId,
+          incomingAmount: {
+            value: BigInt(10),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(Date.now() + 30_000),
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        })
+      ).resolves.toBe(IncomingPaymentError.InactivePaymentPointer)
+    })
+
+    test('Cannot create incoming payment with expiresAt greater than max', async (): Promise<void> => {
+      await expect(
+        incomingPaymentService.create({
+          paymentPointerId,
+          incomingAmount: {
+            value: BigInt(123),
+            assetCode: asset.code,
+            assetScale: asset.scale
+          },
+          expiresAt: new Date(
+            Date.now() + config.incomingPaymentExpiryMaxMs + 10_000
+          ),
           description: 'Test incoming payment',
           externalRef: '#123'
         })
