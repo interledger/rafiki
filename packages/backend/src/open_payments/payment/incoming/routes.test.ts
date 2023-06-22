@@ -146,7 +146,7 @@ describe('Incoming Payment Routes', (): void => {
       }
     })
 
-    test.each(Object.values(IncomingPaymentError).map((err) => [err]))(
+    test.each(Object.values(IncomingPaymentError))(
       'returns error on %s',
       async (error): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
