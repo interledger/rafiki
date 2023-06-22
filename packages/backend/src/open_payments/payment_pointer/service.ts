@@ -286,17 +286,17 @@ async function deactivateOpenIncomingPaymentsByPaymentPointer(
   deps: ServiceDependencies,
   paymentPointerId: string
 ) {
-  await IncomingPayment.query(deps.knex)
-    .patch({
-      expiresAt: new Date(
-        Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
-      )
-    })
+  const expiresAt = new Date(
+    Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
+  )
+  const res = await IncomingPayment.query(deps.knex)
+    .patch({ expiresAt })
     .where('paymentPointerId', paymentPointerId)
     .whereIn('state', [
       IncomingPaymentState.Pending,
       IncomingPaymentState.Processing
-    ])
+        ])
+    .where('expiresAt', '>', expiresAt)
 }
 
 export interface CreateSubresourceOptions {
