@@ -289,7 +289,7 @@ async function deactivateOpenIncomingPaymentsByPaymentPointer(
   const expiresAt = new Date(
     Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
   )
-  const res = await IncomingPayment.query(deps.knex)
+  await IncomingPayment.query(deps.knex)
     .patch({ expiresAt })
     .where('paymentPointerId', paymentPointerId)
     .whereIn('state', [
