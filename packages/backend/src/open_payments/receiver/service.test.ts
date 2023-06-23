@@ -514,7 +514,7 @@ describe('Receiver Service', (): void => {
       test.each`
         incomingAmount | expiresAt                        | description                | externalRef  | metadata
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{description: 'Test incoming payment', externalRef: '#123'}}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `(
         'creates receiver from remote incoming payment ($#)',
         async ({
@@ -622,7 +622,7 @@ describe('Receiver Service', (): void => {
       test.each`
         incomingAmount | expiresAt                        | description                | externalRef  | metadata
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{description: 'Test incoming payment', externalRef: '#123'}}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `(
         'creates receiver from local incoming payment ($#)',
         async ({

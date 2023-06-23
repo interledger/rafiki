@@ -92,10 +92,10 @@ describe('Incoming Payment Resolver', (): void => {
     })
 
     test.each`
-      metadata                                         | description  | externalRef  | expiresAt                        | withAmount | desc
-      ${{description: 'rent', externalRef: '202201' }} | ${undefined} | ${'202201'}  | ${undefined}                     | ${false}   | ${'metadata'}
-      ${undefined}                                     | ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
-      ${undefined}                                     | ${undefined} | ${undefined} | ${undefined}                     | ${true}    | ${'incomingAmount'}
+      metadata                                          | description  | externalRef  | expiresAt                        | withAmount | desc
+      ${{ description: 'rent', externalRef: '202201' }} | ${undefined} | ${'202201'}  | ${undefined}                     | ${false}   | ${'metadata'}
+      ${undefined}                                      | ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
+      ${undefined}                                      | ${undefined} | ${undefined} | ${undefined}                     | ${true}    | ${'incomingAmount'}
     `(
       '200 ($desc)',
       async ({

@@ -213,7 +213,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
                 assetScale: paymentPointer.asset.scale
               },
               expiresAt,
-              metadata : {
+              metadata: {
                 description: 'Test incoming payment',
                 externalRef: '#123'
               }
@@ -255,7 +255,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
                 assetScale: paymentPointer.asset.scale
               },
               expiresAt,
-              metadata : {
+              metadata: {
                 description: 'Test incoming payment',
                 externalRef: '#123'
               }

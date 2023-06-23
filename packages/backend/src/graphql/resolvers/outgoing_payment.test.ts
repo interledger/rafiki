@@ -237,16 +237,16 @@ describe('OutgoingPayment Resolvers', (): void => {
         assetId: asset.id
       })
       const payment = await createPayment({ paymentPointerId, metadata })
-  
+
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')
         .mockResolvedValueOnce(payment)
-  
+
       const input = {
         paymentPointerId: payment.paymentPointerId,
         quoteId: payment.quote.id
       }
-  
+
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -268,7 +268,7 @@ describe('OutgoingPayment Resolvers', (): void => {
         .then(
           (query): OutgoingPaymentResponse => query.data?.createOutgoingPayment
         )
-  
+
       expect(createSpy).toHaveBeenCalledWith(input)
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)

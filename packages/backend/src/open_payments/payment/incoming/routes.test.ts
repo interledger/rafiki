@@ -175,7 +175,7 @@ describe('Incoming Payment Routes', (): void => {
 
     test.each`
       client                                        | incomingAmount | description  | externalRef  | expiresAt                                      | metadata
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()} | ${{description: 'text', externalRef: '#123'}}
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()} | ${{ description: 'text', externalRef: '#123' }}
       ${undefined}                                  | ${false}       | ${undefined} | ${undefined} | ${undefined}                                   | ${undefined}
     `(
       'returns the incoming payment on success',

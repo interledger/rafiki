@@ -128,7 +128,7 @@ describe('Remote Incoming Payment Service', (): void => {
       test.each`
         incomingAmount | expiresAt                        | description                | externalRef  | metadata
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{description: 'Test incoming payment', externalRef: '#123'}}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
         const mockedIncomingPayment = mockIncomingPaymentWithConnection({
           ...args,
@@ -182,7 +182,7 @@ describe('Remote Incoming Payment Service', (): void => {
       describe.each`
         incomingAmount | expiresAt                        | description                | externalRef  | metadata
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{description: 'Test incoming payment', externalRef: '#123'}}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', (args): void => {
         const newToken = {
           access_token: {
@@ -268,7 +268,7 @@ describe('Remote Incoming Payment Service', (): void => {
       test.each`
         incomingAmount | expiresAt                        | description                | externalRef  | metadata
         ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{description: 'Test incoming payment', externalRef: '#123'}}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
         const mockedIncomingPayment = mockIncomingPaymentWithConnection({
           ...args,

@@ -179,9 +179,7 @@ describe('Outgoing Payment Routes', (): void => {
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
           .mockResolvedValueOnce(payment)
-        await expect(
-          outgoingPaymentRoutes.create(ctx)
-        ).resolves.toBeUndefined()
+        await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
           quoteId: payment.quote.id,
