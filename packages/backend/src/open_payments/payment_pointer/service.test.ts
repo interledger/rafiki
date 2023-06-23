@@ -37,7 +37,6 @@ describe('Open Payments Payment Pointer Service', (): void => {
   let paymentPointerService: PaymentPointerService
   let accountingService: AccountingService
   let knex: Knex
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
