@@ -65,6 +65,7 @@ export class OutgoingPayment
 
   public description?: string
   public externalRef?: string
+  public metadata?: Record<string, unknown>
 
   public quote!: Quote
 
@@ -170,6 +171,7 @@ export class OutgoingPayment
       failed: this.failed,
       externalRef: this.externalRef ?? undefined,
       description: this.description ?? undefined,
+      metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     }

@@ -44,10 +44,12 @@ import {
 } from './paymentPointerKey'
 import { createReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
+import { GraphQLJSONObject } from 'graphql-scalars'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
   UInt64: GraphQLBigInt,
+  JSONObject: GraphQLJSONObject,
   Asset: {
     liquidity: getAssetLiquidity
   },

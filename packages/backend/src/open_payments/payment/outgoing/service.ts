@@ -91,6 +91,7 @@ export interface CreateOutgoingPaymentOptions {
   grant?: Grant
   description?: string
   externalRef?: string
+  metadata?: Record<string, unknown>
   callback?: (f: unknown) => NodeJS.Timeout
 }
 
@@ -126,6 +127,7 @@ async function createOutgoingPayment(
           paymentPointerId,
           description: options.description,
           externalRef: options.externalRef,
+          metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
           client: options.client,
           grantId

@@ -31,6 +31,7 @@ export interface CreateIncomingPaymentOptions {
   expiresAt?: Date
   incomingAmount?: Amount
   externalRef?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface IncomingPaymentService
@@ -102,7 +103,8 @@ async function createIncomingPayment(
     description,
     expiresAt,
     incomingAmount,
-    externalRef
+    externalRef,
+    metadata
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -141,6 +143,7 @@ async function createIncomingPayment(
       expiresAt,
       incomingAmount,
       externalRef,
+      metadata,
       state: IncomingPaymentState.Pending,
       processAt: expiresAt
     })

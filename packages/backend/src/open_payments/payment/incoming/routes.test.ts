@@ -45,6 +45,7 @@ describe('Incoming Payment Routes', (): void => {
   let incomingAmount: Amount
   let description: string
   let externalRef: string
+  let metadata: Record<string, unknown>
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
@@ -63,6 +64,10 @@ describe('Incoming Payment Routes', (): void => {
     }
     description = 'hello world'
     externalRef = '#123'
+    metadata = {
+      description: 'hello world',
+      externalRef: '#123'
+    }
   })
 
   afterEach(async (): Promise<void> => {
@@ -83,7 +88,8 @@ describe('Incoming Payment Routes', (): void => {
           description,
           expiresAt,
           incomingAmount,
-          externalRef
+          externalRef,
+          metadata
         }),
       get: (ctx) => incomingPaymentRoutes.get(ctx),
       getBody: (incomingPayment, list) => {
@@ -100,6 +106,7 @@ describe('Incoming Payment Routes', (): void => {
           updatedAt: incomingPayment.updatedAt.toISOString(),
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
           externalRef: '#123',
+          metadata: incomingPayment.metadata,
           ilpStreamConnection: list
             ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
             : {
@@ -167,9 +174,9 @@ describe('Incoming Payment Routes', (): void => {
     )
 
     test.each`
-      client                                        | incomingAmount | description  | externalRef  | expiresAt
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined}                                  | ${false}       | ${undefined} | ${undefined} | ${undefined}
+      client                                        | incomingAmount | description  | externalRef  | expiresAt                                      | metadata
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()} | ${{description: 'text', externalRef: '#123'}}
+      ${undefined}                                  | ${false}       | ${undefined} | ${undefined} | ${undefined}                                   | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
@@ -177,6 +184,7 @@ describe('Incoming Payment Routes', (): void => {
         incomingAmount,
         description,
         externalRef,
+        metadata,
         expiresAt
       }): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
@@ -185,6 +193,7 @@ describe('Incoming Payment Routes', (): void => {
               incomingAmount: incomingAmount ? amount : undefined,
               description,
               externalRef,
+              metadata,
               expiresAt
             },
             method: 'POST',
@@ -201,6 +210,7 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           description,
           externalRef,
+          metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client
         })
@@ -233,6 +243,7 @@ describe('Incoming Payment Routes', (): void => {
             assetScale: asset.scale
           },
           externalRef,
+          metadata,
           completed: false,
           ilpStreamConnection: {
             id: `${config.openPaymentsUrl}/connections/${connectionId}`,
@@ -256,7 +267,8 @@ describe('Incoming Payment Routes', (): void => {
         description,
         expiresAt,
         incomingAmount,
-        externalRef
+        externalRef,
+        metadata
       })
     })
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
@@ -292,6 +304,7 @@ describe('Incoming Payment Routes', (): void => {
           assetScale: asset.scale
         },
         externalRef: '#123',
+        metadata,
         completed: true
       })
     })

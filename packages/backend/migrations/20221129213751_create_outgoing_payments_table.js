@@ -8,6 +8,7 @@ exports.up = function (knex) {
     table.integer('stateAttempts').notNullable().defaultTo(0)
     table.string('description').nullable()
     table.string('externalRef').nullable()
+    table.jsonb('metadata').nullable()
 
     table.string('client').nullable()
 

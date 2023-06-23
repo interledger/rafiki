@@ -61,6 +61,7 @@ export type CreateBody = {
   quoteId: string
   description?: string
   externalRef?: string
+  metadata?: Record<string, unknown>
 }
 
 async function createOutgoingPayment(
@@ -80,6 +81,7 @@ async function createOutgoingPayment(
     quoteId,
     description: body.description,
     externalRef: body.externalRef,
+    metadata: body.metadata,
     client: ctx.client,
     grant: ctx.grant
   })

@@ -11,6 +11,7 @@ exports.up = function (knex) {
     table.string('state').notNullable()
     table.string('externalRef').nullable()
     table.uuid('connectionId').nullable()
+    table.jsonb('metadata').nullable()
 
     table.string('client').nullable()
 

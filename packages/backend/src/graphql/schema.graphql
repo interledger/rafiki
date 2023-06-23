@@ -538,6 +538,8 @@ type IncomingPayment implements Model {
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Date-time of creation"
   createdAt: String!
 }
@@ -559,6 +561,8 @@ type Receiver {
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Date-time of creation"
   createdAt: String!
   "Date-time of last update"
@@ -613,6 +617,8 @@ type OutgoingPayment implements Model {
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
   "Quote for this outgoing payment"
   quote: Quote
   "Amount already sent"
@@ -704,6 +710,8 @@ input CreateOutgoingPaymentInput {
   description: String
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -715,6 +723,8 @@ input CreateIncomingPaymentInput {
   expiresAt: String
   "Human readable description of the incoming payment."
   description: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Maximum amount to be received"
   incomingAmount: AmountInput
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
@@ -734,6 +744,8 @@ input CreateReceiverInput {
   incomingAmount: AmountInput
   "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
   externalRef: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -961,3 +973,4 @@ interface MutationResponse {
 
 scalar UInt8
 scalar UInt64
+scalar JSONObject

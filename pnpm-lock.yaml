@@ -317,8 +317,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       '@interledger/open-payments':
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.1.0
+        version: 1.1.0
       '@interledger/openapi':
         specifier: 1.0.2
         version: 1.0.2
@@ -4333,6 +4333,21 @@ packages:
       - debug
     dev: false
 
+  /@interledger/open-payments@1.1.0:
+    resolution: {integrity: sha512-a/Iwuuf5nlBTSGqat11gf4lLjsBin+7/cjGptRVKozOkX88Id1FNZgPqG7iUsCSpCMgK8uzeO8sJlVAqR41lSw==}
+    dependencies:
+      '@interledger/http-signature-utils': 1.0.3
+      '@interledger/openapi': 1.0.3
+      axios: 1.4.0
+      base64url: 3.0.1
+      http-message-signatures: 0.1.2
+      pino: 8.14.1
+      uuid: 9.0.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+    dev: false
+
   /@interledger/openapi@1.0.2:
     resolution: {integrity: sha512-JcvldDyPydLWRny9NCSx2T3CUR3WHSc2SBgmc2k7TRykO/kxvvBC87S0wFyhMBIRsdoyfDMEJigS14uFiDaEyw==}
     dependencies:
@@ -4344,6 +4359,22 @@ packages:
       openapi-request-validator: 12.1.0
       openapi-response-validator: 12.1.0
       openapi-types: 12.1.3
+    dev: false
+
+  /@interledger/openapi@1.0.3:
+    resolution: {integrity: sha512-Xx/Me2tj8DhHpQR9cVjioX/DAUmQnaXWjt8hEVPIru4pDSMHCGG0RmpU2dV+aIiVmkDM2OvJUfKoLGsPVStqrA==}
+    dependencies:
+      '@apidevtools/json-schema-ref-parser': 10.1.0
+      ajv: 8.12.0
+      ajv-formats: 2.1.1(ajv@8.12.0)
+      koa: 2.14.2
+      openapi-default-setter: 12.1.0
+      openapi-request-coercer: 12.1.0
+      openapi-request-validator: 12.1.0
+      openapi-response-validator: 12.1.0
+      openapi-types: 12.1.3
+    transitivePeerDependencies:
+      - supports-color
     dev: false
 
   /@interledger/pay@0.4.0-alpha.9:

@@ -12,6 +12,7 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  JSONObject: any;
   UInt8: number;
   UInt64: bigint;
 };
@@ -128,6 +129,8 @@ export type CreateIncomingPaymentInput = {
   idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
+  /** Additional metadata associated with the incoming payment. */
+  metadata?: InputMaybe<Scalars['JSONObject']>;
   /** Id of the payment pointer under which the incoming payment will be created */
   paymentPointerId: Scalars['String'];
 };
@@ -139,6 +142,8 @@ export type CreateOutgoingPaymentInput = {
   externalRef?: InputMaybe<Scalars['String']>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']>;
+  /** Additional metadata associated with the outgoing payment. */
+  metadata?: InputMaybe<Scalars['JSONObject']>;
   /** Id of the payment pointer under which the outgoing payment will be created */
   paymentPointerId: Scalars['String'];
   /** Id of the corresponding quote for that outgoing payment */
@@ -247,6 +252,8 @@ export type CreateReceiverInput = {
   idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum amount to be received */
   incomingAmount?: InputMaybe<AmountInput>;
+  /** Additional metadata associated with the incoming payment. */
+  metadata?: InputMaybe<Scalars['JSONObject']>;
   /** Receiving payment pointer URL */
   paymentPointerUrl: Scalars['String'];
 };
@@ -334,6 +341,8 @@ export type IncomingPayment = Model & {
   id: Scalars['ID'];
   /** The maximum amount that should be paid into the payment pointer under this incoming payment. */
   incomingAmount?: Maybe<Amount>;
+  /** Additional metadata associated with the incoming payment. */
+  metadata?: Maybe<Scalars['JSONObject']>;
   /** Id of the payment pointer under which this incoming payment was created */
   paymentPointerId: Scalars['ID'];
   /** The total amount that has been paid into the payment pointer under this incoming payment. */
@@ -614,6 +623,8 @@ export type OutgoingPayment = Model & {
   externalRef?: Maybe<Scalars['String']>;
   /** Outgoing payment id */
   id: Scalars['ID'];
+  /** Additional metadata associated with the outgoing payment. */
+  metadata?: Maybe<Scalars['JSONObject']>;
   /** Id of the payment pointer under which this outgoing payment was created */
   paymentPointerId: Scalars['ID'];
   /** Quote for this outgoing payment */
@@ -960,6 +971,8 @@ export type Receiver = {
   id: Scalars['String'];
   /** The maximum amount that should be paid into the payment pointer under this incoming payment. */
   incomingAmount?: Maybe<Amount>;
+  /** Additional metadata associated with the incoming payment. */
+  metadata?: Maybe<Scalars['JSONObject']>;
   /** Payment pointer URL under which the incoming payment was created */
   paymentPointerUrl: Scalars['String'];
   /** The total amount that has been paid into the payment pointer under this incoming payment. */
@@ -1213,6 +1226,7 @@ export type ResolversTypes = {
   IncomingPaymentResponse: ResolverTypeWrapper<Partial<IncomingPaymentResponse>>;
   IncomingPaymentState: ResolverTypeWrapper<Partial<IncomingPaymentState>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
+  JSONObject: ResolverTypeWrapper<Partial<Scalars['JSONObject']>>;
   Jwk: ResolverTypeWrapper<Partial<Jwk>>;
   JwkInput: ResolverTypeWrapper<Partial<JwkInput>>;
   Kty: ResolverTypeWrapper<Partial<Kty>>;
@@ -1307,6 +1321,7 @@ export type ResolversParentTypes = {
   IncomingPaymentEdge: Partial<IncomingPaymentEdge>;
   IncomingPaymentResponse: Partial<IncomingPaymentResponse>;
   Int: Partial<Scalars['Int']>;
+  JSONObject: Partial<Scalars['JSONObject']>;
   Jwk: Partial<Jwk>;
   JwkInput: Partial<JwkInput>;
   LiquidityMutationResponse: Partial<LiquidityMutationResponse>;
@@ -1449,6 +1464,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
+  metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
@@ -1474,6 +1490,10 @@ export type IncomingPaymentResponseResolvers<ContextType = any, ParentType exten
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
+
+export interface JsonObjectScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['JSONObject'], any> {
+  name: 'JSONObject';
+}
 
 export type JwkResolvers<ContextType = any, ParentType extends ResolversParentTypes['Jwk'] = ResolversParentTypes['Jwk']> = {
   alg?: Resolver<ResolversTypes['Alg'], ParentType, ContextType>;
@@ -1537,6 +1557,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
@@ -1706,6 +1727,7 @@ export type ReceiverResolvers<ContextType = any, ParentType extends ResolversPar
   externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
+  metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   paymentPointerUrl?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1796,6 +1818,7 @@ export type Resolvers<ContextType = any> = {
   IncomingPaymentConnection?: IncomingPaymentConnectionResolvers<ContextType>;
   IncomingPaymentEdge?: IncomingPaymentEdgeResolvers<ContextType>;
   IncomingPaymentResponse?: IncomingPaymentResponseResolvers<ContextType>;
+  JSONObject?: GraphQLScalarType;
   Jwk?: JwkResolvers<ContextType>;
   LiquidityMutationResponse?: LiquidityMutationResponseResolvers<ContextType>;
   Model?: ModelResolvers<ContextType>;

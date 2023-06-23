@@ -66,7 +66,11 @@ describe('Incoming Payment Resolver', (): void => {
           },
           expiresAt: new Date(Date.now() + 30_000),
           description: `IncomingPayment`,
-          externalRef: '#123'
+          externalRef: '#123',
+          metadata: {
+            description: `IncomingPayment`,
+            externalRef: '#123'
+          }
         }),
       pagedQuery: 'incomingPayments',
       parent: {
@@ -88,16 +92,16 @@ describe('Incoming Payment Resolver', (): void => {
     })
 
     test.each`
-      description  | externalRef  | expiresAt                        | withAmount | desc
-      ${'rent'}    | ${undefined} | ${undefined}                     | ${false}   | ${'description'}
-      ${undefined} | ${'202201'}  | ${undefined}                     | ${false}   | ${'externalRef'}
-      ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
-      ${undefined} | ${undefined} | ${undefined}                     | ${true}    | ${'incomingAmount'}
+      metadata                                         | description  | externalRef  | expiresAt                        | withAmount | desc
+      ${{description: 'rent', externalRef: '202201' }} | ${undefined} | ${'202201'}  | ${undefined}                     | ${false}   | ${'metadata'}
+      ${undefined}                                     | ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
+      ${undefined}                                     | ${undefined} | ${undefined} | ${undefined}                     | ${true}    | ${'incomingAmount'}
     `(
       '200 ($desc)',
       async ({
         description,
         externalRef,
+        metadata,
         expiresAt,
         withAmount
       }): Promise<void> => {
@@ -109,6 +113,7 @@ describe('Incoming Payment Resolver', (): void => {
           paymentPointerId,
           description,
           externalRef,
+          metadata,
           expiresAt,
           incomingAmount
         })
@@ -122,7 +127,8 @@ describe('Incoming Payment Resolver', (): void => {
           incomingAmount,
           expiresAt,
           description,
-          externalRef
+          externalRef,
+          metadata
         }
 
         const query = await appContainer.apolloClient
@@ -152,6 +158,7 @@ describe('Incoming Payment Resolver', (): void => {
                     }
                     description
                     externalRef
+                    metadata
                     createdAt
                   }
                 }
@@ -190,6 +197,7 @@ describe('Incoming Payment Resolver', (): void => {
             },
             description: description || null,
             externalRef: externalRef || null,
+            metadata: metadata || null,
             createdAt: payment.createdAt.toISOString()
           }
         })
@@ -282,6 +290,7 @@ describe('Incoming Payment Resolver', (): void => {
       paymentPointerId: string
       description?: string
       externalRef?: string
+      metadata?: Record<string, unknown>
     }): Promise<IncomingPaymentModel> => {
       return await createIncomingPayment(deps, {
         ...options,
@@ -293,20 +302,16 @@ describe('Incoming Payment Resolver', (): void => {
       })
     }
 
-    describe.each`
-      description  | externalRef  | desc
-      ${'rent'}    | ${undefined} | ${'description'}
-      ${undefined} | ${'202201'}  | ${'externalRef'}
-    `('$desc', ({ description, externalRef }): void => {
+    describe('metadata', (): void => {
+      const metadata = {
+        description: 'rent',
+        externalRef: '202201'
+      }
       beforeEach(async (): Promise<void> => {
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
           assetId: asset.id
         })
-        payment = await createPayment({
-          paymentPointerId,
-          description,
-          externalRef
-        })
+        payment = await createPayment({ paymentPointerId, metadata })
       })
 
       // Query with each payment state
@@ -341,8 +346,7 @@ describe('Incoming Payment Resolver', (): void => {
                     assetCode
                     assetScale
                   }
-                  description
-                  externalRef
+                  metadata
                   createdAt
                 }
               }
@@ -370,8 +374,7 @@ describe('Incoming Payment Resolver', (): void => {
             assetScale: payment.receivedAmount.assetScale,
             __typename: 'Amount'
           },
-          description: description ?? null,
-          externalRef: externalRef ?? null,
+          metadata,
           createdAt: payment.createdAt.toISOString(),
           __typename: 'IncomingPayment'
         })
