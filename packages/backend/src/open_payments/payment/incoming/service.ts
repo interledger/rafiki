@@ -16,15 +16,13 @@ import {
 
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
-import { end, parse } from 'iso8601-duration'
+import { IAppConfig } from '../../../config/app'
 
 export const POSITIVE_SLIPPAGE = BigInt(1)
 // First retry waits 10 seconds
 // Second retry waits 20 (more) seconds
 // Third retry waits 30 (more) seconds, etc. up to 60 seconds
 export const RETRY_BACKOFF_MS = 10_000
-// TODO: make expiry date configurable
-export const EXPIRY = parse('P90D') // 90 days in future
 
 export interface CreateIncomingPaymentOptions {
   paymentPointerId: string
@@ -50,6 +48,7 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
   paymentPointerService: PaymentPointerService
+  config: IAppConfig
 }
 
 export async function createIncomingPaymentService(
@@ -108,8 +107,11 @@ async function createIncomingPayment(
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
   if (!expiresAt) {
-    expiresAt = end(EXPIRY)
-  } else if (expiresAt.getTime() <= Date.now()) {
+    expiresAt = new Date(Date.now() + deps.config.incomingPaymentExpiryMaxMs)
+  } else if (
+    expiresAt.getTime() <= Date.now() ||
+    expiresAt.getTime() > Date.now() + deps.config.incomingPaymentExpiryMaxMs
+  ) {
     return IncomingPaymentError.InvalidExpiry
   }
   if (incomingAmount && incomingAmount.value <= 0) {
@@ -118,6 +120,9 @@ async function createIncomingPayment(
   const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
   if (!paymentPointer) {
     return IncomingPaymentError.UnknownPaymentPointer
+  }
+  if (!paymentPointer.isActive) {
+    return IncomingPaymentError.InactivePaymentPointer
   }
   if (incomingAmount) {
     if (

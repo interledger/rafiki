@@ -246,7 +246,8 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
-      paymentPointerService: await deps.use('paymentPointerService')
+      paymentPointerService: await deps.use('paymentPointerService'),
+      config: await deps.use('config')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {
@@ -368,7 +369,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       receiverService: await deps.use('receiverService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      peerService: await deps.use('peerService')
+      peerService: await deps.use('peerService'),
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {
