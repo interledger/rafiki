@@ -45,7 +45,6 @@ describe('Open Payments Payment Pointer Service', (): void => {
     knex = appContainer.knex
     paymentPointerService = await deps.use('paymentPointerService')
     accountingService = await deps.use('accountingService')
-    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
