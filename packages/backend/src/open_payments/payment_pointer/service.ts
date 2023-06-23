@@ -22,6 +22,8 @@ import {
 } from '../payment/incoming/model'
 import { IAppConfig } from '../../config/app'
 import { Pagination } from '../../shared/baseModel'
+import { WebhookService } from '../../webhook/service'
+import { poll } from '../../shared/utils'
 
 interface Options {
   publicName?: string
@@ -50,31 +52,34 @@ export interface PaymentPointerService {
 }
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   knex: TransactionOrKnex
   accountingService: AccountingService
-  config: IAppConfig
+  webhookService: WebhookService
 }
 
 export async function createPaymentPointerService({
   logger,
+  config,
   knex,
   accountingService,
-  config
+  webhookService
 }: ServiceDependencies): Promise<PaymentPointerService> {
   const log = logger.child({
     service: 'PaymentPointerService'
   })
   const deps: ServiceDependencies = {
+    config,
     logger: log,
     knex,
     accountingService,
-    config
+    webhookService
   }
   return {
     create: (options) => createPaymentPointer(deps, options),
     update: (options) => updatePaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
-    getByUrl: (url) => getPaymentPointerByUrl(deps, url),
+    getByUrl: (url) => getOrRequestPaymentPointer(deps, url),
     getPage: (pagination?) => getPaymentPointerPage(deps, pagination),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
@@ -166,6 +171,42 @@ async function getPaymentPointer(
   return await PaymentPointer.query(deps.knex)
     .findById(id)
     .withGraphFetched('asset')
+}
+
+async function getOrRequestPaymentPointer(
+  deps: ServiceDependencies,
+  url: string
+): Promise<PaymentPointer | undefined> {
+  const existingPaymentPointer = await getPaymentPointerByUrl(deps, url)
+
+  if (existingPaymentPointer) {
+    return existingPaymentPointer
+  }
+
+  await PaymentPointerEvent.query(deps.knex).insert({
+    type: PaymentPointerEventType.PaymentPointerNotFound,
+    data: {
+      paymentPointerUrl: url
+    }
+  })
+
+  try {
+    const paymentPointer = await poll({
+      request: () => getPaymentPointerByUrl(deps, url),
+      pollingFrequencyMs: deps.config.paymentPointerPollingFrequencyMs,
+      timeoutMs: deps.config.paymentPointerLookupTimeoutMs
+    })
+
+    return paymentPointer
+  } catch (error) {
+    const errorMessage = 'Could not get payment pointer'
+    deps.logger.error(
+      { errorMessage: error instanceof Error && error.message },
+      errorMessage
+    )
+
+    return undefined
+  }
 }
 
 async function getPaymentPointerByUrl(

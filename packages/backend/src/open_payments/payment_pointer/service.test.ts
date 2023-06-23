@@ -27,23 +27,24 @@ import { createIncomingPayment } from '../../tests/incomingPayment'
 import { getPageInfo } from '../../shared/pagination'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination } from '../../shared/baseModel'
+import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let paymentPointerService: PaymentPointerService
   let accountingService: AccountingService
   let knex: Knex
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     paymentPointerService = await deps.use('paymentPointerService')
     accountingService = await deps.use('accountingService')
-    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -281,25 +282,84 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('Get Payment Pointer By Url', (): void => {
-    test('Can retrieve payment pointer by url', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps)
-      await expect(
-        paymentPointerService.getByUrl(paymentPointer.url)
-      ).resolves.toEqual(paymentPointer)
+    describe('existing payment pointer', (): void => {
+      test('can retrieve payment pointer by url', async (): Promise<void> => {
+        const paymentPointer = await createPaymentPointer(deps)
+        await expect(
+          paymentPointerService.getByUrl(paymentPointer.url)
+        ).resolves.toEqual(paymentPointer)
 
-      await expect(
-        paymentPointerService.getByUrl(paymentPointer.url + '/path')
-      ).resolves.toBeUndefined()
+        await expect(
+          paymentPointerService.getByUrl(paymentPointer.url + '/path')
+        ).resolves.toBeUndefined()
 
-      await expect(
-        paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
-      ).resolves.toBeUndefined()
+        await expect(
+          paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
+        ).resolves.toBeUndefined()
+      })
     })
 
-    test('Returns undefined if no payment pointer exists with url', async (): Promise<void> => {
-      await expect(
-        paymentPointerService.getByUrl('test.nope')
-      ).resolves.toBeUndefined()
+    describe('non-existing payment pointer', (): void => {
+      test(
+        'creates payment pointer not found event',
+        withConfigOverride(
+          () => config,
+          { paymentPointerLookupTimeoutMs: 0 },
+          async (): Promise<void> => {
+            const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            await expect(
+              paymentPointerService.getByUrl(paymentPointerUrl)
+            ).resolves.toBeUndefined()
+
+            const paymentPointerNotFoundEvents =
+              await PaymentPointerEvent.query(knex).where({
+                type: PaymentPointerEventType.PaymentPointerNotFound
+              })
+
+            expect(paymentPointerNotFoundEvents[0]).toMatchObject({
+              data: { paymentPointerUrl }
+            })
+          }
+        )
+      )
+
+      test(
+        'polls for payment pointer',
+        withConfigOverride(
+          () => config,
+          { paymentPointerPollingFrequencyMs: 10 },
+          async (): Promise<void> => {
+            const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+
+            const [getByUrlPaymentPointer, createdPaymentPointer] =
+              await Promise.all([
+                paymentPointerService.getByUrl(paymentPointerUrl),
+                (async () => {
+                  await sleep(5)
+                  return createPaymentPointer(deps, {
+                    url: paymentPointerUrl
+                  })
+                })()
+              ])
+
+            assert.ok(getByUrlPaymentPointer)
+            expect(getByUrlPaymentPointer).toEqual(createdPaymentPointer)
+          }
+        )
+      )
+
+      test(
+        'returns undefined if no payment pointer exists with url',
+        withConfigOverride(
+          () => config,
+          { paymentPointerLookupTimeoutMs: 1 },
+          async (): Promise<void> => {
+            await expect(
+              paymentPointerService.getByUrl('test.nope')
+            ).resolves.toBeUndefined()
+          }
+        )
+      )
     })
   })
 

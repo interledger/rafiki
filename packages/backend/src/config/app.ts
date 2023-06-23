@@ -109,12 +109,18 @@ export const Config = {
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
   ),
-
+  paymentPointerLookupTimeoutMs: envInt(
+    'PAYMENT_POINTER_LOOKUP_TIMEOUT_MS',
+    1500
+  ),
+  paymentPointerPollingFrequencyMs: envInt(
+    'PAYMENT_POINTER_POLLING_FREQUENCY_MS',
+    100
+  ),
   paymentPointerDeactivationPaymentGracePeriodMs: envInt(
     'PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS',
     86400000
   ),
-
   incomingPaymentExpiryMaxMs: envInt(
     'INCOMING_PAYMENT_EXPIRY_MAX_MS',
     2592000000

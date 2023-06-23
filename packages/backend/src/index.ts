@@ -215,13 +215,21 @@ export function initIocContainer(
       knex: await deps.use('knex')
     })
   })
+  container.singleton('webhookService', async (deps) => {
+    return createWebhookService({
+      config: await deps.use('config'),
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger')
+    })
+  })
   container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
     return await createPaymentPointerService({
+      config: await deps.use('config'),
       knex: await deps.use('knex'),
       logger: logger,
       accountingService: await deps.use('accountingService'),
-      config: await deps.use('config')
+      webhookService: await deps.use('webhookService')
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -232,13 +240,7 @@ export function initIocContainer(
       streamServer: streamServer
     })
   })
-  container.singleton('webhookService', async (deps) => {
-    return createWebhookService({
-      config: await deps.use('config'),
-      knex: await deps.use('knex'),
-      logger: await deps.use('logger')
-    })
-  })
+
   container.singleton('incomingPaymentService', async (deps) => {
     return await createIncomingPaymentService({
       logger: await deps.use('logger'),
