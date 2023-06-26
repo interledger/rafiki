@@ -45,11 +45,7 @@ describe('Receiver Resolver', (): void => {
       ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
     `(
       'creates receiver ($#)',
-      async ({
-        metadata,
-        expiresAt,
-        incomingAmount
-      }): Promise<void> => {
+      async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
         const receiver = Receiver.fromIncomingPayment(
           mockIncomingPaymentWithConnection({
             id: `${paymentPointer.id}/incoming-payments/${uuid()}`,

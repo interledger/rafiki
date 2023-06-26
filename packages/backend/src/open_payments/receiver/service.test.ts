@@ -515,11 +515,7 @@ describe('Receiver Service', (): void => {
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `(
         'creates receiver from remote incoming payment ($#)',
-        async ({
-          metadata,
-          expiresAt,
-          incomingAmount
-        }): Promise<void> => {
+        async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
           const incomingPayment = mockIncomingPaymentWithConnection({
             metadata,
             expiresAt,
@@ -613,11 +609,7 @@ describe('Receiver Service', (): void => {
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `(
         'creates receiver from local incoming payment ($#)',
-        async ({
-          metadata,
-          expiresAt,
-          incomingAmount
-        }): Promise<void> => {
+        async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
           const incomingPaymentCreateSpy = jest.spyOn(
             incomingPaymentService,
             'create'

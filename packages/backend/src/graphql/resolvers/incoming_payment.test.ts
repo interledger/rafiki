@@ -96,11 +96,7 @@ describe('Incoming Payment Resolver', (): void => {
       ${undefined}                                      | ${undefined}                     | ${true}    | ${'incomingAmount'}
     `(
       '200 ($desc)',
-      async ({
-        metadata,
-        expiresAt,
-        withAmount
-      }): Promise<void> => {
+      async ({ metadata, expiresAt, withAmount }): Promise<void> => {
         const incomingAmount = withAmount ? amount : undefined
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
           assetId: asset.id
