@@ -105,7 +105,7 @@ describe('Grant Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            query GetGrant($id: String!) {
+            query GetGrant($id: ID!) {
               grant(id: $id) {
                 id
                 client

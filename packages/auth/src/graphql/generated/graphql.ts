@@ -107,17 +107,6 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']>;
 };
 
-export type PaginationInput = {
-  /** Paginating forwards: the cursor before the the requested page. */
-  after?: InputMaybe<Scalars['String']>;
-  /** Paginating backwards: the cursor after the the requested page. */
-  before?: InputMaybe<Scalars['String']>;
-  /** Paginating forwards: The first **n** elements from the page. */
-  first?: InputMaybe<Scalars['Int']>;
-  /** Paginating backwards: The last **n** elements from the page. */
-  last?: InputMaybe<Scalars['Int']>;
-};
-
 export type Query = {
   __typename?: 'Query';
   /** Fetch a grant */
@@ -128,13 +117,16 @@ export type Query = {
 
 
 export type QueryGrantArgs = {
-  id: Scalars['String'];
+  id: Scalars['ID'];
 };
 
 
 export type QueryGrantsArgs = {
+  after?: InputMaybe<Scalars['String']>;
+  before?: InputMaybe<Scalars['String']>;
   filter?: InputMaybe<GrantFilter>;
-  input?: InputMaybe<PaginationInput>;
+  first?: InputMaybe<Scalars['Int']>;
+  last?: InputMaybe<Scalars['Int']>;
 };
 
 export type RevokeGrantInput = {
@@ -233,7 +225,6 @@ export type ResolversTypes = {
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['RevokeGrantMutationResponse'];
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
-  PaginationInput: ResolverTypeWrapper<Partial<PaginationInput>>;
   Query: ResolverTypeWrapper<{}>;
   RevokeGrantInput: ResolverTypeWrapper<Partial<RevokeGrantInput>>;
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
@@ -255,7 +246,6 @@ export type ResolversParentTypes = {
   Mutation: {};
   MutationResponse: ResolversParentTypes['RevokeGrantMutationResponse'];
   PageInfo: Partial<PageInfo>;
-  PaginationInput: Partial<PaginationInput>;
   Query: {};
   RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;

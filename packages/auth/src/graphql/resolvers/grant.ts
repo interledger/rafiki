@@ -17,10 +17,10 @@ export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   ctx
 ): Promise<ResolversTypes['GrantsConnection']> => {
   const grantService = await ctx.container.use('grantService')
-  const { filter, input: pagination } = args
+  const { filter, ...pagination } = args
   const grants = await grantService.getPage(pagination, filter)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => grantService.getPage(pagination),
+    (pagination: Pagination) => grantService.getPage(pagination, filter),
     grants
   )
 
