@@ -78,9 +78,7 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
         expiresAt: !args.input.expiresAt
           ? undefined
           : new Date(args.input.expiresAt),
-        description: args.input.description,
         incomingAmount: args.input.incomingAmount,
-        externalRef: args.input.externalRef,
         metadata: args.input.metadata
       })
       .then((paymentOrErr: IncomingPayment | IncomingPaymentError) =>
@@ -113,8 +111,6 @@ export function paymentToGraphql(
     expiresAt: payment.expiresAt.toISOString(),
     incomingAmount: payment.incomingAmount,
     receivedAmount: payment.receivedAmount,
-    description: payment.description,
-    externalRef: payment.externalRef,
     metadata: payment.metadata,
     createdAt: new Date(+payment.createdAt).toISOString()
   }

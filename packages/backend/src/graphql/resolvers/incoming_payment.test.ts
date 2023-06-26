@@ -65,8 +65,6 @@ describe('Incoming Payment Resolver', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: `IncomingPayment`,
-          externalRef: '#123',
           metadata: {
             description: `IncomingPayment`,
             externalRef: '#123'
@@ -92,15 +90,13 @@ describe('Incoming Payment Resolver', (): void => {
     })
 
     test.each`
-      metadata                                          | description  | externalRef  | expiresAt                        | withAmount | desc
-      ${{ description: 'rent', externalRef: '202201' }} | ${undefined} | ${'202201'}  | ${undefined}                     | ${false}   | ${'metadata'}
-      ${undefined}                                      | ${undefined} | ${undefined} | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
-      ${undefined}                                      | ${undefined} | ${undefined} | ${undefined}                     | ${true}    | ${'incomingAmount'}
+      metadata                                          | expiresAt                        | withAmount | desc
+      ${{ description: 'rent', externalRef: '202201' }} | ${undefined}                     | ${false}   | ${'metadata'}
+      ${undefined}                                      | ${new Date(Date.now() + 30_000)} | ${false}   | ${'expiresAt'}
+      ${undefined}                                      | ${undefined}                     | ${true}    | ${'incomingAmount'}
     `(
       '200 ($desc)',
       async ({
-        description,
-        externalRef,
         metadata,
         expiresAt,
         withAmount
@@ -111,8 +107,6 @@ describe('Incoming Payment Resolver', (): void => {
         })
         const payment = await createIncomingPayment(deps, {
           paymentPointerId,
-          description,
-          externalRef,
           metadata,
           expiresAt,
           incomingAmount
@@ -126,8 +120,6 @@ describe('Incoming Payment Resolver', (): void => {
           paymentPointerId,
           incomingAmount,
           expiresAt,
-          description,
-          externalRef,
           metadata
         }
 
@@ -156,8 +148,6 @@ describe('Incoming Payment Resolver', (): void => {
                       assetCode
                       assetScale
                     }
-                    description
-                    externalRef
                     metadata
                     createdAt
                   }
@@ -195,8 +185,6 @@ describe('Incoming Payment Resolver', (): void => {
               __typename: 'Amount',
               ...serializeAmount(payment.receivedAmount)
             },
-            description: description || null,
-            externalRef: externalRef || null,
             metadata: metadata || null,
             createdAt: payment.createdAt.toISOString()
           }
@@ -288,8 +276,6 @@ describe('Incoming Payment Resolver', (): void => {
 
     const createPayment = async (options: {
       paymentPointerId: string
-      description?: string
-      externalRef?: string
       metadata?: Record<string, unknown>
     }): Promise<IncomingPaymentModel> => {
       return await createIncomingPayment(deps, {

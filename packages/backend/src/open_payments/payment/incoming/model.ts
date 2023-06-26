@@ -39,13 +39,11 @@ export enum IncomingPaymentState {
 export interface IncomingPaymentResponse {
   id: string
   paymentPointerId: string
-  description?: string
   createdAt: string
   updatedAt: string
   expiresAt: string
   incomingAmount?: AmountJSON
   receivedAmount: AmountJSON
-  externalRef?: string
   completed: boolean
   metadata?: Record<string, unknown>
 }
@@ -86,10 +84,8 @@ export class IncomingPayment
     }
   }
 
-  public description?: string
   public expiresAt!: Date
   public state!: IncomingPaymentState
-  public externalRef?: string
   public metadata?: Record<string, unknown>
   // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the connectionId. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
   public connectionId?: string | null
@@ -191,12 +187,6 @@ export class IncomingPayment
         value: this.incomingAmount.value.toString()
       }
     }
-    if (this.description) {
-      data.incomingPayment.description = this.description
-    }
-    if (this.externalRef) {
-      data.incomingPayment.externalRef = this.externalRef
-    }
     if (this.metadata) {
       data.incomingPayment.metadata = this.metadata
     }
@@ -253,8 +243,6 @@ export class IncomingPayment
         : undefined,
       receivedAmount: serializeAmount(this.receivedAmount),
       completed: this.completed,
-      description: this.description ?? undefined,
-      externalRef: this.externalRef ?? undefined,
       metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),

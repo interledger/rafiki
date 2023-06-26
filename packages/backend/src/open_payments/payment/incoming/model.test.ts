@@ -36,7 +36,6 @@ describe('Incoming Payment Model', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description: 'my payment',
         metadata: { description: 'my payment' }
       })
 
@@ -49,8 +48,6 @@ describe('Incoming Payment Model', (): void => {
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
         expiresAt: incomingPayment.expiresAt.toISOString(),
-        description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined,
         metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString()
@@ -61,7 +58,6 @@ describe('Incoming Payment Model', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description: 'my payment',
         metadata: { description: 'my payment' }
       })
 
@@ -78,8 +74,6 @@ describe('Incoming Payment Model', (): void => {
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
         expiresAt: incomingPayment.expiresAt.toISOString(),
-        description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined,
         metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
@@ -91,7 +85,6 @@ describe('Incoming Payment Model', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description: 'my payment',
         metadata: { description: 'my payment' }
       })
 
@@ -115,8 +108,6 @@ describe('Incoming Payment Model', (): void => {
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
         expiresAt: incomingPayment.expiresAt.toISOString(),
-        description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined,
         metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),

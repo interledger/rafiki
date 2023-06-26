@@ -231,7 +231,6 @@ export async function createPaymentPointerKey({
 
 export async function getPaymentPointerPayments(
   paymentPointerId: string
-  // TODO: pagination
 ): Promise<PaymentPointer> {
   const query = gql`
     query PaymentPointer($id: String!) {
@@ -250,8 +249,7 @@ export async function getPaymentPointerPayments(
                 assetCode
                 assetScale
               }
-              description
-              externalRef
+              metadata
               createdAt
             }
             cursor
@@ -280,8 +278,7 @@ export async function getPaymentPointerPayments(
                 assetScale
               }
               receiver
-              description
-              externalRef
+              metadata
               sentAmount {
                 value
                 assetCode

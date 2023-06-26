@@ -25,10 +25,8 @@ import {
 
 interface CreateReceiverArgs {
   paymentPointerUrl: string
-  description?: string
   expiresAt?: Date
   incomingAmount?: Amount
-  externalRef?: string
   metadata?: Record<string, unknown>
 }
 
@@ -108,14 +106,12 @@ async function createLocalIncomingPayment(
   args: CreateReceiverArgs,
   paymentPointer: PaymentPointer
 ): Promise<OpenPaymentsIncomingPayment | ReceiverError> {
-  const { description, expiresAt, incomingAmount, externalRef, metadata } = args
+  const { expiresAt, incomingAmount, metadata } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     paymentPointerId: paymentPointer.id,
-    description,
     expiresAt,
     incomingAmount,
-    externalRef,
     metadata
   })
 

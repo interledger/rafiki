@@ -21,9 +21,7 @@ export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] 
         expiresAt: args.input.expiresAt
           ? new Date(args.input.expiresAt)
           : undefined,
-        description: args.input.description,
         incomingAmount: args.input.incomingAmount,
-        externalRef: args.input.externalRef,
         metadata: args.input.metadata
       })
 
@@ -61,10 +59,8 @@ export function receiverToGraphql(receiver: Receiver): SchemaReceiver {
     id: receiver.incomingPayment.id,
     paymentPointerUrl: receiver.incomingPayment.paymentPointer,
     expiresAt: receiver.incomingPayment.expiresAt?.toISOString(),
-    description: receiver.incomingPayment.description,
     incomingAmount: receiver.incomingPayment.incomingAmount,
     receivedAmount: receiver.incomingPayment.receivedAmount,
-    externalRef: receiver.incomingPayment.externalRef,
     metadata: receiver.incomingPayment.metadata,
     completed: receiver.incomingPayment.completed,
     createdAt: receiver.incomingPayment.createdAt.toISOString(),

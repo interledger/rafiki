@@ -43,8 +43,6 @@ describe('Incoming Payment Routes', (): void => {
   let paymentPointer: PaymentPointer
   let expiresAt: Date
   let incomingAmount: Amount
-  let description: string
-  let externalRef: string
   let metadata: Record<string, unknown>
 
   beforeEach(async (): Promise<void> => {
@@ -62,8 +60,6 @@ describe('Incoming Payment Routes', (): void => {
       assetScale: asset.scale,
       assetCode: asset.code
     }
-    description = 'hello world'
-    externalRef = '#123'
     metadata = {
       description: 'hello world',
       externalRef: '#123'
@@ -85,10 +81,8 @@ describe('Incoming Payment Routes', (): void => {
         createIncomingPayment(deps, {
           paymentPointerId: paymentPointer.id,
           client,
-          description,
           expiresAt,
           incomingAmount,
-          externalRef,
           metadata
         }),
       get: (ctx) => incomingPaymentRoutes.get(ctx),
@@ -100,12 +94,10 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount:
             incomingPayment.incomingAmount &&
             serializeAmount(incomingPayment.incomingAmount),
-          description: incomingPayment.description,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString(),
           updatedAt: incomingPayment.updatedAt.toISOString(),
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-          externalRef: '#123',
           metadata: incomingPayment.metadata,
           ilpStreamConnection: list
             ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
@@ -174,16 +166,14 @@ describe('Incoming Payment Routes', (): void => {
     )
 
     test.each`
-      client                                        | incomingAmount | description  | externalRef  | expiresAt                                      | metadata
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()} | ${{ description: 'text', externalRef: '#123' }}
-      ${undefined}                                  | ${false}       | ${undefined} | ${undefined} | ${undefined}                                   | ${undefined}
+      client                                        | incomingAmount | expiresAt                                      | metadata
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000).toISOString()} | ${{ description: 'text', externalRef: '#123' }}
+      ${undefined}                                  | ${false}       | ${undefined}                                   | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
         client,
         incomingAmount,
-        description,
-        externalRef,
         metadata,
         expiresAt
       }): Promise<void> => {
@@ -191,8 +181,6 @@ describe('Incoming Payment Routes', (): void => {
           reqOpts: {
             body: {
               incomingAmount: incomingAmount ? amount : undefined,
-              description,
-              externalRef,
               metadata,
               expiresAt
             },
@@ -208,8 +196,6 @@ describe('Incoming Payment Routes', (): void => {
         expect(createSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
-          description,
-          externalRef,
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client
@@ -233,7 +219,6 @@ describe('Incoming Payment Routes', (): void => {
           id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
           paymentPointer: paymentPointer.url,
           incomingAmount: incomingAmount ? amount : undefined,
-          description,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
@@ -242,7 +227,6 @@ describe('Incoming Payment Routes', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          externalRef,
           metadata,
           completed: false,
           ilpStreamConnection: {
@@ -264,10 +248,8 @@ describe('Incoming Payment Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description,
         expiresAt,
         incomingAmount,
-        externalRef,
         metadata
       })
     })
@@ -294,7 +276,6 @@ describe('Incoming Payment Routes', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
         updatedAt: expect.any(String),
@@ -303,7 +284,6 @@ describe('Incoming Payment Routes', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        externalRef: '#123',
         metadata,
         completed: true
       })

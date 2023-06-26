@@ -89,8 +89,6 @@ export interface CreateOutgoingPaymentOptions {
   quoteId: string
   client?: string
   grant?: Grant
-  description?: string
-  externalRef?: string
   metadata?: Record<string, unknown>
   callback?: (f: unknown) => NodeJS.Timeout
 }
@@ -125,8 +123,6 @@ async function createOutgoingPayment(
         .insertAndFetch({
           id: options.quoteId,
           paymentPointerId,
-          description: options.description,
-          externalRef: options.externalRef,
           metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
           client: options.client,

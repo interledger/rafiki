@@ -59,8 +59,6 @@ async function getOutgoingPayment(
 
 export type CreateBody = {
   quoteId: string
-  description?: string
-  externalRef?: string
   metadata?: Record<string, unknown>
 }
 
@@ -79,8 +77,6 @@ async function createOutgoingPayment(
   const paymentOrErr = await deps.outgoingPaymentService.create({
     paymentPointerId: ctx.paymentPointer.id,
     quoteId,
-    description: body.description,
-    externalRef: body.externalRef,
     metadata: body.metadata,
     client: ctx.client,
     grant: ctx.grant

@@ -207,8 +207,6 @@ describe('Receiver Service', (): void => {
             completed: incomingPayment.completed,
             receivedAmount: incomingPayment.receivedAmount,
             incomingAmount: incomingPayment.incomingAmount,
-            description: incomingPayment.description || undefined,
-            externalRef: incomingPayment.externalRef || undefined,
             metadata: incomingPayment.metadata || undefined,
             expiresAt: incomingPayment.expiresAt,
             updatedAt: new Date(incomingPayment.updatedAt),
@@ -512,21 +510,17 @@ describe('Receiver Service', (): void => {
       }
 
       test.each`
-        incomingAmount | expiresAt                        | description                | externalRef  | metadata
-        ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
+        incomingAmount | expiresAt                        | metadata
+        ${undefined}   | ${undefined}                     | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `(
         'creates receiver from remote incoming payment ($#)',
         async ({
-          description,
-          externalRef,
           metadata,
           expiresAt,
           incomingAmount
         }): Promise<void> => {
           const incomingPayment = mockIncomingPaymentWithConnection({
-            description,
-            externalRef,
             metadata,
             expiresAt,
             incomingAmount
@@ -544,8 +538,6 @@ describe('Receiver Service', (): void => {
             paymentPointerUrl: paymentPointer.id,
             incomingAmount,
             expiresAt,
-            description,
-            externalRef,
             metadata
           })
 
@@ -562,8 +554,6 @@ describe('Receiver Service', (): void => {
               incomingAmount:
                 incomingPayment.incomingAmount &&
                 parseAmount(incomingPayment.incomingAmount),
-              description: incomingPayment.description || undefined,
-              externalRef: incomingPayment.externalRef || undefined,
               metadata: incomingPayment.metadata || undefined,
               updatedAt: new Date(incomingPayment.updatedAt),
               createdAt: new Date(incomingPayment.createdAt),
@@ -576,8 +566,6 @@ describe('Receiver Service', (): void => {
             paymentPointerUrl: paymentPointer.id,
             incomingAmount,
             expiresAt,
-            description,
-            externalRef,
             metadata
           })
           expect(localIncomingPaymentCreateSpy).not.toHaveBeenCalled()
@@ -620,14 +608,12 @@ describe('Receiver Service', (): void => {
       })
 
       test.each`
-        incomingAmount | expiresAt                        | description                | externalRef  | metadata
-        ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined} | ${undefined}
-        ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}    | ${{ description: 'Test incoming payment', externalRef: '#123' }}
+        incomingAmount | expiresAt                        | metadata
+        ${undefined}   | ${undefined}                     | ${undefined}
+        ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `(
         'creates receiver from local incoming payment ($#)',
         async ({
-          description,
-          externalRef,
           metadata,
           expiresAt,
           incomingAmount
@@ -644,8 +630,6 @@ describe('Receiver Service', (): void => {
             paymentPointerUrl: paymentPointer.url,
             incomingAmount,
             expiresAt,
-            description,
-            externalRef,
             metadata
           })
 
@@ -661,8 +645,6 @@ describe('Receiver Service', (): void => {
               completed: receiver.incomingPayment?.completed,
               receivedAmount: receiver.incomingPayment?.receivedAmount,
               incomingAmount: receiver.incomingPayment?.incomingAmount,
-              description: receiver.incomingPayment?.description || undefined,
-              externalRef: receiver.incomingPayment?.externalRef || undefined,
               metadata: receiver.incomingPayment?.metadata || undefined,
               updatedAt: receiver.incomingPayment?.updatedAt,
               createdAt: receiver.incomingPayment?.createdAt,
@@ -674,8 +656,6 @@ describe('Receiver Service', (): void => {
             paymentPointerId: paymentPointer.id,
             incomingAmount,
             expiresAt,
-            description,
-            externalRef,
             metadata
           })
           expect(remoteIncomingPaymentCreateSpy).not.toHaveBeenCalled()

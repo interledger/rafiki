@@ -728,32 +728,8 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "description",
-            "description": "Human readable description of the incoming payment.",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "expiresAt",
             "description": "Expiration date-time",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "externalRef",
-            "description": "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -826,30 +802,6 @@
         "description": null,
         "fields": null,
         "inputFields": [
-          {
-            "name": "description",
-            "description": "Human readable description of the outgoing payment.",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "externalRef",
-            "description": "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
           {
             "name": "idempotencyKey",
             "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
@@ -1579,32 +1531,8 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "description",
-            "description": "Human readable description of the incoming payment.",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "expiresAt",
             "description": "Expiration date-time",
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "externalRef",
-            "description": "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.",
             "type": {
               "kind": "SCALAR",
               "name": "String",
@@ -2166,18 +2094,6 @@
             "deprecationReason": null
           },
           {
-            "name": "description",
-            "description": "Human readable description of the incoming payment.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "expiresAt",
             "description": "Date-time of expiry. After this time, the incoming payment will not accept further payments made to it.",
             "args": [],
@@ -2189,18 +2105,6 @@
                 "name": "String",
                 "ofType": null
               }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "externalRef",
-            "description": "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -3827,32 +3731,8 @@
             "deprecationReason": null
           },
           {
-            "name": "description",
-            "description": "Human readable description of the outgoing payment.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "error",
             "description": null,
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "externalRef",
-            "description": "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -6052,32 +5932,8 @@
             "deprecationReason": null
           },
           {
-            "name": "description",
-            "description": "Human readable description of the incoming payment.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "expiresAt",
             "description": "Date-time of expiry. After this time, the incoming payment will accept further payments made to it.",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "externalRef",
-            "description": "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.",
             "args": [],
             "type": {
               "kind": "SCALAR",

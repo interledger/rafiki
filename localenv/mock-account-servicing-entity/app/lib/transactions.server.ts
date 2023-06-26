@@ -14,8 +14,7 @@ export enum TransactionType {
 
 interface Transaction {
   id: string
-  description: string
-  externalRef: string
+  metadata: Record<string, unknown>
   createdAt: string
   amountValue: string
   assetCode: string
@@ -43,8 +42,7 @@ export async function getAccountTransactions(
   const transactions = incomingPayments.edges.map(({ node }) => {
     return {
       id: node.id,
-      description: node.description,
-      externalRef: node.externalRef,
+      metadata: node.metadata,
       incomingAmountValue: node.incomingAmount.value,
       amountValue: node.receivedAmount.value,
       assetCode: node.receivedAmount.assetCode,
@@ -59,8 +57,7 @@ export async function getAccountTransactions(
       return {
         id: node.id,
         receiver: node.receiver,
-        description: node.description,
-        externalRef: node.externalRef,
+        metadata: node.metadata,
         sendAmountValue: node.sendAmount.value,
         amountValue: node.sentAmount.value,
         receiveAmount: node.receiveAmount,

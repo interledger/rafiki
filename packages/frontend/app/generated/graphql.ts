@@ -119,12 +119,8 @@ export type CreateAssetLiquidityWithdrawalInput = {
 };
 
 export type CreateIncomingPaymentInput = {
-  /** Human readable description of the incoming payment. */
-  description?: InputMaybe<Scalars['String']>;
   /** Expiration date-time */
   expiresAt?: InputMaybe<Scalars['String']>;
-  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
-  externalRef?: InputMaybe<Scalars['String']>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum amount to be received */
@@ -136,10 +132,6 @@ export type CreateIncomingPaymentInput = {
 };
 
 export type CreateOutgoingPaymentInput = {
-  /** Human readable description of the outgoing payment. */
-  description?: InputMaybe<Scalars['String']>;
-  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
-  externalRef?: InputMaybe<Scalars['String']>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Additional metadata associated with the outgoing payment. */
@@ -242,12 +234,8 @@ export type CreateQuoteInput = {
 };
 
 export type CreateReceiverInput = {
-  /** Human readable description of the incoming payment. */
-  description?: InputMaybe<Scalars['String']>;
   /** Expiration date-time */
   expiresAt?: InputMaybe<Scalars['String']>;
-  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
-  externalRef?: InputMaybe<Scalars['String']>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']>;
   /** Maximum amount to be received */
@@ -331,12 +319,8 @@ export type IncomingPayment = Model & {
   __typename?: 'IncomingPayment';
   /** Date-time of creation */
   createdAt: Scalars['String'];
-  /** Human readable description of the incoming payment. */
-  description?: Maybe<Scalars['String']>;
   /** Date-time of expiry. After this time, the incoming payment will not accept further payments made to it. */
   expiresAt: Scalars['String'];
-  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
-  externalRef?: Maybe<Scalars['String']>;
   /** Incoming Payment id */
   id: Scalars['ID'];
   /** The maximum amount that should be paid into the payment pointer under this incoming payment. */
@@ -616,11 +600,7 @@ export type OutgoingPayment = Model & {
   __typename?: 'OutgoingPayment';
   /** Date-time of creation */
   createdAt: Scalars['String'];
-  /** Human readable description of the outgoing payment. */
-  description?: Maybe<Scalars['String']>;
   error?: Maybe<Scalars['String']>;
-  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
-  externalRef?: Maybe<Scalars['String']>;
   /** Outgoing payment id */
   id: Scalars['ID'];
   /** Additional metadata associated with the outgoing payment. */
@@ -961,12 +941,8 @@ export type Receiver = {
   completed: Scalars['Boolean'];
   /** Date-time of creation */
   createdAt: Scalars['String'];
-  /** Human readable description of the incoming payment. */
-  description?: Maybe<Scalars['String']>;
   /** Date-time of expiry. After this time, the incoming payment will accept further payments made to it. */
   expiresAt?: Maybe<Scalars['String']>;
-  /** A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number. */
-  externalRef?: Maybe<Scalars['String']>;
   /** Incoming payment URL */
   id: Scalars['String'];
   /** The maximum amount that should be paid into the payment pointer under this incoming payment. */
@@ -1459,9 +1435,7 @@ export type HttpOutgoingResolvers<ContextType = any, ParentType extends Resolver
 
 export type IncomingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['IncomingPayment'] = ResolversParentTypes['IncomingPayment']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
@@ -1553,9 +1527,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1722,9 +1694,7 @@ export type QuoteResponseResolvers<ContextType = any, ParentType extends Resolve
 export type ReceiverResolvers<ContextType = any, ParentType extends ResolversParentTypes['Receiver'] = ResolversParentTypes['Receiver']> = {
   completed?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   expiresAt?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  externalRef?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
