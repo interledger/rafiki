@@ -6936,7 +6936,7 @@
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "String",
+                "name": "JSONObject",
                 "ofType": null
               }
             },

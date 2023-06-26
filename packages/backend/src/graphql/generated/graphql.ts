@@ -1082,7 +1082,7 @@ export type WebhookEvent = Model & {
   /** Date-time of creation */
   createdAt: Scalars['String'];
   /** Stringified JSON data */
-  data: Scalars['String'];
+  data: Scalars['JSONObject'];
   /** Event id */
   id: Scalars['ID'];
   /** Type of event */
@@ -1783,7 +1783,7 @@ export type UpdatePeerMutationResponseResolvers<ContextType = any, ParentType ex
 
 export type WebhookEventResolvers<ContextType = any, ParentType extends ResolversParentTypes['WebhookEvent'] = ResolversParentTypes['WebhookEvent']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  data?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  data?: Resolver<ResolversTypes['JSONObject'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

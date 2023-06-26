@@ -853,7 +853,7 @@ type WebhookEvent implements Model {
   "Type of event"
   type: String!
   "Stringified JSON data"
-  data: String!
+  data: JSONObject!
   "Date-time of creation"
   createdAt: String!
 }

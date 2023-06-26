@@ -37,6 +37,6 @@ export const webhookEventToGraphql = (
 ): SchemaWebhookEvent => ({
   id: webhookEvent.id,
   type: webhookEvent.type,
-  data: JSON.stringify(webhookEvent.data),
+  data: webhookEvent.data,
   createdAt: new Date(webhookEvent.createdAt).toISOString()
 })
