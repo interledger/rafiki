@@ -1581,8 +1581,7 @@ describe('Liquidity Resolvers', (): void => {
           assetCode: paymentPointer.asset.code,
           assetScale: paymentPointer.asset.scale
         },
-        expiresAt: new Date(Date.now() + 60 * 1000),
-        description: 'description!'
+        expiresAt: new Date(Date.now() + 60 * 1000)
       })
       payment = await createOutgoingPayment(deps, {
         paymentPointerId,

@@ -23,7 +23,6 @@ export default function Transactions() {
           <th>Date</th>
           <th>Type</th>
           <th>Amount</th>
-          <th>Description</th>
         </tr>
         {transactions.map((trx) => (
           <tr key={trx.id}>
@@ -33,7 +32,6 @@ export default function Transactions() {
               {(Number(trx.amountValue) / 100).toFixed(trx.assetScale)}{' '}
               {trx.assetCode}
             </td>
-            <td>{trx.description}</td>
           </tr>
         ))}
       </table>
