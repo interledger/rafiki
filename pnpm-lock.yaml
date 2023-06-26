@@ -541,8 +541,8 @@ importers:
         specifier: ^0.9.0
         version: 0.9.0(@types/node@18.11.9)(graphql@16.6.0)
       prism-react-renderer:
-        specifier: ^2.0.4
-        version: 2.0.4(react@17.0.2)
+        specifier: ^2.0.6
+        version: 2.0.6(react@17.0.2)
       react:
         specifier: ^17.0.2
         version: 17.0.2
@@ -15701,8 +15701,8 @@ packages:
       react: 17.0.2
     dev: false
 
-  /prism-react-renderer@2.0.4(react@17.0.2):
-    resolution: {integrity: sha512-1fcayBPhlGWLjKHeZMA2eJbvLsq1YJsoP3CUOF0BNlobw4knAYS6EWHYawywaZ5zoIxYkgxuqrrkCj7b+135ow==}
+  /prism-react-renderer@2.0.6(react@17.0.2):
+    resolution: {integrity: sha512-ERzmAI5UvrcTw5ivfEG20/dYClAsC84eSED5p9X3oKpm0xPV4A5clFK1mp7lPIdKmbLnQYsPTGiOI7WS6gWigw==}
     peerDependencies:
       react: '>=16.0.0'
     dependencies:
