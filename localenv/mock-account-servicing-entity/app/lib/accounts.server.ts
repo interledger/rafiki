@@ -1,6 +1,7 @@
 export interface Account {
   id: string
   name: string
+  path: string
   paymentPointerID: string
   paymentPointer: string
   debitsPending: bigint
@@ -9,6 +10,7 @@ export interface Account {
   creditsPosted: bigint
   assetCode: string
   assetScale: number
+  assetId: string
 }
 
 export interface AccountsServer {
@@ -20,13 +22,19 @@ export interface AccountsServer {
   ): Promise<void>
   create(
     id: string,
+    path: string,
     name: string,
     assetCode: string,
-    assetScale: number
+    assetScale: number,
+    assetId: string
   ): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
-  getByPaymentPointer(paymentPointer: string): Promise<Account | undefined>
+  getByPaymentPointerId(paymentPointerId: string): Promise<Account | undefined>
+  getByPath(path: string): Promise<Account | undefined>
+  getByPaymentPointerUrl(
+    paymentPointerUrl: string
+  ): Promise<Account | undefined>
   voidPendingDebit(id: string, amount: bigint): Promise<void>
   voidPendingCredit(id: string, amount: bigint): Promise<void>
   pendingDebit(id: string, amount: bigint): Promise<void>
@@ -63,9 +71,11 @@ export class AccountProvider implements AccountsServer {
 
   async create(
     id: string,
+    path: string,
     name: string,
     assetCode: string,
-    assetScale: number
+    assetScale: number,
+    assetId: string
   ): Promise<void> {
     if (this.accounts.has(id)) {
       throw new Error('account already exists')
@@ -73,6 +83,7 @@ export class AccountProvider implements AccountsServer {
     this.accounts.set(id, {
       id,
       name,
+      path,
       paymentPointer: '',
       paymentPointerID: '',
       creditsPending: BigInt(0),
@@ -80,7 +91,8 @@ export class AccountProvider implements AccountsServer {
       debitsPending: BigInt(0),
       debitsPosted: BigInt(0),
       assetCode,
-      assetScale
+      assetScale,
+      assetId
     })
   }
 
@@ -92,7 +104,7 @@ export class AccountProvider implements AccountsServer {
     return this.accounts.get(id)
   }
 
-  async getByPaymentPointer(
+  async getByPaymentPointerId(
     paymentPointerId: string
   ): Promise<Account | undefined> {
     for (const acc of this.accounts.values()) {
@@ -100,6 +112,18 @@ export class AccountProvider implements AccountsServer {
         return acc
       }
     }
+  }
+
+  async getByPaymentPointerUrl(
+    paymentPointerUrl: string
+  ): Promise<Account | undefined> {
+    return (await this.listAll()).find(
+      (acc) => acc.paymentPointer === paymentPointerUrl
+    )
+  }
+
+  async getByPath(path: string): Promise<Account | undefined> {
+    return (await this.listAll()).find((acc) => acc.path === path)
   }
 
   async credit(

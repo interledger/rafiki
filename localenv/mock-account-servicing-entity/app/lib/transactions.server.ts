@@ -38,6 +38,11 @@ export async function getAccountTransactions(
   accountId: string
 ): Promise<Array<IncomingPayment | OutgoingPayment>> {
   const account = await mockAccounts.get(accountId)
+
+  if (!account?.paymentPointerID) {
+    return []
+  }
+
   const { incomingPayments, outgoingPayments } =
     await getPaymentPointerPayments(account.paymentPointerID)
   const transactions = incomingPayments.edges.map(({ node }) => {

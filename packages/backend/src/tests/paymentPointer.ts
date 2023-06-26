@@ -15,6 +15,7 @@ import { LiquidityAccountType } from '../accounting/service'
 interface CreateOptions extends Partial<BaseCreateOptions> {
   mockServerPort?: number
   createLiquidityAccount?: boolean
+  deactivatedAt?: Date
 }
 
 export type MockPaymentPointer = PaymentPointer & {
