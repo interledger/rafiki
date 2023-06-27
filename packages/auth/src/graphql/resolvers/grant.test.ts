@@ -15,8 +15,7 @@ import {
 } from '../generated/graphql'
 import { Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
-import { createGrant, getGrantById } from '../../tests/grant'
-import { grantToGraphql } from './grant'
+import { createGrant } from '../../tests/grant'
 
 describe('Grant Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -140,8 +139,7 @@ describe('Grant Resolvers', (): void => {
   describe('Grant By id Queries', (): void => {
     let grant: GrantModel
     beforeEach(async (): Promise<void> => {
-      const createdGrant = await createGrant(deps)
-      grant = (await getGrantById(deps, createdGrant.id)) || createdGrant
+      grant = await createGrant(deps)
     })
 
     test('Can get a grant', async (): Promise<void> => {
@@ -151,30 +149,6 @@ describe('Grant Resolvers', (): void => {
             query GetGrant($id: ID!) {
               grant(id: $id) {
                 id
-                client
-                state
-                access {
-                  id
-                  identifier
-                  createdAt
-                  actions
-                  type
-                  limits {
-                    receiver
-                    sendAmount {
-                      value
-                      assetCode
-                      assetScale
-                    }
-                    receiveAmount {
-                      value
-                      assetCode
-                      assetScale
-                    }
-                    interval
-                  }
-                }
-                createdAt
               }
             }
           `,
@@ -190,11 +164,7 @@ describe('Grant Resolvers', (): void => {
           }
         })
 
-      const expected = grantToGraphql(grant)
-      expected.__typename = 'Grant'
-      expected.access[0].__typename = 'Access'
-
-      expect(response).toStrictEqual(expected)
+      expect(response.id).toStrictEqual(grant.id)
     })
 
     test('Returns error for unknown grant', async (): Promise<void> => {

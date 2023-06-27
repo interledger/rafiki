@@ -41,12 +41,3 @@ export async function createGrant(
     }
   })
 }
-
-export async function getGrantById(
-  deps: IocContract<AppServices>,
-  id: string
-): Promise<Grant | undefined> {
-  const grantService = await deps.use('grantService')
-
-  return await grantService.getByIdWithAccess(id)
-}
