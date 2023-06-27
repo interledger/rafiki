@@ -195,7 +195,7 @@ describe('Grant Service', (): void => {
     test('Can fetch a grant by id with access', async () => {
       const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
       expect(fetchedGrant?.id).toEqual(grant.id)
-      expect(Array.isArray(fetchedGrant?.access)).toBe(true)
+      expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
     })
   })
 
@@ -292,8 +292,8 @@ describe('Grant Service', (): void => {
     const paymentPointer = 'example.com/test'
     beforeEach(async () => {
       grants = await Promise.all(
-        [paymentPointer, paymentPointer, 'example.com/test3'].map(async (id) =>
-          createGrant(deps, id)
+        [paymentPointer, paymentPointer, 'example.com/test3'].map(
+          async (identifier) => createGrant(deps, identifier)
         )
       )
     })

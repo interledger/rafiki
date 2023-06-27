@@ -82,8 +82,29 @@ type Access implements Model {
   type: String!
   "Access action (create, read, list or complete)"
   actions: [String]!
+  "Payment limits"
+  limits: LimitData
   "Date-time of creation"
   createdAt: String!
+}
+
+type LimitData {
+  "Payment pointer URL of the receiver"
+  receiver: String
+  "Amount to send"
+  sendAmount: PaymentAmount
+  "Amount to receive"
+  receiveAmount: PaymentAmount
+  "Interval between payments"
+  interval: String
+}
+
+type PaymentAmount {
+  value: UInt64!
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
+  assetCode: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
+  assetScale: UInt8!
 }
 
 type RevokeGrantMutationResponse implements MutationResponse {
@@ -108,3 +129,6 @@ enum GrantState {
   "grant was rejected"
   REJECTED
 }
+
+scalar UInt8
+scalar UInt64

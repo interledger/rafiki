@@ -1,4 +1,4 @@
-import { GraphQLResolveInfo } from 'graphql';
+import { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = T | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -12,6 +12,8 @@ export type Scalars = {
   Boolean: boolean;
   Int: number;
   Float: number;
+  UInt8: any;
+  UInt64: any;
 };
 
 export type Access = Model & {
@@ -24,6 +26,8 @@ export type Access = Model & {
   id: Scalars['ID'];
   /** Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote) */
   identifier?: Maybe<Scalars['String']>;
+  /** Payment limits */
+  limits?: Maybe<LimitData>;
   /** Access type (incoming payment, outgoing payment, or quote) */
   type: Scalars['String'];
 };
@@ -73,6 +77,18 @@ export type GrantsConnection = {
   pageInfo: PageInfo;
 };
 
+export type LimitData = {
+  __typename?: 'LimitData';
+  /** Interval between payments */
+  interval?: Maybe<Scalars['String']>;
+  /** Amount to receive */
+  receiveAmount?: Maybe<PaymentAmount>;
+  /** Payment pointer URL of the receiver */
+  receiver?: Maybe<Scalars['String']>;
+  /** Amount to send */
+  sendAmount?: Maybe<PaymentAmount>;
+};
+
 export type Model = {
   createdAt: Scalars['String'];
   id: Scalars['ID'];
@@ -105,6 +121,15 @@ export type PageInfo = {
   hasPreviousPage: Scalars['Boolean'];
   /** Paginating backwards: the cursor to continue. */
   startCursor?: Maybe<Scalars['String']>;
+};
+
+export type PaymentAmount = {
+  __typename?: 'PaymentAmount';
+  /** [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD` */
+  assetCode: Scalars['String'];
+  /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
+  assetScale: Scalars['UInt8'];
+  value: Scalars['UInt64'];
 };
 
 export type Query = {
@@ -221,14 +246,18 @@ export type ResolversTypes = {
   GrantsConnection: ResolverTypeWrapper<Partial<GrantsConnection>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']>>;
   Int: ResolverTypeWrapper<Partial<Scalars['Int']>>;
+  LimitData: ResolverTypeWrapper<Partial<LimitData>>;
   Model: ResolversTypes['Access'] | ResolversTypes['Grant'];
   Mutation: ResolverTypeWrapper<{}>;
   MutationResponse: ResolversTypes['RevokeGrantMutationResponse'];
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
+  PaymentAmount: ResolverTypeWrapper<Partial<PaymentAmount>>;
   Query: ResolverTypeWrapper<{}>;
   RevokeGrantInput: ResolverTypeWrapper<Partial<RevokeGrantInput>>;
   RevokeGrantMutationResponse: ResolverTypeWrapper<Partial<RevokeGrantMutationResponse>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']>>;
+  UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']>>;
+  UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']>>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -242,14 +271,18 @@ export type ResolversParentTypes = {
   GrantsConnection: Partial<GrantsConnection>;
   ID: Partial<Scalars['ID']>;
   Int: Partial<Scalars['Int']>;
+  LimitData: Partial<LimitData>;
   Model: ResolversParentTypes['Access'] | ResolversParentTypes['Grant'];
   Mutation: {};
   MutationResponse: ResolversParentTypes['RevokeGrantMutationResponse'];
   PageInfo: Partial<PageInfo>;
+  PaymentAmount: Partial<PaymentAmount>;
   Query: {};
   RevokeGrantInput: Partial<RevokeGrantInput>;
   RevokeGrantMutationResponse: Partial<RevokeGrantMutationResponse>;
   String: Partial<Scalars['String']>;
+  UInt8: Partial<Scalars['UInt8']>;
+  UInt64: Partial<Scalars['UInt64']>;
 };
 
 export type AccessResolvers<ContextType = any, ParentType extends ResolversParentTypes['Access'] = ResolversParentTypes['Access']> = {
@@ -257,6 +290,7 @@ export type AccessResolvers<ContextType = any, ParentType extends ResolversParen
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   identifier?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  limits?: Resolver<Maybe<ResolversTypes['LimitData']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -279,6 +313,14 @@ export type GrantEdgeResolvers<ContextType = any, ParentType extends ResolversPa
 export type GrantsConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['GrantsConnection'] = ResolversParentTypes['GrantsConnection']> = {
   edges?: Resolver<Array<ResolversTypes['GrantEdge']>, ParentType, ContextType>;
   pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type LimitDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['LimitData'] = ResolversParentTypes['LimitData']> = {
+  interval?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  receiveAmount?: Resolver<Maybe<ResolversTypes['PaymentAmount']>, ParentType, ContextType>;
+  receiver?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  sendAmount?: Resolver<Maybe<ResolversTypes['PaymentAmount']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -307,6 +349,13 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type PaymentAmountResolvers<ContextType = any, ParentType extends ResolversParentTypes['PaymentAmount'] = ResolversParentTypes['PaymentAmount']> = {
+  assetCode?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  assetScale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   grant?: Resolver<ResolversTypes['Grant'], ParentType, ContextType, RequireFields<QueryGrantArgs, 'id'>>;
   grants?: Resolver<ResolversTypes['GrantsConnection'], ParentType, ContextType, Partial<QueryGrantsArgs>>;
@@ -319,16 +368,28 @@ export type RevokeGrantMutationResponseResolvers<ContextType = any, ParentType e
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export interface UInt8ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt8'], any> {
+  name: 'UInt8';
+}
+
+export interface UInt64ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt64'], any> {
+  name: 'UInt64';
+}
+
 export type Resolvers<ContextType = any> = {
   Access?: AccessResolvers<ContextType>;
   Grant?: GrantResolvers<ContextType>;
   GrantEdge?: GrantEdgeResolvers<ContextType>;
   GrantsConnection?: GrantsConnectionResolvers<ContextType>;
+  LimitData?: LimitDataResolvers<ContextType>;
   Model?: ModelResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   MutationResponse?: MutationResponseResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
+  PaymentAmount?: PaymentAmountResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RevokeGrantMutationResponse?: RevokeGrantMutationResponseResolvers<ContextType>;
+  UInt8?: GraphQLScalarType;
+  UInt64?: GraphQLScalarType;
 };
 

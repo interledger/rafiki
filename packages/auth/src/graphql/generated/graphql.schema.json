@@ -78,6 +78,18 @@
             "deprecationReason": null
           },
           {
+            "name": "limits",
+            "description": "Payment limits",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "LimitData",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "type",
             "description": "Access type (incoming payment, outgoing payment, or quote)",
             "args": [],
@@ -428,6 +440,65 @@
         "possibleTypes": null
       },
       {
+        "kind": "OBJECT",
+        "name": "LimitData",
+        "description": null,
+        "fields": [
+          {
+            "name": "interval",
+            "description": "Interval between payments",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "receiveAmount",
+            "description": "Amount to receive",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PaymentAmount",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "receiver",
+            "description": "Payment pointer URL of the receiver",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sendAmount",
+            "description": "Amount to send",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PaymentAmount",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "INTERFACE",
         "name": "Model",
         "description": null,
@@ -659,6 +730,65 @@
       },
       {
         "kind": "OBJECT",
+        "name": "PaymentAmount",
+        "description": null,
+        "fields": [
+          {
+            "name": "assetCode",
+            "description": "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "assetScale",
+            "description": "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt8",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "value",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "Query",
         "description": null,
         "fields": [
@@ -874,6 +1004,26 @@
         "kind": "SCALAR",
         "name": "String",
         "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "SCALAR",
+        "name": "UInt8",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "SCALAR",
+        "name": "UInt64",
+        "description": null,
         "fields": null,
         "inputFields": null,
         "interfaces": null,

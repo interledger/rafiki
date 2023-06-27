@@ -51,12 +51,6 @@ describe('Grant Resolvers', (): void => {
         grants.push(grant)
       }
 
-      const filter = {
-        identifier: {
-          in: ['test']
-        }
-      }
-
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -71,8 +65,57 @@ describe('Grant Resolvers', (): void => {
                 }
               }
             }
+          `
+        })
+        .then((query): GrantsConnection => {
+          if (query.data) {
+            return query.data.grants
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+      expect(query.edges).toHaveLength(2)
+      query.edges.forEach((edge, idx) => {
+        const grant = grants[idx]
+        expect(edge.cursor).toEqual(grant.id)
+        expect(edge.node).toEqual({
+          __typename: 'Grant',
+          id: grant.id,
+          state: grant.state
+        })
+      })
+    })
+
+    test('Can filter grants', async (): Promise<void> => {
+      const grants: GrantModel[] = []
+      const identifier = 'https://example.com/test'
+      for (let i = 0; i < 2; i++) {
+        const grant = await createGrant(deps, identifier)
+        grants.push(grant)
+      }
+
+      const filter = {
+        identifier: {
+          in: [identifier]
+        }
+      }
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query grants($filter: GrantFilter) {
+              grants(filter: $filter) {
+                edges {
+                  node {
+                    id
+                    state
+                  }
+                  cursor
+                }
+              }
+            }
           `,
-          variables: filter
+          variables: { filter }
         })
         .then((query): GrantsConnection => {
           if (query.data) {
@@ -116,6 +159,20 @@ describe('Grant Resolvers', (): void => {
                   createdAt
                   actions
                   type
+                  limits {
+                    receiver
+                    sendAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    receiveAmount {
+                      value
+                      assetCode
+                      assetScale
+                    }
+                    interval
+                  }
                 }
                 createdAt
               }

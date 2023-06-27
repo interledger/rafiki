@@ -109,5 +109,6 @@ export const accessToGraphql = (access: Access): SchemaAccess => ({
   actions: access.actions,
   type: access.type,
   identifier: access.identifier,
-  createdAt: access.createdAt.toISOString()
+  createdAt: access.createdAt.toISOString(),
+  limits: access.limits
 })
