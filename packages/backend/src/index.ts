@@ -215,12 +215,21 @@ export function initIocContainer(
       knex: await deps.use('knex')
     })
   })
+  container.singleton('webhookService', async (deps) => {
+    return createWebhookService({
+      config: await deps.use('config'),
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger')
+    })
+  })
   container.singleton('paymentPointerService', async (deps) => {
     const logger = await deps.use('logger')
     return await createPaymentPointerService({
+      config: await deps.use('config'),
       knex: await deps.use('knex'),
       logger: logger,
-      accountingService: await deps.use('accountingService')
+      accountingService: await deps.use('accountingService'),
+      webhookService: await deps.use('webhookService')
     })
   })
   container.singleton('spspRoutes', async (deps) => {
@@ -231,19 +240,14 @@ export function initIocContainer(
       streamServer: streamServer
     })
   })
-  container.singleton('webhookService', async (deps) => {
-    return createWebhookService({
-      config: await deps.use('config'),
-      knex: await deps.use('knex'),
-      logger: await deps.use('logger')
-    })
-  })
+
   container.singleton('incomingPaymentService', async (deps) => {
     return await createIncomingPaymentService({
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       accountingService: await deps.use('accountingService'),
-      paymentPointerService: await deps.use('paymentPointerService')
+      paymentPointerService: await deps.use('paymentPointerService'),
+      config: await deps.use('config')
     })
   })
   container.singleton('remoteIncomingPaymentService', async (deps) => {
@@ -365,7 +369,8 @@ export function initIocContainer(
       accountingService: await deps.use('accountingService'),
       receiverService: await deps.use('receiverService'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      peerService: await deps.use('peerService')
+      peerService: await deps.use('peerService'),
+      paymentPointerService: await deps.use('paymentPointerService')
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {

@@ -16,17 +16,20 @@ import {
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
-import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
+import { IncomingPaymentRoutes, CreateBody } from './routes'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { Asset } from '../../../asset/model'
+import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
+import { IncomingPaymentService } from './service'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
+  let incomingPaymentService: IncomingPaymentService
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -46,6 +49,7 @@ describe('Incoming Payment Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
+    incomingPaymentService = await deps.use('incomingPaymentService')
 
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
@@ -142,19 +146,25 @@ describe('Incoming Payment Routes', (): void => {
       }
     })
 
-    test('returns error on distant-future expiresAt', async (): Promise<void> => {
-      const ctx = setup<CreateContext<CreateBody>>({
-        reqOpts: { body: {} },
-        paymentPointer
-      })
-      ctx.request.body['expiresAt'] = new Date(
-        Date.now() + MAX_EXPIRY + 1000
-      ).toISOString()
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'expiry too high'
-      )
-    })
+    test.each(Object.values(IncomingPaymentError))(
+      'returns error on %s',
+      async (error): Promise<void> => {
+        const ctx = setup<CreateContext<CreateBody>>({
+          reqOpts: { body: {} },
+          paymentPointer
+        })
+        const createSpy = jest
+          .spyOn(incomingPaymentService, 'create')
+          .mockResolvedValueOnce(error)
+        await expect(incomingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          message: errorToMessage[error],
+          status: errorToCode[error]
+        })
+        expect(createSpy).toHaveBeenCalledWith({
+          paymentPointerId: paymentPointer.id
+        })
+      }
+    )
 
     test.each`
       client                                        | incomingAmount | description  | externalRef  | expiresAt

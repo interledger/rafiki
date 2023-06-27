@@ -46,6 +46,7 @@ import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
 import { getTests } from '../../payment_pointer/model.test'
 import { Quote } from '../../quote/model'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -498,6 +499,26 @@ describe('OutgoingPaymentService', (): void => {
           ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
         }
       )
+
+      test('fails to create on inactive payment pointer', async () => {
+        const { id: quoteId } = await createQuote(deps, {
+          paymentPointerId,
+          receiver,
+          sendAmount,
+          validDestination: false
+        })
+        const paymentPointer = await createPaymentPointer(deps)
+        const paymentPointerUpdated = await PaymentPointer.query(
+          knex
+        ).patchAndFetchById(paymentPointer.id, { deactivatedAt: new Date() })
+        assert.ok(!paymentPointerUpdated.isActive)
+        await expect(
+          outgoingPaymentService.create({
+            paymentPointerId: paymentPointer.id,
+            quoteId
+          })
+        ).resolves.toEqual(OutgoingPaymentError.InactivePaymentPointer)
+      })
 
       if (grantOption !== GrantOption.None) {
         test('fails to create if grant is locked', async () => {

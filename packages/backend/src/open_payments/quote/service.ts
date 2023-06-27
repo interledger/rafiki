@@ -94,6 +94,9 @@ async function createQuote(
   if (!paymentPointer) {
     return QuoteError.UnknownPaymentPointer
   }
+  if (!paymentPointer.isActive) {
+    return QuoteError.InactivePaymentPointer
+  }
   if (options.sendAmount) {
     if (
       options.sendAmount.value <= BigInt(0) ||
