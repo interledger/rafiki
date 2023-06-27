@@ -355,7 +355,8 @@ describe('OutgoingPaymentService', (): void => {
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
-                externalRef: '202201'
+                externalRef: '202201',
+                items: [1,2,3]
               }
             }
             if (outgoingPeer) {
