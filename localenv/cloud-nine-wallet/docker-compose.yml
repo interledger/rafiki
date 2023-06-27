@@ -71,6 +71,7 @@ services:
     networks:
       - rafiki
     ports:
+      - '3003:3003'
       - '3006:3006'
     environment:
       NODE_ENV: development
