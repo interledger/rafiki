@@ -74,7 +74,7 @@ describe('Incoming Payment Service', (): void => {
     test.each`
       client                                        | incomingAmount | expiresAt                        | metadata
       ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1,2,3] }}
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
     `('An incoming payment can be created', async (options): Promise<void> => {
       await expect(
         IncomingPaymentEvent.query(knex).where({

@@ -356,7 +356,7 @@ describe('OutgoingPaymentService', (): void => {
               metadata: {
                 description: 'rent',
                 externalRef: '202201',
-                items: [1,2,3]
+                items: [1, 2, 3]
               }
             }
             if (outgoingPeer) {
