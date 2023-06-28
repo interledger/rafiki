@@ -255,11 +255,11 @@ expiresAt<br />
 </tr>
 <tr>
 <td>
-description<br />
-<a href="scalars#string"><code>String</code></a>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
-<p>Human readable description of the incoming payment.</p>
+<p>Additional metadata associated with the incoming payment.</p>
 </td>
 </tr>
 <tr>
@@ -269,15 +269,6 @@ incomingAmount<br />
 </td>
 <td>
 <p>Maximum amount to be received</p>
-</td>
-</tr>
-<tr>
-<td>
-externalRef<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.</p>
 </td>
 </tr>
 <tr>
@@ -319,20 +310,11 @@ quoteId<br />
 </tr>
 <tr>
 <td>
-description<br />
-<a href="scalars#string"><code>String</code></a>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
-<p>Human readable description of the outgoing payment.</p>
-</td>
-</tr>
-<tr>
-<td>
-externalRef<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.</p>
+<p>Additional metadata associated with the outgoing payment.</p>
 </td>
 </tr>
 <tr>
@@ -659,15 +641,6 @@ expiresAt<br />
 </tr>
 <tr>
 <td>
-description<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>Human readable description of the incoming payment.</p>
-</td>
-</tr>
-<tr>
-<td>
 incomingAmount<br />
 <a href="inputObjects#amountinput"><code>AmountInput</code></a>
 </td>
@@ -677,11 +650,11 @@ incomingAmount<br />
 </tr>
 <tr>
 <td>
-externalRef<br />
-<a href="scalars#string"><code>String</code></a>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
-<p>A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.</p>
+<p>Additional metadata associated with the incoming payment.</p>
 </td>
 </tr>
 <tr>
@@ -747,6 +720,25 @@ idempotencyKey<br />
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## FilterString
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+in<br />
+<a href="scalars#string"><code>[String!]!</code></a>
+</td>
+<td>
+
 </td>
 </tr>
 </tbody>
@@ -1136,6 +1128,25 @@ idempotencyKey<br />
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## WebhookEventFilter
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+type<br />
+<a href="inputObjects#filterstring"><code>FilterString</code></a>
+</td>
+<td>
+
 </td>
 </tr>
 </tbody>

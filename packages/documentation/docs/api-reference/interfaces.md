@@ -17,6 +17,7 @@ sidebar_position: 5
 - [IncomingPayment](objects#incomingpayment)
 - [OutgoingPayment](objects#outgoingpayment)
 - [PaymentPointerKey](objects#paymentpointerkey)
+- [WebhookEvent](objects#webhookevent)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 

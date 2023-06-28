@@ -85,7 +85,7 @@ const config = {
       'docusaurus-graphql-plugin',
       {
         schema: '../backend/src/graphql/schema.graphql',
-        routeBasePath: '/docs/reference'
+        routeBasePath: '/docs/api-reference'
       }
     ]
   ]
