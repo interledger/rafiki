@@ -16,7 +16,14 @@ tags:
     description: Exchange rates
 paths:
   /:
-    parameters: []
+    parameters:
+      - schema:
+          type: string
+          minLength: 1
+        name: base
+        in: query
+        required: true
+        description: Base exchange rate Base exchange rate
     get:
       summary: Fetch exchange rates
       operationId: get-rates
