@@ -46,6 +46,7 @@ export interface PaymentPointerService {
   update(options: UpdateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
+  getOrPollByUrl(url: string): Promise<PaymentPointer | undefined>
   getPage(pagination?: Pagination): Promise<PaymentPointer[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
@@ -79,7 +80,8 @@ export async function createPaymentPointerService({
     create: (options) => createPaymentPointer(deps, options),
     update: (options) => updatePaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
-    getByUrl: (url) => getOrRequestPaymentPointer(deps, url),
+    getByUrl: (url) => getPaymentPointerByUrl(deps, url),
+    getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?) => getPaymentPointerPage(deps, pagination),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
@@ -173,7 +175,7 @@ async function getPaymentPointer(
     .withGraphFetched('asset')
 }
 
-async function getOrRequestPaymentPointer(
+async function getOrPollByUrl(
   deps: ServiceDependencies,
   url: string
 ): Promise<PaymentPointer | undefined> {

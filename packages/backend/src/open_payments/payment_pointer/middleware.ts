@@ -11,7 +11,7 @@ export function createPaymentPointerMiddleware() {
       const paymentPointerService = await ctx.container.use(
         'paymentPointerService'
       )
-      const paymentPointer = await paymentPointerService.getByUrl(
+      const paymentPointer = await paymentPointerService.getOrPollByUrl(
         ctx.paymentPointerUrl
       )
 
