@@ -161,8 +161,8 @@ importers:
         specifier: ^4.7.4
         version: 4.7.4(graphql@16.6.0)
       '@as-integrations/koa':
-        specifier: ^1.0.0
-        version: 1.0.0(@apollo/server@4.7.4)(koa@2.14.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@apollo/server@4.7.4)(koa@2.14.2)
       '@graphql-tools/graphql-file-loader':
         specifier: ^8.0.0
         version: 8.0.0(graphql@16.6.0)
@@ -303,8 +303,8 @@ importers:
         specifier: ^4.7.4
         version: 4.7.4(graphql@16.6.0)
       '@as-integrations/koa':
-        specifier: ^1.0.0
-        version: 1.0.0(@apollo/server@4.7.4)(koa@2.14.2)
+        specifier: ^1.1.1
+        version: 1.1.1(@apollo/server@4.7.4)(koa@2.14.2)
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -1068,8 +1068,8 @@ packages:
     transitivePeerDependencies:
       - encoding
 
-  /@as-integrations/koa@1.0.0(@apollo/server@4.7.4)(koa@2.14.2):
-    resolution: {integrity: sha512-KQQOdeagfFiGC/n/9vNgUrflajCIlr+0W7NmY+an5nw9QMHqtv93XpLJz9Z0LJEateHrIC8V/v2JnZ5F8zMzrQ==}
+  /@as-integrations/koa@1.1.1(@apollo/server@4.7.4)(koa@2.14.2):
+    resolution: {integrity: sha512-v84cVhkLUxAH9l19pajbWp/Z9ZYTzO7jkAOiY1xndTclfpXZstiWDKejZYq7xpkBtUSSAKzNyM66uox8MP9qVg==}
     engines: {node: '>=16.0'}
     peerDependencies:
       '@apollo/server': ^4.0.0
