@@ -1,6 +1,20 @@
 type Query {
   "Fetch a page of grants."
-  grants(input: PaginationInput): GrantsConnection!
+  grants(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+    "Filter grants based on specific criteria."
+    filter: GrantFilter
+  ): GrantsConnection!
+
+  "Fetch a grant"
+  grant(id: ID!): Grant!
 }
 
 type Mutation {
@@ -29,15 +43,12 @@ type GrantEdge {
   cursor: String!
 }
 
-input PaginationInput {
-  "Paginating forwards: the cursor before the the requested page."
-  after: String
-  "Paginating backwards: the cursor after the the requested page."
-  before: String
-  "Paginating forwards: The first **n** elements from the page."
-  first: Int
-  "Paginating backwards: The last **n** elements from the page."
-  last: Int
+input GrantFilter {
+  identifier: FilterString
+}
+
+input FilterString {
+  in: [String!]!
 }
 
 input RevokeGrantInput {
@@ -52,8 +63,6 @@ interface Model {
 type Grant implements Model {
   "Grant id"
   id: ID!
-  "Payment pointer of the resource owner's account"
-  identifier: String!
   "Payment pointer of the grantee's account"
   client: String!
   "Access details"
@@ -69,8 +78,33 @@ type Access implements Model {
   id: ID!
   "Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote)"
   identifier: String
+  "Access type (incoming payment, outgoing payment, or quote)"
+  type: String!
+  "Access action (create, read, list or complete)"
+  actions: [String]!
+  "Payment limits"
+  limits: LimitData
   "Date-time of creation"
   createdAt: String!
+}
+
+type LimitData {
+  "Payment pointer URL of the receiver"
+  receiver: String
+  "Amount to send"
+  sendAmount: PaymentAmount
+  "Amount to receive"
+  receiveAmount: PaymentAmount
+  "Interval between payments"
+  interval: String
+}
+
+type PaymentAmount {
+  value: UInt64!
+  "[ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`"
+  assetCode: String!
+  "Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit"
+  assetScale: UInt8!
 }
 
 type RevokeGrantMutationResponse implements MutationResponse {
@@ -95,3 +129,6 @@ enum GrantState {
   "grant was rejected"
   REJECTED
 }
+
+scalar UInt8
+scalar UInt64

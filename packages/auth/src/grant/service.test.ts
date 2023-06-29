@@ -13,6 +13,7 @@ import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
+import { createGrant } from '../tests/grant'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -190,6 +191,12 @@ describe('Grant Service', (): void => {
       await expect(grantService.get(v4())).resolves.toBeUndefined()
       await expect(grantService.getByInteraction(v4())).resolves.toBeUndefined()
     })
+
+    test('Can fetch a grant by id with access', async () => {
+      const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
+      expect(fetchedGrant?.id).toEqual(grant.id)
+      expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
+    })
   })
 
   describe('getByInteractiveSession', (): void => {
@@ -277,6 +284,47 @@ describe('Grant Service', (): void => {
       await expect(Promise.all([lock(), lock()])).rejects.toThrowError(
         /Defined query timeout/
       )
+    })
+  })
+
+  describe('getGrantsPage', (): void => {
+    let grants: Grant[] | undefined
+    const paymentPointer = 'example.com/test'
+    beforeEach(async () => {
+      grants = await Promise.all(
+        [paymentPointer, paymentPointer, 'example.com/test3'].map(
+          async (identifier) => createGrant(deps, identifier)
+        )
+      )
+    })
+    test('No filter gets all', async (): Promise<void> => {
+      const grants = await grantService.getPage()
+      const allGrants = await Grant.query()
+      expect(grants.length).toBe(allGrants.length)
+    })
+
+    test('Filter by identifier', async () => {
+      const grants = await grantService.getPage(undefined, {
+        identifier: {
+          in: [paymentPointer]
+        }
+      })
+
+      expect(grants.length).toBe(2)
+    })
+
+    test('Can paginate and filter', async (): Promise<void> => {
+      const filter = { identifier: { in: [paymentPointer] } }
+      const page = await grantService.getPage(
+        {
+          first: 1,
+          after: grants?.[0].id
+        },
+        filter
+      )
+
+      expect(page[0].id).toBe(grants?.[1].id)
+      expect(page.length).toBe(1)
     })
   })
 })

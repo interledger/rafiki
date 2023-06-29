@@ -14,9 +14,15 @@ import {
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 import { Pagination } from '../shared/baseModel'
+import { FilterString } from '../shared/filters'
+
+interface GrantFilter {
+  identifier?: FilterString
+}
 
 export interface GrantService {
   get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
+  getByIdWithAccess(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteraction(interactId: string): Promise<PendingGrant | undefined>
   getByInteractionSession(
@@ -32,7 +38,7 @@ export interface GrantService {
   rejectGrant(grantId: string): Promise<Grant | null>
   deleteGrant(continueId: string): Promise<boolean>
   deleteGrantById(grantId: string): Promise<boolean>
-  getPage(pagination?: Pagination): Promise<Grant[]>
+  getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
 
@@ -86,6 +92,7 @@ export async function createGrantService({
   }
   return {
     get: (grantId: string, trx?: Transaction) => get(grantId, trx),
+    getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
     getByInteraction: (interactId: string) => getByInteraction(interactId),
@@ -100,7 +107,7 @@ export async function createGrantService({
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
     deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
     deleteGrantById: (grantId: string) => deleteGrantById(deps, grantId),
-    getPage: (pagination?) => getGrantsPage(deps, pagination),
+    getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
   }
@@ -111,6 +118,10 @@ async function get(
   trx?: Transaction
 ): Promise<Grant | undefined> {
   return Grant.query(trx).findById(grantId)
+}
+
+async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
+  return Grant.query().findById(grantId).withGraphJoined('access')
 }
 
 async function issueGrant(
@@ -246,9 +257,16 @@ async function getByContinue(
 
 async function getGrantsPage(
   deps: ServiceDependencies,
-  pagination?: Pagination
+  pagination?: Pagination,
+  filter?: GrantFilter
 ): Promise<Grant[]> {
-  return await Grant.query(deps.knex).getPage(pagination)
+  const query = Grant.query(deps.knex).withGraphJoined('access')
+
+  if (filter?.identifier?.in && filter.identifier.in.length > 0) {
+    query.whereIn('access.identifier', filter.identifier.in)
+  }
+
+  return query.getPage(pagination)
 }
 
 async function lock(
