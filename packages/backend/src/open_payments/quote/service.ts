@@ -221,9 +221,11 @@ export async function startQuote(
   deps: ServiceDependencies,
   options: StartQuoteOptions
 ): Promise<Pay.Quote> {
-  const rates = await deps.ratesService.rates().catch((_err: Error) => {
-    throw new Error('missing rates')
-  })
+  const rates = await deps.ratesService
+    .rates(options.receiver.assetCode)
+    .catch((_err: Error) => {
+      throw new Error('missing rates')
+    })
 
   const plugin = deps.makeIlpPlugin({
     sourceAccount: options.paymentPointer,

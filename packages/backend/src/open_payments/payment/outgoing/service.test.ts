@@ -229,6 +229,7 @@ describe('OutgoingPaymentService', (): void => {
     Config.exchangeRatesUrl = 'https://test.rates'
     nock(Config.exchangeRatesUrl)
       .get('/')
+      .query(true)
       .reply(200, () => ({
         base: 'USD',
         rates: {
