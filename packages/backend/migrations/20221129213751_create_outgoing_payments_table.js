@@ -6,7 +6,8 @@ exports.up = function (knex) {
     table.string('state').notNullable().index() // OutgoingPaymentState
     table.string('error').nullable()
     table.integer('stateAttempts').notNullable().defaultTo(0)
-    table.jsonb('metadata').nullable()
+    table.string('description').nullable()
+    table.string('externalRef').nullable()
 
     table.string('client').nullable()
 

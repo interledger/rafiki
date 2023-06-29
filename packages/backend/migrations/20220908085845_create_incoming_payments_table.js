@@ -5,11 +5,12 @@ exports.up = function (knex) {
     // Open payments payment pointer id
     table.uuid('paymentPointerId').notNullable()
     table.foreign('paymentPointerId').references('paymentPointers.id')
+    table.string('description').nullable()
     table.timestamp('expiresAt').notNullable()
     table.bigInteger('incomingAmountValue').nullable()
     table.string('state').notNullable()
+    table.string('externalRef').nullable()
     table.uuid('connectionId').nullable()
-    table.jsonb('metadata').nullable()
 
     table.string('client').nullable()
 
