@@ -560,7 +560,7 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7
       typescript:
-        specifier: ^4.7.4
+        specifier: ^4.9.5
         version: 4.9.5
 
   packages/frontend:
