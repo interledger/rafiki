@@ -29,7 +29,9 @@ export default function Transactions() {
           <tr key={trx.id}>
             <td>{trx.createdAt}</td>
             <td>{trx.type}</td>
-            <td><code>{JSON.stringify(trx.metadata)}</code></td>
+            <td>
+              <code>{JSON.stringify(trx.metadata)}</code>
+            </td>
             <td>
               {(Number(trx.amountValue) / 100).toFixed(trx.assetScale)}{' '}
               {trx.assetCode}
