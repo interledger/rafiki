@@ -22,12 +22,14 @@ export default function Transactions() {
         <tr>
           <th>Date</th>
           <th>Type</th>
+          <th>Metadata</th>
           <th>Amount</th>
         </tr>
         {transactions.map((trx) => (
           <tr key={trx.id}>
             <td>{trx.createdAt}</td>
             <td>{trx.type}</td>
+            <td><code>{JSON.stringify(trx.metadata)}</code></td>
             <td>
               {(Number(trx.amountValue) / 100).toFixed(trx.assetScale)}{' '}
               {trx.assetCode}
