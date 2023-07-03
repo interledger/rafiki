@@ -21,6 +21,7 @@
     "isbot": "^3.6.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "uuid": "^9.0.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
@@ -29,6 +30,7 @@
     "@tailwindcss/forms": "^0.5.3",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
+    "@types/uuid": "^9.0.1",
     "autoprefixer": "^10.4.14",
     "eslint": "^8.43.0",
     "eslint-plugin-jsx-a11y": "^6.7.1",
