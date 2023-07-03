@@ -5,7 +5,7 @@ import {
 } from '@apollo/client'
 import { gql } from '@apollo/client'
 
-import { Model, PageInfo, PaginationInput } from '../generated/graphql'
+import { Model, PageInfo } from '../generated/graphql'
 import { BaseModel } from '../../shared/baseModel'
 
 interface PageTestsOptions<Type> {
@@ -152,30 +152,26 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
 
     test('pageInfo is correct on pagination from start', async (): Promise<void> => {
       const models = await createModels()
-      const input: PaginationInput = {
-        first: 10
-      }
       const query = await apolloClient
         .query({
           query: parent
             ? gql`
-              query Page($input: PaginationInput!) {
+              query Page($id: String!) {
                 ${parent.query}(id: $id) {
-                  ${pagedQuery}(input: $input) {
+                  ${pagedQuery}(first: 10) {
                     ${queryFields}
                   }
                 }
               }`
             : gql`
-              query Page($input: PaginationInput!) {
-                ${pagedQuery}(input: $input) {
+              query Page {
+                ${pagedQuery}(first: 10) {
                   ${queryFields}
                 }
               }
             `,
           variables: {
-            id: parent?.getId(),
-            input
+            id: parent?.getId()
           }
         })
         .then(toConnection)
@@ -192,20 +188,20 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
         .query({
           query: parent
             ? gql`
-                  query Page($id: String!, $after: String!) {
-                    ${parent.query}(id: $id) {
-                      ${pagedQuery}(input: {after: $after}) {
-                        ${queryFields}
-                      }
-                    }
-                  }`
-            : gql`
-                  query Page($after: String!) {
-                    ${pagedQuery}(input: {after: $after}) {
-                      ${queryFields}
-                    }
+              query Page($id: String!, $after: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery}(after: $after) {
+                    ${queryFields}
                   }
-                `,
+                }
+              }`
+            : gql`
+              query Page($after: String!) {
+                ${pagedQuery}(after: $after) {
+                  ${queryFields}
+                }
+              }
+            `,
           variables: {
             id: parent?.getId(),
             after: models[19].id
@@ -225,20 +221,20 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
         .query({
           query: parent
             ? gql`
-                  query Page($id: String!, $after: String!) {
-                    ${parent.query}(id: $id) {
-                      ${pagedQuery}(input: {after: $after, first: 10}) {
-                        ${queryFields}
-                      }
-                    }
-                  }`
-            : gql`
-                  query Page($after: String!) {
-                    ${pagedQuery}(input: {after: $after, first: 10}) {
-                      ${queryFields}
-                    }
+              query Page($id: String!, $after: String!) {
+                ${parent.query}(id: $id) {
+                  ${pagedQuery}(after: $after, first: 10) {
+                    ${queryFields}
                   }
-                `,
+                }
+              }`
+            : gql`
+              query Page($after: String!) {
+                ${pagedQuery}(after: $after, first: 10) {
+                  ${queryFields}
+                }
+              }
+            `,
           variables: {
             id: parent?.getId(),
             after: models[44].id

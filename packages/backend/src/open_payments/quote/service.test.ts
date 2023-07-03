@@ -72,6 +72,7 @@ describe('QuoteService', (): void => {
     Config.signatureSecret = SIGNATURE_SECRET
     nock(Config.exchangeRatesUrl)
       .get('/')
+      .query(true)
       .reply(200, () => ({
         base: 'USD',
         rates: {

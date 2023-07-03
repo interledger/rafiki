@@ -18,7 +18,7 @@
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
     "@apollo/server": "^4.7.4",
-    "@as-integrations/koa": "^1.0.0",
+    "@as-integrations/koa": "^1.1.1",
     "graphql": "^16.6.0",
     "@graphql-tools/graphql-file-loader": "^8.0.0",
     "@graphql-tools/load": "^8.0.0",
@@ -58,7 +58,7 @@
     "@types/koa-session": "^6.4.1",
     "@types/koa__cors": "^4.0.0",
     "@types/koa__router": "^12.0.0",
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^9.0.2",
     "cross-fetch": "^3.1.6",
     "jest-openapi": "^0.14.2",
     "nock": "^13.3.1",

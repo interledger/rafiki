@@ -28,7 +28,7 @@
     "@types/react": "^18.2.6",
     "@types/rosie": "^0.0.42",
     "@types/tmp": "^0.2.3",
-    "@types/uuid": "^9.0.1",
+    "@types/uuid": "^9.0.2",
     "cross-fetch": "^3.1.6",
     "ilp-protocol-ildcp": "^2.2.3",
     "ilp-protocol-stream": "^2.7.1",
@@ -46,7 +46,7 @@
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
     "@apollo/server": "^4.7.4",
-    "@as-integrations/koa": "^1.0.0",
+    "@as-integrations/koa": "^1.1.1",
     "@faker-js/faker": "^8.0.2",
     "@interledger/http-signature-utils": "1.0.3",
     "@interledger/open-payments": "1.0.3",

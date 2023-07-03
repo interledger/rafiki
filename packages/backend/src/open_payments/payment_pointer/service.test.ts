@@ -282,20 +282,42 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('Get Payment Pointer By Url', (): void => {
+    test('can retrieve payment pointer by url', async (): Promise<void> => {
+      const paymentPointer = await createPaymentPointer(deps)
+      await expect(
+        paymentPointerService.getByUrl(paymentPointer.url)
+      ).resolves.toEqual(paymentPointer)
+
+      await expect(
+        paymentPointerService.getByUrl(paymentPointer.url + '/path')
+      ).resolves.toBeUndefined()
+
+      await expect(
+        paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
+      ).resolves.toBeUndefined()
+    })
+
+    test(
+      'returns undefined if no payment pointer exists with url',
+      withConfigOverride(
+        () => config,
+        { paymentPointerLookupTimeoutMs: 1 },
+        async (): Promise<void> => {
+          await expect(
+            paymentPointerService.getByUrl('test.nope')
+          ).resolves.toBeUndefined()
+        }
+      )
+    )
+  })
+
+  describe('Get Or Poll Payment Pointer By Url', (): void => {
     describe('existing payment pointer', (): void => {
       test('can retrieve payment pointer by url', async (): Promise<void> => {
         const paymentPointer = await createPaymentPointer(deps)
         await expect(
-          paymentPointerService.getByUrl(paymentPointer.url)
+          paymentPointerService.getOrPollByUrl(paymentPointer.url)
         ).resolves.toEqual(paymentPointer)
-
-        await expect(
-          paymentPointerService.getByUrl(paymentPointer.url + '/path')
-        ).resolves.toBeUndefined()
-
-        await expect(
-          paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
-        ).resolves.toBeUndefined()
       })
     })
 
@@ -308,7 +330,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
           async (): Promise<void> => {
             const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
             await expect(
-              paymentPointerService.getByUrl(paymentPointerUrl)
+              paymentPointerService.getOrPollByUrl(paymentPointerUrl)
             ).resolves.toBeUndefined()
 
             const paymentPointerNotFoundEvents =
@@ -331,9 +353,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
           async (): Promise<void> => {
             const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
 
-            const [getByUrlPaymentPointer, createdPaymentPointer] =
+            const [getOrPollByUrlPaymentPointer, createdPaymentPointer] =
               await Promise.all([
-                paymentPointerService.getByUrl(paymentPointerUrl),
+                paymentPointerService.getOrPollByUrl(paymentPointerUrl),
                 (async () => {
                   await sleep(5)
                   return createPaymentPointer(deps, {
@@ -342,8 +364,8 @@ describe('Open Payments Payment Pointer Service', (): void => {
                 })()
               ])
 
-            assert.ok(getByUrlPaymentPointer)
-            expect(getByUrlPaymentPointer).toEqual(createdPaymentPointer)
+            assert.ok(getOrPollByUrlPaymentPointer)
+            expect(getOrPollByUrlPaymentPointer).toEqual(createdPaymentPointer)
           }
         )
       )
