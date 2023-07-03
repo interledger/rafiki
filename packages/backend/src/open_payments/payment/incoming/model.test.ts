@@ -36,7 +36,7 @@ describe('Incoming Payment Model', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description: 'my payment'
+        metadata: { description: 'my payment' }
       })
 
       expect(incomingPayment.toOpenPaymentsType(paymentPointer)).toEqual({
@@ -48,8 +48,7 @@ describe('Incoming Payment Model', (): void => {
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
         expiresAt: incomingPayment.expiresAt.toISOString(),
-        description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined,
+        metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString()
       })
@@ -59,7 +58,7 @@ describe('Incoming Payment Model', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description: 'my payment'
+        metadata: { description: 'my payment' }
       })
 
       const connection = `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
@@ -75,8 +74,7 @@ describe('Incoming Payment Model', (): void => {
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
         expiresAt: incomingPayment.expiresAt.toISOString(),
-        description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined,
+        metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
         ilpStreamConnection: connection
@@ -87,7 +85,7 @@ describe('Incoming Payment Model', (): void => {
       const paymentPointer = await createPaymentPointer(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description: 'my payment'
+        metadata: { description: 'my payment' }
       })
 
       const connection = Connection.fromPayment({
@@ -110,8 +108,7 @@ describe('Incoming Payment Model', (): void => {
           ? serializeAmount(incomingPayment.incomingAmount)
           : undefined,
         expiresAt: incomingPayment.expiresAt.toISOString(),
-        description: incomingPayment.description ?? undefined,
-        externalRef: incomingPayment.externalRef ?? undefined,
+        metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
         ilpStreamConnection: {

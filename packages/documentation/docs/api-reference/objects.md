@@ -84,6 +84,15 @@ scale<br />
 </tr>
 <tr>
 <td>
+liquidity<br />
+<a href="scalars#uint64"><code>UInt64</code></a>
+</td>
+<td>
+<p>Available liquidity</p>
+</td>
+</tr>
+<tr>
+<td>
 withdrawalThreshold<br />
 <a href="scalars#uint64"><code>UInt64</code></a>
 </td>
@@ -560,20 +569,11 @@ receivedAmount<br />
 </tr>
 <tr>
 <td>
-description<br />
-<a href="scalars#string"><code>String</code></a>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
-<p>Human readable description of the incoming payment.</p>
-</td>
-</tr>
-<tr>
-<td>
-externalRef<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.</p>
+<p>Additional metadata associated with the incoming payment.</p>
 </td>
 </tr>
 <tr>
@@ -880,20 +880,11 @@ receiver<br />
 </tr>
 <tr>
 <td>
-description<br />
-<a href="scalars#string"><code>String</code></a>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
-<p>Human readable description of the outgoing payment.</p>
-</td>
-</tr>
-<tr>
-<td>
-externalRef<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.</p>
+<p>Additional metadata associated with the outgoing payment.</p>
 </td>
 </tr>
 <tr>
@@ -1304,6 +1295,34 @@ status<br />
 </tbody>
 </table>
 
+## PaymentPointerEdge
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+node<br />
+<a href="objects#paymentpointer"><code>PaymentPointer!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+cursor<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## PaymentPointerKey
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
@@ -1358,6 +1377,34 @@ createdAt<br />
 </td>
 <td>
 <p>Date-time of creation</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## PaymentPointersConnection
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+pageInfo<br />
+<a href="objects#pageinfo"><code>PageInfo!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+edges<br />
+<a href="objects#paymentpointeredge"><code>[PaymentPointerEdge!]!</code></a>
+</td>
+<td>
+
 </td>
 </tr>
 </tbody>
@@ -1522,6 +1569,15 @@ name<br />
 </td>
 <td>
 <p>Peer&#39;s public name</p>
+</td>
+</tr>
+<tr>
+<td>
+liquidity<br />
+<a href="scalars#uint64"><code>UInt64</code></a>
+</td>
+<td>
+<p>Available liquidity</p>
 </td>
 </tr>
 <tr>
@@ -1866,20 +1922,11 @@ expiresAt<br />
 </tr>
 <tr>
 <td>
-description<br />
-<a href="scalars#string"><code>String</code></a>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
-<p>Human readable description of the incoming payment.</p>
-</td>
-</tr>
-<tr>
-<td>
-externalRef<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-<p>A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number.</p>
+<p>Additional metadata associated with the incoming payment.</p>
 </td>
 </tr>
 <tr>
@@ -2136,6 +2183,112 @@ message<br />
 <td>
 peer<br />
 <a href="objects#peer"><code>Peer</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## WebhookEvent
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [Model](interfaces#model)
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+id<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Event id</p>
+</td>
+</tr>
+<tr>
+<td>
+type<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>Type of event</p>
+</td>
+</tr>
+<tr>
+<td>
+data<br />
+<a href="scalars#jsonobject"><code>JSONObject!</code></a>
+</td>
+<td>
+<p>Stringified JSON data</p>
+</td>
+</tr>
+<tr>
+<td>
+createdAt<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>Date-time of creation</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## WebhookEventsConnection
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+pageInfo<br />
+<a href="objects#pageinfo"><code>PageInfo!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+edges<br />
+<a href="objects#webhookeventsedge"><code>[WebhookEventsEdge!]!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## WebhookEventsEdge
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+node<br />
+<a href="objects#webhookevent"><code>WebhookEvent!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+cursor<br />
+<a href="scalars#string"><code>String!</code></a>
 </td>
 <td>
 

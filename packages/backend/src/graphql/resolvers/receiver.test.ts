@@ -40,23 +40,17 @@ describe('Receiver Resolver', (): void => {
     const paymentPointer = mockPaymentPointer()
 
     test.each`
-      incomingAmount | expiresAt                        | description                | externalRef
-      ${undefined}   | ${undefined}                     | ${undefined}               | ${undefined}
-      ${amount}      | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      incomingAmount | expiresAt                        | metadata
+      ${undefined}   | ${undefined}                     | ${undefined}
+      ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
     `(
       'creates receiver ($#)',
-      async ({
-        description,
-        externalRef,
-        expiresAt,
-        incomingAmount
-      }): Promise<void> => {
+      async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
         const receiver = Receiver.fromIncomingPayment(
           mockIncomingPaymentWithConnection({
             id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
             paymentPointer: paymentPointer.id,
-            description,
-            externalRef,
+            metadata,
             expiresAt: expiresAt?.toISOString(),
             incomingAmount: incomingAmount
               ? serializeAmount(incomingAmount)
@@ -72,8 +66,7 @@ describe('Receiver Resolver', (): void => {
           paymentPointerUrl: paymentPointer.id,
           incomingAmount,
           expiresAt,
-          description,
-          externalRef
+          metadata
         }
 
         const query = await appContainer.apolloClient
@@ -99,8 +92,7 @@ describe('Receiver Resolver', (): void => {
                       assetCode
                       assetScale
                     }
-                    description
-                    externalRef
+                    metadata
                     createdAt
                     updatedAt
                   }
@@ -135,8 +127,7 @@ describe('Receiver Resolver', (): void => {
               __typename: 'Amount',
               ...serializeAmount(receiver.incomingPayment.receivedAmount)
             },
-            description: receiver.incomingPayment?.description || null,
-            externalRef: receiver.incomingPayment?.externalRef || null,
+            metadata: receiver.incomingPayment?.metadata || null,
             createdAt: receiver.incomingPayment?.createdAt.toISOString(),
             updatedAt: receiver.incomingPayment?.updatedAt.toISOString()
           }
@@ -176,8 +167,7 @@ describe('Receiver Resolver', (): void => {
                     assetCode
                     assetScale
                   }
-                  description
-                  externalRef
+                  metadata
                   createdAt
                   updatedAt
                 }
@@ -232,8 +222,7 @@ describe('Receiver Resolver', (): void => {
                     assetCode
                     assetScale
                   }
-                  description
-                  externalRef
+                  metadata
                   createdAt
                   updatedAt
                 }

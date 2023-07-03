@@ -27,10 +27,9 @@ export const RETRY_BACKOFF_MS = 10_000
 export interface CreateIncomingPaymentOptions {
   paymentPointerId: string
   client?: string
-  description?: string
   expiresAt?: Date
   incomingAmount?: Amount
-  externalRef?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface IncomingPaymentService
@@ -99,10 +98,9 @@ async function createIncomingPayment(
   {
     paymentPointerId,
     client,
-    description,
     expiresAt,
     incomingAmount,
-    externalRef
+    metadata
   }: CreateIncomingPaymentOptions,
   trx?: Knex.Transaction
 ): Promise<IncomingPayment | IncomingPaymentError> {
@@ -137,10 +135,9 @@ async function createIncomingPayment(
       paymentPointerId,
       client,
       assetId: paymentPointer.asset.id,
-      description,
       expiresAt,
       incomingAmount,
-      externalRef,
+      metadata,
       state: IncomingPaymentState.Pending,
       processAt: expiresAt
     })

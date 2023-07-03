@@ -354,8 +354,11 @@ describe('OutgoingPaymentService', (): void => {
             const options = {
               paymentPointerId,
               quoteId: quote.id,
-              description: 'rent',
-              externalRef: '202201'
+              metadata: {
+                description: 'rent',
+                externalRef: '202201',
+                items: [1, 2, 3]
+              }
             }
             if (outgoingPeer) {
               jest
@@ -370,8 +373,7 @@ describe('OutgoingPaymentService', (): void => {
               receiver: quote.receiver,
               sendAmount: quote.sendAmount,
               receiveAmount: quote.receiveAmount,
-              description: options.description,
-              externalRef: options.externalRef,
+              metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
               asset,
               quote,
@@ -541,8 +543,10 @@ describe('OutgoingPaymentService', (): void => {
             return {
               paymentPointerId,
               quoteId: quote.id,
-              description: 'rent',
-              externalRef: '202201',
+              metadata: {
+                description: 'rent',
+                externalRef: '202201'
+              },
               grant,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               callback: (f: any) => setTimeout(f, 5000)
@@ -584,8 +588,10 @@ describe('OutgoingPaymentService', (): void => {
             options = {
               paymentPointerId,
               quoteId: quote.id,
-              description: 'rent',
-              externalRef: '202201',
+              metadata: {
+                description: 'rent',
+                externalRef: '202201'
+              },
               client
             }
             const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)

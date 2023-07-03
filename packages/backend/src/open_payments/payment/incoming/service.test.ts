@@ -72,9 +72,9 @@ describe('Incoming Payment Service', (): void => {
     })
 
     test.each`
-      client                                        | incomingAmount | expiresAt                        | description                | externalRef
-      ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}               | ${undefined}
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${'Test incoming payment'} | ${'#123'}
+      client                                        | incomingAmount | expiresAt                        | metadata
+      ${undefined}                                  | ${false}       | ${undefined}                     | ${undefined}
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123', items: [1, 2, 3] }}
     `('An incoming payment can be created', async (options): Promise<void> => {
       await expect(
         IncomingPaymentEvent.query(knex).where({
@@ -90,7 +90,8 @@ describe('Incoming Payment Service', (): void => {
       expect(incomingPayment).toMatchObject({
         id: incomingPayment.id,
         asset,
-        processAt: new Date(incomingPayment.expiresAt.getTime())
+        processAt: new Date(incomingPayment.expiresAt.getTime()),
+        metadata: options.metadata ?? null
       })
       await expect(
         IncomingPaymentEvent.query(knex).where({
@@ -109,8 +110,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.UnknownPaymentPointer)
     })
@@ -125,8 +128,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -138,8 +143,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: (asset.scale + 1) % 256
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -154,8 +161,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
       await expect(
@@ -167,8 +176,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InvalidAmount)
     })
@@ -183,8 +194,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() - 40_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
@@ -204,8 +217,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InactivePaymentPointer)
     })
@@ -222,8 +237,10 @@ describe('Incoming Payment Service', (): void => {
           expiresAt: new Date(
             Date.now() + config.incomingPaymentExpiryMaxMs + 10_000
           ),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
       ).resolves.toBe(IncomingPaymentError.InvalidExpiry)
     })
@@ -241,8 +258,10 @@ describe('Incoming Payment Service', (): void => {
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
-          description: 'Test incoming payment',
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         }),
       get: (options) => incomingPaymentService.get(options),
       list: (options) => incomingPaymentService.getPaymentPointerPage(options)
@@ -255,14 +274,16 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       const incomingPaymentOrError = await incomingPaymentService.create({
         paymentPointerId,
-        description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
         expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123'
+        metadata: {
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        }
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       incomingPayment = incomingPaymentOrError
@@ -324,9 +345,11 @@ describe('Incoming Payment Service', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        description: 'Test incoming payment',
         expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123'
+        metadata: {
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        }
       })
       assert.ok(!isIncomingPaymentError(incomingPaymentOrError))
       const incomingPaymentId = incomingPaymentOrError.id
@@ -351,9 +374,11 @@ describe('Incoming Payment Service', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          description: 'Test incoming payment',
           expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
         await expect(
           accountingService.createDeposit({
@@ -388,9 +413,11 @@ describe('Incoming Payment Service', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          description: 'Test incoming payment',
           expiresAt: new Date(Date.now() + 30_000),
-          externalRef: '#123'
+          metadata: {
+            description: 'Test incoming payment',
+            externalRef: '#123'
+          }
         })
         jest.useFakeTimers()
         jest.setSystemTime(incomingPayment.expiresAt)
@@ -423,8 +450,10 @@ describe('Incoming Payment Service', (): void => {
               assetScale: asset.scale
             },
             expiresAt,
-            description: 'Test incoming payment',
-            externalRef: '#123'
+            metadata: {
+              description: 'Test incoming payment',
+              externalRef: '#123'
+            }
           })
           await expect(
             accountingService.createDeposit({
@@ -501,14 +530,16 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId,
-        description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
         expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123'
+        metadata: {
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        }
       })
     })
     test('updates state of pending incoming payment to complete', async (): Promise<void> => {
@@ -635,14 +666,16 @@ describe('Incoming Payment Service', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = (await incomingPaymentService.create({
         paymentPointerId,
-        description: 'Test incoming payment',
         incomingAmount: {
           value: BigInt(123),
           assetCode: asset.code,
           assetScale: asset.scale
         },
         expiresAt: new Date(Date.now() + 30_000),
-        externalRef: '#123'
+        metadata: {
+          description: 'Test incoming payment',
+          externalRef: '#123'
+        }
       })) as IncomingPayment
       assert.ok(!isIncomingPaymentError(incomingPayment))
     })

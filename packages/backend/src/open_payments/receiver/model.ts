@@ -90,8 +90,7 @@ export class Receiver extends ConnectionBase {
         expiresAt,
         receivedAmount,
         incomingAmount,
-        description: incomingPayment.description,
-        externalRef: incomingPayment.externalRef,
+        metadata: incomingPayment.metadata,
         createdAt: new Date(incomingPayment.createdAt),
         updatedAt: new Date(incomingPayment.updatedAt)
       }

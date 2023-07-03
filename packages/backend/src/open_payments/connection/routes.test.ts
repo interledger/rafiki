@@ -47,14 +47,16 @@ describe('Connection Routes', (): void => {
     paymentPointer = await createPaymentPointer(deps, { assetId: asset.id })
     incomingPayment = await createIncomingPayment(deps, {
       paymentPointerId: paymentPointer.id,
-      description: 'hello world',
       expiresAt: new Date(Date.now() + 30_000),
       incomingAmount: {
         value: BigInt('123'),
         assetScale: asset.scale,
         assetCode: asset.code
       },
-      externalRef: '#123'
+      metadata: {
+        description: 'hello world',
+        externalRef: '#123'
+      }
     })
   })
 

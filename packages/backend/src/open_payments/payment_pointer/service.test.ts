@@ -213,9 +213,11 @@ describe('Open Payments Payment Pointer Service', (): void => {
                 assetCode: paymentPointer.asset.code,
                 assetScale: paymentPointer.asset.scale
               },
-              description: 'Test incoming payment',
               expiresAt,
-              externalRef: '#123'
+              metadata: {
+                description: 'Test incoming payment',
+                externalRef: '#123'
+              }
             })
 
             await paymentPointerService.update({
@@ -253,9 +255,11 @@ describe('Open Payments Payment Pointer Service', (): void => {
                 assetCode: paymentPointer.asset.code,
                 assetScale: paymentPointer.asset.scale
               },
-              description: 'Test incoming payment',
               expiresAt,
-              externalRef: '#123'
+              metadata: {
+                description: 'Test incoming payment',
+                externalRef: '#123'
+              }
             })
 
             await paymentPointerService.update({

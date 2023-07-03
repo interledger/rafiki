@@ -124,10 +124,9 @@ components:
               $ref: ./schemas.yaml#/components/schemas/amount
             receivedAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            description:
-              type: string
-            externalRef:
-              type: string
+            metadata:
+              type: object
+              additionalProperties: true
             createdAt:
               type: string
               format: date-time
@@ -188,10 +187,9 @@ components:
               $ref: ./schemas.yaml#/components/schemas/amount
             sentAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            description:
-              type: string
-            externalRef:
-              type: string
+            metadata:
+              type: object
+              additionalProperties: true
             createdAt:
               type: string
               format: date-time

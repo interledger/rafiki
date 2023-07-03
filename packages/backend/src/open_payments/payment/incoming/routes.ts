@@ -81,10 +81,9 @@ async function getIncomingPayment(
 }
 
 export type CreateBody = {
-  description?: string
   expiresAt?: string
   incomingAmount?: AmountJSON
-  externalRef?: string
+  metadata?: Record<string, unknown>
 }
 
 async function createIncomingPayment(
@@ -101,8 +100,7 @@ async function createIncomingPayment(
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     paymentPointerId: ctx.paymentPointer.id,
     client: ctx.client,
-    description: body.description,
-    externalRef: body.externalRef,
+    metadata: body.metadata,
     expiresAt,
     incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount)
   })
