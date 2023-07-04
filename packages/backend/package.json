@@ -67,7 +67,7 @@
     "fishery": "^2.2.2",
     "graphql": "^16.6.0",
     "graphql-middleware": "^6.1.34",
-    "graphql-scalars": "^1.22.1",
+    "graphql-scalars": "^1.22.2",
     "graphql-tools": "^9.0.0",
     "ilp-packet": "3.1.4-alpha.2",
     "ilp-protocol-ccp": "^1.2.3",
