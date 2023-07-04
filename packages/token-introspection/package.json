@@ -22,7 +22,7 @@
     "uuid": "^9.0.0"
   },
   "dependencies": {
-    "@interledger/openapi": "1.0.2",
+    "@interledger/openapi": "1.0.3",
     "axios": "^1.4.0",
     "pino": "^8.14.1"
   }
