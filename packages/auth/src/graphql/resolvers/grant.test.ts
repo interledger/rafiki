@@ -89,7 +89,7 @@ describe('Grant Resolvers', (): void => {
       const grants: GrantModel[] = []
       const identifier = 'https://example.com/test'
       for (let i = 0; i < 2; i++) {
-        const grant = await createGrant(deps, identifier)
+        const grant = await createGrant(deps, { identifier })
         grants.push(grant)
       }
 
