@@ -40,7 +40,7 @@
     "@interledger/openapi": "1.0.3",
     "pg": "^8.11.0",
     "pino": "^8.14.1",
-    "pino-pretty": "^10.0.0",
+    "pino-pretty": "^10.0.1",
     "testcontainers": "^9.8.0",
     "token-introspection": "workspace:../token-introspection",
     "uuid": "^9.0.0"
