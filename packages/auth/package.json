@@ -38,7 +38,7 @@
     "objection-db-errors": "^1.1.2",
     "@interledger/open-payments": "1.0.3",
     "@interledger/openapi": "1.0.3",
-    "pg": "^8.11.0",
+    "pg": "^8.11.1",
     "pino": "^8.14.1",
     "pino-pretty": "^10.0.0",
     "testcontainers": "^9.8.0",
