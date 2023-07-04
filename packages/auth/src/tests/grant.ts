@@ -1,5 +1,4 @@
 import { faker } from '@faker-js/faker'
-import { v4 as uuid } from 'uuid'
 import { FinishMethod, Grant, StartMethod } from '../grant/model'
 import { generateNonce } from '../shared/utils'
 import { AccessAction, AccessType } from '@interledger/open-payments'
@@ -8,13 +7,13 @@ import { AppServices } from '../app'
 
 export async function createGrant(
   deps: IocContract<AppServices>,
-  identifier?: string
+  options?: { identifier?: string }
 ): Promise<Grant> {
   const grantService = await deps.use('grantService')
   const CLIENT = faker.internet.url({ appendSlash: false })
   const BASE_GRANT_ACCESS = {
     actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
-    identifier: identifier ?? `https://example.com/${uuid()}`
+    identifier: options?.identifier
   }
 
   const BASE_GRANT_REQUEST = {

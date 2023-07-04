@@ -288,15 +288,23 @@ describe('Grant Service', (): void => {
   })
 
   describe('getGrantsPage', (): void => {
-    let grants: Grant[] | undefined
+    let grants: Grant[] = []
     const paymentPointer = 'example.com/test'
+
     beforeEach(async () => {
-      grants = await Promise.all(
-        [paymentPointer, paymentPointer, 'example.com/test3'].map(
-          async (identifier) => createGrant(deps, identifier)
-        )
-      )
+      for (const identifier of [
+        paymentPointer,
+        paymentPointer,
+        'example.com/test3'
+      ]) {
+        grants.push(await createGrant(deps, { identifier }))
+      }
     })
+
+    afterEach(async () => {
+      grants = []
+    })
+
     test('No filter gets all', async (): Promise<void> => {
       const grants = await grantService.getPage()
       const allGrants = await Grant.query()
