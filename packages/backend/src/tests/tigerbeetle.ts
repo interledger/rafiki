@@ -28,7 +28,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     .withAddedCapabilities('IPC_LOCK')
     .withCommand([
       'format',
-      '--cluster=' + tigerbeetleClusterId,
+      `--cluster=${tigerbeetleClusterId}`,
       '--replica=0',
       '--replica-count=1',
       `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
@@ -59,7 +59,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     .withAddedCapabilities('IPC_LOCK')
     .withCommand([
       'start',
-      '--addresses=0.0.0.0:' + TIGERBEETLE_PORT,
+      `--addresses=0.0.0.0:${TIGERBEETLE_PORT}`,
       `${TIGERBEETLE_DIR}/${tigerbeetleFile}`
     ])
     .withWaitStrategy(
