@@ -230,8 +230,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       testcontainers:
-        specifier: ^9.8.0
-        version: 9.8.0
+        specifier: ^9.9.1
+        version: 9.9.1
       token-introspection:
         specifier: workspace:../token-introspection
         version: link:../token-introspection
@@ -508,8 +508,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       testcontainers:
-        specifier: ^9.8.0
-        version: 9.8.0
+        specifier: ^9.9.1
+        version: 9.9.1
       tmp:
         specifier: ^0.2.1
         version: 0.2.1
@@ -5671,8 +5671,8 @@ packages:
       '@types/node': 18.11.9
       '@types/ssh2': 1.11.5
 
-  /@types/dockerode@3.3.16:
-    resolution: {integrity: sha512-ZAX2VrkTjwjk1808T8m6vMr+CFXSLiDD+tkEkLThI+v83AfzlYQZEWfZKwFyk1PWopSXkdDunmIhrF7sxt+zWg==}
+  /@types/dockerode@3.3.19:
+    resolution: {integrity: sha512-7CC5yIpQi+bHXwDK43b/deYXteP3Lem9gdocVVHJPSRJJLMfbiOchQV3rDmAPkMw+n3GIVj7m1six3JW+VcwwA==}
     dependencies:
       '@types/docker-modem': 3.0.2
       '@types/node': 18.11.9
@@ -9134,11 +9134,11 @@ packages:
       '@leichtgewicht/ip-codec': 2.0.4
     dev: false
 
-  /docker-compose@0.23.19:
-    resolution: {integrity: sha512-v5vNLIdUqwj4my80wxFDkNH+4S85zsRuH29SO7dCWVWPCMt/ohZBsGN6g6KXWifT0pzQ7uOxqEKCYCDPJ8Vz4g==}
+  /docker-compose@0.24.1:
+    resolution: {integrity: sha512-CVphzCi0Hmw/0CHlAzgiwhLsJjFRqnvpBYMYbf63bz6MON69ElgrfrgQTmgPtEjbifjgaptu3+Gea62vI+9jiA==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      yaml: 1.10.2
+      yaml: 2.3.1
 
   /docker-modem@3.0.6:
     resolution: {integrity: sha512-h0Ow21gclbYsZ3mkHDfsYNDqtRhXS8fXr51bU0qr1dxgTMJj0XufbzX+jhNOvA8KuEEzn6JbvLVhXyv+fny9Uw==}
@@ -13950,17 +13950,6 @@ packages:
     dependencies:
       whatwg-url: 5.0.0
 
-  /node-fetch@2.6.9:
-    resolution: {integrity: sha512-DJm/CJkZkRjKKj4Zi4BsKVZh3ValV5IR5s7LVZnW+6YMh0W1BfNA8XSs6DLMGYlId5F3KnA70uu2qepcR08Qqg==}
-    engines: {node: 4.x || >=6.0.0}
-    peerDependencies:
-      encoding: ^0.1.0
-    peerDependenciesMeta:
-      encoding:
-        optional: true
-    dependencies:
-      whatwg-url: 5.0.0
-
   /node-forge@1.3.1:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
     engines: {node: '>= 6.13.0'}
@@ -17658,24 +17647,25 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers@9.8.0:
-    resolution: {integrity: sha512-61IlJeVrUbS5JlAgM/N0koFnRxsID+vDap7CUmgaHXSGxmFofCiokB7kD96c1BtDWGOznrd7lTAPGSkd3RVkPA==}
+  /testcontainers@9.9.1:
+    resolution: {integrity: sha512-44iDiyK0JzK5FbqdrKjmE/8QSZhvCFxh0d/OfG+R9fkznU5KVCYeeUsPULkVRIi210X4FAitSXra1ZU591Zlqw==}
     engines: {node: '>= 10.16'}
     dependencies:
       '@balena/dockerignore': 1.0.2
       '@types/archiver': 5.3.2
-      '@types/dockerode': 3.3.16
+      '@types/dockerode': 3.3.19
       archiver: 5.3.1
       async-lock: 1.4.0
       byline: 5.0.0
       debug: 4.3.4(supports-color@9.3.1)
-      docker-compose: 0.23.19
+      docker-compose: 0.24.1
       dockerode: 3.3.5
       get-port: 5.1.1
-      node-fetch: 2.6.9
+      node-fetch: 2.6.11
       properties-reader: 2.2.0
       ssh-remote-port-forward: 1.0.4
       tar-fs: 2.1.1
+      tmp: 0.2.1
     transitivePeerDependencies:
       - encoding
       - supports-color
@@ -17760,7 +17750,6 @@ packages:
     engines: {node: '>=8.17.0'}
     dependencies:
       rimraf: 3.0.2
-    dev: true
 
   /tmpl@1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
