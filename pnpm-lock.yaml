@@ -57,8 +57,8 @@ importers:
         specifier: ^2.14.2
         version: 2.14.2
       koa-bodyparser:
-        specifier: ^4.4.0
-        version: 4.4.0
+        specifier: ^4.4.1
+        version: 4.4.1
       koa-json:
         specifier: ^2.0.2
         version: 2.0.2
@@ -206,8 +206,8 @@ importers:
         specifier: ^2.14.2
         version: 2.14.2
       koa-bodyparser:
-        specifier: ^4.4.0
-        version: 4.4.0
+        specifier: ^4.4.1
+        version: 4.4.1
       koa-session:
         specifier: ^6.4.0
         version: 6.4.0
@@ -393,8 +393,8 @@ importers:
         specifier: ^2.14.2
         version: 2.14.2
       koa-bodyparser:
-        specifier: ^4.4.0
-        version: 4.4.0
+        specifier: ^4.4.1
+        version: 4.4.1
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -12744,12 +12744,13 @@ packages:
       - supports-color
     dev: false
 
-  /koa-bodyparser@4.4.0:
-    resolution: {integrity: sha512-AXPY7wwKZUmbgb8VkTEUFoRNOlx6aWRJwEnQD+zfNf33/7KSAkN4Oo9BqlIk80D+5TvuqlhpQT5dPVcyxl5Zsw==}
+  /koa-bodyparser@4.4.1:
+    resolution: {integrity: sha512-kBH3IYPMb+iAXnrxIhXnW+gXV8OTzCu8VPDqvcDHW9SQrbkHmqPQtiZwrltNmSq6/lpipHnT7k7PsjlVD7kK0w==}
     engines: {node: '>=8.0.0'}
     dependencies:
       co-body: 6.1.0
       copy-to: 2.0.1
+      type-is: 1.6.18
     dev: false
 
   /koa-compose@4.1.0:
