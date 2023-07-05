@@ -84,7 +84,7 @@
     "oer-utils": "5.1.3-alpha.2",
     "pg": "^8.11.1",
     "pino": "^8.14.1",
-    "pino-pretty": "^10.0.0",
+    "pino-pretty": "^10.0.1",
     "raw-body": "^2.5.2",
     "tigerbeetle-node": "^0.13.38",
     "token-introspection": "workspace:../token-introspection",
