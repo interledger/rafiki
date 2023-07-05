@@ -96,22 +96,3 @@ message<br />
 </tr>
 </tbody>
 </table>
-
-## TempTest
-
-<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
-
-<table>
-<thead><tr><th>Name</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-<td>
-foo<br />
-<a href="scalars#string"><code>String</code></a>
-</td>
-<td>
-
-</td>
-</tr>
-</tbody>
-</table>
