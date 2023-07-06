@@ -5,8 +5,7 @@ import { Config } from '../config/app'
 
 const TIGERBEETLE_PORT = 3004
 const TIGERBEETLE_DIR = '/var/lib/tigerbeetle'
-const TIGERBEETLE_CONTAINER_LOG =
-  process.env.TIGERBEETLE_CONTAINER_LOG === 'true'
+const TIGERBEETLE_CONTAINER_LOG = true
 
 export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   container: StartedTestContainer
@@ -40,8 +39,8 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     )
     .start()
 
-  const streamTbFormat = await tbContFormat.logs()
   if (TIGERBEETLE_CONTAINER_LOG) {
+    const streamTbFormat = await tbContFormat.logs()
     streamTbFormat
       .on('data', (line) => console.log(line))
       .on('err', (line) => console.error(line))
@@ -69,8 +68,8 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
     )
     .start()
 
-  const streamTbStart = await tbContStart.logs()
   if (TIGERBEETLE_CONTAINER_LOG) {
+    const streamTbStart = await tbContStart.logs()
     streamTbStart
       .on('data', (line) => console.log(line))
       .on('err', (line) => console.error(line))
