@@ -13,7 +13,7 @@
     "clean": "rm -fr dist/",
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "prepack": "pnpm build",
-    "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp -r ./src/openapi ./dist/"
+    "copy-files": "cp src/graphql/schema.graphql dist/graphql/ && cp --dereference -r ./src/openapi ./dist/"
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
