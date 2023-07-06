@@ -146,8 +146,10 @@ async function deleteGrant(
   deps: ServiceDependencies,
   continueId: string
 ): Promise<boolean> {
-  const deletion = await Grant.query(deps.knex).delete().where({ continueId })
-  if (deletion === 0) {
+  const update = await Grant.query(deps.knex)
+    .patch({ state: GrantState.Revoked })
+    .where({ continueId })
+  if (update === 0) {
     deps.logger.info(
       `Could not find grant corresponding to continueId: ${continueId}`
     )
@@ -160,8 +162,10 @@ async function deleteGrantById(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<boolean> {
-  const deletion = await Grant.query(deps.knex).deleteById(grantId)
-  if (deletion === 0) {
+  const update = await Grant.query(deps.knex)
+    .patch({ state: GrantState.Revoked })
+    .where({ id: grantId })
+  if (update === 0) {
     deps.logger.info(
       `Could not delete grant corresponding to grantId: ${grantId}`
     )
