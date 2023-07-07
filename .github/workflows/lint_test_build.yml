@@ -10,8 +10,17 @@ on:
 name: PR Checks
 
 jobs:
+  checkout:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/rafiki/env-setup
+      - run: pnpm checks
+
   backend:
     runs-on: ubuntu-22.04
+    needs: [checkout]
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
