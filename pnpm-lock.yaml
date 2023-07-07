@@ -363,8 +363,8 @@ importers:
         specifier: ^16.7.1
         version: 16.7.1
       graphql-middleware:
-        specifier: ^6.1.34
-        version: 6.1.34(graphql@16.7.1)
+        specifier: ^6.1.35
+        version: 6.1.35(graphql@16.7.1)
       graphql-scalars:
         specifier: ^1.22.2
         version: 1.22.2(graphql@16.7.1)
@@ -10751,8 +10751,8 @@ packages:
       - utf-8-validate
     dev: true
 
-  /graphql-middleware@6.1.34(graphql@16.7.1):
-    resolution: {integrity: sha512-cnX6vEQVmfJRUZcek6BaVLA2cD8826WyMskZRiLKNZFxCMPJpwi5MCH86BnmFXtWYeYHO4MwnCcfmKdRKOh0ow==}
+  /graphql-middleware@6.1.35(graphql@16.7.1):
+    resolution: {integrity: sha512-azawK7ApUYtcuPGRGBR9vDZu795pRuaFhO5fgomdJppdfKRt7jwncuh0b7+D3i574/4B+16CNWgVpnGVlg3ZCg==}
     peerDependencies:
       graphql: ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
