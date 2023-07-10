@@ -37,7 +37,7 @@ export interface GrantService {
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
   deleteGrant(continueId: string): Promise<boolean>
-  deleteGrantById(grantId: string): Promise<boolean>
+  revokeGrantById(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
@@ -106,7 +106,7 @@ export async function createGrantService({
     ) => getByContinue(continueId, continueToken, interactRef),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
     deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
-    deleteGrantById: (grantId: string) => deleteGrantById(deps, grantId),
+    revokeGrantById: (grantId: string) => revokeGrantById(deps, grantId),
     getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
@@ -158,7 +158,7 @@ async function deleteGrant(
   return true
 }
 
-async function deleteGrantById(
+async function revokeGrantById(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<boolean> {
@@ -167,7 +167,7 @@ async function deleteGrantById(
     .where({ id: grantId })
   if (update === 0) {
     deps.logger.info(
-      `Could not delete grant corresponding to grantId: ${grantId}`
+      `Could not revoke grant corresponding to grantId: ${grantId}`
     )
     return false
   }

@@ -304,7 +304,7 @@ describe('Grant Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toBe('404')
-      expect(response.message).toBe('Delete grant was not successful')
+      expect(response.message).toBe('Revoke grant was not successful')
     })
 
     test('Returns 500 if grant id is in invaild format', async (): Promise<void> => {
