@@ -36,7 +36,7 @@ export interface GrantService {
     interactRef?: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
-  deleteGrant(continueId: string): Promise<boolean>
+  revokeGrant(continueId: string): Promise<boolean>
   revokeGrantById(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
@@ -105,7 +105,7 @@ export async function createGrantService({
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
-    deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
+    revokeGrant: (continueId: string) => revokeGrant(deps, continueId),
     revokeGrantById: (grantId: string) => revokeGrantById(deps, grantId),
     getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
@@ -142,7 +142,7 @@ async function rejectGrant(
   })
 }
 
-async function deleteGrant(
+async function revokeGrant(
   deps: ServiceDependencies,
   continueId: string
 ): Promise<boolean> {

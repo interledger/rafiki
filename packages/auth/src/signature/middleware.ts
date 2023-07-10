@@ -8,7 +8,7 @@ import {
 } from '@interledger/http-signature-utils'
 
 import { AppContext } from '../app'
-import { ContinueContext, CreateContext, DeleteContext } from '../grant/routes'
+import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -42,7 +42,7 @@ async function verifySigFromClient(
 }
 
 export async function grantContinueHttpsigMiddleware(
-  ctx: ContinueContext | DeleteContext,
+  ctx: ContinueContext | RevokeContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (

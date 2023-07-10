@@ -243,18 +243,18 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('delete', (): void => {
-    test('Can delete a grant', async (): Promise<void> => {
-      await expect(grantService.deleteGrant(grant.continueId)).resolves.toEqual(
+  describe('revoke', (): void => {
+    test('Can revoke a grant', async (): Promise<void> => {
+      await expect(grantService.revokeGrant(grant.continueId)).resolves.toEqual(
         true
       )
       
-      const deletedGrant = await grantService.get(grant.id)
-      expect(deletedGrant?.state).toEqual(GrantState.Revoked)
+      const revokedGrant = await grantService.get(grant.id)
+      expect(revokedGrant?.state).toEqual(GrantState.Revoked)
     })
 
-    test('Can "delete" unknown grant', async (): Promise<void> => {
-      await expect(grantService.deleteGrant(v4())).resolves.toEqual(false)
+    test('Can "revoke" unknown grant', async (): Promise<void> => {
+      await expect(grantService.revokeGrant(v4())).resolves.toEqual(false)
     })
 
     test('Can revoke a grant by grant ID', async (): Promise<void> => {

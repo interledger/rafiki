@@ -18,7 +18,7 @@ import {
   GrantChoices,
   CreateContext,
   ContinueContext,
-  DeleteContext,
+  RevokeContext,
   StartContext,
   FinishContext,
   GetContext,
@@ -532,7 +532,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Can cancel a grant request / pending grant', async (): Promise<void> => {
-        const ctx = createContext<DeleteContext>(
+        const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
             method: 'DELETE',
@@ -544,7 +544,7 @@ describe('Grant Routes', (): void => {
             id: grant.continueId
           }
         )
-        await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+        await expect(grantRoutes.revoke(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(204)
       })
@@ -554,7 +554,7 @@ describe('Grant Routes', (): void => {
           ...generateBaseGrant(),
           state: GrantState.Granted
         })
-        const ctx = createContext<DeleteContext>(
+        const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
             method: 'DELETE',
@@ -566,13 +566,13 @@ describe('Grant Routes', (): void => {
             id: grant.continueId
           }
         )
-        await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+        await expect(grantRoutes.revoke(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(204)
       })
 
       test('Cannot delete non-existing grant', async (): Promise<void> => {
-        const ctx = createContext<DeleteContext>(
+        const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
             method: 'DELETE',
@@ -584,7 +584,7 @@ describe('Grant Routes', (): void => {
             id: v4()
           }
         )
-        await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+        await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
           status: 404,
           error: 'unknown_request'
         })
@@ -597,7 +597,7 @@ describe('Grant Routes', (): void => {
       `(
         'Cannot delete without$description continueToken',
         async ({ token, status, error }): Promise<void> => {
-          const ctx = createContext<DeleteContext>(
+          const ctx = createContext<RevokeContext>(
             {
               url: '/continue/{id}',
               method: 'DELETE',
@@ -611,7 +611,7 @@ describe('Grant Routes', (): void => {
               id: v4()
             }
           )
-          await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+          await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
             status,
             error
           })

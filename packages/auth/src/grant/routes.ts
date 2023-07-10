@@ -56,7 +56,7 @@ interface GrantParams {
 }
 export type ContinueContext = GrantContext<GrantContinueBody, GrantParams>
 
-export type DeleteContext = GrantContext<null, GrantParams>
+export type RevokeContext = GrantContext<null, GrantParams>
 
 type InteractionRequest<
   BodyT = never,
@@ -106,7 +106,7 @@ export interface GrantRoutes {
     details(ctx: GetContext): Promise<void>
   }
   continue(ctx: ContinueContext): Promise<void>
-  delete(ctx: DeleteContext): Promise<void>
+  revoke(ctx: RevokeContext): Promise<void>
 }
 
 export function createGrantRoutes({
@@ -138,7 +138,7 @@ export function createGrantRoutes({
       details: (ctx: GetContext) => getGrantDetails(deps, ctx)
     },
     continue: (ctx: ContinueContext) => continueGrant(deps, ctx),
-    delete: (ctx: DeleteContext) => deleteGrant(deps, ctx)
+    revoke: (ctx: RevokeContext) => revokeGrant(deps, ctx)
   }
 }
 
@@ -404,9 +404,10 @@ async function continueGrant(
   }
 }
 
-async function deleteGrant(
+// async function deleteGrant(
+async function revokeGrant(
   deps: ServiceDependencies,
-  ctx: DeleteContext
+  ctx: RevokeContext
 ): Promise<void> {
   const { id: continueId } = ctx.params
   const continueToken = (ctx.headers['authorization'] as string)?.split(
@@ -420,8 +421,8 @@ async function deleteGrant(
     ctx.throw(404, { error: 'unknown_request' })
   }
 
-  const deletion = await deps.grantService.deleteGrant(continueId)
-  if (!deletion) {
+  const revoked = await deps.grantService.revokeGrant(continueId)
+  if (!revoked) {
     ctx.throw(404, { error: 'unknown_request' })
   }
   ctx.status = 204

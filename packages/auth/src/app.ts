@@ -29,7 +29,7 @@ import {
   ChooseContext,
   FinishContext,
   GrantRoutes,
-  DeleteContext
+  RevokeContext as GrantRevokeContext
 } from './grant/routes'
 import {
   AccessTokenRoutes,
@@ -238,14 +238,14 @@ export class App {
     )
 
     // Grant Cancel
-    router.delete<DefaultState, DeleteContext>(
+    router.delete<DefaultState, GrantRevokeContext>(
       '/continue/:id',
-      createValidatorMiddleware<DeleteContext>(openApi.authServerSpec, {
+      createValidatorMiddleware<GrantRevokeContext>(openApi.authServerSpec, {
         path: '/continue/{id}',
         method: HttpMethod.DELETE
       }),
       grantContinueHttpsigMiddleware,
-      grantRoutes.delete
+      grantRoutes.revoke
     )
 
     // Token Rotation
