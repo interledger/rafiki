@@ -16,8 +16,12 @@ import { AccessService } from '../access/service'
 import { Pagination } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 
+interface FilterGrantState {
+  notIn?: GrantState[]
+}
 interface GrantFilter {
   identifier?: FilterString
+  state?: FilterGrantState
 }
 
 export interface GrantService {
@@ -265,9 +269,14 @@ async function getGrantsPage(
   filter?: GrantFilter
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
+  const { identifier, state } = filter ?? {}
 
-  if (filter?.identifier?.in && filter.identifier.in.length > 0) {
-    query.whereIn('access.identifier', filter.identifier.in)
+  if (identifier?.in?.length) {
+    query.whereIn('access.identifier', identifier.in)
+  }
+
+  if (state?.notIn?.length) {
+    query.whereNotIn('state', state.notIn)
   }
 
   return query.getPage(pagination)

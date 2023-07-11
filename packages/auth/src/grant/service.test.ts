@@ -248,7 +248,7 @@ describe('Grant Service', (): void => {
       await expect(grantService.revokeGrant(grant.continueId)).resolves.toEqual(
         true
       )
-      
+
       const revokedGrant = await grantService.get(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
     })
@@ -261,7 +261,7 @@ describe('Grant Service', (): void => {
       await expect(grantService.revokeGrantById(grant.id)).resolves.toEqual(
         true
       )
-      
+
       const revokedGrant = await grantService.get(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
     })
@@ -313,6 +313,7 @@ describe('Grant Service', (): void => {
         'example.com/test3'
       ]) {
         grants.push(await createGrant(deps, { identifier }))
+        await grants[0].$query().patch({ state: GrantState.Revoked })
       }
     })
 
@@ -334,6 +335,16 @@ describe('Grant Service', (): void => {
       })
 
       expect(grants.length).toBe(2)
+    })
+
+    test('Filter out by grant state', async () => {
+      const grants = await grantService.getPage(undefined, {
+        state: {
+          notIn: [GrantState.Revoked]
+        }
+      })
+
+      expect(grants.length).toBe(3)
     })
 
     test('Can paginate and filter', async (): Promise<void> => {

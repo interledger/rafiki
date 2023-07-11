@@ -32,6 +32,10 @@ export type Access = Model & {
   type: Scalars['String'];
 };
 
+export type FilterGrantState = {
+  notIn: Array<GrantState>;
+};
+
 export type FilterString = {
   in: Array<Scalars['String']>;
 };
@@ -58,6 +62,7 @@ export type GrantEdge = {
 
 export type GrantFilter = {
   identifier?: InputMaybe<FilterString>;
+  state?: InputMaybe<FilterGrantState>;
 };
 
 export enum GrantState {
@@ -238,6 +243,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Access: ResolverTypeWrapper<Partial<Access>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']>>;
+  FilterGrantState: ResolverTypeWrapper<Partial<FilterGrantState>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
   GrantEdge: ResolverTypeWrapper<Partial<GrantEdge>>;
@@ -264,6 +270,7 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Access: Partial<Access>;
   Boolean: Partial<Scalars['Boolean']>;
+  FilterGrantState: Partial<FilterGrantState>;
   FilterString: Partial<FilterString>;
   Grant: Partial<Grant>;
   GrantEdge: Partial<GrantEdge>;
