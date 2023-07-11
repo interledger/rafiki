@@ -94,8 +94,8 @@ importers:
   localenv/mock-account-servicing-entity:
     dependencies:
       '@apollo/client':
-        specifier: ^3.7.16
-        version: 3.7.16(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.7.17
+        version: 3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 1.0.3
         version: 1.0.3
@@ -240,8 +240,8 @@ importers:
         version: 9.0.0
     devDependencies:
       '@apollo/client':
-        specifier: ^3.7.16
-        version: 3.7.16(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.7.17
+        version: 3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -433,8 +433,8 @@ importers:
         version: 9.0.0
     devDependencies:
       '@apollo/client':
-        specifier: ^3.7.16
-        version: 3.7.16(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.7.17
+        version: 3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
         specifier: 3.3.1
         version: 3.3.1(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1)
@@ -566,8 +566,8 @@ importers:
   packages/frontend:
     dependencies:
       '@apollo/client':
-        specifier: ^3.7.16
-        version: 3.7.16(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.7.17
+        version: 3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
         specifier: ^1.7.15
         version: 1.7.15(react-dom@18.2.0)(react@18.2.0)
@@ -834,8 +834,8 @@ packages:
       graphql: 16.7.1
     dev: false
 
-  /@apollo/client@3.7.16(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-rdhoc7baSD7ZzcjavEpYN8gZJle1KhjEKj4SJeMgBpcnO4as7oXUVU4LtFpotzZdFlo57qaLrNzfvppSTsKvZQ==}
+  /@apollo/client@3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-0EErSHEtKPNl5wgWikHJbKFAzJ/k11O0WO2QyqZSHpdxdAnw7UWHY4YiLbHCFG7lhrD+NTQ3Z/H9Jn4rcikoJA==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
@@ -10775,7 +10775,7 @@ packages:
       graphql: 16.7.1
       tslib: 2.5.0
     optionalDependencies:
-      '@apollo/client': 3.7.16(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
+      '@apollo/client': 3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
     transitivePeerDependencies:
       - graphql-ws
       - react

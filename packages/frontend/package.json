@@ -10,7 +10,7 @@
     "start": "remix-serve build"
   },
   "dependencies": {
-    "@apollo/client": "^3.7.16",
+    "@apollo/client": "^3.7.17",
     "@headlessui/react": "^1.7.15",
     "@remix-run/node": "^1.18.1",
     "@remix-run/react": "^1.18.1",
