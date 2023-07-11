@@ -279,8 +279,8 @@ importers:
         specifier: ^9.0.2
         version: 9.0.2
       cross-fetch:
-        specifier: ^3.1.8
-        version: 3.1.8
+        specifier: ^4.0.0
+        version: 4.0.0
       jest-openapi:
         specifier: ^0.14.2
         version: 0.14.2
@@ -484,8 +484,8 @@ importers:
         specifier: ^9.0.2
         version: 9.0.2
       cross-fetch:
-        specifier: ^3.1.8
-        version: 3.1.8
+        specifier: ^4.0.0
+        version: 4.0.0
       ilp-protocol-stream:
         specifier: ^2.7.1
         version: 2.7.1
@@ -8187,6 +8187,14 @@ packages:
       node-fetch: 2.6.12
     transitivePeerDependencies:
       - encoding
+
+  /cross-fetch@4.0.0:
+    resolution: {integrity: sha512-e4a5N8lVvuLgAWgnCrLr2PP0YyDOTHa9H/Rj54dirp61qXnNq46m82bRhNqIA5VccJtWBvPTFRV3TtvHUKPB1g==}
+    dependencies:
+      node-fetch: 2.6.12
+    transitivePeerDependencies:
+      - encoding
+    dev: true
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
