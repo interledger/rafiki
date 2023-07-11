@@ -41,7 +41,7 @@
     "pg": "^8.11.1",
     "pino": "^8.14.1",
     "pino-pretty": "^10.0.1",
-    "testcontainers": "^9.9.1",
+    "testcontainers": "^9.10.0",
     "token-introspection": "workspace:../token-introspection",
     "uuid": "^9.0.0"
   },
