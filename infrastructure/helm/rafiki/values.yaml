@@ -48,9 +48,6 @@ rafiki-backend:
   idempotency:
     keyTTL: 86400000
     keyLock: 2000
-  image:
-    repository: rafiki-cloud-nine-backend
-    tag: 'latest'
 
 rafiki-auth:
   postgresql:
@@ -77,17 +74,11 @@ rafiki-auth:
   cookieKey: ''
   workers: 
     cleanup: 1
-  image:
-    repository: rafiki-cloud-nine-auth
-    tag: 'latest'
 
 rafiki-frontend:
   serviceUrls:
     GRAPHQL_URL: http://rafiki-rafiki-backend:3001/graphql
   port: 3010
-  image:
-    repository: rafiki-cloud-nine-admin
-    tag: 'latest'
 
 postgresql:
   replication:
