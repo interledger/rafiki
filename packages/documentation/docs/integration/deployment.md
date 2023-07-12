@@ -3,7 +3,7 @@
 The production environment consists of
 
 - `backend`
-- (optional but recommended) `auth`
+- `auth`
 - (optional but recommended) `frontend`
 
 and the databases
@@ -24,19 +24,29 @@ Dependencies:
 
 Rafiki cannot be run by itself but needs at least a Postgres and a Redis instance running with it. If you prefer to use Tigerbeetle instead of Postgres for accounting, a Tigerbeetle instance is required as well.
 
-An example Chart including Rafiki, Postgres, and Redis can be found [here](https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki-example/).
+An example Chart including Rafiki, Postgres, and Redis can be found [here](https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki/).
 
-<!-- TODO: add chart to packages -->
+To install this chart, run
 
-<!-- To add the Rafiki chart, run
-
+```sh
+helm install rafiki PATH_TO_RAFIKI_REPO/infrastructure/helm/rafiki
 ```
-// add rafiki repository
-$ helm repo add ...
 
-``` -->
+In this alpha version, by default, no ports are exposed. You can port-forward the frontend (Admin UI) port by running
 
-#### Parameters
+```sh
+// get list of pod names
+kubectl get pods
+
+// port forward
+kubectl port-forward rafiki-rafiki-frontend-YOUR-SEQUENCE 3010:3010
+```
+
+Now, the Admin UI can be found on localhost:3010.
+
+**❗ Update at least the values.yaml file before running the example Chart in production.**
+
+#### values.yaml Parameters
 
 | Name                                    | Corresponding Environment Variable or Description |
 | --------------------------------------- | ------------------------------------------------- |
@@ -95,6 +105,7 @@ $ helm repo add ...
 | backend.workerIdle                      | worker idle time in milliseconds                  |
 | backend.idempotencyTTL                  | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
 | frontend.port                           | `PORT`                                            |
+| frontend.serviceUrls.GRAPHQL_URL:       | `GRAPHQL_URL`                                     |
 
 ### Environment Variables
 
