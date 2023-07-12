@@ -1,6 +1,7 @@
 import { Resolvers } from '../generated/graphql'
 import {
   getPaymentPointer,
+  getPaymentPointers,
   createPaymentPointer,
   updatePaymentPointer,
   triggerPaymentPointerEvents
@@ -42,10 +43,13 @@ import {
   revokePaymentPointerKey
 } from './paymentPointerKey'
 import { createReceiver } from './receiver'
+import { getWebhookEvents } from './webhooks'
+import { GraphQLJSONObject } from 'graphql-scalars'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
   UInt64: GraphQLBigInt,
+  JSONObject: GraphQLJSONObject,
   Asset: {
     liquidity: getAssetLiquidity
   },
@@ -54,13 +58,15 @@ export const resolvers: Resolvers = {
   },
   Query: {
     paymentPointer: getPaymentPointer,
+    paymentPointers: getPaymentPointers,
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
     incomingPayment: getIncomingPayment,
     peer: getPeer,
     peers: getPeers,
-    quote: getQuote
+    quote: getQuote,
+    webhookEvents: getWebhookEvents
   },
   PaymentPointer: {
     incomingPayments: getPaymentPointerIncomingPayments,

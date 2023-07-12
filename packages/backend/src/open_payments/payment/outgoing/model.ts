@@ -63,8 +63,7 @@ export class OutgoingPayment
     return this.quote.receiveAmount
   }
 
-  public description?: string
-  public externalRef?: string
+  public metadata?: Record<string, unknown>
 
   public quote!: Quote
 
@@ -141,11 +140,8 @@ export class OutgoingPayment
         balance: balance.toString()
       }
     }
-    if (this.description) {
-      data.payment.description = this.description
-    }
-    if (this.externalRef) {
-      data.payment.externalRef = this.externalRef
+    if (this.metadata) {
+      data.payment.metadata = this.metadata
     }
     if (this.error) {
       data.payment.error = this.error
@@ -168,8 +164,7 @@ export class OutgoingPayment
       sentAmount: serializeAmount(this.sentAmount),
       receiver: this.receiver,
       failed: this.failed,
-      externalRef: this.externalRef ?? undefined,
-      description: this.description ?? undefined,
+      metadata: this.metadata ?? undefined,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString()
     }
@@ -213,8 +208,7 @@ export interface OutgoingPaymentResponse {
   receiver: string
   sendAmount: AmountJSON
   receiveAmount: AmountJSON
-  description?: string
-  externalRef?: string
+  metadata?: Record<string, unknown>
   failed: boolean
   updatedAt: string
   sentAmount: AmountJSON

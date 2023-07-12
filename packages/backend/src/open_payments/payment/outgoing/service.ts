@@ -25,7 +25,10 @@ import {
 import { PeerService } from '../../../peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
-import { PaymentPointerSubresourceService } from '../../payment_pointer/service'
+import {
+  PaymentPointerService,
+  PaymentPointerSubresourceService
+} from '../../payment_pointer/service'
 import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
@@ -50,6 +53,7 @@ export interface ServiceDependencies extends BaseService {
   receiverService: ReceiverService
   peerService: PeerService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  paymentPointerService: PaymentPointerService
 }
 
 export async function createOutgoingPaymentService(
@@ -85,8 +89,7 @@ export interface CreateOutgoingPaymentOptions {
   quoteId: string
   client?: string
   grant?: Grant
-  description?: string
-  externalRef?: string
+  metadata?: Record<string, unknown>
   callback?: (f: unknown) => NodeJS.Timeout
 }
 
@@ -95,8 +98,19 @@ async function createOutgoingPayment(
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
   const grantId = options.grant?.id
+  const paymentPointerId = options.paymentPointerId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
+      const paymentPointer = await deps.paymentPointerService.get(
+        paymentPointerId
+      )
+      if (!paymentPointer) {
+        throw OutgoingPaymentError.UnknownPaymentPointer
+      }
+      if (!paymentPointer.isActive) {
+        throw OutgoingPaymentError.InactivePaymentPointer
+      }
+
       if (grantId) {
         await OutgoingPaymentGrant.query(trx)
           .insert({
@@ -108,9 +122,8 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
-          paymentPointerId: options.paymentPointerId,
-          description: options.description,
-          externalRef: options.externalRef,
+          paymentPointerId,
+          metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
           client: options.client,
           grantId

@@ -27,10 +27,6 @@ import {
 } from '@interledger/open-payments'
 import { PaymentPointer } from '../../payment_pointer/model'
 
-// Don't allow creating an incoming payment too far out. Incoming payments with no payments before they expire are cleaned up, since incoming payments creation is unauthenticated.
-// TODO what is a good default value for this?
-export const MAX_EXPIRY = 24 * 60 * 60 * 1000 // milliseconds
-
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
@@ -85,10 +81,9 @@ async function getIncomingPayment(
 }
 
 export type CreateBody = {
-  description?: string
   expiresAt?: string
   incomingAmount?: AmountJSON
-  externalRef?: string
+  metadata?: Record<string, unknown>
 }
 
 async function createIncomingPayment(
@@ -100,15 +95,12 @@ async function createIncomingPayment(
   let expiresAt: Date | undefined
   if (body.expiresAt !== undefined) {
     expiresAt = new Date(body.expiresAt)
-    if (Date.now() + MAX_EXPIRY < expiresAt.getTime())
-      return ctx.throw(400, 'expiry too high')
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
     paymentPointerId: ctx.paymentPointer.id,
     client: ctx.client,
-    description: body.description,
-    externalRef: body.externalRef,
+    metadata: body.metadata,
     expiresAt,
     incomingAmount: body.incomingAmount && parseAmount(body.incomingAmount)
   })

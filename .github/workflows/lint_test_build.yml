@@ -31,13 +31,29 @@ jobs:
         run: pnpm --filter auth generate
 
       - name: verify changed files
-        uses: tj-actions/verify-changed-files@v14
+        uses: tj-actions/verify-changed-files@v16
         id: verify-changed-files
         with:
           files: |
             **/generated/graphql.*
 
       - name: fail if GraphQL was generated
+        if: steps.verify-changed-files.outputs.files_changed == 'true'
+        run: exit 1
+
+  documenation:
+    runs-on: ubuntu-22.04
+    needs: checkout
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/workflows/rafiki/env-setup
+      - name: generate graphql api documentation
+        run: pnpm --filter documentation docs:graphql:generate && pnpm format
+      - name: verify changed files
+        uses: tj-actions/verify-changed-files@v16
+        id: verify-changed-files
+
+      - name: fail if docs were generated
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: exit 1
 

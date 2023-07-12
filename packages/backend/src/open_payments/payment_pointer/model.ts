@@ -106,7 +106,8 @@ export class PaymentPointer
 }
 
 export enum PaymentPointerEventType {
-  PaymentPointerWebMonetization = 'payment_pointer.web_monetization'
+  PaymentPointerWebMonetization = 'payment_pointer.web_monetization',
+  PaymentPointerNotFound = 'payment_pointer.not_found'
 }
 
 export type PaymentPointerData = {
@@ -117,9 +118,13 @@ export type PaymentPointerData = {
   }
 }
 
+export type PaymentPointerRequestedData = {
+  paymentPointerUrl: string
+}
+
 export class PaymentPointerEvent extends WebhookEvent {
   public type!: PaymentPointerEventType
-  public data!: PaymentPointerData
+  public data!: PaymentPointerData | PaymentPointerRequestedData
 }
 
 export interface GetOptions {

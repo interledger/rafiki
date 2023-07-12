@@ -1,9 +1,9 @@
-import { json, redirect, type ActionArgs } from '@remix-run/node'
+import { json, type ActionArgs } from '@remix-run/node'
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import { createAsset } from '~/lib/api/asset.server'
-import { commitSession, getSession, setMessage } from '~/lib/message.server'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
@@ -103,14 +103,14 @@ export async function action({ request }: ActionArgs) {
     return json({ errors }, { status: 400 })
   }
 
-  const session = await getSession(request.headers.get('cookie'))
+  const session = await messageStorage.getSession(request.headers.get('cookie'))
 
-  setMessage(session, {
-    content: 'Asset created.',
-    type: 'success'
-  })
-
-  return redirect(`/assets/${response.asset?.id}`, {
-    headers: { 'Set-Cookie': await commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: 'Asset created.',
+      type: 'success'
+    },
+    location: `/assets/${response.asset?.id}`
   })
 }

@@ -18,21 +18,29 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { truncateTables } from '../../tests/tableManager'
-import { Config } from '../../config/app'
+import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
+import { createIncomingPayment } from '../../tests/incomingPayment'
+import { getPageInfo } from '../../shared/pagination'
+import { getPageTests } from '../../shared/baseModel.test'
+import { Pagination } from '../../shared/baseModel'
+import { sleep } from '../../shared/utils'
+import { withConfigOverride } from '../../tests/helpers'
 
 describe('Open Payments Payment Pointer Service', (): void => {
   let deps: IocContract<AppServices>
+  let config: IAppConfig
   let appContainer: TestContainer
   let paymentPointerService: PaymentPointerService
   let accountingService: AccountingService
   let knex: Knex
 
   beforeAll(async (): Promise<void> => {
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
+    config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     paymentPointerService = await deps.use('paymentPointerService')
@@ -180,6 +188,92 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ).resolves.toEqual(updatedPaymentPointer)
     })
 
+    describe('Deactivating payment pointer', (): void => {
+      test(
+        'Updates expiry dates of related incoming payments',
+        withConfigOverride(
+          () => config,
+          {
+            paymentPointerDeactivationPaymentGracePeriodMs: 2592000000,
+            incomingPaymentExpiryMaxMs: 2592000000 * 3
+          },
+          async (): Promise<void> => {
+            const paymentPointer = await createPaymentPointer(deps)
+            const now = new Date('2023-06-01T00:00:00Z').getTime()
+            jest.useFakeTimers({ now })
+
+            const duration =
+              config.paymentPointerDeactivationPaymentGracePeriodMs + 10_000
+            const expiresAt = new Date(Date.now() + duration)
+
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: paymentPointer.id,
+              incomingAmount: {
+                value: BigInt(123),
+                assetCode: paymentPointer.asset.code,
+                assetScale: paymentPointer.asset.scale
+              },
+              expiresAt,
+              metadata: {
+                description: 'Test incoming payment',
+                externalRef: '#123'
+              }
+            })
+
+            await paymentPointerService.update({
+              id: paymentPointer.id,
+              status: 'INACTIVE'
+            })
+            const incomingPaymentUpdated = await incomingPayment.$query(knex)
+
+            expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
+              expiresAt.getTime() +
+                config.paymentPointerDeactivationPaymentGracePeriodMs -
+                duration
+            )
+          }
+        )
+      )
+
+      test(
+        'Does not update expiry dates of related incoming payments when new expiry is greater',
+        withConfigOverride(
+          () => config,
+          { paymentPointerDeactivationPaymentGracePeriodMs: 2592000000 },
+          async (): Promise<void> => {
+            const paymentPointer = await createPaymentPointer(deps)
+            const now = new Date('2023-06-01T00:00:00Z').getTime()
+            jest.useFakeTimers({ now })
+
+            const duration = 30_000
+            const expiresAt = new Date(Date.now() + duration)
+
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: paymentPointer.id,
+              incomingAmount: {
+                value: BigInt(123),
+                assetCode: paymentPointer.asset.code,
+                assetScale: paymentPointer.asset.scale
+              },
+              expiresAt,
+              metadata: {
+                description: 'Test incoming payment',
+                externalRef: '#123'
+              }
+            })
+
+            await paymentPointerService.update({
+              id: paymentPointer.id,
+              status: 'INACTIVE'
+            })
+            const incomingPaymentUpdated = await incomingPayment.$query(knex)
+
+            expect(incomingPaymentUpdated.expiresAt).toEqual(expiresAt)
+          }
+        )
+      )
+    })
+
     test('Cannot update unknown payment pointer', async (): Promise<void> => {
       await expect(
         paymentPointerService.update({
@@ -192,7 +286,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('Get Payment Pointer By Url', (): void => {
-    test('Can retrieve payment pointer by url', async (): Promise<void> => {
+    test('can retrieve payment pointer by url', async (): Promise<void> => {
       const paymentPointer = await createPaymentPointer(deps)
       await expect(
         paymentPointerService.getByUrl(paymentPointer.url)
@@ -207,10 +301,141 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ).resolves.toBeUndefined()
     })
 
-    test('Returns undefined if no payment pointer exists with url', async (): Promise<void> => {
-      await expect(
-        paymentPointerService.getByUrl('test.nope')
-      ).resolves.toBeUndefined()
+    test(
+      'returns undefined if no payment pointer exists with url',
+      withConfigOverride(
+        () => config,
+        { paymentPointerLookupTimeoutMs: 1 },
+        async (): Promise<void> => {
+          await expect(
+            paymentPointerService.getByUrl('test.nope')
+          ).resolves.toBeUndefined()
+        }
+      )
+    )
+  })
+
+  describe('Get Or Poll Payment Pointer By Url', (): void => {
+    describe('existing payment pointer', (): void => {
+      test('can retrieve payment pointer by url', async (): Promise<void> => {
+        const paymentPointer = await createPaymentPointer(deps)
+        await expect(
+          paymentPointerService.getOrPollByUrl(paymentPointer.url)
+        ).resolves.toEqual(paymentPointer)
+      })
+    })
+
+    describe('non-existing payment pointer', (): void => {
+      test(
+        'creates payment pointer not found event',
+        withConfigOverride(
+          () => config,
+          { paymentPointerLookupTimeoutMs: 0 },
+          async (): Promise<void> => {
+            const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            await expect(
+              paymentPointerService.getOrPollByUrl(paymentPointerUrl)
+            ).resolves.toBeUndefined()
+
+            const paymentPointerNotFoundEvents =
+              await PaymentPointerEvent.query(knex).where({
+                type: PaymentPointerEventType.PaymentPointerNotFound
+              })
+
+            expect(paymentPointerNotFoundEvents[0]).toMatchObject({
+              data: { paymentPointerUrl }
+            })
+          }
+        )
+      )
+
+      test(
+        'polls for payment pointer',
+        withConfigOverride(
+          () => config,
+          { paymentPointerPollingFrequencyMs: 10 },
+          async (): Promise<void> => {
+            const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+
+            const [getOrPollByUrlPaymentPointer, createdPaymentPointer] =
+              await Promise.all([
+                paymentPointerService.getOrPollByUrl(paymentPointerUrl),
+                (async () => {
+                  await sleep(5)
+                  return createPaymentPointer(deps, {
+                    url: paymentPointerUrl
+                  })
+                })()
+              ])
+
+            assert.ok(getOrPollByUrlPaymentPointer)
+            expect(getOrPollByUrlPaymentPointer).toEqual(createdPaymentPointer)
+          }
+        )
+      )
+
+      test(
+        'returns undefined if no payment pointer exists with url',
+        withConfigOverride(
+          () => config,
+          { paymentPointerLookupTimeoutMs: 1 },
+          async (): Promise<void> => {
+            await expect(
+              paymentPointerService.getByUrl('test.nope')
+            ).resolves.toBeUndefined()
+          }
+        )
+      )
+    })
+  })
+
+  describe('Payment Pointer pagination', (): void => {
+    test.each`
+      num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
+      ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
+      ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
+      ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
+      ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
+      ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
+    `(
+      '$num payments, pagination $pagination with cursor $cursor',
+      async ({
+        num,
+        pagination,
+        cursor,
+        start,
+        end,
+        hasNextPage,
+        hasPreviousPage
+      }): Promise<void> => {
+        const paymentPointerIds: string[] = []
+        for (let i = 0; i < num; i++) {
+          const paymentPointer = await createPaymentPointer(deps)
+          paymentPointerIds.push(paymentPointer.id)
+        }
+        if (cursor) {
+          if (pagination.last) pagination.before = paymentPointerIds[cursor]
+          else pagination.after = paymentPointerIds[cursor]
+        }
+        const page = await paymentPointerService.getPage(pagination)
+        const pageInfo = await getPageInfo(
+          (pagination) => paymentPointerService.getPage(pagination),
+          page
+        )
+        expect(pageInfo).toEqual({
+          startCursor: paymentPointerIds[start],
+          endCursor: paymentPointerIds[end],
+          hasNextPage,
+          hasPreviousPage
+        })
+      }
+    )
+    describe('getPage', (): void => {
+      getPageTests({
+        createModel: () => createPaymentPointer(deps),
+        getPage: (pagination?: Pagination) =>
+          paymentPointerService.getPage(pagination)
+      })
     })
   })
 

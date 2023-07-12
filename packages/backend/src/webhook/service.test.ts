@@ -19,6 +19,13 @@ import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { getPageTests } from '../shared/baseModel.test'
+import { Pagination } from '../shared/baseModel'
+import {
+  createWebhookEvent,
+  randomWebhookEvent,
+  webhookEventTypes
+} from '../tests/webhook'
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
@@ -57,18 +64,6 @@ describe('Webhook Service', (): void => {
     webhookUrl = new URL(Config.webhookUrl)
   })
 
-  beforeEach(async (): Promise<void> => {
-    event = await WebhookEvent.query(knex).insertAndFetch({
-      id: uuid(),
-      type: 'account.test_event',
-      data: {
-        account: {
-          id: uuid()
-        }
-      }
-    })
-  })
-
   afterEach(async (): Promise<void> => {
     await truncateTables(knex)
   })
@@ -78,6 +73,18 @@ describe('Webhook Service', (): void => {
   })
 
   describe('Get Webhook Event', (): void => {
+    beforeEach(async (): Promise<void> => {
+      event = await WebhookEvent.query(knex).insertAndFetch({
+        id: uuid(),
+        type: 'account.test_event',
+        data: {
+          account: {
+            id: uuid()
+          }
+        }
+      })
+    })
+
     test('A webhook event can be fetched', async (): Promise<void> => {
       await expect(webhookService.getEvent(event.id)).resolves.toEqual(event)
     })
@@ -90,6 +97,76 @@ describe('Webhook Service', (): void => {
 
     test('Cannot fetch a bogus webhook event', async (): Promise<void> => {
       await expect(webhookService.getEvent(uuid())).resolves.toBeUndefined()
+    })
+  })
+
+  describe('getPage', (): void => {
+    getPageTests({
+      createModel: () => createWebhookEvent(deps),
+      getPage: (pagination?: Pagination) =>
+        webhookService.getPage({ pagination })
+    })
+  })
+
+  describe('getWebhookEventsPage', (): void => {
+    const eventOverrides = [
+      { type: webhookEventTypes[0] },
+      { type: webhookEventTypes[0] },
+      { type: webhookEventTypes[1] },
+      { type: webhookEventTypes[1] },
+      { type: webhookEventTypes[1] },
+      { type: webhookEventTypes[2] }
+    ]
+    let webhookEvents: WebhookEvent[] = []
+
+    beforeEach(async (): Promise<void> => {
+      for (const eventOverride of eventOverrides) {
+        webhookEvents.push(
+          await createWebhookEvent(deps, randomWebhookEvent(eventOverride))
+        )
+      }
+    })
+    afterEach(async (): Promise<void> => {
+      webhookEvents = []
+    })
+
+    test('No filter gets all', async (): Promise<void> => {
+      const webhookEvents = await webhookService.getPage()
+      const allWebhookEvents = await WebhookEvent.query(knex)
+      expect(webhookEvents.length).toBe(allWebhookEvents.length)
+    })
+
+    const uniqueTypes = Array.from(
+      new Set(eventOverrides.map((event) => event.type))
+    )
+    test.each(uniqueTypes)('Filter by type: %s', async (type) => {
+      const webhookEvents = await webhookService.getPage({
+        filter: {
+          type: {
+            in: [type]
+          }
+        }
+      })
+      const expectedLength = webhookEvents.filter(
+        (event) => event.type === type
+      ).length
+      expect(webhookEvents.length).toBe(expectedLength)
+    })
+
+    test('Can paginate and filter', async (): Promise<void> => {
+      const type = webhookEventTypes[1]
+      const filter = { type: { in: [type] } }
+      const idsOfTypeY = webhookEvents
+        .filter((event) => event.type === type)
+        .map((event) => event.id)
+      const page = await webhookService.getPage({
+        pagination: { first: 10, after: idsOfTypeY[0] },
+        filter
+      })
+      expect(page[0].id).toBe(idsOfTypeY[1])
+      expect(page.filter((event) => event.type === type).length).toBe(
+        page.length
+      )
     })
   })
 

@@ -61,6 +61,17 @@ webhooks:
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
+  paymentPointerNotFound:
+    post:
+      requestBody:
+        description: Notify account servicing entity to create a payment pointer if it can find a corresponding account in their system.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/paymentPointerNotFound'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
   webMonetization:
     post:
       requestBody:
@@ -113,10 +124,9 @@ components:
               $ref: ./schemas.yaml#/components/schemas/amount
             receivedAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            description:
-              type: string
-            externalRef:
-              type: string
+            metadata:
+              type: object
+              additionalProperties: true
             createdAt:
               type: string
               format: date-time
@@ -177,10 +187,9 @@ components:
               $ref: ./schemas.yaml#/components/schemas/amount
             sentAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
-            description:
-              type: string
-            externalRef:
-              type: string
+            metadata:
+              type: object
+              additionalProperties: true
             createdAt:
               type: string
               format: date-time
@@ -200,6 +209,27 @@ components:
             peerId:
               type: string
               format: uuid
+      additionalProperties: false
+    paymentPointerNotFound:
+      required:
+        - id
+        - type
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - payment_pointer.not_found
+        data:
+          type: object
+          required:
+            - paymentPointerUrl
+          properties:
+            paymentPointerUrl:
+              type: string
       additionalProperties: false
     webMonetizationEvent:
       required:

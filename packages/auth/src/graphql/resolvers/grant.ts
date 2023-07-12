@@ -17,9 +17,10 @@ export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
   ctx
 ): Promise<ResolversTypes['GrantsConnection']> => {
   const grantService = await ctx.container.use('grantService')
-  const grants = await grantService.getPage(args.input)
+  const { filter, ...pagination } = args
+  const grants = await grantService.getPage(pagination, filter)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => grantService.getPage(pagination),
+    (pagination: Pagination) => grantService.getPage(pagination, filter),
     grants
   )
 
@@ -30,6 +31,21 @@ export const getGrants: QueryResolvers<ApolloContext>['grants'] = async (
       node: grantToGraphql(grant)
     }))
   }
+}
+
+export const getGrantById: QueryResolvers<ApolloContext>['grant'] = async (
+  _,
+  args,
+  ctx
+): Promise<ResolversTypes['Grant']> => {
+  const grantService = await ctx.container.use('grantService')
+  const grant = await grantService.getByIdWithAccess(args.id)
+
+  if (!grant) {
+    throw new Error('No grant')
+  }
+
+  return grantToGraphql(grant)
 }
 
 export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
@@ -82,7 +98,6 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
 
 export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   id: grant.id,
-  identifier: grant.identifier,
   client: grant.client,
   access: grant.access?.map((item) => accessToGraphql(item)),
   state: grant.state,
@@ -91,6 +106,9 @@ export const grantToGraphql = (grant: Grant): SchemaGrant => ({
 
 export const accessToGraphql = (access: Access): SchemaAccess => ({
   id: access.id,
+  actions: access.actions,
+  type: access.type,
   identifier: access.identifier,
-  createdAt: access.createdAt.toISOString()
+  createdAt: access.createdAt.toISOString(),
+  limits: access.limits
 })

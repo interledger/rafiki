@@ -2,6 +2,7 @@ name: hl
 services:
   happy-life-mock-ase:
     hostname: happy-life-bank
+    image: rafiki-mock-ase
     build:
       context: ../..
       dockerfile: ./localenv/mock-account-servicing-entity/Dockerfile
@@ -23,6 +24,7 @@ services:
       - happy-life-backend
   happy-life-backend:
     hostname: happy-life-bank-backend
+    image: rafiki-backend
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile
@@ -56,6 +58,7 @@ services:
       PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
   happy-life-auth:
     hostname: happy-life-bank-auth
+    image: rafiki-auth
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
@@ -63,13 +66,15 @@ services:
     networks:
       - rafiki
     ports:
-      - "4006:3006"
+      - '4003:3003'
+      - '4006:3006'
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
       AUTH_SERVER_DOMAIN: "http://localhost:4006"
   happy-life-signatures:
     hostname: happy-life-bank-signatures
+    image: rafiki-postman-signatures
     build:
       context: ../..
       dockerfile: ./localenv/local-http-signatures/Dockerfile
@@ -82,6 +87,7 @@ services:
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
   happy-life-admin:
     hostname: happy-life-bank-admin
+    image: rafiki-frontend
     build:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile

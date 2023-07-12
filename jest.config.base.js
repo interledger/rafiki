@@ -6,5 +6,6 @@ module.exports = {
   },
   testEnvironment: 'node',
   moduleDirectories: ['node_modules', './'],
-  modulePaths: ['node_modules', './']
+  modulePaths: ['node_modules', './'],
+  workerThreads: true
 }

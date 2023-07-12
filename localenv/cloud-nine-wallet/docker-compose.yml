@@ -2,6 +2,7 @@ name: c9
 services:
   cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
+    image: rafiki-mock-ase
     build:
       context: ../..
       dockerfile: ./localenv/mock-account-servicing-entity/Dockerfile
@@ -23,6 +24,7 @@ services:
       - cloud-nine-backend
   cloud-nine-backend:
     hostname: cloud-nine-wallet-backend
+    image: rafiki-backend
     build:
       context: ../..
       dockerfile: ./packages/backend/Dockerfile
@@ -59,6 +61,7 @@ services:
       - shared-redis
   cloud-nine-auth:
     hostname: cloud-nine-wallet-auth
+    image: rafiki-auth
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
@@ -66,6 +69,7 @@ services:
     networks:
       - rafiki
     ports:
+      - '3003:3003'
       - '3006:3006'
     environment:
       NODE_ENV: development
@@ -74,6 +78,7 @@ services:
       - shared-database
   cloud-nine-signatures:
     hostname: cloud-nine-wallet-signatures
+    image: rafiki-postman-signatures
     build:
       context: ../..
       dockerfile: ./localenv/local-http-signatures/Dockerfile
@@ -106,6 +111,7 @@ services:
       - rafiki
   cloud-nine-admin:
     hostname: cloud-nine-wallet-admin
+    image: rafiki-frontend
     build:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile
