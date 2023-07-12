@@ -3,7 +3,7 @@
 The production environment consists of
 
 - `backend`
-- (optional but recommended) `auth`
+- `auth`
 - (optional but recommended) `frontend`
 
 and the databases
@@ -22,15 +22,90 @@ Dependencies:
 - [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl)
 - [helm](https://helm.sh/docs/intro/install/)
 
-TODO: Describe helm charts and how to install them on kubernetes cluster once we have them
+Rafiki cannot be run by itself but needs at least a Postgres and a Redis instance running with it. If you prefer to use Tigerbeetle instead of Postgres for accounting, a Tigerbeetle instance is required as well.
 
-```
-// add rafiki repository
-$ helm repo add ...
+An example Chart including Rafiki, Postgres, and Redis can be found [here](https://github.com/interledger/rafiki/tree/main/infrastructure/helm/rafiki/).
 
-// install rafiki components
-$ helm install ...
+To install this chart, run
+
+```sh
+helm install rafiki PATH_TO_RAFIKI_REPO/infrastructure/helm/rafiki
 ```
+
+In this alpha version, by default, no ports are exposed. You can port-forward the frontend (Admin UI) port by running
+
+```sh
+// get list of pod names
+kubectl get pods
+
+// port forward
+kubectl port-forward rafiki-rafiki-frontend-YOUR-SEQUENCE 3010:3010
+```
+
+Now, the Admin UI can be found on localhost:3010.
+
+**❗ Update at least the values.yaml file before running the example Chart in production.**
+
+#### values.yaml Parameters
+
+| Name                                    | Corresponding Environment Variable or Description |
+| --------------------------------------- | ------------------------------------------------- |
+| auth.postgresql.host                    | Postgres host                                     |
+| auth.postgresql.port                    | Postgres port                                     |
+| auth.postgresql.username                | Postgres user name                                |
+| auth.postgresql.database                | Postgres database name                            |
+| auth.postgresql.password                | Postgres user password                            |
+| auth.port.admin                         | `ADMIN_PORT`                                      |
+| auth.port.auth                          | `AUTH_PORT`                                       |
+| auth.port.introspection                 | `INTROSPECTION_PORT`                              |
+| auth.identityServer.domain              | `IDENTITY_SERVER_DOMAIN`                          |
+| auth.identityServer.secret              | `IDENTITY_SERVER_SECRET`                          |
+| auth.interaction.incomingPayment        | `INCOMING_PAYMENT_INTERACTION`                    |
+| auth.interaction.quote                  | `QUOTE_INTERACTION`                               |
+| auth.grant.waitSeconds                  | `WAIT_SECONDS`                                    |
+| auth.accessToken.deletionDays           | `ACCESS_TOKEN_DELETION_DAYS`                      |
+| auth.accessToken.expirySeconds          | `ACCESS_TOKEN_EXPIRY_SECONDS`                     |
+| auth.cookieKey                          | `COOKIE_KEY`                                      |
+| auth.workers.cleanup                    | `DATABASE_CLEANUP_WORKERS`                        |
+| backend.nodeEnv                         | `NODE_ENV`                                        |
+| backend.logLevel                        | `LOG_LEVEL`                                       |
+| backend.serviceUrls.PUBLIC_HOST         | `PUBLIC_HOST`                                     |
+| backend.serviceUrls.OPEN_PAYMENTS_URL   | `OPEN_PAYMENTS_URL`                               |
+| backend.serviceUrls.PAYMENT_POINTER_URL | `PAYMENT_POINTER_URL`                             |
+| backend.serviceUrls.WEBHOOK_URL         | `WEBHOOK_URL`                                     |
+| backend.serviceUrls.EXCHANGE_RATES_URL  | `EXCHANGE_RATES_URL`                              |
+| backend.serviceUrls.QUOTE_URL           | `QUOTE_URL`                                       |
+| backend.redis.host                      | Redis host                                        |
+| backend.redis.port                      | Redis port                                        |
+| backend.redis.tlsCaFile                 | `REDIS_TLS_CA_FILE_PATH`                          |
+| backend.redis.tlsCertFile               | `REDIS_TLS_CERT_FILE_PATH`                        |
+| backend.redis.tlsKeyFile                | `REDIS_TLS_KEY_FILE_PATH`                         |
+| backend.postgresql.host                 | Postgres host                                     |
+| backend.postgresql.port                 | Postgres port                                     |
+| backend.postgresql.username             | Postgres user name                                |
+| backend.postgresql.database             | Postgres database name                            |
+| backend.postgresql.password             | Postgres user password                            |
+| backend.port.admin                      | `ADMIN_PORT`                                      |
+| backend.port.connector                  | `CONNECTOR_PORT`                                  |
+| backend.port.openPayments               | `OPEN_PAYMENTS_PORT`                              |
+| backend.ilp.address                     | `ILP_ADDRESS`                                     |
+| backend.ilp.streamSecret                | `STREAM_SECRET`                                   |
+| backend.ilp.slippage                    | `SLIPPAGE`                                        |
+| backend.key.id                          | `KEY_ID`                                          |
+| backend.key.file                        | `PRIVATE_KEY_FILE`                                |
+| backend.quoteSignatureSecret            | `SIGNATURE_SECRET`                                |
+| backend.withdrawalThrottleDelay         | `WITHDRAWAL_THROTTLE_DELAY`                       |
+| backend.lifetime.exchangeRate           | `EXCHANGE_RATES_LIFETIME`                         |
+| backend.lifetime.quote                  | `QUOTE_LIFESPAN`                                  |
+| backend.lifetime.webhook                | `WEBHOOK_TIMEOUT`                                 |
+| backend.workers.incomingPayment         | `INCOMING_PAYMENT_WORKERS`                        |
+| backend.workers.outgoingPayment         | `OUTGOING_PAYMENT_WORKERS`                        |
+| backend.workers.paymentPointer          | `PAYMENT_POINTER_WORKERS`                         |
+| backend.workers.webhook                 | `WEBHOOK_WORKERS`                                 |
+| backend.workerIdle                      | worker idle time in milliseconds                  |
+| backend.idempotencyTTL                  | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
+| frontend.port                           | `PORT`                                            |
+| frontend.serviceUrls.GRAPHQL_URL:       | `GRAPHQL_URL`                                     |
 
 ### Environment Variables
 
