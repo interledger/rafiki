@@ -404,7 +404,6 @@ async function continueGrant(
   }
 }
 
-// async function deleteGrant(
 async function revokeGrant(
   deps: ServiceDependencies,
   ctx: RevokeContext
