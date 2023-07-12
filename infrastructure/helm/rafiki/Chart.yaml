@@ -32,10 +32,10 @@ dependencies:
     repository: 'https://charts.bitnami.com/bitnami'
   - name: rafiki-auth
     version: '0.1.0'
-    repository: 'file://../rafiki-auth'
+    repository: 'https://interledger.github.io/helm-charts'
   - name: rafiki-backend
     version: '0.1.0'
-    repository: 'file://../rafiki-backend'
+    repository: 'https://interledger.github.io/helm-charts'
   - name: rafiki-frontend
     version: '0.1.0'
-    repository: 'file://../rafiki-frontend'
+    repository: 'https://interledger.github.io/helm-charts'

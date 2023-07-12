@@ -5,14 +5,14 @@ dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 12.0.0
-- name: auth
-  repository: file://../rafiki-auth
+- name: rafiki-auth
+  repository: https://interledger.github.io/helm-charts
   version: 0.1.0
-- name: backend
-  repository: file://../rafiki-backend
+- name: rafiki-backend
+  repository: https://interledger.github.io/helm-charts
   version: 0.1.0
-- name: frontend
-  repository: file://../rafiki-frontend
+- name: rafiki-frontend
+  repository: https://interledger.github.io/helm-charts
   version: 0.1.0
-digest: sha256:62899fadc3f1e061988b2f66d2570871b3250c80a1382a85d9301cbcbc8040e3
-generated: "2023-06-01T13:00:11.4639+02:00"
+digest: sha256:365a5ff986c53ee2998e668b60f5d9182d5fc536f9c3c1fad29bb88604c03303
+generated: "2023-07-12T11:22:57.949075+02:00"
