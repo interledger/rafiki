@@ -200,8 +200,8 @@ importers:
         specifier: github:interledger/httpbis-digest-headers
         version: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
       knex:
-        specifier: ^2.4.2
-        version: 2.4.2(pg@8.11.1)
+        specifier: ^2.5.0
+        version: 2.5.0(pg@8.11.1)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -216,7 +216,7 @@ importers:
         version: 1.12.2
       objection:
         specifier: ^3.0.4
-        version: 3.0.4(knex@2.4.2)
+        version: 3.0.4(knex@2.5.0)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.0.4)
@@ -387,8 +387,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       knex:
-        specifier: ^2.4.2
-        version: 2.4.2(pg@8.11.1)
+        specifier: ^2.5.0
+        version: 2.5.0(pg@8.11.1)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -403,7 +403,7 @@ importers:
         version: 3.3.0
       objection:
         specifier: ^3.0.4
-        version: 3.0.4(knex@2.4.2)
+        version: 3.0.4(knex@2.5.0)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.0.4)
@@ -7960,6 +7960,11 @@ packages:
     resolution: {integrity: sha512-G5yTt3KQN4Yn7Yk4ed73hlZ1evrFKXeUW3086p3PRFNp7m2vIjI6Pg+Kgb+oyzhd9F2qdcoj67+y3SdxL5XWsg==}
     dev: true
 
+  /commander@10.0.1:
+    resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==}
+    engines: {node: '>=14'}
+    dev: false
+
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
 
@@ -7980,11 +7985,6 @@ packages:
   /commander@8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
-    dev: false
-
-  /commander@9.5.0:
-    resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
-    engines: {node: ^12.20.0 || >=14}
     dev: false
 
   /common-tags@1.8.2:
@@ -12721,8 +12721,8 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /knex@2.4.2(pg@8.11.1):
-    resolution: {integrity: sha512-tMI1M7a+xwHhPxjbl/H9K1kHX+VncEYcvCx5K00M16bWvpYPKAZd6QrCu68PtHAdIZNQPWZn0GVhqVBEthGWCg==}
+  /knex@2.5.0(pg@8.11.1):
+    resolution: {integrity: sha512-h6Ru3PJmZjCDUEqLgwQ/RJUu06Bz7MTzY6sD90udLIa9qwtC7Rnicr7TBiWSaswZmDqk4EZ8xysdg1fkvhYM6w==}
     engines: {node: '>=12'}
     hasBin: true
     peerDependencies:
@@ -12750,7 +12750,7 @@ packages:
         optional: true
     dependencies:
       colorette: 2.0.19
-      commander: 9.5.0
+      commander: 10.0.1
       debug: 4.3.4(supports-color@9.3.1)
       escalade: 3.1.1
       esm: 3.2.25
@@ -12759,7 +12759,7 @@ packages:
       interpret: 2.2.0
       lodash: 4.17.21
       pg: 8.11.1
-      pg-connection-string: 2.5.0
+      pg-connection-string: 2.6.1
       rechoir: 0.8.0
       resolve-from: 5.0.0
       tarn: 3.0.2
@@ -14097,10 +14097,10 @@ packages:
       objection: '>= 0.9.1'
     dependencies:
       db-errors: 0.2.3
-      objection: 3.0.4(knex@2.4.2)
+      objection: 3.0.4(knex@2.5.0)
     dev: false
 
-  /objection@3.0.4(knex@2.4.2):
+  /objection@3.0.4(knex@2.5.0):
     resolution: {integrity: sha512-0XaStHtOBcux4nlffUj8gOpxUsAPE+sLDZPml6n79WQhInYLBvjctU/uv2kEUPPybAJK8YL6ETkLtft9UOj7nQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -14108,7 +14108,7 @@ packages:
     dependencies:
       ajv: 8.12.0
       db-errors: 0.2.3
-      knex: 2.4.2(pg@8.11.1)
+      knex: 2.5.0(pg@8.11.1)
     dev: false
 
   /obuf@1.1.2:
@@ -14609,10 +14609,6 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
-
-  /pg-connection-string@2.5.0:
-    resolution: {integrity: sha512-r5o/V/ORTA6TmUnyWZR9nCj1klXCO2CEKNRlVuJptZe85QuhFayC7WeMic7ndayT5IRIR0S0xFxFi2ousartlQ==}
-    dev: false
 
   /pg-connection-string@2.6.1:
     resolution: {integrity: sha512-w6ZzNu6oMmIzEAYVw+RLK0+nqHPt8K3ZnknKi+g48Ak2pr3dtljJW3o+D/n2zzCG07Zoe9VOX3aiKpj+BN0pjg==}
