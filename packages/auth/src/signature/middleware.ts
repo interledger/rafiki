@@ -9,6 +9,7 @@ import {
 
 import { AppContext } from '../app'
 import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
+import { GrantState } from '../grant/model'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   return {
@@ -74,7 +75,7 @@ export async function grantContinueHttpsigMiddleware(
     continueToken,
     interactRef
   )
-  if (!grant) {
+  if (!grant || grant.state === GrantState.Revoked) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_continuation',
