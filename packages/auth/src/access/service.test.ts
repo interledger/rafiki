@@ -143,7 +143,7 @@ describe('Access Service', (): void => {
         actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
       }
 
-      const access = await Access.query(trx).insert([
+      await Access.query(trx).insert([
         {
           grantId: grant.id,
           type: incomingPaymentAccess.type,
