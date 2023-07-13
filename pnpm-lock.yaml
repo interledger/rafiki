@@ -200,8 +200,8 @@ importers:
         specifier: github:interledger/httpbis-digest-headers
         version: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
       knex:
-        specifier: ^2.5.0
-        version: 2.5.0(pg@8.11.1)
+        specifier: ^2.5.1
+        version: 2.5.1(pg@8.11.1)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -216,7 +216,7 @@ importers:
         version: 1.12.2
       objection:
         specifier: ^3.0.4
-        version: 3.0.4(knex@2.5.0)
+        version: 3.0.4(knex@2.5.1)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.0.4)
@@ -387,8 +387,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       knex:
-        specifier: ^2.5.0
-        version: 2.5.0(pg@8.11.1)
+        specifier: ^2.5.1
+        version: 2.5.1(pg@8.11.1)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -403,7 +403,7 @@ importers:
         version: 3.3.0
       objection:
         specifier: ^3.0.4
-        version: 3.0.4(knex@2.5.0)
+        version: 3.0.4(knex@2.5.1)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.0.4)
@@ -12721,8 +12721,8 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /knex@2.5.0(pg@8.11.1):
-    resolution: {integrity: sha512-h6Ru3PJmZjCDUEqLgwQ/RJUu06Bz7MTzY6sD90udLIa9qwtC7Rnicr7TBiWSaswZmDqk4EZ8xysdg1fkvhYM6w==}
+  /knex@2.5.1(pg@8.11.1):
+    resolution: {integrity: sha512-z78DgGKUr4SE/6cm7ku+jHvFT0X97aERh/f0MUKAKgFnwCYBEW4TFBqtHWFYiJFid7fMrtpZ/gxJthvz5mEByA==}
     engines: {node: '>=12'}
     hasBin: true
     peerDependencies:
@@ -14097,10 +14097,10 @@ packages:
       objection: '>= 0.9.1'
     dependencies:
       db-errors: 0.2.3
-      objection: 3.0.4(knex@2.5.0)
+      objection: 3.0.4(knex@2.5.1)
     dev: false
 
-  /objection@3.0.4(knex@2.5.0):
+  /objection@3.0.4(knex@2.5.1):
     resolution: {integrity: sha512-0XaStHtOBcux4nlffUj8gOpxUsAPE+sLDZPml6n79WQhInYLBvjctU/uv2kEUPPybAJK8YL6ETkLtft9UOj7nQ==}
     engines: {node: '>=12.0.0'}
     peerDependencies:
@@ -14108,7 +14108,7 @@ packages:
     dependencies:
       ajv: 8.12.0
       db-errors: 0.2.3
-      knex: 2.5.0(pg@8.11.1)
+      knex: 2.5.1(pg@8.11.1)
     dev: false
 
   /obuf@1.1.2:
