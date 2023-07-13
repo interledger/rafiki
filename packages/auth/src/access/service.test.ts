@@ -105,7 +105,7 @@ describe('Access Service', (): void => {
     })
   })
 
-  describe('getByNonRevokedGrant', (): void => {
+  describe('getByGrant', (): void => {
     test('gets access', async () => {
       const grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT
@@ -124,7 +124,7 @@ describe('Access Service', (): void => {
         }
       ])
 
-      const fetchedAccess = await accessService.getByNonRevokedGrant(grant.id)
+      const fetchedAccess = await accessService.getByGrant(grant.id)
 
       expect(fetchedAccess.length).toEqual(1)
       expect(fetchedAccess[0].id).toEqual(access[0].id)
@@ -153,7 +153,7 @@ describe('Access Service', (): void => {
 
       await grant.$query(trx).patch({ state: GrantState.Revoked })
 
-      const fetchedAccess = await accessService.getByNonRevokedGrant(grant.id)
+      const fetchedAccess = await accessService.getByGrant(grant.id)
 
       expect(fetchedAccess.length).toEqual(0)
     })

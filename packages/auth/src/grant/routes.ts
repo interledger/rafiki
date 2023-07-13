@@ -182,7 +182,7 @@ async function createApprovedGrant(
     await trx.rollback()
     ctx.throw(500)
   }
-  const access = await deps.accessService.getByNonRevokedGrant(grant.id)
+  const access = await deps.accessService.getByGrant(grant.id)
   ctx.status = 200
   ctx.body = toOpenPaymentsGrant(
     grant,
@@ -392,7 +392,7 @@ async function continueGrant(
     }
 
     const accessToken = await accessTokenService.create(grant.id)
-    const access = await accessService.getByNonRevokedGrant(grant.id)
+    const access = await accessService.getByGrant(grant.id)
 
     // TODO: add "continue" to response if additional grant request steps are added
     ctx.body = toOpenPaymentsGrant(

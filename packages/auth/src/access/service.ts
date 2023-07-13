@@ -11,7 +11,7 @@ export interface AccessService {
     accessRequests: AccessRequest[],
     trx?: Transaction
   ): Promise<Access[]>
-  getByNonRevokedGrant(grantId: string, trx?: Transaction): Promise<Access[]>
+  getByGrant(grantId: string, trx?: Transaction): Promise<Access[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -37,8 +37,8 @@ export async function createAccessService({
       accessRequests: AccessRequest[],
       trx?: Transaction
     ) => createAccess(deps, grantId, accessRequests, trx),
-    getByNonRevokedGrant: (grantId: string, trx?: Transaction) =>
-      getByNonRevokedGrant(deps, grantId, trx)
+    getByGrant: (grantId: string, trx?: Transaction) =>
+      getByGrant(deps, grantId, trx)
   }
 }
 
@@ -55,7 +55,7 @@ async function createAccess(
   return Access.query(trx || deps.knex).insert(accessRequestsWithGrant)
 }
 
-async function getByNonRevokedGrant(
+async function getByGrant(
   deps: ServiceDependencies,
   grantId: string,
   trx?: Transaction

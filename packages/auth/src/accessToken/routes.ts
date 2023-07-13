@@ -122,10 +122,7 @@ async function rotateToken(
       ctx.throw()
     }
 
-    accessItems = await deps.accessService.getByNonRevokedGrant(
-      newToken.grantId,
-      trx
-    )
+    accessItems = await deps.accessService.getByGrant(newToken.grantId, trx)
 
     await trx.commit()
   } catch (error) {
