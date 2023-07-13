@@ -66,7 +66,8 @@ async function getByManagementId(
 ): Promise<AccessToken | undefined> {
   return AccessToken.query()
     .findOne('managementId', managementId)
-    .withGraphFetched('grant')
+    .withGraphJoined('grant')
+    .whereNot('grant.state', GrantState.Revoked)
 }
 
 async function introspect(

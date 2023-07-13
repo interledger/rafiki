@@ -153,6 +153,13 @@ describe('Access Token Service', (): void => {
         accessTokenService.getByManagementId(accessToken.managementId)
       ).resolves.toBeUndefined()
     })
+
+    test('Cannot get access token with revoked grant', async (): Promise<void> => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+      await expect(
+        accessTokenService.getByManagementId(accessToken.managementId)
+      ).resolves.toBeUndefined()
+    })
   })
 
   describe('Introspect', (): void => {
