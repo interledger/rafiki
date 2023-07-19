@@ -8,7 +8,7 @@
  */
 exports.up = function (knex) {
   return knex.schema.raw(`
-    CREATE VIEW "combinedPayments" AS
+    CREATE VIEW "combinedPaymentsView" AS
     SELECT
       "id",
       "paymentPointerId",
@@ -23,8 +23,8 @@ exports.up = function (knex) {
       NULL AS "peerId",
       "createdAt",
       "updatedAt",
-      'incoming' AS "paymentType",
-      "metadata"
+      "metadata",
+      'INCOMING' AS "type"
     FROM "incomingPayments"
     UNION ALL
     SELECT
@@ -41,8 +41,8 @@ exports.up = function (knex) {
       "peerId",
       "createdAt",
       "updatedAt",
-      'outgoing' AS "paymentType",
-      "metadata"
+      "metadata",
+      'OUTGOING' AS "type"
     FROM "outgoingPayments"
   `)
 }
@@ -52,5 +52,5 @@ exports.up = function (knex) {
  */
 exports.down = function (knex) {
   // return knex.schema.raw('DROP VIEW IF EXISTS combinedPayments')
-  return knex.schema.dropViewIfExists('combinedPayments')
+  return knex.schema.dropViewIfExists('combinedPaymentsView')
 }
