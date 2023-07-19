@@ -35,10 +35,5 @@ describe('Combined Payment Service', (): void => {
       const payments = await combinedPaymentService.getPage()
       expect(payments).toEqual([])
     })
-
-    test('should return empty array if no payments', async (): Promise<void> => {
-      const payments = await combinedPaymentService.getPage()
-      expect(payments).toEqual([])
-    })
   })
 })
