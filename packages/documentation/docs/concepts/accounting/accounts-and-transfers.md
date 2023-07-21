@@ -45,7 +45,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -55,7 +55,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -82,7 +82,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -92,7 +92,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -119,7 +119,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -129,7 +129,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -158,7 +158,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -168,7 +168,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -195,7 +195,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -205,7 +205,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -232,7 +232,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -242,7 +242,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -269,7 +269,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -279,7 +279,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -306,7 +306,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -316,7 +316,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -345,7 +345,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -355,7 +355,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -384,7 +384,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -394,7 +394,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -404,7 +404,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -433,7 +433,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -443,7 +443,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -453,7 +453,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -481,7 +481,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -491,7 +491,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -507,7 +507,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -517,7 +517,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -545,7 +545,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -555,7 +555,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -571,7 +571,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -581,7 +581,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -614,7 +614,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -624,7 +624,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -652,7 +652,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -662,7 +662,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -678,7 +678,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -688,7 +688,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -717,7 +717,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -727,7 +727,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -754,7 +754,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -764,7 +764,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -792,7 +792,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -802,7 +802,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -818,7 +818,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -828,7 +828,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -856,7 +856,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -866,7 +866,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -882,7 +882,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -892,7 +892,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -921,7 +921,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -931,7 +931,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -959,7 +959,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -969,7 +969,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -985,7 +985,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
@@ -995,7 +995,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
       </table>
     </td>
     <td>
-      <table style={{marginTop: 0, marginBottom: 0, marginLeft: 'auto',marginRight: 'auto', textAlign: 'center'}}>
+      <table>
         <tr>
           <th>Debit</th><th>Credit</th>
         </tr>
