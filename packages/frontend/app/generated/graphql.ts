@@ -1879,6 +1879,16 @@ export type WithdrawAssetLiquidityVariables = Exact<{
 
 export type WithdrawAssetLiquidity = { __typename?: 'Mutation', createAssetLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
 
+export type ListPaymentPointersQueryVariables = Exact<{
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type ListPaymentPointersQuery = { __typename?: 'Query', paymentPointers: { __typename?: 'PaymentPointersConnection', edges: Array<{ __typename?: 'PaymentPointerEdge', cursor: string, node: { __typename?: 'PaymentPointer', id: string, publicName?: string | null, status?: PaymentPointerStatus | null, url: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;
