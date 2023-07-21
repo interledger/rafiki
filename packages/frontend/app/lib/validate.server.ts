@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { isValidIlpAddress } from 'ilp-packet'
+import { PaymentPointerStatus } from '~/generated/graphql'
 
 export const uuidSchema = z.object({
   id: z.string().uuid()
@@ -84,3 +85,10 @@ export const amountSchema = z.coerce
     invalid_type_error: 'Amount is expected to be a number.'
   })
   .positive()
+
+export const updatePaymentPointerSchema = z
+  .object({
+    publicName: z.string().optional(),
+    status: z.enum([PaymentPointerStatus.Active, PaymentPointerStatus.Inactive])
+  })
+  .merge(uuidSchema)

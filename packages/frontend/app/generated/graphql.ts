@@ -1879,6 +1879,13 @@ export type WithdrawAssetLiquidityVariables = Exact<{
 
 export type WithdrawAssetLiquidity = { __typename?: 'Mutation', createAssetLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
 
+export type GetPaymentPointerQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+}>;
+
+
+export type GetPaymentPointerQuery = { __typename?: 'Query', paymentPointer?: { __typename?: 'PaymentPointer', id: string, url: string, publicName?: string | null, status?: PaymentPointerStatus | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
+
 export type ListPaymentPointersQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
@@ -1888,6 +1895,13 @@ export type ListPaymentPointersQueryVariables = Exact<{
 
 
 export type ListPaymentPointersQuery = { __typename?: 'Query', paymentPointers: { __typename?: 'PaymentPointersConnection', edges: Array<{ __typename?: 'PaymentPointerEdge', cursor: string, node: { __typename?: 'PaymentPointer', id: string, publicName?: string | null, status?: PaymentPointerStatus | null, url: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+
+export type UpdatePaymentPointerMutationVariables = Exact<{
+  input: UpdatePaymentPointerInput;
+}>;
+
+
+export type UpdatePaymentPointerMutation = { __typename?: 'Mutation', updatePaymentPointer: { __typename?: 'UpdatePaymentPointerMutationResponse', code: string, message: string, success: boolean } };
 
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String']['input'];

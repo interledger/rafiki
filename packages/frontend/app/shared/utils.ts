@@ -7,3 +7,7 @@ export function formatAmount(amount: string, scale: number) {
 
   return `${integerPart}.${fractionalPart}`
 }
+
+export function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
+}

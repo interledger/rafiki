@@ -18,6 +18,7 @@ type SelectProps = {
   disabled?: boolean
   required?: boolean
   error?: string | string[]
+  defaultValue?: SelectOption
 }
 
 export const Select = ({
@@ -27,13 +28,14 @@ export const Select = ({
   label,
   error,
   disabled = false,
-  required = false
-}: SelectProps) => {
-  const id = useId()
-  const [internalValue, setInternalValue] = useState<SelectOption>({
+  required = false,
+  defaultValue = {
     label: '',
     value: ''
-  })
+  }
+}: SelectProps) => {
+  const id = useId()
+  const [internalValue, setInternalValue] = useState<SelectOption>(defaultValue)
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredOptions =
