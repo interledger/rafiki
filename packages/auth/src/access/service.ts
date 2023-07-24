@@ -3,7 +3,6 @@ import { Transaction, TransactionOrKnex } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { Access } from './model'
 import { AccessRequest } from './types'
-import { GrantState } from '../grant/model'
 
 export interface AccessService {
   createAccess(
