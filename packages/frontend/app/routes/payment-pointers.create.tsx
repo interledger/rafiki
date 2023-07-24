@@ -73,6 +73,7 @@ export default function CreatePaymentPointerPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     required
+                    addOn={getOpenPaymentsHost()}
                     name='name'
                     label='Payment pointer name'
                     placeholder='jdoe'
