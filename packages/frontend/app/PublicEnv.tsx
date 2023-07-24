@@ -1,5 +1,5 @@
 export interface PublicEnvironment {
-  OPEN_PAYMENTS_HOST: string
+  OPEN_PAYMENTS_URL: string
 }
 
 declare global {

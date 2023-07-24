@@ -12,12 +12,10 @@ export function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 }
 
-export function getOpenPaymentsHost() {
+export function getOpenPaymentsUrl() {
   if (typeof window === 'undefined') {
-    return (
-      process.env.OPEN_PAYMENTS_HOST ?? 'https://cloud-nine-wallet-backend/'
-    )
+    return process.env.OPEN_PAYMENTS_URL ?? 'https://cloud-nine-wallet-backend/'
   }
 
-  return window.ENV.OPEN_PAYMENTS_HOST
+  return window.ENV.OPEN_PAYMENTS_URL
 }

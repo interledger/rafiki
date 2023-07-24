@@ -17,7 +17,7 @@ import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
 import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
-import { getOpenPaymentsHost } from './shared/utils'
+import { getOpenPaymentsUrl } from './shared/utils'
 import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 
 export const meta: MetaFunction = () => ({
@@ -31,7 +31,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   const message = session.get('message') as Message
 
   const publicEnv: PublicEnvironment = {
-    OPEN_PAYMENTS_HOST: getOpenPaymentsHost()
+    OPEN_PAYMENTS_URL: getOpenPaymentsUrl()
   }
 
   if (!message) {

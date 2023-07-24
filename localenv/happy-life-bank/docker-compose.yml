@@ -99,6 +99,7 @@ services:
     environment:
       PORT: 4010
       GRAPHQL_URL: http://happy-life-bank-backend:3001/graphql
+      OPEN_PAYMENTS_URL: https://happy-life-bank-backend/
     depends_on:
       - happy-life-backend
 

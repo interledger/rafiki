@@ -12,7 +12,7 @@ import { createPaymentPointer } from '~/lib/api/payment-pointer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createPaymentPointerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { getOpenPaymentsHost } from '~/shared/utils'
+import { getOpenPaymentsUrl } from '~/shared/utils'
 
 export async function loader() {
   return json({ assets: await loadAssets() })
@@ -49,7 +49,7 @@ export default function CreatePaymentPointerPage() {
                 <div className='w-full p-4 space-y-3'>
                   <Input
                     required
-                    addOn={getOpenPaymentsHost()}
+                    addOn={getOpenPaymentsUrl()}
                     name='name'
                     label='Payment pointer name'
                     placeholder='jdoe'
@@ -106,7 +106,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   const response = await createPaymentPointer({
-    url: `${getOpenPaymentsHost()}${result.data.name}`,
+    url: `${getOpenPaymentsUrl()}${result.data.name}`,
     publicName: result.data.publicName,
     assetId: result.data.asset
   })
