@@ -501,7 +501,7 @@ type PaymentPointer implements Model {
   "Date-time of creation"
   createdAt: String!
   "Status of the payment pointer"
-  status: PaymentPointerStatus
+  status: PaymentPointerStatus!
 }
 
 enum PaymentPointerStatus {

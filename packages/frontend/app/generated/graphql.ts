@@ -684,7 +684,7 @@ export type PaymentPointer = Model & {
   /** List of quotes created at this payment pointer */
   quotes?: Maybe<QuoteConnection>;
   /** Status of the payment pointer */
-  status?: Maybe<PaymentPointerStatus>;
+  status: PaymentPointerStatus;
   /** Payment Pointer URL */
   url: Scalars['String']['output'];
 };
@@ -1584,7 +1584,7 @@ export type PaymentPointerResolvers<ContextType = any, ParentType extends Resolv
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, Partial<PaymentPointerOutgoingPaymentsArgs>>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<PaymentPointerQuotesArgs>>;
-  status?: Resolver<Maybe<ResolversTypes['PaymentPointerStatus']>, ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['PaymentPointerStatus'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
@@ -1884,7 +1884,7 @@ export type GetPaymentPointerQueryVariables = Exact<{
 }>;
 
 
-export type GetPaymentPointerQuery = { __typename?: 'Query', paymentPointer?: { __typename?: 'PaymentPointer', id: string, url: string, publicName?: string | null, status?: PaymentPointerStatus | null, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
+export type GetPaymentPointerQuery = { __typename?: 'Query', paymentPointer?: { __typename?: 'PaymentPointer', id: string, url: string, publicName?: string | null, status: PaymentPointerStatus, createdAt: string, asset: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null } } | null };
 
 export type ListPaymentPointersQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
@@ -1894,7 +1894,7 @@ export type ListPaymentPointersQueryVariables = Exact<{
 }>;
 
 
-export type ListPaymentPointersQuery = { __typename?: 'Query', paymentPointers: { __typename?: 'PaymentPointersConnection', edges: Array<{ __typename?: 'PaymentPointerEdge', cursor: string, node: { __typename?: 'PaymentPointer', id: string, publicName?: string | null, status?: PaymentPointerStatus | null, url: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListPaymentPointersQuery = { __typename?: 'Query', paymentPointers: { __typename?: 'PaymentPointersConnection', edges: Array<{ __typename?: 'PaymentPointerEdge', cursor: string, node: { __typename?: 'PaymentPointer', id: string, publicName?: string | null, status: PaymentPointerStatus, url: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type UpdatePaymentPointerMutationVariables = Exact<{
   input: UpdatePaymentPointerInput;
