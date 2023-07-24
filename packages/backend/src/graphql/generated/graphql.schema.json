@@ -4422,9 +4422,13 @@
             "description": "Status of the payment pointer",
             "args": [],
             "type": {
-              "kind": "ENUM",
-              "name": "PaymentPointerStatus",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "PaymentPointerStatus",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null

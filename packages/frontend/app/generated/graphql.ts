@@ -1903,6 +1903,13 @@ export type UpdatePaymentPointerMutationVariables = Exact<{
 
 export type UpdatePaymentPointerMutation = { __typename?: 'Mutation', updatePaymentPointer: { __typename?: 'UpdatePaymentPointerMutationResponse', code: string, message: string, success: boolean } };
 
+export type CreatePaymentPointerMutationVariables = Exact<{
+  input: CreatePaymentPointerInput;
+}>;
+
+
+export type CreatePaymentPointerMutation = { __typename?: 'Mutation', createPaymentPointer: { __typename?: 'CreatePaymentPointerMutationResponse', code: string, success: boolean, message: string, paymentPointer?: { __typename?: 'PaymentPointer', id: string } | null } };
+
 export type GetPeerQueryVariables = Exact<{
   id: Scalars['String']['input'];
 }>;

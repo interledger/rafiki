@@ -1,13 +1,16 @@
 import { gql } from '@apollo/client'
 import { apolloClient } from '../apollo.server'
 import type {
+  CreatePaymentPointerMutation,
+  CreatePaymentPointerInput,
   GetPaymentPointerQuery,
   GetPaymentPointerQueryVariables,
   ListPaymentPointersQuery,
   ListPaymentPointersQueryVariables,
   QueryPaymentPointerArgs,
   QueryPaymentPointersArgs,
-  UpdatePaymentPointerInput
+  UpdatePaymentPointerInput,
+  CreatePaymentPointerMutationVariables
 } from '~/generated/graphql'
 
 export const getPaymentPointer = async (args: QueryPaymentPointerArgs) => {
@@ -99,4 +102,31 @@ export const updatePaymentPointer = async (args: UpdatePaymentPointerInput) => {
   })
 
   return response.data.updatePaymentPointer
+}
+
+export const createPaymentPointer = async (args: CreatePaymentPointerInput) => {
+  const response = await apolloClient.mutate<
+    CreatePaymentPointerMutation,
+    CreatePaymentPointerMutationVariables
+  >({
+    mutation: gql`
+      mutation CreatePaymentPointerMutation(
+        $input: CreatePaymentPointerInput!
+      ) {
+        createPaymentPointer(input: $input) {
+          code
+          success
+          message
+          paymentPointer {
+            id
+          }
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.createPaymentPointer
 }

@@ -86,6 +86,12 @@ export const amountSchema = z.coerce
   })
   .positive()
 
+export const createPaymentPointerSchema = z.object({
+  name: z.string().min(1),
+  publicName: z.string().optional(),
+  asset: z.string().uuid()
+})
+
 export const updatePaymentPointerSchema = z
   .object({
     publicName: z.string().optional(),
