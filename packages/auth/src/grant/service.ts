@@ -15,6 +15,7 @@ import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 import { Pagination } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
+import { AccessTokenService } from '../accessToken/service'
 
 interface FilterGrantState {
   notIn?: GrantState[]
@@ -46,6 +47,7 @@ export interface GrantService {
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
+  accessTokenService: AccessTokenService
   knex: TransactionOrKnex
 }
 
@@ -82,6 +84,7 @@ export interface GrantResponse {
 export async function createGrantService({
   logger,
   accessService,
+  accessTokenService,
   knex
 }: ServiceDependencies): Promise<GrantService> {
   const log = logger.child({
@@ -90,6 +93,7 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
+    accessTokenService,
     knex
   }
   return {
@@ -139,32 +143,66 @@ async function revokeGrant(
   deps: ServiceDependencies,
   continueId: string
 ): Promise<boolean> {
-  const update = await Grant.query(deps.knex)
-    .patch({ state: GrantState.Revoked })
-    .where({ continueId })
-  if (update === 0) {
-    deps.logger.info(
-      `Could not find grant corresponding to continueId: ${continueId}`
-    )
-    return false
+  const { accessTokenService, accessService } = deps
+
+  const trx = await deps.knex.transaction()
+
+  try {
+    const grant = await Grant.query(trx)
+      .patch({ state: GrantState.Revoked })
+      .where({ continueId })
+      .returning('*')
+      .first()
+
+    if (!grant) {
+      deps.logger.info(
+        `Could not find grant corresponding to continueId: ${continueId}`
+      )
+      await trx.rollback()
+      return false
+    }
+
+    await accessTokenService.revokeByGrantId(grant.id, trx)
+    await accessService.revokeByGrantId(grant.id, trx)
+
+    await trx.commit()
+    return true
+  } catch (error) {
+    await trx.rollback()
+    throw error
   }
-  return true
 }
 
 async function revokeGrantById(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<boolean> {
-  const update = await Grant.query(deps.knex)
-    .patch({ state: GrantState.Revoked })
-    .where({ id: grantId })
-  if (update === 0) {
-    deps.logger.info(
-      `Could not revoke grant corresponding to grantId: ${grantId}`
-    )
-    return false
+  const { accessTokenService, accessService } = deps
+
+  const trx = await deps.knex.transaction()
+
+  try {
+    const grant = await Grant.query(trx)
+      .patchAndFetchById(grantId, { state: GrantState.Revoked })
+      .first()
+
+    if (!grant) {
+      deps.logger.info(
+        `Could not revoke grant corresponding to grantId: ${grantId}`
+      )
+      await trx.rollback()
+      return false
+    }
+
+    await accessTokenService.revokeByGrantId(grant.id, trx)
+    await accessService.revokeByGrantId(grant.id, trx)
+
+    await trx.commit()
+    return true
+  } catch (error) {
+    await trx.rollback()
+    throw error
   }
-  return true
 }
 
 async function create(

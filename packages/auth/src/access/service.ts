@@ -12,6 +12,7 @@ export interface AccessService {
     trx?: Transaction
   ): Promise<Access[]>
   getByGrant(grantId: string, trx?: Transaction): Promise<Access[]>
+  revokeByGrantId(grantId: string, trx?: Transaction): Promise<number>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -38,7 +39,9 @@ export async function createAccessService({
       trx?: Transaction
     ) => createAccess(deps, grantId, accessRequests, trx),
     getByGrant: (grantId: string, trx?: Transaction) =>
-      getByGrant(deps, grantId, trx)
+      getByGrant(deps, grantId, trx),
+    revokeByGrantId: (grantId: string, trx?: Transaction) =>
+      revokeByGrantId(deps, grantId, trx)
   }
 }
 
@@ -60,8 +63,19 @@ async function getByGrant(
   grantId: string,
   trx?: Transaction
 ): Promise<Access[]> {
+  return Access.query(trx || deps.knex).where({
+    grantId
+  })
+}
+
+async function revokeByGrantId(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx?: Transaction
+): Promise<number> {
   return Access.query(trx || deps.knex)
-    .where({ grantId })
-    .withGraphJoined('grant')
-    .whereNot('grant.state', GrantState.Revoked)
+    .delete()
+    .where({
+      grantId
+    })
 }

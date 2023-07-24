@@ -132,30 +132,22 @@ describe('Access Service', (): void => {
       expect(fetchedAccess[0].type).toEqual(AccessType.IncomingPayment)
       expect(fetchedAccess[0].actions).toEqual(incomingPaymentAccess.actions)
     })
+  })
 
-    test('cannot get access for revoked grants', async () => {
+  describe('revoke access', (): void => {
+    test('revokeByGrantId', async () => {
       const grant = await Grant.query(trx).insertAndFetch({
         ...BASE_GRANT
       })
-
-      const incomingPaymentAccess: IncomingPaymentRequest = {
+      const access = await Access.query(trx).insert({
+        grantId: grant.id,
         type: 'incoming-payment',
         actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
-      }
+      })
 
-      await Access.query(trx).insert([
-        {
-          grantId: grant.id,
-          type: incomingPaymentAccess.type,
-          actions: incomingPaymentAccess.actions
-        }
-      ])
+      await accessService.revokeByGrantId(grant.id)
 
-      await grant.$query(trx).patch({ state: GrantState.Revoked })
-
-      const fetchedAccess = await accessService.getByGrant(grant.id)
-
-      expect(fetchedAccess.length).toEqual(0)
+      expect(Access.query(trx).findById(access.id)).resolves.toBeUndefined()
     })
   })
 })

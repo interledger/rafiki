@@ -12,6 +12,7 @@ export interface AccessTokenService {
   introspect(tokenValue: string): Promise<Grant | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
+  revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
   rotate(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
 }
 
@@ -43,6 +44,8 @@ export async function createAccessTokenService({
       getByManagementId(managementId),
     introspect: (tokenValue: string) => introspect(deps, tokenValue),
     revoke: (id: string, trx?: TransactionOrKnex) => revoke(deps, id, trx),
+    revokeByGrantId: (grantId: string, trx?: TransactionOrKnex) =>
+      revokeByGrantId(deps, grantId, trx),
     create: (grantId: string, trx?: TransactionOrKnex) =>
       createAccessToken(deps, grantId, trx),
     rotate: (id: string) => rotate(deps, id)
@@ -60,8 +63,7 @@ async function getByManagementId(
 ): Promise<AccessToken | undefined> {
   return AccessToken.query()
     .findOne('managementId', managementId)
-    .withGraphJoined('grant')
-    .whereNot('grant.state', GrantState.Revoked)
+    .withGraphFetched('grant')
 }
 
 async function introspect(
@@ -93,6 +95,16 @@ async function revoke(
     .deleteById(id)
     .returning('*')
     .first()
+}
+
+async function revokeByGrantId(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx?: TransactionOrKnex
+): Promise<number> {
+  return await AccessToken.query(trx || deps.knex)
+    .delete()
+    .where('grantId', grantId)
 }
 
 async function createAccessToken(

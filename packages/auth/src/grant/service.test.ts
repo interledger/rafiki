@@ -14,6 +14,7 @@ import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { createGrant } from '../tests/grant'
+import { AccessToken } from '../accessToken/model'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -49,6 +50,13 @@ describe('Grant Service', (): void => {
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
       type: AccessType.IncomingPayment,
+      grantId: grant.id
+    })
+
+    await AccessToken.query().insert({
+      value: generateToken(),
+      managementId: v4(),
+      expiresIn: 10_000_000,
       grantId: grant.id
     })
   })
@@ -229,6 +237,11 @@ describe('Grant Service', (): void => {
   })
 
   describe('revoke', (): void => {
+    const expectNoAccessNorAccessTokens = (grantId: string) => {
+      expect(Access.query().where({ grantId })).resolves.toEqual([])
+      expect(AccessToken.query().where({ grantId })).resolves.toEqual([])
+    }
+
     test('Can revoke a grant', async (): Promise<void> => {
       await expect(grantService.revokeGrant(grant.continueId)).resolves.toEqual(
         true
@@ -236,6 +249,7 @@ describe('Grant Service', (): void => {
 
       const revokedGrant = await Grant.query(trx).findById(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
+      expectNoAccessNorAccessTokens(grant.id)
     })
 
     test('Can "revoke" unknown grant', async (): Promise<void> => {
@@ -249,10 +263,15 @@ describe('Grant Service', (): void => {
 
       const revokedGrant = await Grant.query(trx).findById(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
+      expectNoAccessNorAccessTokens(grant.id)
     })
 
     test('Can "revoke" unknown grant by grant ID', async (): Promise<void> => {
-      await expect(grantService.revokeGrantById(v4())).resolves.toEqual(false)
+      const grantId = v4()
+      await expect(grantService.revokeGrantById(grantId)).resolves.toEqual(
+        false
+      )
+      expectNoAccessNorAccessTokens(grantId)
     })
   })
 
