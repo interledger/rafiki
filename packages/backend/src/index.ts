@@ -399,7 +399,9 @@ export function initIocContainer(
   container.singleton('combinedPaymentService', async (deps) => {
     return await createCombinedPaymentService({
       logger: await deps.use('logger'),
-      knex: await deps.use('knex')
+      knex: await deps.use('knex'),
+      incomingPaymentService: await deps.use('incomingPaymentService'),
+      outgoingPaymentService: await deps.use('outgoingPaymentService')
     })
   })
   return container
