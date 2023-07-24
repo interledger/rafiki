@@ -15,8 +15,12 @@ import {
 } from '../../../tests/paymentPointer'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { Pagination } from '../../../shared/baseModel'
-import { CombinedPayment } from './model'
+import { CombinedPayment, PaymentType } from './model'
 import { Asset } from '../../../asset/model'
+import { IncomingPaymentError } from '../incoming/errors'
+import { IncomingPaymentService } from '../incoming/service'
+import { OutgoingPaymentService } from '../outgoing/service'
+import { OutgoingPaymentError } from '../outgoing/errors'
 
 describe('Combined Payment Service', (): void => {
   let deps: IocContract<AppServices>
@@ -24,6 +28,8 @@ describe('Combined Payment Service', (): void => {
   let config: IAppConfig
   let knex: Knex
   let combinedPaymentService: CombinedPaymentService
+  let incomingPaymentService: IncomingPaymentService
+  let outgoingPaymentService: OutgoingPaymentService
   let sendAsset: Asset
   let sendPaymentPointerId: string
   let receiveAsset: Asset
@@ -34,6 +40,8 @@ describe('Combined Payment Service', (): void => {
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
     combinedPaymentService = await deps.use('combinedPaymentService')
+    incomingPaymentService = await deps.use('incomingPaymentService')
+    outgoingPaymentService = await deps.use('outgoingPaymentService')
     config = await deps.use('config')
   })
 
@@ -90,15 +98,40 @@ describe('Combined Payment Service', (): void => {
         })
         return CombinedPayment.fromJson(incomingPayment)
       }
+      async function getCombinedPaymentsPage(pagination?: Pagination) {
+        const payments = await combinedPaymentService.getPage({ pagination })
+        return payments.map(
+          (payment) => payment.payment
+        ) as unknown as CombinedPayment[]
+      }
       getPageTests({
         createModel: () => createCombinedPayment(deps),
         getPage: (pagination?: Pagination) =>
-          combinedPaymentService.getPage({ pagination })
+          getCombinedPaymentsPage(pagination)
       })
 
       test('should return empty array if no payments', async (): Promise<void> => {
         const payments = await combinedPaymentService.getPage()
         expect(payments).toEqual([])
+      })
+
+      test('can get all', async (): Promise<void> => {
+        const setupDetails = await setupOutgoingPayment(deps)
+        const payments = await combinedPaymentService.getPage()
+        console.log({ payments })
+        expect(payments.length).toEqual(2)
+        expect(
+          payments.find((p) => p.type === PaymentType.Outgoing)
+        ).toMatchObject({
+          type: PaymentType.Outgoing,
+          payment: setupDetails.outgoingPayment
+        })
+        expect(
+          payments.find((p) => p.type === PaymentType.Incoming)
+        ).toMatchObject({
+          type: PaymentType.Incoming,
+          payment: setupDetails.incomingPayment
+        })
       })
 
       test('can filter by paymentPointerId', async (): Promise<void> => {
@@ -111,8 +144,43 @@ describe('Combined Payment Service', (): void => {
           }
         })
         expect(payments.length).toEqual(1)
-        expect(payments[0].paymentPointerId).toEqual(
+        expect(payments[0].type).toEqual(PaymentType.Incoming)
+        expect(payments[0].payment.paymentPointerId).toEqual(
           setupDetails.incomingPayment.paymentPointerId
+        )
+      })
+
+      test('can filter by type', async (): Promise<void> => {
+        const setupDetails = await setupOutgoingPayment(deps)
+        const payments = await combinedPaymentService.getPage({
+          filter: {
+            type: {
+              in: [PaymentType.Outgoing]
+            }
+          }
+        })
+        expect(payments.length).toEqual(1)
+        expect(payments[0].type).toEqual(PaymentType.Outgoing)
+        expect(payments[0].payment).toMatchObject(setupDetails.outgoingPayment)
+      })
+
+      test('throws an error when incoming payment is not found', async (): Promise<void> => {
+        await setupOutgoingPayment(deps)
+
+        incomingPaymentService.get = jest.fn().mockResolvedValue(undefined)
+
+        await expect(combinedPaymentService.getPage()).rejects.toThrow(
+          Error(IncomingPaymentError.UnknownPayment)
+        )
+      })
+
+      test('throws an error when incoming payment is not found', async (): Promise<void> => {
+        await setupOutgoingPayment(deps)
+
+        outgoingPaymentService.get = jest.fn().mockResolvedValue(undefined)
+
+        await expect(combinedPaymentService.getPage()).rejects.toThrow(
+          Error(OutgoingPaymentError.UnknownPayment)
         )
       })
     })
