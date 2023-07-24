@@ -176,3 +176,30 @@ export const withdrawAssetLiquidity = async (
 
   return response.data?.createAssetLiquidityWithdrawal
 }
+
+export const loadAssets = async () => {
+  let assets: ListAssetsQuery['assets']['edges'] = []
+  let hasNextPage = true
+  let after: string | undefined
+
+  while (hasNextPage) {
+    const response = await listAssets({ first: 100, after })
+
+    if (response.edges) {
+      assets = [...assets, ...response.edges]
+    }
+
+    if (response.pageInfo.hasNextPage) {
+      hasNextPage = true
+      if (response.pageInfo.endCursor) {
+        after = response?.pageInfo?.endCursor
+      } else {
+        after = assets[assets.length - 1].node.id
+      }
+    } else {
+      hasNextPage = false
+    }
+  }
+
+  return assets
+}

@@ -7,8 +7,7 @@ import {
 } from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, Select } from '~/components/ui'
-import type { ListAssetsQuery } from '~/generated/graphql'
-import { listAssets } from '~/lib/api/asset.server'
+import { loadAssets } from '~/lib/api/asset.server'
 import { createPaymentPointer } from '~/lib/api/payment-pointer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createPaymentPointerSchema } from '~/lib/validate.server'
@@ -16,30 +15,7 @@ import type { ZodFieldErrors } from '~/shared/types'
 import { getOpenPaymentsHost } from '~/shared/utils'
 
 export async function loader() {
-  let assets: ListAssetsQuery['assets']['edges'] = []
-  let hasNextPage = true
-  let after: string | undefined
-
-  while (hasNextPage) {
-    const response = await listAssets({ first: 100, after })
-
-    if (response.edges) {
-      assets = [...assets, ...response.edges]
-    }
-
-    if (response.pageInfo.hasNextPage) {
-      hasNextPage = true
-      if (response.pageInfo.endCursor) {
-        after = response?.pageInfo?.endCursor
-      } else {
-        after = assets[assets.length - 1].node.id
-      }
-    } else {
-      hasNextPage = false
-    }
-  }
-
-  return json({ assets })
+  return json({ assets: await loadAssets() })
 }
 
 export default function CreatePaymentPointerPage() {
@@ -57,7 +33,7 @@ export default function CreatePaymentPointerPage() {
             aria-label='go back to payment pointers page'
             to='/payment-pointers'
           >
-            Go back to PP page
+            Go back to payment pointers page
           </Button>
         </PageHeader>
         <Form method='post' replace>

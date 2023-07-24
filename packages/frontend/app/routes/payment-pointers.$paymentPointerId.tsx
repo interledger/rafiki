@@ -9,7 +9,6 @@ import {
 import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, Dropdown } from '~/components/ui'
-
 import {
   getPaymentPointer,
   updatePaymentPointer
@@ -24,13 +23,13 @@ export async function loader({ params }: LoaderArgs) {
 
   const result = z.string().uuid().safeParse(paymentPointerId)
   if (!result.success) {
-    throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
+    throw json(null, { status: 400, statusText: 'Invalid payment pointer ID.' })
   }
 
   const paymentPointer = await getPaymentPointer({ id: result.data })
 
   if (!paymentPointer) {
-    throw json(null, { status: 404, statusText: 'Asset not found.' })
+    throw json(null, { status: 404, statusText: 'Payment pointer not found.' })
   }
 
   return json({
@@ -96,8 +95,8 @@ export default function ViewAssetPage() {
                     name='status'
                     placeholder='Select status...'
                     defaultValue={{
-                      label: capitalize(paymentPointer.status ?? ''),
-                      value: paymentPointer.status ?? ''
+                      label: capitalize(paymentPointer.status),
+                      value: paymentPointer.status
                     }}
                     error={response?.errors.fieldErrors.status}
                     label='Status'
@@ -105,7 +104,10 @@ export default function ViewAssetPage() {
                   />
                 </div>
                 <div className='flex justify-end p-4'>
-                  <Button aria-label='save asset information' type='submit'>
+                  <Button
+                    aria-label='save payment pointer information'
+                    type='submit'
+                  >
                     {isSubmitting ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
@@ -175,10 +177,7 @@ export async function action({ request }: ActionArgs) {
   }
 
   const response = await updatePaymentPointer({
-    ...result.data,
-    ...(result.data.publicName
-      ? { publicName: result.data.publicName }
-      : { publicName: undefined })
+    ...result.data
   })
 
   if (!response?.success) {
