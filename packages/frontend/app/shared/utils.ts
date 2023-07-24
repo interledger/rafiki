@@ -13,7 +13,7 @@ export function capitalize(str: string) {
 }
 
 export function getOpenPaymentsHost() {
-  if (process) {
+  if (typeof window === 'undefined') {
     return (
       process.env.OPEN_PAYMENTS_HOST ?? 'https://cloud-nine-wallet-backend/'
     )
