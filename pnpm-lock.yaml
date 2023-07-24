@@ -230,8 +230,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1
       testcontainers:
-        specifier: ^9.11.0
-        version: 9.11.0
+        specifier: ^9.12.0
+        version: 9.12.0
       token-introspection:
         specifier: workspace:../token-introspection
         version: link:../token-introspection
@@ -508,8 +508,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       testcontainers:
-        specifier: ^9.11.0
-        version: 9.11.0
+        specifier: ^9.12.0
+        version: 9.12.0
       tmp:
         specifier: ^0.2.1
         version: 0.2.1
@@ -17683,8 +17683,8 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers@9.11.0:
-    resolution: {integrity: sha512-U6pUvxz7UiK4TffBMF8qwMJxyHfFi5RiJjfXAfrfOY3xMdEYZABTXhAk2cZUmuxdSVZ5STK9KuqzV+OEAbH9DQ==}
+  /testcontainers@9.12.0:
+    resolution: {integrity: sha512-zmjLTAUqCiDvhDq7TCwcyhI3m/cXXKGnhyLLJ9pgh53VgG9O+P+opX1pIx28aYTUQ7Yu6b5sJf0xoIuxoiclWg==}
     engines: {node: '>= 10.16'}
     dependencies:
       '@balena/dockerignore': 1.0.2
