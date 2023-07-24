@@ -97,32 +97,6 @@ describe('Access Token Service', (): void => {
     })
   })
 
-  describe('Get', (): void => {
-    let accessToken: AccessToken
-    beforeEach(async (): Promise<void> => {
-      accessToken = await AccessToken.query(trx).insert({
-        value: 'test-access-token',
-        managementId: v4(),
-        grantId: grant.id,
-        expiresIn: 1234
-      })
-    })
-
-    test('Can get an access token by its value', async (): Promise<void> => {
-      await expect(accessTokenService.get(accessToken.value)).resolves.toEqual(
-        accessToken
-      )
-    })
-
-    test('Cannot get rotated access token', async (): Promise<void> => {
-      await accessTokenService.rotate(accessToken.id)
-
-      await expect(
-        accessTokenService.get(accessToken.value)
-      ).resolves.toBeUndefined()
-    })
-  })
-
   describe('getByManagementId', (): void => {
     let accessToken: AccessToken
     beforeEach(async (): Promise<void> => {
@@ -141,7 +115,7 @@ describe('Access Token Service', (): void => {
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {
-      await expect(accessTokenService.get(v4())).resolves.toBeUndefined()
+      await expect(AccessToken.query().findById(v4())).resolves.toBeUndefined()
       await expect(
         accessTokenService.getByManagementId(v4())
       ).resolves.toBeUndefined()

@@ -8,7 +8,6 @@ import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 
 export interface AccessTokenService {
-  get(tokenValue: string): Promise<AccessToken | undefined>
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(tokenValue: string): Promise<Grant | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
@@ -40,7 +39,6 @@ export async function createAccessTokenService({
   }
 
   return {
-    get: (tokenValue: string) => get(tokenValue),
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
     introspect: (tokenValue: string) => introspect(deps, tokenValue),
@@ -55,10 +53,6 @@ function isTokenExpired(token: AccessToken): boolean {
   const now = new Date(Date.now())
   const expiresAt = token.createdAt.getTime() + token.expiresIn * 1000
   return expiresAt < now.getTime()
-}
-
-async function get(tokenValue: string): Promise<AccessToken | undefined> {
-  return AccessToken.query().findOne('value', tokenValue)
 }
 
 async function getByManagementId(

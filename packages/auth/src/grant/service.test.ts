@@ -176,22 +176,7 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('get', (): void => {
-    test('Can fetch a grant by id', async () => {
-      const fetchedGrant = await grantService.get(grant.id)
-      expect(fetchedGrant?.id).toEqual(grant.id)
-    })
-    test('Can fetch a grant by its interaction information', async (): Promise<void> => {
-      assert.ok(grant.interactId)
-      const fetchedGrant = await grantService.getByInteraction(grant.interactId)
-      expect(fetchedGrant?.id).toEqual(grant.id)
-      expect(fetchedGrant?.interactId).toEqual(grant.interactId)
-    })
-    test('Cannot fetch non-existing grant', async () => {
-      await expect(grantService.get(v4())).resolves.toBeUndefined()
-      await expect(grantService.getByInteraction(v4())).resolves.toBeUndefined()
-    })
-
+  describe('getByIdWithAccess', (): void => {
     test('Can fetch a grant by id with access', async () => {
       const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
       expect(fetchedGrant?.id).toEqual(grant.id)
@@ -249,7 +234,7 @@ describe('Grant Service', (): void => {
         true
       )
 
-      const revokedGrant = await grantService.get(grant.id)
+      const revokedGrant = await Grant.query(trx).findById(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
     })
 
@@ -262,7 +247,7 @@ describe('Grant Service', (): void => {
         true
       )
 
-      const revokedGrant = await grantService.get(grant.id)
+      const revokedGrant = await Grant.query(trx).findById(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
     })
 
@@ -293,7 +278,7 @@ describe('Grant Service', (): void => {
         return await Grant.transaction(async (trx) => {
           await grantService.lock(grant.id, trx, timeoutMs)
           await new Promise((resolve) => setTimeout(resolve, timeoutMs + 10))
-          await grantService.get(grant.id)
+          await Grant.query(trx).findById(grant.id)
         })
       }
       await expect(Promise.all([lock(), lock()])).rejects.toThrowError(

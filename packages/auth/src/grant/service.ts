@@ -25,10 +25,8 @@ interface GrantFilter {
 }
 
 export interface GrantService {
-  get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteraction(interactId: string): Promise<PendingGrant | undefined>
   getByInteractionSession(
     interactId: string,
     interactNonce: string
@@ -95,11 +93,9 @@ export async function createGrantService({
     knex
   }
   return {
-    get: (grantId: string, trx?: Transaction) => get(grantId, trx),
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
-    getByInteraction: (interactId: string) => getByInteraction(interactId),
     getByInteractionSession: (interactId: string, interactNonce: string) =>
       getByInteractionSession(interactId, interactNonce),
     issueGrant: (grantId: string) => issueGrant(deps, grantId),
@@ -115,13 +111,6 @@ export async function createGrantService({
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
   }
-}
-
-async function get(
-  grantId: string,
-  trx?: Transaction
-): Promise<Grant | undefined> {
-  return Grant.query(trx).findById(grantId)
 }
 
 async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
@@ -221,17 +210,6 @@ async function create(
     }
 
     throw err
-  }
-}
-
-async function getByInteraction(
-  interactId: string
-): Promise<PendingGrant | undefined> {
-  const grant = await Grant.query().findOne({ interactId })
-  if (!grant || !isPendingGrant(grant)) {
-    return undefined
-  } else {
-    return grant
   }
 }
 
