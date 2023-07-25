@@ -39,8 +39,7 @@ export interface GrantService {
     interactRef?: string
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
-  revokeGrant(continueId: string): Promise<boolean>
-  revokeGrantById(grantId: string): Promise<boolean>
+  revokeGrant(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
@@ -109,8 +108,7 @@ export async function createGrantService({
       interactRef: string
     ) => getByContinue(continueId, continueToken, interactRef),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
-    revokeGrant: (continueId: string) => revokeGrant(deps, continueId),
-    revokeGrantById: (grantId: string) => revokeGrantById(deps, grantId),
+    revokeGrant: (grantId: string) => revokeGrant(deps, grantId),
     getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
@@ -140,40 +138,6 @@ async function rejectGrant(
 }
 
 async function revokeGrant(
-  deps: ServiceDependencies,
-  continueId: string
-): Promise<boolean> {
-  const { accessTokenService, accessService } = deps
-
-  const trx = await deps.knex.transaction()
-
-  try {
-    const grant = await Grant.query(trx)
-      .patch({ state: GrantState.Revoked })
-      .where({ continueId })
-      .returning('*')
-      .first()
-
-    if (!grant) {
-      deps.logger.info(
-        `Could not find grant corresponding to continueId: ${continueId}`
-      )
-      await trx.rollback()
-      return false
-    }
-
-    await accessTokenService.revokeByGrantId(grant.id, trx)
-    await accessService.revokeByGrantId(grant.id, trx)
-
-    await trx.commit()
-    return true
-  } catch (error) {
-    await trx.rollback()
-    throw error
-  }
-}
-
-async function revokeGrantById(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<boolean> {

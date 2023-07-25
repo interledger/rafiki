@@ -237,41 +237,19 @@ describe('Grant Service', (): void => {
   })
 
   describe('revoke', (): void => {
-    const expectNoAccessNorAccessTokens = (grantId: string) => {
-      expect(Access.query().where({ grantId })).resolves.toEqual([])
-      expect(AccessToken.query().where({ grantId })).resolves.toEqual([])
-    }
-
     test('Can revoke a grant', async (): Promise<void> => {
-      await expect(grantService.revokeGrant(grant.continueId)).resolves.toEqual(
-        true
-      )
+      await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(true)
 
       const revokedGrant = await Grant.query(trx).findById(grant.id)
       expect(revokedGrant?.state).toEqual(GrantState.Revoked)
-      expectNoAccessNorAccessTokens(grant.id)
+      expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([])
+      expect(AccessToken.query().where({ grantId: grant.id })).resolves.toEqual(
+        []
+      )
     })
 
     test('Can "revoke" unknown grant', async (): Promise<void> => {
       await expect(grantService.revokeGrant(v4())).resolves.toEqual(false)
-    })
-
-    test('Can revoke a grant by grant ID', async (): Promise<void> => {
-      await expect(grantService.revokeGrantById(grant.id)).resolves.toEqual(
-        true
-      )
-
-      const revokedGrant = await Grant.query(trx).findById(grant.id)
-      expect(revokedGrant?.state).toEqual(GrantState.Revoked)
-      expectNoAccessNorAccessTokens(grant.id)
-    })
-
-    test('Can "revoke" unknown grant by grant ID', async (): Promise<void> => {
-      const grantId = v4()
-      await expect(grantService.revokeGrantById(grantId)).resolves.toEqual(
-        false
-      )
-      expectNoAccessNorAccessTokens(grantId)
     })
   })
 

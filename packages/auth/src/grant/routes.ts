@@ -420,7 +420,7 @@ async function revokeGrant(
     ctx.throw(404, { error: 'unknown_request' })
   }
 
-  const revoked = await deps.grantService.revokeGrant(continueId)
+  const revoked = await deps.grantService.revokeGrant(grant.id)
   if (!revoked) {
     ctx.throw(404, { error: 'unknown_request' })
   }

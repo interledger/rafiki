@@ -65,7 +65,7 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
       }
 
       const grantService = await ctx.container.use('grantService')
-      const revoked = await grantService.revokeGrantById(grantId)
+      const revoked = await grantService.revokeGrant(grantId)
       if (!revoked) {
         return {
           code: '404',
