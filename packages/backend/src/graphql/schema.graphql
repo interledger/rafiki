@@ -652,7 +652,7 @@ type PaymentEdge {
 
 type Payment {
   type: PaymentType!
-  payment: IncomingOrOutgoingPayment
+  data: IncomingOrOutgoingPayment
 }
 
 enum PaymentType {

@@ -672,7 +672,7 @@ export type PageInfo = {
 
 export type Payment = {
   __typename?: 'Payment';
-  payment?: Maybe<IncomingOrOutgoingPayment>;
+  data?: Maybe<IncomingOrOutgoingPayment>;
   type: PaymentType;
 };
 
@@ -1271,7 +1271,7 @@ export type ResolversTypes = {
   OutgoingPaymentResponse: ResolverTypeWrapper<Partial<OutgoingPaymentResponse>>;
   OutgoingPaymentState: ResolverTypeWrapper<Partial<OutgoingPaymentState>>;
   PageInfo: ResolverTypeWrapper<Partial<PageInfo>>;
-  Payment: ResolverTypeWrapper<Partial<Omit<Payment, 'payment'> & { payment?: Maybe<ResolversTypes['IncomingOrOutgoingPayment']> }>>;
+  Payment: ResolverTypeWrapper<Partial<Omit<Payment, 'data'> & { data?: Maybe<ResolversTypes['IncomingOrOutgoingPayment']> }>>;
   PaymentConnection: ResolverTypeWrapper<Partial<PaymentConnection>>;
   PaymentEdge: ResolverTypeWrapper<Partial<PaymentEdge>>;
   PaymentFilter: ResolverTypeWrapper<Partial<PaymentFilter>>;
@@ -1369,7 +1369,7 @@ export type ResolversParentTypes = {
   OutgoingPaymentEdge: Partial<OutgoingPaymentEdge>;
   OutgoingPaymentResponse: Partial<OutgoingPaymentResponse>;
   PageInfo: Partial<PageInfo>;
-  Payment: Partial<Omit<Payment, 'payment'> & { payment?: Maybe<ResolversParentTypes['IncomingOrOutgoingPayment']> }>;
+  Payment: Partial<Omit<Payment, 'data'> & { data?: Maybe<ResolversParentTypes['IncomingOrOutgoingPayment']> }>;
   PaymentConnection: Partial<PaymentConnection>;
   PaymentEdge: Partial<PaymentEdge>;
   PaymentFilter: Partial<PaymentFilter>;
@@ -1638,7 +1638,7 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type PaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Payment'] = ResolversParentTypes['Payment']> = {
-  payment?: Resolver<Maybe<ResolversTypes['IncomingOrOutgoingPayment']>, ParentType, ContextType>;
+  data?: Resolver<Maybe<ResolversTypes['IncomingOrOutgoingPayment']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

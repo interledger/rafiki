@@ -4196,7 +4196,7 @@
         "description": null,
         "fields": [
           {
-            "name": "payment",
+            "name": "data",
             "description": null,
             "args": [],
             "type": {

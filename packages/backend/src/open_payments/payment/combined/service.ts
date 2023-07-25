@@ -1,7 +1,7 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../../shared/baseService'
 import { Pagination } from '../../../shared/baseModel'
-import { CombinedPayment, PaymentType } from './model'
+import { CombinedPayment, Payment, PaymentType } from './model'
 import { FilterString } from '../../../shared/filters'
 import { IncomingPayment } from '../incoming/model'
 import { OutgoingPayment } from '../outgoing/model'
@@ -17,11 +17,6 @@ interface CombinedPaymentFilter {
 interface GetPageOptions {
   pagination?: Pagination
   filter?: CombinedPaymentFilter
-}
-
-interface Payment {
-  type: PaymentType
-  payment: IncomingPayment | OutgoingPayment
 }
 
 export interface CombinedPaymentService {
@@ -74,7 +69,7 @@ async function getCombinedPaymentsPage(
 
       if (!incomingPayment) throw new Error(IncomingPaymentError.UnknownPayment)
 
-      payments.push({ type: PaymentType.Incoming, payment: incomingPayment })
+      payments.push({ type: PaymentType.Incoming, data: incomingPayment })
     } else {
       const outgoingPayment = await deps.outgoingPaymentService.get({
         id: combinedPayment.id
@@ -82,7 +77,7 @@ async function getCombinedPaymentsPage(
 
       if (!outgoingPayment) throw new Error(OutgoingPaymentError.UnknownPayment)
 
-      payments.push({ type: PaymentType.Outgoing, payment: outgoingPayment })
+      payments.push({ type: PaymentType.Outgoing, data: outgoingPayment })
     }
   }
 

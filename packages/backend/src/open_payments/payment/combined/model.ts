@@ -15,7 +15,7 @@ export enum PaymentType {
 
 export interface Payment {
   type: PaymentType
-  payment: IncomingPayment | OutgoingPayment
+  data: IncomingPayment | OutgoingPayment
 }
 
 export class CombinedPayment extends PaginationModel {

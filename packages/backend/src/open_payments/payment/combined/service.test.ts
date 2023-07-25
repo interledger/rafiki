@@ -101,7 +101,7 @@ describe('Combined Payment Service', (): void => {
       async function getCombinedPaymentsPage(pagination?: Pagination) {
         const payments = await combinedPaymentService.getPage({ pagination })
         return payments.map(
-          (payment) => payment.payment
+          (payment) => payment.data
         ) as unknown as CombinedPayment[]
       }
       getPageTests({
@@ -118,19 +118,18 @@ describe('Combined Payment Service', (): void => {
       test('can get all', async (): Promise<void> => {
         const setupDetails = await setupOutgoingPayment(deps)
         const payments = await combinedPaymentService.getPage()
-        console.log({ payments })
         expect(payments.length).toEqual(2)
         expect(
           payments.find((p) => p.type === PaymentType.Outgoing)
         ).toMatchObject({
           type: PaymentType.Outgoing,
-          payment: setupDetails.outgoingPayment
+          data: setupDetails.outgoingPayment
         })
         expect(
           payments.find((p) => p.type === PaymentType.Incoming)
         ).toMatchObject({
           type: PaymentType.Incoming,
-          payment: setupDetails.incomingPayment
+          data: setupDetails.incomingPayment
         })
       })
 
@@ -145,7 +144,7 @@ describe('Combined Payment Service', (): void => {
         })
         expect(payments.length).toEqual(1)
         expect(payments[0].type).toEqual(PaymentType.Incoming)
-        expect(payments[0].payment.paymentPointerId).toEqual(
+        expect(payments[0].data.paymentPointerId).toEqual(
           setupDetails.incomingPayment.paymentPointerId
         )
       })
@@ -161,7 +160,7 @@ describe('Combined Payment Service', (): void => {
         })
         expect(payments.length).toEqual(1)
         expect(payments[0].type).toEqual(PaymentType.Outgoing)
-        expect(payments[0].payment).toMatchObject(setupDetails.outgoingPayment)
+        expect(payments[0].data).toMatchObject(setupDetails.outgoingPayment)
       })
 
       test('throws an error when incoming payment is not found', async (): Promise<void> => {
