@@ -233,7 +233,7 @@ async function getGrantDetails(
   }
   const { id: interactId, nonce } = ctx.params
   const grant = await grantService.getByInteractionSession(interactId, nonce)
-  if (!grant || grant.state === GrantState.Revoked) {
+  if (!grant) {
     ctx.throw(404)
   }
 
@@ -258,7 +258,7 @@ async function startInteraction(
   const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
-  if (!grant || grant.state === GrantState.Revoked) {
+  if (!grant) {
     ctx.throw(401, { error: 'unknown_request' })
   } else {
     // TODO: also establish session in redis with short expiry
@@ -293,7 +293,9 @@ async function handleGrantChoice(
     ctx.throw(401, { error: 'invalid_interaction' })
   }
 
-  const grant = await grantService.getByInteractionSession(interactId, nonce)
+  const grant = await grantService.getByInteractionSession(interactId, nonce, {
+    includeRevoked: true
+  })
 
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
@@ -337,7 +339,7 @@ async function finishInteraction(
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
   // TODO: redirect with this error in query string
-  if (!grant || grant.state === GrantState.Revoked) {
+  if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
     const clientRedirectUri = new URL(grant.finishUri)

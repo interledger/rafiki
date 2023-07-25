@@ -221,6 +221,27 @@ describe('Grant Service', (): void => {
         ).resolves.toBeUndefined()
       }
     )
+    test('Defaults to excluding revoked grants', async () => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+      assert.ok(grant.interactId)
+      assert.ok(grant.interactNonce)
+      const fetchedGrant = await grantService.getByInteractionSession(
+        grant.interactId,
+        grant.interactNonce
+      )
+      expect(fetchedGrant).toBeUndefined()
+    })
+    test('Can fetch revoked grants with includeRevoked', async () => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+      assert.ok(grant.interactId)
+      assert.ok(grant.interactNonce)
+      const fetchedGrant = await grantService.getByInteractionSession(
+        grant.interactId,
+        grant.interactNonce,
+        { includeRevoked: true }
+      )
+      expect(fetchedGrant?.id).toEqual(grant.id)
+    })
   })
 
   describe('reject', (): void => {

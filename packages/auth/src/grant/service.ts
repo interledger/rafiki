@@ -17,20 +17,13 @@ import { Pagination } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 
-interface FilterGrantState {
-  notIn?: GrantState[]
-}
-interface GrantFilter {
-  identifier?: FilterString
-  state?: FilterGrantState
-}
-
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteractionSession(
     interactId: string,
-    interactNonce: string
+    interactNonce: string,
+    options?: GetByInteractionSessionOpts
   ): Promise<PendingGrant | undefined>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
@@ -80,6 +73,14 @@ export interface GrantResponse {
   }
 }
 
+interface FilterGrantState {
+  notIn?: GrantState[]
+}
+interface GrantFilter {
+  identifier?: FilterString
+  state?: FilterGrantState
+}
+
 export async function createGrantService({
   logger,
   accessService,
@@ -99,8 +100,11 @@ export async function createGrantService({
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
-    getByInteractionSession: (interactId: string, interactNonce: string) =>
-      getByInteractionSession(interactId, interactNonce),
+    getByInteractionSession: (
+      interactId: string,
+      interactNonce: string,
+      options: GetByInteractionSessionOpts
+    ) => getByInteractionSession(interactId, interactNonce, options),
     issueGrant: (grantId: string) => issueGrant(deps, grantId),
     getByContinue: (
       continueId: string,
@@ -215,13 +219,27 @@ async function create(
   }
 }
 
+interface GetByInteractionSessionOpts {
+  includeRevoked?: boolean
+}
+
 async function getByInteractionSession(
   interactId: string,
-  interactNonce: string
+  interactNonce: string,
+  options: GetByInteractionSessionOpts = {}
 ): Promise<PendingGrant | undefined> {
-  const grant = await Grant.query()
+  const { includeRevoked = false } = options
+
+  const queryBuilder = Grant.query()
     .findOne({ interactId, interactNonce })
     .withGraphFetched('access')
+
+  if (!includeRevoked) {
+    queryBuilder.whereNot('state', GrantState.Revoked)
+  }
+
+  const grant = await queryBuilder
+
   if (!grant || !isPendingGrant(grant)) {
     return undefined
   } else {
