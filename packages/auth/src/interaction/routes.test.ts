@@ -20,12 +20,7 @@ import {
   GetContext,
   ChooseContext
 } from './routes'
-import {
-  Grant,
-  StartMethod,
-  FinishMethod,
-  GrantState,
-} from '../grant/model'
+import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 
@@ -153,9 +148,7 @@ describe('Interaction Routes', (): void => {
         redirectUrl.searchParams.set('interactId', grant.interactId)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        await expect(
-          interactionRoutes.start(ctx)
-        ).resolves.toBeUndefined()
+        await expect(interactionRoutes.start(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
 
         redirectUrl.searchParams.set('nonce', grant.interactNonce as string)
@@ -183,12 +176,10 @@ describe('Interaction Routes', (): void => {
           { id: '', nonce: grant.interactNonce }
         )
 
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject(
-          {
-            status: 404,
-            error: 'unknown_request'
-          }
-        )
+        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+          status: 404,
+          error: 'unknown_request'
+        })
       })
 
       test('Cannot finish interaction with invalid session', async (): Promise<void> => {
@@ -204,12 +195,10 @@ describe('Interaction Routes', (): void => {
           { nonce: grant.interactNonce, id: grant.interactId }
         )
 
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject(
-          {
-            status: 401,
-            error: 'invalid_request'
-          }
-        )
+        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'invalid_request'
+        })
       })
 
       test('Cannot finish interaction that does not exist', async (): Promise<void> => {
@@ -225,12 +214,10 @@ describe('Interaction Routes', (): void => {
           { id: fakeInteractId, nonce: grant.interactNonce }
         )
 
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject(
-          {
-            status: 404,
-            error: 'unknown_request'
-          }
-        )
+        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+          status: 404,
+          error: 'unknown_request'
+        })
       })
 
       test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
@@ -298,9 +285,7 @@ describe('Interaction Routes', (): void => {
 
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        await expect(
-          interactionRoutes.finish(ctx)
-        ).resolves.toBeUndefined()
+        await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
@@ -337,9 +322,7 @@ describe('Interaction Routes', (): void => {
 
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        await expect(
-          interactionRoutes.finish(ctx)
-        ).resolves.toBeUndefined()
+        await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
@@ -366,9 +349,7 @@ describe('Interaction Routes', (): void => {
 
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
-        await expect(
-          interactionRoutes.finish(ctx)
-        ).resolves.toBeUndefined()
+        await expect(interactionRoutes.finish(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
@@ -404,9 +385,7 @@ describe('Interaction Routes', (): void => {
           { id: grant.interactId, nonce: grant.interactNonce }
         )
 
-        await expect(
-          interactionRoutes.details(ctx)
-        ).resolves.toBeUndefined()
+        await expect(interactionRoutes.details(ctx)).resolves.toBeUndefined()
         expect(ctx.status).toBe(200)
         expect(ctx.body).toEqual({
           access: [
@@ -432,9 +411,7 @@ describe('Interaction Routes', (): void => {
           },
           { id: v4(), nonce: grant.interactNonce }
         )
-        await expect(
-          interactionRoutes.details(ctx)
-        ).rejects.toMatchObject({
+        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404
         })
       })
@@ -476,9 +453,7 @@ describe('Interaction Routes', (): void => {
           { id: grant.interactId, nonce: grant.interactNonce }
         )
 
-        await expect(
-          interactionRoutes.details(ctx)
-        ).rejects.toMatchObject({
+        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 401
         })
       })
@@ -496,9 +471,7 @@ describe('Interaction Routes', (): void => {
           },
           { id: v4(), nonce: grant.interactNonce }
         )
-        await expect(
-          interactionRoutes.details(ctx)
-        ).rejects.toMatchObject({
+        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404
         })
       })
@@ -516,9 +489,7 @@ describe('Interaction Routes', (): void => {
           { id: grant.interactId, nonce: grant.interactNonce }
         )
 
-        await expect(
-          interactionRoutes.details(ctx)
-        ).rejects.toMatchObject({
+        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 401
         })
       })

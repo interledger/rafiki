@@ -123,13 +123,16 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('interactionRoutes', async (deps: IocContract<AppServices>) => {
-    return createInteractionRoutes({
-      grantService: await deps.use('grantService'),
-      logger: await deps.use('logger'),
-      config: await deps.use('config')
-    })
-  })
+  container.singleton(
+    'interactionRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return createInteractionRoutes({
+        grantService: await deps.use('grantService'),
+        logger: await deps.use('logger'),
+        config: await deps.use('config')
+      })
+    }
+  )
 
   container.singleton('openApi', async () => {
     const authServerSpec = await createOpenAPI(

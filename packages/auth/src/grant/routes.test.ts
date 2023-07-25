@@ -1,10 +1,8 @@
 import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
-import * as crypto from 'crypto'
 import { IocContract } from '@adonisjs/fold'
 import nock from 'nock'
 import jestOpenAPI from 'jest-openapi'
-import { URL } from 'url'
 import assert from 'assert'
 
 import { createContext } from '../tests/context'
