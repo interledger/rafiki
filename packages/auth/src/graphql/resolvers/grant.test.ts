@@ -137,7 +137,49 @@ describe('Grant Resolvers', (): void => {
         })
       })
 
-      test('state', async (): Promise<void> => {
+      test('state: in', async (): Promise<void> => {
+        const grants: GrantModel[] = []
+        for (let i = 0; i < 2; i++) {
+          const grant = await createGrant(deps)
+          grant.$query().patch({ state: GrantState.Pending })
+          grants.push(grant)
+        }
+
+        const filter = {
+          state: {
+            in: [GrantState.Pending]
+          }
+        }
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query grants($filter: GrantFilter) {
+                grants(filter: $filter) {
+                  edges {
+                    node {
+                      id
+                      state
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { filter }
+          })
+          .then((query): GrantsConnection => {
+            if (query.data) {
+              return query.data.grants
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        expect(grants).toHaveLength(2)
+      })
+
+      test('state: not in', async (): Promise<void> => {
         const grants: GrantModel[] = []
         for (let i = 0; i < 2; i++) {
           const grant = await createGrant(deps)

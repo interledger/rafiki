@@ -49,11 +49,12 @@ input GrantFilter {
 }
 
 input FilterString {
-  in: [String!]!
+  in: [String!]
 }
 
 input FilterGrantState {
-  notIn: [GrantState!]!
+  in: [GrantState!]
+  notIn: [GrantState!]
 }
 
 input RevokeGrantInput {

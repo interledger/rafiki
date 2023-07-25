@@ -35,11 +35,12 @@ export type Access = Model & {
 };
 
 export type FilterGrantState = {
-  notIn: Array<GrantState>;
+  in?: InputMaybe<Array<GrantState>>;
+  notIn?: InputMaybe<Array<GrantState>>;
 };
 
 export type FilterString = {
-  in: Array<Scalars['String']['input']>;
+  in?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type Grant = Model & {

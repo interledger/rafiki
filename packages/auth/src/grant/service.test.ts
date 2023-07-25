@@ -341,13 +341,16 @@ describe('Grant Service', (): void => {
     const paymentPointer = 'example.com/test'
 
     beforeEach(async () => {
-      for (const identifier of [
-        paymentPointer,
-        paymentPointer,
-        'example.com/test3'
-      ]) {
-        grants.push(await createGrant(deps, { identifier }))
-        await grants[0].$query().patch({ state: GrantState.Revoked })
+      const grantDetails = [
+        { identifier: paymentPointer, state: GrantState.Revoked },
+        { identifier: paymentPointer, state: GrantState.Pending },
+        { identifier: 'example.com/test3', state: GrantState.Pending }
+      ]
+
+      for (const { identifier, state } of grantDetails) {
+        const grant = await createGrant(deps, { identifier })
+        const updatedGrant = await grant.$query().patchAndFetch({ state })
+        grants.push(updatedGrant)
       }
     })
 
@@ -371,14 +374,24 @@ describe('Grant Service', (): void => {
       expect(grants.length).toBe(2)
     })
 
-    test('Filter out by grant state', async () => {
+    test('Filter by grant state', async () => {
       const grants = await grantService.getPage(undefined, {
+        state: {
+          in: [GrantState.Revoked]
+        }
+      })
+
+      expect(grants.length).toBe(1)
+    })
+
+    test('Filter out by grant state', async () => {
+      const fetchedGrants = await grantService.getPage(undefined, {
         state: {
           notIn: [GrantState.Revoked]
         }
       })
 
-      expect(grants.length).toBe(3)
+      expect(fetchedGrants.length).toBe(3)
     })
 
     test('Can paginate and filter', async (): Promise<void> => {

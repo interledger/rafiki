@@ -74,6 +74,7 @@ export interface GrantResponse {
 }
 
 interface FilterGrantState {
+  in?: GrantState[]
   notIn?: GrantState[]
 }
 interface GrantFilter {
@@ -285,6 +286,10 @@ async function getGrantsPage(
 
   if (identifier?.in?.length) {
     query.whereIn('access.identifier', identifier.in)
+  }
+
+  if (state?.in?.length) {
+    query.whereIn('state', state.in)
   }
 
   if (state?.notIn?.length) {
