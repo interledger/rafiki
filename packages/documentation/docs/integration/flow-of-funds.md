@@ -9,11 +9,11 @@ The `incoming_payment.created` event indicates that an incoming payment has been
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>B: webhook event: incoming payment created
-B->>B: no action required
+R->>ASE: webhook event: incoming payment created
+ASE->>ASE: no action required
 ```
 
 ## `incoming_payment.completed`
@@ -25,12 +25,12 @@ Example: An incoming payment was completed and received $10.
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>B: webhook event: incoming payment completed,<br>receiveAmount: $10
-B->>R: admin API call: WithdrawEventLiquidity
-B->>B: credit receiver's account with $10
+R->>ASE: webhook event: incoming payment completed,<br>receiveAmount: $10
+ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>ASE: credit receiver's account with $10
 ```
 
 ## `incoming_payment.expired`
@@ -42,12 +42,12 @@ Example: An incoming payment has expired and received $2.55.
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>B: webhook event: incoming payment expired,<br>receiveAmount: $2.55
-B->>R: admin API call: WithdrawEventLiquidity
-B->>B: credit receiver's account with $2.55
+R->>ASE: webhook event: incoming payment expired,<br>receiveAmount: $2.55
+ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>ASE: credit receiver's account with $2.55
 ```
 
 ## `outgoing_payment.created`
@@ -59,12 +59,12 @@ Example: An outgoing payment for $12 has been created.
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>B: webhook event: outgoing payment created,<br>sendAmount: $12
-B->>B: put hold of $12 on sender's account
-B->>R: admin API call: DepositEventLiquidity
+R->>ASE: webhook event: outgoing payment created,<br>sendAmount: $12
+ASE->>ASE: put hold of $12 on sender's account
+ASE->>R: admin API call: DepositEventLiquidity
 ```
 
 ## `outgoing_payment.completed`
@@ -76,12 +76,12 @@ Example: An outgoing payment for $12 has completed. $11.50 were sent. The Accoun
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-%% R->>B: webhook event: outgoing completed,<br>sendAmount: $12, sentAmount:$11.50
-%% B->>R: admin API call: WithdrawEventLiquidity
-%% B->>B: remove hold and deduct $12 from sender's account,<br>credit ASE's account with $0.50
+R->>ASE: webhook event: outgoing completed,<br>sendAmount: $12, sentAmount:$11.50
+ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>ASE: remove hold and deduct $12 from sender's account,<br>credit ASE's account with $0.50
 ```
 
 ## `outgoing_payment.failed`
@@ -93,12 +93,12 @@ Example: An outgoing payment for $12 has failed. $8 were sent.
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-%% R->>B: webhook event: outgoing failed,<br>sendAmount: $12, sentAmount:$8
-%% B->>R: admin API call: WithdrawEventLiquidity
-%% B->>B: remove hold and deduct $8 from sender's account
+R->>ASE: webhook event: outgoing failed,<br>sendAmount: $12, sentAmount:$8
+ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>ASE: remove hold and deduct $8 from sender's account
 ```
 
 ## `payment_pointer.web_monetization`
@@ -110,10 +110,10 @@ Example: A payment pointer received $0.33
 ```mermaid
 sequenceDiagram
 
-participant B as Account Servicing Entity
+participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>B: webhook event: payment pointer web monetization,<br>received: $0.33
-B->>R: admin API call: WithdrawEventLiquidity
-B->>B: credit receiver's account with $0.33
+R->>ASE: webhook event: payment pointer web monetization,<br>received: $0.33
+ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>ASE: credit receiver's account with $0.33
 ```
