@@ -227,8 +227,8 @@ importers:
         specifier: ^8.14.1
         version: 8.14.1
       pino-pretty:
-        specifier: ^10.0.1
-        version: 10.0.1
+        specifier: ^10.2.0
+        version: 10.2.0
       testcontainers:
         specifier: ^9.12.0
         version: 9.12.0
@@ -417,8 +417,8 @@ importers:
         specifier: ^8.14.1
         version: 8.14.1
       pino-pretty:
-        specifier: ^10.0.1
-        version: 10.0.1
+        specifier: ^10.2.0
+        version: 10.2.0
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
@@ -14760,8 +14760,8 @@ packages:
       split2: 4.1.0
     dev: false
 
-  /pino-pretty@10.0.1:
-    resolution: {integrity: sha512-yrn00+jNpkvZX/NrPVCPIVHAfTDy3ahF0PND9tKqZk4j9s+loK8dpzrJj4dGb7i+WLuR50ussuTAiWoMWU+qeA==}
+  /pino-pretty@10.2.0:
+    resolution: {integrity: sha512-tRvpyEmGtc2D+Lr3FulIZ+R1baggQ4S3xD2Ar93KixFEDx6SEAUP3W5aYuEw1C73d6ROrNcB2IXLteW8itlwhA==}
     hasBin: true
     dependencies:
       colorette: 2.0.19
