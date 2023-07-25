@@ -29,7 +29,7 @@ export interface GrantService {
   getByContinue(
     continueId: string,
     continueToken: string,
-    interactRef?: string
+    options?: GetByContinueOpts
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
   revokeGrant(grantId: string): Promise<boolean>
@@ -109,8 +109,8 @@ export async function createGrantService({
     getByContinue: (
       continueId: string,
       continueToken: string,
-      interactRef: string
-    ) => getByContinue(continueId, continueToken, interactRef),
+      options: GetByContinueOpts
+    ) => getByContinue(continueId, continueToken, options),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
     revokeGrant: (grantId: string) => revokeGrant(deps, grantId),
     getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
@@ -247,12 +247,26 @@ async function getByInteractionSession(
   }
 }
 
+interface GetByContinueOpts {
+  interactRef?: string
+  includeRevoked?: boolean
+}
+
 async function getByContinue(
   continueId: string,
   continueToken: string,
-  interactRef?: string
+  options: GetByContinueOpts = {}
 ): Promise<Grant | null> {
-  const grant = await Grant.query().findOne({ continueId })
+  const { interactRef, includeRevoked = false } = options
+
+  const queryBuilder = Grant.query().findOne({ continueId })
+
+  if (!includeRevoked) {
+    queryBuilder.whereNot('state', GrantState.Revoked)
+  }
+
+  const grant = await queryBuilder
+
   if (
     continueToken !== grant?.continueToken ||
     (interactRef && interactRef !== grant?.interactRef)

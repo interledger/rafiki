@@ -175,7 +175,38 @@ describe('Grant Service', (): void => {
       const fetchedGrant = await grantService.getByContinue(
         continueId,
         continueToken,
-        interactRef
+        { interactRef }
+      )
+      expect(fetchedGrant?.id).toEqual(grant.id)
+      expect(fetchedGrant?.continueId).toEqual(continueId)
+      expect(fetchedGrant?.continueToken).toEqual(continueToken)
+      expect(fetchedGrant?.interactRef).toEqual(interactRef)
+    })
+
+    test('Defaults to excluding revoked grants', async (): Promise<void> => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+
+      const { continueId, continueToken, interactRef } = grant
+      assert.ok(interactRef)
+
+      const fetchedGrant = await grantService.getByContinue(
+        continueId,
+        continueToken,
+        { interactRef }
+      )
+      expect(fetchedGrant).toBeNull()
+    })
+
+    test('Can fetch revoked grants with includeRevoked', async (): Promise<void> => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+
+      const { continueId, continueToken, interactRef } = grant
+      assert.ok(interactRef)
+
+      const fetchedGrant = await grantService.getByContinue(
+        continueId,
+        continueToken,
+        { interactRef, includeRevoked: true }
       )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.continueId).toEqual(continueId)

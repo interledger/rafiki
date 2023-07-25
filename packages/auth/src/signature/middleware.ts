@@ -73,9 +73,9 @@ export async function grantContinueHttpsigMiddleware(
   const grant = await grantService.getByContinue(
     ctx.params['id'],
     continueToken,
-    interactRef
+    { interactRef }
   )
-  if (!grant || grant.state === GrantState.Revoked) {
+  if (!grant) {
     ctx.status = 401
     ctx.body = {
       error: 'invalid_continuation',

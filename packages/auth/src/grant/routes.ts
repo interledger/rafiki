@@ -381,12 +381,10 @@ async function continueGrant(
   }
 
   const { config, accessTokenService, grantService, accessService } = deps
-  const grant = await grantService.getByContinue(
-    continueId,
-    continueToken,
+  const grant = await grantService.getByContinue(continueId, continueToken, {
     interactRef
-  )
-  if (!grant || grant.state === GrantState.Revoked) {
+  })
+  if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
     if (grant.state !== GrantState.Granted) {
@@ -418,7 +416,7 @@ async function revokeGrant(
     ctx.throw(401, { error: 'invalid_request' })
   }
   const grant = await deps.grantService.getByContinue(continueId, continueToken)
-  if (!grant || grant.state === GrantState.Revoked) {
+  if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
   }
 
