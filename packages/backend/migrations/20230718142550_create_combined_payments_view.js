@@ -7,50 +7,35 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.raw(`
-    CREATE VIEW "combinedPaymentsView" AS
-    SELECT
-      "id",
-      "paymentPointerId",
-      "expiresAt",
-      "incomingAmountValue",
-      "state",
-      "connectionId",
-      "client",
-      "assetId",
-      "processAt",
-      NULL AS "grantId",
-      NULL AS "peerId",
-      "createdAt",
-      "updatedAt",
-      "metadata",
-      'INCOMING' AS "type"
-    FROM "incomingPayments"
-    UNION ALL
-    SELECT
-      "id",
-      "paymentPointerId",
-      NULL AS "expiresAt",
-      NULL AS "incomingAmountValue",
-      "state",
-      NULL AS "connectionId",
-      "client",
-      NULL AS "assetId",
-      NULL AS "processAt",
-      "grantId",
-      "peerId",
-      "createdAt",
-      "updatedAt",
-      "metadata",
-      'OUTGOING' AS "type"
-    FROM "outgoingPayments"
-  `)
+  return knex.schema.createViewOrReplace(
+    'combinedPaymentsView',
+    function (view) {
+      const sharedColumns = [
+        'id',
+        'paymentPointerId',
+        'state',
+        'client',
+        'createdAt',
+        'updatedAt',
+        'metadata'
+      ]
+      view.columns([...sharedColumns, 'type'])
+      view.as(
+        knex('incomingPayments')
+          .select([...sharedColumns, knex.raw("'INCOMING' AS type")])
+          .unionAll((union) => {
+            union
+              .select([...sharedColumns, knex.raw("'OUTGOING' AS type")])
+              .from('outgoingPayments')
+          })
+      )
+    }
+  )
 }
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  // return knex.schema.raw('DROP VIEW IF EXISTS combinedPayments')
   return knex.schema.dropViewIfExists('combinedPaymentsView')
 }
