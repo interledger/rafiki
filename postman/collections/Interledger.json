@@ -396,7 +396,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreatePeerLiquidityWithdrawal ($input: CreatePeerLiquidityWithdrawalInput!) {\n  createPeerLiquidityWithdrawal(input: $input) {\n    code\n    success\n    message\n    error\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"id\": \"421fae87-9a59-4217-9ff8-faf55ffab9c6\",\n    \"peerId\": \"{{peerId}}\",\n    \"amount\": \"100\"\n  }\n}\n"
+								"variables": "{\n  \"input\": {\n    \"id\": \"421fae87-9a59-4217-9ff8-faf55ffab9c6\",\n    \"peerId\": \"{{peerId}}\",\n    \"amount\": \"100\",\n    \"idempotencyKey\":\"{{$guid}}\"\n  }\n}\n"
 							}
 						},
 						"url": {
