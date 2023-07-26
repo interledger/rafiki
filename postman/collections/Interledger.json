@@ -1,0 +1,3328 @@
+{
+	"info": {
+		"_postman_id": "a347da4d-a22b-4674-abb3-92a420f74dbd",
+		"name": "Interledger",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_uid": "23065173-a347da4d-a22b-4674-abb3-92a420f74dbd"
+	},
+	"item": [
+		{
+			"name": "Rafiki Admin APIs",
+			"item": [
+				{
+					"name": "Create Asset",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9bc423dc-c41c-4aff-9ba5-6ded770bdf5d",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"assetId\", body.data.createAsset.asset.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "01300ba5-5d14-4b77-80b4-633e0d268068",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Asset Withdrawal Threshold",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "9bc423dc-c41c-4aff-9ba5-6ded770bdf5d",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "4cdcb218-d8f7-4019-9ae7-596883cc9d4e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Asset",
+					"id": "4eede220-bd6a-4f21-9215-c16aec442e5c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assets",
+					"id": "e1eb953f-f7e0-4175-b7ca-f46d805163cd",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Asset Liquidity",
+					"id": "86ef7b62-24f5-4543-a849-4d92f413305a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Asset Liquidity",
+					"id": "dd79226e-2624-4608-8f33-088fc1c0e272",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Peer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "dbeca019-62ce-4382-8821-a0ce32e296fe",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"peerId\", body.data.createPeer.peer.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "85b268b8-f117-4dea-ac36-ec5c1bd817bd",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Peer",
+					"id": "c6aaa82b-e87d-4303-b3ba-b844b4b3b19e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Peer",
+					"id": "6a916aef-f33f-489f-86f9-1a94182908fe",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Peers",
+					"id": "606368f0-943b-401f-8afa-968e03bb1490",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Peer",
+					"id": "b5cc6cd4-964a-4313-afbc-2258ae5fa83a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Peer Liquidity",
+					"id": "441b2b7f-6bda-4d69-b64d-2d25e383b9fc",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Peer Liquidity",
+					"id": "da9b1236-affe-4e6e-a13b-d5fd6cf4ce5d",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Post Liquidity Withdrawal",
+					"id": "52a01d2c-3d1f-4c35-a815-0dbae731684a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Void Liquidity Withdrawal",
+					"id": "3f400c54-86d4-4397-870f-5756511f5963",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment Pointer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "526e6171-94aa-4629-8079-ae8b2d60573a",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"paymentPointerId\", body.data.createPaymentPointer.paymentPointer.id);",
+									"pm.expect(pm.collectionVariables.get(\"paymentPointerId\")).to.be.a('string');",
+									"",
+									"pm.collectionVariables.set(\"paymentPointerUrl\", body.data.createPaymentPointer.paymentPointer.url);",
+									"pm.expect(pm.collectionVariables.get(\"paymentPointerUrl\")).to.be.a('string');",
+									"",
+									"pm.collectionVariables.set(\"createPaymentPointerRequest\", pm.request);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "cd48908c-3829-4e36-a545-2a34c0654765",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "d81f5037-07e9-4d4d-9a2e-e760de8a3d23",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Payment Pointer",
+					"id": "5c9b364e-8c48-40af-ad68-bed181b91e87",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Pointer",
+					"id": "64710a3f-f610-4480-89e2-b9983bd46b7f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Payment Pointers",
+					"id": "55601a1b-640b-4940-b61a-8d3d8cf321a1",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment Pointer Key",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "a8dc0dc3-c8b5-455f-831f-a4ab4a301b4c",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"paymentPointerKeyId\", body.data.createPaymentPointerKey.paymentPointerKey.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "9c5c3cc4-59b7-418a-a885-27fdbfac5d40",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Revoke Payment Pointer Key",
+					"id": "aa9e04cf-f871-4fe9-87f2-9841d4f394e5",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Incoming Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "fb0da7ad-2f68-436d-8127-e0769bf0b7fb",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"incomingPaymentId\", body.data.createIncomingPayment.payment.id);",
+									"pm.expect(pm.collectionVariables.get(\"incomingPaymentId\")).to.be.a('string');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "025acf48-eb27-44b9-b5bd-b45c7f403bbc",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Receiver (remote Incoming Payment)",
+					"id": "c49a2d8d-6057-477b-b7e4-e77d0e7550a2",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Quote",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "ea151f03-7b85-4f0f-b300-aaee56312e31",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"quoteId\", body.data.createQuote.quote.id);",
+									"pm.expect(pm.collectionVariables.get(\"quoteId\")).to.be.a('string');"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "cf42a5d8-af8e-468e-bb57-a4e1609e5134",
+								"exec": [
+									"// Create an additional payment pointer to represent the account that will be sending money",
+									"",
+									"// Reset the uniquePaymentPointer value",
+									"pm.collectionVariables.set(\"uniquePaymentPointer\", Math.floor(Math.random() * (1001)));",
+									"",
+									"const initialRequest = pm.collectionVariables.get(\"createPaymentPointerRequest\");",
+									"",
+									"const postRequest = {",
+									"  url: initialRequest.url,",
+									"  method: initialRequest.method,",
+									"  body: {",
+									"    mode: 'graphql',",
+									"    graphql: {",
+									"        query: initialRequest.body.graphql.query,",
+									"        variables: JSON.stringify({",
+									"            \"input\": {",
+									"                \"assetId\": pm.collectionVariables.get(\"assetId\"),",
+									"                \"url\": \"https://\" + pm.collectionVariables.get(\"OpenPaymentsHost\") + \"/simon/\" + pm.collectionVariables.get(\"uniquePaymentPointer\"),",
+									"                \"publicName\": \"Simon\"",
+									"            }",
+									"        })",
+									"    }",
+									"  }",
+									"};",
+									"",
+									"pm.sendRequest(postRequest, (error, response) => {",
+									"    if (error) {",
+									"        console.log(error);",
+									"    }",
+									"    const body = response.json();",
+									"    pm.test('response should be okay to process', () => {",
+									"        pm.expect(error).to.equal(null);",
+									"        pm.expect(body.data.createPaymentPointer.code).to.equal('200');",
+									"        pm.expect(body.data.createPaymentPointer.success).to.equal(true);",
+									"    });",
+									"    pm.collectionVariables.set(\"secondPaymentPointerId\", body.data.createPaymentPointer.paymentPointer.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "9c162f7f-46aa-4273-be51-6e862dbb5c20",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Quote",
+					"id": "7ae5a7cc-9939-429e-91c9-1af32009c2b2",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Outgoing Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "e8fec150-a523-410e-861f-bf5f2cc89ee6",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"outgoingPaymentId\", body.data.createOutgoingPayment.payment.id);",
+									"pm.expect(pm.collectionVariables.get(\"outgoingPaymentId\")).to.be.a('string');"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "c15d932e-58c8-4551-9de9-ded749ed60a3",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Outgoing Payment",
+					"id": "fe34245b-9733-4c61-aa30-a64d1f229d98",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Incoming Payment",
+					"id": "fc61d357-b568-4702-938b-86e40d988d54",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{PeerGraphqlHost}}/graphql",
+							"host": [
+								"{{PeerGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Deposit Event Liquidity",
+					"id": "383e2176-1fa9-4fb9-9976-86e252549e27",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Event Liquidity",
+					"id": "c0c5cba1-6132-4a70-855c-5e4f90ee7ce6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Payment Pointer Withdrawal",
+					"id": "8072539b-1f64-4e92-9363-816f7e15f557",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Trigger Payment Pointer Events",
+					"id": "97b0d704-992b-4f4d-afad-5802b8cf4db0",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Webhook Events",
+					"id": "fe2004fe-de98-43a4-bb95-e92a2425dca5",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql"
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"id": "80022c2e-5e7a-4fb3-9101-85dc432546ed"
+		},
+		{
+			"name": "Open Payments APIs",
+			"item": [
+				{
+					"name": "Payment Pointer",
+					"item": [
+						{
+							"name": "Get a Payment Pointer",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "86136bc8-2627-4f24-b3bb-918c3813d14b",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "94d335f6-aad5-4136-b282-425d270df6bd",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4000/accounts/paaaa",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"accounts",
+										"paaaa"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get a Payment Pointer Copy",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "86136bc8-2627-4f24-b3bb-918c3813d14b",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "3cbf75fa-97b9-47ad-b7fd-8210fb58f057",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									},
+									{
+										"key": "Accept",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "http://localhost:4000/accounts/paaaa",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "4000",
+									"path": [
+										"accounts",
+										"paaaa"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Payment Pointer Keys",
+							"id": "8dff2fff-62b9-4a3c-9ef6-8e92d1e0e5fe",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/jwks.json",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"jwks.json"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "30ad8d51-f697-4b8e-a1dd-3fbb1880fa9a"
+				},
+				{
+					"name": "STREAM connection",
+					"item": [
+						{
+							"name": "Get STREAM credentials",
+							"id": "791f2953-509e-4a17-8641-377d34d556f2",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{PeerOpenPaymentsHost}}/connections/{{connectionId}}",
+									"host": [
+										"{{PeerOpenPaymentsHost}}"
+									],
+									"path": [
+										"connections",
+										"{{connectionId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "6699192d-63ef-45ef-928a-cd0c6ec24bc8"
+				},
+				{
+					"name": "Incoming Payments",
+					"item": [
+						{
+							"name": "Create Incoming Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "a5d72a14-641a-4ea3-8382-3fd14feef282",
+										"exec": [
+											"pm.collectionVariables.set(\"tomorrow\", (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString());",
+											"",
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "488c7915-7b1a-4e77-8998-c4501bb3585d",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"incomingPaymentId\", body.id.split(\"/\").pop());",
+											"pm.collectionVariables.set(\"connectionId\", body.ilpStreamConnection.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "e026b405-4628-4781-8b09-471ab7e62ae7",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Incoming Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "06d96b41-dc01-49af-b22c-2e089e66d861",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "f2af93a6-e842-4dc1-abc5-e9b462f85762",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "b01a733b-5fe1-427b-b651-823bcd4acb7a",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments",
+										"{{incomingPaymentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Incoming Payments",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "6276a240-a174-430e-ac14-4178d70eb229",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "45739db5-ff51-49da-b394-5c210938718c",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "02d65dd0-76bd-4359-9d82-926341a919fa",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments?first=10",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments"
+									],
+									"query": [
+										{
+											"key": "cursor",
+											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
+											"disabled": true
+										},
+										{
+											"key": "first",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Complete Incoming Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "a9b7f1dc-98a3-463d-b452-487722076180",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "6cfef445-4620-40fa-a2df-35c26995ae7d",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}/complete",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments",
+										"{{incomingPaymentId}}",
+										"complete"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "b4f43855-2847-4646-bf88-7bfbc2a72637"
+				},
+				{
+					"name": "Quotes",
+					"item": [
+						{
+							"name": "Create Quote",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7914cf2f-5ce8-4e6a-8c20-95c4b89114c2",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"quoteId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "ec6a02da-edc7-4503-b759-2160b125974f",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "2167b53c-8d90-47e6-8d86-cdb2f265b9f4",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"sendAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/quotes",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"quotes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Quote",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "1f2d3c33-7838-4071-beb4-efc702dc24cd",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "d684567c-4e4a-42c7-8977-32bc22c5bc1d",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "164cb5bd-4d1d-4d5a-b526-636022da2b20",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/quotes/{{quoteId}}",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"quotes",
+										"{{quoteId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "e1d62bcc-3f6f-4cc9-850b-09e29596d3bb"
+				},
+				{
+					"name": "Outgoing Payments",
+					"item": [
+						{
+							"name": "Create Outgoing Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "fe0d7c37-8fb7-407a-88af-6dd8859f18ba",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "adcd60af-8ed3-4f20-ada9-d1c53c56d485",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"outgoingPaymentId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "f62eb73d-0693-4659-83b6-da74519b4c60",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quoteId\": \"{{gfranklinPaymentPointer}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/outgoing-payments",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Outgoing Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7e5adcbb-8c9d-4599-8279-5167be8b2104",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "2ff7630d-52dc-41ad-bd9b-b66747c4a00e",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "54844a0b-4151-462c-b8dd-f62a0d0c177f",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/outgoing-payments/{{outgoingPaymentId}}",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments",
+										"{{outgoingPaymentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "List Outgoing Payments",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2fc40a72-e702-4450-9caa-ec8212e98de1",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "14afddb8-01c3-4750-b85b-46382c4bde4f",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "7f8cf548-3627-406a-baa2-d4997cc14c94",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/outgoing-payments?first=2",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments"
+									],
+									"query": [
+										{
+											"key": "first",
+											"value": "2"
+										},
+										{
+											"key": "cursor",
+											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "e1b0adfd-10a6-4cdb-9e83-0a02ce5f27f3"
+				}
+			],
+			"id": "559d76e4-3678-4561-bf9c-78a85a64b90c"
+		},
+		{
+			"name": "Open Payments Auth APIs",
+			"item": [
+				{
+					"name": "Grants",
+					"item": [
+						{
+							"name": "Grant Request",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "11de67e4-9394-4ac2-8b0d-8c99c27aba7b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
+											"pm.collectionVariables.set(\"continueToken\", body.continue.access_token.value);",
+											"pm.collectionVariables.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "18631723-2512-4e2b-8ff8-5ca54cbd3c62",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "2d072ac3-f771-45e3-96a8-0c3e56aee677",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"http://localhost:3000/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"8000\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"8000\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"123\"\n        }\n    }\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Continuation Request",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "35f95579-c245-478e-b20c-4b4f5605ab34",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "128bfe5f-50cb-4ba0-81e9-d03e3d73468b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body.access_token.value);",
+											"pm.collectionVariables.set(\"tokenId\", body.access_token.manage.split('/').pop())"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "be8db771-2176-4416-ab8d-3b747cb7327b",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{continueToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n     \"interact_ref\": \"fdfa9202-3e68-4c2a-8049-25135704a1cb\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/continue/{{continueId}}",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										"continue",
+										"{{continueId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "f5f3e404-25ea-41dc-8a16-5e85e8e806b0"
+				},
+				{
+					"name": "Tokens",
+					"item": [
+						{
+							"name": "Rotate Access Token",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "4b1a8be9-e837-4ba4-8bda-ca237c0e813f",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "e7fed44d-0ab3-4d95-b9d4-fadef79b9255",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body.access_token.value);",
+											"pm.collectionVariables.set(\"tokenId\", body.access_token.manage.split('/').pop())"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "d5aa7265-70bc-4a9e-8ee5-b97204429ba8",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/token/{{tokenId}}",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										"token",
+										"{{tokenId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Revoke Access Token",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "a937fbe8-c9c3-46cf-9107-8344136513a6",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "1570ca33-a331-458e-aa66-e3d3892a9d99",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/token/{{tokenId}}",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										"token",
+										"{{tokenId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "77f49b3f-a2a2-4833-9ab8-809a302de54f"
+				}
+			],
+			"id": "5f108f35-479c-41c1-ae65-b14dce172dc0"
+		},
+		{
+			"name": "Examples",
+			"item": [
+				{
+					"name": "eCommerce",
+					"item": [
+						{
+							"name": "Grant Request Incoming Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "11de67e4-9394-4ac2-8b0d-8c99c27aba7b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
+											"pm.collectionVariables.set(\"continueToken\", body.continue.access_token.value);",
+											"pm.collectionVariables.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "809060c9-3852-45b1-ad83-b55c4538b8c4",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "27324732-bd5d-4c43-81b9-b556b6b42896",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"incoming-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\", \"complete\"\n                ]\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"123\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{PeerOpenPaymentsAuthHost}}/",
+									"host": [
+										"{{PeerOpenPaymentsAuthHost}}"
+									],
+									"path": [
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Incoming Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "a5d72a14-641a-4ea3-8382-3fd14feef282",
+										"exec": [
+											"pm.collectionVariables.set(\"tomorrow\", (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString());",
+											"",
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "488c7915-7b1a-4e77-8998-c4501bb3585d",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"incomingPaymentId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "ba15bbee-ddc6-4c1b-9616-d41bbe4dc7d2",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"incomingAmount\": {\n        \"value\": \"3364\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Purchase Shoe Shop\", \n        \"externalRef\": \"#INV2022-8363828\",\n        \"items\": [1,2,3,4]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Grant Request Quote",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "11de67e4-9394-4ac2-8b0d-8c99c27aba7b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
+											"pm.collectionVariables.set(\"continueToken\", body.continue.access_token.value);",
+											"pm.collectionVariables.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "802a0508-e276-489c-8f55-a72a8ab1f013",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "f822f27e-d380-4448-9441-ed31de1c8793",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Quote",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7914cf2f-5ce8-4e6a-8c20-95c4b89114c2",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"quoteId\", body.id.split(\"/\").pop());",
+											"pm.collectionVariables.set(\"quoteSendAmountValue\", body.sendAmount.value)",
+											"pm.collectionVariables.set(\"quoteReceiveAmountValue\", body.receiveAmount.value)",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "48bcf22f-9cf7-4c0a-b01d-578fca2f3163",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "40bfb0cc-e9eb-46ca-9130-cb5032778a7e",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/quotes",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"quotes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Grant Request Outgoing Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "11de67e4-9394-4ac2-8b0d-8c99c27aba7b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
+											"pm.collectionVariables.set(\"continueToken\", body.continue.access_token.value);",
+											"pm.collectionVariables.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "802a0508-e276-489c-8f55-a72a8ab1f013",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "8769ffd8-8039-4cc7-a4b3-44aa5cda8659",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://cloud-nine-wallet-backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"{{quoteSendAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"{{quoteReceiveAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Continuation Request",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2c2e1014-2bbc-433e-905b-ce187988dc55",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"accessToken\", body.access_token.value);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "70f9a6f0-21ed-4d08-9ce9-958398ce379b",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "982f303c-cdd3-401d-8a33-f6e537e53aaa",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{continueToken}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n     \"interact_ref\": \"f4c980dc-8715-47ee-a322-314e0f8b74c9\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{OpenPaymentsAuthHost}}/continue/{{continueId}}",
+									"host": [
+										"{{OpenPaymentsAuthHost}}"
+									],
+									"path": [
+										"continue",
+										"{{continueId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Outgoing Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "fe0d7c37-8fb7-407a-88af-6dd8859f18ba",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "adcd60af-8ed3-4f20-ada9-d1c53c56d485",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.collectionVariables.set(\"outgoingPaymentId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "f66a4e00-7915-4afe-b18b-693a3d6619ea",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quoteId\": \"{{gfranklinPaymentPointer}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"Your purchase at Shoe Shop\",\n        \"externalRef\": \"#INV2022-8363828\",\n        \"items\": [1,2,3,4]\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/outgoing-payments",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Outgoing Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7e5adcbb-8c9d-4599-8279-5167be8b2104",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "6fe1ba04-737c-4b3d-bc3a-966dae49db29",
+										"exec": [
+											"eval(pm.collectionVariables.get('preRequestSignatures'))"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "3f0fd48e-44f2-46ed-b25f-1eabca1c0e0f",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "cloud-nine-wallet-backend"
+									}
+								],
+								"url": {
+									"raw": "{{gfranklinPaymentPointer}}/outgoing-payments/{{outgoingPaymentId}}",
+									"host": [
+										"{{gfranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments",
+										"{{outgoingPaymentId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "4c1510c4-b522-434e-835c-286da12f3698"
+				},
+				{
+					"name": "Peer-to-Peer Payment",
+					"item": [
+						{
+							"name": "Create Receiver (remote Incoming Payment)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "f47f73db-160a-4204-b96d-a11a185791c6",
+										"exec": [
+											"const body = pm.response.json();",
+											"",
+											"pm.collectionVariables.set(\"receiverId\", body.data.createReceiver.receiver.id);",
+											"pm.expect(pm.collectionVariables.get(\"receiverId\")).to.be.a('string');"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "58e2f5e1-9c0b-4d4d-80af-3f9cd7488335",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql"
+								},
+								"url": {
+									"raw": "{{RafikiGraphqlHost}}/graphql",
+									"host": [
+										"{{RafikiGraphqlHost}}"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Quote",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "ea151f03-7b85-4f0f-b300-aaee56312e31",
+										"exec": [
+											"const body = pm.response.json();",
+											"",
+											"pm.collectionVariables.set(\"quoteId\", body.data.createQuote.quote.id);",
+											"pm.expect(pm.collectionVariables.get(\"quoteId\")).to.be.a('string');"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "cf42a5d8-af8e-468e-bb57-a4e1609e5134",
+										"exec": [
+											"",
+											"const getPaymentPointersQuery = `",
+											"query GetPaymentPointers {",
+											"    paymentPointers {",
+											"        edges {",
+											"            cursor",
+											"            node {",
+											"                id",
+											"                publicName",
+											"                url",
+											"            }",
+											"        }",
+											"    }",
+											"}`",
+											"",
+											"const postRequest = {",
+											"  url: `${pm.collectionVariables.get(\"RafikiGraphqlHost\")}/graphql`,",
+											"  method: 'POST',",
+											"  body: {",
+											"    mode: 'graphql',",
+											"    graphql: {",
+											"        query:getPaymentPointersQuery",
+											"    }",
+											"  }",
+											"};",
+											"",
+											"",
+											"pm.sendRequest(postRequest, (error, response) => {",
+											"    const body = response.json();",
+											"    const gfranklinPaymentPointerId = body.data.paymentPointers.edges.map(e => e.node).find(node => node.publicName === 'Grace Franklin')?.id",
+											"",
+											"    pm.collectionVariables.set(\"gfranklinPaymentPointerId\", gfranklinPaymentPointerId)",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "10a48355-2063-471f-aadc-af0248d1a3e5",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql"
+								},
+								"url": {
+									"raw": "{{RafikiGraphqlHost}}/graphql",
+									"host": [
+										"{{RafikiGraphqlHost}}"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Outgoing Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "e8fec150-a523-410e-861f-bf5f2cc89ee6",
+										"exec": [
+											"const body = pm.response.json();",
+											"",
+											"pm.collectionVariables.set(\"outgoingPaymentId\", body.data.createOutgoingPayment.payment.id);",
+											"pm.expect(pm.collectionVariables.get(\"outgoingPaymentId\")).to.be.a('string');"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "15a0ddd5-3cdf-417d-b3e5-969e735bb3f6",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql"
+								},
+								"url": {
+									"raw": "{{RafikiGraphqlHost}}/graphql",
+									"host": [
+										"{{RafikiGraphqlHost}}"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Outgoing Payment",
+							"id": "5eaccdfc-7957-4066-80fd-b0c45435a2b3",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql"
+								},
+								"url": {
+									"raw": "{{RafikiGraphqlHost}}/graphql",
+									"host": [
+										"{{RafikiGraphqlHost}}"
+									],
+									"path": [
+										"graphql"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "b9581867-1e1f-44e3-b6c0-8b658b34c704"
+				}
+			],
+			"id": "6a55ba16-8fe7-4587-baa4-3aed511735ee"
+		},
+		{
+			"name": "Demos",
+			"item": [
+				{
+					"name": "ILP Summit Demo",
+					"item": [
+						{
+							"name": "Grant Request Incoming Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "11de67e4-9394-4ac2-8b0d-8c99c27aba7b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
+											"pm.environment.set(\"continueToken\", body.continue.access_token.value);",
+											"pm.environment.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "87389922-131e-49bc-b3f4-87d5d1184c65",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"incoming-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\", \"complete\"\n                ]\n            }\n        ]\n    },\n    \"client\": {\n        \"display\": {\n            \"name\": \"Shoe Shop\",\n            \"uri\": \"https://www.saagershoeshop.com\"\n        },\n        \"key\": {\n            \"proof\": \"httpsig\",\n            \"jwk\": {\n                \"alg\": \"EdDSA\",\n                \"kty\": \"OKP\",\n                \"use\": \"sig\",\n                \"crv\": \"Ed25519\",\n                \"kid\": \"http://fynbos/keys/12345\",\n                \"x\": \"jfiusdhvherui4vueurygygb8\"\n            }\n        }\n    },\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"123\"\n        }\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{BankOpenPaymentsAuthHost}}/",
+									"host": [
+										"{{BankOpenPaymentsAuthHost}}"
+									],
+									"path": [
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Incoming Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "a5d72a14-641a-4ea3-8382-3fd14feef282",
+										"exec": [
+											"pm.environment.set(\"tomorrow\", (new Date(new Date().setDate(new Date().getDate() + 1))).toISOString());"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "488c7915-7b1a-4e77-8998-c4501bb3585d",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.environment.set(\"incomingPaymentId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "a6ff5297-bff6-4837-bba1-ccb8b167fc68",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}"
+									},
+									{
+										"key": "Host",
+										"value": "peer-backend"
+									},
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"incomingAmount\": {\n        \"value\": \"3364\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Purchase Shoe Shop\",\n        \"externalRef\": \"#INV2022-8363828\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{PhilipFryPaymentPointer}}/incoming-payments",
+									"host": [
+										"{{PhilipFryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Grant Request Quote + Outgoing Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "11de67e4-9394-4ac2-8b0d-8c99c27aba7b",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
+											"pm.environment.set(\"continueToken\", body.continue.access_token.value);",
+											"pm.environment.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "12c9c945-bf95-4557-ae5b-240ab9d7ccb0",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"3600\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"3364\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": {\n        \"display\": {\n            \"name\": \"Shoe Shop\",\n            \"uri\": \"https://www.saagershoeshop.com\"\n        },\n        \"key\": {\n            \"proof\": \"httpsig\",\n            \"jwk\": {\n                \"alg\": \"EdDSA\",\n                \"kty\": \"OKP\",\n                \"use\": \"sig\",\n                \"crv\": \"Ed25519\",\n                \"kid\": \"http://fynbos/keys/12345\",\n                \"x\": \"jfiusdhvherui4vueurygygb8\"\n            }\n        }\n    },\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{FynbosOpenPaymentsAuthHost}}/",
+									"host": [
+										"{{FynbosOpenPaymentsAuthHost}}"
+									],
+									"path": [
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Continuation Request",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "2c2e1014-2bbc-433e-905b-ce187988dc55",
+										"exec": [
+											"const body = pm.response.json();",
+											"pm.environment.set(\"accessToken\", body.access_token.value);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "456e1b6e-2ebf-451f-ad86-194ee511aee0",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{continueToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n     \"interact_ref\": \"a31b55bf-2d1e-44eb-b99e-0d98a1a953f4\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{FynbosOpenPaymentsAuthHost}}/continue/{{continueId}}",
+									"host": [
+										"{{FynbosOpenPaymentsAuthHost}}"
+									],
+									"path": [
+										"continue",
+										"{{continueId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Quote",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7914cf2f-5ce8-4e6a-8c20-95c4b89114c2",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.environment.set(\"quoteId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "9fbd20de-7047-4b4d-b526-d7e8f229dca8",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Host",
+										"value": "backend",
+										"type": "text"
+									},
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"receiver\": \"https://peer-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{GraceFranklinPaymentPointer}}/quotes",
+									"host": [
+										"{{GraceFranklinPaymentPointer}}"
+									],
+									"path": [
+										"quotes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Outgoing Payment",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "fe0d7c37-8fb7-407a-88af-6dd8859f18ba",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"id": "adcd60af-8ed3-4f20-ada9-d1c53c56d485",
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"const body = pm.response.json();",
+											"pm.environment.set(\"outgoingPaymentId\", body.id.split(\"/\").pop());",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "181de7e5-ccfa-4867-a2bf-d5bc8c285982",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Host",
+										"value": "backend",
+										"type": "text"
+									},
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quoteId\": \"{{GraceFranklinPaymentPointer}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"Your purchase at Shoe Shop\",\n        \"externalRef\": \"#INV2022-8363828\"\n    }\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{GraceFranklinPaymentPointer}}/outgoing-payments",
+									"host": [
+										"{{GraceFranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Outgoing Payment",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "7e5adcbb-8c9d-4599-8279-5167be8b2104",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "f34515eb-55a4-4a65-b265-7ed4c9137291",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}",
+										"type": "text"
+									},
+									{
+										"key": "Host",
+										"value": "backend",
+										"type": "text"
+									},
+									{
+										"key": "Signature-Input",
+										"value": "TODO",
+										"type": "text"
+									},
+									{
+										"key": "Signature",
+										"value": "TODO",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{GraceFranklinPaymentPointer}}/outgoing-payments/{{outgoingPaymentId}}",
+									"host": [
+										"{{GraceFranklinPaymentPointer}}"
+									],
+									"path": [
+										"outgoing-payments",
+										"{{outgoingPaymentId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"id": "6746818b-61e2-4a6a-80d3-80a60889a916"
+				}
+			],
+			"id": "287d33cb-391d-430f-855c-bbfc8e1c2845"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "971b2508-12cb-4cea-8b54-05324d4bf119",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "a5a4ee63-edd5-4c75-8520-50e5bc07684a",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "8eb1ab18-9e2e-47be-a071-4c0f0e1465c9",
+			"key": "OpenPaymentsHost",
+			"value": "http://localhost:3000"
+		},
+		{
+			"id": "e864da89-7948-42f0-a554-3940192cf949",
+			"key": "PeerOpenPaymentsHost",
+			"value": "http://localhost:4000"
+		},
+		{
+			"id": "18252f6b-b163-406c-88c5-8979382cd71b",
+			"key": "OpenPaymentsAuthHost",
+			"value": "http://localhost:3006"
+		},
+		{
+			"id": "f95fca04-8ecd-4f38-9a1d-e7d024695548",
+			"key": "PeerOpenPaymentsAuthHost",
+			"value": "http://localhost:4006"
+		},
+		{
+			"id": "ef575433-54fb-4d81-a400-5616d9a4f631",
+			"key": "RafikiGraphqlHost",
+			"value": "http://localhost:3001"
+		},
+		{
+			"id": "85c5209a-e187-4d99-98c3-f9f8e0587a69",
+			"key": "PeerGraphqlHost",
+			"value": "http://localhost:4001"
+		},
+		{
+			"id": "9642cdd2-b7f4-413b-8920-e63ae03fe98d",
+			"key": "SignatureHost",
+			"value": "http://localhost:3040"
+		},
+		{
+			"id": "58ff6922-4b46-49ea-9a98-6a29ba3f6257",
+			"key": "PeerSignatureHost",
+			"value": "http://localhost:3041"
+		},
+		{
+			"id": "0f023df4-2596-4ab3-b51c-1418251487c2",
+			"key": "gfranklinPaymentPointer",
+			"value": "http://localhost:3000/accounts/gfranklin"
+		},
+		{
+			"id": "d00a8b86-2675-43d0-ac5f-2c9e52ae603b",
+			"key": "asmithPaymentPointer",
+			"value": "http://localhost:4000/accounts/asmith",
+			"type": "string"
+		},
+		{
+			"id": "ebac1fb8-8d70-4b68-be69-900e86825370",
+			"key": "gfranklinPaymentPointerId",
+			"value": "6abd8671-72d0-41ee-8e0a-0b28eff522a5",
+			"type": "string"
+		},
+		{
+			"id": "1960ccfe-1615-448d-8058-258dac2190dd",
+			"key": "pfryPaymentPointer",
+			"value": "http://localhost:4000/accounts/pfry"
+		},
+		{
+			"id": "a402a50f-ea86-46d6-8649-0dc97608c9b8",
+			"key": "accessToken",
+			"value": "example-access-token"
+		},
+		{
+			"id": "18258c8a-4d42-4e54-b3d9-9b6c2fa3037c",
+			"key": "paymentPointerId",
+			"value": "bde8da93-9bff-4251-90ce-abb15e7d444c"
+		},
+		{
+			"id": "daeb5df7-0124-44e5-a580-93d5e99776c3",
+			"key": "incomingPaymentId",
+			"value": "dc7b71a5-d78e-450c-b4c5-7db299f2a133"
+		},
+		{
+			"id": "a8c9ca75-a97b-4b65-aeaf-0607c021000c",
+			"key": "connectionId",
+			"value": "23de6081-b340-4334-b335-a2328bbb3334"
+		},
+		{
+			"id": "00b2586a-f176-4eb9-a503-03f6fc9dd84a",
+			"key": "outgoingPaymentId",
+			"value": "empty"
+		},
+		{
+			"id": "1b5e8e99-bf55-41b8-a1e9-f0075c1895db",
+			"key": "quoteId",
+			"value": "http://backend/d982ab2f-4380-4d05-be3b-43d23a57d23f/quotes/8adaa7f9-fbd2-4cc2-89b5-6f354d68728e"
+		},
+		{
+			"id": "c3f90699-5807-436c-9df2-1fe3074dc48d",
+			"key": "tokenId",
+			"value": "f6cf615c-70e8-4b04-bd86-0d6ac41a4c85"
+		},
+		{
+			"id": "95ef061c-9703-4bd5-90d6-e1ef06edb785",
+			"key": "tomorrow",
+			"value": ""
+		},
+		{
+			"id": "fe61f163-6a77-4388-bbb1-38b8f666106a",
+			"key": "uniquePaymentPointer",
+			"value": ""
+		},
+		{
+			"id": "88221e0e-0ce6-449c-8b95-db307d129590",
+			"key": "quoteUrl",
+			"value": ""
+		},
+		{
+			"id": "fd0ec951-242b-499d-9ad2-d06eb6a17ae7",
+			"key": "incomingPaymentUrl",
+			"value": ""
+		},
+		{
+			"id": "c150e719-d93b-41c0-b791-250e0ee8ee59",
+			"key": "continueToken",
+			"value": ""
+		},
+		{
+			"id": "d71f86e1-61a0-4a36-8365-386c31622a73",
+			"key": "continueId",
+			"value": ""
+		},
+		{
+			"id": "ea50a77d-3a1c-42d6-99fc-90ad84f15879",
+			"key": "paymentPointerUrl",
+			"value": ""
+		},
+		{
+			"id": "2b76f5af-0335-470b-9f30-d6b878e0e9ef",
+			"key": "createPaymentPointerRequest",
+			"value": ""
+		},
+		{
+			"id": "7af9e7f9-0626-4579-a92d-b370368485c1",
+			"key": "secondPaymentPointerId",
+			"value": ""
+		},
+		{
+			"id": "5e990e3d-7a8c-4614-b58b-bc7308550e50",
+			"key": "assetId",
+			"value": ""
+		},
+		{
+			"id": "86ba41a3-4505-401d-bb94-e43748bb2809",
+			"key": "preRequestSignatures",
+			"value": "const requestUrl = request.url\n  .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.collectionVariables.get(key))\n  .replace(/localhost:([3,4])000/g, (_, key) =>\n    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'\n  )\nconst requestBody =\n  request.method === 'POST' && Object.keys(request.data).length !== 0\n    ? request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n        pm.collectionVariables.get(key)\n      )\n    : undefined\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n// Request Signature Headers\npm.sendRequest(\n  {\n    url: pm.collectionVariables.get('signatureUrl'),\n    method: 'POST',\n    header: {\n      'content-type': 'application/json'\n    },\n    body: {\n      mode: 'raw',\n      raw: JSON.stringify({\n        keyId: pm.collectionVariables.get('keyId'),\n        request: {\n          url: requestUrl,\n          method: request.method,\n          headers: requestHeaders,\n          body: requestBody\n        }\n      })\n    }\n  },\n  (_, res) => {\n    const headers = res.json()\n    for (let [key, value] of Object.entries(headers)) {\n      pm.request.headers.add({ key, value })\n    }\n  }\n)\n"
+		},
+		{
+			"id": "b82a8c43-5153-4d14-9ca6-a489de55e9ee",
+			"key": "preRequestSignaturesGrantRequest",
+			"value": "const url = require('url')\n\nconst body = JSON.parse(request.data)\nconst client = url.parse(body.client)\nconst jwkUrl = `http://localhost:${\n  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'\n}000${client.path}/jwks.json`\npm.collectionVariables.set(\n  'signatureUrl',\n  pm.collectionVariables.get(\n    client.host === 'cloud-nine-wallet-backend'\n      ? 'SignatureHost'\n      : 'PeerSignatureHost'\n  )\n)\n\nconst requestUrl = request.url.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestBody = request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n\n// Request Client JWK\npm.sendRequest(\n  {\n    url: jwkUrl,\n    method: 'GET',\n    header: {\n      Host: client.host\n    }\n  },\n  (err, res) => {\n    const keys = res.json()\n    pm.collectionVariables.set('keyId', keys.keys[0].kid)\n\n    // Request Signature Headers\n    pm.sendRequest(\n      {\n        url: pm.collectionVariables.get('signatureUrl'),\n        method: 'POST',\n        header: {\n          'content-type': 'application/json'\n        },\n        body: {\n          mode: 'raw',\n          raw: JSON.stringify({\n            keyId: pm.collectionVariables.get('keyId'),\n            request: {\n              url: requestUrl,\n              method: request.method,\n              headers: requestHeaders,\n              body: requestBody\n            }\n          })\n        }\n      },\n      (_, res) => {\n        const headers = res.json()\n        for (let [key, value] of Object.entries(headers)) {\n          pm.request.headers.add({ key, value })\n        }\n      }\n    )\n  }\n)\n"
+		},
+		{
+			"id": "e72cb7b5-06f9-4e45-a974-9dd7d81ccd46",
+			"key": "signatureUrl",
+			"value": ""
+		},
+		{
+			"id": "62343602-d34a-44c9-b0ef-0b66f3dbd7cb",
+			"key": "keyId",
+			"value": ""
+		},
+		{
+			"id": "c34a3e4b-a828-42a6-86ca-7c1383444362",
+			"key": "peerId",
+			"value": ""
+		},
+		{
+			"id": "e17b87ad-9a15-4981-bccf-a4e3b30ab835",
+			"key": "paymentPointerKeyId",
+			"value": ""
+		},
+		{
+			"id": "fe579978-fb58-4879-a37c-22005c0a9d11",
+			"key": "secureOpenPaymentsHost",
+			"value": ""
+		},
+		{
+			"id": "1d0922cf-1144-4e82-a807-97b69b7758b4",
+			"key": "tokenManagementUrl",
+			"value": ""
+		},
+		{
+			"id": "1c4cb823-e86a-4d8f-b400-289e82dacf86",
+			"key": "quoteSendAmountValue",
+			"value": ""
+		},
+		{
+			"id": "a74de336-5023-43fb-862b-f620e8e4ea83",
+			"key": "quoteReceiveAmountValue",
+			"value": ""
+		},
+		{
+			"id": "b48d3b3a-47b7-4f74-898f-fcce3a15f1fd",
+			"key": "idempotencyKey",
+			"value": ""
+		},
+		{
+			"id": "d52cd9a7-c903-456b-89ae-d4bcf432cedc",
+			"key": "receiverId",
+			"value": ""
+		}
+	]
+}
