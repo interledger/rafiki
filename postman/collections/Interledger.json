@@ -3,8 +3,7 @@
 		"_postman_id": "92761441-6d0c-4fc6-aa04-73eccf6afd4c",
 		"name": "Interledger",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "23674746",
-		"_collection_link": "https://www.postman.com/interledger/workspace/interledger/collection/22855701-92761441-6d0c-4fc6-aa04-73eccf6afd4c?action=share&creator=23674746&source=collection_link"
+		"_uid": "23674746-92761441-6d0c-4fc6-aa04-73eccf6afd4c"
 	},
 	"item": [
 		{
@@ -16,6 +15,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "f852a7a5-0e89-499a-9bff-c53a84d78773",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -25,6 +25,10 @@
 							}
 						}
 					],
+					"id": "7eeac689-1a11-4bf7-961c-ed2f51fccc62",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -60,6 +64,10 @@
 							}
 						}
 					],
+					"id": "68c26713-273b-4bee-88e6-8f38f1ed57b2",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -84,6 +92,10 @@
 				},
 				{
 					"name": "Get Asset",
+					"id": "1a43bdb1-ddcb-4c62-a446-470433751278",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -108,6 +120,10 @@
 				},
 				{
 					"name": "Get Assets",
+					"id": "88548a93-d444-492c-ab64-843ba4d8e9e6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -132,6 +148,10 @@
 				},
 				{
 					"name": "Add Asset Liquidity",
+					"id": "64b586a1-d9a9-4d14-b756-42f9368ed519",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -156,6 +176,10 @@
 				},
 				{
 					"name": "Withdraw Asset Liquidity",
+					"id": "26ae74ef-bb7d-4bca-88c7-c5d95695d1bd",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -193,6 +217,10 @@
 							}
 						}
 					],
+					"id": "af5fbfd3-a893-490c-914e-99b2866cf482",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -217,6 +245,10 @@
 				},
 				{
 					"name": "Update Peer",
+					"id": "206fa427-cf5e-4aa8-9c59-5ddb1b021720",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -241,6 +273,10 @@
 				},
 				{
 					"name": "Get Peer",
+					"id": "a5f3d256-d435-4fdd-bc68-456c891e3fb7",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -265,6 +301,10 @@
 				},
 				{
 					"name": "Get Peers",
+					"id": "194c260e-a4cb-486d-9cfc-cee5bd00d36b",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -289,6 +329,10 @@
 				},
 				{
 					"name": "Delete Peer",
+					"id": "3299f99c-72ba-42ea-8db5-93024e1328d6",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -313,6 +357,10 @@
 				},
 				{
 					"name": "Add Peer Liquidity",
+					"id": "99935f5e-8ff6-48c4-8ba7-c69954dfbb5d",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -337,6 +385,10 @@
 				},
 				{
 					"name": "Withdraw Peer Liquidity",
+					"id": "b2a48f59-8e87-4153-8c1b-9f5a5be8c8d3",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -361,6 +413,10 @@
 				},
 				{
 					"name": "Post Liquidity Withdrawal",
+					"id": "49967c65-a0ba-43e2-b3f7-0e263300833a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -385,6 +441,10 @@
 				},
 				{
 					"name": "Void Liquidity Withdrawal",
+					"id": "a8a366c0-dbcb-4e9f-80df-faef74da2872",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -437,6 +497,10 @@
 							}
 						}
 					],
+					"id": "b2bd6d8d-541e-4fd6-9f14-810179eda985",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -461,6 +525,10 @@
 				},
 				{
 					"name": "Update Payment Pointer",
+					"id": "3ec1c9ca-4d14-4fe1-bbf7-d71be8e9454d",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -485,6 +553,10 @@
 				},
 				{
 					"name": "Get Payment Pointer",
+					"id": "a2807507-b39a-498b-b2ec-514b53706a00",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -509,6 +581,10 @@
 				},
 				{
 					"name": "Get Payment Pointers",
+					"id": "6d83b6a9-dd1d-40a7-a774-32747c7d9938",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -546,6 +622,10 @@
 							}
 						}
 					],
+					"id": "33546c8b-a254-4142-a50c-551725319c0c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -570,6 +650,10 @@
 				},
 				{
 					"name": "Revoke Payment Pointer Key",
+					"id": "15b344d9-16c7-40ee-96c4-0b8beb1667b2",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -608,6 +692,10 @@
 							}
 						}
 					],
+					"id": "50fb19dc-e5dc-4dbf-9f98-a142a9c016eb",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -632,6 +720,10 @@
 				},
 				{
 					"name": "Create Receiver (remote Incoming Payment)",
+					"id": "c7f63ae6-c790-43f5-8c8e-163297708693",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -715,6 +807,10 @@
 							}
 						}
 					],
+					"id": "0bb53e01-0cc0-4295-aa4a-9b5663e578a0",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -739,6 +835,10 @@
 				},
 				{
 					"name": "Get Quote",
+					"id": "1b640182-9efb-4b06-b89d-1eaa520a7d97",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -777,6 +877,10 @@
 							}
 						}
 					],
+					"id": "74f060e1-01d6-43f1-9634-0a73d398c9da",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -801,6 +905,10 @@
 				},
 				{
 					"name": "Get Outgoing Payment",
+					"id": "22ee3b50-8ac9-46ac-b4dd-e885fc8fe395",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -825,6 +933,10 @@
 				},
 				{
 					"name": "Get Incoming Payment",
+					"id": "a7cab5ce-4459-4e34-be83-b8fdf8ab867f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -849,6 +961,10 @@
 				},
 				{
 					"name": "Deposit Event Liquidity",
+					"id": "7c3afd23-2348-43d6-9cfa-895e54e05f9e",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -873,6 +989,10 @@
 				},
 				{
 					"name": "Withdraw Event Liquidity",
+					"id": "2d788367-7019-4a9a-94c6-e0655e9200c7",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -897,6 +1017,10 @@
 				},
 				{
 					"name": "Create Payment Pointer Withdrawal",
+					"id": "84fcddb6-efbf-43d6-a8c6-d3ea8c1bdc40",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -921,6 +1045,10 @@
 				},
 				{
 					"name": "Trigger Payment Pointer Events",
+					"id": "9d7a602e-6025-475a-a4f4-13d99936fb74",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -945,6 +1073,10 @@
 				},
 				{
 					"name": "Get Webhook Events",
+					"id": "46009b2f-564c-41ca-8381-de63227f20c8",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"method": "POST",
 						"header": [],
@@ -967,7 +1099,8 @@
 					},
 					"response": []
 				}
-			]
+			],
+			"id": "4b27bf1e-2769-47bd-a3a7-3f48322cc22d"
 		},
 		{
 			"name": "Open Payments APIs",
@@ -991,6 +1124,10 @@
 									}
 								}
 							],
+							"id": "f4201fcf-3092-441f-8d54-1f9a8a55bdc0",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1034,6 +1171,10 @@
 									}
 								}
 							],
+							"id": "744910ef-141d-4dd0-8104-2765459ebbbe",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1063,6 +1204,10 @@
 						},
 						{
 							"name": "Get Payment Pointer Keys",
+							"id": "841e3c01-87b1-4f6b-b750-d3c85130aa56",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1083,13 +1228,18 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "eb2dba4c-bb3b-4e31-89d1-17e24a158638"
 				},
 				{
 					"name": "STREAM connection",
 					"item": [
 						{
 							"name": "Get STREAM credentials",
+							"id": "ee878ea2-ae30-4d12-b617-d28a92c98d86",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1111,7 +1261,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "710e5513-49bf-45ab-b15b-efee78a76462"
 				},
 				{
 					"name": "Incoming Payments",
@@ -1147,6 +1298,10 @@
 									}
 								}
 							],
+							"id": "cdb889f0-90c3-4913-abed-b2848aa64b94",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1205,6 +1360,10 @@
 									}
 								}
 							],
+							"id": "23cfe940-068d-422c-928e-7c567e0ba4e1",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1255,6 +1414,10 @@
 									}
 								}
 							],
+							"id": "d318aae2-aae6-4a06-89ad-c56255e7dca0",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1303,6 +1466,10 @@
 									}
 								}
 							],
+							"id": "c9e4b4a3-ead1-4422-b2cf-aef6a9b90a39",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1329,7 +1496,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "bf50a9e8-4c18-4a40-beab-650d5cd91f24"
 				},
 				{
 					"name": "Quotes",
@@ -1362,6 +1530,10 @@
 									}
 								}
 							],
+							"id": "a1787244-2b57-4a04-8b24-c3dca6ab75cd",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1420,6 +1592,10 @@
 									}
 								}
 							],
+							"id": "a559e657-9199-4469-92a6-0307ddaed245",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1445,7 +1621,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "dfd44185-08c3-4162-b37f-4f5504f2a51d"
 				},
 				{
 					"name": "Outgoing Payments",
@@ -1478,6 +1655,10 @@
 									}
 								}
 							],
+							"id": "7256c6b4-7317-4792-8884-492f5d423296",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1536,6 +1717,10 @@
 									}
 								}
 							],
+							"id": "1361b3c1-6e86-4b46-9112-f09fadd2137d",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1586,6 +1771,10 @@
 									}
 								}
 							],
+							"id": "2f554db1-dde0-4e12-a8fc-b0c94efdc05f",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -1621,9 +1810,11 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "f42e954e-9b66-4739-8aad-f1133f209cdb"
 				}
-			]
+			],
+			"id": "7df0dc22-d369-4064-9447-0a60a70d2231"
 		},
 		{
 			"name": "Open Payments Auth APIs",
@@ -1657,6 +1848,10 @@
 									}
 								}
 							],
+							"id": "b1ec3d86-ed15-4d8e-8d61-52187f9861de",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -1705,6 +1900,10 @@
 									}
 								}
 							],
+							"id": "634fc4f7-b633-4354-94ff-6049a4f65558",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1736,7 +1935,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "91779d19-7d34-49a2-b1a9-27fadb99fde9"
 				},
 				{
 					"name": "Tokens",
@@ -1765,6 +1965,10 @@
 									}
 								}
 							],
+							"id": "26abda6c-a70d-4424-b663-60ba9df34c7c",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1800,6 +2004,10 @@
 									}
 								}
 							],
+							"id": "68a5198d-0a96-4021-8e06-c26ef2d12b09",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "DELETE",
 								"header": [],
@@ -1816,9 +2024,11 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "48f943f1-abdf-4ad8-8470-a3525c8a869d"
 				}
-			]
+			],
+			"id": "4e2e58bf-9087-49bc-99f8-0d6ea5bc8ae1"
 		},
 		{
 			"name": "Examples",
@@ -1853,6 +2063,10 @@
 									}
 								}
 							],
+							"id": "840c541a-562f-4702-8c8d-97f0e411cbd3",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -1907,6 +2121,10 @@
 									}
 								}
 							],
+							"id": "8fa31db0-5885-46cf-b313-22131fdbcecb",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -1966,6 +2184,10 @@
 									}
 								}
 							],
+							"id": "4a54e74f-3cab-4d79-b4a4-a04cabb5fc4d",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -2020,6 +2242,10 @@
 									}
 								}
 							],
+							"id": "d3054236-58cb-4279-90ed-231ebbb93ec9",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2079,6 +2305,10 @@
 									}
 								}
 							],
+							"id": "458e2bbe-4fa4-41ee-9463-d2ad3e5e8b46",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -2126,6 +2356,10 @@
 									}
 								}
 							],
+							"id": "e1c26544-8249-4ec3-a1cc-ae8a8fe9bbdc",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2185,6 +2419,10 @@
 									}
 								}
 							],
+							"id": "4782d22e-6595-4bd7-9d87-2a5a552284f2",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2243,6 +2481,10 @@
 									}
 								}
 							],
+							"id": "b1184e0f-938e-4f3f-95eb-5597194e3604",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -2268,7 +2510,8 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "974e87e8-bef8-4eaf-b89e-6b963d03bc96"
 				},
 				{
 					"name": "Peer-to-Peer Payment",
@@ -2289,6 +2532,10 @@
 									}
 								}
 							],
+							"id": "76d1b135-f6a2-4211-b4dc-6bd1c3e4e895",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -2368,6 +2615,10 @@
 									}
 								}
 							],
+							"id": "ecdf8913-7153-4a48-bd92-709cacf42b9e",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -2406,6 +2657,10 @@
 									}
 								}
 							],
+							"id": "b91c0436-54f4-4245-b575-e10f6e1ea5e0",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -2430,6 +2685,10 @@
 						},
 						{
 							"name": "Get Outgoing Payment",
+							"id": "23a94dbe-5b18-46d6-81bb-0e5eba580412",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [],
@@ -2452,9 +2711,11 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "1820d241-9269-47c5-ad03-00b5ad04d186"
 				}
-			]
+			],
+			"id": "b5d95158-8dde-456b-9ce5-8dbca3b5983c"
 		},
 		{
 			"name": "Demos",
@@ -2479,6 +2740,10 @@
 									}
 								}
 							],
+							"id": "371d34ec-c8e7-4695-a2d3-15d866e04839",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2542,6 +2807,10 @@
 									}
 								}
 							],
+							"id": "49ea498b-ee5f-46ad-aea9-466d2488b3b3",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2602,6 +2871,10 @@
 									}
 								}
 							],
+							"id": "27b8ddb1-a5c4-4be2-8ce9-ac94b49d15ab",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2651,6 +2924,10 @@
 									}
 								}
 							],
+							"id": "11f3a23c-40b1-44cf-bbad-b4d38066934c",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2711,6 +2988,10 @@
 									}
 								}
 							],
+							"id": "21d8480d-f065-497c-a9fa-045c16f46733",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2784,6 +3065,10 @@
 									}
 								}
 							],
+							"id": "f6f5d366-057c-4c8d-bec8-b86e3f79e1fe",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "POST",
 								"header": [
@@ -2845,6 +3130,10 @@
 									}
 								}
 							],
+							"id": "e8c919f3-dbee-4166-83f9-104d05878d82",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
 							"request": {
 								"method": "GET",
 								"header": [
@@ -2882,9 +3171,11 @@
 							},
 							"response": []
 						}
-					]
+					],
+					"id": "8cccb4b3-0088-467c-8a2d-f9233db2d019"
 				}
-			]
+			],
+			"id": "cb1b9eeb-aa1e-45cd-a93d-da8786aa2ba9"
 		}
 	],
 	"event": [
@@ -2909,168 +3200,209 @@
 	],
 	"variable": [
 		{
+			"id": "16560665-e7e7-4758-8a2f-bc48c7d2c1a4",
 			"key": "OpenPaymentsHost",
 			"value": "http://localhost:3000"
 		},
 		{
+			"id": "84be0694-dcae-4e1c-b61b-380f8dd87df1",
 			"key": "PeerOpenPaymentsHost",
 			"value": "http://localhost:4000"
 		},
 		{
+			"id": "44d0d080-de33-4bc8-a58c-87e40055b09c",
 			"key": "OpenPaymentsAuthHost",
 			"value": "http://localhost:3006"
 		},
 		{
+			"id": "5dfafbaa-b082-4c46-bbb9-fa0299593585",
 			"key": "PeerOpenPaymentsAuthHost",
 			"value": "http://localhost:4006"
 		},
 		{
+			"id": "8faf6825-431a-433e-bf62-c33b2e24c9b8",
 			"key": "RafikiGraphqlHost",
 			"value": "http://localhost:3001"
 		},
 		{
+			"id": "62029029-14c5-496c-a031-da7c404ed59d",
 			"key": "PeerGraphqlHost",
 			"value": "http://localhost:4001"
 		},
 		{
+			"id": "572f1249-d5b3-4c20-803a-ebe56bff88f0",
 			"key": "SignatureHost",
 			"value": "http://localhost:3040"
 		},
 		{
+			"id": "ebb32b91-290c-422a-b6df-88de681ad87f",
 			"key": "PeerSignatureHost",
 			"value": "http://localhost:3041"
 		},
 		{
+			"id": "c5d5d0c1-5022-4b84-91fc-0b7ecbbe5a2c",
 			"key": "gfranklinPaymentPointer",
 			"value": "http://localhost:3000/accounts/gfranklin"
 		},
 		{
+			"id": "c517a03a-e994-40c9-8a28-875d826d706e",
 			"key": "asmithPaymentPointer",
 			"value": "http://localhost:4000/accounts/asmith",
 			"type": "string"
 		},
 		{
+			"id": "099e767e-be7e-45c1-a34f-3edbeccaea98",
 			"key": "gfranklinPaymentPointerId",
 			"value": "6abd8671-72d0-41ee-8e0a-0b28eff522a5",
 			"type": "string"
 		},
 		{
+			"id": "57228423-697d-4416-8c78-dd1f7842463d",
 			"key": "pfryPaymentPointer",
 			"value": "http://localhost:4000/accounts/pfry"
 		},
 		{
+			"id": "d9963714-bf7d-4330-8149-6ff44d5291c9",
 			"key": "accessToken",
 			"value": "example-access-token"
 		},
 		{
+			"id": "39cb3789-5c45-4f02-b64e-f1f8564593a1",
 			"key": "paymentPointerId",
 			"value": "bde8da93-9bff-4251-90ce-abb15e7d444c"
 		},
 		{
+			"id": "1517e3d5-c578-40d3-9f7a-58dbab760484",
 			"key": "incomingPaymentId",
 			"value": "dc7b71a5-d78e-450c-b4c5-7db299f2a133"
 		},
 		{
+			"id": "8ef0ee7b-5b26-458b-af8c-e0f662f6012a",
 			"key": "connectionId",
 			"value": "23de6081-b340-4334-b335-a2328bbb3334"
 		},
 		{
+			"id": "99bc3339-80fe-4731-afc3-85eb3aad9013",
 			"key": "outgoingPaymentId",
 			"value": "empty"
 		},
 		{
+			"id": "245c67f2-971b-4aec-b743-bdb0bf3c23dd",
 			"key": "quoteId",
 			"value": "http://backend/d982ab2f-4380-4d05-be3b-43d23a57d23f/quotes/8adaa7f9-fbd2-4cc2-89b5-6f354d68728e"
 		},
 		{
+			"id": "fceaf321-4f82-4ef4-96ba-7c1823f88602",
 			"key": "tokenId",
 			"value": "f6cf615c-70e8-4b04-bd86-0d6ac41a4c85"
 		},
 		{
+			"id": "ef9c443a-5a54-4adc-8653-d511bdd0cad6",
 			"key": "tomorrow",
 			"value": ""
 		},
 		{
+			"id": "b6909ad2-054f-4dc3-b11d-c9886c46cc94",
 			"key": "uniquePaymentPointer",
 			"value": ""
 		},
 		{
+			"id": "a6e9f5dc-6378-4a96-9ac5-bfdb748d708f",
 			"key": "quoteUrl",
 			"value": ""
 		},
 		{
+			"id": "2f74eda9-e905-4672-8be3-0d07432609e1",
 			"key": "incomingPaymentUrl",
 			"value": ""
 		},
 		{
+			"id": "eb996128-81ab-4107-b7db-475dfee6297c",
 			"key": "continueToken",
 			"value": ""
 		},
 		{
+			"id": "354d5a74-3423-4df2-bc57-57f45287e098",
 			"key": "continueId",
 			"value": ""
 		},
 		{
+			"id": "c707a35e-ceb8-4f93-84e2-6e37d2e299fb",
 			"key": "paymentPointerUrl",
 			"value": ""
 		},
 		{
+			"id": "8b9553c8-3e85-408e-9143-d12da9df7c5f",
 			"key": "createPaymentPointerRequest",
 			"value": ""
 		},
 		{
+			"id": "79b0d3b4-3b55-485f-b1a5-b00ba4eeea14",
 			"key": "secondPaymentPointerId",
 			"value": ""
 		},
 		{
+			"id": "f055125b-3efa-4181-af37-9e7b5b2c1aee",
 			"key": "assetId",
 			"value": ""
 		},
 		{
+			"id": "2caf689d-23b4-40a7-8bb9-6af3a409acc5",
 			"key": "preRequestSignatures",
 			"value": "const requestUrl = request.url\n  .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.collectionVariables.get(key))\n  .replace(/localhost:([3,4])000/g, (_, key) =>\n    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'\n  )\nconst requestBody =\n  request.method === 'POST' && Object.keys(request.data).length !== 0\n    ? request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n        pm.collectionVariables.get(key)\n      )\n    : undefined\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n// Request Signature Headers\npm.sendRequest(\n  {\n    url: pm.collectionVariables.get('signatureUrl'),\n    method: 'POST',\n    header: {\n      'content-type': 'application/json'\n    },\n    body: {\n      mode: 'raw',\n      raw: JSON.stringify({\n        keyId: pm.collectionVariables.get('keyId'),\n        request: {\n          url: requestUrl,\n          method: request.method,\n          headers: requestHeaders,\n          body: requestBody\n        }\n      })\n    }\n  },\n  (_, res) => {\n    const headers = res.json()\n    for (let [key, value] of Object.entries(headers)) {\n      pm.request.headers.add({ key, value })\n    }\n  }\n)\n"
 		},
 		{
+			"id": "58aeff5f-bddc-4232-ab73-b81ce0e2eae3",
 			"key": "preRequestSignaturesGrantRequest",
 			"value": "const url = require('url')\n\nconst body = JSON.parse(request.data)\nconst client = url.parse(body.client)\nconst jwkUrl = `http://localhost:${\n  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'\n}000${client.path}/jwks.json`\npm.collectionVariables.set(\n  'signatureUrl',\n  pm.collectionVariables.get(\n    client.host === 'cloud-nine-wallet-backend'\n      ? 'SignatureHost'\n      : 'PeerSignatureHost'\n  )\n)\n\nconst requestUrl = request.url.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestBody = request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n\n// Request Client JWK\npm.sendRequest(\n  {\n    url: jwkUrl,\n    method: 'GET',\n    header: {\n      Host: client.host\n    }\n  },\n  (err, res) => {\n    const keys = res.json()\n    pm.collectionVariables.set('keyId', keys.keys[0].kid)\n\n    // Request Signature Headers\n    pm.sendRequest(\n      {\n        url: pm.collectionVariables.get('signatureUrl'),\n        method: 'POST',\n        header: {\n          'content-type': 'application/json'\n        },\n        body: {\n          mode: 'raw',\n          raw: JSON.stringify({\n            keyId: pm.collectionVariables.get('keyId'),\n            request: {\n              url: requestUrl,\n              method: request.method,\n              headers: requestHeaders,\n              body: requestBody\n            }\n          })\n        }\n      },\n      (_, res) => {\n        const headers = res.json()\n        for (let [key, value] of Object.entries(headers)) {\n          pm.request.headers.add({ key, value })\n        }\n      }\n    )\n  }\n)\n"
 		},
 		{
+			"id": "05279e17-7258-45c5-854d-68d21c7d1404",
 			"key": "signatureUrl",
 			"value": ""
 		},
 		{
+			"id": "1196efa5-c4bb-45fd-9a35-31b18718f338",
 			"key": "keyId",
 			"value": ""
 		},
 		{
+			"id": "f27de491-1d17-474f-9320-72ab6f0609c2",
 			"key": "peerId",
 			"value": ""
 		},
 		{
+			"id": "a730656a-14b4-41aa-b6c6-708b5374d7fd",
 			"key": "paymentPointerKeyId",
 			"value": ""
 		},
 		{
+			"id": "d9259213-54e8-4695-ab1f-261383f5c857",
 			"key": "secureOpenPaymentsHost",
 			"value": ""
 		},
 		{
+			"id": "4c9e8416-f224-4b28-ae17-1f213cbedc34",
 			"key": "tokenManagementUrl",
 			"value": ""
 		},
 		{
+			"id": "f79b4353-98fc-46f3-81d1-42cd6ba2a3dc",
 			"key": "quoteSendAmountValue",
 			"value": ""
 		},
 		{
+			"id": "a95bd9e7-8fb3-4f9c-a33c-419d2afdecac",
 			"key": "quoteReceiveAmountValue",
 			"value": ""
 		},
 		{
+			"id": "ebddee05-7f4c-457b-a70b-f835f0675f11",
 			"key": "idempotencyKey",
 			"value": ""
 		},
 		{
+			"id": "742a4254-3698-4473-be35-b32bed592bfb",
 			"key": "receiverId",
 			"value": ""
 		}
