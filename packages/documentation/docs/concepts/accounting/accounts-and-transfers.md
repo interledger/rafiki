@@ -18,7 +18,7 @@ There is one liquidity account for each of the following resource:
 
 ### Settlement account
 
-A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](./glossary/a ccount-servicing-entity) has deposited into Rafiki.
+A settlement account may only hold a negative balance. Rafiki enforces that its total credits MUST NOT exceed its total debits amount. A settlement account represents those total amount of funds an [Account Servicing Entity](../../reference/glossary#account-servicing-entity) has deposited into Rafiki.
 
 There is one settlement account for each asset.
 

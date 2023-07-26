@@ -1,5 +1,7 @@
 # Liquidity
 
+Rafiki implements a clearing protocol - the [Interledger Protocol](../../reference/glossary.md#interledger-protocol). As such, it does not hold liquidity but keeps track liquidity moving through it.
+
 ## Types of Liquidity
 
 ### Asset Liquidity
@@ -18,7 +20,7 @@ A transaction where Rafiki receives 50 EUR and would have to sent 55 USD would f
 
 ### Peer Liquidity
 
-Peer Liquidity defines the line of credit, denominated in the asset of the peering relationship, that Rafiki gives a certain peer. It should be defined in the peering agreement and depends on the trust between the transacting peers. Once the peer liquidity is used up, peers should settle and then reset their peer liquidity.
+Peer Liquidity defines the line of credit, denominated in the asset of the peering relationship, that Rafiki gives a certain peer. It should be defined in the peering agreement and depends on the trust between the transacting peers. If peer liquidity is not sufficient, payments will not be processed. Once the peer liquidity is used up, peers should settle and then reset their peer liquidity.
 
 #### Example
 
