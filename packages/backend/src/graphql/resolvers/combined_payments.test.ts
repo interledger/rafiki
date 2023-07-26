@@ -127,4 +127,86 @@ describe('Payment', (): void => {
       createdAt: combinedIncomingPayment.createdAt.toISOString()
     })
   })
+
+  test('Can filter payments by type and payment pointer', async (): Promise<void> => {
+    const { id: outPaymentPointerId } = await createPaymentPointer(deps, {
+      assetId: asset.id
+    })
+
+    const baseOutgoingPayment = {
+      receiver: `${Config.publicHost}/${uuid()}`,
+      sendAmount: {
+        value: BigInt(56),
+        assetCode: asset.code,
+        assetScale: asset.scale
+      },
+      validDestination: false
+    }
+
+    const outgoingPayment = await createOutgoingPayment(deps, {
+      paymentPointerId: outPaymentPointerId,
+      ...baseOutgoingPayment
+    })
+
+    const { id: outPaymentPointerId2 } = await createPaymentPointer(deps, {
+      assetId: asset.id
+    })
+    await createOutgoingPayment(deps, {
+      paymentPointerId: outPaymentPointerId2,
+      ...baseOutgoingPayment
+    })
+
+    const query = await appContainer.apolloClient
+      .query({
+        query: gql`
+          query Payments($filter: PaymentFilter) {
+            payments(filter: $filter) {
+              edges {
+                node {
+                  id
+                  type
+                  paymentPointerId
+                  state
+                  metadata
+                  createdAt
+                }
+                cursor
+              }
+            }
+          }
+        `,
+        variables: {
+          filter: {
+            type: {
+              in: ['OUTGOING']
+            },
+            paymentPointerId: {
+              in: [outPaymentPointerId]
+            }
+          }
+        }
+      })
+      .then((query): PaymentConnection => {
+        if (query.data) {
+          return query.data.payments
+        } else {
+          throw new Error('Data was empty')
+        }
+      })
+
+    expect(query.edges).toHaveLength(1)
+
+    const combinedOutgoingPayment = toCombinedPayment(
+      PaymentType.Outgoing,
+      outgoingPayment
+    )
+    expect(query.edges[0].node).toMatchObject({
+      id: combinedOutgoingPayment.id,
+      type: combinedOutgoingPayment.type,
+      metadata: combinedOutgoingPayment.metadata,
+      paymentPointerId: combinedOutgoingPayment.paymentPointerId,
+      state: combinedOutgoingPayment.state,
+      createdAt: combinedOutgoingPayment.createdAt.toISOString()
+    })
+  })
 })
