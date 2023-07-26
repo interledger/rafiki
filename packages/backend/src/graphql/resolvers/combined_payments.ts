@@ -1,20 +1,12 @@
 import {
   ResolversTypes,
   QueryResolvers,
-  Payment as SchemaPayment,
-  PaymentType as SchemaPaymentType
+  Payment as SchemaPayment
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
-import {
-  Payment,
-  PaymentType
-} from '../../open_payments/payment/combined/model'
-import { paymentToGraphql as incomingPaymentToGraphql } from './incoming_payment'
-import { paymentToGraphql as outgoingPaymentToGraphql } from './outgoing_payment'
-import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
-import { IncomingPayment } from '../../open_payments/payment/incoming/model'
+import { CombinedPayment } from '../../open_payments/payment/combined/model'
 
 export const getCombinedPayments: QueryResolvers<ApolloContext>['payments'] =
   async (parent, args, ctx): Promise<ResolversTypes['PaymentConnection']> => {
@@ -34,31 +26,23 @@ export const getCombinedPayments: QueryResolvers<ApolloContext>['payments'] =
 
     return {
       pageInfo,
-      edges: payments.map((payment: Payment) => {
+      edges: payments.map((payment: CombinedPayment) => {
         return {
-          cursor: payment.data.id,
+          cursor: payment.id,
           node: paymentToGraphql(payment)
         }
       })
     }
   }
 
-function paymentToGraphql(payment: Payment): SchemaPayment {
-  if (payment.type === PaymentType.Outgoing) {
-    return {
-      type: SchemaPaymentType.Outgoing,
-      data: {
-        ...outgoingPaymentToGraphql(payment.data as OutgoingPayment),
-        __typename: 'OutgoingPayment'
-      }
-    }
-  } else {
-    return {
-      type: SchemaPaymentType.Incoming,
-      data: {
-        ...incomingPaymentToGraphql(payment.data as IncomingPayment),
-        __typename: 'IncomingPayment'
-      }
-    }
+function paymentToGraphql(payment: CombinedPayment): SchemaPayment {
+  return {
+    id: payment.id,
+    type: payment.type,
+    state: payment.state,
+    paymentPointerId: payment.paymentPointerId,
+    metadata: payment.metadata,
+    createdAt: new Date(payment.createdAt).toISOString(),
+    __typename: 'Payment'
   }
 }

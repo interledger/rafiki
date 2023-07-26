@@ -1,14 +1,10 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../../shared/baseService'
 import { Pagination } from '../../../shared/baseModel'
-import { CombinedPayment, Payment, PaymentType } from './model'
+import { CombinedPayment } from './model'
 import { FilterString } from '../../../shared/filters'
-import { IncomingPayment } from '../incoming/model'
-import { OutgoingPayment } from '../outgoing/model'
 import { OutgoingPaymentService } from '../outgoing/service'
 import { IncomingPaymentService } from '../incoming/service'
-import { OutgoingPaymentError } from '../outgoing/errors'
-import { IncomingPaymentError } from '../incoming/errors'
 
 interface CombinedPaymentFilter {
   paymentPointerId?: FilterString
@@ -20,7 +16,7 @@ interface GetPageOptions {
 }
 
 export interface CombinedPaymentService {
-  getPage(options?: GetPageOptions): Promise<Payment[]>
+  getPage(options?: GetPageOptions): Promise<CombinedPayment[]>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -58,28 +54,5 @@ async function getCombinedPaymentsPage(
     query.whereIn('type', filter.type.in)
   }
 
-  const combinedPayments = await query.getPage(pagination)
-
-  const payments: Payment[] = []
-  for (const combinedPayment of combinedPayments) {
-    if (combinedPayment.type === PaymentType.Incoming) {
-      const incomingPayment = await deps.incomingPaymentService.get({
-        id: combinedPayment.id
-      })
-
-      if (!incomingPayment) throw new Error(IncomingPaymentError.UnknownPayment)
-
-      payments.push({ type: PaymentType.Incoming, data: incomingPayment })
-    } else {
-      const outgoingPayment = await deps.outgoingPaymentService.get({
-        id: combinedPayment.id
-      })
-
-      if (!outgoingPayment) throw new Error(OutgoingPaymentError.UnknownPayment)
-
-      payments.push({ type: PaymentType.Outgoing, data: outgoingPayment })
-    }
-  }
-
-  return payments
+  return await query.getPage(pagination)
 }

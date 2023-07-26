@@ -12,6 +12,12 @@ import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createAsset } from '../../tests/asset'
 import { v4 as uuid } from 'uuid'
 import { Asset } from '../../asset/model'
+import {
+  createCombinedPayment,
+  toCombinedPayment
+} from '../../tests/combinedPayment'
+import { PaymentType } from '../../open_payments/payment/combined/model'
+import { getPageTests } from './page.test'
 
 describe('Payment', (): void => {
   let deps: IocContract<AppServices>
@@ -35,12 +41,19 @@ describe('Payment', (): void => {
     appContainer.apolloClient.stop()
     await appContainer.shutdown()
   })
+
+  getPageTests({
+    getClient: () => appContainer.apolloClient,
+    createModel: () => createCombinedPayment(deps),
+    pagedQuery: 'payments'
+  })
+
   test('Can get payments', async (): Promise<void> => {
     const { id: outPaymentPointerId } = await createPaymentPointer(deps, {
       assetId: asset.id
     })
 
-    await createOutgoingPayment(deps, {
+    const outgoingPayment = await createOutgoingPayment(deps, {
       paymentPointerId: outPaymentPointerId,
       receiver: `${Config.publicHost}/${uuid()}`,
       sendAmount: {
@@ -54,7 +67,9 @@ describe('Payment', (): void => {
     const { id: inPaymentPointerId } = await createPaymentPointer(deps, {
       assetId: asset.id
     })
-    await createIncomingPayment(deps, { paymentPointerId: inPaymentPointerId })
+    const incomingPayment = await createIncomingPayment(deps, {
+      paymentPointerId: inPaymentPointerId
+    })
 
     const query = await appContainer.apolloClient
       .query({
@@ -63,23 +78,12 @@ describe('Payment', (): void => {
             payments {
               edges {
                 node {
+                  id
                   type
-                  data {
-                    ... on IncomingPayment {
-                      id
-                      paymentPointerId
-                      incomingPaymentState: state
-                      metadata
-                      createdAt
-                    }
-                    ... on OutgoingPayment {
-                      id
-                      paymentPointerId
-                      outgoingPaymentState: state
-                      metadata
-                      createdAt
-                    }
-                  }
+                  paymentPointerId
+                  state
+                  metadata
+                  createdAt
                 }
                 cursor
               }
@@ -96,5 +100,31 @@ describe('Payment', (): void => {
       })
 
     expect(query.edges).toHaveLength(2)
+
+    const combinedOutgoingPayment = toCombinedPayment(
+      PaymentType.Outgoing,
+      outgoingPayment
+    )
+    expect(query.edges[0].node).toMatchObject({
+      id: combinedOutgoingPayment.id,
+      type: combinedOutgoingPayment.type,
+      metadata: combinedOutgoingPayment.metadata,
+      paymentPointerId: combinedOutgoingPayment.paymentPointerId,
+      state: combinedOutgoingPayment.state,
+      createdAt: combinedOutgoingPayment.createdAt.toISOString()
+    })
+
+    const combinedIncomingPayment = toCombinedPayment(
+      PaymentType.Incoming,
+      incomingPayment
+    )
+    expect(query.edges[1].node).toMatchObject({
+      id: combinedIncomingPayment.id,
+      type: combinedIncomingPayment.type,
+      metadata: combinedIncomingPayment.metadata,
+      paymentPointerId: combinedIncomingPayment.paymentPointerId,
+      state: combinedIncomingPayment.state,
+      createdAt: combinedIncomingPayment.createdAt.toISOString()
+    })
   })
 })

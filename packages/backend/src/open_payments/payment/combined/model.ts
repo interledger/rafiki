@@ -1,6 +1,6 @@
 import { PaginationModel } from '../../../shared/baseModel'
-import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
-import { OutgoingPayment, OutgoingPaymentState } from '../outgoing/model'
+import { IncomingPaymentState } from '../incoming/model'
+import { OutgoingPaymentState } from '../outgoing/model'
 
 // This model is for a view that combines incoming and outgoing payments for the purpose of pagination.
 // You likely should use IncomingPayment and OutgoingPayment seperately for any other purpose.
@@ -9,11 +9,6 @@ import { OutgoingPayment, OutgoingPaymentState } from '../outgoing/model'
 export enum PaymentType {
   Incoming = 'INCOMING',
   Outgoing = 'OUTGOING'
-}
-
-export interface Payment {
-  type: PaymentType
-  data: IncomingPayment | OutgoingPayment
 }
 
 export class CombinedPayment extends PaginationModel {
