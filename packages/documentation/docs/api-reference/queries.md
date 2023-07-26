@@ -199,6 +199,65 @@ last<br />
 </tbody>
 </table>
 
+## payments
+
+**Type:** [PaymentConnection!](objects#paymentconnection)
+
+Fetch a page of combined payments
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+after<br />
+<a href="scalars#string"><code>String</code></a>
+</td>
+<td>
+<p>Paginating forwards: the cursor before the the requested page.</p>
+</td>
+</tr>
+<tr>
+<td>
+before<br />
+<a href="scalars#string"><code>String</code></a>
+</td>
+<td>
+<p>Paginating backwards: the cursor after the the requested page.</p>
+</td>
+</tr>
+<tr>
+<td>
+first<br />
+<a href="scalars#int"><code>Int</code></a>
+</td>
+<td>
+<p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
+</td>
+</tr>
+<tr>
+<td>
+last<br />
+<a href="scalars#int"><code>Int</code></a>
+</td>
+<td>
+<p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
+</td>
+</tr>
+<tr>
+<td>
+filter<br />
+<a href="inputObjects#paymentfilter"><code>PaymentFilter</code></a>
+</td>
+<td>
+<p>Filter payment events based on specific criteria.</p>
+</td>
+</tr>
+</tbody>
+</table>
+
 ## peer
 
 **Type:** [Peer](objects#peer)
