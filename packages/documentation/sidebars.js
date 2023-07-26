@@ -56,7 +56,7 @@ const docs = [
       'integration/getting-started',
       'integration/deployment',
       'integration/management',
-      'integration/flow-of-funds'
+      'integration/event-handlers'
     ]
   },
   {
