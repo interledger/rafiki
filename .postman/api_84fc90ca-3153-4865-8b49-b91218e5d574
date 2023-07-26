@@ -9,7 +9,7 @@ id = 84fc90ca-3153-4865-8b49-b91218e5d574
 
 [config.relations.collections]
 rootDirectory = postman/collections
-files[] = {"id":"23674746-92761441-6d0c-4fc6-aa04-73eccf6afd4c","path":"Interledger.json","metaData":{}}
+files[] = {"id":"27186415-92761441-6d0c-4fc6-aa04-73eccf6afd4c","path":"Interledger.json","metaData":{}}
 
 [config.relations.collections.metaData]
 
