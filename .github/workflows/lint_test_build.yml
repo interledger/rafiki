@@ -55,7 +55,10 @@ jobs:
 
       - name: fail if docs were generated
         if: steps.verify-changed-files.outputs.files_changed == 'true'
+        run: |
+          echo "Changed files: ${{ steps.verify-changed-files.outputs.changed_files }}"
         run: exit 1
+        
 
   backend:
     runs-on: ubuntu-22.04
