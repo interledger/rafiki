@@ -9,8 +9,6 @@ sidebar_position: 5
 
 ## Model
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
 - [Asset](objects#asset)
@@ -48,8 +46,6 @@ createdAt<br />
 </table>
 
 ## MutationResponse
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
@@ -100,4 +96,3 @@ message<br />
 </tr>
 </tbody>
 </table>
-

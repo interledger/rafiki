@@ -9,8 +9,6 @@ sidebar_position: 6
 
 ## GrantState
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
 
 <table>
@@ -42,4 +40,3 @@ sidebar_position: 6
 </tr>
 </tbody>
 </table>
-

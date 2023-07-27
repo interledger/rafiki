@@ -9,8 +9,6 @@ sidebar_position: 8
 
 ## FilterString
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -29,8 +27,6 @@ in<br />
 </table>
 
 ## GrantFilter
-
-
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -51,8 +47,6 @@ identifier<br />
 
 ## RevokeGrantInput
 
-
-
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -69,4 +63,3 @@ grantId<br />
 </tr>
 </tbody>
 </table>
-
