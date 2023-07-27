@@ -960,6 +960,34 @@
 					"response": []
 				},
 				{
+					"name": "Get Payments",
+					"id": "357ee69f-d258-49c5-a02b-072b566302d2",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query Payments($filter: PaymentFilter) {\n    payments(filter: $filter) {\n        edges {\n        node {\n            id\n            type\n            paymentPointerId\n            state\n            metadata\n            createdAt\n        }\n        cursor\n        }\n    }\n}",
+								"variables": "{          \n    \"filter\": {\n        \"type\": {\n            \"in\": [\"OUTGOING\"]\n        },\n        \"paymentPointerId\": {\n           \"in\": [{{secondPaymentPointerId}}]\n        }\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Deposit Event Liquidity",
 					"id": "7c3afd23-2348-43d6-9cfa-895e54e05f9e",
 					"protocolProfileBehavior": {
