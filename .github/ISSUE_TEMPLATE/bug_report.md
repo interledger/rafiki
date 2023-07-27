@@ -17,8 +17,8 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 
-Steps to reproduce the behavior. Please provide clear code snippets that always reproduce the bug.
-1. run pnpm localenv:compose build on branch example-bug
+Steps and commands to reproduce the behavior. Please provide clear code snippets that always reproduce the bug.
+1. run 'pnpm ...'
 2. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
