@@ -7,10 +7,16 @@ assignees: ''
 
 ---
 
+Thanks for taking the time to file a bug report! Please fill out this form as completely as possible.
+
+## Bug Report
+
 **Describe the bug**
+
 A clear and concise description of what the bug is.
 
 **To Reproduce**
+
 Steps to reproduce the behavior. Please provide clear code snippets that always reproduce the bug.
 1. run pnpm localenv:compose build on branch example-bug
 2. Go to '...'
@@ -19,9 +25,11 @@ Steps to reproduce the behavior. Please provide clear code snippets that always 
 4. See error
 
 **Expected behavior**
+
 A clear and concise description of what you expected to happen.
 
 **Desktop (please complete the following information):**
+
  - OS: [e.g. Ubuntu]
  - Version [e.g. 20.04LTS]
  - Node version [e.g. 18.16.0]
@@ -29,7 +37,9 @@ A clear and concise description of what you expected to happen.
  - Browser [e.g. chrome, safari]
 
 **Screenshots**
+
 If applicable, add screenshots to help explain your problem.
 
 **Additional context**
+
 Add any other context about the problem here.
