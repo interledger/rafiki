@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@adonisjs/fold": "^8.2.0",
-    "@apollo/server": "^4.8.1",
+    "@apollo/server": "^4.9.0",
     "@as-integrations/koa": "^1.1.1",
     "graphql": "^16.7.1",
     "@graphql-tools/graphql-file-loader": "^8.0.0",
