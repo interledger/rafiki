@@ -87,6 +87,12 @@ describe('Payment', (): void => {
                 }
                 cursor
               }
+              pageInfo {
+                endCursor
+                hasNextPage
+                hasPreviousPage
+                startCursor
+              }
             }
           }
         `
