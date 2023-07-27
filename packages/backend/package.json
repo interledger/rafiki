@@ -13,7 +13,7 @@
   },
   "devDependencies": {
     "@apollo/client": "^3.7.17",
-    "@graphql-codegen/cli": "4.0.1",
+    "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/introspection": "4.0.0",
     "@graphql-codegen/typescript": "4.0.1",
     "@graphql-codegen/typescript-operations": "^4.0.1",
@@ -25,7 +25,7 @@
     "@types/koa__router": "^12.0.0",
     "@types/lodash": "^4.14.196",
     "@types/luxon": "^3.3.1",
-    "@types/react": "^18.2.16",
+    "@types/react": "^18.2.17",
     "@types/rosie": "^0.0.42",
     "@types/tmp": "^0.2.3",
     "@types/uuid": "^9.0.2",

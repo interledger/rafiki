@@ -140,8 +140,8 @@ importers:
         specifier: ^1.19.1
         version: 1.19.1(eslint@8.45.0)(jest@29.6.1)(react@18.2.0)(typescript@4.9.5)
       '@types/react':
-        specifier: ^18.2.16
-        version: 18.2.16
+        specifier: ^18.2.17
+        version: 18.2.17
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
@@ -246,8 +246,8 @@ importers:
         specifier: ^8.0.2
         version: 8.0.2
       '@graphql-codegen/cli':
-        specifier: 4.0.1
-        version: 4.0.1(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1)
+        specifier: 5.0.0
+        version: 5.0.0(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1)
       '@graphql-codegen/introspection':
         specifier: 4.0.0
         version: 4.0.0(graphql@16.7.1)
@@ -436,8 +436,8 @@ importers:
         specifier: ^3.7.17
         version: 3.7.17(graphql@16.7.1)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
-        specifier: 4.0.1
-        version: 4.0.1(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1)
+        specifier: 5.0.0
+        version: 5.0.0(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1)
       '@graphql-codegen/introspection':
         specifier: 4.0.0
         version: 4.0.0(graphql@16.7.1)
@@ -472,8 +472,8 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       '@types/react':
-        specifier: ^18.2.16
-        version: 18.2.16
+        specifier: ^18.2.17
+        version: 18.2.17
       '@types/rosie':
         specifier: ^0.0.42
         version: 0.0.42
@@ -615,8 +615,8 @@ importers:
         specifier: ^0.5.4
         version: 0.5.4(tailwindcss@3.3.3)
       '@types/react':
-        specifier: ^18.2.16
-        version: 18.2.16
+        specifier: ^18.2.17
+        version: 18.2.17
       '@types/react-dom':
         specifier: ^18.2.7
         version: 18.2.7
@@ -2627,7 +2627,7 @@ packages:
       '@docusaurus/react-loadable': 5.5.2(react@18.2.0)
       '@docusaurus/types': 2.4.1(@swc/core@1.3.39)(react-dom@18.2.0)(react@18.2.0)
       '@types/history': 4.7.11
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
       '@types/react-router-config': 5.0.7
       '@types/react-router-dom': 5.3.3
       react: 18.2.0
@@ -2973,7 +2973,7 @@ packages:
     peerDependencies:
       react: '*'
     dependencies:
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
       prop-types: 15.8.1
       react: 18.2.0
 
@@ -3044,7 +3044,7 @@ packages:
       '@docusaurus/utils': 2.4.1(@docusaurus/types@2.4.1)(@swc/core@1.3.39)
       '@docusaurus/utils-common': 2.4.1(@docusaurus/types@2.4.1)
       '@types/history': 4.7.11
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
       '@types/react-router-config': 5.0.7
       clsx: 1.2.1
       parse-numeric-range: 1.3.0
@@ -3169,7 +3169,7 @@ packages:
       react-dom: ^16.8.4 || ^17.0.0
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
       commander: 5.1.0
       joi: 17.9.2
       react: 18.2.0
@@ -3492,17 +3492,21 @@ packages:
     resolution: {integrity: sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==}
     dev: true
 
-  /@graphql-codegen/cli@4.0.1(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1):
-    resolution: {integrity: sha512-/H4imnGOl3hoPXLKmIiGUnXpmBmeIClSZie/YHDzD5N59cZlGGJlIOOrUlOTDpJx5JNU1MTQcRjyTToOYM5IfA==}
+  /@graphql-codegen/cli@5.0.0(@babel/core@7.21.8)(@types/node@18.11.9)(graphql@16.7.1):
+    resolution: {integrity: sha512-A7J7+be/a6e+/ul2KI5sfJlpoqeqwX8EzktaKCeduyVKgOLA6W5t+NUGf6QumBDXU8PEOqXk3o3F+RAwCWOiqA==}
     hasBin: true
     peerDependencies:
+      '@parcel/watcher': ^2.1.0
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+    peerDependenciesMeta:
+      '@parcel/watcher':
+        optional: true
     dependencies:
       '@babel/generator': 7.21.5
       '@babel/template': 7.20.7
       '@babel/types': 7.21.5
       '@graphql-codegen/core': 4.0.0(graphql@16.7.1)
-      '@graphql-codegen/plugin-helpers': 5.0.0(graphql@16.7.1)
+      '@graphql-codegen/plugin-helpers': 5.0.1(graphql@16.7.1)
       '@graphql-tools/apollo-engine-loader': 8.0.0(graphql@16.7.1)
       '@graphql-tools/code-file-loader': 8.0.1(@babel/core@7.21.8)(graphql@16.7.1)
       '@graphql-tools/git-loader': 8.0.1(@babel/core@7.21.8)(graphql@16.7.1)
@@ -3512,8 +3516,7 @@ packages:
       '@graphql-tools/load': 8.0.0(graphql@16.7.1)
       '@graphql-tools/prisma-loader': 8.0.1(@types/node@18.11.9)(graphql@16.7.1)
       '@graphql-tools/url-loader': 8.0.0(@types/node@18.11.9)(graphql@16.7.1)
-      '@graphql-tools/utils': 10.0.0(graphql@16.7.1)
-      '@parcel/watcher': 2.1.0
+      '@graphql-tools/utils': 10.0.3(graphql@16.7.1)
       '@whatwg-node/fetch': 0.8.1(@types/node@18.11.9)
       chalk: 4.1.2
       cosmiconfig: 8.1.3
@@ -3532,7 +3535,7 @@ packages:
       string-env-interpolation: 1.0.1
       ts-log: 2.2.4
       tslib: 2.5.0
-      yaml: 1.10.2
+      yaml: 2.3.1
       yargs: 17.7.1
     transitivePeerDependencies:
       - '@babel/core'
@@ -3550,7 +3553,7 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
-      '@graphql-codegen/plugin-helpers': 5.0.0(graphql@16.7.1)
+      '@graphql-codegen/plugin-helpers': 5.0.1(graphql@16.7.1)
       '@graphql-tools/schema': 10.0.0(graphql@16.7.1)
       '@graphql-tools/utils': 10.0.3(graphql@16.7.1)
       graphql: 16.7.1
@@ -3573,6 +3576,20 @@ packages:
 
   /@graphql-codegen/plugin-helpers@5.0.0(graphql@16.7.1):
     resolution: {integrity: sha512-suL2ZMkBAU2a4YbBHaZvUPsV1z0q3cW6S96Z/eYYfkRIsJoe2vN+wNZ9Xdzmqx0JLmeeFCBSoBGC0imFyXlkDQ==}
+    peerDependencies:
+      graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
+    dependencies:
+      '@graphql-tools/utils': 10.0.3(graphql@16.7.1)
+      change-case-all: 1.0.15
+      common-tags: 1.8.2
+      graphql: 16.7.1
+      import-from: 4.0.0
+      lodash: 4.17.21
+      tslib: 2.5.0
+    dev: true
+
+  /@graphql-codegen/plugin-helpers@5.0.1(graphql@16.7.1):
+    resolution: {integrity: sha512-6L5sb9D8wptZhnhLLBcheSPU7Tg//DGWgc5tQBWX46KYTOTQHGqDpv50FxAJJOyFVJrveN9otWk9UT9/yfY4ww==}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
     dependencies:
@@ -4893,17 +4910,6 @@ packages:
       json-parse-even-better-errors: 2.3.1
     dev: true
 
-  /@parcel/watcher@2.1.0:
-    resolution: {integrity: sha512-8s8yYjd19pDSsBpbkOHnT6Z2+UJSuLQx61pCFM0s5wSRvKCEMDjd/cHY3/GI1szHIWbpXpsJdg3V6ISGGx9xDw==}
-    engines: {node: '>= 10.0.0'}
-    requiresBuild: true
-    dependencies:
-      is-glob: 4.0.3
-      micromatch: 4.0.5
-      node-addon-api: 3.2.1
-      node-gyp-build: 4.6.0
-    dev: true
-
   /@peculiar/asn1-schema@2.3.0:
     resolution: {integrity: sha512-DtNLAG4vmDrdSJFPe7rypkcj597chNQL7u+2dBtYo5mh7VW2+im6ke+O0NVr8W1f4re4C3F71LhoMb0Yxqa48Q==}
     dependencies:
@@ -6026,31 +6032,31 @@ packages:
   /@types/react-dom@18.2.7:
     resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
     dependencies:
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
     dev: true
 
   /@types/react-router-config@5.0.7:
     resolution: {integrity: sha512-pFFVXUIydHlcJP6wJm7sDii5mD/bCmmAY0wQzq+M+uX7bqS95AQqHZWP1iNMKrWVQSuHIzj5qi9BvrtLX2/T4w==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
       '@types/react-router': 5.1.20
 
   /@types/react-router-dom@5.3.3:
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
       '@types/react-router': 5.1.20
 
   /@types/react-router@5.1.20:
     resolution: {integrity: sha512-jGjmu/ZqS7FjSH6owMcD5qpq19+1RS9DeVRqfl1FeBMxTDQAGwlMWOcs52NDoXaNKyG3d1cYQFMs9rCrb88o9Q==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.2.16
+      '@types/react': 18.2.17
 
-  /@types/react@18.2.16:
-    resolution: {integrity: sha512-LLFWr12ZhBJ4YVw7neWLe6Pk7Ey5R9OCydfuMsz1L8bZxzaawJj2p06Q8/EFEHDeTBQNFLF62X+CG7B2zIyu0Q==}
+  /@types/react@18.2.17:
+    resolution: {integrity: sha512-u+e7OlgPPh+aryjOm5UJMX32OvB2E3QASOAqVMY6Ahs90djagxwv2ya0IctglNbNTexC12qCSMZG47KPfy1hAA==}
     dependencies:
       '@types/prop-types': 15.7.5
       '@types/scheduler': 0.16.2
@@ -13973,10 +13979,6 @@ packages:
     dev: true
     optional: true
 
-  /node-addon-api@3.2.1:
-    resolution: {integrity: sha512-mmcei9JghVNDYydghQmeDX8KoAm0FAiYyIcUt/N4nhyAipB17pllZQDOJD2fotxABnt4Mdz+dKTO7eftLg4d0A==}
-    dev: true
-
   /node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -14015,11 +14017,6 @@ packages:
     resolution: {integrity: sha512-dPEtOeMvF9VMcYV/1Wb8CPoVAXtp6MKMlcbAt4ddqmGqUJ6fQZFXkNZNkNlfevtNkGtaSoXf/vNNNSvgrdXwtA==}
     engines: {node: '>= 6.13.0'}
     dev: false
-
-  /node-gyp-build@4.6.0:
-    resolution: {integrity: sha512-NTZVKn9IylLwUzaKjkas1e4u2DLNcV4rdYagA4PWdPwW87Bi7z+BznyKSRwS/761tV/lzCGXplWsiaMjLqP2zQ==}
-    hasBin: true
-    dev: true
 
   /node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
@@ -19054,6 +19051,7 @@ packages:
   /yaml@1.10.2:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
+    dev: false
 
   /yaml@2.3.1:
     resolution: {integrity: sha512-2eHWfjaoXgTBC2jNM1LRef62VQa0umtvRiDSk6HSzW7RvS5YtkabJrwYLLEKWBc8a5U2PTSCs+dJjUTJdlHsWQ==}
