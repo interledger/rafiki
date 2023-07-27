@@ -4,7 +4,7 @@ dependencies:
   version: 17.14.2
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 12.7.0
+  version: 12.7.1
 - name: rafiki-auth
   repository: https://interledger.github.io/helm-charts
   version: 0.2.0
@@ -14,5 +14,5 @@ dependencies:
 - name: rafiki-frontend
   repository: https://interledger.github.io/helm-charts
   version: 0.2.0
-digest: sha256:64c13e38f2c018fa615e24a4d125e85a8fcf9083b2f40b0646d589c159e7a788
-generated: "2023-07-26T15:53:34.63720882Z"
+digest: sha256:a952da1575015a14b3d3ad6ed8e13f0d76024cc36d9d383f126d082c0d24acc2
+generated: "2023-07-27T04:48:52.5704881Z"
