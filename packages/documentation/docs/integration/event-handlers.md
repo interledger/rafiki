@@ -1,6 +1,6 @@
 # Event Handlers
 
-Rafiki communicates with the Account Servicing Entity over webhook events, as mentioned in the [_Getting Started_](./getting-started) section. Most events require the Account Servicing Entity interact with Rafiki, either to deposit or withdraw liquidity into or from Rafiki, or to provide payment pointer information. This document will provide an example flow for each of the defined webhook events.
+Rafiki communicates with the Account Servicing Entity over webhook events, as mentioned in the [_Getting Started_](./getting-started) section. Most events require the Account Servicing Entity interact with Rafiki, either to deposit or withdraw liquidity into or from Rafiki, or to provide payment pointer information. This document will describe how an Account Servicing Entity should handle each of the defined webhook events.
 
 ## `incoming_payment.created`
 
