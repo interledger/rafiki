@@ -18,7 +18,7 @@ import {
   GrantChoices,
   CreateContext,
   ContinueContext,
-  DeleteContext,
+  RevokeContext,
   StartContext,
   FinishContext,
   GetContext,
@@ -458,6 +458,41 @@ describe('Grant Routes', (): void => {
         })
       })
 
+      test('Cannot issue access token if grant has been revoked', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Revoked
+        })
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: grant.id
+        })
+
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grant.continueToken}`
+            }
+          },
+          {
+            id: grant.continueId
+          }
+        )
+
+        assert.ok(grant.interactRef)
+
+        ctx.request.body = {
+          interact_ref: grant.interactRef
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 404,
+          error: 'unknown_request'
+        })
+      })
+
       test('Cannot issue access token without interact ref', async (): Promise<void> => {
         const ctx = createContext<ContinueContext>(
           {
@@ -532,7 +567,7 @@ describe('Grant Routes', (): void => {
       })
 
       test('Can cancel a grant request / pending grant', async (): Promise<void> => {
-        const ctx = createContext<DeleteContext>(
+        const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
             method: 'DELETE',
@@ -544,17 +579,17 @@ describe('Grant Routes', (): void => {
             id: grant.continueId
           }
         )
-        await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+        await expect(grantRoutes.revoke(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(204)
       })
 
-      test('Can delete an existing grant', async (): Promise<void> => {
+      test('Can revoke an existing grant', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
           state: GrantState.Granted
         })
-        const ctx = createContext<DeleteContext>(
+        const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
             method: 'DELETE',
@@ -566,13 +601,36 @@ describe('Grant Routes', (): void => {
             id: grant.continueId
           }
         )
-        await expect(grantRoutes.delete(ctx)).resolves.toBeUndefined()
+        await expect(grantRoutes.revoke(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(204)
       })
 
-      test('Cannot delete non-existing grant', async (): Promise<void> => {
-        const ctx = createContext<DeleteContext>(
+      test('Cannot revoke an already revoked grant', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Revoked
+        })
+        const ctx = createContext<RevokeContext>(
+          {
+            url: '/continue/{id}',
+            method: 'DELETE',
+            headers: {
+              Authorization: `GNAP ${grant.continueToken}`
+            }
+          },
+          {
+            id: grant.continueId
+          }
+        )
+        await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
+          status: 404,
+          error: 'unknown_request'
+        })
+      })
+
+      test('Cannot revoke non-existing grant', async (): Promise<void> => {
+        const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
             method: 'DELETE',
@@ -584,7 +642,7 @@ describe('Grant Routes', (): void => {
             id: v4()
           }
         )
-        await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+        await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
           status: 404,
           error: 'unknown_request'
         })
@@ -597,7 +655,7 @@ describe('Grant Routes', (): void => {
       `(
         'Cannot delete without$description continueToken',
         async ({ token, status, error }): Promise<void> => {
-          const ctx = createContext<DeleteContext>(
+          const ctx = createContext<RevokeContext>(
             {
               url: '/continue/{id}',
               method: 'DELETE',
@@ -611,7 +669,7 @@ describe('Grant Routes', (): void => {
               id: v4()
             }
           )
-          await expect(grantRoutes.delete(ctx)).rejects.toMatchObject({
+          await expect(grantRoutes.revoke(ctx)).rejects.toMatchObject({
             status,
             error
           })
@@ -627,7 +685,7 @@ describe('Grant Routes', (): void => {
     })
 
     describe('Client - interaction start', (): void => {
-      test('Interaction start fails if grant is invalid', async (): Promise<void> => {
+      test('Interaction start fails if grant doesnt exist', async (): Promise<void> => {
         const ctx = createContext<StartContext>(
           {
             headers: {
@@ -636,6 +694,28 @@ describe('Grant Routes', (): void => {
             }
           },
           { id: 'unknown_interaction', nonce: grant.interactNonce }
+        )
+
+        await expect(grantRoutes.interaction.start(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'unknown_request'
+        })
+      })
+
+      test('Interaction start fails if grant is revoked', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Revoked
+        })
+
+        const ctx = createContext<StartContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            }
+          },
+          { id: grant.interactId, nonce: grant.interactNonce }
         )
 
         await expect(grantRoutes.interaction.start(ctx)).rejects.toMatchObject({
@@ -736,6 +816,31 @@ describe('Grant Routes', (): void => {
             session: { nonce: grant.interactNonce }
           },
           { id: fakeInteractId, nonce: grant.interactNonce }
+        )
+
+        await expect(grantRoutes.interaction.finish(ctx)).rejects.toMatchObject(
+          {
+            status: 404,
+            error: 'unknown_request'
+          }
+        )
+      })
+
+      test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
+        const grant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Revoked
+        })
+
+        const ctx = createContext<FinishContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            session: { nonce: grant.interactNonce }
+          },
+          { id: grant.interactId, nonce: grant.interactNonce }
         )
 
         await expect(grantRoutes.interaction.finish(ctx)).rejects.toMatchObject(
@@ -927,6 +1032,30 @@ describe('Grant Routes', (): void => {
         })
       })
 
+      test('Cannot get grant details for revoked grant', async (): Promise<void> => {
+        const revokedGrant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Revoked
+        })
+        const ctx = createContext<GetContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              'x-idp-secret': Config.identityServerSecret
+            },
+            url: `/grant/${revokedGrant.interactId}/${revokedGrant.interactNonce}`,
+            method: 'GET'
+          },
+          { id: revokedGrant.interactId, nonce: revokedGrant.interactNonce }
+        )
+        await expect(
+          grantRoutes.interaction.details(ctx)
+        ).rejects.toMatchObject({
+          status: 404
+        })
+      })
+
       test('Cannot get grant details without secret', async (): Promise<void> => {
         const ctx = createContext<GetContext>(
           {
@@ -944,26 +1073,6 @@ describe('Grant Routes', (): void => {
           grantRoutes.interaction.details(ctx)
         ).rejects.toMatchObject({
           status: 401
-        })
-      })
-
-      test('Cannot get grant details for nonexistent grant', async (): Promise<void> => {
-        const ctx = createContext<GetContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              'x-idp-secret': Config.identityServerSecret
-            },
-            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
-            method: 'GET'
-          },
-          { id: v4(), nonce: grant.interactNonce }
-        )
-        await expect(
-          grantRoutes.interaction.details(ctx)
-        ).rejects.toMatchObject({
-          status: 404
         })
       })
 

@@ -15,35 +15,31 @@ import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
 import { Pagination } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
-
-interface GrantFilter {
-  identifier?: FilterString
-}
+import { AccessTokenService } from '../accessToken/service'
 
 export interface GrantService {
-  get(grantId: string, trx?: Transaction): Promise<Grant | undefined>
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteraction(interactId: string): Promise<PendingGrant | undefined>
   getByInteractionSession(
     interactId: string,
-    interactNonce: string
+    interactNonce: string,
+    options?: GetByInteractionSessionOpts
   ): Promise<PendingGrant | undefined>
   issueGrant(grantId: string): Promise<Grant>
   getByContinue(
     continueId: string,
     continueToken: string,
-    interactRef?: string
+    options?: GetByContinueOpts
   ): Promise<Grant | null>
   rejectGrant(grantId: string): Promise<Grant | null>
-  deleteGrant(continueId: string): Promise<boolean>
-  deleteGrantById(grantId: string): Promise<boolean>
+  revokeGrant(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
   accessService: AccessService
+  accessTokenService: AccessTokenService
   knex: TransactionOrKnex
 }
 
@@ -77,9 +73,19 @@ export interface GrantResponse {
   }
 }
 
+interface FilterGrantState {
+  in?: GrantState[]
+  notIn?: GrantState[]
+}
+interface GrantFilter {
+  identifier?: FilterString
+  state?: FilterGrantState
+}
+
 export async function createGrantService({
   logger,
   accessService,
+  accessTokenService,
   knex
 }: ServiceDependencies): Promise<GrantService> {
   const log = logger.child({
@@ -88,36 +94,30 @@ export async function createGrantService({
   const deps: ServiceDependencies = {
     logger: log,
     accessService,
+    accessTokenService,
     knex
   }
   return {
-    get: (grantId: string, trx?: Transaction) => get(grantId, trx),
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
-    getByInteraction: (interactId: string) => getByInteraction(interactId),
-    getByInteractionSession: (interactId: string, interactNonce: string) =>
-      getByInteractionSession(interactId, interactNonce),
+    getByInteractionSession: (
+      interactId: string,
+      interactNonce: string,
+      options: GetByInteractionSessionOpts
+    ) => getByInteractionSession(interactId, interactNonce, options),
     issueGrant: (grantId: string) => issueGrant(deps, grantId),
     getByContinue: (
       continueId: string,
       continueToken: string,
-      interactRef: string
-    ) => getByContinue(continueId, continueToken, interactRef),
+      options: GetByContinueOpts
+    ) => getByContinue(continueId, continueToken, options),
     rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
-    deleteGrant: (continueId: string) => deleteGrant(deps, continueId),
-    deleteGrantById: (grantId: string) => deleteGrantById(deps, grantId),
+    revokeGrant: (grantId: string) => revokeGrant(deps, grantId),
     getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
   }
-}
-
-async function get(
-  grantId: string,
-  trx?: Transaction
-): Promise<Grant | undefined> {
-  return Grant.query(trx).findById(grantId)
 }
 
 async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
@@ -142,32 +142,36 @@ async function rejectGrant(
   })
 }
 
-async function deleteGrant(
-  deps: ServiceDependencies,
-  continueId: string
-): Promise<boolean> {
-  const deletion = await Grant.query(deps.knex).delete().where({ continueId })
-  if (deletion === 0) {
-    deps.logger.info(
-      `Could not find grant corresponding to continueId: ${continueId}`
-    )
-    return false
-  }
-  return true
-}
-
-async function deleteGrantById(
+async function revokeGrant(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<boolean> {
-  const deletion = await Grant.query(deps.knex).deleteById(grantId)
-  if (deletion === 0) {
-    deps.logger.info(
-      `Could not delete grant corresponding to grantId: ${grantId}`
-    )
-    return false
+  const { accessTokenService, accessService } = deps
+
+  const trx = await deps.knex.transaction()
+
+  try {
+    const grant = await Grant.query(trx)
+      .patchAndFetchById(grantId, { state: GrantState.Revoked })
+      .first()
+
+    if (!grant) {
+      deps.logger.info(
+        `Could not revoke grant corresponding to grantId: ${grantId}`
+      )
+      await trx.rollback()
+      return false
+    }
+
+    await accessTokenService.revokeByGrantId(grant.id, trx)
+    await accessService.revokeByGrantId(grant.id, trx)
+
+    await trx.commit()
+    return true
+  } catch (error) {
+    await trx.rollback()
+    throw error
   }
-  return true
 }
 
 async function create(
@@ -216,10 +220,27 @@ async function create(
   }
 }
 
-async function getByInteraction(
-  interactId: string
+interface GetByInteractionSessionOpts {
+  includeRevoked?: boolean
+}
+
+async function getByInteractionSession(
+  interactId: string,
+  interactNonce: string,
+  options: GetByInteractionSessionOpts = {}
 ): Promise<PendingGrant | undefined> {
-  const grant = await Grant.query().findOne({ interactId })
+  const { includeRevoked = false } = options
+
+  const queryBuilder = Grant.query()
+    .findOne({ interactId, interactNonce })
+    .withGraphFetched('access')
+
+  if (!includeRevoked) {
+    queryBuilder.whereNot('state', GrantState.Revoked)
+  }
+
+  const grant = await queryBuilder
+
   if (!grant || !isPendingGrant(grant)) {
     return undefined
   } else {
@@ -227,26 +248,26 @@ async function getByInteraction(
   }
 }
 
-async function getByInteractionSession(
-  interactId: string,
-  interactNonce: string
-): Promise<PendingGrant | undefined> {
-  const grant = await Grant.query()
-    .findOne({ interactId, interactNonce })
-    .withGraphFetched('access')
-  if (!grant || !isPendingGrant(grant)) {
-    return undefined
-  } else {
-    return grant
-  }
+interface GetByContinueOpts {
+  interactRef?: string
+  includeRevoked?: boolean
 }
 
 async function getByContinue(
   continueId: string,
   continueToken: string,
-  interactRef?: string
+  options: GetByContinueOpts = {}
 ): Promise<Grant | null> {
-  const grant = await Grant.query().findOne({ continueId })
+  const { interactRef, includeRevoked = false } = options
+
+  const queryBuilder = Grant.query().findOne({ continueId })
+
+  if (!includeRevoked) {
+    queryBuilder.whereNot('state', GrantState.Revoked)
+  }
+
+  const grant = await queryBuilder
+
   if (
     continueToken !== grant?.continueToken ||
     (interactRef && interactRef !== grant?.interactRef)
@@ -261,9 +282,18 @@ async function getGrantsPage(
   filter?: GrantFilter
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
+  const { identifier, state } = filter ?? {}
 
-  if (filter?.identifier?.in && filter.identifier.in.length > 0) {
-    query.whereIn('access.identifier', filter.identifier.in)
+  if (identifier?.in?.length) {
+    query.whereIn('access.identifier', identifier.in)
+  }
+
+  if (state?.in?.length) {
+    query.whereIn('state', state.in)
+  }
+
+  if (state?.notIn?.length) {
+    query.whereNotIn('state', state.notIn)
   }
 
   return query.getPage(pagination)
