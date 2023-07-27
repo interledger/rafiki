@@ -56,7 +56,8 @@ const docs = [
     items: [
       'integration/getting-started',
       'integration/deployment',
-      'integration/management'
+      'integration/management',
+      'integration/event-handlers'
     ]
   },
   {

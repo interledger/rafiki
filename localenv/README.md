@@ -30,27 +30,31 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 (b) Admin API - accessible at http://localhost:3001/graphql
 
-(c) Open Payments API - accessible at http://localhost:3000
+(c) Auth API - accessible at http://localhost:3003/graphql
 
-(d) Rafiki Admin - accessible at http://localhost:3010
+(d) Open Payments API - accessible at http://localhost:3000
 
-(e) Open Payments Auth API - accessible at http://localhost:3006
+(e) Rafiki Admin - accessible at http://localhost:3010
 
-(f) Postman Signature Service - accessible at http://localhost:3040
+(f) Open Payments Auth API - accessible at http://localhost:3006
+
+(g) Postman Signature Service - accessible at http://localhost:3040
 
 #### Happy Life Bank
 
-(g) User Interface - accessible at http://localhost:3031
+(h) User Interface - accessible at http://localhost:3031
 
-(h) Admin API - accessible at http://localhost:4001/graphql
+(i) Admin API - accessible at http://localhost:4001/graphql
 
-(i) Open Payments API - accessible at http://localhost:4000
+(j) Auth API - accessible at http://localhost:4003/graphql
 
-(j) Rafiki Admin - accessible at http://localhost:4010
+(k) Open Payments API - accessible at http://localhost:4000
 
-(k) Open Payments Auth API - accessible at http://localhost:4006
+(l) Rafiki Admin - accessible at http://localhost:4010
 
-(l) Postman Signature Service - accessible at http://localhost:3041
+(m) Open Payments Auth API - accessible at http://localhost:4006
+
+(n) Postman Signature Service - accessible at http://localhost:3041
 
 #### Database
 

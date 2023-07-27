@@ -89,57 +89,9 @@ The endpoint accepts a `POST` request with
 | `payment_pointer.not_found`        | A requested payment pointer was not found                                   |
 | `payment_pointer.web_monetization` | Web Monetization payments received via STREAM.                              |
 
+The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](./event-handlers.md) documentation.
+
 The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
-
-### Event Handlers
-
-#### `incoming_payment.created`
-
-An [Open Payments](../reference/glossary.md#open-payments) Incoming Payment was created. This is for information purposes only and does not require an action.
-
-- Action: None
-
-#### `incoming_payment.completed`
-
-An [Open Payments](../reference/glossary.md#open-payments) Incoming Payment was completed, either manually or programmatically, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
-
-- Action: Withdraw liquidity
-
-#### `incoming_payment.expired`
-
-An [Open Payments](../reference/glossary.md#open-payments) Incoming Payment has expired, i.e. it does not accept any incoming funds anymore. The Account Servicing Entity SHOULD withdraw any funds already received and deposit them into the payee's account.
-
-- Action: Withdraw liquidity
-
-#### `outgoing_payment.created`
-
-An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment has been created. It requires liquidity to be processed. The Account Servicing Entity SHOULD reserve the maximum requisite funds for the payment attempt on the payer's account.
-
-- Action: Deposit liquidity
-
-#### `outgoing_payment.completed`
-
-An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment was completed, i.e. it won't send any further funds. The Account Servicing Entity SHOULD withdraw any excess liquidity and deposit it into the payer's account.
-
-- Action: Withdraw liquidity
-
-#### `outgoing_payment.failed`
-
-An [Open Payments](../reference/glossary.md#open-payments) Outgoing Payment failed to send all (or any) of the funds and won't re-try. The Account Servicing Entity SHOULD withdraw all or any excess liquidity and return it to the payer's account.
-
-- Action: Withdraw liquidity
-
-#### `payment_pointer.not_found`
-
-A [payment pointer](../reference/glossary.md#payment-pointer) was requested (via the [Open Payments API](../reference/glossary.md#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and [create](#issuing-payment-pointers) a payment pointer. The initial request for the payment pointer will succeed if the Account Servicing Entity creates it within the configurable [`PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`](./deployment.md#backend) timeframe.
-
-- Action: Create Payment Pointer
-
-#### `payment_pointer.web_monetization`
-
-A [Web Monetization](../reference/glossary.md#web-monetization) payment has been received via [STREAM](../reference/glossary.md#stream) by a payment pointer. The Account Servicing Entity SHOULD withdraw all funds received and deposit them into the payee's account.
-
-- Action: Withdraw liquidity
 
 ## Identity Provider
 
