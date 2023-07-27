@@ -45,10 +45,16 @@ type GrantEdge {
 
 input GrantFilter {
   identifier: FilterString
+  state: FilterGrantState
 }
 
 input FilterString {
-  in: [String!]!
+  in: [String!]
+}
+
+input FilterGrantState {
+  in: [GrantState!]
+  notIn: [GrantState!]
 }
 
 input RevokeGrantInput {

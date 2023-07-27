@@ -57,7 +57,7 @@ describe('Signature Service', (): void => {
     let tokenManagementUrl: string
     let accessTokenService: AccessTokenService
 
-    const BASE_GRANT = {
+    const generateBaseGrant = (overrides?: Partial<Grant>) => ({
       state: GrantState.Pending,
       startMethod: [StartMethod.Redirect],
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
@@ -68,8 +68,9 @@ describe('Signature Service', (): void => {
       client: CLIENT,
       interactId: v4(),
       interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-    }
+      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
+      ...overrides
+    })
 
     const BASE_ACCESS = {
       type: AccessType.OutgoingPayment,
@@ -96,7 +97,7 @@ describe('Signature Service', (): void => {
     })
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
@@ -310,6 +311,35 @@ describe('Signature Service', (): void => {
       ).rejects.toHaveProperty('status', 401)
 
       scope.done()
+    })
+
+    test('middleware fails if grant is revoked', async (): Promise<void> => {
+      const grant = await Grant.query().insert({
+        ...generateBaseGrant({ state: GrantState.Revoked })
+      })
+
+      const ctx = await createContextWithSigHeaders<ContinueContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${grant.continueToken}`
+          },
+          url: 'http://example.com/continue',
+          method: 'POST'
+        },
+        { id: grant.continueId },
+        { interact_ref: grant.interactRef },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await grantContinueHttpsigMiddleware(ctx, next)
+      expect(ctx.response.status).toBe(401)
+      expect(ctx.response.body).toMatchObject({
+        error: 'invalid_continuation',
+        message: 'invalid grant'
+      })
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {
