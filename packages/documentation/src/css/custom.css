@@ -108,11 +108,13 @@ h1::after {
 }
 
 .navbar__item {
+  padding-top: 0.75rem;
   padding-bottom: 0;
 }
 
 .navbar {
-  height: 4rem;
+  line-height: 2.5rem;
+  height: 6rem;
 }
 
 .footer__bottom {
