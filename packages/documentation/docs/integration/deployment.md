@@ -188,5 +188,5 @@ Now, the Admin UI can be found on localhost:3010.
 | Variable            | Default                         | Description                           |
 | ------------------- | ------------------------------- | ------------------------------------- |
 | `GRAPHQL_URL`       | `http://localhost:3001/graphql` | URL for the GraphQL Admin API         |
-| `OPEN_PAYMENTS_URL` | `http://127.0.0.1:3003/`        | URL for the GraphQL Admin API         |
+| `OPEN_PAYMENTS_URL` | `http://localhost:3003/`        | Open Payments API Endpoit |
 | `PORT`              | `3005`                          | Port from which to host the Remix app |
