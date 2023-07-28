@@ -55,7 +55,7 @@ export default function PaymentPointersPage() {
           </div>
         </PageHeader>
         <Table>
-          <Table.Head columns={['ID', 'Public name', 'URL', 'Status']} />
+          <Table.Head columns={['Payment pointer', 'Public name', 'Status']} />
           <Table.Body>
             {paymentPointers.edges.length ? (
               paymentPointers.edges.map((pp) => (
@@ -64,7 +64,7 @@ export default function PaymentPointersPage() {
                   className='cursor-pointer'
                   onClick={() => navigate(`/payment-pointers/${pp.node.id}`)}
                 >
-                  <Table.Cell>{pp.node.id}</Table.Cell>
+                  <Table.Cell>{pp.node.url}</Table.Cell>
                   <Table.Cell>
                     <div className='flex flex-col'>
                       {pp.node.publicName ? (
@@ -76,7 +76,6 @@ export default function PaymentPointersPage() {
                       )}
                     </div>
                   </Table.Cell>
-                  <Table.Cell>{pp.node.url}</Table.Cell>
                   <Table.Cell>
                     <Badge status={pp.node.status} />
                   </Table.Cell>
