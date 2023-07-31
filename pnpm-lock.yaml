@@ -633,8 +633,8 @@ importers:
         specifier: ^6.7.1
         version: 6.7.1(eslint@8.46.0)
       eslint-plugin-react:
-        specifier: ^7.33.0
-        version: 7.33.0(eslint@8.46.0)
+        specifier: ^7.33.1
+        version: 7.33.1(eslint@8.46.0)
       postcss:
         specifier: ^8.4.27
         version: 8.4.27
@@ -9868,8 +9868,8 @@ packages:
       string.prototype.matchall: 4.0.8
     dev: true
 
-  /eslint-plugin-react@7.33.0(eslint@8.46.0):
-    resolution: {integrity: sha512-qewL/8P34WkY8jAqdQxsiL82pDUeT7nhs8IsuXgfgnsEloKCT4miAV9N9kGtx7/KM9NH/NCGUE7Edt9iGxLXFw==}
+  /eslint-plugin-react@7.33.1(eslint@8.46.0):
+    resolution: {integrity: sha512-L093k0WAMvr6VhNwReB8VgOq5s2LesZmrpPdKz/kZElQDzqS7G7+DnKoqT+w4JwuiGeAhAvHO0fvy0Eyk4ejDA==}
     engines: {node: '>=4'}
     peerDependencies:
       eslint: ^3 || ^4 || ^5 || ^6 || ^7 || ^8
