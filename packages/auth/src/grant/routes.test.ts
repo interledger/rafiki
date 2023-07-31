@@ -16,13 +16,6 @@ import {
   CreateContext,
   ContinueContext,
   RevokeContext,
-  StartContext,
-  FinishContext,
-  GetContext,
-  ChooseContext
-=======
-  DeleteContext
->>>>>>> f0bd4b6c (refactor(auth): factor out interaction routes into separate route service)
 } from './routes'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
