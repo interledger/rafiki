@@ -1,59 +1,63 @@
-import Koa from 'koa'
-
 import { RatesService, ConvertError } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { CacheDataStore } from '../middleware/cache/data-stores'
+import nock from 'nock'
 
 describe('Rates service', function () {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let service: RatesService
-  let requestCount = 0
+  let apiRequestCount = 0
   const exchangeRatesLifetime = 100
-  const koa = new Koa()
-  koa.use(function (ctx) {
-    requestCount++
-    ctx.body = {
-      base: 'USD',
-      rates: {
-        XRP: 0.5,
-        NEGATIVE: -0.5,
-        ZERO: 0.0,
-        STRING: '123'
-      }
-    }
-  })
-  const server = koa.listen(3210)
+  const exchangeRatesUrl = 'http://example-rates.com'
+
+  const exampleRates = {
+    XRP: 0.5,
+    NEGATIVE: -0.5,
+    ZERO: 0.0,
+    STRING: '123'
+  }
 
   beforeAll(async (): Promise<void> => {
-    const config = Config
-    config.exchangeRatesLifetime = exchangeRatesLifetime
-    config.exchangeRatesUrl = 'http://127.0.0.1:3210/'
-    deps = await initIocContainer(config)
+    deps = initIocContainer({
+      ...Config,
+      exchangeRatesUrl,
+      exchangeRatesLifetime
+    })
+
+    nock(exchangeRatesUrl)
+      .get('/')
+      .query(true)
+      .reply(200, () => {
+        apiRequestCount++
+        return {
+          base: 'USD',
+          rates: exampleRates
+        }
+      })
+      .persist()
+
     appContainer = await createTestApp(deps)
-    jest.useFakeTimers()
-    jest.setSystemTime(1600000000000)
+    service = await deps.use('ratesService')
   })
 
   beforeEach(async (): Promise<void> => {
-    // Fast-forward to reset the cache between tests.
-    jest.setSystemTime(Date.now() + exchangeRatesLifetime + 1)
-    service = await deps.use('ratesService')
-    requestCount = 0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;((service as any).cachedRates as CacheDataStore).deleteAll()
+
+    apiRequestCount = 0
   })
 
   afterAll(async (): Promise<void> => {
-    jest.useRealTimers()
-    await new Promise((resolve, reject) => {
-      server.close((err?: Error) => (err ? reject(err) : resolve(null)))
-    })
     await appContainer.shutdown()
+    jest.useRealTimers()
   })
 
-  describe('convert', function () {
+  describe('convert', () => {
     it('returns the source amount when assets are alike', async () => {
       await expect(
         service.convert({
@@ -62,7 +66,7 @@ describe('Rates service', function () {
           destinationAsset: { code: 'USD', scale: 9 }
         })
       ).resolves.toBe(1234n)
-      expect(requestCount).toBe(0)
+      expect(apiRequestCount).toBe(0)
     })
 
     it('scales the source amount when currencies are alike but scales are different', async () => {
@@ -80,7 +84,7 @@ describe('Rates service', function () {
           destinationAsset: { code: 'USD', scale: 9 }
         })
       ).resolves.toBe(123n)
-      expect(requestCount).toBe(0)
+      expect(apiRequestCount).toBe(0)
     })
 
     it('returns the converted amount when assets are different', async () => {
@@ -130,58 +134,57 @@ describe('Rates service', function () {
         })
       ).resolves.toBe(ConvertError.InvalidDestinationPrice)
     })
+  })
 
-    describe('caching', function () {
-      const opts = {
-        sourceAmount: 1234n,
-        sourceAsset: { code: 'USD', scale: 9 },
-        destinationAsset: { code: 'XRP', scale: 9 }
-      }
-
-      afterEach(async () => {
-        // Await it so that the test can clean up properly. Typecast due to private property.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((<any>service).prefetchRequest) await (<any>service).prefetchRequest
+  describe('rates', function () {
+    beforeEach(async (): Promise<void> => {
+      jest.useFakeTimers({
+        now: Date.now(),
+        doNotFake: ['nextTick', 'setImmediate']
       })
+    })
 
-      it('caches requests', async () => {
-        await expect(
-          Promise.all([
-            service.convert(opts),
-            service.convert(opts),
-            service.convert(opts)
-          ])
-        ).resolves.toEqual([1234n * 2n, 1234n * 2n, 1234n * 2n])
-        expect(requestCount).toBe(1)
-      })
+    const expectedUsdRates = {
+      ...exampleRates,
+      USD: 1
+    }
 
-      it('prefetches when the cached request is old', async () => {
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
-        jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-        // ... cache isn't expired yet, but it will be soon
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((<any>service).prefetchRequest).toBeDefined()
-        // The prefetch isn't done.
-        expect(requestCount).toBe(1)
+    it('handles concurrent requests', async () => {
+      await expect(
+        Promise.all([
+          service.rates('USD'),
+          service.rates('USD'),
+          service.rates('USD')
+        ])
+      ).resolves.toEqual([expectedUsdRates, expectedUsdRates, expectedUsdRates])
+      expect(apiRequestCount).toBe(1)
+    })
 
-        // Invalidate the cache.
-        jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        // The prefetch response is promoted to the cache.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((<any>service).prefetchRequest).toBeUndefined()
-        expect(requestCount).toBe(2)
-      })
+    it('returns cached request', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      expect(apiRequestCount).toBe(1)
+    })
 
-      it('cannot use an expired cache', async () => {
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
-        jest.advanceTimersByTime(exchangeRatesLifetime + 1)
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((<any>service).prefetchRequest).toBeUndefined()
-        expect(requestCount).toBe(2)
-      })
+    it('prefetches when the cached request is old', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
+      // ... cache isn't expired yet, but it will be soon
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      expect(apiRequestCount).toBe(1)
+
+      // Invalidate the cache.
+      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      // The prefetch response is promoted to the cache.
+      expect(apiRequestCount).toBe(2)
+    })
+
+    it('cannot use an expired cache', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      jest.advanceTimersByTime(exchangeRatesLifetime + 1)
+      await expect(service.rates('USD')).resolves.toEqual(expectedUsdRates)
+      expect(apiRequestCount).toBe(2)
     })
   })
 
