@@ -44,6 +44,7 @@ import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
+import { createFeeService } from './fee/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -395,6 +396,16 @@ export function initIocContainer(
       ilpAddress: config.ilpAddress
     })
   })
+
+  container.singleton('feeService', async (deps) => {
+    const logger = await deps.use('logger')
+    const knex = await deps.use('knex')
+    return await createFeeService({
+      logger: logger,
+      knex: knex
+    })
+  })
+
   return container
 }
 

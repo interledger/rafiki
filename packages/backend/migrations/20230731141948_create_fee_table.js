@@ -9,7 +9,9 @@ exports.up = function (knex) {
     table.enum('type', ['SENDING', 'RECEIVING']).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.bigInteger('fixedFee')
-    table.decimal('percentageFee', 5, 4).checkBetween([0, 1])
+    table
+      .decimal('percentageFee', 5, 4)
+      .checkBetween([0, 1], 'fees_percentagefee_check')
   })
 }
 
