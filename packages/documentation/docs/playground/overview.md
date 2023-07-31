@@ -137,7 +137,7 @@ pnpm localenv:compose down --volumes
 
 #### Postman & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the [Postman collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). It is configured to use the default endpoints of the local environment.
+The Open Payments APIs can be interacted with using the [Rafiki Postman API](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). It is configured to use the default endpoints of the local environment.
 
 The Examples folder in the Postman collection includes an eCommerce (Open Payments) example that can be executed one by one. It
 
