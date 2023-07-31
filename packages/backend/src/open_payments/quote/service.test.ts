@@ -94,10 +94,9 @@ describe('QuoteService', (): void => {
       code: sendAmount.assetCode,
       scale: sendAmount.assetScale
     })
-    const paymentPointer = await createPaymentPointer(deps, {
+    sendingPaymentPointer = await createPaymentPointer(deps, {
       assetId: sendAssetId
     })
-    sendingPaymentPointer = paymentPointer
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receivingPaymentPointer = await createPaymentPointer(deps, {
       assetId: destinationAssetId,
