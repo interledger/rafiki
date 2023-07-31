@@ -237,12 +237,10 @@ describe('Interaction Routes', (): void => {
           { id: grant.interactId, nonce: grant.interactNonce }
         )
 
-        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject(
-          {
-            status: 404,
-            error: 'unknown_request'
-          }
-        )
+        await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
+          status: 404,
+          error: 'unknown_request'
+        })
       })
 
       test('Can finish accepted interaction', async (): Promise<void> => {
@@ -433,9 +431,7 @@ describe('Interaction Routes', (): void => {
           },
           { id: revokedGrant.interactId, nonce: revokedGrant.interactNonce }
         )
-        await expect(
-          interactionRoutes.details(ctx)
-        ).rejects.toMatchObject({
+        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404
         })
       })

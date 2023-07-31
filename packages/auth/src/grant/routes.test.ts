@@ -15,7 +15,7 @@ import {
   GrantRoutes,
   CreateContext,
   ContinueContext,
-  RevokeContext,
+  RevokeContext
 } from './routes'
 import { Access } from '../access/model'
 import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
