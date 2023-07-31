@@ -1,23 +1,11 @@
-import { createRedisDataStore } from './redis'
-import Redis from 'ioredis'
-import assert from 'assert'
-import { Config } from '../../../config/app'
+import { createInMemoryDataStore } from './in-memory'
 
-describe('Redis Data Store', (): void => {
-  const redis = new Redis(Config.redisUrl, {
-    tls: Config.redisTls,
-    stringNumbers: true
-  })
-
+describe('In-Memory Data Store', (): void => {
   const ttlMs = 100
-  const dataStore = createRedisDataStore(redis, ttlMs)
+  const dataStore = createInMemoryDataStore(ttlMs)
 
   afterEach(async () => {
-    await redis.flushall()
-  })
-
-  afterAll(async () => {
-    redis.disconnect()
+    await dataStore.deleteAll()
     jest.useRealTimers()
   })
 
@@ -53,7 +41,6 @@ describe('Redis Data Store', (): void => {
 
   describe('getKeyExpiry', (): void => {
     test('returns undefined if key not set', async () => {
-      await expect(dataStore.get('foo')).resolves.toBeUndefined()
       await expect(dataStore.getKeyExpiry('foo')).resolves.toBeUndefined()
     })
 
@@ -62,13 +49,9 @@ describe('Redis Data Store', (): void => {
       jest.useFakeTimers({ now })
 
       await expect(dataStore.set('foo', 'bar')).resolves.toBe(true)
-
-      const keyExpiry = await dataStore.getKeyExpiry('foo')
-      assert.ok(keyExpiry)
-
-      const difference = keyExpiry?.getTime() - now
-
-      expect(ttlMs <= difference && difference <= ttlMs + 5).toBe(true) // ideally the key expiry would be set at exactly now + ttlMs, but we give redis spmel here
+      await expect(dataStore.getKeyExpiry('foo')).resolves.toEqual(
+        new Date(now + ttlMs)
+      )
     })
   })
 
