@@ -39,7 +39,7 @@ describe('QuoteService', (): void => {
   let appContainer: TestContainer
   let quoteService: QuoteService
   let knex: Knex
-  let paymentPointerId: string
+  let sendingPaymentPointer: MockPaymentPointer
   let receivingPaymentPointer: MockPaymentPointer
   let config: IAppConfig
   let quoteUrl: URL
@@ -97,7 +97,7 @@ describe('QuoteService', (): void => {
     const paymentPointer = await createPaymentPointer(deps, {
       assetId: sendAssetId
     })
-    paymentPointerId = paymentPointer.id
+    sendingPaymentPointer = paymentPointer
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
     receivingPaymentPointer = await createPaymentPointer(deps, {
       assetId: destinationAssetId,
@@ -127,7 +127,7 @@ describe('QuoteService', (): void => {
     getTests({
       createModel: ({ client }) =>
         createQuote(deps, {
-          paymentPointerId,
+          paymentPointerId: sendingPaymentPointer.id,
           receiver: `${
             receivingPaymentPointer.url
           }/incoming-payments/${uuid()}`,
@@ -180,7 +180,7 @@ describe('QuoteService', (): void => {
           try {
             expect(body).toEqual({
               id: expect.any(String),
-              paymentPointerId,
+              paymentPointerId: sendingPaymentPointer.id,
               receiver: expected.receiver || expect.any(String),
               sendAmount: {
                 value:
@@ -247,7 +247,7 @@ describe('QuoteService', (): void => {
           })
           const connectionService = await deps.use('connectionService')
           options = {
-            paymentPointerId,
+            paymentPointerId: sendingPaymentPointer.id,
             receiver: toConnection
               ? connectionService.getUrl(incomingPayment)
               : incomingPayment.getUrl(receivingPaymentPointer)
@@ -285,7 +285,7 @@ describe('QuoteService', (): void => {
                 assert.ok(!isQuoteError(quote))
                 walletScope.done()
                 expect(quote).toMatchObject({
-                  paymentPointerId,
+                  paymentPointerId: sendingPaymentPointer.id,
                   receiver: options.receiver,
                   sendAmount: sendAmount || {
                     value: BigInt(
@@ -481,7 +481,7 @@ describe('QuoteService', (): void => {
               assert.ok(!isQuoteError(quote))
               walletScope.done()
               expect(quote).toMatchObject({
-                paymentPointerId,
+                paymentPointerId: sendingPaymentPointer.id,
                 receiver: options.receiver,
                 sendAmount,
                 receiveAmount: receiveAmount || incomingAmount,
@@ -577,7 +577,7 @@ describe('QuoteService', (): void => {
           expiresAt: expiryDate
         })
         const options: CreateQuoteOptions = {
-          paymentPointerId,
+          paymentPointerId: sendingPaymentPointer.id,
           receiver: incomingPayment.getUrl(receivingPaymentPointer),
           receiveAmount
         }
@@ -596,7 +596,7 @@ describe('QuoteService', (): void => {
           quote.createdAt.getTime() + config.quoteLifespan
         )
         expect(quote).toMatchObject({
-          paymentPointerId,
+          paymentPointerId: sendingPaymentPointer.id,
           receiver: options.receiver,
           sendAmount: {
             value: BigInt(
@@ -651,7 +651,7 @@ describe('QuoteService', (): void => {
     it('fails on invalid receiver', async (): Promise<void> => {
       await expect(
         quoteService.create({
-          paymentPointerId,
+          paymentPointerId: sendingPaymentPointer.id,
           receiver: `${
             receivingPaymentPointer.url
           }/incoming-payments/${uuid()}`,
@@ -675,7 +675,7 @@ describe('QuoteService', (): void => {
           paymentPointerId: receivingPaymentPointer.id
         })
         const options: CreateQuoteOptions = {
-          paymentPointerId,
+          paymentPointerId: sendingPaymentPointer.id,
           receiver: incomingPayment.getUrl(receivingPaymentPointer)
         }
         if (sendAmount) options.sendAmount = sendAmount
@@ -685,6 +685,36 @@ describe('QuoteService', (): void => {
         )
       }
     )
+
+    it('calls rates service with correct base asset', async (): Promise<void> => {
+      const incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId: receivingPaymentPointer.id,
+        incomingAmount
+      })
+      const options: CreateQuoteOptions = {
+        paymentPointerId: sendingPaymentPointer.id,
+        receiver: incomingPayment.getUrl(receivingPaymentPointer),
+        receiveAmount
+      }
+      const expected: ExpectedQuote = {
+        ...options,
+        paymentType: Pay.PaymentType.FixedDelivery
+      }
+      const walletScope = mockWalletQuote({
+        expected
+      })
+
+      const ratesService = await deps.use('ratesService')
+      const ratesServiceSpy = jest.spyOn(ratesService, 'rates')
+
+      const quote = await quoteService.create(options)
+      assert.ok(!isQuoteError(quote))
+      walletScope.done()
+
+      expect(ratesServiceSpy).toHaveBeenCalledWith(
+        sendingPaymentPointer.asset.code
+      )
+    })
 
     it('fails on rate service error', async (): Promise<void> => {
       const ratesService = await deps.use('ratesService')
@@ -697,7 +727,7 @@ describe('QuoteService', (): void => {
 
       await expect(
         quoteService.create({
-          paymentPointerId,
+          paymentPointerId: sendingPaymentPointer.id,
           receiver: incomingPayment.getUrl(receivingPaymentPointer),
           sendAmount
         })
