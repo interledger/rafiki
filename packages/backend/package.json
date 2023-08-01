@@ -82,7 +82,7 @@
     "objection": "^3.1.1",
     "objection-db-errors": "^1.1.2",
     "oer-utils": "5.1.3-alpha.2",
-    "pg": "^8.11.1",
+    "pg": "^8.11.2",
     "pino": "^8.14.2",
     "pino-pretty": "^10.2.0",
     "raw-body": "^2.5.2",
