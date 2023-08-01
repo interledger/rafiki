@@ -284,6 +284,8 @@ export type Fee = {
   __typename?: 'Fee';
   /** Asset id associated with the fee */
   assetId: Scalars['ID']['output'];
+  /** Date-time of creation */
+  createdAt: Scalars['String']['output'];
   /** Fixed fee */
   fixed?: Maybe<Scalars['UInt64']['output']>;
   /** Fee id */
@@ -291,7 +293,7 @@ export type Fee = {
   /** Percentage fee */
   percentage?: Maybe<Scalars['Float']['output']>;
   /** Type of fee (sending or receiving) */
-  type?: Maybe<FeeType>;
+  type: FeeType;
 };
 
 export type FeeDetails = {
@@ -302,9 +304,9 @@ export type FeeDetails = {
 };
 
 export enum FeeType {
-  /** Applied to receiver side */
+  /** Receiver pays the fees */
   Receiving = 'RECEIVING',
-  /** Applied to sender side */
+  /** Sender pays the fees */
   Sending = 'SENDING'
 }
 
@@ -1045,9 +1047,9 @@ export type UpdateFeeInput = {
   /** Asset id to add the fee to */
   assetId: Scalars['ID']['input'];
   /** Fee values */
-  fee?: InputMaybe<FeeDetails>;
+  fee: FeeDetails;
   /** Type of fee (sending or receiving) */
-  type?: InputMaybe<FeeType>;
+  type: FeeType;
 };
 
 export type UpdateFeeResponse = MutationResponse & {
@@ -1492,10 +1494,11 @@ export type DeletePeerMutationResponseResolvers<ContextType = any, ParentType ex
 
 export type FeeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Fee'] = ResolversParentTypes['Fee']> = {
   assetId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   fixed?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   percentage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
-  type?: Resolver<Maybe<ResolversTypes['FeeType']>, ParentType, ContextType>;
+  type?: Resolver<ResolversTypes['FeeType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

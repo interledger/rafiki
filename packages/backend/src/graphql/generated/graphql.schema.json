@@ -1852,6 +1852,22 @@
             "deprecationReason": null
           },
           {
+            "name": "createdAt",
+            "description": "Date-time of creation",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "fixed",
             "description": "Fixed fee",
             "args": [],
@@ -1896,9 +1912,13 @@
             "description": "Type of fee (sending or receiving)",
             "args": [],
             "type": {
-              "kind": "ENUM",
-              "name": "FeeType",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "FeeType",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -1954,13 +1974,13 @@
         "enumValues": [
           {
             "name": "RECEIVING",
-            "description": "Applied to receiver side",
+            "description": "Receiver pays the fees",
             "isDeprecated": false,
             "deprecationReason": null
           },
           {
             "name": "SENDING",
-            "description": "Applied to sender side",
+            "description": "Sender pays the fees",
             "isDeprecated": false,
             "deprecationReason": null
           }
@@ -6616,9 +6636,13 @@
             "name": "fee",
             "description": "Fee values",
             "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "FeeDetails",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "INPUT_OBJECT",
+                "name": "FeeDetails",
+                "ofType": null
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -6628,9 +6652,13 @@
             "name": "type",
             "description": "Type of fee (sending or receiving)",
             "type": {
-              "kind": "ENUM",
-              "name": "FeeType",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "ENUM",
+                "name": "FeeType",
+                "ofType": null
+              }
             },
             "defaultValue": null,
             "isDeprecated": false,

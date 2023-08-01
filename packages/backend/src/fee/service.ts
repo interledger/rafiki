@@ -7,8 +7,8 @@ interface CreateOptions {
   assetId: string
   type: FeeType
   fee: {
-    fixedFee: bigint
-    percentageFee: number
+    fixed?: bigint
+    percentage?: number
   }
 }
 
@@ -38,12 +38,20 @@ async function createFee(
   options: CreateOptions
 ): Promise<Fee | FeeError> {
   try {
-    return await Fee.query(deps.knex).insertAndFetch({
+    let fee: Partial<Fee> = {
       assetId: options.assetId,
-      type: options.type,
-      percentageFee: options.fee.percentageFee.toString(),
-      fixedFee: options.fee.fixedFee
-    })
+      type: options.type
+    }
+
+    if (options.fee.percentage !== undefined) {
+      fee.percentageFee = options.fee.percentage.toString()
+    }
+
+    if (options.fee.fixed !== undefined) {
+      fee.fixedFee = options.fee.fixed
+    }
+
+    return await Fee.query(deps.knex).insertAndFetch(fee)
   } catch (error) {
     if (error instanceof ForeignKeyViolationError) {
       return FeeError.UnknownAsset

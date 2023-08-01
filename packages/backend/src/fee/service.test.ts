@@ -46,16 +46,16 @@ describe('Combined Payment Service', (): void => {
           assetId: asset.id,
           type: FeeType.Sending,
           fee: {
-            fixedFee: BigInt(100),
-            percentageFee: 0.01
+            fixed: BigInt(100),
+            percentage: 0.01
           }
         }
 
         await expect(feeService.create(feeCreate)).resolves.toMatchObject({
           assetId: feeCreate.assetId,
           type: feeCreate.type,
-          fixedFee: feeCreate.fee.fixedFee,
-          percentageFee: feeCreate.fee.percentageFee.toFixed(4)
+          fixedFee: feeCreate.fee.fixed,
+          percentageFee: feeCreate.fee.percentage.toFixed(4)
         })
       }
     )
@@ -65,8 +65,8 @@ describe('Combined Payment Service', (): void => {
         assetId: asset.id,
         type: FeeType.Sending,
         fee: {
-          fixedFee: BigInt(100),
-          percentageFee: 1.01
+          fixed: BigInt(100),
+          percentage: 1.01
         }
       }
 
@@ -80,8 +80,8 @@ describe('Combined Payment Service', (): void => {
         assetId: asset.id,
         type: FeeType.Sending,
         fee: {
-          fixedFee: BigInt(100),
-          percentageFee: -0.05
+          fixed: BigInt(100),
+          percentage: -0.05
         }
       }
 
@@ -95,8 +95,8 @@ describe('Combined Payment Service', (): void => {
         assetId: v4(),
         type: FeeType.Sending,
         fee: {
-          fixedFee: BigInt(100),
-          percentageFee: 0.05
+          fixed: BigInt(100),
+          percentage: 0.05
         }
       }
 

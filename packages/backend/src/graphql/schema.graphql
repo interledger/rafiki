@@ -860,20 +860,22 @@ type Fee {
   "Asset id associated with the fee"
   assetId: ID!
   "Type of fee (sending or receiving)"
-  type: FeeType
+  type: FeeType!
   "Fixed fee"
   fixed: UInt64
   "Percentage fee"
   percentage: Float
+  "Date-time of creation"
+  createdAt: String!
 }
 
 input UpdateFeeInput {
   "Asset id to add the fee to"
   assetId: ID!
   "Type of fee (sending or receiving)"
-  type: FeeType
+  type: FeeType!
   "Fee values"
-  fee: FeeDetails
+  fee: FeeDetails!
 }
 
 input FeeDetails {
