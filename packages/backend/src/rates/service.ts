@@ -20,7 +20,7 @@ interface ServiceDependencies extends BaseService {
   exchangeRatesLifetime: number
 }
 
-export interface Rates {
+interface Rates {
   [currency: string]: number
 }
 

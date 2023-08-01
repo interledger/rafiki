@@ -1,4 +1,4 @@
-import { RatesService, ConvertError, Rates } from './service'
+import { RatesService, ConvertError } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
