@@ -38,7 +38,7 @@ async function createFee(
   options: CreateOptions
 ): Promise<Fee | FeeError> {
   try {
-    let fee: Partial<Fee> = {
+    const fee: Partial<Fee> = {
       assetId: options.assetId,
       type: options.type
     }
