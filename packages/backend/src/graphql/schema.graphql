@@ -167,6 +167,9 @@ type Mutation {
   triggerPaymentPointerEvents(
     input: TriggerPaymentPointerEventsInput!
   ): TriggerPaymentPointerEventsMutationResponse!
+
+  "Update the fee on an asset"
+  updateFee(input: UpdateFeeInput!): UpdateFeeResponse!
 }
 
 type PageInfo {
@@ -844,6 +847,42 @@ type WebhookEventsEdge {
   cursor: String!
 }
 
+enum FeeType {
+  "Applied to sender side"
+  SENDING
+  "Applied to receiver side"
+  RECEIVING
+}
+
+type Fee {
+  "Fee id"
+  id: ID!
+  "Asset id associated with the fee"
+  assetId: ID!
+  "Type of fee (sending or receiving)"
+  type: FeeType
+  "Fixed fee"
+  fixed: UInt64
+  "Percentage fee"
+  percentage: Float
+}
+
+input UpdateFeeInput {
+  "Asset id to add the fee to"
+  assetId: ID!
+  "Type of fee (sending or receiving)"
+  type: FeeType
+  "Fee values"
+  fee: FeeDetails
+}
+
+input FeeDetails {
+  "A flat fee"
+  fixed: UInt64
+  "Percentage fee"
+  percentage: Float
+}
+
 input WebhookEventFilter {
   type: FilterString
 }
@@ -939,6 +978,13 @@ type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   paymentPointerKey: PaymentPointerKey
+}
+
+type UpdateFeeResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  fee: Fee
 }
 
 interface MutationResponse {
