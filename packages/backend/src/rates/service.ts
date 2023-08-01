@@ -20,7 +20,7 @@ interface ServiceDependencies extends BaseService {
   exchangeRatesLifetime: number
 }
 
-interface Rates {
+export interface Rates {
   [currency: string]: number
 }
 
@@ -106,17 +106,14 @@ class RatesServiceImpl implements RatesService {
     }
   }
 
-  async fetchNewRatesAndCache(baseAssetCode: string): Promise<Rates> {
+  private async fetchNewRatesAndCache(baseAssetCode: string): Promise<Rates> {
     const inProgressRequest = this.inProgressRequests[baseAssetCode]
-    let rates: Rates
 
-    if (inProgressRequest) {
-      rates = await inProgressRequest
-    } else {
+    if (!inProgressRequest) {
       this.inProgressRequests[baseAssetCode] = this.fetchNewRates(baseAssetCode)
-
-      rates = await this.inProgressRequests[baseAssetCode]
     }
+
+    const rates = await this.inProgressRequests[baseAssetCode]
 
     delete this.inProgressRequests[baseAssetCode]
 
