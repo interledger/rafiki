@@ -1,7 +1,5 @@
 # Rafiki
 
-<img width="920" alt="rafiki" src="https://user-images.githubusercontent.com/3362563/119590055-e3347580-bd88-11eb-8ae7-958075433e48.png">
-
 ## What is Rafiki?
 
 Rafiki is open source software that allows an [Account Servicing Entity](./packages/documentation/docs/reference/glossary.md#account-servicing-entity) to enable [Interledger](./packages/documentation/docs/reference/glossary.md#interledger-protocol) functionality on its users' accounts.
@@ -38,7 +36,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Planning Calls
 
-Our planning calls are open to our community. We have them every Tuesday at 12:30 GMT, via Google Meet.
+Our planning calls are open to our community. We have them every Tuesday at 14:30 GMT, via Google Meet.
 
 **Google Meet joining info**
 
