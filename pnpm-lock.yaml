@@ -667,8 +667,8 @@ importers:
         specifier: ^13.3.2
         version: 13.3.2
       openapi-typescript:
-        specifier: ^6.3.9
-        version: 6.3.9
+        specifier: ^6.4.0
+        version: 6.4.0
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -14376,8 +14376,8 @@ packages:
     resolution: {integrity: sha512-/Yvsd2D7miYB4HLJ3hOOS0+vnowQpaT75FsHzr/y5M9P4q9bwa7RcbW2YdH6KZBn8ceLbKGnHxMZ1CHliGHUFw==}
     dev: true
 
-  /openapi-typescript@6.3.9:
-    resolution: {integrity: sha512-1+IHZIhkPjOjS9WQ3YF8lJq7/ZuFBoDOQfCFI2r5mJ4n2+xQ4aQbFw+mTqBl2pYSIb1cB+LWb2T8ig0K/VwI7A==}
+  /openapi-typescript@6.4.0:
+    resolution: {integrity: sha512-qTa5HGcVdTic2zmvC+aE3tEJqFUZGkXFk8ygAexTPzsHY3a0etay8bBSQjdNP4ZI8TaA+gtHJtTKvhkUhJd6Jw==}
     hasBin: true
     dependencies:
       ansi-colors: 4.1.3
