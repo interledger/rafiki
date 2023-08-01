@@ -12,7 +12,7 @@ export function createRedisDataStore(
     async getKeyExpiry(key: string): Promise<Date | undefined> {
       const expiryTimestamp = await redisClient.pexpiretime(key)
       return expiryTimestamp && expiryTimestamp > 0
-        ? new Date(parseInt(expiryTimestamp.toString()))
+        ? new Date(+expiryTimestamp)
         : undefined
     },
     async set(key: string, value: string): Promise<boolean> {

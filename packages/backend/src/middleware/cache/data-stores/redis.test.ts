@@ -68,7 +68,7 @@ describe('Redis Data Store', (): void => {
 
       const difference = keyExpiry?.getTime() - now
 
-      expect(ttlMs <= difference && difference <= ttlMs + 5).toBe(true) // ideally the key expiry would be set at exactly now + ttlMs, but we give redis spmel here
+      expect(ttlMs <= difference && difference <= ttlMs + 5).toBe(true) // ideally the key expiry would be set at exactly now + ttlMs, but we give redis some margin
     })
   })
 
