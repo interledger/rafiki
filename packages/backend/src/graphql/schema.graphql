@@ -848,9 +848,9 @@ type WebhookEventsEdge {
 }
 
 enum FeeType {
-  "Applied to sender side"
+  "Sender pays the fees"
   SENDING
-  "Applied to receiver side"
+  "Receiver pays the fees"
   RECEIVING
 }
 
