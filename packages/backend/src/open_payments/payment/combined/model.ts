@@ -3,7 +3,7 @@ import { IncomingPaymentState } from '../incoming/model'
 import { OutgoingPaymentState } from '../outgoing/model'
 
 // This model is for a view that combines incoming and outgoing payments for the purpose of pagination.
-// You likely should use IncomingPayment and OutgoingPayment seperately for any other purpose.
+// You likely should use IncomingPayment and OutgoingPayment separately for any other purpose.
 // It cannot and should not be used for inserts/update/deletes.
 
 export enum PaymentType {
