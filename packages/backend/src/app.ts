@@ -70,6 +70,7 @@ import {
 } from './graphql/middleware'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
+import { CombinedPaymentService } from './open_payments/payment/combined/service'
 
 export interface AppContextData {
   logger: Logger
@@ -199,6 +200,7 @@ export interface AppServices {
   openPaymentsClient: Promise<AuthenticatedClient>
   tokenIntrospectionClient: Promise<TokenIntrospectionClient>
   redis: Promise<Redis>
+  combinedPaymentService: Promise<CombinedPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>

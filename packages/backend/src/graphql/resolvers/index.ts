@@ -45,6 +45,7 @@ import {
 import { createReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
 import { GraphQLJSONObject } from 'graphql-scalars'
+import { getCombinedPayments } from './combined_payments'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -66,7 +67,8 @@ export const resolvers: Resolvers = {
     peer: getPeer,
     peers: getPeers,
     quote: getQuote,
-    webhookEvents: getWebhookEvents
+    webhookEvents: getWebhookEvents,
+    payments: getCombinedPayments
   },
   PaymentPointer: {
     incomingPayments: getPaymentPointerIncomingPayments,
