@@ -444,6 +444,29 @@ input<br />
 </tbody>
 </table>
 
+## updateFee
+
+**Type:** [UpdateFeeResponse!](objects#updatefeeresponse)
+
+Update the fee on an asset
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+input<br />
+<a href="inputObjects#updatefeeinput"><code>UpdateFeeInput!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## updatePaymentPointer
 
 **Type:** [UpdatePaymentPointerMutationResponse!](objects#updatepaymentpointermutationresponse)

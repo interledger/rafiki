@@ -114,6 +114,7 @@ createdAt<br />
 - [PaymentPointerWithdrawalMutationResponse](objects#paymentpointerwithdrawalmutationresponse)
 - [CreatePaymentPointerKeyMutationResponse](objects#createpaymentpointerkeymutationresponse)
 - [RevokePaymentPointerKeyMutationResponse](objects#revokepaymentpointerkeymutationresponse)
+- [UpdateFeeResponse](objects#updatefeeresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 

@@ -455,6 +455,70 @@ message<br />
 </tbody>
 </table>
 
+## Fee
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+id<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Fee id</p>
+</td>
+</tr>
+<tr>
+<td>
+assetId<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Asset id associated with the fee</p>
+</td>
+</tr>
+<tr>
+<td>
+type<br />
+<a href="enums#feetype"><code>FeeType!</code></a>
+</td>
+<td>
+<p>Type of fee (sending or receiving)</p>
+</td>
+</tr>
+<tr>
+<td>
+fixed<br />
+<a href="scalars#uint64"><code>UInt64</code></a>
+</td>
+<td>
+<p>Fixed fee</p>
+</td>
+</tr>
+<tr>
+<td>
+percentage<br />
+<a href="scalars#float"><code>Float</code></a>
+</td>
+<td>
+<p>Percentage fee</p>
+</td>
+</tr>
+<tr>
+<td>
+createdAt<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>Date-time of creation</p>
+</td>
+</tr>
+</tbody>
+</table>
+
 ## Http
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
@@ -2213,6 +2277,56 @@ count<br />
 </td>
 <td>
 <p>Number of events triggered</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## UpdateFeeResponse
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [MutationResponse](interfaces#mutationresponse)
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+code<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+success<br />
+<a href="scalars#boolean"><code>Boolean!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+message<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+fee<br />
+<a href="objects#fee"><code>Fee</code></a>
+</td>
+<td>
+
 </td>
 </tr>
 </tbody>
