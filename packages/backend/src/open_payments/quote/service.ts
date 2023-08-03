@@ -222,7 +222,7 @@ export async function startQuote(
   options: StartQuoteOptions
 ): Promise<Pay.Quote> {
   const rates = await deps.ratesService
-    .rates(options.receiver.assetCode)
+    .rates(options.paymentPointer.asset.code)
     .catch((_err: Error) => {
       throw new Error('missing rates')
     })
