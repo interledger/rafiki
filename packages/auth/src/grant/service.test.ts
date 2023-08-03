@@ -13,6 +13,8 @@ import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
+import { createGrant } from '../tests/grant'
+import { AccessToken } from '../accessToken/model'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -48,6 +50,13 @@ describe('Grant Service', (): void => {
     await Access.query().insert({
       ...BASE_GRANT_ACCESS,
       type: AccessType.IncomingPayment,
+      grantId: grant.id
+    })
+
+    await AccessToken.query().insert({
+      value: generateToken(),
+      managementId: v4(),
+      expiresIn: 10_000_000,
       grantId: grant.id
     })
   })
@@ -166,7 +175,38 @@ describe('Grant Service', (): void => {
       const fetchedGrant = await grantService.getByContinue(
         continueId,
         continueToken,
-        interactRef
+        { interactRef }
+      )
+      expect(fetchedGrant?.id).toEqual(grant.id)
+      expect(fetchedGrant?.continueId).toEqual(continueId)
+      expect(fetchedGrant?.continueToken).toEqual(continueToken)
+      expect(fetchedGrant?.interactRef).toEqual(interactRef)
+    })
+
+    test('Defaults to excluding revoked grants', async (): Promise<void> => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+
+      const { continueId, continueToken, interactRef } = grant
+      assert.ok(interactRef)
+
+      const fetchedGrant = await grantService.getByContinue(
+        continueId,
+        continueToken,
+        { interactRef }
+      )
+      expect(fetchedGrant).toBeNull()
+    })
+
+    test('Can fetch revoked grants with includeRevoked', async (): Promise<void> => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+
+      const { continueId, continueToken, interactRef } = grant
+      assert.ok(interactRef)
+
+      const fetchedGrant = await grantService.getByContinue(
+        continueId,
+        continueToken,
+        { interactRef, includeRevoked: true }
       )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.continueId).toEqual(continueId)
@@ -175,20 +215,11 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('get', (): void => {
-    test('Can fetch a grant by id', async () => {
-      const fetchedGrant = await grantService.get(grant.id)
+  describe('getByIdWithAccess', (): void => {
+    test('Can fetch a grant by id with access', async () => {
+      const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
       expect(fetchedGrant?.id).toEqual(grant.id)
-    })
-    test('Can fetch a grant by its interaction information', async (): Promise<void> => {
-      assert.ok(grant.interactId)
-      const fetchedGrant = await grantService.getByInteraction(grant.interactId)
-      expect(fetchedGrant?.id).toEqual(grant.id)
-      expect(fetchedGrant?.interactId).toEqual(grant.interactId)
-    })
-    test('Cannot fetch non-existing grant', async () => {
-      await expect(grantService.get(v4())).resolves.toBeUndefined()
-      await expect(grantService.getByInteraction(v4())).resolves.toBeUndefined()
+      expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
     })
   })
 
@@ -221,6 +252,27 @@ describe('Grant Service', (): void => {
         ).resolves.toBeUndefined()
       }
     )
+    test('Defaults to excluding revoked grants', async () => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+      assert.ok(grant.interactId)
+      assert.ok(grant.interactNonce)
+      const fetchedGrant = await grantService.getByInteractionSession(
+        grant.interactId,
+        grant.interactNonce
+      )
+      expect(fetchedGrant).toBeUndefined()
+    })
+    test('Can fetch revoked grants with includeRevoked', async () => {
+      await grant.$query().patch({ state: GrantState.Revoked })
+      assert.ok(grant.interactId)
+      assert.ok(grant.interactNonce)
+      const fetchedGrant = await grantService.getByInteractionSession(
+        grant.interactId,
+        grant.interactNonce,
+        { includeRevoked: true }
+      )
+      expect(fetchedGrant?.id).toEqual(grant.id)
+    })
   })
 
   describe('reject', (): void => {
@@ -236,16 +288,20 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('delete', (): void => {
-    test('Can delete a grant', async (): Promise<void> => {
-      await expect(grantService.deleteGrant(grant.continueId)).resolves.toEqual(
-        true
+  describe('revoke', (): void => {
+    test('Can revoke a grant', async (): Promise<void> => {
+      await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(true)
+
+      const revokedGrant = await Grant.query(trx).findById(grant.id)
+      expect(revokedGrant?.state).toEqual(GrantState.Revoked)
+      expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([])
+      expect(AccessToken.query().where({ grantId: grant.id })).resolves.toEqual(
+        []
       )
-      await expect(grantService.get(grant.id)).resolves.toBeUndefined()
     })
 
-    test('Can "delete" unknown grant', async (): Promise<void> => {
-      await expect(grantService.deleteGrant(v4())).resolves.toEqual(false)
+    test('Can "revoke" unknown grant', async (): Promise<void> => {
+      await expect(grantService.revokeGrant(v4())).resolves.toEqual(false)
     })
   })
 
@@ -271,12 +327,85 @@ describe('Grant Service', (): void => {
         return await Grant.transaction(async (trx) => {
           await grantService.lock(grant.id, trx, timeoutMs)
           await new Promise((resolve) => setTimeout(resolve, timeoutMs + 10))
-          await grantService.get(grant.id)
+          await Grant.query(trx).findById(grant.id)
         })
       }
       await expect(Promise.all([lock(), lock()])).rejects.toThrowError(
         /Defined query timeout/
       )
+    })
+  })
+
+  describe('getGrantsPage', (): void => {
+    let grants: Grant[] = []
+    const paymentPointer = 'example.com/test'
+
+    beforeEach(async () => {
+      const grantDetails = [
+        { identifier: paymentPointer, state: GrantState.Revoked },
+        { identifier: paymentPointer, state: GrantState.Pending },
+        { identifier: 'example.com/test3', state: GrantState.Pending }
+      ]
+
+      for (const { identifier, state } of grantDetails) {
+        const grant = await createGrant(deps, { identifier })
+        const updatedGrant = await grant.$query().patchAndFetch({ state })
+        grants.push(updatedGrant)
+      }
+    })
+
+    afterEach(async () => {
+      grants = []
+    })
+
+    test('No filter gets all', async (): Promise<void> => {
+      const grants = await grantService.getPage()
+      const allGrants = await Grant.query()
+      expect(grants.length).toBe(allGrants.length)
+    })
+
+    test('Filter by identifier', async () => {
+      const grants = await grantService.getPage(undefined, {
+        identifier: {
+          in: [paymentPointer]
+        }
+      })
+
+      expect(grants.length).toBe(2)
+    })
+
+    test('Filter by grant state', async () => {
+      const grants = await grantService.getPage(undefined, {
+        state: {
+          in: [GrantState.Revoked]
+        }
+      })
+
+      expect(grants.length).toBe(1)
+    })
+
+    test('Filter out by grant state', async () => {
+      const fetchedGrants = await grantService.getPage(undefined, {
+        state: {
+          notIn: [GrantState.Revoked]
+        }
+      })
+
+      expect(fetchedGrants.length).toBe(3)
+    })
+
+    test('Can paginate and filter', async (): Promise<void> => {
+      const filter = { identifier: { in: [paymentPointer] } }
+      const page = await grantService.getPage(
+        {
+          first: 1,
+          after: grants?.[0].id
+        },
+        filter
+      )
+
+      expect(page[0].id).toBe(grants?.[1].id)
+      expect(page.length).toBe(1)
     })
   })
 })

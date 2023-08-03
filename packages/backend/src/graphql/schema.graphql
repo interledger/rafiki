@@ -534,10 +534,8 @@ type IncomingPayment implements Model {
   incomingAmount: Amount
   "The total amount that has been paid into the payment pointer under this incoming payment."
   receivedAmount: Amount!
-  "Human readable description of the incoming payment."
-  description: String
-  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
-  externalRef: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Date-time of creation"
   createdAt: String!
 }
@@ -555,10 +553,8 @@ type Receiver {
   receivedAmount: Amount!
   "Date-time of expiry. After this time, the incoming payment will accept further payments made to it."
   expiresAt: String
-  "Human readable description of the incoming payment."
-  description: String
-  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
-  externalRef: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Date-time of creation"
   createdAt: String!
   "Date-time of last update"
@@ -609,10 +605,8 @@ type OutgoingPayment implements Model {
   receiveAmount: Amount!
   "Payment pointer URL of the receiver"
   receiver: String!
-  "Human readable description of the outgoing payment."
-  description: String
-  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
-  externalRef: String
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
   "Quote for this outgoing payment"
   quote: Quote
   "Amount already sent"
@@ -700,10 +694,8 @@ input CreateOutgoingPaymentInput {
   paymentPointerId: String!
   "Id of the corresponding quote for that outgoing payment"
   quoteId: String!
-  "Human readable description of the outgoing payment."
-  description: String
-  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
-  externalRef: String
+  "Additional metadata associated with the outgoing payment."
+  metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -713,12 +705,10 @@ input CreateIncomingPaymentInput {
   paymentPointerId: String!
   "Expiration date-time"
   expiresAt: String
-  "Human readable description of the incoming payment."
-  description: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Maximum amount to be received"
   incomingAmount: AmountInput
-  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
-  externalRef: String
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -728,12 +718,10 @@ input CreateReceiverInput {
   paymentPointerUrl: String!
   "Expiration date-time"
   expiresAt: String
-  "Human readable description of the incoming payment."
-  description: String
   "Maximum amount to be received"
   incomingAmount: AmountInput
-  "A reference that can be used by external systems to reconcile this payment with their systems. E.g. an invoice number."
-  externalRef: String
+  "Additional metadata associated with the incoming payment."
+  metadata: JSONObject
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -841,7 +829,7 @@ type WebhookEvent implements Model {
   "Type of event"
   type: String!
   "Stringified JSON data"
-  data: String!
+  data: JSONObject!
   "Date-time of creation"
   createdAt: String!
 }
@@ -961,3 +949,4 @@ interface MutationResponse {
 
 scalar UInt8
 scalar UInt64
+scalar JSONObject

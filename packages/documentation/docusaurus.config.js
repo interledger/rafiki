@@ -62,8 +62,8 @@ const config = {
           {
             type: 'docSidebar',
             position: 'left',
-            sidebarId: 'reference',
-            label: 'API'
+            sidebarId: 'apis',
+            label: 'Admin APIs'
           },
           {
             href: 'https://github.com/interledger/rafiki',
@@ -84,8 +84,17 @@ const config = {
     [
       'docusaurus-graphql-plugin',
       {
+        id: 'backend-api',
         schema: '../backend/src/graphql/schema.graphql',
-        routeBasePath: '/docs/reference'
+        routeBasePath: '/docs/apis/backend'
+      }
+    ],
+    [
+      'docusaurus-graphql-plugin',
+      {
+        id: 'auth-api',
+        schema: '../auth/src/graphql/schema.graphql',
+        routeBasePath: '/docs/apis/auth'
       }
     ]
   ]

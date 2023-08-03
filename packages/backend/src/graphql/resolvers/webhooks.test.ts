@@ -93,7 +93,7 @@ describe('Webhook Events Query', (): void => {
         __typename: 'WebhookEvent',
         id: webhookEvent.id,
         type: webhookEvent.type,
-        data: JSON.stringify(webhookEvent.data)
+        data: webhookEvent.data
       })
     })
   })

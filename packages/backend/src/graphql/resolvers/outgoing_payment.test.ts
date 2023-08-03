@@ -60,8 +60,7 @@ describe('OutgoingPayment Resolvers', (): void => {
 
   const createPayment = async (options: {
     paymentPointerId: string
-    description?: string
-    externalRef?: string
+    metadata?: Record<string, unknown>
   }): Promise<OutgoingPaymentModel> => {
     return await createOutgoingPayment(deps, {
       ...options,
@@ -78,20 +77,17 @@ describe('OutgoingPayment Resolvers', (): void => {
   describe('Query.outgoingPayment', (): void => {
     let payment: OutgoingPaymentModel
 
-    describe.each`
-      description  | externalRef  | desc
-      ${'rent'}    | ${undefined} | ${'description'}
-      ${undefined} | ${'202201'}  | ${'externalRef'}
-    `('$desc', ({ description, externalRef }): void => {
+    describe('metadata', (): void => {
+      const metadata = {
+        description: 'rent',
+        externalRef: '202201'
+      }
+
       beforeEach(async (): Promise<void> => {
         const { id: paymentPointerId } = await createPaymentPointer(deps, {
           assetId: asset.id
         })
-        payment = await createPayment({
-          paymentPointerId,
-          description,
-          externalRef
-        })
+        payment = await createPayment({ paymentPointerId, metadata })
       })
 
       // Query with each payment state with and without an error
@@ -145,8 +141,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                       assetCode
                       assetScale
                     }
-                    description
-                    externalRef
+                    metadata
                     quote {
                       id
                       maxPacketAmount
@@ -191,8 +186,7 @@ describe('OutgoingPayment Resolvers', (): void => {
               assetScale: payment.receiveAmount.assetScale,
               __typename: 'Amount'
             },
-            description: description ?? null,
-            externalRef: externalRef ?? null,
+            metadata,
             quote: {
               id: payment.quote.id,
               maxPacketAmount: payment.quote.maxPacketAmount.toString(),
@@ -233,19 +227,16 @@ describe('OutgoingPayment Resolvers', (): void => {
   })
 
   describe('Mutation.createOutgoingPayment', (): void => {
-    test.each`
-      description  | externalRef  | desc
-      ${'rent'}    | ${undefined} | ${'description'}
-      ${undefined} | ${'202201'}  | ${'externalRef'}
-    `('200 ($desc)', async ({ description, externalRef }): Promise<void> => {
+    const metadata = {
+      description: 'rent',
+      externalRef: '202201'
+    }
+
+    test('200 (metadata)', async (): Promise<void> => {
       const { id: paymentPointerId } = await createPaymentPointer(deps, {
         assetId: asset.id
       })
-      const payment = await createPayment({
-        paymentPointerId,
-        description,
-        externalRef
-      })
+      const payment = await createPayment({ paymentPointerId, metadata })
 
       const createSpy = jest
         .spyOn(outgoingPaymentService, 'create')

@@ -33,6 +33,7 @@ export interface Account {
   initialBalance: bigint
   path: string
   postmanEnvVar: string
+  skipPaymentPointerCreation?: boolean
 }
 
 export interface SeedInstance {

@@ -46,6 +46,7 @@ import { Amount } from '../../amount'
 import { ConnectionService } from '../../connection/service'
 import { getTests } from '../../payment_pointer/model.test'
 import { Quote } from '../../quote/model'
+import { PaymentPointer } from '../../payment_pointer/model'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
@@ -228,6 +229,7 @@ describe('OutgoingPaymentService', (): void => {
     Config.exchangeRatesUrl = 'https://test.rates'
     nock(Config.exchangeRatesUrl)
       .get('/')
+      .query(true)
       .reply(200, () => ({
         base: 'USD',
         rates: {
@@ -352,8 +354,11 @@ describe('OutgoingPaymentService', (): void => {
             const options = {
               paymentPointerId,
               quoteId: quote.id,
-              description: 'rent',
-              externalRef: '202201'
+              metadata: {
+                description: 'rent',
+                externalRef: '202201',
+                items: [1, 2, 3]
+              }
             }
             if (outgoingPeer) {
               jest
@@ -368,8 +373,7 @@ describe('OutgoingPaymentService', (): void => {
               receiver: quote.receiver,
               sendAmount: quote.sendAmount,
               receiveAmount: quote.receiveAmount,
-              description: options.description,
-              externalRef: options.externalRef,
+              metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
               asset,
               quote,
@@ -499,6 +503,26 @@ describe('OutgoingPaymentService', (): void => {
         }
       )
 
+      test('fails to create on inactive payment pointer', async () => {
+        const { id: quoteId } = await createQuote(deps, {
+          paymentPointerId,
+          receiver,
+          sendAmount,
+          validDestination: false
+        })
+        const paymentPointer = await createPaymentPointer(deps)
+        const paymentPointerUpdated = await PaymentPointer.query(
+          knex
+        ).patchAndFetchById(paymentPointer.id, { deactivatedAt: new Date() })
+        assert.ok(!paymentPointerUpdated.isActive)
+        await expect(
+          outgoingPaymentService.create({
+            paymentPointerId: paymentPointer.id,
+            quoteId
+          })
+        ).resolves.toEqual(OutgoingPaymentError.InactivePaymentPointer)
+      })
+
       if (grantOption !== GrantOption.None) {
         test('fails to create if grant is locked', async () => {
           assert.ok(grant)
@@ -519,8 +543,10 @@ describe('OutgoingPaymentService', (): void => {
             return {
               paymentPointerId,
               quoteId: quote.id,
-              description: 'rent',
-              externalRef: '202201',
+              metadata: {
+                description: 'rent',
+                externalRef: '202201'
+              },
               grant,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               callback: (f: any) => setTimeout(f, 5000)
@@ -562,8 +588,10 @@ describe('OutgoingPaymentService', (): void => {
             options = {
               paymentPointerId,
               quoteId: quote.id,
-              description: 'rent',
-              externalRef: '202201',
+              metadata: {
+                description: 'rent',
+                externalRef: '202201'
+              },
               client
             }
             const start = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)

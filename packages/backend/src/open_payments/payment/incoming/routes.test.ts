@@ -16,17 +16,20 @@ import {
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
-import { IncomingPaymentRoutes, CreateBody, MAX_EXPIRY } from './routes'
+import { IncomingPaymentRoutes, CreateBody } from './routes'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
 import { Asset } from '../../../asset/model'
+import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
+import { IncomingPaymentService } from './service'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
   let incomingPaymentRoutes: IncomingPaymentRoutes
+  let incomingPaymentService: IncomingPaymentService
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -40,12 +43,12 @@ describe('Incoming Payment Routes', (): void => {
   let paymentPointer: PaymentPointer
   let expiresAt: Date
   let incomingAmount: Amount
-  let description: string
-  let externalRef: string
+  let metadata: Record<string, unknown>
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
     incomingPaymentRoutes = await deps.use('incomingPaymentRoutes')
+    incomingPaymentService = await deps.use('incomingPaymentService')
 
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
@@ -57,8 +60,10 @@ describe('Incoming Payment Routes', (): void => {
       assetScale: asset.scale,
       assetCode: asset.code
     }
-    description = 'hello world'
-    externalRef = '#123'
+    metadata = {
+      description: 'hello world',
+      externalRef: '#123'
+    }
   })
 
   afterEach(async (): Promise<void> => {
@@ -76,10 +81,9 @@ describe('Incoming Payment Routes', (): void => {
         createIncomingPayment(deps, {
           paymentPointerId: paymentPointer.id,
           client,
-          description,
           expiresAt,
           incomingAmount,
-          externalRef
+          metadata
         }),
       get: (ctx) => incomingPaymentRoutes.get(ctx),
       getBody: (incomingPayment, list) => {
@@ -90,12 +94,11 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount:
             incomingPayment.incomingAmount &&
             serializeAmount(incomingPayment.incomingAmount),
-          description: incomingPayment.description,
           expiresAt: incomingPayment.expiresAt.toISOString(),
           createdAt: incomingPayment.createdAt.toISOString(),
           updatedAt: incomingPayment.updatedAt.toISOString(),
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-          externalRef: '#123',
+          metadata: incomingPayment.metadata,
           ilpStreamConnection: list
             ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
             : {
@@ -142,39 +145,43 @@ describe('Incoming Payment Routes', (): void => {
       }
     })
 
-    test('returns error on distant-future expiresAt', async (): Promise<void> => {
-      const ctx = setup<CreateContext<CreateBody>>({
-        reqOpts: { body: {} },
-        paymentPointer
-      })
-      ctx.request.body['expiresAt'] = new Date(
-        Date.now() + MAX_EXPIRY + 1000
-      ).toISOString()
-      await expect(incomingPaymentRoutes.create(ctx)).rejects.toHaveProperty(
-        'message',
-        'expiry too high'
-      )
-    })
+    test.each(Object.values(IncomingPaymentError))(
+      'returns error on %s',
+      async (error): Promise<void> => {
+        const ctx = setup<CreateContext<CreateBody>>({
+          reqOpts: { body: {} },
+          paymentPointer
+        })
+        const createSpy = jest
+          .spyOn(incomingPaymentService, 'create')
+          .mockResolvedValueOnce(error)
+        await expect(incomingPaymentRoutes.create(ctx)).rejects.toMatchObject({
+          message: errorToMessage[error],
+          status: errorToCode[error]
+        })
+        expect(createSpy).toHaveBeenCalledWith({
+          paymentPointerId: paymentPointer.id
+        })
+      }
+    )
 
     test.each`
-      client                                        | incomingAmount | description  | externalRef  | expiresAt
-      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${'text'}    | ${'#123'}    | ${new Date(Date.now() + 30_000).toISOString()}
-      ${undefined}                                  | ${false}       | ${undefined} | ${undefined} | ${undefined}
+      client                                        | incomingAmount | expiresAt                                      | metadata
+      ${faker.internet.url({ appendSlash: false })} | ${true}        | ${new Date(Date.now() + 30_000).toISOString()} | ${{ description: 'text', externalRef: '#123' }}
+      ${undefined}                                  | ${false}       | ${undefined}                                   | ${undefined}
     `(
       'returns the incoming payment on success',
       async ({
         client,
         incomingAmount,
-        description,
-        externalRef,
+        metadata,
         expiresAt
       }): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: {
             body: {
               incomingAmount: incomingAmount ? amount : undefined,
-              description,
-              externalRef,
+              metadata,
               expiresAt
             },
             method: 'POST',
@@ -189,8 +196,7 @@ describe('Incoming Payment Routes', (): void => {
         expect(createSpy).toHaveBeenCalledWith({
           paymentPointerId: paymentPointer.id,
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
-          description,
-          externalRef,
+          metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client
         })
@@ -213,7 +219,6 @@ describe('Incoming Payment Routes', (): void => {
           id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
           paymentPointer: paymentPointer.url,
           incomingAmount: incomingAmount ? amount : undefined,
-          description,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),
           updatedAt: expect.any(String),
@@ -222,7 +227,7 @@ describe('Incoming Payment Routes', (): void => {
             assetCode: asset.code,
             assetScale: asset.scale
           },
-          externalRef,
+          metadata,
           completed: false,
           ilpStreamConnection: {
             id: `${config.openPaymentsUrl}/connections/${connectionId}`,
@@ -243,10 +248,9 @@ describe('Incoming Payment Routes', (): void => {
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
         paymentPointerId: paymentPointer.id,
-        description,
         expiresAt,
         incomingAmount,
-        externalRef
+        metadata
       })
     })
     test('returns 200 with an updated open payments incoming payment', async (): Promise<void> => {
@@ -272,7 +276,6 @@ describe('Incoming Payment Routes', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        description: incomingPayment.description,
         expiresAt: expiresAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
         updatedAt: expect.any(String),
@@ -281,7 +284,7 @@ describe('Incoming Payment Routes', (): void => {
           assetCode: asset.code,
           assetScale: asset.scale
         },
-        externalRef: '#123',
+        metadata,
         completed: true
       })
     })

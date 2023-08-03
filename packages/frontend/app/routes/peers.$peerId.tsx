@@ -1,12 +1,9 @@
-import {
-  json,
-  redirect,
-  type ActionArgs,
-  type LoaderArgs
-} from '@remix-run/node'
+import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
 import {
   Form,
+  Outlet,
   useActionData,
+  useFormAction,
   useLoaderData,
   useNavigation,
   useSubmit
@@ -20,13 +17,14 @@ import {
 } from '~/components/ConfirmationDialog'
 import { Button, ErrorPanel, Input, PasswordInput } from '~/components/ui'
 import { deletePeer, getPeer, updatePeer } from '~/lib/api/peer.server'
-import { messageStorage } from '~/lib/message.server'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import {
   peerGeneralInfoSchema,
   peerHttpInfoSchema,
   uuidSchema
 } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
+import { formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const peerId = params.peerId
@@ -53,12 +51,14 @@ export async function loader({ params }: LoaderArgs) {
 export default function ViewPeerPage() {
   const { peer } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
+  const formAction = useFormAction()
   const [formData, setFormData] = useState<FormData>()
   const submit = useSubmit()
-  const { state } = useNavigation()
+  const navigation = useNavigation()
   const dialogRef = useRef<ConfirmationDialogRef>(null)
 
-  const isSubmitting = state === 'submitting'
+  const isSubmitting = navigation.state === 'submitting'
+  const currentPageAction = isSubmitting && navigation.formAction === formAction
 
   const submitHandler = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -99,8 +99,8 @@ export default function ViewPeerPage() {
             <ErrorPanel errors={response?.errors.general.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace>
-              <fieldset disabled={isSubmitting}>
+            <Form method='post' replace preventScrollReset>
+              <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
                   <Input
@@ -145,7 +145,7 @@ export default function ViewPeerPage() {
                     name='intent'
                     value='general'
                   >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
+                    {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
@@ -160,8 +160,8 @@ export default function ViewPeerPage() {
             <ErrorPanel errors={response?.errors.http.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace>
-              <fieldset disabled={isSubmitting}>
+            <Form method='post' replace preventScrollReset>
+              <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={peer.id} />
                   <Input
@@ -194,7 +194,7 @@ export default function ViewPeerPage() {
                     name='intent'
                     value='http'
                   >
-                    {isSubmitting ? 'Saving ...' : 'Save'}
+                    {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
@@ -236,6 +236,42 @@ export default function ViewPeerPage() {
           </div>
         </div>
         {/* Peer Asset Info - END */}
+        {/* Peer Liquidity Info */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Liquidity Information</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='w-full p-4 flex justify-between items-center'>
+              <div>
+                <p className='font-medium'>Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
+                  {peer.asset.code}
+                </p>
+              </div>
+              <div className='flex space-x-4'>
+                <Button
+                  aria-label='add peer liquidity page'
+                  preventScrollReset
+                  type='button'
+                  to={`/peers/${peer.id}/add-liquidity`}
+                >
+                  Add liquidity
+                </Button>
+                <Button
+                  aria-label='withdraw peer liquidity page'
+                  preventScrollReset
+                  type='button'
+                  to={`/peers/${peer.id}/withdraw-liquidity`}
+                >
+                  Withdraw liquidity
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Peer Liquidity Info - END */}
         {/* DELETE PEER - Danger zone */}
         <DangerZone title='Delete Peer'>
           <Form method='post' onSubmit={submitHandler}>
@@ -254,6 +290,7 @@ export default function ViewPeerPage() {
         keyword={peer.name || 'delete peer'}
         confirmButtonText='Delete this peer'
       />
+      <Outlet />
     </div>
   )
 }
@@ -356,47 +393,47 @@ export async function action({ request }: ActionArgs) {
     case 'delete': {
       const result = uuidSchema.safeParse(Object.fromEntries(formData))
       if (!result.success) {
-        session.flash('message', {
-          content: 'Invalid peer ID.',
-          type: 'error'
-        })
-
-        return redirect('.', {
-          headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+        return setMessageAndRedirect({
+          session,
+          message: {
+            content: 'Invalid peer ID.',
+            type: 'error'
+          },
+          location: '.'
         })
       }
 
       const response = await deletePeer({ input: { id: result.data.id } })
       if (!response?.success) {
-        session.flash('message', {
-          content: 'Could not delete peer.',
-          type: 'error'
-        })
-
-        return redirect('.', {
-          headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+        return setMessageAndRedirect({
+          session,
+          message: {
+            content: 'Could not delete peer.',
+            type: 'error'
+          },
+          location: '.'
         })
       }
 
-      session.flash('message', {
-        content: 'Peer was deleted.',
-        type: 'success'
-      })
-
-      return redirect('/peers', {
-        headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+      return setMessageAndRedirect({
+        session,
+        message: {
+          content: 'Peer was deleted.',
+          type: 'success'
+        },
+        location: '/peers'
       })
     }
     default:
       throw json(null, { status: 400, statusText: 'Invalid intent.' })
   }
 
-  session.flash('message', {
-    content: 'Peer information was updated.',
-    type: 'success'
-  })
-
-  return redirect('.', {
-    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: 'Peer information was updated.',
+      type: 'success'
+    },
+    location: '.'
   })
 }

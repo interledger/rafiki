@@ -16,7 +16,14 @@ import {
 } from './model'
 import { BaseService } from '../../shared/baseService'
 import { AccountingService } from '../../accounting/service'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../payment/incoming/model'
+import { IAppConfig } from '../../config/app'
 import { Pagination } from '../../shared/baseModel'
+import { WebhookService } from '../../webhook/service'
+import { poll } from '../../shared/utils'
 
 interface Options {
   publicName?: string
@@ -39,34 +46,42 @@ export interface PaymentPointerService {
   update(options: UpdateOptions): Promise<PaymentPointer | PaymentPointerError>
   get(id: string): Promise<PaymentPointer | undefined>
   getByUrl(url: string): Promise<PaymentPointer | undefined>
+  getOrPollByUrl(url: string): Promise<PaymentPointer | undefined>
   getPage(pagination?: Pagination): Promise<PaymentPointer[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
 }
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   knex: TransactionOrKnex
   accountingService: AccountingService
+  webhookService: WebhookService
 }
 
 export async function createPaymentPointerService({
   logger,
+  config,
   knex,
-  accountingService
+  accountingService,
+  webhookService
 }: ServiceDependencies): Promise<PaymentPointerService> {
   const log = logger.child({
     service: 'PaymentPointerService'
   })
   const deps: ServiceDependencies = {
+    config,
     logger: log,
     knex,
-    accountingService
+    accountingService,
+    webhookService
   }
   return {
     create: (options) => createPaymentPointer(deps, options),
     update: (options) => updatePaymentPointer(deps, options),
     get: (id) => getPaymentPointer(deps, id),
     getByUrl: (url) => getPaymentPointerByUrl(deps, url),
+    getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
     getPage: (pagination?) => getPaymentPointerPage(deps, pagination),
     processNext: () => processNextPaymentPointer(deps),
     triggerEvents: (limit) => triggerPaymentPointerEvents(deps, limit)
@@ -127,12 +142,20 @@ async function updatePaymentPointer(
 ): Promise<PaymentPointer | PaymentPointerError> {
   try {
     const update: UpdateInput = { publicName }
-    if (status) {
-      update.deactivatedAt = status === 'INACTIVE' ? new Date() : null
+    const paymentPointer = await PaymentPointer.query(deps.knex)
+      .findById(id)
+      .throwIfNotFound()
+
+    if (status === 'INACTIVE' && paymentPointer.isActive) {
+      update.deactivatedAt = new Date()
+      await deactivateOpenIncomingPaymentsByPaymentPointer(deps, id)
+    } else if (status === 'ACTIVE' && !paymentPointer.isActive) {
+      update.deactivatedAt = null
     }
 
-    return await PaymentPointer.query(deps.knex)
-      .patchAndFetchById(id, update)
+    return await paymentPointer
+      .$query(deps.knex)
+      .patchAndFetch(update)
       .withGraphFetched('asset')
       .throwIfNotFound()
   } catch (err) {
@@ -150,6 +173,42 @@ async function getPaymentPointer(
   return await PaymentPointer.query(deps.knex)
     .findById(id)
     .withGraphFetched('asset')
+}
+
+async function getOrPollByUrl(
+  deps: ServiceDependencies,
+  url: string
+): Promise<PaymentPointer | undefined> {
+  const existingPaymentPointer = await getPaymentPointerByUrl(deps, url)
+
+  if (existingPaymentPointer) {
+    return existingPaymentPointer
+  }
+
+  await PaymentPointerEvent.query(deps.knex).insert({
+    type: PaymentPointerEventType.PaymentPointerNotFound,
+    data: {
+      paymentPointerUrl: url
+    }
+  })
+
+  try {
+    const paymentPointer = await poll({
+      request: () => getPaymentPointerByUrl(deps, url),
+      pollingFrequencyMs: deps.config.paymentPointerPollingFrequencyMs,
+      timeoutMs: deps.config.paymentPointerLookupTimeoutMs
+    })
+
+    return paymentPointer
+  } catch (error) {
+    const errorMessage = 'Could not get payment pointer'
+    deps.logger.error(
+      { errorMessage: error instanceof Error && error.message },
+      errorMessage
+    )
+
+    return undefined
+  }
 }
 
 async function getPaymentPointerByUrl(
@@ -264,6 +323,23 @@ async function createWithdrawalEvent(
   await paymentPointer.$query(deps.knex).patch({
     totalEventsAmount: paymentPointer.totalEventsAmount + amount
   })
+}
+
+async function deactivateOpenIncomingPaymentsByPaymentPointer(
+  deps: ServiceDependencies,
+  paymentPointerId: string
+) {
+  const expiresAt = new Date(
+    Date.now() + deps.config.paymentPointerDeactivationPaymentGracePeriodMs
+  )
+  await IncomingPayment.query(deps.knex)
+    .patch({ expiresAt })
+    .where('paymentPointerId', paymentPointerId)
+    .whereIn('state', [
+      IncomingPaymentState.Pending,
+      IncomingPaymentState.Processing
+    ])
+    .where('expiresAt', '>', expiresAt)
 }
 
 export interface CreateSubresourceOptions {

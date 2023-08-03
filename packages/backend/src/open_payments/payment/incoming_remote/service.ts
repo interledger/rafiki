@@ -16,10 +16,9 @@ import {
 
 interface CreateRemoteIncomingPaymentArgs {
   paymentPointerUrl: string
-  description?: string
   expiresAt?: Date
   incomingAmount?: Amount
-  externalRef?: string
+  metadata?: Record<string, unknown>
 }
 
 export interface RemoteIncomingPaymentService {
@@ -74,9 +73,8 @@ async function create(
         incomingAmount: args.incomingAmount
           ? serializeAmount(args.incomingAmount)
           : undefined,
-        description: args.description ?? undefined,
         expiresAt: args.expiresAt?.toISOString(),
-        externalRef: args.externalRef ?? undefined
+        metadata: args.metadata ?? undefined
       }
     )
   } catch (error) {

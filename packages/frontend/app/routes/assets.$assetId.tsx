@@ -1,12 +1,9 @@
-import {
-  json,
-  redirect,
-  type ActionArgs,
-  type LoaderArgs
-} from '@remix-run/node'
+import { json, type ActionArgs, type LoaderArgs } from '@remix-run/node'
 import {
   Form,
+  Outlet,
   useActionData,
+  useFormAction,
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
@@ -14,9 +11,10 @@ import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import { getAsset, updateAsset } from '~/lib/api/asset.server'
-import { messageStorage } from '~/lib/message.server'
+import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateAssetSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
+import { formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const assetId = params.assetId
@@ -43,8 +41,11 @@ export async function loader({ params }: LoaderArgs) {
 export default function ViewAssetPage() {
   const { asset } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
-  const { state } = useNavigation()
-  const isSubmitting = state === 'submitting'
+  const navigation = useNavigation()
+  const formAction = useFormAction()
+
+  const isSubmitting = navigation.state === 'submitting'
+  const currentPageAction = isSubmitting && navigation.formAction === formAction
 
   return (
     <div className='pt-4 flex flex-col space-y-4'>
@@ -61,8 +62,8 @@ export default function ViewAssetPage() {
             <ErrorPanel errors={response?.errors.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace>
-              <fieldset disabled={isSubmitting}>
+            <Form method='post' replace preventScrollReset>
+              <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
                   <Input type='hidden' name='id' value={asset.id} />
                   <Input label='Asset ID' value={asset.id} disabled readOnly />
@@ -78,14 +79,49 @@ export default function ViewAssetPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button aria-label='save asset information' type='submit'>
-                    {isSubmitting ? 'Saving ...' : 'Save'}
+                    {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
               </fieldset>
             </Form>
           </div>
         </div>
+        {/* Asset Liquidity Info */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Liquidity Information</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='w-full p-4 flex justify-between items-center'>
+              <div>
+                <p className='font-medium'>Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(asset.liquidity ?? '0', asset.scale)}{' '}
+                  {asset.code}
+                </p>
+              </div>
+              <div className='flex space-x-4'>
+                <Button
+                  aria-label='add asset liquidity page'
+                  type='button'
+                  to={`/assets/${asset.id}/add-liquidity`}
+                >
+                  Add liquidity
+                </Button>
+                <Button
+                  aria-label='withdraw asset liquidity page'
+                  type='button'
+                  to={`/assets/${asset.id}/withdraw-liquidity`}
+                >
+                  Withdraw liquidity
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Peer Liquidity Info - END */}
       </div>
+      <Outlet />
     </div>
   )
 }
@@ -128,12 +164,12 @@ export async function action({ request }: ActionArgs) {
 
   const session = await messageStorage.getSession(request.headers.get('cookie'))
 
-  session.flash('message', {
-    content: 'Asset information was updated',
-    type: 'success'
-  })
-
-  return redirect('.', {
-    headers: { 'Set-Cookie': await messageStorage.commitSession(session) }
+  return setMessageAndRedirect({
+    session,
+    message: {
+      content: 'Asset information was updated',
+      type: 'success'
+    },
+    location: '.'
   })
 }

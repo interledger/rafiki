@@ -33,7 +33,7 @@ An ILP packet may either terminate at the local Rafiki's STREAM server or contin
 
 The connector attempts to extract and decode the payment tag from a received ILP packet's destination address. If it is successfully able to match the tag with a locally managed [Open Payments](../../reference/glossary.md#open-payments) [payment pointer](../../reference/glossary.md#payment-pointer) or [incoming payment](https://docs.openpayments.guide/reference/create-incoming-payment), it will not forward the packet. The connector will credit the corresponding balance as well as track the total amount received for the STREAM connection in [Redis](../../introduction/architecture.md) in order to support [STREAM receipts](https://interledger.org/rfcs/0039-stream-receipts/).
 
-Packets addressed to a payment pointer happen via [SPSP](../../reference/glossary.md#payment-pointer), often for [Web Monetization](../../reference/glossary.md#web-monetization)
+Packets addressed to a payment pointer happen via [SPSP](../../reference/glossary.md#payment-pointer).
 
 ### Outgoing HTTP
 
@@ -41,11 +41,10 @@ If the ILP packet's destination address corresponds to a configured [peer](./pee
 
 ## Packet Rejection
 
-The connector may reject a packet with a corresponding [ILP error code](https://interledger.org/rfcs/0027-interledger-protocol-4/#error-codes) due to a number of reasons including:
+The connector may reject a packet with a corresponding [ILP error code](https://interledger.org/rfcs/0027-interledger-protocol-4/#error-codes) due to a number of reasons:
 
 - invalid packet
 - insufficient liquidity
 - rate limit exceeded
 - amount exceeding `maxPacketAmount`
 - expired packet
-- and more!

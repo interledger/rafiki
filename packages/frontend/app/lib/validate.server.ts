@@ -103,3 +103,9 @@ export const createAssetSchema = z
   })
   .merge(updateAssetSchema)
   .omit({ id: true })
+
+export const amountSchema = z.coerce
+  .bigint({
+    invalid_type_error: 'Amount is expected to be a number.'
+  })
+  .positive()

@@ -1,6 +1,6 @@
 import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import type { WebHook } from '~/lib/webhooks.server'
+import { handlePaymentPointerNotFound, WebHook } from '~/lib/webhooks.server'
 import {
   handleOutgoingPaymentCreated,
   handleOutgoingPaymentCompletedFailed,
@@ -30,6 +30,9 @@ export async function action({ request }: ActionArgs) {
       case EventType.IncomingPaymentCompleted:
       case EventType.IncomingPaymentExpired:
         await handleIncomingPaymentCompletedExpired(wh)
+        break
+      case EventType.PaymentPointerNotFound:
+        await handlePaymentPointerNotFound(wh)
         break
       default:
         console.log(`unknown event type: ${wh.type}`)

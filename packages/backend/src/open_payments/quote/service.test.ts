@@ -32,6 +32,7 @@ import {
   IncomingPaymentState
 } from '../payment/incoming/model'
 import { getTests } from '../payment_pointer/model.test'
+import { PaymentPointer } from '../payment_pointer/model'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
@@ -71,6 +72,7 @@ describe('QuoteService', (): void => {
     Config.signatureSecret = SIGNATURE_SECRET
     nock(Config.exchangeRatesUrl)
       .get('/')
+      .query(true)
       .reply(200, () => ({
         base: 'USD',
         rates: {
@@ -627,6 +629,23 @@ describe('QuoteService', (): void => {
           sendAmount
         })
       ).resolves.toEqual(QuoteError.UnknownPaymentPointer)
+    })
+
+    it('fails on inactive payment pointer', async () => {
+      const paymentPointer = await createPaymentPointer(deps)
+      const paymentPointerUpdated = await PaymentPointer.query(
+        knex
+      ).patchAndFetchById(paymentPointer.id, { deactivatedAt: new Date() })
+      assert.ok(!paymentPointerUpdated.isActive)
+      await expect(
+        quoteService.create({
+          paymentPointerId: paymentPointer.id,
+          receiver: `${
+            receivingPaymentPointer.url
+          }/incoming-payments/${uuid()}`,
+          sendAmount
+        })
+      ).resolves.toEqual(QuoteError.InactivePaymentPointer)
     })
 
     it('fails on invalid receiver', async (): Promise<void> => {

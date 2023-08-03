@@ -15,10 +15,9 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
   const tigerbeetleClusterId = clusterId || Config.tigerbeetleClusterId
   const { name: tigerbeetleDir } = tmp.dirSync({ unsafeCleanup: true })
   const tigerbeetleFile = `cluster_${tigerbeetleClusterId}_replica_0_test.tigerbeetle`
+  const tigerbeetleContainerVersion = 'ghcr.io/tigerbeetle/tigerbeetle:0.13.57'
 
-  const tbContFormat = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:3e2954cba78e17db42013e56fd9850a6047f7caa6f30dd7c46ff932c809af10c'
-  )
+  const tbContFormat = await new GenericContainer(tigerbeetleContainerVersion)
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {
@@ -49,9 +48,7 @@ export async function startTigerbeetleContainer(clusterId?: number): Promise<{
       .on('end', () => console.log('Stream closed for [tb-format]'))
   }
 
-  const tbContStart = await new GenericContainer(
-    'ghcr.io/tigerbeetledb/tigerbeetle@sha256:3e2954cba78e17db42013e56fd9850a6047f7caa6f30dd7c46ff932c809af10c'
-  )
+  const tbContStart = await new GenericContainer(tigerbeetleContainerVersion)
     .withExposedPorts(TIGERBEETLE_PORT)
     .withBindMounts([
       {

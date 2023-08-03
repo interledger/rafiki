@@ -38,8 +38,7 @@ describe('Outgoing Payment Routes', (): void => {
   const createPayment = async (options: {
     client?: string
     grant?: Grant
-    description?: string
-    externalRef?: string
+    metadata?: Record<string, unknown>
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
@@ -89,8 +88,10 @@ describe('Outgoing Payment Routes', (): void => {
       createModel: async ({ client }) => {
         const outgoingPayment = await createPayment({
           client,
-          description: 'rent',
-          externalRef: '202201'
+          metadata: {
+            description: 'rent',
+            externalRef: '202201'
+          }
         })
         if (failed) {
           await outgoingPayment
@@ -109,8 +110,7 @@ describe('Outgoing Payment Routes', (): void => {
           sendAmount: serializeAmount(outgoingPayment.sendAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
-          description: outgoingPayment.description,
-          externalRef: outgoingPayment.externalRef,
+          metadata: outgoingPayment.metadata,
           failed,
           createdAt: outgoingPayment.createdAt.toISOString(),
           updatedAt: outgoingPayment.updatedAt.toISOString()
@@ -159,73 +159,64 @@ describe('Outgoing Payment Routes', (): void => {
       ${{ id: uuid() }} | ${faker.internet.url({ appendSlash: false })} | ${'grant'}
       ${undefined}      | ${undefined}                                  | ${'no grant'}
     `('create ($description)', ({ grant, client }): void => {
-      test.each`
-        description  | externalRef  | desc
-        ${'rent'}    | ${undefined} | ${'description'}
-        ${undefined} | ${'202201'}  | ${'externalRef'}
-      `(
-        'returns the outgoing payment on success ($desc)',
-        async ({ description, externalRef }): Promise<void> => {
-          const payment = await createPayment({
-            client,
-            grant,
-            description,
-            externalRef
-          })
-          const options = {
-            quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
-            client,
-            grant,
-            description,
-            externalRef
-          }
-          const ctx = setup(options)
-          const createSpy = jest
-            .spyOn(outgoingPaymentService, 'create')
-            .mockResolvedValueOnce(payment)
-          await expect(
-            outgoingPaymentRoutes.create(ctx)
-          ).resolves.toBeUndefined()
-          expect(createSpy).toHaveBeenCalledWith({
-            paymentPointerId: paymentPointer.id,
-            quoteId: payment.quote.id,
-            description,
-            externalRef,
-            client,
-            grant
-          })
-          expect(ctx.response).toSatisfyApiSpec()
-          const outgoingPaymentId = (
-            (ctx.response.body as Record<string, unknown>)['id'] as string
-          )
-            .split('/')
-            .pop()
-          expect(ctx.response.body).toEqual({
-            id: `${paymentPointer.url}/outgoing-payments/${outgoingPaymentId}`,
-            paymentPointer: paymentPointer.url,
-            receiver: payment.receiver,
-            quoteId: options.quoteId,
-            sendAmount: {
-              ...payment.sendAmount,
-              value: payment.sendAmount.value.toString()
-            },
-            receiveAmount: {
-              ...payment.receiveAmount,
-              value: payment.receiveAmount.value.toString()
-            },
-            description: options.description,
-            externalRef: options.externalRef,
-            sentAmount: {
-              value: '0',
-              assetCode: paymentPointer.asset.code,
-              assetScale: paymentPointer.asset.scale
-            },
-            failed: false,
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String)
-          })
+      test('returns the outgoing payment on success (metadata)', async (): Promise<void> => {
+        const metadata = {
+          description: 'rent',
+          externalRef: '202201'
         }
-      )
+        const payment = await createPayment({
+          client,
+          grant,
+          metadata
+        })
+        const options = {
+          quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
+          client,
+          grant,
+          metadata
+        }
+        const ctx = setup(options)
+        const createSpy = jest
+          .spyOn(outgoingPaymentService, 'create')
+          .mockResolvedValueOnce(payment)
+        await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
+        expect(createSpy).toHaveBeenCalledWith({
+          paymentPointerId: paymentPointer.id,
+          quoteId: payment.quote.id,
+          metadata,
+          client,
+          grant
+        })
+        expect(ctx.response).toSatisfyApiSpec()
+        const outgoingPaymentId = (
+          (ctx.response.body as Record<string, unknown>)['id'] as string
+        )
+          .split('/')
+          .pop()
+        expect(ctx.response.body).toEqual({
+          id: `${paymentPointer.url}/outgoing-payments/${outgoingPaymentId}`,
+          paymentPointer: paymentPointer.url,
+          receiver: payment.receiver,
+          quoteId: options.quoteId,
+          sendAmount: {
+            ...payment.sendAmount,
+            value: payment.sendAmount.value.toString()
+          },
+          receiveAmount: {
+            ...payment.receiveAmount,
+            value: payment.receiveAmount.value.toString()
+          },
+          metadata: options.metadata,
+          sentAmount: {
+            value: '0',
+            assetCode: paymentPointer.asset.code,
+            assetScale: paymentPointer.asset.scale
+          },
+          failed: false,
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String)
+        })
+      })
     })
 
     test.each(Object.values(OutgoingPaymentError).map((err) => [err]))(

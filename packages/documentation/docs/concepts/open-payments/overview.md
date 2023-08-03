@@ -1,6 +1,6 @@
 # Overview
 
-Open Payments is an API standard that allows third-parties/clients to initiate payments and to view the transaction history on the account holder's account (with the account holder's consent) . Extensive documentation can be found on the [Open Payments website](https://openpayments.guide).
+Open Payments is an API standard that allows third-parties/clients to initiate payments and to view the transaction history on the account holder's account (with the account holder's consent). Extensive documentation can be found on the [Open Payments website](https://openpayments.guide).
 
 Rafiki implements the Open Payments APIs. Every request and response is validated against the [Open Payments API specification](https://github.com/interledger/open-payments/tree/main/openapi).
 
