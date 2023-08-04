@@ -65,12 +65,12 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
       }
 
       const grantService = await ctx.container.use('grantService')
-      const deletion = await grantService.deleteGrantById(grantId)
-      if (!deletion) {
+      const revoked = await grantService.revokeGrant(grantId)
+      if (!revoked) {
         return {
           code: '404',
           success: false,
-          message: 'Delete grant was not successful'
+          message: 'Revoke grant was not successful'
         }
       }
 

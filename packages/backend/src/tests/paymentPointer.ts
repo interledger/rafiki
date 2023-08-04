@@ -33,7 +33,7 @@ export async function createPaymentPointer(
     url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
   })) as MockPaymentPointer
   if (isPaymentPointerError(paymentPointerOrError)) {
-    throw new Error()
+    throw new Error(paymentPointerOrError)
   }
   if (options.createLiquidityAccount) {
     const accountingService = await deps.use('accountingService')

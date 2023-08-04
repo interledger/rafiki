@@ -1,6 +1,8 @@
 import { BaseService } from '../shared/baseService'
 import Axios, { AxiosInstance } from 'axios'
 import { convert, ConvertOptions } from './util'
+import { createInMemoryDataStore } from '../middleware/cache/data-stores/in-memory'
+import { CacheDataStore } from '../middleware/cache/data-stores'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
@@ -40,15 +42,16 @@ export function createRatesService(deps: ServiceDependencies): RatesService {
 
 class RatesServiceImpl implements RatesService {
   private axios: AxiosInstance
-  private ratesRequest?: Promise<Rates>
-  private ratesExpiry?: Date
-  private prefetchRequest?: Promise<Rates>
+  private cachedRates: CacheDataStore
+  private inProgressRequests: Record<string, Promise<Rates>> = {}
 
   constructor(private deps: ServiceDependencies) {
     this.axios = Axios.create({
       timeout: REQUEST_TIMEOUT,
       validateStatus: (status) => status === 200
     })
+
+    this.cachedRates = createInMemoryDataStore(deps.exchangeRatesLifetime)
   }
 
   async convert(
@@ -59,7 +62,7 @@ class RatesServiceImpl implements RatesService {
     if (sameCode && sameScale) return opts.sourceAmount
     if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
 
-    const rates = await this.sharedLoad(opts.sourceAsset.code)
+    const rates = await this.getRates(opts.sourceAsset.code)
     const sourcePrice = rates[opts.sourceAsset.code]
     if (!sourcePrice) return ConvertError.MissingSourceAsset
     if (!isValidPrice(sourcePrice)) return ConvertError.InvalidSourcePrice
@@ -74,41 +77,51 @@ class RatesServiceImpl implements RatesService {
   }
 
   async rates(baseAssetCode: string): Promise<Rates> {
-    return this.sharedLoad(baseAssetCode)
+    return this.getRates(baseAssetCode)
   }
 
-  private sharedLoad(baseAssetCode: string): Promise<Rates> {
-    if (this.ratesRequest && this.ratesExpiry) {
-      if (this.ratesExpiry < new Date()) {
-        // Already expired: invalidate cached rates.
-        this.ratesRequest = undefined
-        this.ratesExpiry = undefined
-      } else if (
-        this.ratesExpiry.getTime() <
+  private async getRates(baseAssetCode: string): Promise<Rates> {
+    const [cachedRate, cachedExpiry] = await Promise.all([
+      this.cachedRates.get(baseAssetCode),
+      this.cachedRates.getKeyExpiry(baseAssetCode)
+    ])
+
+    if (cachedRate && cachedExpiry) {
+      const isCloseToExpiry =
+        cachedExpiry.getTime() <
         Date.now() + 0.5 * this.deps.exchangeRatesLifetime
-      ) {
-        // Expiring soon: start prefetch.
-        if (!this.prefetchRequest) {
-          this.prefetchRequest = this.loadNow(baseAssetCode).finally(() => {
-            this.prefetchRequest = undefined
-          })
-        }
+
+      if (isCloseToExpiry) {
+        this.fetchNewRatesAndCache(baseAssetCode) // don't await, just get new rates for later
       }
+
+      return JSON.parse(cachedRate)
     }
 
-    if (!this.ratesRequest) {
-      this.ratesRequest =
-        this.prefetchRequest ||
-        this.loadNow(baseAssetCode).catch((err) => {
-          this.ratesRequest = undefined
-          this.ratesExpiry = undefined
-          throw err
-        })
+    try {
+      return await this.fetchNewRatesAndCache(baseAssetCode)
+    } catch (err) {
+      this.cachedRates.delete(baseAssetCode)
+      throw err
     }
-    return this.ratesRequest
   }
 
-  private async loadNow(baseAssetCode: string): Promise<Rates> {
+  private async fetchNewRatesAndCache(baseAssetCode: string): Promise<Rates> {
+    const inProgressRequest = this.inProgressRequests[baseAssetCode]
+
+    if (!inProgressRequest) {
+      this.inProgressRequests[baseAssetCode] = this.fetchNewRates(baseAssetCode)
+    }
+
+    const rates = await this.inProgressRequests[baseAssetCode]
+
+    delete this.inProgressRequests[baseAssetCode]
+
+    await this.cachedRates.set(baseAssetCode, JSON.stringify(rates))
+    return rates
+  }
+
+  private async fetchNewRates(baseAssetCode: string): Promise<Rates> {
     const url = this.deps.exchangeRatesUrl
     if (!url) return {}
 
@@ -127,8 +140,6 @@ class RatesServiceImpl implements RatesService {
       ...(rates ? rates : {})
     }
 
-    this.ratesRequest = Promise.resolve(data)
-    this.ratesExpiry = new Date(Date.now() + this.deps.exchangeRatesLifetime)
     return data
   }
 

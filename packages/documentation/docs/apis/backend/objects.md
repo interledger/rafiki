@@ -506,6 +506,7 @@ endpoint<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
+- [BasePayment](interfaces#basepayment)
 - [Model](interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
@@ -799,6 +800,7 @@ error<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
+- [BasePayment](interfaces#basepayment)
 - [Model](interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
@@ -1060,6 +1062,131 @@ startCursor<br />
 </td>
 <td>
 <p>Paginating backwards: the cursor to continue.</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## Payment
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [BasePayment](interfaces#basepayment)
+- [Model](interfaces#model)
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+id<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Payment id</p>
+</td>
+</tr>
+<tr>
+<td>
+type<br />
+<a href="enums#paymenttype"><code>PaymentType!</code></a>
+</td>
+<td>
+<p>Type of payment</p>
+</td>
+</tr>
+<tr>
+<td>
+paymentPointerId<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Id of the payment pointer under which this payment was created</p>
+</td>
+</tr>
+<tr>
+<td>
+state<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>Either the IncomingPaymentState or OutgoingPaymentState according to type</p>
+</td>
+</tr>
+<tr>
+<td>
+metadata<br />
+<a href="scalars#jsonobject"><code>JSONObject</code></a>
+</td>
+<td>
+<p>Additional metadata associated with the payment.</p>
+</td>
+</tr>
+<tr>
+<td>
+createdAt<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>Date-time of creation</p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## PaymentConnection
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+pageInfo<br />
+<a href="objects#pageinfo"><code>PageInfo!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+edges<br />
+<a href="objects#paymentedge"><code>[PaymentEdge!]!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## PaymentEdge
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+node<br />
+<a href="objects#payment"><code>Payment!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+cursor<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
 </td>
 </tr>
 </tbody>

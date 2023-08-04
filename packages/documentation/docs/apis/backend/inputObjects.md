@@ -874,6 +874,34 @@ crv<br />
 </tbody>
 </table>
 
+## PaymentFilter
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+type<br />
+<a href="inputObjects#filterstring"><code>FilterString</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+paymentPointerId<br />
+<a href="inputObjects#filterstring"><code>FilterString</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## PostLiquidityWithdrawalInput
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>

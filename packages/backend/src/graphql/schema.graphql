@@ -66,6 +66,20 @@ type Query {
     "Filter webhook events based on specific criteria."
     filter: WebhookEventFilter
   ): WebhookEventsConnection!
+
+  "Fetch a page of combined payments"
+  payments(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+    "Filter payment events based on specific criteria."
+    filter: PaymentFilter
+  ): PaymentConnection!
 }
 
 type Mutation {
@@ -521,7 +535,14 @@ type IncomingPaymentEdge {
   cursor: String!
 }
 
-type IncomingPayment implements Model {
+interface BasePayment {
+  id: ID!
+  paymentPointerId: ID!
+  metadata: JSONObject
+  createdAt: String!
+}
+
+type IncomingPayment implements BasePayment & Model {
   "Incoming Payment id"
   id: ID!
   "Id of the payment pointer under which this incoming payment was created"
@@ -590,7 +611,7 @@ type OutgoingPaymentEdge {
   cursor: String!
 }
 
-type OutgoingPayment implements Model {
+type OutgoingPayment implements BasePayment & Model {
   "Outgoing payment id"
   id: ID!
   "Id of the payment pointer under which this outgoing payment was created"
@@ -624,6 +645,41 @@ enum OutgoingPaymentState {
   COMPLETED
   "Payment failed"
   FAILED
+}
+
+type PaymentConnection {
+  pageInfo: PageInfo!
+  edges: [PaymentEdge!]!
+}
+
+type PaymentEdge {
+  node: Payment!
+  cursor: String!
+}
+
+type Payment implements BasePayment & Model {
+  "Payment id"
+  id: ID!
+  "Type of payment"
+  type: PaymentType!
+  "Id of the payment pointer under which this payment was created"
+  paymentPointerId: ID!
+  "Either the IncomingPaymentState or OutgoingPaymentState according to type"
+  state: String!
+  "Additional metadata associated with the payment."
+  metadata: JSONObject
+  "Date-time of creation"
+  createdAt: String!
+}
+
+enum PaymentType {
+  INCOMING
+  OUTGOING
+}
+
+input PaymentFilter {
+  type: FilterString
+  paymentPointerId: FilterString
 }
 
 type QuoteConnection {
