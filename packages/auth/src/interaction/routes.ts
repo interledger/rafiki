@@ -127,6 +127,7 @@ async function startInteraction(
     ctx.throw(401, { error: 'unknown_request' })
   } else {
     // TODO: also establish session in redis with short expiry
+    await grantService.markPending(grant.id)
     ctx.session.nonce = grant.interactNonce
 
     const interactionUrl = new URL(config.identityServerDomain)

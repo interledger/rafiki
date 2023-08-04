@@ -164,10 +164,12 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can introspect active token for revoked grant', async (): Promise<void> => {
-      await grant.$query(trx).patch({
-        state: GrantState.Finalized,
-        finalizationReason: GrantFinalization.Revoked
-      })
+      await grant
+        .$query(trx)
+        .patch({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
+        })
       await expect(
         accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()

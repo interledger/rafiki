@@ -23,9 +23,9 @@ export interface GrantService {
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteractionSession(
     interactId: string,
-    interactNonce: string,
-    options?: GetByInteractionSessionOpts
+    interactNonce: string
   ): Promise<InteractiveGrant | undefined>
+  markPending(grantId: string): Promise<Grant>
   approve(grantId: string): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
   getByContinue(
@@ -109,11 +109,9 @@ export async function createGrantService({
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
-    getByInteractionSession: (
-      interactId: string,
-      interactNonce: string,
-      options: GetByInteractionSessionOpts
-    ) => getByInteractionSession(interactId, interactNonce, options),
+    markPending: (grantId: string) => markPending(grantId),
+    getByInteractionSession: (interactId: string, interactNonce: string) =>
+      getByInteractionSession(interactId, interactNonce),
     approve: (grantId: string) => approve(deps, grantId),
     finalize: (id: string, reason: GrantFinalization) => finalize(id, reason),
     getByContinue: (
@@ -138,6 +136,12 @@ async function approve(
 ): Promise<Grant> {
   return Grant.query().patchAndFetchById(grantId, {
     state: GrantState.Approved
+  })
+}
+
+async function markPending(id: string): Promise<Grant> {
+  return Grant.query().patchAndFetchById(id, {
+    state: GrantState.Pending
   })
 }
 
