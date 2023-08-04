@@ -189,16 +189,8 @@ export const loadAssets = async () => {
       assets = [...assets, ...response.edges]
     }
 
-    if (response.pageInfo.hasNextPage) {
-      hasNextPage = true
-      if (response.pageInfo.endCursor) {
-        after = response?.pageInfo?.endCursor
-      } else {
-        after = assets[assets.length - 1].node.id
-      }
-    } else {
-      hasNextPage = false
-    }
+    hasNextPage = response.pageInfo.hasNextPage
+    after = response?.pageInfo?.endCursor || assets[assets.length - 1].node.id
   }
 
   return assets
