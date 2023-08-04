@@ -9,7 +9,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { GrantService, GrantRequest } from '../grant/service'
-import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
+import {
+  Grant,
+  StartMethod,
+  FinishMethod,
+  GrantState,
+  GrantFinalization
+} from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
@@ -34,7 +40,7 @@ describe('Grant Service', (): void => {
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert({
-      state: GrantState.Pending,
+      state: GrantState.Processing,
       startMethod: [StartMethod.Redirect],
       continueToken: generateToken(),
       continueId: v4(),
@@ -103,7 +109,7 @@ describe('Grant Service', (): void => {
       const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
-        state: GrantState.Pending,
+        state: GrantState.Processing,
         continueId: expect.any(String),
         continueToken: expect.any(String),
         interactRef: expect.any(String),
@@ -143,7 +149,7 @@ describe('Grant Service', (): void => {
       const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
-        state: GrantState.Granted,
+        state: GrantState.Approved,
         continueId: expect.any(String),
         continueToken: expect.any(String)
       })
@@ -160,10 +166,17 @@ describe('Grant Service', (): void => {
     })
   })
 
+  describe('pending', (): void => {
+    test('Can mark a grant pending for an interaction', async (): Promise<void> => {
+      const pendingGrant = await grantService.markPending(grant.id)
+      expect(pendingGrant.state).toEqual(GrantState.Pending)
+    })
+  })
+
   describe('issue', (): void => {
-    test('Can issue a grant', async (): Promise<void> => {
-      const issuedGrant = await grantService.issueGrant(grant.id)
-      expect(issuedGrant.state).toEqual(GrantState.Granted)
+    test('Can issue an approved grant', async (): Promise<void> => {
+      const issuedGrant = await grantService.approve(grant.id)
+      expect(issuedGrant.state).toEqual(GrantState.Approved)
     })
   })
 
@@ -275,16 +288,28 @@ describe('Grant Service', (): void => {
     })
   })
 
-  describe('reject', (): void => {
-    test('Can reject a grant', async (): Promise<void> => {
-      const rejectedGrant = await grantService.rejectGrant(grant.id)
-      expect(rejectedGrant?.id).toEqual(grant.id)
-      expect(rejectedGrant?.state).toEqual(GrantState.Rejected)
-    })
+  describe('finalize', (): void => {
+    test.each`
+      reason                        | description
+      ${GrantFinalization.Issued}   | ${'issued'}
+      ${GrantFinalization.Rejected} | ${'rejectd'}
+      ${GrantFinalization.Revoked}  | ${'revoked'}
+    `(
+      'Can finalize a grant that is $description',
+      async ({ reason }): Promise<void> => {
+        const finalizedGrant = await grantService.finalize(grant.id, reason)
+        expect(finalizedGrant.id).toEqual(grant.id)
+        expect(finalizedGrant.state).toEqual(GrantState.Finalized)
+        expect(finalizedGrant.finalizationReason).toEqual(reason)
+      }
+    )
 
-    test("Cannot reject a grant that doesn't exist", async (): Promise<void> => {
-      const rejectedGrant = await grantService.rejectGrant(v4())
-      expect(rejectedGrant).toBeUndefined()
+    test('Cannot finalize a grant that does not exist', async (): Promise<void> => {
+      const finalizedGrant = await grantService.finalize(
+        v4(),
+        GrantFinalization.Issued
+      )
+      expect(finalizedGrant).toBeUndefined()
     })
   })
 

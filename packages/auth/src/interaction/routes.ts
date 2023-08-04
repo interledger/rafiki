@@ -5,7 +5,7 @@ import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { GrantService } from '../grant/service'
-import { GrantState } from '../grant/model'
+import { GrantState, GrantFinalization, isRejectedGrant } from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
 
 interface ServiceDependencies extends BaseService {
@@ -123,10 +123,11 @@ async function startInteraction(
   const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
-  if (!grant) {
+  if (!grant || grant.state !== GrantState.Pending) {
     ctx.throw(401, { error: 'unknown_request' })
   } else {
     // TODO: also establish session in redis with short expiry
+    await grantService.markPending(grant.id)
     ctx.session.nonce = grant.interactNonce
 
     const interactionUrl = new URL(config.identityServerDomain)
@@ -165,21 +166,26 @@ async function handleGrantChoice(
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
+    // If grant was already rejected or revoked
     if (
-      grant.state === GrantState.Revoked ||
-      grant.state === GrantState.Rejected
+      grant.state === GrantState.Finalized &&
+      grant.finalizationReason !== GrantFinalization.Issued
     ) {
       ctx.throw(401, { error: 'user_denied' })
     }
 
-    if (grant.state === GrantState.Granted) {
+    // If grant was already approved
+    if (
+      grant.state === GrantState.Finalized ||
+      grant.state === GrantState.Approved
+    ) {
       ctx.throw(400, { error: 'request_denied' })
     }
 
     if (choice === GrantChoices.Accept) {
-      await grantService.issueGrant(grant.id)
+      await grantService.approve(grant.id)
     } else if (choice === GrantChoices.Reject) {
-      await grantService.rejectGrant(grant.id)
+      await grantService.finalize(grant.id, GrantFinalization.Rejected)
     } else {
       ctx.throw(404)
     }
@@ -208,7 +214,7 @@ async function finishInteraction(
     ctx.throw(404, { error: 'unknown_request' })
   } else {
     const clientRedirectUri = new URL(grant.finishUri)
-    if (grant.state === GrantState.Granted) {
+    if (grant.state === GrantState.Approved) {
       const { clientNonce, interactNonce, interactRef } = grant
       const interactUrl =
         config.identityServerDomain + `/interact/${interactId}`
@@ -220,7 +226,7 @@ async function finishInteraction(
       clientRedirectUri.searchParams.set('hash', hash)
       clientRedirectUri.searchParams.set('interact_ref', interactRef)
       ctx.redirect(clientRedirectUri.toString())
-    } else if (grant.state === GrantState.Rejected) {
+    } else if (isRejectedGrant(grant)) {
       clientRedirectUri.searchParams.set('result', 'grant_rejected')
       ctx.redirect(clientRedirectUri.toString())
     } else {

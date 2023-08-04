@@ -75,6 +75,8 @@ type Grant implements Model {
   access: [Access!]!
   "State of the grant"
   state: GrantState!
+  "Reason a grant was finalized"
+  finalizationReason: GrantFinalization
   "Date-time of creation"
   createdAt: String!
 }
@@ -126,10 +128,19 @@ interface MutationResponse {
 }
 
 enum GrantState {
-  "grant request was created but grant was not approved yet"
+  "grant request is determining what state to enter next"
+  PROCESSING
+  "grant request is awaiting interaction"
   PENDING
   "grant was approved"
-  GRANTED
+  APPROVED
+  "grant was finalized and no more access tokens or interactions can be made on it"
+  FINALIZED
+}
+
+enum GrantFinalization {
+  "grant was issued"
+  ISSUED
   "grant was revoked"
   REVOKED
   "grant was rejected"

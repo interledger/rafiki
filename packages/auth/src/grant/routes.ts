@@ -4,9 +4,11 @@ import { AppContext } from '../app'
 import { GrantService, GrantRequest as GrantRequestBody } from './service'
 import {
   Grant,
+  GrantFinalization,
   GrantState,
   toOpenPaymentPendingGrant,
-  toOpenPaymentsGrant
+  toOpenPaymentsGrant,
+  isRejectedGrant
 } from './model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
@@ -183,12 +185,13 @@ async function continueGrant(
   if (!grant) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
-    if (grant.state !== GrantState.Granted) {
+    if (grant.state !== GrantState.Approved) {
       ctx.throw(401, { error: 'request_denied' })
     }
 
     const accessToken = await accessTokenService.create(grant.id)
     const access = await accessService.getByGrant(grant.id)
+    await grantService.finalize(grant.id, GrantFinalization.Issued)
 
     // TODO: add "continue" to response if additional grant request steps are added
     ctx.body = toOpenPaymentsGrant(

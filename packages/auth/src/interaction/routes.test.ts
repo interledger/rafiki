@@ -20,7 +20,7 @@ import {
   GetContext,
   ChooseContext
 } from './routes'
-import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
+import { Grant, StartMethod, FinishMethod, GrantState, GrantFinalization } from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 
@@ -107,7 +107,8 @@ describe('Interaction Routes', (): void => {
       test('Interaction start fails if grant is revoked', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Revoked
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
         })
 
         const ctx = createContext<StartContext>(
@@ -223,7 +224,8 @@ describe('Interaction Routes', (): void => {
       test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Revoked
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
         })
 
         const ctx = createContext<FinishContext>(
@@ -246,7 +248,7 @@ describe('Interaction Routes', (): void => {
       test('Can finish accepted interaction', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Granted
+          state: GrantState.Approved
         })
 
         await Access.query().insert({
@@ -292,7 +294,8 @@ describe('Interaction Routes', (): void => {
       test('Can finish rejected interaction', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Rejected
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Rejected
         })
 
         await Access.query().insert({
@@ -417,7 +420,8 @@ describe('Interaction Routes', (): void => {
       test('Cannot get grant details for revoked grant', async (): Promise<void> => {
         const revokedGrant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Revoked
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
         })
         const ctx = createContext<GetContext>(
           {
@@ -540,7 +544,7 @@ describe('Interaction Routes', (): void => {
 
         const issuedGrant = await Grant.query().findById(grant.id)
         assert.ok(issuedGrant)
-        expect(issuedGrant.state).toEqual(GrantState.Granted)
+        expect(issuedGrant.state).toEqual(GrantState.Approved)
       })
 
       test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
@@ -591,7 +595,10 @@ describe('Interaction Routes', (): void => {
 
         const issuedGrant = await Grant.query().findById(grant.id)
         assert.ok(issuedGrant)
-        expect(issuedGrant.state).toEqual(GrantState.Rejected)
+        expect(issuedGrant.state).toEqual(GrantState.Finalized)
+        expect(issuedGrant.finalizationReason).toEqual(
+          GrantFinalization.Rejected
+        )
       })
 
       test('Cannot make invalid grant choice', async (): Promise<void> => {
