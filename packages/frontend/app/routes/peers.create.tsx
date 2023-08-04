@@ -7,38 +7,14 @@ import {
 } from '@remix-run/react'
 import { PageHeader } from '~/components/PageHeader'
 import { Button, ErrorPanel, Input, Select } from '~/components/ui'
-import type { ListAssetsQuery } from '~/generated/graphql'
-import { listAssets } from '~/lib/api/asset.server'
+import { loadAssets } from '~/lib/api/asset.server'
 import { createPeer } from '~/lib/api/peer.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { createPeerSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 
 export async function loader() {
-  let assets: ListAssetsQuery['assets']['edges'] = []
-  let hasNextPage = true
-  let after: string | undefined
-
-  while (hasNextPage) {
-    const response = await listAssets({ first: 100, after })
-
-    if (response.edges) {
-      assets = [...assets, ...response.edges]
-    }
-
-    if (response.pageInfo.hasNextPage) {
-      hasNextPage = true
-      if (response.pageInfo.endCursor) {
-        after = response?.pageInfo?.endCursor
-      } else {
-        after = assets[assets.length - 1].node.id
-      }
-    } else {
-      hasNextPage = false
-    }
-  }
-
-  return json({ assets })
+  return json({ assets: await loadAssets() })
 }
 
 export default function CreatePeerPage() {
