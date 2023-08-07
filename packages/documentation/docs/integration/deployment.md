@@ -105,7 +105,8 @@ Now, the Admin UI can be found on localhost:3010.
 | backend.workerIdle                      | worker idle time in milliseconds                  |
 | backend.idempotencyTTL                  | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
 | frontend.port                           | `PORT`                                            |
-| frontend.serviceUrls.GRAPHQL_URL:       | `GRAPHQL_URL`                                     |
+| frontend.serviceUrls.GRAPHQL_URL        | `GRAPHQL_URL`                                     |
+| frontend.serviceUrls.OPEN_PAYMENTS_URL  | `OPEN_PAYMENTS_URL`                               |
 
 ### Environment Variables
 
@@ -184,7 +185,8 @@ Now, the Admin UI can be found on localhost:3010.
 
 #### Frontend
 
-| Variable      | Default                         | Description                           |
-| ------------- | ------------------------------- | ------------------------------------- |
-| `GRAPHQL_URL` | `http://localhost:3001/graphql` | URL for the GraphQL Admin API         |
-| `PORT`        | `3005`                          | Port from which to host the Remix app |
+| Variable            | Default                         | Description                           |
+| ------------------- | ------------------------------- | ------------------------------------- |
+| `GRAPHQL_URL`       | `http://localhost:3001/graphql` | URL for the GraphQL Admin API         |
+| `OPEN_PAYMENTS_URL` | `http://localhost:3003/`        | Open Payments API Endpoint            |
+| `PORT`              | `3005`                          | Port from which to host the Remix app |

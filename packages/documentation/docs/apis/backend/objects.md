@@ -1477,7 +1477,7 @@ createdAt<br />
 <tr>
 <td>
 status<br />
-<a href="enums#paymentpointerstatus"><code>PaymentPointerStatus</code></a>
+<a href="enums#paymentpointerstatus"><code>PaymentPointerStatus!</code></a>
 </td>
 <td>
 <p>Status of the payment pointer</p>

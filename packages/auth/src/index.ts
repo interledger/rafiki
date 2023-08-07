@@ -13,6 +13,7 @@ import { createGrantService } from './grant/service'
 import { createAccessTokenService } from './accessToken/service'
 import { createAccessTokenRoutes } from './accessToken/routes'
 import { createGrantRoutes } from './grant/routes'
+import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
 import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 
@@ -121,6 +122,17 @@ export function initIocContainer(
       config: await deps.use('config')
     })
   })
+
+  container.singleton(
+    'interactionRoutes',
+    async (deps: IocContract<AppServices>) => {
+      return createInteractionRoutes({
+        grantService: await deps.use('grantService'),
+        logger: await deps.use('logger'),
+        config: await deps.use('config')
+      })
+    }
+  )
 
   container.singleton('openApi', async () => {
     const authServerSpec = await createOpenAPI(

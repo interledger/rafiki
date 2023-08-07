@@ -123,6 +123,7 @@ services:
     environment:
       PORT: 3010
       GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
+      OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
     depends_on:
       - cloud-nine-backend
 

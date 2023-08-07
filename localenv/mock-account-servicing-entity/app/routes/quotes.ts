@@ -33,10 +33,10 @@ export async function action({ request }: ActionArgs) {
   const receivedQuote: Quote = await request.json()
 
   const feeStructure = CONFIG.seed.fees[0]
-  const asset = CONFIG.seed.asset
+  const assetCodes = CONFIG.seed.assets.map(({ code }) => code)
   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
     // TODO: handle quote fee calculation for different assets
-    if (receivedQuote.sendAmount.assetCode !== asset.code) {
+    if (!assetCodes.includes(receivedQuote.sendAmount.assetCode)) {
       throw json('Invalid quote sendAmount asset', { status: 400 })
     }
     const sendAmountValue = BigInt(receivedQuote.sendAmount.value)
@@ -49,7 +49,7 @@ export async function action({ request }: ActionArgs) {
 
     receivedQuote.sendAmount.value = (sendAmountValue + fees).toString()
   } else if (receivedQuote.paymentType === PaymentType.FixedSend) {
-    if (receivedQuote.receiveAmount.assetCode !== asset.code) {
+    if (!assetCodes.includes(receivedQuote.receiveAmount.assetCode)) {
       throw json('Invalid quote receiveAmount asset', { status: 400 })
     }
     const receiveAmountValue = BigInt(receivedQuote.receiveAmount.value)

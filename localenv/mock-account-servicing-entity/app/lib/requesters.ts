@@ -66,6 +66,7 @@ export async function createPeer(
   staticIlpAddress: string,
   outgoingEndpoint: string,
   assetId: string,
+  assetCode: string,
   name: string
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
@@ -86,8 +87,8 @@ export async function createPeer(
     input: {
       staticIlpAddress,
       http: {
-        incoming: { authTokens: ['test'] },
-        outgoing: { endpoint: outgoingEndpoint, authToken: 'test' }
+        incoming: { authTokens: [`test-${assetCode}`] },
+        outgoing: { endpoint: outgoingEndpoint, authToken: `test-${assetCode}` }
       },
       assetId,
       name
@@ -108,7 +109,6 @@ export async function createPeer(
 }
 
 export async function addPeerLiquidity(
-  backendUrl: string,
   peerId: string,
   amount: string,
   transferUid: string
@@ -142,6 +142,43 @@ export async function addPeerLiquidity(
         throw new Error('Data was empty')
       }
       return data.addPeerLiquidity
+    })
+}
+
+export async function addAssetLiquidity(
+  assetId: string,
+  amount: number,
+  transferId: string
+): Promise<LiquidityMutationResponse> {
+  const addAssetLiquidityMutation = gql`
+    mutation AddAssetLiquidity($input: AddAssetLiquidityInput!) {
+      addAssetLiquidity(input: $input) {
+        code
+        success
+        message
+        error
+      }
+    }
+  `
+  const addAssetLiquidityInput = {
+    input: {
+      assetId,
+      amount,
+      id: transferId,
+      idempotencyKey: uuid()
+    }
+  }
+  return apolloClient
+    .mutate({
+      mutation: addAssetLiquidityMutation,
+      variables: addAssetLiquidityInput
+    })
+    .then(({ data }): LiquidityMutationResponse => {
+      console.log(data)
+      if (!data.addAssetLiquidity.success) {
+        throw new Error('Data was empty')
+      }
+      return data.addAssetLiquidity
     })
 }
 

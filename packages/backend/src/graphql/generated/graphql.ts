@@ -761,7 +761,7 @@ export type PaymentPointer = Model & {
   /** List of quotes created at this payment pointer */
   quotes?: Maybe<QuoteConnection>;
   /** Status of the payment pointer */
-  status?: Maybe<PaymentPointerStatus>;
+  status: PaymentPointerStatus;
   /** Payment Pointer URL */
   url: Scalars['String']['output'];
 };
@@ -1756,7 +1756,7 @@ export type PaymentPointerResolvers<ContextType = any, ParentType extends Resolv
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, Partial<PaymentPointerOutgoingPaymentsArgs>>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<PaymentPointerQuotesArgs>>;
-  status?: Resolver<Maybe<ResolversTypes['PaymentPointerStatus']>, ParentType, ContextType>;
+  status?: Resolver<ResolversTypes['PaymentPointerStatus'], ParentType, ContextType>;
   url?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
