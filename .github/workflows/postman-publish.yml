@@ -22,4 +22,4 @@ jobs:
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
       - name: Publish Postman API
         run: |
-          postman api publish 84fc90ca-3153-4865-8b49-b91218e5d574  --name ${{ inputs.api-version }} --release-notes ${{ inputs.release-notes }}
+          postman api publish 84fc90ca-3153-4865-8b49-b91218e5d574  --name ${{ inputs.api-version }} --release-notes ${{ inputs.release-notes }} --collections "postman/collections/Interledger.json"
