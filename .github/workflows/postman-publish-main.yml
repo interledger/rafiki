@@ -15,5 +15,5 @@ jobs:
     uses: ./.github/workflows/postman-publish.yml 
     with:
       api-version: 'main'
-      release-notes: "APIs corresponding to Rafiki's main branch (${{ github.sha }})"
+      release-notes: "APIs corresponding to Rafiki main branch"
     secrets: inherit
