@@ -11,3 +11,4 @@ jobs:
     with:
       api-version: ${{github.ref_name}}
       release-notes: "APIs corresponding to Rafiki version ${{github.ref_name}}"
+    secrets: inherit

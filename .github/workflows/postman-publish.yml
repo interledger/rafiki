@@ -11,7 +11,7 @@ on:
         type: string
 
 jobs:
-  automated-api-tests:
+  postman-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
