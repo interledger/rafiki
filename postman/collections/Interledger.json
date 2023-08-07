@@ -2841,7 +2841,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "e5dc9dc8-6997-4ec6-897d-c09b40fad517",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
