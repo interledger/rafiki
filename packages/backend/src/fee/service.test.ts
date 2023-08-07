@@ -48,14 +48,16 @@ describe('Combined Payment Service', (): void => {
           fee: {
             fixed: BigInt(100),
             percentage: 0.01
-          }
+          },
+          activatedAt: new Date()
         }
 
         await expect(feeService.create(feeCreate)).resolves.toMatchObject({
           assetId: feeCreate.assetId,
           type: feeCreate.type,
           fixedFee: feeCreate.fee.fixed,
-          percentageFee: feeCreate.fee.percentage.toFixed(4)
+          percentageFee: feeCreate.fee.percentage.toFixed(4),
+          activatedAt: feeCreate.activatedAt
         })
       }
     )

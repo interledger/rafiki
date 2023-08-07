@@ -51,6 +51,8 @@ async function createFee(
       fee.fixedFee = options.fee.fixed
     }
 
+    fee.activatedAt = new Date()
+
     return await Fee.query(deps.knex).insertAndFetch(fee)
   } catch (error) {
     if (error instanceof ForeignKeyViolationError) {
