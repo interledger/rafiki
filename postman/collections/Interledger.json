@@ -2861,7 +2861,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateReceiver($input: CreateReceiverInput!) {\n  createReceiver(input: $input) {\n    code\n    message\n    receiver {\n      completed\n      createdAt\n      expiresAt\n      metadata\n      id\n      incomingAmount {\n        assetCode\n        assetScale\n        value\n      }\n      paymentPointerUrl\n      receivedAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n    success\n  }\n}",
+										"query": "mutation CreateReceiver($input: CreateReceiverInput!) {\n  createReceiver(input: $input) {\n    code\n    message\n    receiver {\n      completed\n      createdAt\n      expiresAt\n      metadata\n      id\n      incomingAmount {\n        assetCode\n        assetScale\n        value\n      }\n      paymentPointerUrl\n      receivedAmount {\n        assetCode\n        assetScale\n        value\n      }\n      updatedAt\n    }\n    success\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"metadata\": {\n        \"description\": \"For lunch\"\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 500\n    },\n    \"paymentPointerUrl\": \"https://happy-life-bank-backend/accounts/pfry\"\n  }\n}"
 									}
 								},
