@@ -3,7 +3,7 @@ name: Publish Postman API version (main)
 on:
   push:
     branches:
-      - main
+      - mk/1678/postman-cli
     tags:
       - '*'
     paths:
