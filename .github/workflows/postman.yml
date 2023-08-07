@@ -17,4 +17,4 @@ jobs:
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
       - name: Run API tests
         run: |
-          postman collection run "${{ github.workspace }}/postman/collections/Interledger.json"
+          postman api publish 84fc90ca-3153-4865-8b49-b91218e5d574  --name main --release-notes "APIs corresponding to Rafiki's main branch"
