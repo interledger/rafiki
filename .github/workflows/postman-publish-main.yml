@@ -7,8 +7,8 @@ on:
     tags:
       - '*'
     paths:
-        - 'postman'
-        - '.postman'
+        - 'postman/**'
+        - '.postman/**'
 
 jobs:
   postman-publish-main:
