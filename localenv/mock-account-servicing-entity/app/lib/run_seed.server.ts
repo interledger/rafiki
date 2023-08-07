@@ -9,57 +9,67 @@ import {
   createPeer,
   addPeerLiquidity,
   createPaymentPointer,
-  createPaymentPointerKey
+  createPaymentPointerKey,
+  addAssetLiquidity
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
 import { generateJwk } from '@interledger/http-signature-utils'
+import { Asset } from 'generated/graphql'
 
 export async function setupFromSeed(config: Config): Promise<void> {
-  const { asset } = await createAsset(
-    config.seed.asset.code,
-    config.seed.asset.scale
-  )
-  if (!asset) {
-    throw new Error('asset not defined')
-  }
-  console.log(JSON.stringify(asset, null, 2))
-  const peerResponses = await Promise.all(
-    config.seed.peers.map(async (peer: Peering) => {
-      const peerResponse = await createPeer(
-        peer.peerIlpAddress,
-        peer.peerUrl,
-        asset.id,
-        peer.name
-      ).then((response) => response.peer)
-      if (!peerResponse) {
-        throw new Error('peer response not defined')
-      }
-      const transferUid = v4()
-      const liquidity = await addPeerLiquidity(
-        config.seed.self.graphqlUrl,
-        peerResponse.id,
-        peer.initialLiquidity,
-        transferUid
-      )
-      return [peerResponse, liquidity]
-    })
-  )
+  const assets: Record<string, Asset> = {}
+  for (const { code, scale, liquidity } of config.seed.assets) {
+    const { asset } = await createAsset(code, scale)
+    if (!asset) {
+      throw new Error('asset not defined')
+    }
 
-  console.log(JSON.stringify(peerResponses, null, 2))
+    const addedLiquidity = await addAssetLiquidity(asset.id, liquidity, v4())
+
+    assets[code] = asset
+    console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
+  }
+
+  for (const asset of Object.values(assets)) {
+    const peerResponses = await Promise.all(
+      config.seed.peers.map(async (peer: Peering) => {
+        const peerResponse = await createPeer(
+          peer.peerIlpAddress,
+          peer.peerUrl,
+          asset.id,
+          asset.code,
+          peer.name
+        ).then((response) => response.peer)
+        if (!peerResponse) {
+          throw new Error('peer response not defined')
+        }
+        const transferUid = v4()
+        const liquidity = await addPeerLiquidity(
+          peerResponse.id,
+          peer.initialLiquidity,
+          transferUid
+        )
+        return [peerResponse, liquidity]
+      })
+    )
+
+    console.log(JSON.stringify(peerResponses, null, 2))
+  }
 
   // Clear the accounts before seeding.
   await mockAccounts.clearAccounts()
 
   const accountResponses = await Promise.all(
     config.seed.accounts.map(async (account: Account) => {
+      const accountAsset = assets[account.assetCode]
       await mockAccounts.create(
         account.id,
         account.path,
         account.name,
-        asset.code,
-        asset.scale,
-        asset.id
+        accountAsset.code,
+        accountAsset.scale,
+        accountAsset.id
       )
       if (account.initialBalance) {
         await mockAccounts.credit(
@@ -76,7 +86,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
       const paymentPointer = await createPaymentPointer(
         account.name,
         `https://${CONFIG.seed.self.hostname}/${account.path}`,
-        asset.id
+        accountAsset.id
       )
 
       await mockAccounts.setPaymentPointer(
@@ -90,7 +100,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
         jwk: generateJwk({
           keyId: `keyid-${account.id}`,
           privateKey: config.key
-        })
+        }) as unknown as string
       })
 
       return paymentPointer
