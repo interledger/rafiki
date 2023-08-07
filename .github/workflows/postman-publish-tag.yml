@@ -7,7 +7,7 @@ on:
 
 jobs:
   postman-publish-main:
-    uses: ./.github/workflows/postman/postman-publish.yaml
+    uses: ./.github/workflows/postman-publish.yml
     with:
       api-version: ${{github.ref_name}}
       release-notes: "APIs corresponding to Rafiki version ${{github.ref_name}}"

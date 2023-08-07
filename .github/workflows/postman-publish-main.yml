@@ -12,7 +12,7 @@ on:
 
 jobs:
   postman-publish-main:
-    uses: ./.github/workflows/postman/postman-publish.yaml
+    uses: ./.github/workflows/postman-publish.yml
     with:
       api-version: 'main'
       release-notes: "APIs corresponding to Rafiki's main branch (${{ github.sha }})"
