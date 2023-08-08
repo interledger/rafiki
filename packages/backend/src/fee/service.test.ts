@@ -40,7 +40,7 @@ describe('Combined Payment Service', (): void => {
 
   describe('Fee Service', (): void => {
     test.each([0.01, 0.05, 1.0])(
-      'Can create fee with percentageFee of %',
+      'Can create fee with percentageFee of %d',
       async (percentageFee: number): Promise<void> => {
         const feeCreate = {
           assetId: asset.id,
