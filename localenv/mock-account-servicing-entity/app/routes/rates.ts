@@ -7,16 +7,16 @@ interface Rates {
 
 const exchangeRates: Rates = {
   USD: {
-    EUR: 1.1602,
-    ZAR: 17.3792
+    EUR: 0.89,
+    ZAR: 18.7
   },
   EUR: {
-    USD: 0.8619,
-    ZAR: 20.44
+    USD: 1.12,
+    ZAR: 20.48
   },
   ZAR: {
-    USD: 0.0575,
-    EUR: 0.0489
+    USD: 0.053,
+    EUR: 0.049
   }
 }
 
