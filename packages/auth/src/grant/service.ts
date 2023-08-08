@@ -23,7 +23,8 @@ export interface GrantService {
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteractionSession(
     interactId: string,
-    interactNonce: string
+    interactNonce: string,
+    options?: GetByInteractionSessionOpts
   ): Promise<InteractiveGrant | undefined>
   markPending(grantId: string): Promise<Grant>
   approve(grantId: string): Promise<Grant>
@@ -110,8 +111,11 @@ export async function createGrantService({
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
     markPending: (grantId: string) => markPending(grantId),
-    getByInteractionSession: (interactId: string, interactNonce: string) =>
-      getByInteractionSession(interactId, interactNonce),
+    getByInteractionSession: (
+      interactId: string,
+      interactNonce: string,
+      options: GetByInteractionSessionOpts
+    ) => getByInteractionSession(interactId, interactNonce, options),
     approve: (grantId: string) => approve(deps, grantId),
     finalize: (id: string, reason: GrantFinalization) => finalize(id, reason),
     getByContinue: (

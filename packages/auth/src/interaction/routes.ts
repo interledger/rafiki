@@ -123,7 +123,7 @@ async function startInteraction(
   const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
-  if (!grant || grant.state !== GrantState.Pending) {
+  if (!grant || grant.state !== GrantState.Processing) {
     ctx.throw(401, { error: 'unknown_request' })
   } else {
     // TODO: also establish session in redis with short expiry

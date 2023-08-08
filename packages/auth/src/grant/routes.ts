@@ -7,8 +7,7 @@ import {
   GrantFinalization,
   GrantState,
   toOpenPaymentPendingGrant,
-  toOpenPaymentsGrant,
-  isRejectedGrant
+  toOpenPaymentsGrant
 } from './model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
