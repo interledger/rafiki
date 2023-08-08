@@ -20,7 +20,13 @@ import {
   GetContext,
   ChooseContext
 } from './routes'
-import { Grant, StartMethod, FinishMethod, GrantState, GrantFinalization } from '../grant/model'
+import {
+  Grant,
+  StartMethod,
+  FinishMethod,
+  GrantState,
+  GrantFinalization
+} from '../grant/model'
 import { Access } from '../access/model'
 import { generateNonce, generateToken } from '../shared/utils'
 
@@ -41,7 +47,7 @@ describe('Interaction Routes', (): void => {
   let grant: Grant
 
   const generateBaseGrant = () => ({
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),
@@ -495,6 +501,19 @@ describe('Interaction Routes', (): void => {
       })
     })
     describe('IDP - accept/reject grant', (): void => {
+      let pendingGrant: Grant
+      beforeEach(async (): Promise<void> => {
+        pendingGrant = await Grant.query().insert({
+          ...generateBaseGrant(),
+          state: GrantState.Pending
+        })
+
+        await Access.query().insert({
+          ...BASE_GRANT_ACCESS,
+          grantId: pendingGrant.id
+        })
+      })
+
       test('cannot accept/reject grant without secret', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
@@ -504,8 +523,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: grant.interactId,
-            nonce: grant.interactNonce,
+            id: pendingGrant.interactId,
+            nonce: pendingGrant.interactNonce,
             choice: GrantChoices.Accept
           }
         )
@@ -521,7 +540,7 @@ describe('Interaction Routes', (): void => {
       test('can accept grant', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
-            url: `/grant/${grant.id}/${grant.interactNonce}/accept`,
+            url: `/grant/${pendingGrant.id}/${pendingGrant.interactNonce}/accept`,
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -530,8 +549,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: grant.interactId,
-            nonce: grant.interactNonce,
+            id: pendingGrant.interactId,
+            nonce: pendingGrant.interactNonce,
             choice: GrantChoices.Accept
           }
         )
@@ -542,7 +561,7 @@ describe('Interaction Routes', (): void => {
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(202)
 
-        const issuedGrant = await Grant.query().findById(grant.id)
+        const issuedGrant = await Grant.query().findById(pendingGrant.id)
         assert.ok(issuedGrant)
         expect(issuedGrant.state).toEqual(GrantState.Approved)
       })
@@ -572,7 +591,7 @@ describe('Interaction Routes', (): void => {
       test('Can reject grant', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
-            url: `/grant/${grant.id}/${grant.interactNonce}/reject`,
+            url: `/grant/${pendingGrant.id}/${pendingGrant.interactNonce}/reject`,
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -581,8 +600,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: grant.interactId,
-            nonce: grant.interactNonce,
+            id: pendingGrant.interactId,
+            nonce: pendingGrant.interactNonce,
             choice: GrantChoices.Reject
           }
         )
@@ -593,7 +612,7 @@ describe('Interaction Routes', (): void => {
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(202)
 
-        const issuedGrant = await Grant.query().findById(grant.id)
+        const issuedGrant = await Grant.query().findById(pendingGrant.id)
         assert.ok(issuedGrant)
         expect(issuedGrant.state).toEqual(GrantState.Finalized)
         expect(issuedGrant.finalizationReason).toEqual(
@@ -611,8 +630,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: grant.interactId,
-            nonce: grant.interactNonce,
+            id: pendingGrant.interactId,
+            nonce: pendingGrant.interactNonce,
             choice: 'invalidChoice'
           }
         )
@@ -623,7 +642,7 @@ describe('Interaction Routes', (): void => {
           status: 404
         })
 
-        const issuedGrant = await Grant.query().findById(grant.id)
+        const issuedGrant = await Grant.query().findById(pendingGrant.id)
         assert.ok(issuedGrant)
         expect(issuedGrant.state).toEqual(GrantState.Pending)
       })

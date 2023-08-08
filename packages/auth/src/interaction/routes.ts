@@ -123,7 +123,7 @@ async function startInteraction(
   const { config, grantService } = deps
   const grant = await grantService.getByInteractionSession(interactId, nonce)
 
-  if (!grant || grant.state !== GrantState.Pending) {
+  if (!grant || grant.state !== GrantState.Processing) {
     ctx.throw(401, { error: 'unknown_request' })
   } else {
     // TODO: also establish session in redis with short expiry
@@ -174,11 +174,8 @@ async function handleGrantChoice(
       ctx.throw(401, { error: 'user_denied' })
     }
 
-    // If grant was already approved
-    if (
-      grant.state === GrantState.Finalized ||
-      grant.state === GrantState.Approved
-    ) {
+    // If grant is otherwise not pending interaction
+    if (grant.state !== GrantState.Pending) {
       ctx.throw(400, { error: 'request_denied' })
     }
 

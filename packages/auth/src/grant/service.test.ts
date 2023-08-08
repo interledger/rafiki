@@ -197,7 +197,10 @@ describe('Grant Service', (): void => {
     })
 
     test('Defaults to excluding revoked grants', async (): Promise<void> => {
-      await grant.$query().patch({ state: GrantState.Revoked })
+      await grant.$query().patch({
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
 
       const { continueId, continueToken, interactRef } = grant
       assert.ok(interactRef)
@@ -211,7 +214,10 @@ describe('Grant Service', (): void => {
     })
 
     test('Can fetch revoked grants with includeRevoked', async (): Promise<void> => {
-      await grant.$query().patch({ state: GrantState.Revoked })
+      await grant.$query().patch({
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
 
       const { continueId, continueToken, interactRef } = grant
       assert.ok(interactRef)
@@ -266,7 +272,10 @@ describe('Grant Service', (): void => {
       }
     )
     test('Defaults to excluding revoked grants', async () => {
-      await grant.$query().patch({ state: GrantState.Revoked })
+      await grant.$query().patch({
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
       assert.ok(grant.interactId)
       assert.ok(grant.interactNonce)
       const fetchedGrant = await grantService.getByInteractionSession(
@@ -276,7 +285,10 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant).toBeUndefined()
     })
     test('Can fetch revoked grants with includeRevoked', async () => {
-      await grant.$query().patch({ state: GrantState.Revoked })
+      await grant.$query().patch({
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
       assert.ok(grant.interactId)
       assert.ok(grant.interactNonce)
       const fetchedGrant = await grantService.getByInteractionSession(
@@ -318,7 +330,10 @@ describe('Grant Service', (): void => {
       await expect(grantService.revokeGrant(grant.id)).resolves.toEqual(true)
 
       const revokedGrant = await Grant.query(trx).findById(grant.id)
-      expect(revokedGrant?.state).toEqual(GrantState.Revoked)
+      expect(revokedGrant?.state).toEqual(GrantState.Finalized)
+      expect(revokedGrant?.finalizationReason).toEqual(
+        GrantFinalization.Revoked
+      )
       expect(Access.query().where({ grantId: grant.id })).resolves.toEqual([])
       expect(AccessToken.query().where({ grantId: grant.id })).resolves.toEqual(
         []
@@ -367,14 +382,20 @@ describe('Grant Service', (): void => {
 
     beforeEach(async () => {
       const grantDetails = [
-        { identifier: paymentPointer, state: GrantState.Revoked },
+        {
+          identifier: paymentPointer,
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
+        },
         { identifier: paymentPointer, state: GrantState.Pending },
         { identifier: 'example.com/test3', state: GrantState.Pending }
       ]
 
-      for (const { identifier, state } of grantDetails) {
+      for (const { identifier, state, finalizationReason } of grantDetails) {
         const grant = await createGrant(deps, { identifier })
-        const updatedGrant = await grant.$query().patchAndFetch({ state })
+        const updatedGrant = await grant
+          .$query()
+          .patchAndFetch({ state, finalizationReason })
         grants.push(updatedGrant)
       }
     })
@@ -402,7 +423,10 @@ describe('Grant Service', (): void => {
     test('Filter by grant state', async () => {
       const grants = await grantService.getPage(undefined, {
         state: {
-          in: [GrantState.Revoked]
+          in: [GrantState.Finalized]
+        },
+        finalizationReason: {
+          in: [GrantFinalization.Revoked]
         }
       })
 
@@ -411,8 +435,8 @@ describe('Grant Service', (): void => {
 
     test('Filter out by grant state', async () => {
       const fetchedGrants = await grantService.getPage(undefined, {
-        state: {
-          notIn: [GrantState.Revoked]
+        finalizationReason: {
+          notIn: [GrantFinalization.Revoked]
         }
       })
 

@@ -23,7 +23,8 @@ export interface GrantService {
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
   getByInteractionSession(
     interactId: string,
-    interactNonce: string
+    interactNonce: string,
+    options?: GetByInteractionSessionOpts
   ): Promise<InteractiveGrant | undefined>
   markPending(grantId: string): Promise<Grant>
   approve(grantId: string): Promise<Grant>
@@ -78,9 +79,16 @@ interface FilterGrantState {
   in?: GrantState[]
   notIn?: GrantState[]
 }
+
+interface FilterGrantFinalization {
+  in?: GrantFinalization[]
+  notIn?: GrantFinalization[]
+}
+
 interface GrantFilter {
   identifier?: FilterString
   state?: FilterGrantState
+  finalizationReason?: FilterGrantFinalization
 }
 
 export async function createGrantService({
@@ -104,8 +112,11 @@ export async function createGrantService({
       create(deps, grantRequest, trx),
 
     markPending: (grantId: string) => markPending(grantId),
-    getByInteractionSession: (interactId: string, interactNonce: string) =>
-      getByInteractionSession(interactId, interactNonce),
+    getByInteractionSession: (
+      interactId: string,
+      interactNonce: string,
+      options: GetByInteractionSessionOpts
+    ) => getByInteractionSession(interactId, interactNonce, options),
     approve: (grantId: string) => approve(deps, grantId),
     finalize: (id: string, reason: GrantFinalization) => finalize(id, reason),
     getByContinue: (
@@ -156,7 +167,10 @@ async function revokeGrant(
 
   try {
     const grant = await Grant.query(trx)
-      .patchAndFetchById(grantId, { state: GrantState.Finalized, finalizationReason: GrantFinalization.Revoked })
+      .patchAndFetchById(grantId, {
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
       .first()
 
     if (!grant) {
@@ -242,7 +256,9 @@ async function getByInteractionSession(
     .withGraphFetched('access')
 
   if (!includeRevoked) {
-    queryBuilder.whereNot('finalizationReason', GrantFinalization.Revoked).andWhere('state', GrantState.Finalized)
+    queryBuilder
+      .whereNull('finalizationReason')
+      .orWhereNot('finalizationReason', GrantFinalization.Revoked)
   }
 
   const grant = await queryBuilder
@@ -269,7 +285,9 @@ async function getByContinue(
   const queryBuilder = Grant.query().findOne({ continueId })
 
   if (!includeRevoked) {
-    queryBuilder.whereNot('finalizationReason', GrantFinalization.Revoked).andWhere('state', GrantState.Finalized)
+    queryBuilder
+      .whereNull('finalizationReason')
+      .orWhereNot('finalizationReason', GrantFinalization.Revoked)
   }
 
   const grant = await queryBuilder
@@ -288,7 +306,7 @@ async function getGrantsPage(
   filter?: GrantFilter
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
-  const { identifier, state } = filter ?? {}
+  const { identifier, state, finalizationReason } = filter ?? {}
 
   if (identifier?.in?.length) {
     query.whereIn('access.identifier', identifier.in)
@@ -300,6 +318,16 @@ async function getGrantsPage(
 
   if (state?.notIn?.length) {
     query.whereNotIn('state', state.notIn)
+  }
+
+  if (finalizationReason?.in?.length) {
+    query.whereIn('finalizationReason', finalizationReason.in)
+  }
+
+  if (finalizationReason?.notIn?.length) {
+    query
+      .whereNull('finalizationReason')
+      .orWhereNotIn('finalizationReason', finalizationReason.notIn)
   }
 
   return query.getPage(pagination)
