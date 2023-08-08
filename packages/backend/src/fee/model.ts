@@ -23,10 +23,8 @@ export class Fee extends BaseModel {
     }
   }
 
-  public id!: string
   public assetId!: string
   public type!: FeeType
-  public createdAt!: Date
   public activatedAt?: Date
   public fixedFee!: bigint
   public percentageFee!: string
