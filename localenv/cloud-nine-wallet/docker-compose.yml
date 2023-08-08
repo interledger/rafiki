@@ -49,6 +49,7 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
       ILP_ADDRESS: test.cloud-nine-wallet
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      SLIPPAGE: 0
       PUBLIC_HOST: http://cloud-nine-wallet-backend
       OPEN_PAYMENTS_URL: http://cloud-nine-wallet-backend
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
