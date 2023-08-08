@@ -41,13 +41,13 @@ describe('Combined Payment Service', (): void => {
   describe('Fee Service', (): void => {
     test.each([0.01, 0.05, 1.0])(
       'Can create fee with percentageFee of %',
-      async (): Promise<void> => {
+      async (percentageFee: number): Promise<void> => {
         const feeCreate = {
           assetId: asset.id,
           type: FeeType.Sending,
           fee: {
             fixed: BigInt(100),
-            percentage: 0.01
+            percentage: percentageFee
           },
           activatedAt: new Date()
         }
