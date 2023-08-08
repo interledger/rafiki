@@ -5,6 +5,7 @@ import { DropdownFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
 import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
+import { WebhookEventType } from '~/shared/enums'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -57,9 +58,13 @@ export default function WebhookEventsPage() {
                 value={type}
                 options={[
                   {
-                    name: 'Outgoing Payment created',
-                    action: () => navigate('?type=outgoing_payment.created')
-                  }
+                    name: 'All',
+                    action: () => navigate(``)
+                  },
+                  ...Object.values(WebhookEventType).map((value) => ({
+                    name: value,
+                    action: () => navigate(`?type=${value}`)
+                  }))
                 ]}
               />
             </div>

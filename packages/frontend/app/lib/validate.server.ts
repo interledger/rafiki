@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { isValidIlpAddress } from 'ilp-packet'
+import { WebhookEventType } from '~/shared/enums'
 
 export const uuidSchema = z.object({
   id: z.string().uuid()
@@ -20,15 +21,6 @@ export const paginationSchemaTest = z.object({
   first: z.coerce.number().int().positive(),
   last: z.coerce.number().int().positive()
 })
-
-export enum WebhookEventType {
-  IncomingPaymentCreated = 'incoming_payment.created',
-  IncomingPaymentCompleted = 'incoming_payment.completed',
-  IncomingPaymentExpired = 'incoming_payment.expired',
-  OutgoingPaymentCreated = 'outgoing_payment.created',
-  OutgoingPaymentCompleted = 'outgoing_payment.completed',
-  OutgoingPaymentFailed = 'outgoing_payment.failed'
-}
 
 export const paginationSearchParams = paginationSchemaTest.partial()
 export const webhooksSearchParams = paginationSearchParams
