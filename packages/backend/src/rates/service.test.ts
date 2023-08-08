@@ -1,4 +1,4 @@
-import { RatesService, ConvertError } from './service'
+import { RatesService, ConvertError, Rates } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -15,28 +15,22 @@ describe('Rates service', function () {
   const exchangeRatesLifetime = 100
   const exchangeRatesUrl = 'http://example-rates.com'
 
-  const testRates = {
-    NEGATIVE: -0.5,
-    ZERO: 0.0,
-    STRING: '123'
-  }
-
-  const exampleRates: Record<string, object> = {
-    XRP: {
-      USD: 2
-    },
+  const exampleRates = {
     USD: {
-      XRP: 0.5
+      EUR: 2,
+      XRP: 1.65
+    },
+    EUR: {
+      USD: 1.12,
+      XRP: 1.82
+    },
+    XRP: {
+      USD: 0.61,
+      EUR: 0.5
     }
   }
 
-  beforeAll(async (): Promise<void> => {
-    deps = initIocContainer({
-      ...Config,
-      exchangeRatesUrl,
-      exchangeRatesLifetime
-    })
-
+  const mockRatesApi = (fn: (baseAssetCode: unknown) => Rates['rates']) => {
     nock(exchangeRatesUrl)
       .get('/')
       .query(true)
@@ -47,10 +41,18 @@ describe('Rates service', function () {
 
         return {
           base,
-          rates: { ...testRates, ...exampleRates[base] }
+          rates: fn(base)
         }
       })
       .persist()
+  }
+
+  beforeAll(async (): Promise<void> => {
+    deps = initIocContainer({
+      ...Config,
+      exchangeRatesUrl,
+      exchangeRatesLifetime
+    })
 
     appContainer = await createTestApp(deps)
     service = await deps.use('ratesService')
@@ -69,6 +71,18 @@ describe('Rates service', function () {
   })
 
   describe('convert', () => {
+    beforeAll(() => {
+      mockRatesApi((base) => ({
+        ...exampleRates[base as keyof typeof exampleRates],
+        NEGATIVE: -0.5,
+        ZERO: 0.0
+      }))
+    })
+
+    afterAll(() => {
+      nock.cleanAll()
+    })
+
     it('returns the source amount when assets are alike', async () => {
       await expect(
         service.convert({
@@ -99,55 +113,57 @@ describe('Rates service', function () {
     })
 
     it('returns the converted amount when assets are different', async () => {
+      const sourceAmount = 500
       await expect(
         service.convert({
-          sourceAmount: 1234n,
-          sourceAsset: { code: 'USD', scale: 9 },
-          destinationAsset: { code: 'XRP', scale: 9 }
+          sourceAmount: BigInt(sourceAmount),
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'EUR', scale: 2 }
         })
-      ).resolves.toBe(1234n * 2n)
+      ).resolves.toBe(BigInt(sourceAmount * exampleRates.USD.EUR))
       await expect(
         service.convert({
-          sourceAmount: 1234n,
-          sourceAsset: { code: 'XRP', scale: 9 },
-          destinationAsset: { code: 'USD', scale: 9 }
+          sourceAmount: BigInt(sourceAmount),
+          sourceAsset: { code: 'EUR', scale: 2 },
+          destinationAsset: { code: 'USD', scale: 2 }
         })
-      ).resolves.toBe(1234n / 2n)
+      ).resolves.toBe(BigInt(sourceAmount * exampleRates.EUR.USD))
     })
 
     it('returns an error when an asset price is invalid', async () => {
       await expect(
         service.convert({
           sourceAmount: 1234n,
-          sourceAsset: { code: 'USD', scale: 9 },
-          destinationAsset: { code: 'MISSING', scale: 9 }
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'MISSING', scale: 2 }
         })
-      ).resolves.toBe(ConvertError.MissingDestinationAsset)
+      ).resolves.toBe(ConvertError.InvalidDestinationPrice)
       await expect(
         service.convert({
           sourceAmount: 1234n,
-          sourceAsset: { code: 'MISSING', scale: 9 },
-          destinationAsset: { code: 'USD', scale: 9 }
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'ZERO', scale: 2 }
         })
-      ).resolves.toBe(ConvertError.MissingDestinationAsset) // checkBaseAsset assumes we always return a base (source) asset
+      ).resolves.toBe(ConvertError.InvalidDestinationPrice)
       await expect(
         service.convert({
           sourceAmount: 1234n,
-          sourceAsset: { code: 'NEGATIVE', scale: 9 },
-          destinationAsset: { code: 'EUR', scale: 9 }
-        })
-      ).resolves.toBe(ConvertError.InvalidSourcePrice)
-      await expect(
-        service.convert({
-          sourceAmount: 1234n,
-          sourceAsset: { code: 'USD', scale: 9 },
-          destinationAsset: { code: 'STRING', scale: 9 }
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'NEGATIVE', scale: 2 }
         })
       ).resolves.toBe(ConvertError.InvalidDestinationPrice)
     })
   })
 
   describe('rates', function () {
+    beforeAll(() => {
+      mockRatesApi((base) => exampleRates[base as keyof typeof exampleRates])
+    })
+
+    afterAll(() => {
+      nock.cleanAll()
+    })
+
     beforeEach(async (): Promise<void> => {
       jest.useFakeTimers({
         now: Date.now(),
@@ -156,15 +172,13 @@ describe('Rates service', function () {
     })
 
     const usdRates = {
-      ...testRates,
-      ...exampleRates['USD'],
-      USD: 1
+      base: 'USD',
+      rates: exampleRates.USD
     }
 
-    const xrpRates = {
-      ...testRates,
-      ...exampleRates['XRP'],
-      XRP: 1
+    const eurRates = {
+      base: 'EUR',
+      rates: exampleRates.EUR
     }
 
     it('handles concurrent requests for same asset code', async () => {
@@ -183,10 +197,10 @@ describe('Rates service', function () {
         Promise.all([
           service.rates('USD'),
           service.rates('USD'),
-          service.rates('XRP'),
-          service.rates('XRP')
+          service.rates('EUR'),
+          service.rates('EUR')
         ])
-      ).resolves.toEqual([usdRates, usdRates, xrpRates, xrpRates])
+      ).resolves.toEqual([usdRates, usdRates, eurRates, eurRates])
       expect(apiRequestCount).toBe(2)
     })
 
@@ -199,8 +213,8 @@ describe('Rates service', function () {
     it('returns cached request for different asset codes', async () => {
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
       await expect(service.rates('USD')).resolves.toEqual(usdRates)
-      await expect(service.rates('XRP')).resolves.toEqual(xrpRates)
-      await expect(service.rates('XRP')).resolves.toEqual(xrpRates)
+      await expect(service.rates('EUR')).resolves.toEqual(eurRates)
+      await expect(service.rates('EUR')).resolves.toEqual(eurRates)
       expect(apiRequestCount).toBe(2)
     })
 
