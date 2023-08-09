@@ -182,8 +182,8 @@ type Mutation {
     input: TriggerPaymentPointerEventsInput!
   ): TriggerPaymentPointerEventsMutationResponse!
 
-  "Update the fee on an asset"
-  updateFee(input: UpdateFeeInput!): UpdateFeeResponse!
+  "Set the fee on an asset"
+  setFee(input: SetFeeInput!): SetFeeResponse!
 }
 
 type PageInfo {
@@ -925,20 +925,22 @@ type Fee {
   createdAt: String!
 }
 
-input UpdateFeeInput {
+input SetFeeInput {
   "Asset id to add the fee to"
   assetId: ID!
   "Type of fee (sending or receiving)"
   type: FeeType!
   "Fee values"
   fee: FeeDetails!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
 }
 
 input FeeDetails {
   "A flat fee"
-  fixed: UInt64
+  fixed: UInt64!
   "Percentage fee"
-  percentage: Float
+  percentage: Float!
 }
 
 input WebhookEventFilter {
@@ -1038,7 +1040,7 @@ type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
   paymentPointerKey: PaymentPointerKey
 }
 
-type UpdateFeeResponse implements MutationResponse {
+type SetFeeResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

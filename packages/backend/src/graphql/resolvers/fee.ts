@@ -7,11 +7,11 @@ import { ApolloContext } from '../../app'
 import { isFeeError, errorToCode, errorToMessage } from '../../fee/errors'
 import { Fee } from '../../fee/model'
 
-export const updateFee: MutationResolvers<ApolloContext>['updateFee'] = async (
+export const setFee: MutationResolvers<ApolloContext>['setFee'] = async (
   parent,
   args,
   ctx
-): Promise<ResolversTypes['UpdateFeeResponse']> => {
+): Promise<ResolversTypes['SetFeeResponse']> => {
   const feeService = await ctx.container.use('feeService')
   try {
     const feeOrError = await feeService.create(args.input)
@@ -26,7 +26,7 @@ export const updateFee: MutationResolvers<ApolloContext>['updateFee'] = async (
     return {
       code: '200',
       success: true,
-      message: 'Fee updated',
+      message: 'Fee set',
       fee: feeToGraphql(feeOrError)
     }
   } catch (error) {

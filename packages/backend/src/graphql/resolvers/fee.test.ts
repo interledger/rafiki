@@ -5,7 +5,7 @@ import { Config } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { truncateTables } from '../../tests/tableManager'
 import { gql } from '@apollo/client'
-import { UpdateFeeResponse } from '../generated/graphql'
+import { SetFeeResponse } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { createAsset } from '../../tests/asset'
 import { FeeType } from '../../fee/model'
@@ -37,7 +37,7 @@ describe('Fee Resolvers', () => {
     await appContainer.shutdown()
   })
 
-  describe('updateFee mutation', () => {
+  describe('setFee mutation', () => {
     test('Can add fee to an asset', async () => {
       const input = {
         assetId: asset.id,
@@ -50,8 +50,8 @@ describe('Fee Resolvers', () => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdateFee($input: UpdateFeeInput!) {
-              updateFee(input: $input) {
+            mutation SetFee($input: SetFeeInput!) {
+              setFee(input: $input) {
                 code
                 success
                 message
@@ -68,9 +68,9 @@ describe('Fee Resolvers', () => {
           `,
           variables: { input }
         })
-        .then((query): UpdateFeeResponse => {
+        .then((query): SetFeeResponse => {
           if (query.data) {
-            return query.data.updateFee
+            return query.data.setFee
           } else {
             throw new Error('Data was empty')
           }
@@ -78,7 +78,7 @@ describe('Fee Resolvers', () => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      expect(response.message).toEqual('Fee updated')
+      expect(response.message).toEqual('Fee set')
       expect(response.fee).toMatchObject({
         __typename: 'Fee',
         assetId: input.assetId,
@@ -100,8 +100,8 @@ describe('Fee Resolvers', () => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdateFee($input: UpdateFeeInput!) {
-              updateFee(input: $input) {
+            mutation SetFee($input: SetFeeInput!) {
+              setFee(input: $input) {
                 code
                 success
                 message
@@ -118,9 +118,9 @@ describe('Fee Resolvers', () => {
           `,
           variables: { input }
         })
-        .then((query): UpdateFeeResponse => {
+        .then((query): SetFeeResponse => {
           if (query.data) {
-            return query.data.updateFee
+            return query.data.setFee
           } else {
             throw new Error('Data was empty')
           }
@@ -144,8 +144,8 @@ describe('Fee Resolvers', () => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdateFee($input: UpdateFeeInput!) {
-              updateFee(input: $input) {
+            mutation SetFee($input: SetFeeInput!) {
+              setFee(input: $input) {
                 code
                 success
                 message
@@ -162,9 +162,9 @@ describe('Fee Resolvers', () => {
           `,
           variables: { input }
         })
-        .then((query): UpdateFeeResponse => {
+        .then((query): SetFeeResponse => {
           if (query.data) {
-            return query.data.updateFee
+            return query.data.setFee
           } else {
             throw new Error('Data was empty')
           }
@@ -173,6 +173,52 @@ describe('Fee Resolvers', () => {
       expect(response.success).toBe(false)
       expect(response.code).toEqual('422')
       expect(response.message).toEqual('Percent fee must be between 0 and 1')
+      expect(response.fee).toBeNull()
+    })
+
+    test('Returns error for missing fee', async (): Promise<void> => {
+      const input = {
+        assetId: asset.id,
+        type: FeeType.Sending,
+        fee: {
+          fixed: BigInt(0),
+          percentage: 0
+        }
+      }
+      const response = await appContainer.apolloClient
+        .mutate({
+          mutation: gql`
+            mutation SetFee($input: SetFeeInput!) {
+              setFee(input: $input) {
+                code
+                success
+                message
+                fee {
+                  id
+                  assetId
+                  type
+                  fixed
+                  percentage
+                  createdAt
+                }
+              }
+            }
+          `,
+          variables: { input }
+        })
+        .then((query): SetFeeResponse => {
+          if (query.data) {
+            return query.data.setFee
+          } else {
+            throw new Error('Data was empty')
+          }
+        })
+
+      expect(response.success).toBe(false)
+      expect(response.code).toEqual('422')
+      expect(response.message).toEqual(
+        'Either fixed or percentage fee must be greater than 0'
+      )
       expect(response.fee).toBeNull()
     })
 
@@ -191,8 +237,8 @@ describe('Fee Resolvers', () => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdateFee($input: UpdateFeeInput!) {
-              updateFee(input: $input) {
+            mutation setFee($input: SetFeeInput!) {
+              setFee(input: $input) {
                 code
                 success
                 message
@@ -209,9 +255,9 @@ describe('Fee Resolvers', () => {
           `,
           variables: { input }
         })
-        .then((query): UpdateFeeResponse => {
+        .then((query): SetFeeResponse => {
           if (query.data) {
-            return query.data.updateFee
+            return query.data.setFee
           } else {
             throw new Error('Data was empty')
           }

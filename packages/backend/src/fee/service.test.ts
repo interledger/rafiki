@@ -39,17 +39,25 @@ describe('Combined Payment Service', (): void => {
   })
 
   describe('Fee Service', (): void => {
-    test.each([0.01, 0.05, 1.0])(
-      'Can create fee with percentageFee of %d',
-      async (percentageFee: number): Promise<void> => {
+    type ValidFeeCases = { percentage: number; fixed: bigint }
+    const validFeeCases: ValidFeeCases[] = [
+      { fixed: BigInt(1), percentage: 0 },
+      { fixed: BigInt(1), percentage: 0.00004 }, // will round to 0
+      { fixed: BigInt(100), percentage: 0.00005 }, // will round to 0.0001
+      { fixed: BigInt(1), percentage: 0.0 },
+      { fixed: BigInt(100), percentage: 0.05 },
+      { fixed: BigInt(100), percentage: 1.0 }
+    ]
+    test.each(validFeeCases)(
+      'Can create with fixed: $fixed and percentage: $percentage',
+      async ({ percentage, fixed }): Promise<void> => {
         const feeCreate = {
           assetId: asset.id,
           type: FeeType.Sending,
           fee: {
-            fixed: BigInt(100),
-            percentage: percentageFee
-          },
-          activatedAt: new Date()
+            fixed,
+            percentage
+          }
         }
 
         await expect(feeService.create(feeCreate)).resolves.toMatchObject({
@@ -57,40 +65,58 @@ describe('Combined Payment Service', (): void => {
           type: feeCreate.type,
           fixedFee: feeCreate.fee.fixed,
           percentageFee: feeCreate.fee.percentage.toFixed(4),
-          activatedAt: feeCreate.activatedAt
+          activatedAt: expect.any(Date)
         })
       }
     )
 
-    test('Cant create with over 100% fee', async (): Promise<void> => {
-      const feeCreate = {
-        assetId: asset.id,
-        type: FeeType.Sending,
-        fee: {
-          fixed: BigInt(100),
-          percentage: 1.01
-        }
+    type InvalidFeeCases = {
+      percentage: number
+      fixed: bigint
+      error: FeeError
+      description: string
+    }
+    const invalidFeeCases: InvalidFeeCases[] = [
+      {
+        fixed: BigInt(100),
+        percentage: 1.01,
+        error: FeeError.InvalidPercentageFee,
+        description: 'Cant create with over 100% fee'
+      },
+      {
+        fixed: BigInt(100),
+        percentage: -0.05,
+        error: FeeError.InvalidPercentageFee,
+        description: 'Cant create with less than 0% fee'
+      },
+      {
+        fixed: BigInt(-100),
+        percentage: 0.05,
+        error: FeeError.InvalidFixedFee,
+        description: 'Cant create with less than 0 fixed fee'
+      },
+      {
+        fixed: BigInt(0),
+        percentage: 0.00004, // will round to 0
+        error: FeeError.MissingFee,
+        description: 'Cant create with both fixed and percentage fee of 0'
       }
-
-      await expect(feeService.create(feeCreate)).resolves.toEqual(
-        FeeError.InvalidFee
-      )
-    })
-
-    test('Cant create with less than 0% fee', async (): Promise<void> => {
-      const feeCreate = {
-        assetId: asset.id,
-        type: FeeType.Sending,
-        fee: {
-          fixed: BigInt(100),
-          percentage: -0.05
+    ]
+    test.each(invalidFeeCases)(
+      '$description',
+      async ({ percentage, fixed, error }): Promise<void> => {
+        const feeCreate = {
+          assetId: asset.id,
+          type: FeeType.Sending,
+          fee: {
+            fixed,
+            percentage
+          }
         }
-      }
 
-      await expect(feeService.create(feeCreate)).resolves.toEqual(
-        FeeError.InvalidFee
-      )
-    })
+        await expect(feeService.create(feeCreate)).resolves.toEqual(error)
+      }
+    )
 
     test('Cant create for unknown asset id', async (): Promise<void> => {
       const feeCreate = {

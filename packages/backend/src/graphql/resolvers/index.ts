@@ -44,7 +44,7 @@ import {
 } from './paymentPointerKey'
 import { createReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
-import { updateFee } from './fee'
+import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 
@@ -100,6 +100,6 @@ export const resolvers: Resolvers = {
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
     withdrawEventLiquidity,
-    updateFee
+    setFee
   }
 }

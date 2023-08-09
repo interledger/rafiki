@@ -1,4 +1,4 @@
-import { CheckViolationError, ForeignKeyViolationError } from 'objection'
+import { ForeignKeyViolationError } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { FeeError } from './errors'
 import { Fee, FeeType } from './model'
@@ -7,8 +7,8 @@ interface CreateOptions {
   assetId: string
   type: FeeType
   fee: {
-    fixed?: bigint
-    percentage?: number
+    fixed: bigint
+    percentage: number
   }
 }
 
@@ -35,34 +35,33 @@ export async function createFeeService({
 
 async function createFee(
   deps: ServiceDependencies,
-  options: CreateOptions
+  { assetId, type, fee }: CreateOptions
 ): Promise<Fee | FeeError> {
+  const { fixed, percentage } = fee
+
+  if (fixed === BigInt(0) && Number(percentage.toFixed(4)) === 0) {
+    return FeeError.MissingFee
+  }
+
+  if (fixed < 0) {
+    return FeeError.InvalidFixedFee
+  }
+
+  if (percentage < 0 || percentage > 1) {
+    return FeeError.InvalidPercentageFee
+  }
+
   try {
-    const fee: Partial<Fee> = {
-      assetId: options.assetId,
-      type: options.type
-    }
-
-    if (options.fee.percentage !== undefined) {
-      fee.percentageFee = options.fee.percentage.toString()
-    }
-
-    if (options.fee.fixed !== undefined) {
-      fee.fixedFee = options.fee.fixed
-    }
-
-    fee.activatedAt = new Date()
-
-    return await Fee.query(deps.knex).insertAndFetch(fee)
+    return await Fee.query(deps.knex).insertAndFetch({
+      assetId: assetId,
+      type: type,
+      activatedAt: new Date(),
+      percentageFee: percentage.toString(),
+      fixedFee: fixed
+    })
   } catch (error) {
     if (error instanceof ForeignKeyViolationError) {
       return FeeError.UnknownAsset
-    }
-    if (
-      error instanceof CheckViolationError &&
-      error.constraint === 'fees_percentagefee_check'
-    ) {
-      return FeeError.InvalidFee
     }
     throw error
   }

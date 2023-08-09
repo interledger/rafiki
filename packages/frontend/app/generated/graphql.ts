@@ -305,9 +305,9 @@ export type Fee = {
 
 export type FeeDetails = {
   /** A flat fee */
-  fixed?: InputMaybe<Scalars['UInt64']['input']>;
+  fixed: Scalars['UInt64']['input'];
   /** Percentage fee */
-  percentage?: InputMaybe<Scalars['Float']['input']>;
+  percentage: Scalars['Float']['input'];
 };
 
 export enum FeeType {
@@ -500,12 +500,12 @@ export type Mutation = {
   postLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
   /** Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward. */
   revokePaymentPointerKey?: Maybe<RevokePaymentPointerKeyMutationResponse>;
+  /** Set the fee on an asset */
+  setFee: SetFeeResponse;
   /** If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events. */
   triggerPaymentPointerEvents: TriggerPaymentPointerEventsMutationResponse;
   /** Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn. */
   updateAssetWithdrawalThreshold: AssetMutationResponse;
-  /** Update the fee on an asset */
-  updateFee: UpdateFeeResponse;
   /** Update a payment pointer */
   updatePaymentPointer: UpdatePaymentPointerMutationResponse;
   /** Update a peer */
@@ -602,6 +602,11 @@ export type MutationRevokePaymentPointerKeyArgs = {
 };
 
 
+export type MutationSetFeeArgs = {
+  input: SetFeeInput;
+};
+
+
 export type MutationTriggerPaymentPointerEventsArgs = {
   input: TriggerPaymentPointerEventsInput;
 };
@@ -609,11 +614,6 @@ export type MutationTriggerPaymentPointerEventsArgs = {
 
 export type MutationUpdateAssetWithdrawalThresholdArgs = {
   input: UpdateAssetInput;
-};
-
-
-export type MutationUpdateFeeArgs = {
-  input: UpdateFeeInput;
 };
 
 
@@ -1067,6 +1067,25 @@ export type RevokePaymentPointerKeyMutationResponse = MutationResponse & {
   success: Scalars['Boolean']['output'];
 };
 
+export type SetFeeInput = {
+  /** Asset id to add the fee to */
+  assetId: Scalars['ID']['input'];
+  /** Fee values */
+  fee: FeeDetails;
+  /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Type of fee (sending or receiving) */
+  type: FeeType;
+};
+
+export type SetFeeResponse = MutationResponse & {
+  __typename?: 'SetFeeResponse';
+  code: Scalars['String']['output'];
+  fee?: Maybe<Fee>;
+  message: Scalars['String']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type TransferMutationResponse = MutationResponse & {
   __typename?: 'TransferMutationResponse';
   code: Scalars['String']['output'];
@@ -1097,23 +1116,6 @@ export type UpdateAssetInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** New minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
-};
-
-export type UpdateFeeInput = {
-  /** Asset id to add the fee to */
-  assetId: Scalars['ID']['input'];
-  /** Fee values */
-  fee: FeeDetails;
-  /** Type of fee (sending or receiving) */
-  type: FeeType;
-};
-
-export type UpdateFeeResponse = MutationResponse & {
-  __typename?: 'UpdateFeeResponse';
-  code: Scalars['String']['output'];
-  fee?: Maybe<Fee>;
-  message: Scalars['String']['output'];
-  success: Scalars['Boolean']['output'];
 };
 
 export type UpdatePaymentPointerInput = {
@@ -1272,7 +1274,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
   Model: ( Partial<Asset> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<PaymentPointer> ) | ( Partial<PaymentPointerKey> ) | ( Partial<Peer> ) | ( Partial<WebhookEvent> );
-  MutationResponse: ( Partial<AssetMutationResponse> ) | ( Partial<CreatePaymentPointerKeyMutationResponse> ) | ( Partial<CreatePaymentPointerMutationResponse> ) | ( Partial<CreatePeerMutationResponse> ) | ( Partial<DeletePeerMutationResponse> ) | ( Partial<LiquidityMutationResponse> ) | ( Partial<PaymentPointerWithdrawalMutationResponse> ) | ( Partial<RevokePaymentPointerKeyMutationResponse> ) | ( Partial<TransferMutationResponse> ) | ( Partial<TriggerPaymentPointerEventsMutationResponse> ) | ( Partial<UpdateFeeResponse> ) | ( Partial<UpdatePaymentPointerMutationResponse> ) | ( Partial<UpdatePeerMutationResponse> );
+  MutationResponse: ( Partial<AssetMutationResponse> ) | ( Partial<CreatePaymentPointerKeyMutationResponse> ) | ( Partial<CreatePaymentPointerMutationResponse> ) | ( Partial<CreatePeerMutationResponse> ) | ( Partial<DeletePeerMutationResponse> ) | ( Partial<LiquidityMutationResponse> ) | ( Partial<PaymentPointerWithdrawalMutationResponse> ) | ( Partial<RevokePaymentPointerKeyMutationResponse> ) | ( Partial<SetFeeResponse> ) | ( Partial<TransferMutationResponse> ) | ( Partial<TriggerPaymentPointerEventsMutationResponse> ) | ( Partial<UpdatePaymentPointerMutationResponse> ) | ( Partial<UpdatePeerMutationResponse> );
 };
 
 /** Mapping between all available schema types and the resolvers types */
@@ -1363,6 +1365,8 @@ export type ResolversTypes = {
   Receiver: ResolverTypeWrapper<Partial<Receiver>>;
   RevokePaymentPointerKeyInput: ResolverTypeWrapper<Partial<RevokePaymentPointerKeyInput>>;
   RevokePaymentPointerKeyMutationResponse: ResolverTypeWrapper<Partial<RevokePaymentPointerKeyMutationResponse>>;
+  SetFeeInput: ResolverTypeWrapper<Partial<SetFeeInput>>;
+  SetFeeResponse: ResolverTypeWrapper<Partial<SetFeeResponse>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   TriggerPaymentPointerEventsInput: ResolverTypeWrapper<Partial<TriggerPaymentPointerEventsInput>>;
@@ -1370,8 +1374,6 @@ export type ResolversTypes = {
   UInt8: ResolverTypeWrapper<Partial<Scalars['UInt8']['output']>>;
   UInt64: ResolverTypeWrapper<Partial<Scalars['UInt64']['output']>>;
   UpdateAssetInput: ResolverTypeWrapper<Partial<UpdateAssetInput>>;
-  UpdateFeeInput: ResolverTypeWrapper<Partial<UpdateFeeInput>>;
-  UpdateFeeResponse: ResolverTypeWrapper<Partial<UpdateFeeResponse>>;
   UpdatePaymentPointerInput: ResolverTypeWrapper<Partial<UpdatePaymentPointerInput>>;
   UpdatePaymentPointerMutationResponse: ResolverTypeWrapper<Partial<UpdatePaymentPointerMutationResponse>>;
   UpdatePeerInput: ResolverTypeWrapper<Partial<UpdatePeerInput>>;
@@ -1463,6 +1465,8 @@ export type ResolversParentTypes = {
   Receiver: Partial<Receiver>;
   RevokePaymentPointerKeyInput: Partial<RevokePaymentPointerKeyInput>;
   RevokePaymentPointerKeyMutationResponse: Partial<RevokePaymentPointerKeyMutationResponse>;
+  SetFeeInput: Partial<SetFeeInput>;
+  SetFeeResponse: Partial<SetFeeResponse>;
   String: Partial<Scalars['String']['output']>;
   TransferMutationResponse: Partial<TransferMutationResponse>;
   TriggerPaymentPointerEventsInput: Partial<TriggerPaymentPointerEventsInput>;
@@ -1470,8 +1474,6 @@ export type ResolversParentTypes = {
   UInt8: Partial<Scalars['UInt8']['output']>;
   UInt64: Partial<Scalars['UInt64']['output']>;
   UpdateAssetInput: Partial<UpdateAssetInput>;
-  UpdateFeeInput: Partial<UpdateFeeInput>;
-  UpdateFeeResponse: Partial<UpdateFeeResponse>;
   UpdatePaymentPointerInput: Partial<UpdatePaymentPointerInput>;
   UpdatePaymentPointerMutationResponse: Partial<UpdatePaymentPointerMutationResponse>;
   UpdatePeerInput: Partial<UpdatePeerInput>;
@@ -1666,9 +1668,9 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   depositEventLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationDepositEventLiquidityArgs, 'input'>>;
   postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'input'>>;
   revokePaymentPointerKey?: Resolver<Maybe<ResolversTypes['RevokePaymentPointerKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokePaymentPointerKeyArgs, 'input'>>;
+  setFee?: Resolver<ResolversTypes['SetFeeResponse'], ParentType, ContextType, RequireFields<MutationSetFeeArgs, 'input'>>;
   triggerPaymentPointerEvents?: Resolver<ResolversTypes['TriggerPaymentPointerEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerPaymentPointerEventsArgs, 'input'>>;
   updateAssetWithdrawalThreshold?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetWithdrawalThresholdArgs, 'input'>>;
-  updateFee?: Resolver<ResolversTypes['UpdateFeeResponse'], ParentType, ContextType, RequireFields<MutationUpdateFeeArgs, 'input'>>;
   updatePaymentPointer?: Resolver<ResolversTypes['UpdatePaymentPointerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePaymentPointerArgs, 'input'>>;
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;
   voidLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationVoidLiquidityWithdrawalArgs, 'input'>>;
@@ -1676,7 +1678,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
 };
 
 export type MutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['MutationResponse'] = ResolversParentTypes['MutationResponse']> = {
-  __resolveType: TypeResolveFn<'AssetMutationResponse' | 'CreatePaymentPointerKeyMutationResponse' | 'CreatePaymentPointerMutationResponse' | 'CreatePeerMutationResponse' | 'DeletePeerMutationResponse' | 'LiquidityMutationResponse' | 'PaymentPointerWithdrawalMutationResponse' | 'RevokePaymentPointerKeyMutationResponse' | 'TransferMutationResponse' | 'TriggerPaymentPointerEventsMutationResponse' | 'UpdateFeeResponse' | 'UpdatePaymentPointerMutationResponse' | 'UpdatePeerMutationResponse', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'AssetMutationResponse' | 'CreatePaymentPointerKeyMutationResponse' | 'CreatePaymentPointerMutationResponse' | 'CreatePeerMutationResponse' | 'DeletePeerMutationResponse' | 'LiquidityMutationResponse' | 'PaymentPointerWithdrawalMutationResponse' | 'RevokePaymentPointerKeyMutationResponse' | 'SetFeeResponse' | 'TransferMutationResponse' | 'TriggerPaymentPointerEventsMutationResponse' | 'UpdatePaymentPointerMutationResponse' | 'UpdatePeerMutationResponse', ParentType, ContextType>;
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
@@ -1892,6 +1894,14 @@ export type RevokePaymentPointerKeyMutationResponseResolvers<ContextType = any, 
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
+export type SetFeeResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['SetFeeResponse'] = ResolversParentTypes['SetFeeResponse']> = {
+  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  fee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
+  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
 export type TransferMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['TransferMutationResponse'] = ResolversParentTypes['TransferMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -1914,14 +1924,6 @@ export interface UInt8ScalarConfig extends GraphQLScalarTypeConfig<ResolversType
 export interface UInt64ScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes['UInt64'], any> {
   name: 'UInt64';
 }
-
-export type UpdateFeeResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdateFeeResponse'] = ResolversParentTypes['UpdateFeeResponse']> = {
-  code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  fee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
-  message?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  success?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-};
 
 export type UpdatePaymentPointerMutationResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['UpdatePaymentPointerMutationResponse'] = ResolversParentTypes['UpdatePaymentPointerMutationResponse']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
@@ -2008,11 +2010,11 @@ export type Resolvers<ContextType = any> = {
   QuoteResponse?: QuoteResponseResolvers<ContextType>;
   Receiver?: ReceiverResolvers<ContextType>;
   RevokePaymentPointerKeyMutationResponse?: RevokePaymentPointerKeyMutationResponseResolvers<ContextType>;
+  SetFeeResponse?: SetFeeResponseResolvers<ContextType>;
   TransferMutationResponse?: TransferMutationResponseResolvers<ContextType>;
   TriggerPaymentPointerEventsMutationResponse?: TriggerPaymentPointerEventsMutationResponseResolvers<ContextType>;
   UInt8?: GraphQLScalarType;
   UInt64?: GraphQLScalarType;
-  UpdateFeeResponse?: UpdateFeeResponseResolvers<ContextType>;
   UpdatePaymentPointerMutationResponse?: UpdatePaymentPointerMutationResponseResolvers<ContextType>;
   UpdatePeerMutationResponse?: UpdatePeerMutationResponseResolvers<ContextType>;
   WebhookEvent?: WebhookEventResolvers<ContextType>;
