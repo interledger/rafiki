@@ -14,6 +14,7 @@ interface CreateOptions {
 
 export interface FeeService {
   create(CreateOptions: CreateOptions): Promise<Fee | FeeError>
+  getLatestFee(assetId: string): Promise<Fee | undefined>
 }
 
 type ServiceDependencies = BaseService
@@ -29,8 +30,20 @@ export async function createFeeService({
     knex
   }
   return {
-    create: (options: CreateOptions) => createFee(deps, options)
+    create: (options: CreateOptions) => createFee(deps, options),
+    getLatestFee: (assetId: string) => getLatestFee(deps, assetId)
   }
+}
+
+async function getLatestFee(
+  deps: ServiceDependencies,
+  assetId: string
+): Promise<Fee | undefined> {
+  return await Fee.query(deps.knex)
+    .where('assetId', assetId)
+    .whereNotNull('activatedAt')
+    .orderBy('activatedAt', 'desc')
+    .first()
 }
 
 async function createFee(

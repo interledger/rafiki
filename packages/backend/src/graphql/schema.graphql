@@ -406,6 +406,8 @@ type Asset implements Model {
   liquidity: UInt64
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "The fee structure for the asset"
+  fee: Fee
   "Date-time of creation"
   createdAt: String!
 }
@@ -910,7 +912,7 @@ enum FeeType {
   RECEIVING
 }
 
-type Fee {
+type Fee implements Model {
   "Fee id"
   id: ID!
   "Asset id associated with the fee"

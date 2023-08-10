@@ -331,6 +331,18 @@
             "deprecationReason": null
           },
           {
+            "name": "fee",
+            "description": "The fee structure for the asset",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "Fee",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "id",
             "description": "Asset id",
             "args": [],
@@ -2012,7 +2024,13 @@
           }
         ],
         "inputFields": null,
-        "interfaces": [],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Model",
+            "ofType": null
+          }
+        ],
         "enumValues": null,
         "possibleTypes": null
       },
@@ -3086,6 +3104,11 @@
           {
             "kind": "OBJECT",
             "name": "Asset",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "Fee",
             "ofType": null
           },
           {

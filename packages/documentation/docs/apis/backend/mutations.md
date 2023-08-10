@@ -398,6 +398,29 @@ input<br />
 </tbody>
 </table>
 
+## setFee
+
+**Type:** [SetFeeResponse!](objects#setfeeresponse)
+
+Set the fee on an asset
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+input<br />
+<a href="inputObjects#setfeeinput"><code>SetFeeInput!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## triggerPaymentPointerEvents
 
 **Type:** [TriggerPaymentPointerEventsMutationResponse!](objects#triggerpaymentpointereventsmutationresponse)
@@ -436,29 +459,6 @@ Update an asset's withdrawal threshold. The withdrawal threshold indicates the M
 <td>
 input<br />
 <a href="inputObjects#updateassetinput"><code>UpdateAssetInput!</code></a>
-</td>
-<td>
-
-</td>
-</tr>
-</tbody>
-</table>
-
-## updateFee
-
-**Type:** [UpdateFeeResponse!](objects#updatefeeresponse)
-
-Update the fee on an asset
-
-<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
-
-<table>
-<thead><tr><th>Name</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-<td>
-input<br />
-<a href="inputObjects#updatefeeinput"><code>UpdateFeeInput!</code></a>
 </td>
 <td>
 

@@ -68,6 +68,8 @@ export type Asset = Model & {
   code: Scalars['String']['output'];
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** The fee structure for the asset */
+  fee?: Maybe<Fee>;
   /** Asset id */
   id: Scalars['ID']['output'];
   /** Available liquidity */
@@ -287,7 +289,7 @@ export type DepositEventLiquidityInput = {
   idempotencyKey: Scalars['String']['input'];
 };
 
-export type Fee = {
+export type Fee = Model & {
   __typename?: 'Fee';
   /** Asset id associated with the fee */
   assetId: Scalars['ID']['output'];
@@ -1273,7 +1275,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping of interface types */
 export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
   BasePayment: ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> );
-  Model: ( Partial<Asset> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<PaymentPointer> ) | ( Partial<PaymentPointerKey> ) | ( Partial<Peer> ) | ( Partial<WebhookEvent> );
+  Model: ( Partial<Asset> ) | ( Partial<Fee> ) | ( Partial<IncomingPayment> ) | ( Partial<OutgoingPayment> ) | ( Partial<Payment> ) | ( Partial<PaymentPointer> ) | ( Partial<PaymentPointerKey> ) | ( Partial<Peer> ) | ( Partial<WebhookEvent> );
   MutationResponse: ( Partial<AssetMutationResponse> ) | ( Partial<CreatePaymentPointerKeyMutationResponse> ) | ( Partial<CreatePaymentPointerMutationResponse> ) | ( Partial<CreatePeerMutationResponse> ) | ( Partial<DeletePeerMutationResponse> ) | ( Partial<LiquidityMutationResponse> ) | ( Partial<PaymentPointerWithdrawalMutationResponse> ) | ( Partial<RevokePaymentPointerKeyMutationResponse> ) | ( Partial<SetFeeResponse> ) | ( Partial<TransferMutationResponse> ) | ( Partial<TriggerPaymentPointerEventsMutationResponse> ) | ( Partial<UpdatePaymentPointerMutationResponse> ) | ( Partial<UpdatePeerMutationResponse> );
 };
 
@@ -1496,6 +1498,7 @@ export type AmountResolvers<ContextType = any, ParentType extends ResolversParen
 export type AssetResolvers<ContextType = any, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  fee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
@@ -1645,7 +1648,7 @@ export type LiquidityMutationResponseResolvers<ContextType = any, ParentType ext
 };
 
 export type ModelResolvers<ContextType = any, ParentType extends ResolversParentTypes['Model'] = ResolversParentTypes['Model']> = {
-  __resolveType: TypeResolveFn<'Asset' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'PaymentPointer' | 'PaymentPointerKey' | 'Peer' | 'WebhookEvent', ParentType, ContextType>;
+  __resolveType: TypeResolveFn<'Asset' | 'Fee' | 'IncomingPayment' | 'OutgoingPayment' | 'Payment' | 'PaymentPointer' | 'PaymentPointerKey' | 'Peer' | 'WebhookEvent', ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };

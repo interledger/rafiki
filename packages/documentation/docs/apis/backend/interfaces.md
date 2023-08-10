@@ -71,6 +71,7 @@ createdAt<br />
 - [Payment](objects#payment)
 - [PaymentPointerKey](objects#paymentpointerkey)
 - [WebhookEvent](objects#webhookevent)
+- [Fee](objects#fee)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -114,7 +115,7 @@ createdAt<br />
 - [PaymentPointerWithdrawalMutationResponse](objects#paymentpointerwithdrawalmutationresponse)
 - [CreatePaymentPointerKeyMutationResponse](objects#createpaymentpointerkeymutationresponse)
 - [RevokePaymentPointerKeyMutationResponse](objects#revokepaymentpointerkeymutationresponse)
-- [UpdateFeeResponse](objects#updatefeeresponse)
+- [SetFeeResponse](objects#setfeeresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 

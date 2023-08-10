@@ -21,18 +21,23 @@ import {
   CreateAssetInput
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
+import { FeeService } from '../../fee/service'
+import { Fee, FeeType } from '../../fee/model'
+import { isFeeError } from '../../fee/errors'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let assetService: AssetService
   let accountingService: AccountingService
+  let feeService: FeeService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
     assetService = await deps.use('assetService')
     accountingService = await deps.use('accountingService')
+    feeService = await deps.use('feeService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -242,6 +247,75 @@ describe('Asset Resolvers', (): void => {
         createdAt: new Date(+asset.createdAt).toISOString()
       })
     })
+
+    test.each([undefined, { fixed: BigInt(100), percentage: 0.1 }])(
+      'Can get an asset with fee of %p',
+      async (fee): Promise<void> => {
+        const asset = await assetService.create(randomAsset())
+        assert.ok(!isAssetError(asset))
+
+        let expectedFee = null
+
+        if (fee) {
+          const feeOrError = await feeService.create({
+            assetId: asset.id,
+            type: FeeType.Sending,
+            fee
+          })
+          assert.ok(!isFeeError(fee))
+          const foundFee = feeOrError as Fee
+          expectedFee = {
+            __typename: 'Fee',
+            id: foundFee.id,
+            assetId: asset.id,
+            type: foundFee.type,
+            fixed: foundFee.fixedFee.toString(),
+            percentage: parseFloat(foundFee.percentageFee)
+          }
+        }
+
+        const query = async () =>
+          await appContainer.apolloClient
+            .query({
+              query: gql`
+                query Asset($assetId: String!) {
+                  asset(id: $assetId) {
+                    id
+                    code
+                    scale
+                    fee {
+                      id
+                      assetId
+                      type
+                      fixed
+                      percentage
+                    }
+                    createdAt
+                  }
+                }
+              `,
+              variables: {
+                assetId: asset.id
+              }
+            })
+            .then((query): Asset => {
+              if (query.data) {
+                return query.data.asset
+              } else {
+                throw new Error('Data was empty')
+              }
+            })
+
+        await expect(query()).resolves.toEqual({
+          __typename: 'Asset',
+          id: asset.id,
+          code: asset.code,
+          scale: asset.scale,
+          fee: expectedFee,
+          createdAt: new Date(+asset.createdAt).toISOString()
+        })
+      }
+    )
 
     test('Returns error for unknown asset', async (): Promise<void> => {
       const gqlQuery = appContainer.apolloClient

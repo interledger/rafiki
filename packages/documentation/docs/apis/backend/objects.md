@@ -102,6 +102,15 @@ withdrawalThreshold<br />
 </tr>
 <tr>
 <td>
+fee<br />
+<a href="objects#fee"><code>Fee</code></a>
+</td>
+<td>
+<p>The fee structure for the asset</p>
+</td>
+</tr>
+<tr>
+<td>
 createdAt<br />
 <a href="scalars#string"><code>String!</code></a>
 </td>
@@ -456,6 +465,10 @@ message<br />
 </table>
 
 ## Fee
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [Model](interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2191,6 +2204,56 @@ paymentPointerKey<br />
 </tbody>
 </table>
 
+## SetFeeResponse
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [MutationResponse](interfaces#mutationresponse)
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+code<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+success<br />
+<a href="scalars#boolean"><code>Boolean!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+message<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+fee<br />
+<a href="objects#fee"><code>Fee</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## TransferMutationResponse
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
@@ -2277,56 +2340,6 @@ count<br />
 </td>
 <td>
 <p>Number of events triggered</p>
-</td>
-</tr>
-</tbody>
-</table>
-
-## UpdateFeeResponse
-
-<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
-
-- [MutationResponse](interfaces#mutationresponse)
-
-<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
-
-<table>
-<thead><tr><th>Name</th><th>Description</th></tr></thead>
-<tbody>
-<tr>
-<td>
-code<br />
-<a href="scalars#string"><code>String!</code></a>
-</td>
-<td>
-
-</td>
-</tr>
-<tr>
-<td>
-success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
-</td>
-<td>
-
-</td>
-</tr>
-<tr>
-<td>
-message<br />
-<a href="scalars#string"><code>String!</code></a>
-</td>
-<td>
-
-</td>
-</tr>
-<tr>
-<td>
-fee<br />
-<a href="objects#fee"><code>Fee</code></a>
-</td>
-<td>
-
 </td>
 </tr>
 </tbody>
