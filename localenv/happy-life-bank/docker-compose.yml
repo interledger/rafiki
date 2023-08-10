@@ -49,7 +49,6 @@ services:
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
       ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      SLIPPAGE: 0
       PUBLIC_HOST: http://happy-life-bank-backend
       WEBHOOK_URL: http://happy-life-bank/webhooks
       OPEN_PAYMENTS_URL: http://happy-life-bank-backend
