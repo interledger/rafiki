@@ -48,7 +48,7 @@ describe('Access Token Service', (): void => {
   const CLIENT = faker.internet.url({ appendSlash: false })
 
   const BASE_GRANT = {
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',

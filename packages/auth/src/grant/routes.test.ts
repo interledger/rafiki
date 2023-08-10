@@ -77,7 +77,7 @@ describe('Grant Routes', (): void => {
   let grant: Grant
 
   const generateBaseGrant = () => ({
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),
