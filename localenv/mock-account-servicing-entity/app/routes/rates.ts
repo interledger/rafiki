@@ -1,24 +1,6 @@
 import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-
-interface Rates {
-  [currency: string]: { [currency: string]: number }
-}
-
-const exchangeRates: Rates = {
-  USD: {
-    EUR: 0.89,
-    ZAR: 18.7
-  },
-  EUR: {
-    USD: 1.12,
-    ZAR: 20.48
-  },
-  ZAR: {
-    USD: 0.053,
-    EUR: 0.049
-  }
-}
+import { CONFIG as config } from '~/lib/parse_config.server'
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function loader({ request }: LoaderArgs) {
@@ -27,7 +9,7 @@ export function loader({ request }: LoaderArgs) {
   return json(
     {
       base,
-      rates: exchangeRates[base] ?? {}
+      rates: config.seed.rates[base] || {}
     },
     { status: 200 }
   )
