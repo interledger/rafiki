@@ -233,7 +233,7 @@ describe('OutgoingPaymentService', (): void => {
       .reply(200, () => ({
         base: 'USD',
         rates: {
-          XRP: 2.0
+          XRP: 0.5
         }
       }))
       .persist()
