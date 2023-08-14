@@ -38,12 +38,18 @@ export interface Account {
   skipPaymentPointerCreation?: boolean
 }
 
+interface Fee {
+  fixed: number
+  percentage: number
+}
+
 export interface SeedInstance {
   self: Self
   assets: Array<Asset>
   peers: Array<Peering>
   accounts: Array<Account>
-  fees: Array<Fees>
+  sendingFee: Fee
+  rates: Record<string, Record<string, number>>
 }
 
 export interface Config {

@@ -17,13 +17,13 @@
   "devDependencies": {
     "@types/node": "^18.7.12",
     "nock": "^13.3.2",
-    "openapi-typescript": "^6.4.0",
+    "openapi-typescript": "^6.4.5",
     "typescript": "^4.9.5",
     "uuid": "^9.0.0"
   },
   "dependencies": {
     "@interledger/openapi": "1.0.3",
     "axios": "^1.4.0",
-    "pino": "^8.14.2"
+    "pino": "^8.15.0"
   }
 }
