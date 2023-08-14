@@ -8,7 +8,7 @@ exports.up = function (knex) {
     table.uuid('assetId').references('assets.id').notNullable()
     table.enum('type', ['SENDING', 'RECEIVING']).notNullable()
     table.timestamp('createdAt').defaultTo(knex.fn.now())
-    table.timestamp('activatedAt')
+    table.timestamp('activatedAt').notNullable()
     table.bigInteger('fixedFee').notNullable()
     table.check('"fixedFee" >= 0', undefined, 'fees_fixedfee_check')
     table
