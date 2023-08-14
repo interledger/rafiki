@@ -171,7 +171,7 @@ describe('Fee Resolvers', () => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('422')
+      expect(response.code).toEqual('400')
       expect(response.message).toEqual('Percent fee must be between 0 and 1')
       expect(response.fee).toBeNull()
     })
@@ -215,7 +215,7 @@ describe('Fee Resolvers', () => {
         })
 
       expect(response.success).toBe(false)
-      expect(response.code).toEqual('422')
+      expect(response.code).toEqual('400')
       expect(response.message).toEqual(
         'Either fixed or percentage fee must be greater than 0'
       )

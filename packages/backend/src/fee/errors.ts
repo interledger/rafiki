@@ -13,9 +13,9 @@ export const errorToCode: {
   [key in FeeError]: number
 } = {
   [FeeError.UnknownAsset]: 404,
-  [FeeError.InvalidPercentageFee]: 422,
-  [FeeError.InvalidFixedFee]: 422,
-  [FeeError.MissingFee]: 422
+  [FeeError.InvalidPercentageFee]: 400,
+  [FeeError.InvalidFixedFee]: 400,
+  [FeeError.MissingFee]: 400
 }
 
 export const errorToMessage: {
