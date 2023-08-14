@@ -161,13 +161,7 @@ describe('Combined Payment Service', (): void => {
         expect(latestFee).toBeUndefined()
       })
 
-      it('should return undefined if no active fee exists', async (): Promise<void> => {
-        await Fee.query().insert({
-          assetId: asset.id,
-          type: FeeType.Receiving,
-          percentageFee: '0.01',
-          fixedFee: BigInt(100)
-        })
+      it('should return undefined if no fee exists', async (): Promise<void> => {
         const latestFee = await feeService.getLatestFee(asset.id)
         expect(latestFee).toBeUndefined()
       })
