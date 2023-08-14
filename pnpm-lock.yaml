@@ -224,8 +224,8 @@ importers:
         specifier: ^8.11.2
         version: 8.11.2
       pino:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.15.0
+        version: 8.15.0
       pino-pretty:
         specifier: ^10.2.0
         version: 10.2.0
@@ -414,8 +414,8 @@ importers:
         specifier: ^8.11.2
         version: 8.11.2
       pino:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.15.0
+        version: 8.15.0
       pino-pretty:
         specifier: ^10.2.0
         version: 10.2.0
@@ -657,8 +657,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       pino:
-        specifier: ^8.14.2
-        version: 8.14.2
+        specifier: ^8.15.0
+        version: 8.15.0
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -4437,7 +4437,7 @@ packages:
       axios: 1.4.0
       base64url: 3.0.1
       http-message-signatures: 0.1.2
-      pino: 8.14.2
+      pino: 8.15.0
       uuid: 9.0.0
     transitivePeerDependencies:
       - debug
@@ -14743,8 +14743,8 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino@8.14.2:
-    resolution: {integrity: sha512-zKu9aWeSWTy1JgvxIpZveJKKsAr4+6uNMZ0Vf0KRwzl/UNZA3XjHiIl/0WwqLMkDwuHuDkT5xAgPA2jpKq4whA==}
+  /pino@8.15.0:
+    resolution: {integrity: sha512-olUADJByk4twxccmAxb1RiGKOSvddHugCV3wkqjyv+3Sooa2KLrmXrKEWOKi0XPCLasRR5jBXxioE1jxUa4KzQ==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
