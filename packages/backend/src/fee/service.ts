@@ -52,10 +52,6 @@ async function createFee(
 ): Promise<Fee | FeeError> {
   const { fixed, percentage } = fee
 
-  if (fixed === BigInt(0) && Number(percentage.toFixed(4)) === 0) {
-    return FeeError.MissingFee
-  }
-
   if (fixed < 0) {
     return FeeError.InvalidFixedFee
   }

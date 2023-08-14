@@ -176,52 +176,6 @@ describe('Fee Resolvers', () => {
       expect(response.fee).toBeNull()
     })
 
-    test('Returns error for missing fee', async (): Promise<void> => {
-      const input = {
-        assetId: asset.id,
-        type: FeeType.Sending,
-        fee: {
-          fixed: BigInt(0),
-          percentage: 0
-        }
-      }
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation SetFee($input: SetFeeInput!) {
-              setFee(input: $input) {
-                code
-                success
-                message
-                fee {
-                  id
-                  assetId
-                  type
-                  fixed
-                  percentage
-                  createdAt
-                }
-              }
-            }
-          `,
-          variables: { input }
-        })
-        .then((query): SetFeeResponse => {
-          if (query.data) {
-            return query.data.setFee
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
-
-      expect(response.success).toBe(false)
-      expect(response.code).toEqual('400')
-      expect(response.message).toEqual(
-        'Either fixed or percentage fee must be greater than 0'
-      )
-      expect(response.fee).toBeNull()
-    })
-
     test('Returns 500 error for unhandled errors', async (): Promise<void> => {
       jest.spyOn(feeService, 'create').mockImplementationOnce(async () => {
         throw new Error('Unknown error')

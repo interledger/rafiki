@@ -42,6 +42,7 @@ describe('Combined Payment Service', (): void => {
     describe('create', (): void => {
       type ValidFeeCases = { percentage: number; fixed: bigint }
       const validFeeCases: ValidFeeCases[] = [
+        { fixed: BigInt(0), percentage: 0 },
         { fixed: BigInt(1), percentage: 0 },
         { fixed: BigInt(1), percentage: 0.00004 }, // will round to 0
         { fixed: BigInt(100), percentage: 0.00005 }, // will round to 0.0001
@@ -95,12 +96,6 @@ describe('Combined Payment Service', (): void => {
           percentage: 0.05,
           error: FeeError.InvalidFixedFee,
           description: 'Cant create with less than 0 fixed fee'
-        },
-        {
-          fixed: BigInt(0),
-          percentage: 0.00004, // will round to 0
-          error: FeeError.MissingFee,
-          description: 'Cant create with both fixed and percentage fee of 0'
         }
       ]
       test.each(invalidFeeCases)(
