@@ -26,7 +26,6 @@ export interface GrantService {
     interactNonce: string,
     options?: GetByInteractionSessionOpts
   ): Promise<InteractiveGrant | undefined>
-  markPending(grantId: string): Promise<Grant>
   approve(grantId: string): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
   getByContinue(
@@ -110,8 +109,6 @@ export async function createGrantService({
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
-
-    markPending: (grantId: string) => markPending(grantId),
     getByInteractionSession: (
       interactId: string,
       interactNonce: string,
@@ -141,12 +138,6 @@ async function approve(
 ): Promise<Grant> {
   return Grant.query().patchAndFetchById(grantId, {
     state: GrantState.Approved
-  })
-}
-
-async function markPending(id: string): Promise<Grant> {
-  return Grant.query().patchAndFetchById(id, {
-    state: GrantState.Pending
   })
 }
 
@@ -208,7 +199,7 @@ async function create(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
-      state: interact ? GrantState.Processing : GrantState.Approved,
+      state: interact ? GrantState.Pending : GrantState.Approved,
       startMethod: interact?.start,
       finishMethod: interact?.finish?.method,
       finishUri: interact?.finish?.uri,

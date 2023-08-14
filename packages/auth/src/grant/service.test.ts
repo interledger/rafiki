@@ -109,7 +109,7 @@ describe('Grant Service', (): void => {
       const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
-        state: GrantState.Processing,
+        state: GrantState.Pending,
         continueId: expect.any(String),
         continueToken: expect.any(String),
         interactRef: expect.any(String),
@@ -163,13 +163,6 @@ describe('Grant Service', (): void => {
       ).resolves.toMatchObject({
         type: AccessType.IncomingPayment
       })
-    })
-  })
-
-  describe('pending', (): void => {
-    test('Can mark a grant pending for an interaction', async (): Promise<void> => {
-      const pendingGrant = await grantService.markPending(grant.id)
-      expect(pendingGrant.state).toEqual(GrantState.Pending)
     })
   })
 
