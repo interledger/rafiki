@@ -68,14 +68,16 @@ export type Asset = Model & {
   code: Scalars['String']['output'];
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
-  /** The fee structure for the asset */
-  fee?: Maybe<Fee>;
   /** Asset id */
   id: Scalars['ID']['output'];
   /** Available liquidity */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
+  /** The receiving fee structure for the asset */
+  receivingFee?: Maybe<Fee>;
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8']['output'];
+  /** The sending fee structure for the asset */
+  sendingFee?: Maybe<Fee>;
   /** Minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: Maybe<Scalars['UInt64']['output']>;
 };
@@ -1498,10 +1500,11 @@ export type AmountResolvers<ContextType = any, ParentType extends ResolversParen
 export type AssetResolvers<ContextType = any, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  fee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  receivingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
+  sendingFee?: Resolver<Maybe<ResolversTypes['Fee']>, ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

@@ -102,11 +102,20 @@ withdrawalThreshold<br />
 </tr>
 <tr>
 <td>
-fee<br />
+receivingFee<br />
 <a href="objects#fee"><code>Fee</code></a>
 </td>
 <td>
-<p>The fee structure for the asset</p>
+<p>The receiving fee structure for the asset</p>
+</td>
+</tr>
+<tr>
+<td>
+sendingFee<br />
+<a href="objects#fee"><code>Fee</code></a>
+</td>
+<td>
+<p>The sending fee structure for the asset</p>
 </td>
 </tr>
 <tr>

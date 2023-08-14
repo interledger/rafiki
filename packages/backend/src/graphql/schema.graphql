@@ -406,8 +406,10 @@ type Asset implements Model {
   liquidity: UInt64
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
-  "The fee structure for the asset"
-  fee: Fee
+  "The receiving fee structure for the asset"
+  receivingFee: Fee
+  "The sending fee structure for the asset"
+  sendingFee: Fee
   "Date-time of creation"
   createdAt: String!
 }

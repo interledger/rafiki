@@ -11,7 +11,8 @@ import {
   getAssets,
   createAsset,
   updateAssetWithdrawalThreshold,
-  getAssetFee
+  getAssetReceivingFee,
+  getAssetSendingFee
 } from './asset'
 import {
   getPaymentPointerIncomingPayments,
@@ -55,7 +56,8 @@ export const resolvers: Resolvers = {
   JSONObject: GraphQLJSONObject,
   Asset: {
     liquidity: getAssetLiquidity,
-    fee: getAssetFee
+    sendingFee: getAssetSendingFee,
+    receivingFee: getAssetReceivingFee
   },
   Peer: {
     liquidity: getPeerLiquidity

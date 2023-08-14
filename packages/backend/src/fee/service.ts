@@ -14,7 +14,7 @@ interface CreateOptions {
 
 export interface FeeService {
   create(CreateOptions: CreateOptions): Promise<Fee | FeeError>
-  getLatestFee(assetId: string): Promise<Fee | undefined>
+  getLatestFee(assetId: string, type: FeeType): Promise<Fee | undefined>
 }
 
 type ServiceDependencies = BaseService
@@ -31,16 +31,18 @@ export async function createFeeService({
   }
   return {
     create: (options: CreateOptions) => createFee(deps, options),
-    getLatestFee: (assetId: string) => getLatestFee(deps, assetId)
+    getLatestFee: (assetId: string, type: FeeType) =>
+      getLatestFee(deps, assetId, type)
   }
 }
 
 async function getLatestFee(
   deps: ServiceDependencies,
-  assetId: string
+  assetId: string,
+  type: FeeType
 ): Promise<Fee | undefined> {
   return await Fee.query(deps.knex)
-    .where('assetId', assetId)
+    .where({ assetId, type })
     .whereNotNull('activatedAt')
     .orderBy('activatedAt', 'desc')
     .first()

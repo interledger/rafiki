@@ -132,32 +132,28 @@ describe('Combined Payment Service', (): void => {
 
     describe('getLatestFee', (): void => {
       it('should return the latest fee for the given asset', async (): Promise<void> => {
+        const type = FeeType.Receiving
         await Fee.query().insertAndFetch({
           assetId: asset.id,
-          type: FeeType.Receiving,
+          type,
           percentageFee: '0.01',
           fixedFee: BigInt(100),
           activatedAt: new Date()
         })
         const fee2 = await Fee.query().insertAndFetch({
           assetId: asset.id,
-          type: FeeType.Receiving,
+          type,
           percentageFee: '0.02',
           fixedFee: BigInt(200),
           activatedAt: new Date()
         })
 
-        const latestFee = await feeService.getLatestFee(asset.id)
+        const latestFee = await feeService.getLatestFee(asset.id, type)
         expect(latestFee).toEqual(fee2)
       })
 
       it('should return undefined if no fees exist for the given asset', async (): Promise<void> => {
-        const latestFee = await feeService.getLatestFee(v4())
-        expect(latestFee).toBeUndefined()
-      })
-
-      it('should return undefined if no fee exists', async (): Promise<void> => {
-        const latestFee = await feeService.getLatestFee(asset.id)
+        const latestFee = await feeService.getLatestFee(v4(), FeeType.Sending)
         expect(latestFee).toBeUndefined()
       })
     })
