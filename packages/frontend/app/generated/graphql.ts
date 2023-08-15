@@ -961,6 +961,8 @@ export type Quote = {
   lowEstimatedExchangeRate: Scalars['Float']['output'];
   /** Maximum value per packet allowed on the possible routes */
   maxPacketAmount: Scalars['UInt64']['output'];
+  /** Maximum amount to send (fixed send) */
+  maxSendAmount: Amount;
   /** Aggregate exchange rate the payment is guaranteed to meet */
   minExchangeRate: Scalars['Float']['output'];
   /** Id of the payment pointer under which this quote was created */
@@ -969,8 +971,6 @@ export type Quote = {
   receiveAmount: Amount;
   /** Payment pointer URL of the receiver */
   receiver: Scalars['String']['output'];
-  /** Amount to send (fixed send) */
-  sendAmount: Amount;
 };
 
 export type QuoteConnection = {
@@ -1769,11 +1769,11 @@ export type QuoteResolvers<ContextType = any, ParentType extends ResolversParent
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lowEstimatedExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
+  maxSendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  sendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

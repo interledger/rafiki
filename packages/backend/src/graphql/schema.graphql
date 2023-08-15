@@ -699,8 +699,8 @@ type Quote {
   paymentPointerId: ID!
   "Payment pointer URL of the receiver"
   receiver: String!
-  "Amount to send (fixed send)"
-  sendAmount: Amount!
+  "Maximum amount to send (fixed send)"
+  maxSendAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
   "Maximum value per packet allowed on the possible routes"

@@ -1811,11 +1811,11 @@ receiver<br />
 </tr>
 <tr>
 <td>
-sendAmount<br />
+maxSendAmount<br />
 <a href="objects#amount"><code>Amount!</code></a>
 </td>
 <td>
-<p>Amount to send (fixed send)</p>
+<p>Maximum amount to send (fixed send)</p>
 </td>
 </tr>
 <tr>

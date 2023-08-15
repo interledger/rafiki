@@ -6097,6 +6097,22 @@
             "deprecationReason": null
           },
           {
+            "name": "maxSendAmount",
+            "description": "Maximum amount to send (fixed send)",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "minExchangeRate",
             "description": "Aggregate exchange rate the payment is guaranteed to meet",
             "args": [],
@@ -6154,22 +6170,6 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "sendAmount",
-            "description": "Amount to send (fixed send)",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Amount",
                 "ofType": null
               }
             },
