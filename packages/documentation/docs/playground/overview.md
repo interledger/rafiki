@@ -137,9 +137,9 @@ pnpm localenv:compose down --volumes
 
 #### Postman & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the Postman collection ([Open Payments APIs](https://www.postman.com/interledger/workspace/interledger/folder/22855701-1b204bc1-c8e5-44d4-bab9-444d7204b15a?ctx=documentation) and [Open Payments Auth APIs](https://www.postman.com/interledger/workspace/interledger/folder/22855701-ae80b96d-4d25-42b9-94fa-8ed17f0e5ed9?ctx=documentation)). It is configured to use the default endpoints of the local environment.
+The Open Payments APIs can be interacted with using the [Postman collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). It is configured to use the default endpoints of the local environment.
 
-The Examples folder in the Postman collection includes an [eCommerce example](https://www.postman.com/interledger/workspace/interledger/folder/22855701-e27838da-dd72-4b5e-9f1e-086ddfa4d098?ctx=documentation) that can be executed one by one. It
+The Examples folder in the Postman collection includes an eCommerce (Open Payments) example that can be executed one by one. It
 
 1. requests a grant to create an incoming payment on Philip Fry's account
 2. creates an incoming payment on Philip Fry's account

@@ -1,59 +1,88 @@
-import Koa from 'koa'
-
-import { RatesService, ConvertError } from './service'
+import { RatesService, ConvertError, Rates } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
+import { CacheDataStore } from '../middleware/cache/data-stores'
+import nock from 'nock'
 
 describe('Rates service', function () {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let service: RatesService
-  let requestCount = 0
+  let apiRequestCount = 0
   const exchangeRatesLifetime = 100
-  const koa = new Koa()
-  koa.use(function (ctx) {
-    requestCount++
-    ctx.body = {
-      base: 'USD',
-      rates: {
-        XRP: 0.5,
-        NEGATIVE: -0.5,
-        ZERO: 0.0,
-        STRING: '123'
-      }
+  const exchangeRatesUrl = 'http://example-rates.com'
+
+  const exampleRates = {
+    USD: {
+      EUR: 2,
+      XRP: 1.65
+    },
+    EUR: {
+      USD: 1.12,
+      XRP: 1.82
+    },
+    XRP: {
+      USD: 0.61,
+      EUR: 0.5
     }
-  })
-  const server = koa.listen(3210)
+  }
+
+  const mockRatesApi = (fn: (baseAssetCode: unknown) => Rates['rates']) => {
+    nock(exchangeRatesUrl)
+      .get('/')
+      .query(true)
+      .reply(200, (url) => {
+        apiRequestCount++
+
+        const base = url.split('=')[1]
+
+        return {
+          base,
+          rates: fn(base)
+        }
+      })
+      .persist()
+  }
 
   beforeAll(async (): Promise<void> => {
-    const config = Config
-    config.exchangeRatesLifetime = exchangeRatesLifetime
-    config.exchangeRatesUrl = 'http://127.0.0.1:3210/'
-    deps = await initIocContainer(config)
+    deps = initIocContainer({
+      ...Config,
+      exchangeRatesUrl,
+      exchangeRatesLifetime
+    })
+
     appContainer = await createTestApp(deps)
-    jest.useFakeTimers()
-    jest.setSystemTime(1600000000000)
+    service = await deps.use('ratesService')
   })
 
   beforeEach(async (): Promise<void> => {
-    // Fast-forward to reset the cache between tests.
-    jest.setSystemTime(Date.now() + exchangeRatesLifetime + 1)
-    service = await deps.use('ratesService')
-    requestCount = 0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;((service as any).cachedRates as CacheDataStore).deleteAll()
+
+    apiRequestCount = 0
   })
 
   afterAll(async (): Promise<void> => {
-    jest.useRealTimers()
-    await new Promise((resolve, reject) => {
-      server.close((err?: Error) => (err ? reject(err) : resolve(null)))
-    })
     await appContainer.shutdown()
+    jest.useRealTimers()
   })
 
-  describe('convert', function () {
+  describe('convert', () => {
+    beforeAll(() => {
+      mockRatesApi((base) => ({
+        ...exampleRates[base as keyof typeof exampleRates],
+        NEGATIVE: -0.5,
+        ZERO: 0.0
+      }))
+    })
+
+    afterAll(() => {
+      nock.cleanAll()
+    })
+
     it('returns the source amount when assets are alike', async () => {
       await expect(
         service.convert({
@@ -62,7 +91,7 @@ describe('Rates service', function () {
           destinationAsset: { code: 'USD', scale: 9 }
         })
       ).resolves.toBe(1234n)
-      expect(requestCount).toBe(0)
+      expect(apiRequestCount).toBe(0)
     })
 
     it('scales the source amount when currencies are alike but scales are different', async () => {
@@ -80,108 +109,134 @@ describe('Rates service', function () {
           destinationAsset: { code: 'USD', scale: 9 }
         })
       ).resolves.toBe(123n)
-      expect(requestCount).toBe(0)
+      expect(apiRequestCount).toBe(0)
     })
 
     it('returns the converted amount when assets are different', async () => {
+      const sourceAmount = 500
       await expect(
         service.convert({
-          sourceAmount: 1234n,
-          sourceAsset: { code: 'USD', scale: 9 },
-          destinationAsset: { code: 'XRP', scale: 9 }
+          sourceAmount: BigInt(sourceAmount),
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'EUR', scale: 2 }
         })
-      ).resolves.toBe(1234n * 2n)
+      ).resolves.toBe(BigInt(sourceAmount * exampleRates.USD.EUR))
       await expect(
         service.convert({
-          sourceAmount: 1234n,
-          sourceAsset: { code: 'XRP', scale: 9 },
-          destinationAsset: { code: 'USD', scale: 9 }
+          sourceAmount: BigInt(sourceAmount),
+          sourceAsset: { code: 'EUR', scale: 2 },
+          destinationAsset: { code: 'USD', scale: 2 }
         })
-      ).resolves.toBe(1234n / 2n)
+      ).resolves.toBe(BigInt(sourceAmount * exampleRates.EUR.USD))
     })
 
     it('returns an error when an asset price is invalid', async () => {
       await expect(
         service.convert({
           sourceAmount: 1234n,
-          sourceAsset: { code: 'MISSING', scale: 9 },
-          destinationAsset: { code: 'USD', scale: 9 }
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'MISSING', scale: 2 }
         })
-      ).resolves.toBe(ConvertError.MissingSourceAsset)
+      ).resolves.toBe(ConvertError.InvalidDestinationPrice)
       await expect(
         service.convert({
           sourceAmount: 1234n,
-          sourceAsset: { code: 'USD', scale: 9 },
-          destinationAsset: { code: 'MISSING', scale: 9 }
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'ZERO', scale: 2 }
         })
-      ).resolves.toBe(ConvertError.MissingDestinationAsset)
+      ).resolves.toBe(ConvertError.InvalidDestinationPrice)
       await expect(
         service.convert({
           sourceAmount: 1234n,
-          sourceAsset: { code: 'NEGATIVE', scale: 9 },
-          destinationAsset: { code: 'USD', scale: 9 }
-        })
-      ).resolves.toBe(ConvertError.InvalidSourcePrice)
-      await expect(
-        service.convert({
-          sourceAmount: 1234n,
-          sourceAsset: { code: 'USD', scale: 9 },
-          destinationAsset: { code: 'STRING', scale: 9 }
+          sourceAsset: { code: 'USD', scale: 2 },
+          destinationAsset: { code: 'NEGATIVE', scale: 2 }
         })
       ).resolves.toBe(ConvertError.InvalidDestinationPrice)
     })
+  })
 
-    describe('caching', function () {
-      const opts = {
-        sourceAmount: 1234n,
-        sourceAsset: { code: 'USD', scale: 9 },
-        destinationAsset: { code: 'XRP', scale: 9 }
-      }
+  describe('rates', function () {
+    beforeAll(() => {
+      mockRatesApi((base) => exampleRates[base as keyof typeof exampleRates])
+    })
 
-      afterEach(async () => {
-        // Await it so that the test can clean up properly. Typecast due to private property.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        if ((<any>service).prefetchRequest) await (<any>service).prefetchRequest
+    afterAll(() => {
+      nock.cleanAll()
+    })
+
+    beforeEach(async (): Promise<void> => {
+      jest.useFakeTimers({
+        now: Date.now(),
+        doNotFake: ['nextTick', 'setImmediate']
       })
+    })
 
-      it('caches requests', async () => {
-        await expect(
-          Promise.all([
-            service.convert(opts),
-            service.convert(opts),
-            service.convert(opts)
-          ])
-        ).resolves.toEqual([1234n * 2n, 1234n * 2n, 1234n * 2n])
-        expect(requestCount).toBe(1)
-      })
+    const usdRates = {
+      base: 'USD',
+      rates: exampleRates.USD
+    }
 
-      it('prefetches when the cached request is old', async () => {
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
-        jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-        // ... cache isn't expired yet, but it will be soon
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((<any>service).prefetchRequest).toBeDefined()
-        // The prefetch isn't done.
-        expect(requestCount).toBe(1)
+    const eurRates = {
+      base: 'EUR',
+      rates: exampleRates.EUR
+    }
 
-        // Invalidate the cache.
-        jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        // The prefetch response is promoted to the cache.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((<any>service).prefetchRequest).toBeUndefined()
-        expect(requestCount).toBe(2)
-      })
+    it('handles concurrent requests for same asset code', async () => {
+      await expect(
+        Promise.all([
+          service.rates('USD'),
+          service.rates('USD'),
+          service.rates('USD')
+        ])
+      ).resolves.toEqual([usdRates, usdRates, usdRates])
+      expect(apiRequestCount).toBe(1)
+    })
 
-      it('cannot use an expired cache', async () => {
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n) // setup initial rate
-        jest.advanceTimersByTime(exchangeRatesLifetime + 1)
-        await expect(service.convert(opts)).resolves.toBe(1234n * 2n)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        expect((<any>service).prefetchRequest).toBeUndefined()
-        expect(requestCount).toBe(2)
-      })
+    it('handles concurrent requests for different asset codes', async () => {
+      await expect(
+        Promise.all([
+          service.rates('USD'),
+          service.rates('USD'),
+          service.rates('EUR'),
+          service.rates('EUR')
+        ])
+      ).resolves.toEqual([usdRates, usdRates, eurRates, eurRates])
+      expect(apiRequestCount).toBe(2)
+    })
+
+    it('returns cached request for same asset code', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      expect(apiRequestCount).toBe(1)
+    })
+
+    it('returns cached request for different asset codes', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      await expect(service.rates('EUR')).resolves.toEqual(eurRates)
+      await expect(service.rates('EUR')).resolves.toEqual(eurRates)
+      expect(apiRequestCount).toBe(2)
+    })
+
+    it('prefetches when the cached request is old', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
+      // ... cache isn't expired yet, but it will be soon
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      expect(apiRequestCount).toBe(1)
+
+      // Invalidate the cache.
+      jest.advanceTimersByTime(exchangeRatesLifetime * 0.5 + 1)
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      // The prefetch response is promoted to the cache.
+      expect(apiRequestCount).toBe(2)
+    })
+
+    it('cannot use an expired cache', async () => {
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      jest.advanceTimersByTime(exchangeRatesLifetime + 1)
+      await expect(service.rates('USD')).resolves.toEqual(usdRates)
+      expect(apiRequestCount).toBe(2)
     })
   })
 

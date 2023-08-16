@@ -12,7 +12,7 @@ type OneOf<T extends any[]> = T extends [infer Only] ? Only : T extends [infer A
 export type paths = {
   "/": {
     /**
-     * Introspect Access Token 
+     * Introspect Access Token
      * @description Introspect an access token to get grant details.
      */
     post: operations["post-introspect"];
@@ -25,7 +25,7 @@ export type components = {
   schemas: {
     /** token-info */
     "token-info": {
-      /** @enum {unknown} */
+      /** @enum {boolean} */
       active: true;
       grant: string;
       access: external["auth-server.yaml"]["components"]["schemas"]["access"];
@@ -54,19 +54,19 @@ export type external = {
     paths: {
       "/": {
         /**
-         * Grant Request 
+         * Grant Request
          * @description Make a new grant request
          */
         post: operations["post-request"];
       };
       "/continue/{id}": {
         /**
-         * Continuation Request 
+         * Continuation Request
          * @description Continue a grant request during or after user interaction.
          */
         post: operations["post-continue"];
         /**
-         * Cancel Grant 
+         * Cancel Grant
          * @description Cancel a grant request or delete a grant client side.
          */
         delete: operations["delete-continue"];
@@ -78,12 +78,12 @@ export type external = {
       };
       "/token/{id}": {
         /**
-         * Rotate Access Token 
+         * Rotate Access Token
          * @description Management endpoint to rotate access token.
          */
         post: operations["post-token"];
         /**
-         * Revoke Access Token 
+         * Revoke Access Token
          * @description Management endpoint to revoke access token.
          */
         delete: operations["delete-token"];
@@ -100,11 +100,11 @@ export type external = {
         /** @description A description of the rights associated with this access token. */
         access: (components["schemas"]["access-item"])[];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
-        "access-item": components["schemas"]["access-incoming"] | components["schemas"]["access-outgoing"] | components["schemas"]["access-quote"];
+        "access-item": external["auth-server.yaml"]["components"]["schemas"]["access-incoming"] | external["auth-server.yaml"]["components"]["schemas"]["access-outgoing"] | external["auth-server.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
         "access-incoming": {
           /**
-           * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. 
+           * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
            * @enum {string}
            */
           type: "incoming-payment";
@@ -119,7 +119,7 @@ export type external = {
         /** access-outgoing */
         "access-outgoing": {
           /**
-           * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. 
+           * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
            * @enum {string}
            */
           type: "outgoing-payment";
@@ -135,7 +135,7 @@ export type external = {
         /** access-quote */
         "access-quote": {
           /**
-           * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object. 
+           * @description The type of resource request as a string.  This field defines which other fields are allowed in the request object.
            * @enum {string}
            */
           type: "quote";
@@ -196,7 +196,7 @@ export type external = {
           /** @description Indicates how the client instance can receive an indication that interaction has finished at the AS. */
           finish?: {
             /**
-             * @description The callback method that the AS will use to contact the client instance. 
+             * @description The callback method that the AS will use to contact the client instance.
              * @enum {string}
              */
             method: "redirect";
@@ -232,7 +232,7 @@ export type external = {
           receiver?: external["schemas.yaml"]["components"]["schemas"]["receiver"];
           sendAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
           receiveAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
-          interval?: components["schemas"]["interval"];
+          interval?: external["auth-server.yaml"]["components"]["schemas"]["interval"];
         };
       };
       responses: never;
@@ -289,11 +289,11 @@ export type external = {
 export type operations = {
 
   /**
-   * Introspect Access Token 
+   * Introspect Access Token
    * @description Introspect an access token to get grant details.
    */
   "post-introspect": {
-    requestBody?: {
+    requestBody: {
       content: {
         "application/json": {
           /** @description The access token value presented to the RS by the client instance. */
@@ -307,8 +307,8 @@ export type operations = {
       200: {
         content: {
           "application/json": OneOf<[{
-            /** @enum {unknown} */
-            active: "";
+            /** @enum {boolean} */
+            active: false;
           }, components["schemas"]["token-info"]]>;
         };
       };
@@ -317,7 +317,7 @@ export type operations = {
     };
   };
   /**
-   * Grant Request 
+   * Grant Request
    * @description Make a new grant request
    */
   "post-request": {
@@ -325,10 +325,10 @@ export type operations = {
       content: {
         "application/json": {
           access_token: {
-            access: components["schemas"]["access"];
+            access: external["auth-server.yaml"]["components"]["schemas"]["access"];
           };
-          client: components["schemas"]["client"];
-          interact?: components["schemas"]["interact-request"];
+          client: external["auth-server.yaml"]["components"]["schemas"]["client"];
+          interact?: external["auth-server.yaml"]["components"]["schemas"]["interact-request"];
         };
       };
     };
@@ -336,12 +336,12 @@ export type operations = {
       /** @description OK */
       200: {
         content: {
-          "application/json": OneOf<[{
-            interact: components["schemas"]["interact-response"];
-            continue: components["schemas"]["continue"];
+          "application/json": Record<string, never> & OneOf<[{
+            interact: external["auth-server.yaml"]["components"]["schemas"]["interact-response"];
+            continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
           }, {
-            access_token: components["schemas"]["access_token"];
-            continue: components["schemas"]["continue"];
+            access_token: external["auth-server.yaml"]["components"]["schemas"]["access_token"];
+            continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
           }]>;
         };
       };
@@ -354,7 +354,7 @@ export type operations = {
     };
   };
   /**
-   * Continuation Request 
+   * Continuation Request
    * @description Continue a grant request during or after user interaction.
    */
   "post-continue": {
@@ -379,8 +379,8 @@ export type operations = {
       200: {
         content: {
           "application/json": {
-            access_token?: components["schemas"]["access_token"];
-            continue: components["schemas"]["continue"];
+            access_token?: external["auth-server.yaml"]["components"]["schemas"]["access_token"];
+            continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
           };
         };
       };
@@ -393,7 +393,7 @@ export type operations = {
     };
   };
   /**
-   * Cancel Grant 
+   * Cancel Grant
    * @description Cancel a grant request or delete a grant client side.
    */
   "delete-continue": {
@@ -414,7 +414,7 @@ export type operations = {
     };
   };
   /**
-   * Rotate Access Token 
+   * Rotate Access Token
    * @description Management endpoint to rotate access token.
    */
   "post-token": {
@@ -428,7 +428,7 @@ export type operations = {
       200: {
         content: {
           "application/json": {
-            access_token: components["schemas"]["access_token"];
+            access_token: external["auth-server.yaml"]["components"]["schemas"]["access_token"];
           };
         };
       };
@@ -441,7 +441,7 @@ export type operations = {
     };
   };
   /**
-   * Revoke Access Token 
+   * Revoke Access Token
    * @description Management endpoint to revoke access token.
    */
   "delete-token": {

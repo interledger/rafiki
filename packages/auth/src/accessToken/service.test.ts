@@ -97,32 +97,6 @@ describe('Access Token Service', (): void => {
     })
   })
 
-  describe('Get', (): void => {
-    let accessToken: AccessToken
-    beforeEach(async (): Promise<void> => {
-      accessToken = await AccessToken.query(trx).insert({
-        value: 'test-access-token',
-        managementId: v4(),
-        grantId: grant.id,
-        expiresIn: 1234
-      })
-    })
-
-    test('Can get an access token by its value', async (): Promise<void> => {
-      await expect(accessTokenService.get(accessToken.value)).resolves.toEqual(
-        accessToken
-      )
-    })
-
-    test('Cannot get rotated access token', async (): Promise<void> => {
-      await accessTokenService.rotate(accessToken.id)
-
-      await expect(
-        accessTokenService.get(accessToken.value)
-      ).resolves.toBeUndefined()
-    })
-  })
-
   describe('getByManagementId', (): void => {
     let accessToken: AccessToken
     beforeEach(async (): Promise<void> => {
@@ -141,7 +115,7 @@ describe('Access Token Service', (): void => {
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {
-      await expect(accessTokenService.get(v4())).resolves.toBeUndefined()
+      await expect(AccessToken.query().findById(v4())).resolves.toBeUndefined()
       await expect(
         accessTokenService.getByManagementId(v4())
       ).resolves.toBeUndefined()
@@ -222,32 +196,80 @@ describe('Access Token Service', (): void => {
         managementId: v4()
       })
     })
-    test('Can revoke un-expired token', async (): Promise<void> => {
-      await token.$query(trx).patch({ expiresIn: 1000000 })
-      await expect(accessTokenService.revoke(token.id)).resolves.toEqual(token)
-      await expect(
-        AccessToken.query(trx).findById(token.id)
-      ).resolves.toBeUndefined()
-    })
-    test('Can revoke even if token has already expired', async (): Promise<void> => {
-      await token.$query(trx).patch({ expiresIn: -1 })
-      await expect(accessTokenService.revoke(token.id)).resolves.toEqual(token)
-      await expect(
-        AccessToken.query(trx).findById(token.id)
-      ).resolves.toBeUndefined()
-    })
-    test('Can revoke even if token has already been revoked', async (): Promise<void> => {
-      await token.$query(trx).delete()
-      await expect(accessTokenService.revoke(token.id)).resolves.toBeUndefined()
-      await expect(
-        AccessToken.query(trx).findById(token.id)
-      ).resolves.toBeUndefined()
-    })
 
-    test('Cannot revoke rotated access token', async (): Promise<void> => {
-      await accessTokenService.rotate(token.id)
+    describe('Revoke by token id', (): void => {
+      test('Can revoke un-expired token', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: 1000000 })
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
+          token
+        )
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already expired', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: -1 })
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
+          token
+        )
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already been revoked', async (): Promise<void> => {
+        await token.$query(trx).delete()
+        await expect(
+          accessTokenService.revoke(token.id)
+        ).resolves.toBeUndefined()
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
 
-      await expect(accessTokenService.revoke(token.id)).resolves.toBeUndefined()
+      test('Cannot revoke rotated access token', async (): Promise<void> => {
+        await accessTokenService.rotate(token.id)
+
+        await expect(
+          accessTokenService.revoke(token.id)
+        ).resolves.toBeUndefined()
+      })
+    })
+    describe('Revoke by grant id', (): void => {
+      test('Can revoke un-expired token', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: 1000000 })
+        await expect(
+          accessTokenService.revokeByGrantId(grant.id)
+        ).resolves.toEqual(1)
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already expired', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: -1 })
+        await expect(
+          accessTokenService.revokeByGrantId(grant.id)
+        ).resolves.toEqual(1)
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already been revoked', async (): Promise<void> => {
+        await token.$query(trx).delete()
+        await expect(
+          accessTokenService.revokeByGrantId(grant.id)
+        ).resolves.toEqual(0)
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+
+      test('Cannot revoke rotated access token', async (): Promise<void> => {
+        await accessTokenService.rotate(token.id)
+
+        await expect(
+          accessTokenService.revokeByGrantId(token.id)
+        ).resolves.toEqual(0)
+      })
     })
   })
 

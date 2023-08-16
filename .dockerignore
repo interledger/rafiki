@@ -16,6 +16,8 @@ infrastructure
 commitlint.config.js
 jest.config.base.js
 renovate.json
+postman
+.postman
 
 **/jest.config.js
 **/jest.setup.js

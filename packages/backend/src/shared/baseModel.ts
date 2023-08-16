@@ -100,7 +100,12 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
   }
 }
 
-export abstract class BaseModel extends DbErrors(Model) {
+export class PaginationModel extends DbErrors(Model) {
+  QueryBuilderType!: PaginationQueryBuilder<this>
+  static QueryBuilder = PaginationQueryBuilder
+}
+
+export abstract class BaseModel extends PaginationModel {
   public static get modelPaths(): string[] {
     return [__dirname]
   }
@@ -126,7 +131,4 @@ export abstract class BaseModel extends DbErrors(Model) {
       updatedAt: json.updatedAt.toISOString()
     }
   }
-
-  QueryBuilderType!: PaginationQueryBuilder<this>
-  static QueryBuilder = PaginationQueryBuilder
 }

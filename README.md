@@ -1,6 +1,6 @@
 # Rafiki
 
-<img width="920" alt="rafiki" src="https://user-images.githubusercontent.com/3362563/119590055-e3347580-bd88-11eb-8ae7-958075433e48.png">
+![Rafiki](https://github.com/interledger/rafiki/assets/20246798/528b1978-0e02-4bc4-a6b4-e8e81d2f3c3a)
 
 ## What is Rafiki?
 
@@ -26,7 +26,7 @@ Additionally, this package also includes a reference implementation of a [GNAP](
 Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
 
 - [Interledger Website](https://interledger.org/)
-- [Interledger Docs](https://interledger.org/developer-tools/get-started/overview/)
+- [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
 - [Payment pointers](https://paymentpointers.org/)
 - [Open Payments](https://openpayments.guide/)
@@ -38,7 +38,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Planning Calls
 
-Our planning calls are open to our community. We have them every Tuesday at 12:30 GMT, via Google Meet.
+Our planning calls are open to our community. We have them every Tuesday at 14:30 GMT, via Google Meet.
 
 **Google Meet joining info**
 
