@@ -33,7 +33,7 @@ importers:
         specifier: ^29.6.2
         version: 29.6.2
       prettier:
-        specifier: ^3.0.1
+        specifier: ^3.0.2
         version: 3.0.2
       ts-jest:
         specifier: ^29.1.1
@@ -588,7 +588,7 @@ importers:
         specifier: ^8.4.27
         version: 8.4.27
       prettier:
-        specifier: ^3.0.1
+        specifier: ^3.0.2
         version: 3.0.2
       tailwindcss:
         specifier: ^3.3.3
