@@ -10,7 +10,11 @@ import { WebhookEventType } from '~/shared/enums'
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
-  const result = webhooksSearchParams.safeParse(searchParams)
+  const result = webhooksSearchParams.safeParse(
+    searchParams.type
+      ? { ...searchParams, type: searchParams.type.split(',') }
+      : searchParams
+  )
 
   if (!result.success) {
     throw json(null, { status: 400, statusText: 'Invalid result.' })
@@ -19,7 +23,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   const { type, ...pagination } = result.data
   const webhooks = await listWebhooks({
     ...pagination,
-    ...(type ? { filter: { type: { in: [type.toString()] } } } : {})
+    ...(type ? { filter: { type: { in: type } } } : {})
   })
 
   let previousPageUrl = '',
@@ -40,6 +44,23 @@ export default function WebhookEventsPage() {
   const { webhooks, previousPageUrl, nextPageUrl, type } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
+  function getTypeFilterParams(
+    currentTypeParams: WebhookEventType[] | undefined,
+    selectedType: WebhookEventType | undefined
+  ): string {
+    const selectedTypeSet = currentTypeParams
+      ? new Set(currentTypeParams)
+      : new Set<WebhookEventType>()
+    if (selectedType) {
+      selectedTypeSet.has(selectedType)
+        ? selectedTypeSet.delete(selectedType)
+        : selectedTypeSet.add(selectedType)
+    }
+
+    return selectedTypeSet.size > 0
+      ? `?type=${[...selectedTypeSet].join(',')}`
+      : ''
+  }
 
   return (
     <>
@@ -55,15 +76,23 @@ export default function WebhookEventsPage() {
             <div className='flex items-center'>
               <DropdownFilter
                 label='Type'
-                value={type}
+                values={type ? type : ['all']}
                 options={[
                   {
                     name: 'All',
-                    action: () => navigate(``)
+                    value: 'all',
+                    action: () => {
+                      navigate(``)
+                    }
                   },
                   ...Object.values(WebhookEventType).map((value) => ({
-                    name: value,
-                    action: () => navigate(`?type=${value}`)
+                    name:
+                      value.charAt(0).toUpperCase() +
+                      value.slice(1).replace(/[_.]/g, ' '),
+                    value: value,
+                    action: () => {
+                      navigate(`${getTypeFilterParams(type, value)}`)
+                    }
                   }))
                 ]}
               />
@@ -102,7 +131,10 @@ export default function WebhookEventsPage() {
               aria-label='go to previous page'
               disabled={!webhooks.pageInfo.hasPreviousPage}
               onClick={() => {
-                navigate(previousPageUrl)
+                navigate(
+                  previousPageUrl +
+                    getTypeFilterParams(type, undefined).replace('?', '&')
+                )
               }}
             >
               Previous
@@ -111,7 +143,10 @@ export default function WebhookEventsPage() {
               aria-label='go to next page'
               disabled={!webhooks.pageInfo.hasNextPage}
               onClick={() => {
-                navigate(nextPageUrl)
+                navigate(
+                  nextPageUrl +
+                    getTypeFilterParams(type, undefined).replace('?', '&')
+                )
               }}
             >
               Next

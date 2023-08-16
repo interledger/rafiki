@@ -26,7 +26,7 @@ export const paginationSearchParams = paginationSchemaTest.partial()
 export const webhooksSearchParams = paginationSearchParams
   .merge(
     z.object({
-      type: z.nativeEnum(WebhookEventType)
+      type: z.array(z.nativeEnum(WebhookEventType))
     })
   )
   .partial()

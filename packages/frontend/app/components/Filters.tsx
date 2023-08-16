@@ -5,22 +5,23 @@ import { Label } from './ui'
 
 type DropdownFilterOption = {
   name: string
+  value: string
   action: () => void
 }
 
 type DropdownFilterProps = {
   label: string
-  value?: string
+  values?: string[]
   options: DropdownFilterOption[]
 }
 
 export const DropdownFilter = ({
   label,
   options,
-  value
+  values
 }: DropdownFilterProps) => {
   return (
-    <Listbox value={value ?? 'All'} onChange={() => void 0}>
+    <Listbox value={values ?? ['all']} onChange={() => void 0} multiple>
       {({ open }) => (
         <>
           <Listbox.Label as={Label}>{label}</Listbox.Label>
@@ -40,12 +41,12 @@ export const DropdownFilter = ({
               <Listbox.Options className='absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm'>
                 {options.map((option) => (
                   <Listbox.Option
-                    key={option.name}
+                    key={option.value}
                     className='relative cursor-default select-none py-2 pl-3 pr-9'
-                    value={option.name}
+                    value={option.value}
                     onClick={option.action}
                   >
-                    {({ selected, active }) => (
+                    {({ selected }) => (
                       <>
                         <span className='block truncate'>{option.name}</span>
 
