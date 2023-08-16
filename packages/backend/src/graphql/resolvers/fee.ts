@@ -51,7 +51,7 @@ export const feeToGraphql = (fee: Fee): SchemaFee => {
     assetId: fee.assetId,
     type: fee.type,
     fixed: fee.fixedFee,
-    percentage: parseFloat(fee.percentageFee),
+    basisPoints: fee.basisPointFee,
     createdAt: new Date(fee.createdAt).toISOString()
   }
 }

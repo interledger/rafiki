@@ -1,6 +1,6 @@
 export enum FeeError {
   UnknownAsset = 'UnknownAsset',
-  InvalidPercentageFee = 'InvalidPercentageFee',
+  InvalidBasisPointFee = 'InvalidBasisPointFee',
   InvalidFixedFee = 'InvalidFixedFee'
 }
 
@@ -12,7 +12,7 @@ export const errorToCode: {
   [key in FeeError]: number
 } = {
   [FeeError.UnknownAsset]: 404,
-  [FeeError.InvalidPercentageFee]: 400,
+  [FeeError.InvalidBasisPointFee]: 400,
   [FeeError.InvalidFixedFee]: 400
 }
 
@@ -20,6 +20,7 @@ export const errorToMessage: {
   [key in FeeError]: string
 } = {
   [FeeError.UnknownAsset]: 'unknown asset',
-  [FeeError.InvalidPercentageFee]: 'Percent fee must be between 0 and 1',
+  [FeeError.InvalidBasisPointFee]:
+    'Basis point fee must be between 0 and 10000',
   [FeeError.InvalidFixedFee]: 'Fixed fee must be greater than or equal to 0'
 }

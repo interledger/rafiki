@@ -295,23 +295,23 @@ export type Fee = Model & {
   __typename?: 'Fee';
   /** Asset id associated with the fee */
   assetId: Scalars['ID']['output'];
+  /** Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100% */
+  basisPoints: Scalars['Int']['output'];
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
   /** Fixed fee */
-  fixed?: Maybe<Scalars['UInt64']['output']>;
+  fixed: Scalars['UInt64']['output'];
   /** Fee id */
   id: Scalars['ID']['output'];
-  /** Percentage fee */
-  percentage?: Maybe<Scalars['Float']['output']>;
   /** Type of fee (sending or receiving) */
   type: FeeType;
 };
 
 export type FeeDetails = {
+  /** Basis points fee. Should be between 0 and 10000. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100% */
+  basisPoints: Scalars['Int']['input'];
   /** A flat fee */
   fixed: Scalars['UInt64']['input'];
-  /** Percentage fee */
-  percentage: Scalars['Float']['input'];
 };
 
 export enum FeeType {
@@ -1578,10 +1578,10 @@ export type DeletePeerMutationResponseResolvers<ContextType = any, ParentType ex
 
 export type FeeResolvers<ContextType = any, ParentType extends ResolversParentTypes['Fee'] = ResolversParentTypes['Fee']> = {
   assetId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  basisPoints?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  fixed?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  fixed?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  percentage?: Resolver<Maybe<ResolversTypes['Float']>, ParentType, ContextType>;
   type?: Resolver<ResolversTypes['FeeType'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };

@@ -514,7 +514,7 @@ type<br />
 <tr>
 <td>
 fixed<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Fixed fee</p>
@@ -522,11 +522,11 @@ fixed<br />
 </tr>
 <tr>
 <td>
-percentage<br />
-<a href="scalars#float"><code>Float</code></a>
+basisPoints<br />
+<a href="scalars#int"><code>Int!</code></a>
 </td>
 <td>
-<p>Percentage fee</p>
+<p>Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
 </td>
 </tr>
 <tr>

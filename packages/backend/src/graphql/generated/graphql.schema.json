@@ -1963,6 +1963,22 @@
             "deprecationReason": null
           },
           {
+            "name": "basisPoints",
+            "description": "Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createdAt",
             "description": "Date-time of creation",
             "args": [],
@@ -1983,9 +1999,13 @@
             "description": "Fixed fee",
             "args": [],
             "type": {
-              "kind": "SCALAR",
-              "name": "UInt64",
-              "ofType": null
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UInt64",
+                "ofType": null
+              }
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -2002,18 +2022,6 @@
                 "name": "ID",
                 "ofType": null
               }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "percentage",
-            "description": "Percentage fee",
-            "args": [],
-            "type": {
-              "kind": "SCALAR",
-              "name": "Float",
-              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -2053,14 +2061,14 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "fixed",
-            "description": "A flat fee",
+            "name": "basisPoints",
+            "description": "Basis points fee. Should be between 0 and 10000. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%",
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "UInt64",
+                "name": "Int",
                 "ofType": null
               }
             },
@@ -2069,14 +2077,14 @@
             "deprecationReason": null
           },
           {
-            "name": "percentage",
-            "description": "Percentage fee",
+            "name": "fixed",
+            "description": "A flat fee",
             "type": {
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
                 "kind": "SCALAR",
-                "name": "Float",
+                "name": "UInt64",
                 "ofType": null
               }
             },

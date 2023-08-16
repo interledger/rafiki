@@ -922,9 +922,9 @@ type Fee implements Model {
   "Type of fee (sending or receiving)"
   type: FeeType!
   "Fixed fee"
-  fixed: UInt64
-  "Percentage fee"
-  percentage: Float
+  fixed: UInt64!
+  "Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%"
+  basisPoints: Int!
   "Date-time of creation"
   createdAt: String!
 }
@@ -943,8 +943,8 @@ input SetFeeInput {
 input FeeDetails {
   "A flat fee"
   fixed: UInt64!
-  "Percentage fee"
-  percentage: Float!
+  "Basis points fee. Should be between 0 and 10000. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%"
+  basisPoints: Int!
 }
 
 input WebhookEventFilter {

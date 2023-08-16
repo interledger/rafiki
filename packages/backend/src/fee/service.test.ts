@@ -40,25 +40,23 @@ describe('Combined Payment Service', (): void => {
 
   describe('Fee Service', (): void => {
     describe('create', (): void => {
-      type ValidFeeCases = { percentage: number; fixed: bigint }
+      type ValidFeeCases = { basisPoints: number; fixed: bigint }
       const validFeeCases: ValidFeeCases[] = [
-        { fixed: BigInt(0), percentage: 0 },
-        { fixed: BigInt(1), percentage: 0 },
-        { fixed: BigInt(1), percentage: 0.00004 }, // will round to 0
-        { fixed: BigInt(100), percentage: 0.00005 }, // will round to 0.0001
-        { fixed: BigInt(1), percentage: 0.0 },
-        { fixed: BigInt(100), percentage: 0.05 },
-        { fixed: BigInt(100), percentage: 1.0 }
+        { fixed: BigInt(0), basisPoints: 0 },
+        { fixed: BigInt(1), basisPoints: 0 },
+        { fixed: BigInt(1), basisPoints: 1 },
+        { fixed: BigInt(100), basisPoints: 500 },
+        { fixed: BigInt(100), basisPoints: 10_000 }
       ]
       test.each(validFeeCases)(
-        'Can create with fixed: $fixed and percentage: $percentage',
-        async ({ percentage, fixed }): Promise<void> => {
+        'Can create with fixed: $fixed and basisPoints: $basisPoints',
+        async ({ basisPoints, fixed }): Promise<void> => {
           const feeCreate = {
             assetId: asset.id,
             type: FeeType.Sending,
             fee: {
               fixed,
-              percentage
+              basisPoints
             }
           }
 
@@ -66,14 +64,14 @@ describe('Combined Payment Service', (): void => {
             assetId: feeCreate.assetId,
             type: feeCreate.type,
             fixedFee: feeCreate.fee.fixed,
-            percentageFee: feeCreate.fee.percentage.toFixed(4),
+            basisPointFee: feeCreate.fee.basisPoints,
             activatedAt: expect.any(Date)
           })
         }
       )
 
       type InvalidFeeCases = {
-        percentage: number
+        basisPoints: number
         fixed: bigint
         error: FeeError
         description: string
@@ -81,32 +79,32 @@ describe('Combined Payment Service', (): void => {
       const invalidFeeCases: InvalidFeeCases[] = [
         {
           fixed: BigInt(100),
-          percentage: 1.01,
-          error: FeeError.InvalidPercentageFee,
-          description: 'Cant create with over 100% fee'
+          basisPoints: 10_001,
+          error: FeeError.InvalidBasisPointFee,
+          description: 'Cant create with over 10000 basis point fee'
         },
         {
           fixed: BigInt(100),
-          percentage: -0.05,
-          error: FeeError.InvalidPercentageFee,
-          description: 'Cant create with less than 0% fee'
+          basisPoints: -500,
+          error: FeeError.InvalidBasisPointFee,
+          description: 'Cant create with less than 0 basis point fee'
         },
         {
           fixed: BigInt(-100),
-          percentage: 0.05,
+          basisPoints: 500,
           error: FeeError.InvalidFixedFee,
           description: 'Cant create with less than 0 fixed fee'
         }
       ]
       test.each(invalidFeeCases)(
         '$description',
-        async ({ percentage, fixed, error }): Promise<void> => {
+        async ({ basisPoints, fixed, error }): Promise<void> => {
           const feeCreate = {
             assetId: asset.id,
             type: FeeType.Sending,
             fee: {
               fixed,
-              percentage
+              basisPoints
             }
           }
 
@@ -120,7 +118,7 @@ describe('Combined Payment Service', (): void => {
           type: FeeType.Sending,
           fee: {
             fixed: BigInt(100),
-            percentage: 0.05
+            basisPoints: 500
           }
         }
 
@@ -136,14 +134,14 @@ describe('Combined Payment Service', (): void => {
         await Fee.query().insertAndFetch({
           assetId: asset.id,
           type,
-          percentageFee: '0.01',
+          basisPointFee: 100,
           fixedFee: BigInt(100),
           activatedAt: new Date()
         })
         const fee2 = await Fee.query().insertAndFetch({
           assetId: asset.id,
           type,
-          percentageFee: '0.02',
+          basisPointFee: 200,
           fixedFee: BigInt(200),
           activatedAt: new Date()
         })

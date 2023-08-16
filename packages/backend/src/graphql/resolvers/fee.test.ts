@@ -44,7 +44,7 @@ describe('Fee Resolvers', () => {
         type: FeeType.Sending,
         fee: {
           fixed: BigInt(100),
-          percentage: 0.01
+          basisPoints: 100
         }
       }
       const response = await appContainer.apolloClient
@@ -60,7 +60,7 @@ describe('Fee Resolvers', () => {
                   assetId
                   type
                   fixed
-                  percentage
+                  basisPoints
                   createdAt
                 }
               }
@@ -84,7 +84,7 @@ describe('Fee Resolvers', () => {
         assetId: input.assetId,
         type: input.type,
         fixed: input.fee.fixed.toString(),
-        percentage: input.fee.percentage
+        basisPoints: input.fee.basisPoints
       })
     })
 
@@ -94,7 +94,7 @@ describe('Fee Resolvers', () => {
         type: FeeType.Sending,
         fee: {
           fixed: BigInt(100),
-          percentage: 0.01
+          basisPoints: 100
         }
       }
       const response = await appContainer.apolloClient
@@ -110,7 +110,7 @@ describe('Fee Resolvers', () => {
                   assetId
                   type
                   fixed
-                  percentage
+                  basisPoints
                   createdAt
                 }
               }
@@ -138,7 +138,7 @@ describe('Fee Resolvers', () => {
         type: FeeType.Sending,
         fee: {
           fixed: BigInt(100),
-          percentage: -1
+          basisPoints: -10_000
         }
       }
       const response = await appContainer.apolloClient
@@ -154,7 +154,7 @@ describe('Fee Resolvers', () => {
                   assetId
                   type
                   fixed
-                  percentage
+                  basisPoints
                   createdAt
                 }
               }
@@ -172,7 +172,9 @@ describe('Fee Resolvers', () => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('400')
-      expect(response.message).toEqual('Percent fee must be between 0 and 1')
+      expect(response.message).toEqual(
+        'Basis point fee must be between 0 and 10000'
+      )
       expect(response.fee).toBeNull()
     })
 
@@ -185,7 +187,7 @@ describe('Fee Resolvers', () => {
         type: FeeType.Sending,
         fee: {
           fixed: BigInt(100),
-          percentage: -1
+          basisPoints: -10_000
         }
       }
       const response = await appContainer.apolloClient
@@ -201,7 +203,7 @@ describe('Fee Resolvers', () => {
                   assetId
                   type
                   fixed
-                  percentage
+                  basisPoints
                   createdAt
                 }
               }

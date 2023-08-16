@@ -27,5 +27,6 @@ export class Fee extends BaseModel {
   public type!: FeeType
   public activatedAt?: Date
   public fixedFee!: bigint
-  public percentageFee!: string
+  public basisPointFee!: number
+  // public percentageFee!: string
 }

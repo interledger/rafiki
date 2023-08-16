@@ -250,8 +250,8 @@ describe('Asset Resolvers', (): void => {
 
     test.each([
       undefined,
-      { fixed: BigInt(100), percentage: 0.1, type: FeeType.Sending },
-      { fixed: BigInt(100), percentage: 0.1, type: FeeType.Receiving }
+      { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Sending },
+      { fixed: BigInt(100), basisPoints: 1000, type: FeeType.Receiving }
     ])('Can get an asset with fee of %p', async (fee): Promise<void> => {
       const asset = await assetService.create(randomAsset())
       assert.ok(!isAssetError(asset))
@@ -264,7 +264,7 @@ describe('Asset Resolvers', (): void => {
           type: fee.type,
           fee: {
             fixed: fee.fixed,
-            percentage: fee.percentage
+            basisPoints: fee.basisPoints
           }
         })
         assert.ok(!isFeeError(fee))
@@ -275,7 +275,7 @@ describe('Asset Resolvers', (): void => {
           assetId: asset.id,
           type: foundFee.type,
           fixed: foundFee.fixedFee.toString(),
-          percentage: parseFloat(foundFee.percentageFee)
+          basisPoints: foundFee.basisPointFee
         }
       }
 
@@ -293,14 +293,14 @@ describe('Asset Resolvers', (): void => {
                     assetId
                     type
                     fixed
-                    percentage
+                    basisPoints
                   }
                   receivingFee {
                     id
                     assetId
                     type
                     fixed
-                    percentage
+                    basisPoints
                   }
                   createdAt
                 }

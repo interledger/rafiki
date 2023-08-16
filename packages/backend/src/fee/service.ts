@@ -8,7 +8,7 @@ interface CreateOptions {
   type: FeeType
   fee: {
     fixed: bigint
-    percentage: number
+    basisPoints: number
   }
 }
 
@@ -52,14 +52,14 @@ async function createFee(
   deps: ServiceDependencies,
   { assetId, type, fee }: CreateOptions
 ): Promise<Fee | FeeError> {
-  const { fixed, percentage } = fee
+  const { fixed, basisPoints } = fee
 
   if (fixed < 0) {
     return FeeError.InvalidFixedFee
   }
 
-  if (percentage < 0 || percentage > 1) {
-    return FeeError.InvalidPercentageFee
+  if (basisPoints < 0 || basisPoints > 10_000) {
+    return FeeError.InvalidBasisPointFee
   }
 
   try {
@@ -67,7 +67,7 @@ async function createFee(
       assetId: assetId,
       type: type,
       activatedAt: new Date(),
-      percentageFee: percentage.toString(),
+      basisPointFee: basisPoints,
       fixedFee: fixed
     })
   } catch (error) {
