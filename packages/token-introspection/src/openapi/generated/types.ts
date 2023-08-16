@@ -30,13 +30,13 @@ export type components = {
       grant: string;
       access: external["auth-server.yaml"]["components"]["schemas"]["access"];
       /**
-       * client 
+       * client
        * @description Payment pointer of the client instance that is making this request.
-       * 
+       *
        * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
-       * 
+       *
        * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the payment pointer + `/jwks.json` url.
-       * 
+       *
        * If sending a grant initiation request that requires RO interaction, the payment pointer MUST serve necessary client display information.
        */
       client: string;
@@ -98,7 +98,7 @@ export type external = {
     components: {
       schemas: {
         /** @description A description of the rights associated with this access token. */
-        access: (components["schemas"]["access-item"])[];
+        access: external["auth-server.yaml"]["components"]["schemas"]["access-item"][];
         /** @description The access associated with the access token is described using objects that each contain multiple dimensions of access. */
         "access-item": external["auth-server.yaml"]["components"]["schemas"]["access-incoming"] | external["auth-server.yaml"]["components"]["schemas"]["access-outgoing"] | external["auth-server.yaml"]["components"]["schemas"]["access-quote"];
         /** access-incoming */
@@ -111,7 +111,7 @@ export type external = {
           /** @description The types of actions the client instance will take at the RS as an array of strings. */
           actions: ("create" | "complete" | "read" | "read-all" | "list" | "list-all")[];
           /**
-           * Format: uri 
+           * Format: uri
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier?: string;
@@ -126,11 +126,11 @@ export type external = {
           /** @description The types of actions the client instance will take at the RS as an array of strings. */
           actions: ("create" | "read" | "read-all" | "list" | "list-all")[];
           /**
-           * Format: uri 
+           * Format: uri
            * @description A string identifier indicating a specific resource at the RS.
            */
           identifier: string;
-          limits?: components["schemas"]["limits-outgoing"];
+          limits?: external["auth-server.yaml"]["components"]["schemas"]["limits-outgoing"];
         };
         /** access-quote */
         "access-quote": {
@@ -143,34 +143,34 @@ export type external = {
           actions: ("create" | "read" | "read-all")[];
         };
         /**
-         * access_token 
+         * access_token
          * @description A single access token or set of access tokens that the client instance can use to call the RS on behalf of the RO.
          */
         access_token: {
           /** @description The value of the access token as a string.  The value is opaque to the client instance.  The value SHOULD be limited to ASCII characters to facilitate transmission over HTTP headers within other protocols without requiring additional encoding. */
           value: string;
           /**
-           * Format: uri 
+           * Format: uri
            * @description The management URI for this access token. This URI MUST NOT include the access token value and SHOULD be different for each access token issued in a request.
            */
           manage: string;
           /** @description The number of seconds in which the access will expire.  The client instance MUST NOT use the access token past this time.  An RS MUST NOT accept an access token past this time. */
           expires_in?: number;
-          access: components["schemas"]["access"];
+          access: external["auth-server.yaml"]["components"]["schemas"]["access"];
         };
         /**
-         * client 
+         * client
          * @description Payment pointer of the client instance that is making this request.
-         * 
+         *
          * When sending a non-continuation request to the AS, the client instance MUST identify itself by including the client field of the request and by signing the request.
-         * 
+         *
          * A JSON Web Key Set document, including the public key that the client instance will use to protect this request and any continuation requests at the AS and any user-facing information about the client instance used in interactions, MUST be available at the payment pointer + `/jwks.json` url.
-         * 
+         *
          * If sending a grant initiation request that requires RO interaction, the payment pointer MUST serve necessary client display information.
          */
         client: string;
         /**
-         * continue 
+         * continue
          * @description If the AS determines that the request can be continued with additional requests, it responds with the continue field.
          */
         continue: {
@@ -179,7 +179,7 @@ export type external = {
             value: string;
           };
           /**
-           * Format: uri 
+           * Format: uri
            * @description The URI at which the client instance can make continuation requests.
            */
           uri: string;
@@ -187,12 +187,12 @@ export type external = {
           wait?: number;
         };
         /**
-         * interact 
+         * interact
          * @description The client instance declares the parameters for interaction methods that it can support using the interact field.
          */
         "interact-request": {
           /** @description Indicates how the client instance can start an interaction. */
-          start: ("redirect")[];
+          start: "redirect"[];
           /** @description Indicates how the client instance can receive an indication that interaction has finished at the AS. */
           finish?: {
             /**
@@ -201,7 +201,7 @@ export type external = {
              */
             method: "redirect";
             /**
-             * Format: uri 
+             * Format: uri
              * @description Indicates the URI that the AS will either send the RO to after interaction or send an HTTP POST request.
              */
             uri: string;
@@ -212,7 +212,7 @@ export type external = {
         /** interact-response */
         "interact-response": {
           /**
-           * Format: uri 
+           * Format: uri
            * @description The URI to direct the end user to.
            */
           redirect: string;
@@ -220,12 +220,12 @@ export type external = {
           finish: string;
         };
         /**
-         * Interval 
+         * Interval
          * @description [ISO8601 repeating interval](https://en.wikipedia.org/wiki/ISO_8601#Repeating_intervals)
          */
         interval: string;
         /**
-         * limits-outgoing 
+         * limits-outgoing
          * @description Open Payments specific property that defines the limits under which outgoing payments can be created.
          */
         "limits-outgoing": {
@@ -248,31 +248,31 @@ export type external = {
     components: {
       schemas: {
         /**
-         * amount 
+         * amount
          * @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.
          */
         amount: {
           /**
-           * Format: uint64 
+           * Format: uint64
            * @description The value is an unsigned 64-bit integer amount, represented as a string.
            */
           value: string;
-          assetCode: components["schemas"]["assetCode"];
-          assetScale: components["schemas"]["assetScale"];
+          assetCode: external["schemas.yaml"]["components"]["schemas"]["assetCode"];
+          assetScale: external["schemas.yaml"]["components"]["schemas"]["assetScale"];
         };
         /**
-         * Asset code 
+         * Asset code
          * @description The assetCode is a code that indicates the underlying asset. This SHOULD be an ISO4217 currency code.
          */
         assetCode: string;
         /**
-         * Asset scale 
+         * Asset scale
          * @description The scale of amounts denoted in the corresponding asset code.
          */
         assetScale: number;
         /**
-         * Receiver 
-         * Format: uri 
+         * Receiver
+         * Format: uri
          * @description The URL of the incoming payment or ILP STREAM connection that is being paid.
          */
         receiver: string;
