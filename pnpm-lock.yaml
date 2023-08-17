@@ -183,7 +183,7 @@ importers:
         version: 16.7.1
       knex:
         specifier: ^2.5.1
-        version: 2.5.1(pg@8.11.2)
+        version: 2.5.1(pg@8.11.3)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -200,8 +200,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.1.1)
       pg:
-        specifier: ^8.11.2
-        version: 8.11.2
+        specifier: ^8.11.3
+        version: 8.11.3
       pino:
         specifier: ^8.15.0
         version: 8.15.0
@@ -352,7 +352,7 @@ importers:
         version: 1.0.6
       knex:
         specifier: ^2.5.1
-        version: 2.5.1(pg@8.11.2)
+        version: 2.5.1(pg@8.11.3)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -375,8 +375,8 @@ importers:
         specifier: 5.1.3-alpha.2
         version: 5.1.3-alpha.2
       pg:
-        specifier: ^8.11.2
-        version: 8.11.2
+        specifier: ^8.11.3
+        version: 8.11.3
       pino:
         specifier: ^8.15.0
         version: 8.15.0
@@ -12884,7 +12884,7 @@ packages:
     engines: {node: '>= 8'}
     dev: false
 
-  /knex@2.5.1(pg@8.11.2):
+  /knex@2.5.1(pg@8.11.3):
     resolution: {integrity: sha512-z78DgGKUr4SE/6cm7ku+jHvFT0X97aERh/f0MUKAKgFnwCYBEW4TFBqtHWFYiJFid7fMrtpZ/gxJthvz5mEByA==}
     engines: {node: '>=12'}
     hasBin: true
@@ -12921,7 +12921,7 @@ packages:
       getopts: 2.3.0
       interpret: 2.2.0
       lodash: 4.17.21
-      pg: 8.11.2
+      pg: 8.11.3
       pg-connection-string: 2.6.1
       rechoir: 0.8.0
       resolve-from: 5.0.0
@@ -14254,7 +14254,7 @@ packages:
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
       db-errors: 0.2.3
-      knex: 2.5.1(pg@8.11.2)
+      knex: 2.5.1(pg@8.11.3)
     dev: false
 
   /obuf@1.1.2:
@@ -14756,12 +14756,12 @@ packages:
     engines: {node: '>=4.0.0'}
     dev: false
 
-  /pg-pool@3.6.1(pg@8.11.2):
+  /pg-pool@3.6.1(pg@8.11.3):
     resolution: {integrity: sha512-jizsIzhkIitxCGfPRzJn1ZdcosIt3pz9Sh3V01fm1vZnbnCMgmGl5wvGGdNN2EL9Rmb0EcFoCkixH4Pu+sP9Og==}
     peerDependencies:
       pg: '>=8.0'
     dependencies:
-      pg: 8.11.2
+      pg: 8.11.3
     dev: false
 
   /pg-protocol@1.6.0:
@@ -14779,8 +14779,8 @@ packages:
       postgres-interval: 1.2.0
     dev: false
 
-  /pg@8.11.2:
-    resolution: {integrity: sha512-l4rmVeV8qTIrrPrIR3kZQqBgSN93331s9i6wiUiLOSk0Q7PmUxZD/m1rQI622l3NfqBby9Ar5PABfS/SulfieQ==}
+  /pg@8.11.3:
+    resolution: {integrity: sha512-+9iuvG8QfaaUrrph+kpF24cXkH1YOOUeArRNYIxq1viYHZagBxrTno7cecY1Fa44tJeZvaoG+Djpkc3JwehN5g==}
     engines: {node: '>= 8.0.0'}
     peerDependencies:
       pg-native: '>=3.0.1'
@@ -14791,7 +14791,7 @@ packages:
       buffer-writer: 2.0.0
       packet-reader: 1.0.0
       pg-connection-string: 2.6.2
-      pg-pool: 3.6.1(pg@8.11.2)
+      pg-pool: 3.6.1(pg@8.11.3)
       pg-protocol: 1.6.0
       pg-types: 2.2.0
       pgpass: 1.0.5
