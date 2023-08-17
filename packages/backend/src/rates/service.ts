@@ -6,6 +6,11 @@ import { CacheDataStore } from '../middleware/cache/data-stores'
 
 const REQUEST_TIMEOUT = 5_000 // millseconds
 
+export interface Rates {
+  base: string
+  rates: Record<string, number>
+}
+
 export interface RatesService {
   rates(baseAssetCode: string): Promise<Rates>
   convert(
@@ -20,19 +25,7 @@ interface ServiceDependencies extends BaseService {
   exchangeRatesLifetime: number
 }
 
-interface Rates {
-  [currency: string]: number
-}
-
-interface RatesResponse {
-  base: string
-  rates: Rates
-}
-
 export enum ConvertError {
-  MissingSourceAsset = 'MissingSourceAsset',
-  MissingDestinationAsset = 'MissingDestinationAsset',
-  InvalidSourcePrice = 'InvalidSourcePrice',
   InvalidDestinationPrice = 'InvalidDestinationPrice'
 }
 
@@ -62,18 +55,14 @@ class RatesServiceImpl implements RatesService {
     if (sameCode && sameScale) return opts.sourceAmount
     if (sameCode) return convert({ exchangeRate: 1.0, ...opts })
 
-    const rates = await this.getRates(opts.sourceAsset.code)
-    const sourcePrice = rates[opts.sourceAsset.code]
-    if (!sourcePrice) return ConvertError.MissingSourceAsset
-    if (!isValidPrice(sourcePrice)) return ConvertError.InvalidSourcePrice
-    const destinationPrice = rates[opts.destinationAsset.code]
-    if (!destinationPrice) return ConvertError.MissingDestinationAsset
-    if (!isValidPrice(destinationPrice))
-      return ConvertError.InvalidDestinationPrice
+    const { rates } = await this.getRates(opts.sourceAsset.code)
 
-    // source asset → base currency → destination asset
-    const exchangeRate = sourcePrice / destinationPrice
-    return convert({ exchangeRate, ...opts })
+    const destinationExchangeRate = rates[opts.destinationAsset.code]
+    if (!destinationExchangeRate || !isValidPrice(destinationExchangeRate)) {
+      return ConvertError.InvalidDestinationPrice
+    }
+
+    return convert({ exchangeRate: destinationExchangeRate, ...opts })
   }
 
   async rates(baseAssetCode: string): Promise<Rates> {
@@ -123,10 +112,12 @@ class RatesServiceImpl implements RatesService {
 
   private async fetchNewRates(baseAssetCode: string): Promise<Rates> {
     const url = this.deps.exchangeRatesUrl
-    if (!url) return {}
+    if (!url) {
+      return { base: baseAssetCode, rates: {} }
+    }
 
     const res = await this.axios
-      .get<RatesResponse>(url, { params: { base: baseAssetCode } })
+      .get<Rates>(url, { params: { base: baseAssetCode } })
       .catch((err) => {
         this.deps.logger.warn({ err: err.message }, 'price request error')
         throw err
@@ -135,12 +126,7 @@ class RatesServiceImpl implements RatesService {
     const { base, rates } = res.data
     this.checkBaseAsset(base)
 
-    const data = {
-      [base]: 1.0,
-      ...(rates ? rates : {})
-    }
-
-    return data
+    return { base, rates }
   }
 
   private checkBaseAsset(asset: unknown): void {
