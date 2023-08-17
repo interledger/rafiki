@@ -47,7 +47,7 @@ describe('Interaction Routes', (): void => {
   let grant: Grant
 
   const generateBaseGrant = () => ({
-    state: GrantState.Processing,
+    state: GrantState.Pending,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),
