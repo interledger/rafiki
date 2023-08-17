@@ -48,7 +48,7 @@ export async function getAccountTransactions(
     return {
       id: node.id,
       metadata: node.metadata,
-      incomingAmountValue: node.incomingAmount.value,
+      incomingAmountValue: node.incomingAmount?.value,
       amountValue: node.receivedAmount.value,
       assetCode: node.receivedAmount.assetCode,
       assetScale: node.receivedAmount.assetScale,

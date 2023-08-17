@@ -24,13 +24,15 @@ import { GrantService } from './grant/service'
 import {
   CreateContext,
   ContinueContext,
-  StartContext,
-  GetContext,
-  ChooseContext,
-  FinishContext,
   GrantRoutes,
   RevokeContext as GrantRevokeContext
 } from './grant/routes'
+import {
+  StartContext,
+  GetContext,
+  ChooseContext,
+  FinishContext
+} from './interaction/routes'
 import {
   AccessTokenRoutes,
   IntrospectContext,
@@ -212,6 +214,7 @@ export class App {
 
     const accessTokenRoutes = await this.container.use('accessTokenRoutes')
     const grantRoutes = await this.container.use('grantRoutes')
+    const interactionRoutes = await this.container.use('interactionRoutes')
     const openApi = await this.container.use('openApi')
 
     /* Back-channel GNAP Routes */
@@ -279,7 +282,7 @@ export class App {
         path: '/interact/{id}/{nonce}',
         method: HttpMethod.GET
       }),
-      grantRoutes.interaction.start
+      interactionRoutes.start
     )
 
     // Interaction finish
@@ -289,7 +292,7 @@ export class App {
         path: '/interact/{id}/{nonce}/finish',
         method: HttpMethod.GET
       }),
-      grantRoutes.interaction.finish
+      interactionRoutes.finish
     )
 
     // Grant lookup
@@ -299,7 +302,7 @@ export class App {
         path: '/grant/{id}/{nonce}',
         method: HttpMethod.GET
       }),
-      grantRoutes.interaction.details
+      interactionRoutes.details
     )
 
     // Grant accept/reject
@@ -309,7 +312,7 @@ export class App {
         path: '/grant/{id}/{nonce}/{choice}',
         method: HttpMethod.POST
       }),
-      grantRoutes.interaction.acceptOrReject
+      interactionRoutes.acceptOrReject
     )
 
     koa.use(cors())

@@ -13,6 +13,7 @@ export interface Self {
 export interface Asset {
   code: string
   scale: number
+  liquidity: number
 }
 
 export interface Fees {
@@ -33,15 +34,22 @@ export interface Account {
   initialBalance: bigint
   path: string
   postmanEnvVar: string
+  assetCode: string
   skipPaymentPointerCreation?: boolean
+}
+
+interface Fee {
+  fixed: number
+  percentage: number
 }
 
 export interface SeedInstance {
   self: Self
-  asset: Asset
+  assets: Array<Asset>
   peers: Array<Peering>
   accounts: Array<Account>
-  fees: Array<Fees>
+  sendingFee: Fee
+  rates: Record<string, Record<string, number>>
 }
 
 export interface Config {

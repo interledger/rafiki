@@ -20,6 +20,7 @@ import {
 } from '../payment_pointer/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
+import { convertRatesToIlpPrices } from '../../rates/util'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -222,7 +223,7 @@ export async function startQuote(
   options: StartQuoteOptions
 ): Promise<Pay.Quote> {
   const rates = await deps.ratesService
-    .rates(options.receiver.assetCode)
+    .rates(options.paymentPointer.asset.code)
     .catch((_err: Error) => {
       throw new Error('missing rates')
     })
@@ -251,7 +252,7 @@ export async function startQuote(
     const quote = await Pay.startQuote({
       ...quoteOptions,
       slippage: deps.slippage,
-      prices: rates
+      prices: convertRatesToIlpPrices(rates)
     }).finally(() => {
       return Pay.closeConnection(
         quoteOptions.plugin,

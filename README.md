@@ -1,6 +1,6 @@
 # Rafiki
 
-<img width="920" alt="rafiki" src="https://user-images.githubusercontent.com/3362563/119590055-e3347580-bd88-11eb-8ae7-958075433e48.png">
+![Rafiki](https://github.com/interledger/rafiki/assets/20246798/528b1978-0e02-4bc4-a6b4-e8e81d2f3c3a)
 
 ## What is Rafiki?
 
@@ -38,7 +38,7 @@ Please read the [contribution guidelines](.github/contributing.md) before submit
 
 ## Planning Calls
 
-Our planning calls are open to our community. We have them every Tuesday at 12:30 GMT, via Google Meet.
+Our planning calls are open to our community. We have them every Tuesday at 14:30 GMT, via Google Meet.
 
 **Google Meet joining info**
 

@@ -226,3 +226,25 @@ sidebar_position: 6
 </tr>
 </tbody>
 </table>
+
+## PaymentType
+
+<p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
+
+<table>
+<thead><tr><th>Value</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>INCOMING</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>OUTGOING</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
