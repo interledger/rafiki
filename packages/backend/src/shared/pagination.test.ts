@@ -16,7 +16,7 @@ import { createOutgoingPayment } from '../tests/outgoingPayment'
 import { createPaymentPointer } from '../tests/paymentPointer'
 import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
-import { PeerService } from '../ilp/peer/service'
+import { PeerService } from '../payment-method/ilp/peer/service'
 import { createPeer } from '../tests/peer'
 
 describe('Pagination', (): void => {

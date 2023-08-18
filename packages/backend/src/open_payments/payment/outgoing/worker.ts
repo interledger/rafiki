@@ -4,7 +4,7 @@ import { ServiceDependencies } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { canRetryError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
-import { IlpPlugin } from '../../../ilp/ilp_plugin'
+import { IlpPlugin } from '../../../payment-method/ilp/ilp_plugin'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10

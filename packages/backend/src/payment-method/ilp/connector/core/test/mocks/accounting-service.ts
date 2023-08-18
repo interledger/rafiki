@@ -4,11 +4,11 @@ import {
   OutgoingAccount
 } from '../../rafiki'
 
-import { Transaction } from '../../../../../accounting/service'
+import { Transaction } from '../../../../../../accounting/service'
 import {
   CreateAccountError,
   TransferError
-} from '../../../../../accounting/errors'
+} from '../../../../../../accounting/errors'
 import { CreateAccountError as CreateAccountErrorCode } from 'tigerbeetle-node'
 
 interface MockAccount {

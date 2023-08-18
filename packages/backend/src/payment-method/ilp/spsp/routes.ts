@@ -1,5 +1,5 @@
-import { BaseService } from '../../shared/baseService'
-import { SPSPContext } from '../../app'
+import { BaseService } from '../../../shared/baseService'
+import { SPSPContext } from '../../../app'
 import base64url from 'base64url'
 import { StreamServer } from '@interledger/stream-receiver'
 

@@ -1,6 +1,6 @@
 import { HttpTokenError } from './errors'
 import { HttpToken } from './model'
-import { BaseService } from '../../shared/baseService'
+import { BaseService } from '../../../shared/baseService'
 import {
   ForeignKeyViolationError,
   Transaction,

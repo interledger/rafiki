@@ -1,5 +1,5 @@
-import { PaymentPointerContext, SPSPContext } from '../../app'
-import { ConnectionContext } from '../../open_payments/connection/middleware'
+import { PaymentPointerContext, SPSPContext } from '../../../app'
+import { ConnectionContext } from '../../../open_payments/connection/middleware'
 
 export type SPSPConnectionContext = ConnectionContext &
   SPSPContext & {

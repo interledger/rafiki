@@ -21,12 +21,12 @@ import {
   createAccountMiddleware,
   createStreamAddressMiddleware
 } from './core'
-import { AccountingService } from '../../accounting/service'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
-import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
+import { AccountingService } from '../../../accounting/service'
+import { PaymentPointerService } from '../../../open_payments/payment_pointer/service'
+import { IncomingPaymentService } from '../../../open_payments/payment/incoming/service'
 import { PeerService } from '../peer/service'
-import { RatesService } from '../../rates/service'
-import { BaseService } from '../../shared/baseService'
+import { RatesService } from '../../../rates/service'
+import { BaseService } from '../../../shared/baseService'
 
 interface ServiceDependencies extends BaseService {
   redis: Redis

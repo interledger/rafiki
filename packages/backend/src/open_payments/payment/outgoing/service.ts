@@ -22,14 +22,17 @@ import {
   AccountingService,
   LiquidityAccountType
 } from '../../../accounting/service'
-import { PeerService } from '../../../ilp/peer/service'
+import { PeerService } from '../../../payment-method/ilp/peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
 import {
   PaymentPointerService,
   PaymentPointerSubresourceService
 } from '../../payment_pointer/service'
-import { IlpPlugin, IlpPluginOptions } from '../../../ilp/ilp_plugin'
+import {
+  IlpPlugin,
+  IlpPluginOptions
+} from '../../../payment-method/ilp/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'

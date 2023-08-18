@@ -9,7 +9,7 @@ import {
 } from '../../payment_pointer/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
-import { ConnectorAccount } from '../../../ilp/connector/core/rafiki'
+import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
 import { WebhookEvent } from '../../../webhook/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,

@@ -12,13 +12,13 @@ import { Peer } from './model'
 import {
   AccountingService,
   LiquidityAccountType
-} from '../../accounting/service'
-import { AssetService } from '../../asset/service'
+} from '../../../accounting/service'
+import { AssetService } from '../../../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../peer-http-token/service'
 import { HttpTokenError } from '../peer-http-token/errors'
-import { Pagination } from '../../shared/baseModel'
-import { BaseService } from '../../shared/baseService'
-import { isValidHttpUrl } from '../../shared/utils'
+import { Pagination } from '../../../shared/baseModel'
+import { BaseService } from '../../../shared/baseService'
+import { isValidHttpUrl } from '../../../shared/utils'
 
 export interface HttpOptions {
   incoming?: {

@@ -3,9 +3,9 @@ import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
 import { AppServices } from '../app'
-import { isPeerError } from '../ilp/peer/errors'
-import { Peer } from '../ilp/peer/model'
-import { CreateOptions, HttpOptions } from '../ilp/peer/service'
+import { isPeerError } from '../payment-method/ilp/peer/errors'
+import { Peer } from '../payment-method/ilp/peer/model'
+import { CreateOptions, HttpOptions } from '../payment-method/ilp/peer/service'
 import { createAsset } from './asset'
 
 export async function createPeer(

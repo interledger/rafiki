@@ -1,7 +1,10 @@
 import { Errors } from 'ilp-packet'
 import { ILPContext, ILPMiddleware } from '../rafiki'
-import { isTransferError, TransferError } from '../../../../accounting/errors'
-import { Transaction } from '../../../../accounting/service'
+import {
+  isTransferError,
+  TransferError
+} from '../../../../../accounting/errors'
+import { Transaction } from '../../../../../accounting/service'
 const { CannotReceiveError, InsufficientLiquidityError } = Errors
 
 export function createBalanceMiddleware(): ILPMiddleware {

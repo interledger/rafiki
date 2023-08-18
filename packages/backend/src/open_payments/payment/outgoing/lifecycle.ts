@@ -9,7 +9,7 @@ import {
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
-import { IlpPlugin } from '../../../ilp/ilp_plugin'
+import { IlpPlugin } from '../../../payment-method/ilp/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(

@@ -3,7 +3,7 @@ import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
-import { ConnectorAccount } from '../../../ilp/connector/core/rafiki'
+import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
 import {
   PaymentPointerSubresource,
   PaymentPointer
