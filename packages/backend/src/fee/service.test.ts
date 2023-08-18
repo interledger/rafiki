@@ -65,7 +65,7 @@ describe('Fee Service', (): void => {
             type: feeCreate.type,
             fixedFee: feeCreate.fee.fixed,
             basisPointFee: feeCreate.fee.basisPoints,
-            activatedAt: expect.any(Date)
+            createdAt: expect.any(Date)
           })
         }
       )
@@ -136,14 +136,12 @@ describe('Fee Service', (): void => {
           type,
           basisPointFee: 100,
           fixedFee: BigInt(100),
-          activatedAt: new Date()
         })
         const fee2 = await Fee.query().insertAndFetch({
           assetId: asset.id,
           type,
           basisPointFee: 200,
           fixedFee: BigInt(200),
-          activatedAt: new Date()
         })
 
         const latestFee = await feeService.getLatestFee(asset.id, type)

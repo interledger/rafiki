@@ -43,8 +43,7 @@ async function getLatestFee(
 ): Promise<Fee | undefined> {
   return await Fee.query(deps.knex)
     .where({ assetId, type })
-    .whereNotNull('activatedAt')
-    .orderBy('activatedAt', 'desc')
+    .orderBy('createdAt', 'desc')
     .first()
 }
 
@@ -66,7 +65,6 @@ async function createFee(
     return await Fee.query(deps.knex).insertAndFetch({
       assetId: assetId,
       type: type,
-      activatedAt: new Date(),
       basisPointFee: basisPoints,
       fixedFee: fixed
     })
