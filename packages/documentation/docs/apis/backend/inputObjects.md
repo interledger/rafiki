@@ -747,7 +747,7 @@ basisPoints<br />
 <a href="scalars#int"><code>Int!</code></a>
 </td>
 <td>
-<p>Basis points fee. Should be between 0 and 10000. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
+<p>Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
 </td>
 </tr>
 </tbody>
