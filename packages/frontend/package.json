@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",
-    "@headlessui/react": "^1.7.16",
+    "@headlessui/react": "^1.7.17",
     "@remix-run/node": "^1.19.3",
     "@remix-run/react": "^1.19.3",
     "@remix-run/serve": "^1.19.3",
