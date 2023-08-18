@@ -12,7 +12,7 @@ import { Fee, FeeType } from './model'
 import { v4 } from 'uuid'
 import { FeeError } from './errors'
 
-describe('Combined Payment Service', (): void => {
+describe('Fee Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
