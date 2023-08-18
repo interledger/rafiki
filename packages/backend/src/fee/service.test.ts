@@ -135,13 +135,13 @@ describe('Fee Service', (): void => {
           assetId: asset.id,
           type,
           basisPointFee: 100,
-          fixedFee: BigInt(100),
+          fixedFee: BigInt(100)
         })
         const fee2 = await Fee.query().insertAndFetch({
           assetId: asset.id,
           type,
           basisPointFee: 200,
-          fixedFee: BigInt(200),
+          fixedFee: BigInt(200)
         })
 
         const latestFee = await feeService.getLatestFee(asset.id, type)
