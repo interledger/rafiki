@@ -2,20 +2,19 @@
   "name": "mock-account-servicing-entity",
   "sideEffects": false,
   "scripts": {
-    "build:deps": "pnpm --filter http-signature-utils build",
-    "build": "pnpm build:deps && remix build",
+    "build": "remix build",
     "dev": "PORT=3300 remix dev",
     "start": "remix-serve build"
   },
   "dependencies": {
     "@apollo/client": "^3.8.1",
-    "@remix-run/node": "^1.19.2",
-    "@remix-run/react": "^1.19.2",
-    "@remix-run/serve": "^1.19.2",
+    "@remix-run/node": "^1.19.3",
+    "@remix-run/react": "^1.19.3",
+    "@remix-run/serve": "^1.19.3",
     "@types/node": "^18.7.12",
     "@types/uuid": "^9.0.2",
     "axios": "^1.4.0",
-    "graphql": "^16.7.1",
+    "graphql": "^16.8.0",
     "@interledger/http-signature-utils": "1.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -23,12 +22,9 @@
     "yaml": "^2.3.1"
   },
   "devDependencies": {
-    "@remix-run/dev": "^1.19.2",
-    "@remix-run/eslint-config": "^1.19.2",
+    "@remix-run/dev": "^1.19.3",
     "@types/react": "^18.2.20",
-    "@types/react-dom": "^18.2.7",
-    "eslint": "^8.46.0",
-    "typescript": "^4.9.5"
+    "@types/react-dom": "^18.2.7"
   },
   "engines": {
     "node": "18"
