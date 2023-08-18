@@ -308,7 +308,7 @@ export type Fee = Model & {
 };
 
 export type FeeDetails = {
-  /** Basis points fee. Should be between 0 and 10000. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100% */
+  /** Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100% */
   basisPoints: Scalars['Int']['input'];
   /** A flat fee */
   fixed: Scalars['UInt64']['input'];
