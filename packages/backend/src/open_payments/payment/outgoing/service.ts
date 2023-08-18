@@ -101,9 +101,8 @@ async function createOutgoingPayment(
   const paymentPointerId = options.paymentPointerId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      const paymentPointer = await deps.paymentPointerService.get(
-        paymentPointerId
-      )
+      const paymentPointer =
+        await deps.paymentPointerService.get(paymentPointerId)
       if (!paymentPointer) {
         throw OutgoingPaymentError.UnknownPaymentPointer
       }
