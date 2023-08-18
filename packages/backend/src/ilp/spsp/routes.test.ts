@@ -1,18 +1,18 @@
 import * as crypto from 'crypto'
 import { v4 as uuid } from 'uuid'
 
-import { AppServices, SPSPContext } from '../app'
+import { AppServices, SPSPContext } from '../../app'
 import { SPSPRoutes } from './routes'
-import { createTestApp, TestContainer } from '../tests/app'
-import { initIocContainer } from '../'
-import { AssetOptions } from '../asset/service'
-import { Config } from '../config/app'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { initIocContainer } from '../..'
+import { AssetOptions } from '../../asset/service'
+import { Config } from '../../config/app'
 
 import { IocContract } from '@adonisjs/fold'
 import { StreamServer } from '@interledger/stream-receiver'
-import { randomAsset } from '../tests/asset'
-import { createContext } from '../tests/context'
-import { truncateTables } from '../tests/tableManager'
+import { randomAsset } from '../../tests/asset'
+import { createContext } from '../../tests/context'
+import { truncateTables } from '../../tests/tableManager'
 
 type SPSPHeader = {
   Accept: string

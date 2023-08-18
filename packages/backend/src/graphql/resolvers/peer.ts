@@ -5,13 +5,13 @@ import {
   Peer as SchemaPeer,
   MutationResolvers
 } from '../generated/graphql'
-import { Peer } from '../../peer/model'
+import { Peer } from '../../ilp/peer/model'
 import {
   PeerError,
   isPeerError,
   errorToCode,
   errorToMessage
-} from '../../peer/errors'
+} from '../../ilp/peer/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'

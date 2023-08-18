@@ -1,6 +1,6 @@
 import { Model } from 'objection'
 import { Peer } from '../peer/model'
-import { BaseModel } from '../shared/baseModel'
+import { BaseModel } from '../../shared/baseModel'
 import { join } from 'path'
 
 export class HttpToken extends BaseModel {

@@ -1,9 +1,9 @@
 import { Model, Pojo } from 'objection'
-import { LiquidityAccount } from '../accounting/service'
-import { Asset } from '../asset/model'
+import { LiquidityAccount } from '../../accounting/service'
+import { Asset } from '../../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
-import { HttpToken } from '../httpToken/model'
-import { BaseModel } from '../shared/baseModel'
+import { HttpToken } from '../peer-http-token/model'
+import { BaseModel } from '../../shared/baseModel'
 
 export class Peer
   extends BaseModel

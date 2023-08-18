@@ -30,7 +30,7 @@ import {
   PaymentWithdrawType,
   isPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
-import { Peer } from '../../peer/model'
+import { Peer } from '../../ilp/peer/model'
 import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'

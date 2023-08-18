@@ -22,14 +22,14 @@ import {
   AccountingService,
   LiquidityAccountType
 } from '../../../accounting/service'
-import { PeerService } from '../../../peer/service'
+import { PeerService } from '../../../ilp/peer/service'
 import { ReceiverService } from '../../receiver/service'
 import { GetOptions, ListOptions } from '../../payment_pointer/model'
 import {
   PaymentPointerService,
   PaymentPointerSubresourceService
 } from '../../payment_pointer/service'
-import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from '../../../ilp/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
@@ -101,8 +101,9 @@ async function createOutgoingPayment(
   const paymentPointerId = options.paymentPointerId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      const paymentPointer =
-        await deps.paymentPointerService.get(paymentPointerId)
+      const paymentPointer = await deps.paymentPointerService.get(
+        paymentPointerId
+      )
       if (!paymentPointer) {
         throw OutgoingPaymentError.UnknownPaymentPointer
       }

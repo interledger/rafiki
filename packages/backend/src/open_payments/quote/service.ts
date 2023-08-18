@@ -19,7 +19,7 @@ import {
   PaymentPointerSubresourceService
 } from '../payment_pointer/service'
 import { RatesService } from '../../rates/service'
-import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from '../../ilp/ilp_plugin'
 import { convertRatesToIlpPrices } from '../../rates/util'
 
 const MAX_INT64 = BigInt('9223372036854775807')

@@ -3,17 +3,17 @@ import {
   SPSPConnectionContext,
   SPSPPaymentPointerContext
 } from './middleware'
-import { setup } from '../open_payments/payment_pointer/model.test'
-import { Config } from '../config/app'
+import { setup } from '../../open_payments/payment_pointer/model.test'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../'
-import { AppServices } from '../app'
-import { createTestApp, TestContainer } from '../tests/app'
-import { createAsset } from '../tests/asset'
-import { createContext } from '../tests/context'
-import { createIncomingPayment } from '../tests/incomingPayment'
-import { createPaymentPointer } from '../tests/paymentPointer'
-import { truncateTables } from '../tests/tableManager'
+import { initIocContainer } from '../..'
+import { AppServices } from '../../app'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { createAsset } from '../../tests/asset'
+import { createContext } from '../../tests/context'
+import { createIncomingPayment } from '../../tests/incomingPayment'
+import { createPaymentPointer } from '../../tests/paymentPointer'
+import { truncateTables } from '../../tests/tableManager'
 
 describe('SPSP Middleware', (): void => {
   let deps: IocContract<AppServices>

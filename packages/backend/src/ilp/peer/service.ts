@@ -9,13 +9,16 @@ import { isValidIlpAddress } from 'ilp-packet'
 
 import { isPeerError, PeerError } from './errors'
 import { Peer } from './model'
-import { AccountingService, LiquidityAccountType } from '../accounting/service'
-import { AssetService } from '../asset/service'
-import { HttpTokenOptions, HttpTokenService } from '../httpToken/service'
-import { HttpTokenError } from '../httpToken/errors'
-import { Pagination } from '../shared/baseModel'
-import { BaseService } from '../shared/baseService'
-import { isValidHttpUrl } from '../shared/utils'
+import {
+  AccountingService,
+  LiquidityAccountType
+} from '../../accounting/service'
+import { AssetService } from '../../asset/service'
+import { HttpTokenOptions, HttpTokenService } from '../peer-http-token/service'
+import { HttpTokenError } from '../peer-http-token/errors'
+import { Pagination } from '../../shared/baseModel'
+import { BaseService } from '../../shared/baseService'
+import { isValidHttpUrl } from '../../shared/utils'
 
 export interface HttpOptions {
   incoming?: {

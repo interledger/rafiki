@@ -1,6 +1,6 @@
 import { ZeroCopyIlpPrepare } from '../..'
-import { AccountAlreadyExistsError } from '../../../../accounting/errors'
-import { LiquidityAccountType } from '../../../../accounting/service'
+import { AccountAlreadyExistsError } from '../../../../../accounting/errors'
+import { LiquidityAccountType } from '../../../../../accounting/service'
 import {
   AccountFactory,
   IlpPrepareFactory,
