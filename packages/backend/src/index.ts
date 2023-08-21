@@ -354,7 +354,8 @@ export function initIocContainer(
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       receiverService: await deps.use('receiverService'),
       paymentPointerService: await deps.use('paymentPointerService'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      feeService: await deps.use('feeService')
     })
   })
   container.singleton('quoteRoutes', async (deps) => {

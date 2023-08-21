@@ -21,6 +21,8 @@ import {
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 import { convertRatesToIlpPrices } from '../../rates/util'
+import { FeeService } from '../../fee/service'
+import { FeeType } from '../../fee/model'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -39,6 +41,7 @@ export interface ServiceDependencies extends BaseService {
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  feeService: FeeService
 }
 
 export async function createQuoteService(
@@ -372,6 +375,173 @@ export async function finalizeQuote(
   await quote.$query(deps.knex).patch(patchOptions)
 
   return quote
+}
+
+async function finalizeQuoteWIP(
+  deps: ServiceDependencies,
+  quote: Quote,
+  receiver: Receiver,
+  maxReceiveAmountValue?: bigint
+): Promise<Quote> {
+  const {
+    quote: updatedQuote,
+    receiveFeeAmount,
+    sendFeeAmount
+  } = await calculateAmounts(deps, quote)
+  const { sendAmount, receiveAmount } = updatedQuote
+
+  // TODO: do i still need to do any of these checks? maxReceiveAmountValue? if values are send/receiveAmount.value is defined/not 0?
+
+  // TODO: validate res.data is quote
+  // if (!send.value || !receive.value) {
+  //   throw QuoteError.InvalidAmount
+  // }
+  // let sendAmount: Amount
+  // let receiveAmount: Amount
+  // try {
+  //   sendAmount = parseAmount(send)
+  //   receiveAmount = parseAmount(receive)
+  // } catch (_) {
+  //   throw QuoteError.InvalidAmount
+  // }
+  // if (maxReceiveAmountValue) {
+  //   if (
+  //     sendAmount.value !== quote.sendAmount.value ||
+  //     receiveAmount.value > maxReceiveAmountValue ||
+  //     receiveAmount.value <= BigInt(0)
+  //   ) {
+  //     throw QuoteError.InvalidAmount
+  //   }
+  // } else {
+  //   if (
+  //     receiveAmount.value !== quote.receiveAmount.value ||
+  //     sendAmount.value < quote.sendAmount.value ||
+  //     sendAmount.value <= BigInt(0)
+  //   ) {
+  //     throw QuoteError.InvalidAmount
+  //   }
+  // }
+
+  const patchOptions = {
+    sendAmount,
+    receiveAmount,
+    expiresAt: new Date(quote.createdAt.getTime() + deps.quoteLifespan)
+  }
+  // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
+  if (
+    receiver.incomingPayment?.expiresAt &&
+    receiver.incomingPayment?.expiresAt.getTime() <
+      patchOptions.expiresAt.getTime()
+  ) {
+    patchOptions.expiresAt = receiver.incomingPayment.expiresAt
+  }
+
+  await quote.$query(deps.knex).patch(patchOptions)
+
+  return quote
+}
+
+// export async function action({ request }: ActionArgs) {
+//   const receivedQuote: Quote = await request.json()
+
+//   const fee = CONFIG.seed.sendingFee
+//   const supportedAssets = CONFIG.seed.assets.map(({ code }) => code)
+
+//   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
+//     // TODO: handle quote fee calculation for different assets
+//     if (!supportedAssets.includes(receivedQuote.sendAmount.assetCode)) {
+//       throw json('Invalid quote sendAmount asset', { status: 400 })
+//     }
+//     const sendAmountValue = BigInt(receivedQuote.sendAmount.value)
+//     const fees =
+//       // TODO: bigint/float multiplication
+//       BigInt(Math.floor(Number(sendAmountValue) * fee.percentage)) +
+//       BigInt(fee.fixed * Math.pow(10, receivedQuote.sendAmount.assetScale))
+
+//     receivedQuote.sendAmount.value = (sendAmountValue + fees).toString()
+//   } else if (receivedQuote.paymentType === PaymentType.FixedSend) {
+//     if (!supportedAssets.includes(receivedQuote.receiveAmount.assetCode)) {
+//       throw json('Invalid quote receiveAmount asset', { status: 400 })
+//     }
+//     const receiveAmountValue = BigInt(receivedQuote.receiveAmount.value)
+//     const fees =
+//       BigInt(Math.floor(Number(receiveAmountValue) * fee.percentage)) +
+//       BigInt(fee.fixed * Math.pow(10, receivedQuote.receiveAmount.assetScale))
+
+//     if (receiveAmountValue <= fees) {
+//       throw json('Fees exceed quote receiveAmount', { status: 400 })
+//     }
+
+//     receivedQuote.receiveAmount.value = (receiveAmountValue - fees).toString()
+//   } else throw json('Invalid paymentType', { status: 400 })
+
+//   return json(receivedQuote, { status: 201 })
+// }
+
+async function calculateAmounts(deps: ServiceDependencies, quote: Quote) {
+  const receivingFee = await deps.feeService.getLatestFee(
+    quote.assetId,
+    FeeType.Receiving
+  )
+  const sendingFee = await deps.feeService.getLatestFee(
+    quote.assetId,
+    FeeType.Sending
+  )
+
+  if (!receivingFee && !sendingFee) throw Error('Invalid fee configuration') // TODO: refactor to quote error
+
+  // TODO: where to get this? or can rm?
+  // const supportedAssets = CONFIG.seed.assets.map(({ code }) => code)
+
+  let receiveFeeAmount: Amount | null = null
+  let sendFeeAmount: Amount | null = null
+
+  if (receivingFee) {
+    // if (!supportedAssets.includes(quote.sendAmount.assetCode)) {
+    //   throw new Error('Invalid quote sendAmount asset') //TODO: refactor to quote error
+    // }
+    const sendAmountValue = BigInt(quote.sendAmount.value)
+    // TODO: avoid float? Pay.Ratio ?
+    const feePercentage = receivingFee.basisPointFee / 10_000
+    const fees =
+      // TODO: bigint/float multiplication
+      BigInt(Math.floor(Number(sendAmountValue) * feePercentage)) +
+      BigInt(
+        Number(receivingFee.fixedFee) * Math.pow(10, receivingFee.asset.scale)
+      )
+    quote.sendAmount.value = sendAmountValue + fees
+    receiveFeeAmount = {
+      value: fees,
+      assetScale: receivingFee.asset.scale,
+      assetCode: receivingFee.asset.code
+    }
+  }
+  // TODO: what if there are sending AND receiving fees? previously that wasnt possible.
+  // Are the fee values and send/receive amounts correct here when there are fees for both?
+  if (sendingFee) {
+    // if (!supportedAssets.includes(quote.receiveAmount.assetCode)) {
+    //   throw new Error('Invalid quote receiveAmount asset') //TODO: refactor to quote error
+    // }
+    const receiveAmountValue = BigInt(quote.receiveAmount.value)
+    // TODO: avoid float? Pay.Ratio ?
+    const feePercentage = sendingFee.basisPointFee / 10_000
+    const fees =
+      BigInt(Math.floor(Number(receiveAmountValue) * feePercentage)) +
+      BigInt(Number(sendingFee.fixedFee) * Math.pow(10, sendingFee.asset.scale))
+
+    if (receiveAmountValue <= fees) {
+      throw new Error('Fees exceed quote receiveAmount') //TODO: refactor to quote error
+    }
+
+    quote.receiveAmount.value = receiveAmountValue - fees
+    sendFeeAmount = {
+      value: fees,
+      assetScale: sendingFee.asset.scale,
+      assetCode: sendingFee.asset.code
+    }
+  }
+
+  return { quote, receiveFeeAmount, sendFeeAmount }
 }
 
 export function generateQuoteSignature(

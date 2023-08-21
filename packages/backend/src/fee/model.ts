@@ -1,3 +1,4 @@
+import { Asset } from '../asset/model'
 import { BaseModel } from '../shared/baseModel'
 
 export enum FeeType {
@@ -27,4 +28,5 @@ export class Fee extends BaseModel {
   public type!: FeeType
   public fixedFee!: bigint
   public basisPointFee!: number
+  public asset!: Asset
 }
