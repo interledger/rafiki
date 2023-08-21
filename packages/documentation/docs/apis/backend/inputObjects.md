@@ -725,6 +725,34 @@ idempotencyKey<br />
 </tbody>
 </table>
 
+## FeeDetails
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+fixed<br />
+<a href="scalars#uint64"><code>UInt64!</code></a>
+</td>
+<td>
+<p>A flat fee</p>
+</td>
+</tr>
+<tr>
+<td>
+basisPoints<br />
+<a href="scalars#int"><code>Int!</code></a>
+</td>
+<td>
+<p>Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
+</td>
+</tr>
+</tbody>
+</table>
+
 ## FilterString
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
@@ -944,6 +972,52 @@ id<br />
 </td>
 <td>
 <p>Internal id of key</p>
+</td>
+</tr>
+<tr>
+<td>
+idempotencyKey<br />
+<a href="scalars#string"><code>String</code></a>
+</td>
+<td>
+<p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+
+## SetFeeInput
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+assetId<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Asset id to add the fee to</p>
+</td>
+</tr>
+<tr>
+<td>
+type<br />
+<a href="enums#feetype"><code>FeeType!</code></a>
+</td>
+<td>
+<p>Type of fee (sending or receiving)</p>
+</td>
+</tr>
+<tr>
+<td>
+fee<br />
+<a href="inputObjects#feedetails"><code>FeeDetails!</code></a>
+</td>
+<td>
+<p>Fee values</p>
 </td>
 </tr>
 <tr>

@@ -102,6 +102,24 @@ withdrawalThreshold<br />
 </tr>
 <tr>
 <td>
+receivingFee<br />
+<a href="objects#fee"><code>Fee</code></a>
+</td>
+<td>
+<p>The receiving fee structure for the asset</p>
+</td>
+</tr>
+<tr>
+<td>
+sendingFee<br />
+<a href="objects#fee"><code>Fee</code></a>
+</td>
+<td>
+<p>The sending fee structure for the asset</p>
+</td>
+</tr>
+<tr>
+<td>
 createdAt<br />
 <a href="scalars#string"><code>String!</code></a>
 </td>
@@ -450,6 +468,74 @@ message<br />
 </td>
 <td>
 
+</td>
+</tr>
+</tbody>
+</table>
+
+## Fee
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [Model](interfaces#model)
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+id<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Fee id</p>
+</td>
+</tr>
+<tr>
+<td>
+assetId<br />
+<a href="scalars#id"><code>ID!</code></a>
+</td>
+<td>
+<p>Asset id associated with the fee</p>
+</td>
+</tr>
+<tr>
+<td>
+type<br />
+<a href="enums#feetype"><code>FeeType!</code></a>
+</td>
+<td>
+<p>Type of fee (sending or receiving)</p>
+</td>
+</tr>
+<tr>
+<td>
+fixed<br />
+<a href="scalars#uint64"><code>UInt64!</code></a>
+</td>
+<td>
+<p>Fixed fee</p>
+</td>
+</tr>
+<tr>
+<td>
+basisPoints<br />
+<a href="scalars#int"><code>Int!</code></a>
+</td>
+<td>
+<p>Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
+</td>
+</tr>
+<tr>
+<td>
+createdAt<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+<p>Date-time of creation</p>
 </td>
 </tr>
 </tbody>
@@ -2119,6 +2205,56 @@ message<br />
 <td>
 paymentPointerKey<br />
 <a href="objects#paymentpointerkey"><code>PaymentPointerKey</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## SetFeeResponse
+
+<p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
+
+- [MutationResponse](interfaces#mutationresponse)
+
+<p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+code<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+success<br />
+<a href="scalars#boolean"><code>Boolean!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+message<br />
+<a href="scalars#string"><code>String!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+<tr>
+<td>
+fee<br />
+<a href="objects#fee"><code>Fee</code></a>
 </td>
 <td>
 

@@ -398,6 +398,29 @@ input<br />
 </tbody>
 </table>
 
+## setFee
+
+**Type:** [SetFeeResponse!](objects#setfeeresponse)
+
+Set the fee on an asset
+
+<p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
+
+<table>
+<thead><tr><th>Name</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>
+input<br />
+<a href="inputObjects#setfeeinput"><code>SetFeeInput!</code></a>
+</td>
+<td>
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## triggerPaymentPointerEvents
 
 **Type:** [TriggerPaymentPointerEventsMutationResponse!](objects#triggerpaymentpointereventsmutationresponse)
