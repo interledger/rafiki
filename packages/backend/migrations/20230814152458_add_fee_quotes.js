@@ -5,8 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.alterTable('quotes', function (table) {
     table.uuid('feeId') //.notNullable()
-    // TODO: make fkey when fee table added
-    // table.foreign('feeId').references('fee.id')
+    table.foreign('feeId').references('fees.id')
   })
 }
 
