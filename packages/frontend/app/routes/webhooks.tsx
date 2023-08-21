@@ -72,7 +72,7 @@ export default function WebhookEventsPage() {
             </div>
           </PageHeader>
           <div className='p-1'>
-            <h3 className='text-lg'>Filters</h3>
+            <h3 className='text-lg font-bold'>Filters</h3>
             <div className='flex items-center'>
               <DropdownFilter
                 label='Type'

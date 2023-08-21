@@ -24,7 +24,9 @@ export const DropdownFilter = ({
     <Listbox value={values ?? ['all']} onChange={() => void 0} multiple>
       {({ open }) => (
         <>
-          <Listbox.Label as={Label}>{label}</Listbox.Label>
+          <Listbox.Label as={Label} className='mr-2'>
+            {label}
+          </Listbox.Label>
           <div className='relative mt-2'>
             <Listbox.Button className='relative w-[400px] cursor-default rounded-md bg-white py-1.5 pl-3 pr-10 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6'>
               <span className='block truncate'>All</span>
