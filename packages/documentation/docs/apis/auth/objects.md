@@ -124,6 +124,15 @@ state<br />
 </tr>
 <tr>
 <td>
+finalizationReason<br />
+<a href="enums#grantfinalization"><code>GrantFinalization</code></a>
+</td>
+<td>
+<p>Reason a grant was finalized</p>
+</td>
+</tr>
+<tr>
+<td>
 createdAt<br />
 <a href="scalars#string"><code>String!</code></a>
 </td>

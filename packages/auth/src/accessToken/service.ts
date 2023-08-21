@@ -3,7 +3,7 @@ import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { generateToken } from '../shared/utils'
-import { Grant, GrantState } from '../grant/model'
+import { Grant, isRevokedGrant } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 
@@ -78,7 +78,7 @@ async function introspect(
   if (isTokenExpired(token)) {
     return undefined
   } else {
-    if (!token.grant || token.grant.state === GrantState.Revoked) {
+    if (!token.grant || isRevokedGrant(token.grant)) {
       return undefined
     }
 

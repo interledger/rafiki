@@ -37,7 +37,7 @@ describe('Access Service', (): void => {
   })
 
   const BASE_GRANT = {
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),

@@ -16,11 +16,17 @@ export enum FinishMethod {
   Redirect = 'redirect'
 }
 
-export enum GrantState {
-  Pending = 'PENDING',
-  Granted = 'GRANTED',
+export enum GrantFinalization {
+  Issued = 'ISSUED',
   Revoked = 'REVOKED',
   Rejected = 'REJECTED'
+}
+
+export enum GrantState {
+  Processing = 'PROCESSING',
+  Pending = 'PENDING',
+  Approved = 'APPROVED',
+  Finalized = 'FINALIZED'
 }
 
 export class Grant extends BaseModel {
@@ -49,6 +55,7 @@ export class Grant extends BaseModel {
   })
   public access!: Access[]
   public state!: GrantState
+  public finalizationReason?: GrantFinalization
   public startMethod!: StartMethod[]
   public identifier!: string
 
@@ -79,7 +86,7 @@ export function toOpenPaymentPendingGrant(
   grant: Grant,
   args: ToOpenPaymentsPendingGrantArgs
 ): OpenPaymentsPendingGrant {
-  if (!isPendingGrant(grant)) {
+  if (!isInteractiveGrant(grant)) {
     throw new Error('Expected pending/interactive grant')
   }
 
@@ -130,7 +137,7 @@ export function toOpenPaymentsGrant(
   }
 }
 
-export interface PendingGrant extends Grant {
+export interface InteractiveGrant extends Grant {
   finishMethod: NonNullable<Grant['finishMethod']>
   finishUri: NonNullable<Grant['finishUri']>
   interactId: NonNullable<Grant['interactId']>
@@ -138,12 +145,26 @@ export interface PendingGrant extends Grant {
   interactNonce: NonNullable<Grant['interactNonce']> // AS-generated nonce for post-interaction hash
 }
 
-export function isPendingGrant(grant: Grant): grant is PendingGrant {
+export function isInteractiveGrant(grant: Grant): grant is InteractiveGrant {
   return !!(
     grant.finishMethod &&
     grant.finishUri &&
     grant.interactId &&
     grant.interactRef &&
     grant.interactNonce
+  )
+}
+
+export function isRejectedGrant(grant: Grant): boolean {
+  return !!(
+    grant.state === GrantState.Finalized &&
+    grant.finalizationReason === GrantFinalization.Rejected
+  )
+}
+
+export function isRevokedGrant(grant: Grant): boolean {
+  return !!(
+    grant.state === GrantState.Finalized &&
+    grant.finalizationReason === GrantFinalization.Revoked
   )
 }
