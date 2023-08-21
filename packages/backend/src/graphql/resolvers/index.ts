@@ -10,7 +10,9 @@ import {
   getAsset,
   getAssets,
   createAsset,
-  updateAssetWithdrawalThreshold
+  updateAssetWithdrawalThreshold,
+  getAssetReceivingFee,
+  getAssetSendingFee
 } from './asset'
 import {
   getPaymentPointerIncomingPayments,
@@ -44,6 +46,7 @@ import {
 } from './paymentPointerKey'
 import { createReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
+import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
 
@@ -52,7 +55,9 @@ export const resolvers: Resolvers = {
   UInt64: GraphQLBigInt,
   JSONObject: GraphQLJSONObject,
   Asset: {
-    liquidity: getAssetLiquidity
+    liquidity: getAssetLiquidity,
+    sendingFee: getAssetSendingFee,
+    receivingFee: getAssetReceivingFee
   },
   Peer: {
     liquidity: getPeerLiquidity
@@ -98,6 +103,7 @@ export const resolvers: Resolvers = {
     postLiquidityWithdrawal: postLiquidityWithdrawal,
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
-    withdrawEventLiquidity
+    withdrawEventLiquidity,
+    setFee
   }
 }

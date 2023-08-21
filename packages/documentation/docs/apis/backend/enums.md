@@ -39,6 +39,28 @@ sidebar_position: 6
 </tbody>
 </table>
 
+## FeeType
+
+<p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
+
+<table>
+<thead><tr><th>Value</th><th>Description</th></tr></thead>
+<tbody>
+<tr>
+<td>SENDING</td>
+<td>
+<p>Sender pays the fees</p>
+</td>
+</tr>
+<tr>
+<td>RECEIVING</td>
+<td>
+<p>Receiver pays the fees</p>
+</td>
+</tr>
+</tbody>
+</table>
+
 ## IncomingPaymentState
 
 <p style={{ marginBottom: "0.4em" }}><strong>Values</strong></p>
