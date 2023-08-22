@@ -41,7 +41,6 @@ const docs = [
         type: 'category',
         label: 'Accounting',
         items: [
-          'concepts/accounting/assets',
           'concepts/accounting/accounts-and-transfers',
           'concepts/accounting/liquidity',
           'concepts/accounting/tigerbeetle'
