@@ -29,6 +29,6 @@ Assets are represented in the `Asset` type due to JavaScript/Typescript's defici
 
 When two Account Servicing Entities peer their Rafiki instances, they need to define the asset(s) they are going to settle in. The Interledger packets they are going to exchange will then also be denominated in that asset.
 
-Furthermore, if an Account Servicing Entity is performing currency exchange, they need to provide [asset liquidity](./liquidity.md#asset-liquidity).
+Furthermore, if an Account Servicing Entity is performing currency exchange, they need to provide [asset liquidity](./accounting/liquidity.md#asset-liquidity).
 
-Assets can be created and managed via the Admin GraphQL API directly or via the Rafiki Admin dashboard. Currently, [payment pointers](../../reference/glossary.md#payment-pointer) can only be created for an existing asset and are tied to that asset.
+Assets can be created and managed via the Admin GraphQL API directly or via the Rafiki Admin dashboard. Currently, [payment pointers](../reference/glossary.md#payment-pointer) can only be created for an existing asset and are tied to that asset.
