@@ -18,7 +18,13 @@ import {
   RevokeContext
 } from './routes'
 import { Access } from '../access/model'
-import { Grant, StartMethod, FinishMethod, GrantState } from '../grant/model'
+import {
+  Grant,
+  StartMethod,
+  FinishMethod,
+  GrantState,
+  GrantFinalization
+} from '../grant/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
 import { generateNonce, generateToken } from '../shared/utils'
@@ -71,7 +77,7 @@ describe('Grant Routes', (): void => {
   let grant: Grant
 
   const generateBaseGrant = () => ({
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),
@@ -333,7 +339,7 @@ describe('Grant Routes', (): void => {
       test('Can issue access token', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Granted
+          state: GrantState.Approved
         })
 
         const access = await Access.query().insert({
@@ -454,7 +460,8 @@ describe('Grant Routes', (): void => {
       test('Cannot issue access token if grant has been revoked', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Revoked
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
         })
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
@@ -580,7 +587,8 @@ describe('Grant Routes', (): void => {
       test('Can revoke an existing grant', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Granted
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Issued
         })
         const ctx = createContext<RevokeContext>(
           {
@@ -602,7 +610,8 @@ describe('Grant Routes', (): void => {
       test('Cannot revoke an already revoked grant', async (): Promise<void> => {
         const grant = await Grant.query().insert({
           ...generateBaseGrant(),
-          state: GrantState.Revoked
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
         })
         const ctx = createContext<RevokeContext>(
           {

@@ -1,0 +1,26 @@
+---
+title: Hello from Rafiki
+template: splash
+hero:
+  tagline: The Interledger isn't going to build itself
+  actions:
+    - text: Build it on Github!
+      link: https://github.com/interledger/rafiki
+      icon: external
+      variant: primary
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components'
+
+<CardGrid>
+  <a class='card-link' href='/introduction/overview'>
+    <Card title='Read Rafiki Docs' icon='open-book'>
+      Find out more about Rafiki and how it works.
+    </Card>
+  </a>
+  <a class='card-link' href='/apis/backend/schema'>
+    <Card title='View API schema' icon='document'>
+      Discover what is in our GraphQL schema.
+    </Card>
+  </a>
+</CardGrid>

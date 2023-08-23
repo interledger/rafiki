@@ -6,10 +6,11 @@ import { generateNonce, generateToken } from '../shared/utils'
 import {
   Grant,
   GrantState,
+  GrantFinalization,
   StartMethod,
   FinishMethod,
-  PendingGrant,
-  isPendingGrant
+  InteractiveGrant,
+  isInteractiveGrant
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -24,14 +25,14 @@ export interface GrantService {
     interactId: string,
     interactNonce: string,
     options?: GetByInteractionSessionOpts
-  ): Promise<PendingGrant | undefined>
-  issueGrant(grantId: string): Promise<Grant>
+  ): Promise<InteractiveGrant | undefined>
+  approve(grantId: string): Promise<Grant>
+  finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
   getByContinue(
     continueId: string,
     continueToken: string,
     options?: GetByContinueOpts
   ): Promise<Grant | null>
-  rejectGrant(grantId: string): Promise<Grant | null>
   revokeGrant(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
@@ -77,9 +78,16 @@ interface FilterGrantState {
   in?: GrantState[]
   notIn?: GrantState[]
 }
+
+interface FilterGrantFinalization {
+  in?: GrantFinalization[]
+  notIn?: GrantFinalization[]
+}
+
 interface GrantFilter {
   identifier?: FilterString
   state?: FilterGrantState
+  finalizationReason?: FilterGrantFinalization
 }
 
 export async function createGrantService({
@@ -106,14 +114,14 @@ export async function createGrantService({
       interactNonce: string,
       options: GetByInteractionSessionOpts
     ) => getByInteractionSession(interactId, interactNonce, options),
-    issueGrant: (grantId: string) => issueGrant(deps, grantId),
+    approve: (grantId: string) => approve(deps, grantId),
+    finalize: (id: string, reason: GrantFinalization) => finalize(id, reason),
     getByContinue: (
       continueId: string,
       continueToken: string,
-      options: GetByContinueOpts
-    ) => getByContinue(continueId, continueToken, options),
-    rejectGrant: (grantId: string) => rejectGrant(deps, grantId),
-    revokeGrant: (grantId: string) => revokeGrant(deps, grantId),
+      opts: GetByContinueOpts
+    ) => getByContinue(continueId, continueToken, opts),
+    revokeGrant: (grantId) => revokeGrant(deps, grantId),
     getPage: (pagination?, filter?) => getGrantsPage(deps, pagination, filter),
     lock: (grantId: string, trx: Transaction, timeoutMs?: number) =>
       lock(deps, grantId, trx, timeoutMs)
@@ -124,21 +132,19 @@ async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
   return Grant.query().findById(grantId).withGraphJoined('access')
 }
 
-async function issueGrant(
+async function approve(
   deps: ServiceDependencies,
   grantId: string
 ): Promise<Grant> {
   return Grant.query().patchAndFetchById(grantId, {
-    state: GrantState.Granted
+    state: GrantState.Approved
   })
 }
 
-async function rejectGrant(
-  deps: ServiceDependencies,
-  grantId: string
-): Promise<Grant | null> {
-  return Grant.query(deps.knex).patchAndFetchById(grantId, {
-    state: GrantState.Rejected
+async function finalize(id: string, reason: GrantFinalization): Promise<Grant> {
+  return Grant.query().patchAndFetchById(id, {
+    state: GrantState.Finalized,
+    finalizationReason: reason
   })
 }
 
@@ -152,7 +158,10 @@ async function revokeGrant(
 
   try {
     const grant = await Grant.query(trx)
-      .patchAndFetchById(grantId, { state: GrantState.Revoked })
+      .patchAndFetchById(grantId, {
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
       .first()
 
     if (!grant) {
@@ -189,8 +198,8 @@ async function create(
 
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
-    const grant = await Grant.query(grantTrx).insert({
-      state: interact ? GrantState.Pending : GrantState.Granted,
+    const grantData = {
+      state: interact ? GrantState.Pending : GrantState.Approved,
       startMethod: interact?.start,
       finishMethod: interact?.finish?.method,
       finishUri: interact?.finish?.uri,
@@ -201,7 +210,9 @@ async function create(
       interactNonce: interact ? generateNonce() : undefined,
       continueId: v4(),
       continueToken: generateToken()
-    })
+    }
+
+    const grant = await Grant.query(grantTrx).insert(grantData)
 
     // Associate provided accesses with grant
     await accessService.createAccess(grant.id, access, grantTrx)
@@ -228,7 +239,7 @@ async function getByInteractionSession(
   interactId: string,
   interactNonce: string,
   options: GetByInteractionSessionOpts = {}
-): Promise<PendingGrant | undefined> {
+): Promise<InteractiveGrant | undefined> {
   const { includeRevoked = false } = options
 
   const queryBuilder = Grant.query()
@@ -236,12 +247,14 @@ async function getByInteractionSession(
     .withGraphFetched('access')
 
   if (!includeRevoked) {
-    queryBuilder.whereNot('state', GrantState.Revoked)
+    queryBuilder
+      .whereNull('finalizationReason')
+      .orWhereNot('finalizationReason', GrantFinalization.Revoked)
   }
 
   const grant = await queryBuilder
 
-  if (!grant || !isPendingGrant(grant)) {
+  if (!grant || !isInteractiveGrant(grant)) {
     return undefined
   } else {
     return grant
@@ -263,7 +276,9 @@ async function getByContinue(
   const queryBuilder = Grant.query().findOne({ continueId })
 
   if (!includeRevoked) {
-    queryBuilder.whereNot('state', GrantState.Revoked)
+    queryBuilder
+      .whereNull('finalizationReason')
+      .orWhereNot('finalizationReason', GrantFinalization.Revoked)
   }
 
   const grant = await queryBuilder
@@ -282,7 +297,7 @@ async function getGrantsPage(
   filter?: GrantFilter
 ): Promise<Grant[]> {
   const query = Grant.query(deps.knex).withGraphJoined('access')
-  const { identifier, state } = filter ?? {}
+  const { identifier, state, finalizationReason } = filter ?? {}
 
   if (identifier?.in?.length) {
     query.whereIn('access.identifier', identifier.in)
@@ -294,6 +309,16 @@ async function getGrantsPage(
 
   if (state?.notIn?.length) {
     query.whereNotIn('state', state.notIn)
+  }
+
+  if (finalizationReason?.in?.length) {
+    query.whereIn('finalizationReason', finalizationReason.in)
+  }
+
+  if (finalizationReason?.notIn?.length) {
+    query
+      .whereNull('finalizationReason')
+      .orWhereNotIn('finalizationReason', finalizationReason.notIn)
   }
 
   return query.getPage(pagination)
