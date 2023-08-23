@@ -77,7 +77,7 @@ describe('Quote Resolvers', (): void => {
                 id
                 paymentPointerId
                 receiver
-                maxSendAmount {
+                debitAmount {
                   value
                   assetCode
                   assetScale
@@ -106,7 +106,7 @@ describe('Quote Resolvers', (): void => {
         id: quote.id,
         paymentPointerId,
         receiver: quote.receiver,
-        maxSendAmount: {
+        debitAmount: {
           value: quote.sendAmount.value.toString(),
           assetCode: quote.sendAmount.assetCode,
           assetScale: quote.sendAmount.assetScale,

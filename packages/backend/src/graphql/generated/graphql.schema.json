@@ -6263,6 +6263,22 @@
             "deprecationReason": null
           },
           {
+            "name": "debitAmount",
+            "description": "Amount to send (fixed send)",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "expiresAt",
             "description": "Date-time of expiration",
             "args": [],
@@ -6336,22 +6352,6 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "UInt64",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "maxSendAmount",
-            "description": "Maximum amount to send (fixed send)",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Amount",
                 "ofType": null
               }
             },

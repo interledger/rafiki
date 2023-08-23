@@ -92,7 +92,7 @@ export function quoteToGraphql(quote: Quote): SchemaQuote {
     id: quote.id,
     paymentPointerId: quote.paymentPointerId,
     receiver: quote.receiver,
-    maxSendAmount: quote.sendAmount,
+    debitAmount: quote.sendAmount,
     receiveAmount: quote.receiveAmount,
     maxPacketAmount: quote.maxPacketAmount,
     minExchangeRate: quote.minExchangeRate.valueOf(),

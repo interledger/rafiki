@@ -992,6 +992,8 @@ export type Quote = {
   __typename?: 'Quote';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** Amount to send (fixed send) */
+  debitAmount: Amount;
   /** Date-time of expiration */
   expiresAt: Scalars['String']['output'];
   /** Upper bound of probed exchange rate */
@@ -1002,8 +1004,6 @@ export type Quote = {
   lowEstimatedExchangeRate: Scalars['Float']['output'];
   /** Maximum value per packet allowed on the possible routes */
   maxPacketAmount: Scalars['UInt64']['output'];
-  /** Maximum amount to send (fixed send) */
-  maxSendAmount: Amount;
   /** Aggregate exchange rate the payment is guaranteed to meet */
   minExchangeRate: Scalars['Float']['output'];
   /** Id of the payment pointer under which this quote was created */
@@ -1846,12 +1846,12 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type QuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quote'] = ResolversParentTypes['Quote']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   highEstimatedExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   lowEstimatedExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   maxPacketAmount?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
-  maxSendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   minExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
