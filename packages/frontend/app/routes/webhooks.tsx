@@ -1,7 +1,7 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { Outlet, useLoaderData, useNavigate } from '@remix-run/react'
 import { PageHeader } from '~/components'
-import { DropdownFilter } from '~/components/Filters'
+import { PopoverFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
 import { listWebhooks } from '~/lib/api/webhook.server'
 import { webhooksSearchParams } from '~/lib/validate.server'
@@ -74,8 +74,8 @@ export default function WebhookEventsPage() {
           <div className='p-1'>
             <h3 className='text-lg font-bold'>Filters</h3>
             <div className='flex items-center'>
-              <DropdownFilter
-                label='Type'
+              <PopoverFilter
+                label='Event type'
                 values={type ? type : ['all']}
                 options={[
                   {
