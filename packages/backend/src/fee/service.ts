@@ -44,7 +44,6 @@ async function getLatestFee(
   return await Fee.query(deps.knex)
     .where({ assetId, type })
     .orderBy('createdAt', 'desc')
-    .withGraphFetched('asset')
     .first()
 }
 
