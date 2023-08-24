@@ -3,7 +3,7 @@ title: Getting Started
 ---
 
 :::caution
-Rafiki is intended to be run by [Account Servicing Entities](../reference/glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.
+Rafiki is intended to be run by [Account Servicing Entities](/reference/glossary#account-servicing-entity) only and should not be used in production by non-regulated entities.
 :::
 
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
@@ -99,13 +99,13 @@ The `backend` package requires an environment variable called `WEBHOOK_URL` whic
 
 ## Identity Provider
 
-The Rafiki `backend` exposes the [Open Payments](../reference/glossary.md#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](../reference/glossary.md#gnap) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
+The Rafiki `backend` exposes the [Open Payments](/reference/glossary#open-payments) APIs. They are auth-protected using an opinionated version of the [Grant Negotiation Authorization Protocol](/reference/glossary#gnap) (GNAP). Rafiki comes with a reference implementation of an Open Payments Auth Server--the `auth` package.
 
 The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
 
 ## Issuing Payment Pointers
 
-A [Payment Pointer](../reference/glossary.md#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](../integration/management.md). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
+A [Payment Pointer](/reference/glossary#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](../integration/management.md). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
 
 ### Create Asset
 
@@ -222,7 +222,7 @@ The Account Servicing Entity SHOULD store at least the `paymentPointer.id` in th
 
 ### Create Payment Pointer Key
 
-In order to use the [Open Payments](../reference/glossary.md#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](../integration/management.md).
+In order to use the [Open Payments](/reference/glossary#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](../integration/management.md).
 
 Query:
 

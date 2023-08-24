@@ -33,4 +33,4 @@ When two Account Servicing Entities peer their Rafiki instances, they need to de
 
 Furthermore, if an Account Servicing Entity is performing currency exchange, they need to provide [asset liquidity](./accounting/liquidity.md#asset-liquidity).
 
-Assets can be created and managed via the Admin GraphQL API directly or via the Rafiki Admin dashboard. Currently, [payment pointers](../reference/glossary.md#payment-pointer) can only be created for an existing asset and are tied to that asset.
+Assets can be created and managed via the Admin GraphQL API directly or via the Rafiki Admin dashboard. Currently, [payment pointers](/reference/glossary#payment-pointer) can only be created for an existing asset and are tied to that asset.
