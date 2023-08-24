@@ -21,6 +21,10 @@
     "react-dom": "^18.2.0",
     "rehype-mathjax": "^4.0.3",
     "remark-math": "^5.1.1",
+    "remark-mermaidjs": "^5.0.2",
     "sharp": "^0.32.6"
+  },
+  "devDependencies": {
+    "netlify-plugin-playwright-cache": "^0.0.1"
   }
 }

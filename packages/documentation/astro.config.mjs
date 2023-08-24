@@ -6,6 +6,7 @@ import react from '@astrojs/react'
 
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
+import remarkMermaid from 'remark-mermaidjs'
 import GraphQL from 'astro-graphql-plugin'
 
 // https://astro.build/config
@@ -13,7 +14,7 @@ export default defineConfig({
   site: 'https://rafiki.dev',
   outDir: './build',
   markdown: {
-    remarkPlugins: [remarkMath],
+    remarkPlugins: [remarkMath, remarkMermaid],
     rehypePlugins: [rehypeMathjax]
   },
   integrations: [
