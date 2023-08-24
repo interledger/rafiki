@@ -484,7 +484,7 @@ importers:
         specifier: ^0.7.3
         version: 0.7.3(astro@2.10.13)
       '@types/react':
-        specifier: ^18.2.20
+        specifier: ^18.2.21
         version: 18.2.21
       '@types/react-dom':
         specifier: ^18.2.7
