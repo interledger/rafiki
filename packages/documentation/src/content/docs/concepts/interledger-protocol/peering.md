@@ -31,7 +31,7 @@ Once the [`frontend`](https://github.com/interledger/rafiki/blob/main/packages/f
 
 ### Using the Admin API
 
-This section describes the process for setting up peering between two Rafiki instances using the [Admin API](../../integration/management.md). The examples are given for one instance, the other instance would have to run the corresponding API calls.
+This section describes the process for setting up peering between two Rafiki instances using the [Admin API](/integration/management). The examples are given for one instance, the other instance would have to run the corresponding API calls.
 
 Assume the following peering relationship
 
