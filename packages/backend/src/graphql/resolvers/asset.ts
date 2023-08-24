@@ -86,7 +86,7 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
     }
   }
 
-export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['updateAssetWithdrawalThreshold'] =
+export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
   async (
     parent,
     args,
@@ -96,7 +96,8 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
       const assetService = await ctx.container.use('assetService')
       const assetOrError = await assetService.update({
         id: args.input.id,
-        withdrawalThreshold: args.input.withdrawalThreshold ?? null
+        withdrawalThreshold: args.input.withdrawalThreshold ?? null,
+        liquidityThreshold: args.input.liquidityThreshold ?? null
       })
       if (isAssetError(assetOrError)) {
         switch (assetOrError) {
@@ -113,7 +114,7 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
       return {
         code: '200',
         success: true,
-        message: 'Updated Asset Withdrawal Threshold',
+        message: 'Updated Asset',
         asset: assetToGraphql(assetOrError)
       }
     } catch (error) {
@@ -126,7 +127,7 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
       )
       return {
         code: '400',
-        message: 'Error trying to update asset withdrawal threshold',
+        message: 'Error trying to update asset',
         success: false
       }
     }
@@ -137,5 +138,6 @@ export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   code: asset.code,
   scale: asset.scale,
   withdrawalThreshold: asset.withdrawalThreshold,
+  liquidityThreshold: asset.liquidityThreshold,
   createdAt: new Date(+asset.createdAt).toISOString()
 })

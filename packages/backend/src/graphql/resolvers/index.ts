@@ -6,12 +6,7 @@ import {
   updatePaymentPointer,
   triggerPaymentPointerEvents
 } from './payment_pointer'
-import {
-  getAsset,
-  getAssets,
-  createAsset,
-  updateAssetWithdrawalThreshold
-} from './asset'
+import { getAsset, getAssets, createAsset, updateAsset } from './asset'
 import {
   getPaymentPointerIncomingPayments,
   createIncomingPayment,
@@ -82,7 +77,7 @@ export const resolvers: Resolvers = {
     updatePaymentPointer,
     triggerPaymentPointerEvents,
     createAsset,
-    updateAssetWithdrawalThreshold,
+    updateAsset: updateAsset,
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,

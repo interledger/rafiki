@@ -86,10 +86,8 @@ type Mutation {
   "Create an asset"
   createAsset(input: CreateAssetInput!): AssetMutationResponse!
 
-  "Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn."
-  updateAssetWithdrawalThreshold(
-    input: UpdateAssetInput!
-  ): AssetMutationResponse!
+  "Update an asset"
+  updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
 
   "Add asset liquidity"
   addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
@@ -211,6 +209,8 @@ input CreateAssetInput {
   scale: UInt8!
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -220,6 +220,8 @@ input UpdateAssetInput {
   id: String!
   "New minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -403,6 +405,8 @@ type Asset implements Model {
   liquidity: UInt64
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Date-time of creation"
   createdAt: String!
 }

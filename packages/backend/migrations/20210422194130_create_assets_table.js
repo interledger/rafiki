@@ -8,13 +8,17 @@ exports.up = function (knex) {
     table.smallint('scale').unsigned().notNullable()
 
     table.bigInteger('withdrawalThreshold').nullable()
+    table.bigInteger('liquidityThreshold').nullable()
 
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
+    table.timestamp('processAt').nullable()
+
     table.unique(['code', 'scale'])
 
     table.index(['createdAt', 'id'])
+    table.index('processAt')
 
     table.check('?? <= 255', ['scale'])
   })

@@ -13,11 +13,13 @@ export interface AssetOptions {
 
 export interface CreateOptions extends AssetOptions {
   withdrawalThreshold?: bigint
+  liquidityThreshold?: bigint
 }
 
 export interface UpdateOptions {
   id: string
   withdrawalThreshold: bigint | null
+  liquidityThreshold: bigint | null
 }
 
 export interface AssetService {
@@ -54,7 +56,7 @@ export async function createAssetService({
 
 async function createAsset(
   deps: ServiceDependencies,
-  { code, scale, withdrawalThreshold }: CreateOptions
+  { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
     // Asset rows include a smallserial 'ledger' column that would have sequence gaps
@@ -67,7 +69,8 @@ async function createAsset(
       const asset = await Asset.query(trx).insertAndFetch({
         code,
         scale,
-        withdrawalThreshold
+        withdrawalThreshold,
+        liquidityThreshold
       })
       await deps.accountingService.createLiquidityAccount(
         asset,
@@ -88,14 +91,14 @@ async function createAsset(
 
 async function updateAsset(
   deps: ServiceDependencies,
-  { id, withdrawalThreshold }: UpdateOptions
+  { id, withdrawalThreshold, liquidityThreshold }: UpdateOptions
 ): Promise<Asset | AssetError> {
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
   try {
     return await Asset.query(deps.knex)
-      .patchAndFetchById(id, { withdrawalThreshold })
+      .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
   } catch (err) {
     if (err instanceof NotFoundError) {

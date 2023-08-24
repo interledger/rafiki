@@ -14,6 +14,9 @@ export class Asset extends BaseModel implements LiquidityAccount {
 
   public readonly withdrawalThreshold!: bigint | null
 
+  public readonly liquidityThreshold!: bigint | null
+  public processAt!: Date | null
+
   public get asset(): LiquidityAccount['asset'] {
     return {
       id: this.id,

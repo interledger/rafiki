@@ -74,7 +74,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation UpdateAssetWithdrawalThreshold($input: UpdateAssetInput!) {\n  updateAssetWithdrawalThreshold(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n    }\n    code\n    message\n    success\n  }\n}",
+								"query": "mutation UpdateAsset($input: UpdateAssetInput!) {\n  updateAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n    }\n    code\n    message\n    success\n  }\n}",
 								"variables": "{\n  \"input\": {\n    \"id\": \"{{assetId}}\",\n    \"withdrawalThreshold\": 100\n  }\n}"
 							}
 						},

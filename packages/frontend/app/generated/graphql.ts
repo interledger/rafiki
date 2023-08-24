@@ -72,6 +72,8 @@ export type Asset = Model & {
   id: Scalars['ID']['output'];
   /** Available liquidity */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
+  /** Account Servicing Entity will be notified via a webhook event if liquidity falls below this value */
+  liquidityThreshold?: Maybe<Scalars['UInt64']['output']>;
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8']['output'];
   /** Minimum amount of liquidity that can be withdrawn from the asset */
@@ -110,6 +112,8 @@ export type CreateAssetInput = {
   code: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Account Servicing Entity will be notified via a webhook event if liquidity falls below this value */
+  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit */
   scale: Scalars['UInt8']['input'];
   /** Minimum amount of liquidity that can be withdrawn from the asset */
@@ -472,8 +476,8 @@ export type Mutation = {
   revokePaymentPointerKey?: Maybe<RevokePaymentPointerKeyMutationResponse>;
   /** If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events. */
   triggerPaymentPointerEvents: TriggerPaymentPointerEventsMutationResponse;
-  /** Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn. */
-  updateAssetWithdrawalThreshold: AssetMutationResponse;
+  /** Update an asset */
+  updateAsset: AssetMutationResponse;
   /** Update a payment pointer */
   updatePaymentPointer: UpdatePaymentPointerMutationResponse;
   /** Update a peer */
@@ -575,7 +579,7 @@ export type MutationTriggerPaymentPointerEventsArgs = {
 };
 
 
-export type MutationUpdateAssetWithdrawalThresholdArgs = {
+export type MutationUpdateAssetArgs = {
   input: UpdateAssetInput;
 };
 
@@ -1058,6 +1062,8 @@ export type UpdateAssetInput = {
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value */
+  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** New minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: InputMaybe<Scalars['UInt64']['input']>;
 };
@@ -1433,6 +1439,7 @@ export type AssetResolvers<ContextType = any, ParentType extends ResolversParent
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   scale?: Resolver<ResolversTypes['UInt8'], ParentType, ContextType>;
   withdrawalThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -1594,7 +1601,7 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   postLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationPostLiquidityWithdrawalArgs, 'input'>>;
   revokePaymentPointerKey?: Resolver<Maybe<ResolversTypes['RevokePaymentPointerKeyMutationResponse']>, ParentType, ContextType, RequireFields<MutationRevokePaymentPointerKeyArgs, 'input'>>;
   triggerPaymentPointerEvents?: Resolver<ResolversTypes['TriggerPaymentPointerEventsMutationResponse'], ParentType, ContextType, RequireFields<MutationTriggerPaymentPointerEventsArgs, 'input'>>;
-  updateAssetWithdrawalThreshold?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetWithdrawalThresholdArgs, 'input'>>;
+  updateAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdateAssetArgs, 'input'>>;
   updatePaymentPointer?: Resolver<ResolversTypes['UpdatePaymentPointerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePaymentPointerArgs, 'input'>>;
   updatePeer?: Resolver<ResolversTypes['UpdatePeerMutationResponse'], ParentType, ContextType, RequireFields<MutationUpdatePeerArgs, 'input'>>;
   voidLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationVoidLiquidityWithdrawalArgs, 'input'>>;
@@ -1966,7 +1973,7 @@ export type UpdateAssetMutationVariables = Exact<{
 }>;
 
 
-export type UpdateAssetMutation = { __typename?: 'Mutation', updateAssetWithdrawalThreshold: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
+export type UpdateAssetMutation = { __typename?: 'Mutation', updateAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
 
 export type AddAssetLiquidityMutationVariables = Exact<{
   input: AddAssetLiquidityInput;
