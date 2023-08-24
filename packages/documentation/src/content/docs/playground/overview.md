@@ -152,7 +152,7 @@ The Examples folder in the Postman collection includes an eCommerce (Open Paymen
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../concepts/open-payments/grant-interaction.md).
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
 
 Example walkthrough:
 

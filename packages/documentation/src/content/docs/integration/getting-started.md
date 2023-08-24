@@ -93,7 +93,7 @@ The endpoint accepts a `POST` request with
 | `payment_pointer.not_found`        | A requested payment pointer was not found                                   |
 | `payment_pointer.web_monetization` | Web Monetization payments received via STREAM.                              |
 
-The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](./event-handlers.md) documentation.
+The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](/integration/event-handlers) documentation.
 
 The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
 
@@ -105,7 +105,7 @@ The Open Payments Auth Server requires integration with an Identity Provider to 
 
 ## Issuing Payment Pointers
 
-A [Payment Pointer](/reference/glossary#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](../integration/management.md). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
+A [Payment Pointer](/reference/glossary#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](/integration/management). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
 
 ### Create Asset
 
@@ -222,7 +222,7 @@ The Account Servicing Entity SHOULD store at least the `paymentPointer.id` in th
 
 ### Create Payment Pointer Key
 
-In order to use the [Open Payments](/reference/glossary#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](../integration/management.md).
+In order to use the [Open Payments](/reference/glossary#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](/integration/management).
 
 Query:
 
