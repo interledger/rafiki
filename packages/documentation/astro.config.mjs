@@ -20,6 +20,15 @@ export default defineConfig({
     starlight({
       title: 'Rafiki',
       customCss: ['./src/styles/ilf-docs.css', './src/styles/rafiki.css'],
+      head: [
+        {
+          tag: 'script',
+          attrs: {
+            src: '/scripts.js',
+            defer: true
+          }
+        }
+      ],
       logo: {
         src: './public/img/icon.svg'
       },
