@@ -109,8 +109,8 @@ importers:
         specifier: ^9.0.2
         version: 9.0.2
       axios:
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.5.0
+        version: 1.5.0
       graphql:
         specifier: ^16.8.0
         version: 16.8.0
@@ -176,8 +176,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.5.0
+        version: 1.5.0
       graphql:
         specifier: ^16.8.0
         version: 16.8.0
@@ -318,8 +318,8 @@ importers:
         specifier: ^8.12.0
         version: 8.12.0
       axios:
-        specifier: 1.4.0
-        version: 1.4.0
+        specifier: 1.5.0
+        version: 1.5.0
       base64url:
         specifier: ^3.0.1
         version: 3.0.1
@@ -605,8 +605,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       axios:
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.5.0
+        version: 1.5.0
       pino:
         specifier: ^8.15.0
         version: 8.15.0
@@ -4212,7 +4212,7 @@ packages:
     dependencies:
       '@interledger/http-signature-utils': 1.0.3
       '@interledger/openapi': 1.0.3
-      axios: 1.4.0
+      axios: 1.5.0
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.15.0
@@ -6693,8 +6693,8 @@ packages:
       - debug
     dev: true
 
-  /axios@1.4.0:
-    resolution: {integrity: sha512-S4XCWMEmzvo64T9GfvQDOXgYRDJ/wsSZc7Jvdgx5u1sd0JwsuPLqb3SYmusag+edF6ziyMensPVqLTSc1PiSEA==}
+  /axios@1.5.0:
+    resolution: {integrity: sha512-D4DdjDo5CY50Qms0qGQTTw6Q44jl7zRwY7bthds06pUGfChBCTcQs+N743eFWGEd6pRTMd6A+I87aWyFV5wiZQ==}
     dependencies:
       follow-redirects: 1.15.1
       form-data: 4.0.0
