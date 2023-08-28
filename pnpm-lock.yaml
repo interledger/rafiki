@@ -363,8 +363,8 @@ importers:
         specifier: ^4.17.21
         version: 4.17.21
       luxon:
-        specifier: ^3.4.1
-        version: 3.4.1
+        specifier: ^3.4.2
+        version: 3.4.2
       objection:
         specifier: ^3.1.1
         version: 3.1.1(knex@2.5.1)
@@ -11652,8 +11652,8 @@ packages:
     resolution: {integrity: sha512-ysxwsnTKdAx96aTRdhDOCQfDgbHnt8SK0KY8SEjO0wHinhWOFTESbjVCMPbU1uGXg/ch4lifqx0wfjOawU2+WA==}
     engines: {node: '>=12'}
 
-  /luxon@3.4.1:
-    resolution: {integrity: sha512-2USspxOCXWGIKHwuQ9XElxPPYrDOJHDQ5DQ870CoD+CxJbBnRDIBCfhioUJJjct7BKOy80Ia8cVstIcIMb/0+Q==}
+  /luxon@3.4.2:
+    resolution: {integrity: sha512-uBoAVCVcajsrqy3pv7eo5jEUz1oeLmCcnMv8n4AJpT5hbpN9lUssAXibNElpbLce3Mhm9dyBzwYLs9zctM/0tA==}
     engines: {node: '>=12'}
     dev: false
 
