@@ -509,7 +509,7 @@ describe('Peer Resolvers', (): void => {
         maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
         staticIlpAddress: updateOptions.staticIlpAddress,
         name: updateOptions.name,
-        liquidityThreshold: '200'
+        liquidityThreshold: BigInt(200)
       })
     })
 
