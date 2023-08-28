@@ -124,8 +124,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       yaml:
-        specifier: ^2.3.1
-        version: 2.3.1
+        specifier: ^2.3.2
+        version: 2.3.2
     devDependencies:
       '@remix-run/dev':
         specifier: ^1.19.3
@@ -3545,7 +3545,7 @@ packages:
       string-env-interpolation: 1.0.1
       ts-log: 2.2.4
       tslib: 2.5.0
-      yaml: 2.3.1
+      yaml: 2.3.2
       yargs: 17.7.1
     transitivePeerDependencies:
       - '@babel/core'
@@ -7982,7 +7982,7 @@ packages:
     resolution: {integrity: sha512-2/WLvA7UZ6A2LDLQrYW0idKipmNBWhtfvrn2yzjC5PnHDzuFVj1zAZN6MJxVMKP0zZH8uzAK6OwVZYHGuyCmTw==}
     engines: {node: '>= 6.0.0'}
     dependencies:
-      yaml: 2.3.1
+      yaml: 2.3.2
     dev: true
 
   /docker-modem@3.0.6:
@@ -13455,7 +13455,7 @@ packages:
     dependencies:
       lilconfig: 2.1.0
       postcss: 8.4.28
-      yaml: 2.3.1
+      yaml: 2.3.2
     dev: true
 
   /postcss-modules-extract-imports@3.0.0(postcss@8.4.28):
@@ -16342,8 +16342,8 @@ packages:
     resolution: {integrity: sha512-2PTINUwsRqSd+s8XxKaJWQlUuEMHJQyEuh2edBbW8KNJz0SJPwUSD2zRWqezFEdN7IzAgeuYHFUCF7o8zRdZ0A==}
     dev: true
 
-  /yaml@2.3.1:
-    resolution: {integrity: sha512-2eHWfjaoXgTBC2jNM1LRef62VQa0umtvRiDSk6HSzW7RvS5YtkabJrwYLLEKWBc8a5U2PTSCs+dJjUTJdlHsWQ==}
+  /yaml@2.3.2:
+    resolution: {integrity: sha512-N/lyzTPaJasoDmfV7YTrYCI0G/3ivm/9wdG0aHuheKowWQwGTsK0Eoiw6utmzAnI6pkJa0DUVygvp3spqqEKXg==}
     engines: {node: '>= 14'}
 
   /yargs-parser@18.1.3:
