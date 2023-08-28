@@ -25,10 +25,10 @@ appVersion: 'v1.0.0-alpha.1'
 
 dependencies:
   - name: redis
-    version: "17.16.0"
+    version: "18.0.0"
     repository: "https://charts.bitnami.com/bitnami"
   - name: postgresql
-    version: '12.9.0'
+    version: '12.10.0'
     repository: 'https://charts.bitnami.com/bitnami'
   - name: rafiki-auth
     version: '0.2.0'
