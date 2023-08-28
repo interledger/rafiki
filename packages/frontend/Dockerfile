@@ -1,21 +1,56 @@
-FROM node:18.13.0-slim as builder
+FROM node:18-alpine AS base
 
-WORKDIR /workspace
+WORKDIR /home/rafiki
 
-RUN apt update
-RUN apt install -y curl xz-utils python3 build-essential
-
-# version in curl is not the version used. Dependent on the last command
 RUN corepack enable
 RUN corepack prepare pnpm@7.25.1 --activate
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++
 
-# pnpm fetch does require only lockfile
 COPY pnpm-lock.yaml ./
-RUN pnpm fetch
 
-ADD . ./
-RUN pnpm install -r --offline
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm fetch \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
+FROM base AS prod-deps
+
+COPY package.json pnpm-workspace.yaml .npmrc ./
+COPY packages/frontend/package.json ./packages/frontend/package.json
+
+RUN pnpm clean
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install \
+    --recursive \
+    --offline \
+    --frozen-lockfile \
+    --prod \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
+
+FROM base AS builder   
+
+COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
+COPY packages/frontend ./packages/frontend
+
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install \
+    --recursive \
+    --offline \
+    --frozen-lockfile
 RUN pnpm --filter frontend build
 
-CMD pnpm --filter frontend start
+FROM node:18-alpine AS runner
+
+WORKDIR /home/rafiki
+
+COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
+COPY --from=prod-deps /home/rafiki/packages/frontend/node_modules ./packages/frontend/node_modules
+COPY --from=prod-deps /home/rafiki/packages/frontend/package.json ./packages/frontend/package.json
+
+COPY --from=builder /home/rafiki/packages/frontend/build ./packages/frontend/build
+COPY --from=builder /home/rafiki/packages/frontend/public ./packages/frontend/public
+
+WORKDIR /home/rafiki/packages/frontend
+CMD ["sh", "./node_modules/.bin/remix-serve", "build"]
