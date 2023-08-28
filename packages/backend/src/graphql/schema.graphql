@@ -179,6 +179,9 @@ type Mutation {
   triggerPaymentPointerEvents(
     input: TriggerPaymentPointerEventsInput!
   ): TriggerPaymentPointerEventsMutationResponse!
+
+  "Set the fee on an asset"
+  setFee(input: SetFeeInput!): SetFeeResponse!
 }
 
 type PageInfo {
@@ -407,6 +410,10 @@ type Asset implements Model {
   withdrawalThreshold: UInt64
   "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value"
   liquidityThreshold: UInt64
+  "The receiving fee structure for the asset"
+  receivingFee: Fee
+  "The sending fee structure for the asset"
+  sendingFee: Fee
   "Date-time of creation"
   createdAt: String!
 }
@@ -904,6 +911,46 @@ type WebhookEventsEdge {
   cursor: String!
 }
 
+enum FeeType {
+  "Sender pays the fees"
+  SENDING
+  "Receiver pays the fees"
+  RECEIVING
+}
+
+type Fee implements Model {
+  "Fee id"
+  id: ID!
+  "Asset id associated with the fee"
+  assetId: ID!
+  "Type of fee (sending or receiving)"
+  type: FeeType!
+  "Fixed fee"
+  fixed: UInt64!
+  "Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%"
+  basisPoints: Int!
+  "Date-time of creation"
+  createdAt: String!
+}
+
+input SetFeeInput {
+  "Asset id to add the fee to"
+  assetId: ID!
+  "Type of fee (sending or receiving)"
+  type: FeeType!
+  "Fee values"
+  fee: FeeDetails!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
+
+input FeeDetails {
+  "A flat fee"
+  fixed: UInt64!
+  "Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%"
+  basisPoints: Int!
+}
+
 input WebhookEventFilter {
   type: FilterString
 }
@@ -999,6 +1046,13 @@ type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
   success: Boolean!
   message: String!
   paymentPointerKey: PaymentPointerKey
+}
+
+type SetFeeResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  fee: Fee
 }
 
 interface MutationResponse {

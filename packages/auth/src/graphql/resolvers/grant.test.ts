@@ -141,7 +141,7 @@ describe('Grant Resolvers', (): void => {
         const grants: GrantModel[] = []
         for (let i = 0; i < 2; i++) {
           const grant = await createGrant(deps)
-          grant.$query().patch({ state: GrantState.Pending })
+          await grant.$query().patch({ state: GrantState.Pending })
           grants.push(grant)
         }
 
@@ -183,7 +183,7 @@ describe('Grant Resolvers', (): void => {
         const grants: GrantModel[] = []
         for (let i = 0; i < 2; i++) {
           const grant = await createGrant(deps)
-          grant.$query().patch({ state: GrantState.Pending })
+          await grant.$query().patch({ state: GrantState.Pending })
           grants.push(grant)
         }
 

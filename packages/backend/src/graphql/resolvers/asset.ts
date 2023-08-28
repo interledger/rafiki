@@ -2,13 +2,16 @@ import {
   QueryResolvers,
   ResolversTypes,
   Asset as SchemaAsset,
-  MutationResolvers
+  MutationResolvers,
+  AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { AssetError, isAssetError } from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
+import { feeToGraphql } from './fee'
+import { FeeType } from '../../fee/model'
 
 export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   parent,
@@ -131,6 +134,30 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
         success: false
       }
     }
+  }
+
+export const getAssetSendingFee: AssetResolvers<ApolloContext>['sendingFee'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Fee'] | null> => {
+    if (!parent.id) return null
+
+    const feeService = await ctx.container.use('feeService')
+    const fee = await feeService.getLatestFee(parent.id, FeeType.Sending)
+
+    if (!fee) return null
+
+    return feeToGraphql(fee)
+  }
+
+export const getAssetReceivingFee: AssetResolvers<ApolloContext>['receivingFee'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Fee'] | null> => {
+    if (!parent.id) return null
+
+    const feeService = await ctx.container.use('feeService')
+    const fee = await feeService.getLatestFee(parent.id, FeeType.Receiving)
+
+    if (!fee) return null
+
+    return feeToGraphql(fee)
   }
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({

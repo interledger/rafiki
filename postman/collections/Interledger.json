@@ -102,7 +102,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetAsset($id: String!) {\n    asset(id: $id) {\n    code\n    createdAt\n    id\n    scale\n    withdrawalThreshold\n  }\n}",
+								"query": "query GetAsset($id: String!) {\n    asset(id: $id) {\n    code\n    createdAt\n    id\n    scale\n    withdrawalThreshold\n    sendingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n    receivingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n  }\n}",
 								"variables": "{\n    \"id\": \"{{assetId}}\"\n}"
 							}
 						},
@@ -130,7 +130,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetAssets($after: String, $before: String, $first: Int, $last: Int) {\n    assets(after: $after, before: $before, first:$first, last: $last) {\n        edges {\n            cursor\n            node {\n                code\n                createdAt\n                id\n                scale\n                withdrawalThreshold\n                liquidity\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}",
+								"query": "query GetAssets($after: String, $before: String, $first: Int, $last: Int) {\n    assets(after: $after, before: $before, first:$first, last: $last) {\n        edges {\n            cursor\n            node {\n                code\n                createdAt\n                id\n                scale\n                withdrawalThreshold\n                liquidity\n                sendingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n                receivingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}",
 								"variables": "{\n  \"after\": null,\n  \"before\": null,\n  \"first\": null,\n  \"last\": null\n}"
 							}
 						},
@@ -188,6 +188,46 @@
 							"graphql": {
 								"query": "mutation CreateAssetLiquidityWithdrawal ($input: CreateAssetLiquidityWithdrawalInput!) {\n  createAssetLiquidityWithdrawal(input: $input) {\n    code\n    success\n    message\n    error\n  }\n}",
 								"variables": "{\n  \"input\": {\n    \"id\": \"b97fd85a-126e-42ef-b40d-1a50a70ffa6f\",\n    \"assetId\": \"{{assetId}}\",\n    \"amount\": \"100\",\n    \"idempotencyKey\":\"{{$guid}}\"\n  }\n}\n"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Set Fee",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "7d92e6c7-22e9-4f7a-92c8-a925d1e013f5",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "373dabae-5af5-44d8-a96c-cbafa4280f20",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation SetFee($input: SetFeeInput!) {\n    setFee(input: $input) {\n        code\n        success\n        message\n        fee {\n            id\n            assetId\n            type\n            fixed\n            basisPoints\n            createdAt\n        }\n    }\n}",
+								"variables": "{\n    \"input\": {\n        \"assetId\": \"{{assetId}}\",\n        \"type\": \"SENDING\",\n        \"fee\": {\n          \"fixed\": 100,\n          \"basisPoints\": 100\n        }\n    }\n}"
 							}
 						},
 						"url": {
@@ -1174,7 +1214,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) {\n    grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {\n        edges {\n            cursor\n            node {\n                access {\n                    createdAt\n                    id\n                    identifier\n                    limits {\n                        interval\n                        receiveAmount {\n                            assetScale\n                            value\n                            assetCode\n                        }\n                        receiver\n                        sendAmount {\n                            assetCode\n                            assetScale\n                            value\n                        }\n                    }\n                    actions\n                    type\n                }\n                client\n                createdAt\n                id\n                state\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}\n",
-								"variables": "{\n    \"after\": null,\n    \"before\": null,\n    \"first\": null,\n    \"last\": null,\n    \"filter\": {\n        \"state\": {\n            \"in\": [\"PENDING\", \"GRANTED\"]\n        }\n    }\n}\n"
+								"variables": "{\n    \"after\": null,\n    \"before\": null,\n    \"first\": null,\n    \"last\": null,\n    \"filter\": {\n        \"state\": {\n            \"in\": [\"PROCESSING\", \"PENDING\", \"APPROVED\", \"FINALIZED\"]\n        },\n        \"finalizationReason\": {\n            \"notIn\": [\"REVOKED\", \"REJECTED\"]\n        }\n    }\n}\n"
 							}
 						},
 						"url": {
@@ -2841,7 +2881,7 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "bc216806-9057-45d5-b74f-86610d430b6d",
+										"id": "a6ff97f8-f239-4d65-b062-abd8ec7f8869",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -3502,7 +3542,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "ca1da280-c4d6-43cc-86db-e3cd53bae676",
+				"id": "83ff5ca5-119d-4e56-ba79-d7e8dc9aa1f8",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3512,7 +3552,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "29e97856-a7ab-4aa5-bc94-35b0294af4cb",
+				"id": "459ca00e-dd8b-4b48-8a07-3c02f266795a",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3522,221 +3562,221 @@
 	],
 	"variable": [
 		{
-			"id": "944c7e30-3493-4064-9156-d51c7de8e1f0",
+			"id": "5ea3f014-b89b-4adf-ab9b-51d3e311663d",
 			"key": "OpenPaymentsHost",
 			"value": "http://localhost:3000"
 		},
 		{
-			"id": "1ab20c6c-3ad2-42a1-b185-06018760ae5e",
+			"id": "31b48aa1-d3ad-4a39-b07e-e5c6bb7b4b62",
 			"key": "PeerOpenPaymentsHost",
 			"value": "http://localhost:4000"
 		},
 		{
-			"id": "64a4fc87-50e9-4bd2-a82b-c13253313455",
+			"id": "81cf178b-1ca3-4b0c-bee7-e71cb51b7b7d",
 			"key": "OpenPaymentsAuthHost",
 			"value": "http://localhost:3006"
 		},
 		{
-			"id": "878d0822-0e77-4cc4-94c2-e20f3cb30a07",
+			"id": "36b88741-209a-4652-9a76-b17f7bd58acc",
 			"key": "PeerOpenPaymentsAuthHost",
 			"value": "http://localhost:4006"
 		},
 		{
-			"id": "d6c0a019-ccac-4178-a23c-922757cabe5c",
+			"id": "c66f6853-ccb9-414e-a823-695479c2cec1",
 			"key": "RafikiGraphqlHost",
 			"value": "http://localhost:3001"
 		},
 		{
-			"id": "133ec9a0-57ca-41b0-bbcb-c89c1bff1ee3",
+			"id": "ca34f9d5-eacb-495a-9f13-43b2b9516549",
 			"key": "RafikiAuthGraphqlHost",
 			"value": "http://localhost:3003",
 			"type": "string"
 		},
 		{
-			"id": "6eeb25e7-8d98-47e6-8e50-24c469c8c842",
+			"id": "70defa54-9035-4f5f-8029-539a8bf86dac",
 			"key": "PeerGraphqlHost",
 			"value": "http://localhost:4001"
 		},
 		{
-			"id": "3793b949-4357-43af-9a4a-123ef4141aa3",
+			"id": "f84c4a0b-f5d7-4362-9c82-eba294e8c3f4",
 			"key": "PeerAuthGraphqlHost",
 			"value": "http://localhost:4003",
 			"type": "string"
 		},
 		{
-			"id": "46f5be2e-262c-46ae-be12-efbc45ab7788",
+			"id": "e171d6ae-2408-4ee3-89a3-ad5cfa720717",
 			"key": "SignatureHost",
 			"value": "http://localhost:3040"
 		},
 		{
-			"id": "2ef5ded5-9c51-4eb0-8db8-fa3f3d8a645e",
+			"id": "985a4b69-55bb-423f-a493-8ca5c1887656",
 			"key": "PeerSignatureHost",
 			"value": "http://localhost:3041"
 		},
 		{
-			"id": "6ab4ef29-4c6a-4c9d-9f90-c095a120c926",
+			"id": "fcf12963-2d8e-4738-be4d-ad2d8cd4a8ce",
 			"key": "gfranklinPaymentPointer",
 			"value": "http://localhost:3000/accounts/gfranklin"
 		},
 		{
-			"id": "7bcfe983-03ed-40bb-909a-7d3dc4e342c8",
+			"id": "a9095b83-41fa-4b5d-a91d-0a287524df89",
 			"key": "asmithPaymentPointer",
 			"value": "http://localhost:4000/accounts/asmith",
 			"type": "string"
 		},
 		{
-			"id": "08950206-65ba-4c5b-b26b-1517525cebcc",
+			"id": "06b9e7e4-e0bc-49cd-9e1b-bf4d5025eda8",
 			"key": "gfranklinPaymentPointerId",
 			"value": "6abd8671-72d0-41ee-8e0a-0b28eff522a5",
 			"type": "string"
 		},
 		{
-			"id": "d5d03295-01bc-4354-a44f-970383d0c5c6",
+			"id": "f3defd6f-de85-4183-b15f-98e4c6da2715",
 			"key": "pfryPaymentPointer",
 			"value": "http://localhost:4000/accounts/pfry"
 		},
 		{
-			"id": "32dc332f-c423-4004-92aa-8acb835b82b7",
+			"id": "2635c0d0-0d10-4518-bc5a-ca76ecd7bf6c",
 			"key": "accessToken",
 			"value": "example-access-token"
 		},
 		{
-			"id": "c1f8438f-c4ed-472f-bae3-55920d19ddaa",
+			"id": "dc7206ec-bc36-4efd-80ac-5ed3c7165b69",
 			"key": "paymentPointerId",
 			"value": "bde8da93-9bff-4251-90ce-abb15e7d444c"
 		},
 		{
-			"id": "956a9618-6f91-4eba-8010-4ea177d23923",
+			"id": "5e0c81c5-c750-49af-81e0-fa7cc72ccda2",
 			"key": "incomingPaymentId",
 			"value": "dc7b71a5-d78e-450c-b4c5-7db299f2a133"
 		},
 		{
-			"id": "94acdf86-b003-4192-bf1b-a92a9165ff78",
+			"id": "2d7e0913-80cd-42f8-9ebd-4740f8ac486f",
 			"key": "connectionId",
 			"value": "23de6081-b340-4334-b335-a2328bbb3334"
 		},
 		{
-			"id": "8ff9dcdd-4d74-4dcc-a3a6-edc50f5ed8e8",
+			"id": "9442ca3e-bdc1-49c4-827b-7ce62e84bdcc",
 			"key": "outgoingPaymentId",
 			"value": "empty"
 		},
 		{
-			"id": "b501db9d-7463-4083-8540-bb009a37fca6",
+			"id": "e629c10b-a8c9-4dbb-91ec-2dc095762419",
 			"key": "quoteId",
 			"value": "http://backend/d982ab2f-4380-4d05-be3b-43d23a57d23f/quotes/8adaa7f9-fbd2-4cc2-89b5-6f354d68728e"
 		},
 		{
-			"id": "3368dd42-ace2-4141-b62a-34ee51f8684a",
+			"id": "ffca0789-cacf-4449-aa45-bfae4669c5b6",
 			"key": "tokenId",
 			"value": "f6cf615c-70e8-4b04-bd86-0d6ac41a4c85"
 		},
 		{
-			"id": "ec7aaa76-1bba-435b-a1d1-ff8d3b57796e",
+			"id": "6f002da2-bc94-42f6-875e-4140ebdc763e",
 			"key": "tomorrow",
 			"value": ""
 		},
 		{
-			"id": "a8b8572e-c048-4696-8573-5ae211b56c54",
+			"id": "0708cdd5-7117-439f-bea9-c17e0cf83822",
 			"key": "uniquePaymentPointer",
 			"value": ""
 		},
 		{
-			"id": "1433fd40-653b-47a1-914f-f29eade927c4",
+			"id": "ffb02d57-b538-46b4-8620-0b7aa4a50dab",
 			"key": "quoteUrl",
 			"value": ""
 		},
 		{
-			"id": "a9d61444-0d16-43af-9877-f84c0b06c022",
+			"id": "949a9425-50e9-4800-bec8-2aab31e56d41",
 			"key": "incomingPaymentUrl",
 			"value": ""
 		},
 		{
-			"id": "f614916c-bf7e-42ce-8414-37071bac413a",
+			"id": "f71f85df-0710-4eaa-8db1-b8d45a8e61c4",
 			"key": "continueToken",
 			"value": ""
 		},
 		{
-			"id": "5eff82d1-3255-4290-97d3-44dd99002340",
+			"id": "1c0bc73a-b512-4bf0-8a31-67cbaecd8f99",
 			"key": "continueId",
 			"value": ""
 		},
 		{
-			"id": "d200884d-5d64-447d-bfcf-2f6d4af53f8c",
+			"id": "96760b4a-cbac-43cb-8c1d-fa01b2560661",
 			"key": "paymentPointerUrl",
 			"value": ""
 		},
 		{
-			"id": "bcfc2c84-e9b4-4698-b2be-9696f788167a",
+			"id": "5d077921-e3bb-4fee-a15d-2b1d142651ba",
 			"key": "createPaymentPointerRequest",
 			"value": ""
 		},
 		{
-			"id": "3f9a12ab-0711-4408-8a6e-cdb6a4b05e4c",
+			"id": "891b5e2f-81bc-4ee7-904a-ca8ccfef6c54",
 			"key": "secondPaymentPointerId",
 			"value": ""
 		},
 		{
-			"id": "97e01aea-13a2-4f24-871a-e69c36010ebe",
+			"id": "8322df2c-c8d1-4c5a-9988-68d550e64bee",
 			"key": "assetId",
 			"value": ""
 		},
 		{
-			"id": "6be9078c-9a2e-4fea-8308-94e39ad25b2e",
+			"id": "dfdcca07-1cd3-4253-8b63-241f0c329ed4",
 			"key": "preRequestSignatures",
 			"value": "const requestUrl = request.url\n  .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.collectionVariables.get(key))\n  .replace(/localhost:([3,4])000/g, (_, key) =>\n    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'\n  )\nconst requestBody =\n  request.method === 'POST' && Object.keys(request.data).length !== 0\n    ? request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n        pm.collectionVariables.get(key)\n      )\n    : undefined\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n// Request Signature Headers\npm.sendRequest(\n  {\n    url: pm.collectionVariables.get('signatureUrl'),\n    method: 'POST',\n    header: {\n      'content-type': 'application/json'\n    },\n    body: {\n      mode: 'raw',\n      raw: JSON.stringify({\n        keyId: pm.collectionVariables.get('keyId'),\n        request: {\n          url: requestUrl,\n          method: request.method,\n          headers: requestHeaders,\n          body: requestBody\n        }\n      })\n    }\n  },\n  (_, res) => {\n    const headers = res.json()\n    for (let [key, value] of Object.entries(headers)) {\n      pm.request.headers.add({ key, value })\n    }\n  }\n)\n"
 		},
 		{
-			"id": "6d404e75-7239-4cc1-b5b2-25645dd87d2e",
+			"id": "aba05b3a-5528-4869-8a83-2e9668b28319",
 			"key": "preRequestSignaturesGrantRequest",
 			"value": "const url = require('url')\n\nconst body = JSON.parse(request.data)\nconst client = url.parse(body.client)\nconst jwkUrl = `http://localhost:${\n  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'\n}000${client.path}/jwks.json`\npm.collectionVariables.set(\n  'signatureUrl',\n  pm.collectionVariables.get(\n    client.host === 'cloud-nine-wallet-backend'\n      ? 'SignatureHost'\n      : 'PeerSignatureHost'\n  )\n)\n\nconst requestUrl = request.url.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestBody = request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n\n// Request Client JWK\npm.sendRequest(\n  {\n    url: jwkUrl,\n    method: 'GET',\n    header: {\n      Host: client.host\n    }\n  },\n  (err, res) => {\n    const keys = res.json()\n    pm.collectionVariables.set('keyId', keys.keys[0].kid)\n\n    // Request Signature Headers\n    pm.sendRequest(\n      {\n        url: pm.collectionVariables.get('signatureUrl'),\n        method: 'POST',\n        header: {\n          'content-type': 'application/json'\n        },\n        body: {\n          mode: 'raw',\n          raw: JSON.stringify({\n            keyId: pm.collectionVariables.get('keyId'),\n            request: {\n              url: requestUrl,\n              method: request.method,\n              headers: requestHeaders,\n              body: requestBody\n            }\n          })\n        }\n      },\n      (_, res) => {\n        const headers = res.json()\n        for (let [key, value] of Object.entries(headers)) {\n          pm.request.headers.add({ key, value })\n        }\n      }\n    )\n  }\n)\n"
 		},
 		{
-			"id": "84f3e3cd-e9f9-49fe-989e-4b84dbd77f1e",
+			"id": "a14da3cd-a6db-4681-9973-16e8d1284e8b",
 			"key": "signatureUrl",
 			"value": ""
 		},
 		{
-			"id": "de3e76bb-c987-411c-8be2-be8cf1d8c329",
+			"id": "df9bd98f-83bd-4751-b849-5c319025a9cf",
 			"key": "keyId",
 			"value": ""
 		},
 		{
-			"id": "ef9ffbc0-5273-4336-a341-6f3008889e4c",
+			"id": "85a6000e-572d-4d57-9530-a7ff347ba6fe",
 			"key": "peerId",
 			"value": ""
 		},
 		{
-			"id": "c21bf0c2-7756-4f0f-9ce1-3501f6b77481",
+			"id": "b5326003-aa0a-488b-8374-24e724cf8088",
 			"key": "paymentPointerKeyId",
 			"value": ""
 		},
 		{
-			"id": "8e8dde48-26e2-455d-93ff-9f7cb185b0e8",
+			"id": "2fe86b77-7ef8-4fa6-b0a2-068ba6a6b1d5",
 			"key": "secureOpenPaymentsHost",
 			"value": ""
 		},
 		{
-			"id": "263ae5d4-7786-498d-a800-473c2491d853",
+			"id": "e39ab091-3cd9-4276-88f1-a19191e96613",
 			"key": "tokenManagementUrl",
 			"value": ""
 		},
 		{
-			"id": "7f407689-2be9-400c-8fc8-9ad6ae3d8d81",
+			"id": "4f1a7546-22a6-40f0-9846-d6c86abd6e87",
 			"key": "quoteSendAmountValue",
 			"value": ""
 		},
 		{
-			"id": "30028594-b4a9-4351-a150-7a2567ca3a50",
+			"id": "05604f7d-620c-4be8-a3d0-715c89741970",
 			"key": "quoteReceiveAmountValue",
 			"value": ""
 		},
 		{
-			"id": "76dc3f03-969d-46f1-979f-e4080ee65bda",
+			"id": "a0f4b62c-53f8-4db5-a7e4-88372ff765f5",
 			"key": "idempotencyKey",
 			"value": ""
 		},
 		{
-			"id": "5de9836b-1df0-4fb0-8fa6-279ab1d33d8d",
+			"id": "d8c534c9-a961-49a7-878b-a4b9def77643",
 			"key": "receiverId",
 			"value": ""
 		}

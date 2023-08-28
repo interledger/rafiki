@@ -10,7 +10,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
+import {
+  FinishMethod,
+  Grant,
+  GrantState,
+  GrantFinalization,
+  StartMethod
+} from '../grant/model'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
@@ -42,7 +48,7 @@ describe('Access Token Service', (): void => {
   const CLIENT = faker.internet.url({ appendSlash: false })
 
   const BASE_GRANT = {
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
@@ -158,7 +164,10 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can introspect active token for revoked grant', async (): Promise<void> => {
-      await grant.$query(trx).patch({ state: GrantState.Revoked })
+      await grant.$query(trx).patch({
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
       await expect(
         accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()

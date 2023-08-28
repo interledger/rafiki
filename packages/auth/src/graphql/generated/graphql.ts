@@ -51,6 +51,8 @@ export type Grant = Model & {
   client: Scalars['String']['output'];
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** Reason a grant was finalized */
+  finalizationReason?: Maybe<GrantFinalization>;
   /** Grant id */
   id: Scalars['ID']['output'];
   /** State of the grant */
@@ -68,15 +70,24 @@ export type GrantFilter = {
   state?: InputMaybe<FilterGrantState>;
 };
 
-export enum GrantState {
-  /** grant was approved */
-  Granted = 'GRANTED',
-  /** grant request was created but grant was not approved yet */
-  Pending = 'PENDING',
+export enum GrantFinalization {
+  /** grant was issued */
+  Issued = 'ISSUED',
   /** grant was rejected */
   Rejected = 'REJECTED',
   /** grant was revoked */
   Revoked = 'REVOKED'
+}
+
+export enum GrantState {
+  /** grant was approved */
+  Approved = 'APPROVED',
+  /** grant was finalized and no more access tokens or interactions can be made on it */
+  Finalized = 'FINALIZED',
+  /** grant request is awaiting interaction */
+  Pending = 'PENDING',
+  /** grant request is determining what state to enter next */
+  Processing = 'PROCESSING'
 }
 
 export type GrantsConnection = {
@@ -256,6 +267,7 @@ export type ResolversTypes = {
   Grant: ResolverTypeWrapper<Partial<Grant>>;
   GrantEdge: ResolverTypeWrapper<Partial<GrantEdge>>;
   GrantFilter: ResolverTypeWrapper<Partial<GrantFilter>>;
+  GrantFinalization: ResolverTypeWrapper<Partial<GrantFinalization>>;
   GrantState: ResolverTypeWrapper<Partial<GrantState>>;
   GrantsConnection: ResolverTypeWrapper<Partial<GrantsConnection>>;
   ID: ResolverTypeWrapper<Partial<Scalars['ID']['output']>>;
@@ -314,6 +326,7 @@ export type GrantResolvers<ContextType = any, ParentType extends ResolversParent
   access?: Resolver<Array<ResolversTypes['Access']>, ParentType, ContextType>;
   client?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  finalizationReason?: Resolver<Maybe<ResolversTypes['GrantFinalization']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['GrantState'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

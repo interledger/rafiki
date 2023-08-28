@@ -16,7 +16,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
-import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
+import {
+  Grant,
+  GrantState,
+  GrantFinalization,
+  StartMethod,
+  FinishMethod
+} from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import {
@@ -315,7 +321,10 @@ describe('Signature Service', (): void => {
 
     test('middleware fails if grant is revoked', async (): Promise<void> => {
       const grant = await Grant.query().insert({
-        ...generateBaseGrant({ state: GrantState.Revoked })
+        ...generateBaseGrant({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
+        })
       })
 
       const ctx = await createContextWithSigHeaders<ContinueContext>(

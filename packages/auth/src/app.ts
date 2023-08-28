@@ -48,6 +48,7 @@ import {
 } from './signature/middleware'
 import { AccessService } from './access/service'
 import { AccessTokenService } from './accessToken/service'
+import { InteractionRoutes } from './interaction/routes'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
@@ -95,6 +96,7 @@ export interface AppServices {
   accessTokenRoutes: Promise<AccessTokenRoutes>
   accessTokenService: Promise<AccessTokenService>
   grantRoutes: Promise<GrantRoutes>
+  interactionRoutes: Promise<InteractionRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
