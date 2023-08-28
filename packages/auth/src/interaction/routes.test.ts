@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import { v4 } from 'uuid'
 import * as crypto from 'crypto'
 import jestOpenAPI from 'jest-openapi'
@@ -14,23 +13,18 @@ import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
 import {
   InteractionRoutes,
-  GrantChoices,
+  InteractionChoices,
   StartContext,
   FinishContext,
   GetContext,
   ChooseContext
 } from './routes'
-import {
-  Grant,
-  StartMethod,
-  FinishMethod,
-  GrantState,
-  GrantFinalization
-} from '../grant/model'
+import { Interaction, InteractionState } from './model'
+import { Grant, GrantState, GrantFinalization } from '../grant/model'
 import { Access } from '../access/model'
-import { generateNonce, generateToken } from '../shared/utils'
-
-const CLIENT = faker.internet.url({ appendSlash: false })
+import { generateNonce } from '../shared/utils'
+import { generateBaseGrant } from '../tests/grant'
+import { generateBaseInteraction } from '../tests/interaction'
 
 const BASE_GRANT_ACCESS = {
   type: AccessType.IncomingPayment,
@@ -45,20 +39,7 @@ describe('Interaction Routes', (): void => {
   let config: IAppConfig
 
   let grant: Grant
-
-  const generateBaseGrant = () => ({
-    state: GrantState.Processing,
-    startMethod: [StartMethod.Redirect],
-    continueToken: generateToken(),
-    continueId: v4(),
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com',
-    clientNonce: generateNonce(),
-    client: CLIENT,
-    interactId: v4(),
-    interactRef: v4(),
-    interactNonce: generateNonce()
-  })
+  let interaction: Interaction
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert(generateBaseGrant())
@@ -67,6 +48,10 @@ describe('Interaction Routes', (): void => {
       ...BASE_GRANT_ACCESS,
       grantId: grant.id
     })
+
+    interaction = await Interaction.query().insert(
+      generateBaseInteraction(grant)
+    )
   })
 
   beforeAll(async (): Promise<void> => {
@@ -93,7 +78,7 @@ describe('Interaction Routes', (): void => {
     })
 
     describe('Client - interaction start', (): void => {
-      test('Interaction start fails if grant is invalid', async (): Promise<void> => {
+      test('Interaction start fails if interaction is invalid', async (): Promise<void> => {
         const ctx = createContext<StartContext>(
           {
             headers: {
@@ -101,7 +86,7 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { id: 'unknown_interaction', nonce: grant.interactNonce }
+          { id: v4(), nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
@@ -111,11 +96,16 @@ describe('Interaction Routes', (): void => {
       })
 
       test('Interaction start fails if grant is revoked', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
-        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          })
+        )
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
 
         const ctx = createContext<StartContext>(
           {
@@ -124,7 +114,7 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json'
             }
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.start(ctx)).rejects.toMatchObject({
@@ -144,31 +134,41 @@ describe('Interaction Routes', (): void => {
               clientName: 'Test Client',
               clientUri: 'https://example.com'
             },
-            url: `/interact/${grant.interactId}/${grant.interactNonce}`
+            url: `/interact/${interaction.id}/${interaction.nonce}`
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
-        assert.ok(grant.interactId)
+        assert.ok(interaction.id)
 
         const redirectUrl = new URL(config.identityServerDomain)
-        redirectUrl.searchParams.set('interactId', grant.interactId)
+        redirectUrl.searchParams.set('interactId', interaction.id)
         const redirectSpy = jest.spyOn(ctx, 'redirect')
 
         await expect(interactionRoutes.start(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
 
-        redirectUrl.searchParams.set('nonce', grant.interactNonce as string)
+        redirectUrl.searchParams.set('nonce', interaction.nonce)
         redirectUrl.searchParams.set('clientName', 'Test Client')
         redirectUrl.searchParams.set('clientUri', 'https://example.com')
 
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(redirectUrl.toString())
-        expect(ctx.session.nonce).toEqual(grant.interactNonce)
+        expect(ctx.session.nonce).toEqual(interaction.nonce)
       })
     })
 
     describe('Client - interaction complete', (): void => {
+      let interaction: Interaction
+
+      beforeEach(async (): Promise<void> => {
+        interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Approved
+          })
+        )
+      })
+
       test('cannot finish interaction with missing id', async (): Promise<void> => {
         const ctx = createContext<FinishContext>(
           {
@@ -177,10 +177,10 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json'
             },
             session: {
-              nonce: grant.interactNonce
+              nonce: interaction.nonce
             }
           },
-          { id: '', nonce: grant.interactNonce }
+          { id: null, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
@@ -199,7 +199,7 @@ describe('Interaction Routes', (): void => {
             },
             session: { nonce: invalidNonce }
           },
-          { nonce: grant.interactNonce, id: grant.interactId }
+          { nonce: interaction.nonce, id: interaction.id }
         )
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
@@ -216,9 +216,9 @@ describe('Interaction Routes', (): void => {
               Accept: 'application/json',
               'Content-Type': 'application/json'
             },
-            session: { nonce: grant.interactNonce }
+            session: { nonce: interaction.nonce }
           },
-          { id: fakeInteractId, nonce: grant.interactNonce }
+          { id: fakeInteractId, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
@@ -228,11 +228,16 @@ describe('Interaction Routes', (): void => {
       })
 
       test('Cannot finish interaction with revoked grant', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
-        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          })
+        )
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
 
         const ctx = createContext<FinishContext>(
           {
@@ -240,9 +245,9 @@ describe('Interaction Routes', (): void => {
               Accept: 'application/json',
               'Content-Type': 'application/json'
             },
-            session: { nonce: grant.interactNonce }
+            session: { nonce: interaction.nonce }
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.finish(ctx)).rejects.toMatchObject({
@@ -262,6 +267,12 @@ describe('Interaction Routes', (): void => {
           grantId: grant.id
         })
 
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Approved
+          })
+        )
+
         const ctx = createContext<FinishContext>(
           {
             headers: {
@@ -269,19 +280,20 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json'
             },
             session: {
-              nonce: grant.interactNonce
+              nonce: interaction.nonce
             },
-            url: `/interact/${grant.interactId}/${grant.interactNonce}/finish`
+            url: `/interact/${interaction.id}/${interaction.nonce}/finish`
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         assert.ok(grant.finishUri)
         const clientRedirectUri = new URL(grant.finishUri)
-        const { clientNonce, interactNonce, interactRef } = grant
+        const { clientNonce } = grant
+        const { nonce: interactNonce, ref: interactRef } = interaction
 
         const interactUrl =
-          config.identityServerDomain + `/interact/${grant.interactId}`
+          config.identityServerDomain + `/interact/${interaction.id}`
 
         const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${interactUrl}`
         const hash = crypto.createHash('sha3-512').update(data).digest('base64')
@@ -295,6 +307,10 @@ describe('Interaction Routes', (): void => {
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+
+        const issuedGrant = await Grant.query().findById(grant.id)
+        assert.ok(issuedGrant)
+        expect(issuedGrant.state).toEqual(GrantState.Approved)
       })
 
       test('Can finish rejected interaction', async (): Promise<void> => {
@@ -309,6 +325,11 @@ describe('Interaction Routes', (): void => {
           grantId: grant.id
         })
 
+        const interaction = await Interaction.query().insert({
+          ...generateBaseInteraction(grant),
+          state: InteractionState.Denied
+        })
+
         const ctx = createContext<FinishContext>(
           {
             headers: {
@@ -316,11 +337,11 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json'
             },
             session: {
-              nonce: grant.interactNonce
+              nonce: interaction.nonce
             },
-            url: `/interact/${grant.interactId}/${grant.interactNonce}/finish`
+            url: `/interact/${interaction.id}/${interaction.nonce}/finish`
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         assert.ok(grant.finishUri)
@@ -333,9 +354,21 @@ describe('Interaction Routes', (): void => {
         expect(ctx.response).toSatisfyApiSpec()
         expect(ctx.status).toBe(302)
         expect(redirectSpy).toHaveBeenCalledWith(clientRedirectUri.toString())
+
+        const rejectedGrant = await Grant.query().findById(grant.id)
+        assert.ok(rejectedGrant)
+        expect(rejectedGrant.state).toEqual(GrantState.Finalized)
+        expect(rejectedGrant.finalizationReason).toEqual(
+          GrantFinalization.Rejected
+        )
       })
 
       test('Cannot finish invalid interaction', async (): Promise<void> => {
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Pending
+          })
+        )
         const ctx = createContext<FinishContext>(
           {
             headers: {
@@ -343,11 +376,11 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json'
             },
             session: {
-              nonce: grant.interactNonce
+              nonce: interaction.nonce
             },
-            url: `/interact/${grant.interactId}/${grant.interactNonce}/finish`
+            url: `/interact/${interaction.id}/${interaction.nonce}/finish`
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         assert.ok(grant.finishUri)
@@ -386,10 +419,10 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json',
               'x-idp-secret': Config.identityServerSecret
             },
-            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+            url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.details(ctx)).resolves.toBeUndefined()
@@ -405,7 +438,7 @@ describe('Interaction Routes', (): void => {
         })
       })
 
-      test('Cannot get grant details for nonexistent grant', async (): Promise<void> => {
+      test('Cannot get grant details for nonexistent interaction', async (): Promise<void> => {
         const ctx = createContext<GetContext>(
           {
             headers: {
@@ -413,10 +446,10 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json',
               'x-idp-secret': Config.identityServerSecret
             },
-            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+            url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
           },
-          { id: v4(), nonce: grant.interactNonce }
+          { id: v4(), nonce: interaction.nonce }
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404
@@ -429,6 +462,10 @@ describe('Interaction Routes', (): void => {
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Revoked
         })
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(revokedGrant)
+        )
         const ctx = createContext<GetContext>(
           {
             headers: {
@@ -436,10 +473,10 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json',
               'x-idp-secret': Config.identityServerSecret
             },
-            url: `/grant/${revokedGrant.interactId}/${revokedGrant.interactNonce}`,
+            url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
           },
-          { id: revokedGrant.interactId, nonce: revokedGrant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404
@@ -453,10 +490,10 @@ describe('Interaction Routes', (): void => {
               Accept: 'application/json',
               'Content-Type': 'application/json'
             },
-            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+            url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
           },
-          { id: grant.interactId, nonce: grant.interactNonce }
+          { id: interaction.id, nonce: interaction.nonce }
         )
 
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
@@ -464,7 +501,7 @@ describe('Interaction Routes', (): void => {
         })
       })
 
-      test('Cannot get grant details for nonexistent grant', async (): Promise<void> => {
+      test('Cannot get grant details for nonexistent interaction', async (): Promise<void> => {
         const ctx = createContext<GetContext>(
           {
             headers: {
@@ -472,36 +509,19 @@ describe('Interaction Routes', (): void => {
               'Content-Type': 'application/json',
               'x-idp-secret': Config.identityServerSecret
             },
-            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
+            url: `/grant/${interaction.id}/${interaction.nonce}`,
             method: 'GET'
           },
-          { id: v4(), nonce: grant.interactNonce }
+          { id: v4(), nonce: interaction.nonce }
         )
         await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
           status: 404
-        })
-      })
-
-      test('Cannot get grant details without secret', async (): Promise<void> => {
-        const ctx = createContext<GetContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json'
-            },
-            url: `/grant/${grant.interactId}/${grant.interactNonce}`,
-            method: 'GET'
-          },
-          { id: grant.interactId, nonce: grant.interactNonce }
-        )
-
-        await expect(interactionRoutes.details(ctx)).rejects.toMatchObject({
-          status: 401
         })
       })
     })
-    describe('IDP - accept/reject grant', (): void => {
+    describe('IDP - accept/reject interaction', (): void => {
       let pendingGrant: Grant
+      let activeInteraction: Interaction
       beforeEach(async (): Promise<void> => {
         pendingGrant = await Grant.query().insert({
           ...generateBaseGrant(),
@@ -512,9 +532,15 @@ describe('Interaction Routes', (): void => {
           ...BASE_GRANT_ACCESS,
           grantId: pendingGrant.id
         })
+
+        activeInteraction = await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Active
+          })
+        )
       })
 
-      test('cannot accept/reject grant without secret', async (): Promise<void> => {
+      test('cannot accept/reject interaction without secret', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
             headers: {
@@ -523,9 +549,9 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: pendingGrant.interactId,
-            nonce: pendingGrant.interactNonce,
-            choice: GrantChoices.Accept
+            id: activeInteraction.id,
+            nonce: activeInteraction.nonce,
+            choice: InteractionChoices.Accept
           }
         )
 
@@ -537,10 +563,10 @@ describe('Interaction Routes', (): void => {
         })
       })
 
-      test('can accept grant', async (): Promise<void> => {
+      test('can accept interaction', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
-            url: `/grant/${pendingGrant.id}/${pendingGrant.interactNonce}/accept`,
+            url: `/grant/${activeInteraction.id}/${activeInteraction.nonce}/accept`,
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -549,9 +575,9 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: pendingGrant.interactId,
-            nonce: pendingGrant.interactNonce,
-            choice: GrantChoices.Accept
+            id: activeInteraction.id,
+            nonce: activeInteraction.nonce,
+            choice: InteractionChoices.Accept
           }
         )
 
@@ -562,8 +588,13 @@ describe('Interaction Routes', (): void => {
         expect(ctx.status).toBe(202)
 
         const issuedGrant = await Grant.query().findById(pendingGrant.id)
+        const acceptedInteraction = await Interaction.query().findById(
+          activeInteraction.id
+        )
         assert.ok(issuedGrant)
-        expect(issuedGrant.state).toEqual(GrantState.Approved)
+        assert.ok(acceptedInteraction)
+        expect(issuedGrant.state).toEqual(GrantState.Pending)
+        expect(acceptedInteraction.state).toEqual(InteractionState.Approved)
       })
 
       test('Cannot accept or reject grant if grant does not exist', async (): Promise<void> => {
@@ -591,7 +622,7 @@ describe('Interaction Routes', (): void => {
       test('Can reject grant', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
-            url: `/grant/${pendingGrant.id}/${pendingGrant.interactNonce}/reject`,
+            url: `/grant/${activeInteraction.id}/${activeInteraction.nonce}/reject`,
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -600,9 +631,9 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: pendingGrant.interactId,
-            nonce: pendingGrant.interactNonce,
-            choice: GrantChoices.Reject
+            id: activeInteraction.id,
+            nonce: activeInteraction.nonce,
+            choice: InteractionChoices.Reject
           }
         )
 
@@ -614,10 +645,13 @@ describe('Interaction Routes', (): void => {
 
         const issuedGrant = await Grant.query().findById(pendingGrant.id)
         assert.ok(issuedGrant)
-        expect(issuedGrant.state).toEqual(GrantState.Finalized)
-        expect(issuedGrant.finalizationReason).toEqual(
-          GrantFinalization.Rejected
+        expect(issuedGrant.state).toEqual(GrantState.Pending)
+
+        const rejectedInteraction = await Interaction.query().findById(
+          activeInteraction.id
         )
+        assert.ok(rejectedInteraction)
+        expect(rejectedInteraction.state).toEqual(InteractionState.Denied)
       })
 
       test('Cannot make invalid grant choice', async (): Promise<void> => {
@@ -630,8 +664,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: pendingGrant.interactId,
-            nonce: pendingGrant.interactNonce,
+            id: activeInteraction.id,
+            nonce: activeInteraction.nonce,
             choice: 'invalidChoice'
           }
         )
@@ -645,6 +679,12 @@ describe('Interaction Routes', (): void => {
         const issuedGrant = await Grant.query().findById(pendingGrant.id)
         assert.ok(issuedGrant)
         expect(issuedGrant.state).toEqual(GrantState.Pending)
+
+        const stillActiveInteraction = await Interaction.query().findById(
+          activeInteraction.id
+        )
+        assert.ok(stillActiveInteraction)
+        expect(stillActiveInteraction.state).toEqual(InteractionState.Pending)
       })
     })
   })

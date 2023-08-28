@@ -58,10 +58,7 @@ describe('Access Token Routes', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: generateNonce(),
-    client: CLIENT,
-    interactId: v4(),
-    interactRef: generateNonce(),
-    interactNonce: generateNonce()
+    client: CLIENT
   }
 
   const BASE_ACCESS = {

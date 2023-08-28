@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -10,18 +9,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import {
-  FinishMethod,
-  Grant,
-  GrantState,
-  GrantFinalization,
-  StartMethod
-} from '../grant/model'
+import { Grant, GrantState, GrantFinalization } from '../grant/model'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import { generateNonce, generateToken } from '../shared/utils'
+import { generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
+import { generateBaseGrant } from '../tests/grant'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -45,17 +39,6 @@ describe('Access Token Service', (): void => {
     await appContainer.shutdown()
   })
 
-  const CLIENT = faker.internet.url({ appendSlash: false })
-
-  const BASE_GRANT = {
-    state: GrantState.Processing,
-    startMethod: [StartMethod.Redirect],
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com/finish',
-    clientNonce: generateNonce(),
-    client: CLIENT
-  }
-
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
     actions: [AccessAction.Read, AccessAction.Create],
@@ -76,14 +59,9 @@ describe('Access Token Service', (): void => {
 
   let grant: Grant
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch({
-      ...BASE_GRANT,
-      continueToken: generateToken(),
-      continueId: v4(),
-      interactId: v4(),
-      interactRef: generateNonce(),
-      interactNonce: generateNonce()
-    })
+    grant = await Grant.query(trx).insertAndFetch(
+      generateBaseGrant({ state: GrantState.Approved })
+    )
     grant.access = [
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -190,14 +168,13 @@ describe('Access Token Service', (): void => {
     let grant: Grant
     let token: AccessToken
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        continueToken: generateToken(),
-        continueId: v4(),
-        interactId: v4(),
-        interactRef: generateNonce(),
-        interactNonce: generateNonce()
-      })
+      grant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Issued
+        })
+      )
+
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
@@ -287,14 +264,12 @@ describe('Access Token Service', (): void => {
     let token: AccessToken
     let originalTokenValue: string
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        continueToken: generateToken(),
-        continueId: v4(),
-        interactId: v4(),
-        interactRef: generateNonce(),
-        interactNonce: generateNonce()
-      })
+      grant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Issued
+        })
+      )
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS

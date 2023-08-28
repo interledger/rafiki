@@ -5,11 +5,16 @@ import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
 import { GrantService } from '../grant/service'
-import { GrantState, GrantFinalization, isRejectedGrant } from '../grant/model'
+import { AccessService } from '../access/service'
+import { InteractionService } from '../interaction/service'
+import { Interaction, InteractionState } from '../interaction/model'
+import { GrantState, GrantFinalization, isRevokedGrant } from '../grant/model'
 import { toOpenPaymentsAccess } from '../access/model'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
+  accessService: AccessService
+  interactionService: InteractionService
   config: IAppConfig
 }
 
@@ -40,7 +45,7 @@ export type StartContext = InteractionContext<StartQuery, InteractionParams>
 
 export type GetContext = InteractionContext<never, InteractionParams>
 
-export enum GrantChoices {
+export enum InteractionChoices {
   Accept = 'accept',
   Reject = 'reject'
 }
@@ -58,8 +63,17 @@ export interface InteractionRoutes {
   details(ctx: GetContext): Promise<void>
 }
 
+function isInteractionExpired(interaction: Interaction): boolean {
+  const now = new Date(Date.now())
+  const expiresAt =
+    interaction.updatedAt.getTime() + interaction.expiresIn * 1000
+  return expiresAt < now.getTime()
+}
+
 export function createInteractionRoutes({
   grantService,
+  accessService,
+  interactionService,
   logger,
   config
 }: ServiceDependencies): InteractionRoutes {
@@ -69,6 +83,8 @@ export function createInteractionRoutes({
 
   const deps = {
     grantService,
+    accessService,
+    interactionService,
     logger: log,
     config
   }
@@ -76,7 +92,7 @@ export function createInteractionRoutes({
   return {
     start: (ctx: StartContext) => startInteraction(deps, ctx),
     finish: (ctx: FinishContext) => finishInteraction(deps, ctx),
-    acceptOrReject: (ctx: ChooseContext) => handleGrantChoice(deps, ctx),
+    acceptOrReject: (ctx: ChooseContext) => handleInteractionChoice(deps, ctx),
     details: (ctx: GetContext) => getGrantDetails(deps, ctx)
   }
 }
@@ -86,7 +102,7 @@ async function getGrantDetails(
   ctx: GetContext
 ): Promise<void> {
   const secret = ctx.headers?.['x-idp-secret']
-  const { config, grantService } = deps
+  const { config, interactionService, accessService } = deps
   if (
     !ctx.headers['x-idp-secret'] ||
     !crypto.timingSafeEqual(
@@ -97,13 +113,15 @@ async function getGrantDetails(
     ctx.throw(401)
   }
   const { id: interactId, nonce } = ctx.params
-  const grant = await grantService.getByInteractionSession(interactId, nonce)
-  if (!grant) {
+  const interaction = await interactionService.getBySession(interactId, nonce)
+  if (!interaction || isRevokedGrant(interaction.grant)) {
     ctx.throw(404)
   }
 
+  const access = await accessService.getByGrant(interaction.grantId)
+
   ctx.body = {
-    access: grant.access.map(toOpenPaymentsAccess)
+    access: access.map(toOpenPaymentsAccess)
   }
 }
 
@@ -120,34 +138,47 @@ async function startInteraction(
   )
   const { id: interactId, nonce } = ctx.params
   const { clientName, clientUri } = ctx.query
-  const { config, grantService } = deps
-  const grant = await grantService.getByInteractionSession(interactId, nonce)
+  const { config, interactionService, grantService } = deps
+  const interaction = await interactionService.getBySession(interactId, nonce)
 
-  if (!grant || grant.state !== GrantState.Processing) {
+  if (
+    !interaction ||
+    interaction.state !== InteractionState.Pending ||
+    isRevokedGrant(interaction.grant)
+  ) {
     ctx.throw(401, { error: 'unknown_request' })
-  } else {
+  }
+
+  const trx = await Interaction.startTransaction()
+  try {
     // TODO: also establish session in redis with short expiry
-    await grantService.markPending(grant.id)
-    ctx.session.nonce = grant.interactNonce
+    await grantService.markPending(interaction.id, trx)
+    await trx.commit()
+
+    ctx.session.nonce = interaction.nonce
 
     const interactionUrl = new URL(config.identityServerDomain)
-    interactionUrl.searchParams.set('interactId', grant.interactId)
-    interactionUrl.searchParams.set('nonce', grant.interactNonce)
+    interactionUrl.searchParams.set('interactId', interaction.id)
+    interactionUrl.searchParams.set('nonce', interaction.nonce)
     interactionUrl.searchParams.set('clientName', clientName as string)
     interactionUrl.searchParams.set('clientUri', clientUri as string)
 
     ctx.redirect(interactionUrl.toString())
+  } catch (err) {
+    await trx.rollback()
+    ctx.throw(500)
   }
 }
 
 // TODO: allow idp to specify the reason for rejection
 // https://github.com/interledger/rafiki/issues/886
-async function handleGrantChoice(
+// TODO: rename to handleInteraction or handleInteractionChoice
+async function handleInteractionChoice(
   deps: ServiceDependencies,
   ctx: ChooseContext
 ): Promise<void> {
   const { id: interactId, nonce, choice } = ctx.params
-  const { config, grantService } = deps
+  const { config, interactionService } = deps
 
   if (
     !ctx.headers['x-idp-secret'] ||
@@ -159,13 +190,11 @@ async function handleGrantChoice(
     ctx.throw(401, { error: 'invalid_interaction' })
   }
 
-  const grant = await grantService.getByInteractionSession(interactId, nonce, {
-    includeRevoked: true
-  })
-
-  if (!grant) {
+  const interaction = await interactionService.getBySession(interactId, nonce)
+  if (!interaction) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
+    const { grant } = interaction
     // If grant was already rejected or revoked
     if (
       grant.state === GrantState.Finalized &&
@@ -175,14 +204,17 @@ async function handleGrantChoice(
     }
 
     // If grant is otherwise not pending interaction
-    if (grant.state !== GrantState.Pending) {
+    if (
+      interaction.state !== InteractionState.Pending ||
+      isInteractionExpired(interaction)
+    ) {
       ctx.throw(400, { error: 'request_denied' })
     }
 
-    if (choice === GrantChoices.Accept) {
-      await grantService.approve(grant.id)
-    } else if (choice === GrantChoices.Reject) {
-      await grantService.finalize(grant.id, GrantFinalization.Rejected)
+    if (choice === InteractionChoices.Accept) {
+      await interactionService.approve(interactId)
+    } else if (choice === InteractionChoices.Reject) {
+      await interactionService.deny(interactId)
     } else {
       ctx.throw(404)
     }
@@ -203,16 +235,21 @@ async function finishInteraction(
     ctx.throw(401, { error: 'invalid_request' })
   }
 
-  const { grantService, config } = deps
-  const grant = await grantService.getByInteractionSession(interactId, nonce)
+  const { grantService, interactionService, config } = deps
+  const interaction = await interactionService.getBySession(interactId, nonce)
 
   // TODO: redirect with this error in query string
-  if (!grant) {
+  if (!interaction || isRevokedGrant(interaction.grant)) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
-    const clientRedirectUri = new URL(grant.finishUri)
-    if (grant.state === GrantState.Approved) {
-      const { clientNonce, interactNonce, interactRef } = grant
+    const { grant } = interaction
+    const clientRedirectUri = new URL(grant.finishUri as string)
+    if (interaction.state === InteractionState.Approved) {
+      const {
+        grant: { clientNonce },
+        nonce: interactNonce,
+        ref: interactRef
+      } = interaction
       const interactUrl =
         config.identityServerDomain + `/interact/${interactId}`
 
@@ -223,11 +260,12 @@ async function finishInteraction(
       clientRedirectUri.searchParams.set('hash', hash)
       clientRedirectUri.searchParams.set('interact_ref', interactRef)
       ctx.redirect(clientRedirectUri.toString())
-    } else if (isRejectedGrant(grant)) {
+    } else if (interaction.state === InteractionState.Denied) {
+      await grantService.finalize(grant.id, GrantFinalization.Rejected)
       clientRedirectUri.searchParams.set('result', 'grant_rejected')
       ctx.redirect(clientRedirectUri.toString())
     } else {
-      // Grant is not in either an accepted or rejected state
+      // Ineraction is not in an accepted or rejected state
       clientRedirectUri.searchParams.set('result', 'grant_invalid')
       ctx.redirect(clientRedirectUri.toString())
     }
