@@ -32,6 +32,9 @@ export class Peer
     }
   }
 
+  public readonly liquidityThreshold!: bigint | null
+  public processAt!: Date | null
+
   public assetId!: string
   public asset!: Asset
 

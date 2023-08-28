@@ -250,6 +250,8 @@ input CreatePeerInput {
   staticIlpAddress: String!
   "Peer's internal name"
   name: String
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -265,6 +267,8 @@ input UpdatePeerInput {
   staticIlpAddress: String
   "Peer's new public name"
   name: String
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -446,6 +450,8 @@ type Peer implements Model {
   staticIlpAddress: String!
   "Peer's public name"
   name: String
+  "Account Servicing Entity will be notified via a webhook event if pper liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Available liquidity"
   liquidity: UInt64
   "Date-time of creation"

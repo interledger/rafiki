@@ -1384,6 +1384,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "maxPacketAmount",
             "description": "Maximum packet amount that the peer accepts",
             "type": {
@@ -5543,6 +5555,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if pper liquidity falls below this value",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "maxPacketAmount",
             "description": "Maximum packet amount that the peer accepts",
             "args": [],
@@ -7474,6 +7498,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
               "ofType": null
             },
             "defaultValue": null,

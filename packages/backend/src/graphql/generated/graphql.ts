@@ -210,6 +210,8 @@ export type CreatePeerInput = {
   http: HttpInput;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value */
+  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** Peer's internal name */
@@ -867,6 +869,8 @@ export type Peer = Model & {
   id: Scalars['ID']['output'];
   /** Available liquidity */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
+  /** Account Servicing Entity will be notified via a webhook event if pper liquidity falls below this value */
+  liquidityThreshold?: Maybe<Scalars['UInt64']['output']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: Maybe<Scalars['UInt64']['output']>;
   /** Peer's public name */
@@ -1154,6 +1158,8 @@ export type UpdatePeerInput = {
   id: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value */
+  liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** New maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** Peer's new public name */
@@ -1819,6 +1825,7 @@ export type PeerResolvers<ContextType = any, ParentType extends ResolversParentT
   http?: Resolver<ResolversTypes['Http'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
+  liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   maxPacketAmount?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   staticIlpAddress?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
