@@ -13,9 +13,9 @@
   "dependencies": {
     "@astrojs/react": "^2.3.2",
     "@astrojs/starlight": "^0.7.3",
-    "@types/react": "^18.2.20",
+    "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
-    "astro": "2.10.12",
+    "astro": "2.10.14",
     "graphql": "^16.8.0",
     "graphql-markdown": "^7.0.0",
     "react": "^18.2.0",

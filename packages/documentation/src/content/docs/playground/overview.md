@@ -2,13 +2,13 @@
 title: Overview
 ---
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../reference/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../reference/glossary.md#open-payments) APIs with its required [GNAP](../reference/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](/reference/glossary#open-payments) APIs with its required [GNAP](/reference/glossary#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../reference/glossary.md#account-servicing-entity))
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](/reference/glossary#account-servicing-entity))
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
 - `local-http-signatures` (request signature generation for Postman)
 
@@ -152,7 +152,7 @@ The Examples folder in the Postman collection includes an eCommerce (Open Paymen
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](../concepts/open-payments/grant-interaction.md).
+Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
 
 Example walkthrough:
 

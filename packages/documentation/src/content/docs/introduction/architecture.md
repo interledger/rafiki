@@ -40,10 +40,10 @@ The `auth` service performs authorization and authentication of incoming request
 
 ## Frontend
 
-The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [payment pointers](../reference/glossary.md#payment-pointer), [peering relationships](../reference/glossary.md#peer), and [assets](../reference/glossary.md#asset), among other settings.
+The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [payment pointers](/reference/glossary#payment-pointer), [peering relationships](/reference/glossary#peer), and [assets](/reference/glossary#asset), among other settings.
 
 ## Additional packages
 
 ### Token Introspection
 
-The `token-introspection` package is a client library for making [GNAP](../reference/glossary.md#grant-negotiation-authorization-protocol) token introspection requests to the auth server.
+The `token-introspection` package is a client library for making [GNAP](/reference/glossary#grant-negotiation-authorization-protocol) token introspection requests to the auth server.

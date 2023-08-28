@@ -41,7 +41,7 @@ jobs:
         if: steps.verify-changed-files.outputs.files_changed == 'true'
         run: exit 1
 
-  documenation:
+  documentation:
     runs-on: ubuntu-22.04
     needs: checkout
     steps:
