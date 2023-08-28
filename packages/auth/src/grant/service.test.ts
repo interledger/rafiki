@@ -1,3 +1,4 @@
+import assert from 'assert'
 import { faker } from '@faker-js/faker'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -171,6 +172,7 @@ describe('Grant Service', (): void => {
   describe('pending', (): void => {
     test('Can mark a grant pending for an interaction', async (): Promise<void> => {
       const pendingGrant = await grantService.markPending(grant.id)
+      assert.ok(pendingGrant)
       expect(pendingGrant.state).toEqual(GrantState.Pending)
     })
   })

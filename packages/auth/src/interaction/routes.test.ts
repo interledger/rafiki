@@ -521,7 +521,6 @@ describe('Interaction Routes', (): void => {
     })
     describe('IDP - accept/reject interaction', (): void => {
       let pendingGrant: Grant
-      let activeInteraction: Interaction
       beforeEach(async (): Promise<void> => {
         pendingGrant = await Grant.query().insert({
           ...generateBaseGrant(),
@@ -532,12 +531,6 @@ describe('Interaction Routes', (): void => {
           ...BASE_GRANT_ACCESS,
           grantId: pendingGrant.id
         })
-
-        activeInteraction = await Interaction.query().insert(
-          generateBaseInteraction(grant, {
-            state: InteractionState.Active
-          })
-        )
       })
 
       test('cannot accept/reject interaction without secret', async (): Promise<void> => {
@@ -549,8 +542,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: activeInteraction.id,
-            nonce: activeInteraction.nonce,
+            id: interaction.id,
+            nonce: interaction.nonce,
             choice: InteractionChoices.Accept
           }
         )
@@ -566,7 +559,7 @@ describe('Interaction Routes', (): void => {
       test('can accept interaction', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
-            url: `/grant/${activeInteraction.id}/${activeInteraction.nonce}/accept`,
+            url: `/grant/${interaction.id}/${interaction.nonce}/accept`,
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -575,8 +568,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: activeInteraction.id,
-            nonce: activeInteraction.nonce,
+            id: interaction.id,
+            nonce: interaction.nonce,
             choice: InteractionChoices.Accept
           }
         )
@@ -589,7 +582,7 @@ describe('Interaction Routes', (): void => {
 
         const issuedGrant = await Grant.query().findById(pendingGrant.id)
         const acceptedInteraction = await Interaction.query().findById(
-          activeInteraction.id
+          interaction.id
         )
         assert.ok(issuedGrant)
         assert.ok(acceptedInteraction)
@@ -622,7 +615,7 @@ describe('Interaction Routes', (): void => {
       test('Can reject grant', async (): Promise<void> => {
         const ctx = createContext<ChooseContext>(
           {
-            url: `/grant/${activeInteraction.id}/${activeInteraction.nonce}/reject`,
+            url: `/grant/${interaction.id}/${interaction.nonce}/reject`,
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -631,8 +624,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: activeInteraction.id,
-            nonce: activeInteraction.nonce,
+            id: interaction.id,
+            nonce: interaction.nonce,
             choice: InteractionChoices.Reject
           }
         )
@@ -648,7 +641,7 @@ describe('Interaction Routes', (): void => {
         expect(issuedGrant.state).toEqual(GrantState.Pending)
 
         const rejectedInteraction = await Interaction.query().findById(
-          activeInteraction.id
+          interaction.id
         )
         assert.ok(rejectedInteraction)
         expect(rejectedInteraction.state).toEqual(InteractionState.Denied)
@@ -664,8 +657,8 @@ describe('Interaction Routes', (): void => {
             }
           },
           {
-            id: activeInteraction.id,
-            nonce: activeInteraction.nonce,
+            id: interaction.id,
+            nonce: interaction.nonce,
             choice: 'invalidChoice'
           }
         )
@@ -681,7 +674,7 @@ describe('Interaction Routes', (): void => {
         expect(issuedGrant.state).toEqual(GrantState.Pending)
 
         const stillActiveInteraction = await Interaction.query().findById(
-          activeInteraction.id
+          interaction.id
         )
         assert.ok(stillActiveInteraction)
         expect(stillActiveInteraction.state).toEqual(InteractionState.Pending)
