@@ -10,7 +10,6 @@ RUN apk add --no-cache \
     g++
 
 COPY pnpm-lock.yaml ./
-
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
@@ -24,7 +23,6 @@ RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install \
     --recursive \
-    --offline \
     --frozen-lockfile \
     --prod \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
