@@ -1,5 +1,5 @@
 FROM node:18-alpine AS base
-ARG CACHE_BUST=1
+
 WORKDIR /home/rafiki
 
 RUN corepack enable
