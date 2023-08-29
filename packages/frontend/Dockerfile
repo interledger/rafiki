@@ -3,7 +3,7 @@ FROM node:18-alpine AS base
 WORKDIR /home/rafiki
 
 RUN corepack enable
-RUN corepack prepare pnpm@8.7.0 --activate
+RUN corepack prepare pnpm@7.25.1 --activate
 RUN apk add --no-cache \
     python3 \
     make \
@@ -24,6 +24,7 @@ RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install \
     --recursive \
+    --prefer-offline \
     --frozen-lockfile \
     --prod \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
