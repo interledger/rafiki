@@ -3,7 +3,7 @@ FROM node:18-alpine AS base
 WORKDIR /home/rafiki
 
 RUN corepack enable
-RUN corepack prepare pnpm@7.25.1 --activate
+RUN corepack prepare pnpm@8.7.0 --activate
 RUN apk add --no-cache \
     python3 \
     make \
