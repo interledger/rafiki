@@ -1,5 +1,7 @@
 FROM node:18-alpine AS base
 
+ARG CACHE_BUST=99
+
 WORKDIR /home/rafiki
 
 ENV PNPM_HOME="/pnpm"
