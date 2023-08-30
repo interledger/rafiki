@@ -2,6 +2,9 @@ FROM node:18-alpine AS base
 
 WORKDIR /home/rafiki
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
 RUN corepack enable
 RUN corepack prepare pnpm@7.25.1 --activate
 RUN apk add --no-cache \
@@ -17,6 +20,8 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 
 FROM base AS prod-deps
 
+RUN pnpm add -g typescript
+
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/auth/package.json ./packages/auth/package.json
 COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
@@ -25,6 +30,7 @@ RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install \
     --recursive \
+    --prefer-offline \
     --frozen-lockfile \
     --prod \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
