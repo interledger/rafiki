@@ -2,6 +2,9 @@ FROM node:18-alpine AS base
 
 WORKDIR /home/rafiki
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
 RUN corepack enable
 RUN corepack prepare pnpm@7.25.1 --activate
 RUN apk add --no-cache \
@@ -11,17 +14,19 @@ RUN apk add --no-cache \
 
 COPY pnpm-lock.yaml ./
 
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
 FROM base AS prod-deps
 
+RUN pnpm add -g typescript
+
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY localenv/mock-account-servicing-entity/package.json ./localenv/mock-account-servicing-entity/package.json
 
 RUN pnpm clean
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --prefer-offline \
@@ -34,7 +39,7 @@ FROM base AS builder
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY localenv/mock-account-servicing-entity ./localenv/mock-account-servicing-entity
 
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --offline \

@@ -2,6 +2,9 @@ FROM node:18-alpine AS base
 
 WORKDIR /home/rafiki
 
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
 RUN corepack enable
 RUN corepack prepare pnpm@7.25.1 --activate
 RUN apk add --no-cache \
@@ -11,7 +14,7 @@ RUN apk add --no-cache \
 
 COPY pnpm-lock.yaml ./
 
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
@@ -21,7 +24,7 @@ COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/frontend/package.json ./packages/frontend/package.json
 
 RUN pnpm clean
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --prefer-offline \
@@ -34,7 +37,7 @@ FROM base AS builder
 COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
 COPY packages/frontend ./packages/frontend
 
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --offline \

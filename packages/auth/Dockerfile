@@ -14,7 +14,7 @@ RUN apk add --no-cache \
 
 COPY pnpm-lock.yaml ./
 
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
@@ -27,7 +27,7 @@ COPY packages/auth/package.json ./packages/auth/package.json
 COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
 
 RUN pnpm clean
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --prefer-offline \
@@ -42,7 +42,7 @@ COPY openapi ./openapi
 COPY packages/auth ./packages/auth
 COPY packages/token-introspection ./packages/token-introspection
 
-RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
     --offline \
