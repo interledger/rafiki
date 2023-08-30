@@ -37,6 +37,7 @@ COPY localenv/local-http-signatures ./localenv/local-http-signatures
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install \
     --recursive \
+    --prefer-offline \
     --offline \
     --frozen-lockfile
 RUN pnpm --filter local-http-signatures build
