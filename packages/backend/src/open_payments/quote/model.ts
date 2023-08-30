@@ -8,6 +8,7 @@ import {
 } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
+import { Fee } from '../../fee/model'
 
 export class Quote extends PaymentPointerSubresource {
   public static readonly tableName = 'quotes'
@@ -27,6 +28,9 @@ export class Quote extends PaymentPointerSubresource {
   public assetId!: string
   public asset!: Asset
 
+  public feeId?: string
+  public fee?: Fee
+
   static get relationMappings() {
     return {
       ...super.relationMappings,
@@ -36,6 +40,14 @@ export class Quote extends PaymentPointerSubresource {
         join: {
           from: 'quotes.assetId',
           to: 'assets.id'
+        }
+      },
+      fee: {
+        relation: Model.HasOneRelation,
+        modelClass: Fee,
+        join: {
+          from: 'quotes.feeId',
+          to: 'fees.id'
         }
       }
     }

@@ -9,6 +9,7 @@ import { CreateQuoteOptions } from '../open_payments/quote/service'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
   validDestination?: boolean
+  withFee?: boolean
 }
 
 export async function createQuote(
@@ -19,7 +20,8 @@ export async function createQuote(
     sendAmount,
     receiveAmount,
     client,
-    validDestination = true
+    validDestination = true,
+    withFee = false
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
   const paymentPointerService = await deps.use('paymentPointerService')
@@ -100,6 +102,12 @@ export async function createQuote(
     }
   }
 
+  const withGraphFetchedArray = ['asset']
+  if (withFee) {
+    withGraphFetchedArray.push('fee.asset')
+  }
+  const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
+
   return await Quote.query()
     .insertAndFetch({
       paymentPointerId,
@@ -123,5 +131,5 @@ export async function createQuote(
       expiresAt: new Date(Date.now() + config.quoteLifespan),
       client
     })
-    .withGraphFetched('asset')
+    .withGraphFetched(withGraphFetchedExpression)
 }

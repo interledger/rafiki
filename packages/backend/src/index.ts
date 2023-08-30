@@ -344,11 +344,7 @@ export function initIocContainer(
   container.singleton('quoteService', async (deps) => {
     const config = await deps.use('config')
     return await createQuoteService({
-      slippage: config.slippage,
-      quoteLifespan: config.quoteLifespan,
-      quoteUrl: config.quoteUrl,
-      signatureSecret: config.signatureSecret,
-      signatureVersion: config.signatureVersion,
+      config,
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
