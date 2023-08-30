@@ -84,7 +84,7 @@ describe('Signature Service', (): void => {
       identifier: `https://example.com/${v4()}`,
       limits: {
         receiver: 'https://wallet.com/alice',
-        sendAmount: {
+        debitAmount: {
           value: '400',
           assetCode: 'USD',
           assetScale: 2
