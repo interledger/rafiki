@@ -7,7 +7,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "docs:graphql:generate": "pnpm docs:graphql:generate:backend && docs:graphql:generate:auth",
+    "docs:graphql:generate": "pnpm docs:graphql:generate:backend && pnpm docs:graphql:generate:auth",
     "docs:graphql:generate:backend": "./node_modules/.bin/graphql-markdown ../backend/src/graphql/schema.graphql > src/schema-dumps/backend_raw_schema.md",
     "docs:graphql:generate:auth": "./node_modules/.bin/graphql-markdown ../auth/src/graphql/schema.graphql > src/schema-dumps/auth_raw_schema.md"
   },
