@@ -264,7 +264,7 @@ async function finishInteraction(
       clientRedirectUri.searchParams.set('result', 'grant_rejected')
       ctx.redirect(clientRedirectUri.toString())
     } else {
-      // Ineraction is not in an accepted or rejected state
+      // Interaction is not in an accepted or rejected state
       clientRedirectUri.searchParams.set('result', 'grant_invalid')
       ctx.redirect(clientRedirectUri.toString())
     }
