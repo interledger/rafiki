@@ -10,7 +10,7 @@ import {
   useLoaderData
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
-import favicon from '../public/favicon.svg'
+import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
@@ -176,6 +176,6 @@ export function CatchBoundary() {
 export function links() {
   return [
     { rel: 'stylesheet', href: tailwind },
-    { rel: 'icon', href: favicon }
+    { rel: 'icon', href: logo }
   ]
 }
