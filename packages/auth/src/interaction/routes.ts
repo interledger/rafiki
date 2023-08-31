@@ -172,7 +172,6 @@ async function startInteraction(
 
 // TODO: allow idp to specify the reason for rejection
 // https://github.com/interledger/rafiki/issues/886
-// TODO: rename to handleInteraction or handleInteractionChoice
 async function handleInteractionChoice(
   deps: ServiceDependencies,
   ctx: ChooseContext

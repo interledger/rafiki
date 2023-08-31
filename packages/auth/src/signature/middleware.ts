@@ -69,7 +69,6 @@ export async function grantContinueHttpsigMiddleware(
   )
 
   const grantService = await ctx.container.use('grantService')
-  // TODO: if interactRef exists, check that interaction is found
   const grant = await grantService.getByContinue(
     ctx.params['id'],
     continueToken
