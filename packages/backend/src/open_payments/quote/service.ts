@@ -331,7 +331,7 @@ async function finalizeQuote(
     receiveAmountValue = BigInt(receiveAmountValue) - fees
 
     if (receiveAmountValue <= fees) {
-      throw new Error('Fees exceed quote receiveAmount') //TODO: refactor to quote error
+      throw QuoteError.FeeExceedsReceiveAmount
     }
 
     if (
