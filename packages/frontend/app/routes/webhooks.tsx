@@ -1,5 +1,10 @@
 import { json, type LoaderArgs } from '@remix-run/node'
-import { Outlet, useLoaderData, useNavigate } from '@remix-run/react'
+import {
+  Outlet,
+  useLoaderData,
+  useNavigate,
+  useSearchParams
+} from '@remix-run/react'
 import { PageHeader } from '~/components'
 import { PopoverFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
@@ -30,11 +35,11 @@ export const loader = async ({ request }: LoaderArgs) => {
     nextPageUrl = ''
 
   if (webhooks.pageInfo.hasPreviousPage) {
-    previousPageUrl = `/webhooks?before=${webhooks.pageInfo.startCursor}`
+    previousPageUrl = `${webhooks.pageInfo.startCursor}`
   }
 
   if (webhooks.pageInfo.hasNextPage) {
-    nextPageUrl = `/webhooks?after=${webhooks.pageInfo.endCursor}`
+    nextPageUrl = `${webhooks.pageInfo.endCursor}`
   }
 
   return json({ webhooks, previousPageUrl, nextPageUrl, type })
@@ -43,23 +48,24 @@ export const loader = async ({ request }: LoaderArgs) => {
 export default function WebhookEventsPage() {
   const { webhooks, previousPageUrl, nextPageUrl, type } =
     useLoaderData<typeof loader>()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
-  function getTypeFilterParams(
-    currentTypeParams: WebhookEventType[] | undefined,
-    selectedType: WebhookEventType | undefined
-  ): string {
-    const selectedTypeSet = currentTypeParams
-      ? new Set(currentTypeParams)
+  function setTypeFilterParams(selectedType: WebhookEventType): void {
+    // When modifying a filter load the first page of results
+    searchParams.delete('before')
+    searchParams.delete('after')
+    const selectedTypeSet: Set<WebhookEventType> = type
+      ? new Set(type)
       : new Set<WebhookEventType>()
-    if (selectedType) {
-      selectedTypeSet.has(selectedType)
-        ? selectedTypeSet.delete(selectedType)
-        : selectedTypeSet.add(selectedType)
+    selectedTypeSet.has(selectedType)
+      ? selectedTypeSet.delete(selectedType)
+      : selectedTypeSet.add(selectedType)
+    if (selectedTypeSet.size > 0) {
+      searchParams.set('type', Array.from(selectedTypeSet).join(','))
+    } else {
+      searchParams.delete('type')
     }
-
-    return selectedTypeSet.size > 0
-      ? `?type=${[...selectedTypeSet].join(',')}`
-      : ''
+    setSearchParams(searchParams)
   }
 
   return (
@@ -91,7 +97,7 @@ export default function WebhookEventsPage() {
                       value.slice(1).replace(/[_.]/g, ' '),
                     value: value,
                     action: () => {
-                      navigate(`${getTypeFilterParams(type, value)}`)
+                      setTypeFilterParams(value)
                     }
                   }))
                 ]}
@@ -131,10 +137,9 @@ export default function WebhookEventsPage() {
               aria-label='go to previous page'
               disabled={!webhooks.pageInfo.hasPreviousPage}
               onClick={() => {
-                navigate(
-                  previousPageUrl +
-                    getTypeFilterParams(type, undefined).replace('?', '&')
-                )
+                searchParams.delete('after')
+                searchParams.set('before', previousPageUrl)
+                setSearchParams(searchParams)
               }}
             >
               Previous
@@ -143,10 +148,9 @@ export default function WebhookEventsPage() {
               aria-label='go to next page'
               disabled={!webhooks.pageInfo.hasNextPage}
               onClick={() => {
-                navigate(
-                  nextPageUrl +
-                    getTypeFilterParams(type, undefined).replace('?', '&')
-                )
+                searchParams.delete('before')
+                searchParams.set('after', nextPageUrl)
+                setSearchParams(searchParams)
               }}
             >
               Next
