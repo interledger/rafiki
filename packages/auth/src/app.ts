@@ -394,28 +394,25 @@ export class App {
   }
 
   public async shutdown(): Promise<void> {
-    return new Promise((resolve): void => {
-      this.isShuttingDown = true
+    this.isShuttingDown = true
 
-      if (this.adminServer) {
-        this.adminServer.close((): void => {
-          resolve()
-        })
-      }
+    if (this.authServer) {
+      await this.stopServer(this.authServer)
+    }
+    if (this.adminServer) {
+      await this.stopServer(this.adminServer)
+    }
+  }
 
-      if (this.authServer) {
-        this.authServer.close((): void => {
-          resolve()
-        })
-      }
+  private async stopServer(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err)
+        }
 
-      if (this.introspectionServer) {
-        this.introspectionServer.close((): void => {
-          resolve()
-        })
-      }
-
-      resolve()
+        resolve()
+      })
     })
   }
 
