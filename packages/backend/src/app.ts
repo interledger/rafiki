@@ -207,12 +207,14 @@ export interface AppServices {
   feeService: Promise<FeeService>
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
+  ilpConnectorService: Promise<IlpConnectorService>
 }
 
 export type AppContainer = IocContract<AppServices>
 
 export class App {
   private openPaymentsServer!: Server
+  private ilpConnectorService!: Server
   private adminServer!: Server
   private autoPeeringServer!: Server
   public apolloServer!: ApolloServer
@@ -253,7 +255,7 @@ export class App {
     }
   }
 
-  public async startAdminServer(port: number | string): Promise<void> {
+  public async startAdminServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
     const httpServer = http.createServer(koa.callback())
 
@@ -321,7 +323,7 @@ export class App {
     this.adminServer = httpServer.listen(port)
   }
 
-  public async startOpenPaymentsServer(port: number | string): Promise<void> {
+  public async startOpenPaymentsServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
@@ -482,7 +484,7 @@ export class App {
     this.openPaymentsServer = koa.listen(port)
   }
 
-  public async startAutoPeeringServer(port: number | string): Promise<void> {
+  public async startAutoPeeringServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
 
     const autoPeeringRoutes = await this.container.use('autoPeeringRoutes')
@@ -497,28 +499,37 @@ export class App {
     this.autoPeeringServer = koa.listen(port)
   }
 
+  public async startIlpConnectorServer(port: number): Promise<void> {
+    const ilpConnectorService = await this.container.use('ilpConnectorService')
+    this.ilpConnectorService = ilpConnectorService.listenPublic(port)
+  }
+
   public async shutdown(): Promise<void> {
-    return new Promise((resolve): void => {
-      this.isShuttingDown = true
-      this.closeEmitter.emit('shutdown')
+    this.isShuttingDown = true
 
-      if (this.openPaymentsServer) {
-        this.openPaymentsServer.close((): void => {
-          resolve()
-        })
-      }
+    if (this.openPaymentsServer) {
+      await this.stopServer(this.openPaymentsServer)
+    }
+    if (this.adminServer) {
+      await this.stopServer(this.adminServer)
+    }
+    if (this.autoPeeringServer) {
+      await this.stopServer(this.autoPeeringServer)
+    }
+    if (this.ilpConnectorService) {
+      await this.stopServer(this.ilpConnectorService)
+    }
+  }
 
-      if (this.adminServer) {
-        this.adminServer.close((): void => {
-          resolve()
-        })
-      }
+  private async stopServer(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err)
+        }
 
-      if (this.autoPeeringServer) {
-        this.autoPeeringServer.close((): void => {
-          resolve()
-        })
-      }
+        resolve()
+      })
     })
   }
 

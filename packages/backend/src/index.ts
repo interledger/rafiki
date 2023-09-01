@@ -36,7 +36,7 @@ import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/ro
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebhookService } from './webhook/service'
-import { createConnectorService } from './connector'
+import { createIlpConnectorService } from './connector'
 import { createOpenAPI } from '@interledger/openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createConnectionService } from './open_payments/connection/service'
@@ -55,7 +55,6 @@ BigInt.prototype.toJSON = function () {
 
 const container = initIocContainer(Config)
 const app = new App(container)
-let connectorServer: Server
 
 export function initIocContainer(
   config: typeof Config
@@ -332,13 +331,17 @@ export function initIocContainer(
   })
 
   container.singleton('makeIlpPlugin', async (deps) => {
-    const connectorApp = await deps.use('connectorApp')
+    const ilpConnectorService = await deps.use('ilpConnectorService')
     return ({
       sourceAccount,
       unfulfillable = false
     }: IlpPluginOptions): IlpPlugin => {
       return createIlpPlugin((data: Buffer): Promise<Buffer> => {
-        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
+        return ilpConnectorService.handleIlpData(
+          sourceAccount,
+          unfulfillable,
+          data
+        )
       })
     }
   })
@@ -385,9 +388,9 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('connectorApp', async (deps) => {
+  container.singleton('ilpConnectorService', async (deps) => {
     const config = await deps.use('config')
-    return await createConnectorService({
+    return await createIlpConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),
@@ -445,19 +448,12 @@ export const gracefulShutdown = async (
   const logger = await container.use('logger')
   logger.info('shutting down.')
   await app.shutdown()
-  if (connectorServer) {
-    await new Promise((resolve, reject) => {
-      connectorServer.close((err?: Error) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  }
   const knex = await container.use('knex')
   await knex.destroy()
   const tigerbeetle = await container.use('tigerbeetle')
-  await tigerbeetle.destroy()
+  tigerbeetle.destroy()
   const redis = await container.use('redis')
-  await redis.disconnect()
+  redis.disconnect()
 }
 
 export const start = async (
@@ -493,6 +489,15 @@ export const start = async (
     logger.info('received SIGTERM attempting graceful shutdown')
 
     try {
+      if (shuttingDown) {
+        logger.warn(
+          'received second SIGTERM during graceful shutdown, exiting forcefully.'
+        )
+        process.exit(1)
+      }
+
+      shuttingDown = true
+
       // Graceful shutdown
       await gracefulShutdown(container, app)
       logger.info('completed graceful shutdown.')
@@ -518,12 +523,12 @@ export const start = async (
   const config = await container.use('config')
   await app.boot()
   await app.startAdminServer(config.adminPort)
-  await app.startOpenPaymentsServer(config.openPaymentsPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
+
+  await app.startOpenPaymentsServer(config.openPaymentsPort)
   logger.info(`Open Payments listening on ${app.getOpenPaymentsPort()}`)
 
-  const connectorApp = await container.use('connectorApp')
-  connectorServer = connectorApp.listenPublic(config.connectorPort)
+  await app.startIlpConnectorServer(config.connectorPort)
   logger.info(`Connector listening on ${config.connectorPort}`)
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 
