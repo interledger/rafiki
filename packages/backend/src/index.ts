@@ -34,7 +34,7 @@ import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/ro
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebhookService } from './webhook/service'
-import { createIlpConnectorService } from './connector'
+import { createConnectorService } from './connector'
 import { createOpenAPI } from '@interledger/openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createConnectionService } from './open_payments/connection/service'
@@ -328,17 +328,13 @@ export function initIocContainer(
   })
 
   container.singleton('makeIlpPlugin', async (deps) => {
-    const ilpConnectorService = await deps.use('ilpConnectorService')
+    const connectorApp = await deps.use('connectorApp')
     return ({
       sourceAccount,
       unfulfillable = false
     }: IlpPluginOptions): IlpPlugin => {
       return createIlpPlugin((data: Buffer): Promise<Buffer> => {
-        return ilpConnectorService.handleIlpData(
-          sourceAccount,
-          unfulfillable,
-          data
-        )
+        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
       })
     }
   })
@@ -385,9 +381,9 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('ilpConnectorService', async (deps) => {
+  container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
-    return await createIlpConnectorService({
+    return await createConnectorService({
       logger: await deps.use('logger'),
       redis: await deps.use('redis'),
       accountingService: await deps.use('accountingService'),

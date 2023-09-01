@@ -74,7 +74,7 @@ import { CombinedPaymentService } from './open_payments/payment/combined/service
 import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
-import { IlpConnectorService } from './connector/core'
+import { Rafiki as ConnectorApp } from './connector/core'
 
 export interface AppContextData {
   logger: Logger
@@ -206,7 +206,7 @@ export interface AppServices {
   feeService: Promise<FeeService>
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
-  ilpConnectorService: Promise<IlpConnectorService>
+  connectorApp: Promise<ConnectorApp>
   tigerbeetle: Promise<TigerbeetleClient>
 }
 
@@ -496,7 +496,7 @@ export class App {
   }
 
   public async startIlpConnectorServer(port: number): Promise<void> {
-    const ilpConnectorService = await this.container.use('ilpConnectorService')
+    const ilpConnectorService = await this.container.use('connectorApp')
     this.ilpConnectorService = ilpConnectorService.listenPublic(port)
   }
 
