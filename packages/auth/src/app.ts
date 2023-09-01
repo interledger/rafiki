@@ -1,6 +1,5 @@
 import { join } from 'path'
 import http, { Server } from 'http'
-import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'

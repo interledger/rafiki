@@ -1,5 +1,4 @@
 import path from 'path'
-import { EventEmitter } from 'events'
 import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'

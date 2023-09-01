@@ -1,5 +1,4 @@
 import crypto from 'crypto'
-import EventEmitter from 'events'
 import * as httpMocks from 'node-mocks-http'
 import Koa from 'koa'
 import session from 'koa-session'
