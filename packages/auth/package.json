@@ -42,7 +42,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@apollo/client": "^3.8.1",
+    "@apollo/client": "^3.8.2",
     "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/introspection": "4.0.0",
     "@graphql-codegen/typescript": "4.0.1",
