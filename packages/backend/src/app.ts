@@ -1,7 +1,7 @@
 import { join } from 'path'
 import http, { Server } from 'http'
-import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
+import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
@@ -74,10 +74,10 @@ import { CombinedPaymentService } from './open_payments/payment/combined/service
 import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
+import { IlpConnectorService } from './connector/core'
 
 export interface AppContextData {
   logger: Logger
-  closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
@@ -177,7 +177,6 @@ const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
-  closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
@@ -208,6 +207,7 @@ export interface AppServices {
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
   ilpConnectorService: Promise<IlpConnectorService>
+  tigerbeetle: Promise<TigerbeetleClient>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -218,12 +218,9 @@ export class App {
   private adminServer!: Server
   private autoPeeringServer!: Server
   public apolloServer!: ApolloServer
-  public closeEmitter!: EventEmitter
   public isShuttingDown = false
   private logger!: Logger
   private config!: IAppConfig
-  private outgoingPaymentTimer!: NodeJS.Timer
-  private deactivateInvoiceTimer!: NodeJS.Timer
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -235,7 +232,6 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
 
     // Workers are in the way during tests.
@@ -594,7 +590,6 @@ export class App {
     const koa = new Koa<DefaultState, AppContext>()
 
     koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
     koa.context.logger = await this.container.use('logger')
 
     koa.use(

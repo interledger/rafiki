@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events'
-import { Server } from 'http'
 import path from 'path'
 import createLogger from 'pino'
 import { knex } from 'knex'
@@ -105,7 +103,6 @@ export function initIocContainer(
     )
     return db
   })
-  container.singleton('closeEmitter', async () => new EventEmitter())
   container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
     return new Redis(config.redisUrl, {

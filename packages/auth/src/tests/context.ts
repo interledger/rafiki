@@ -36,7 +36,6 @@ export function createContext<T extends AppContext>(
   ctx.params = params
   ctx.query = reqOpts.query || {}
   ctx.session = { ...req.session }
-  ctx.closeEmitter = new EventEmitter()
   ctx.container = container
   return ctx as T
 }

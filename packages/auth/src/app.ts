@@ -52,7 +52,6 @@ import { InteractionRoutes } from './interaction/routes'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
-  closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router
   params: { [key: string]: string }
@@ -88,7 +87,6 @@ export interface DatabaseCleanupRule {
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
-  closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
@@ -106,7 +104,6 @@ export class App {
   private introspectionServer!: Server
   private adminServer!: Server
   public apolloServer!: ApolloServer
-  private closeEmitter!: EventEmitter
   private logger!: Logger
   private config!: IAppConfig
   private databaseCleanupRules!: {
@@ -124,7 +121,6 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
 
     this.databaseCleanupRules = {
@@ -374,7 +370,6 @@ export class App {
     const koa = new Koa<DefaultState, AppContext>()
 
     koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
     koa.context.logger = await this.container.use('logger')
 
     koa.use(
@@ -402,7 +397,6 @@ export class App {
   public async shutdown(): Promise<void> {
     return new Promise((resolve): void => {
       this.isShuttingDown = true
-      this.closeEmitter.emit('shutdown')
 
       if (this.adminServer) {
         this.adminServer.close((): void => {

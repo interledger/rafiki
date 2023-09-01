@@ -73,8 +73,6 @@ export function initIocContainer(
     return db
   })
 
-  container.singleton('closeEmitter', async () => new EventEmitter())
-
   container.singleton('openPaymentsClient', async (deps) => {
     const logger = await deps.use('logger')
     return createOpenPaymentsClient({ logger })
