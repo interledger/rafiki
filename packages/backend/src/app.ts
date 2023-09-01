@@ -509,11 +509,11 @@ export class App {
     if (this.adminServer) {
       await this.stopServer(this.adminServer)
     }
-    if (this.autoPeeringServer) {
-      await this.stopServer(this.autoPeeringServer)
-    }
     if (this.ilpConnectorService) {
       await this.stopServer(this.ilpConnectorService)
+    }
+    if (this.autoPeeringServer) {
+      await this.stopServer(this.autoPeeringServer)
     }
   }
 
