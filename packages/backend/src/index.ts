@@ -46,6 +46,8 @@ import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { createCombinedPaymentService } from './open_payments/payment/combined/service'
 import { createFeeService } from './fee/service'
+import { createAutoPeeringService } from './auto-peering/service'
+import { createAutoPeeringRoutes } from './auto-peering/routes'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -413,6 +415,23 @@ export function initIocContainer(
     })
   })
 
+  container.singleton('autoPeeringService', async (deps) => {
+    return createAutoPeeringService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      assetService: await deps.use('assetService'),
+      config: await deps.use('config')
+    })
+  })
+
+  container.singleton('autoPeeringRoutes', async (deps) => {
+    return await createAutoPeeringRoutes({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      autoPeeringService: await deps.use('autoPeeringService')
+    })
+  })
+
   return container
 }
 
@@ -504,6 +523,13 @@ export const start = async (
   connectorServer = connectorApp.listenPublic(config.connectorPort)
   logger.info(`Connector listening on ${config.connectorPort}`)
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
+
+  if (config.enableAutoPeering) {
+    await app.startAutoPeeringServer(config.autoPeeringServerPort)
+    logger.info(
+      `Auto-peering server listening on ${config.autoPeeringServerPort}`
+    )
+  }
 }
 
 // If this script is run directly, start the server
