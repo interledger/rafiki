@@ -362,21 +362,6 @@ async function finalizeQuote(
   return quote
 }
 
-export function generateQuoteSignature(
-  quote: ModelObject<Quote>,
-  secret: string,
-  version: number
-): string {
-  const timestamp = Math.round(new Date().getTime() / 1000)
-
-  const payload = `${timestamp}.${quote}`
-  const hmac = createHmac('sha256', secret)
-  hmac.update(payload)
-  const digest = hmac.digest('hex')
-
-  return `t=${timestamp}, v${version}=${digest}`
-}
-
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
   options: ListOptions
