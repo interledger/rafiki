@@ -158,7 +158,7 @@ export default defineConfig({
               label: 'Auth Admin API',
               collapsed: true,
               autogenerate: {
-                directory: 'apis/backend'
+                directory: 'apis/auth'
               }
             }
           ]
