@@ -489,8 +489,8 @@ importers:
         specifier: 2.10.14
         version: 2.10.14(sharp@0.32.5)
       astro-graphql-plugin:
-        specifier: ^0.0.3
-        version: 0.0.3(astro@2.10.14)(graphql@16.8.0)
+        specifier: ^0.0.6
+        version: 0.0.6(astro@2.10.14)(graphql@16.8.0)
       graphql:
         specifier: ^16.8.0
         version: 16.8.0
@@ -6571,8 +6571,8 @@ packages:
     resolution: {integrity: sha512-sRpyiNrx2dEYIMmUXprS8nlpRg2Drs8m9ElX9vVEXaCB4XEAJhKfs7IcX0IwShjuOAjLR6wzIrgoptz1n19i1A==}
     hasBin: true
 
-  /astro-graphql-plugin@0.0.3(astro@2.10.14)(graphql@16.8.0):
-    resolution: {integrity: sha512-seiw98H6B7dzbrTe7u1xbrU4hcr4qeT2jUFYPFWbILu5O5pRy/pCUZenGb/ETzujRco5QCUyjphCB9P8sX51ZQ==}
+  /astro-graphql-plugin@0.0.6(astro@2.10.14)(graphql@16.8.0):
+    resolution: {integrity: sha512-hNRb+Iq64wpNKbqoB7sgm81/R+DVLzLTaq42p+Pw8btA5or8G6KLidmJsLol0qfM+WMJkPz4sw7w1DKyuCQv8w==}
     peerDependencies:
       astro: ^2.0.0-beta.0
     dependencies:

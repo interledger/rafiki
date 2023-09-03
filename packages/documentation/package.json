@@ -14,7 +14,7 @@
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
     "astro": "2.10.14",
-    "astro-graphql-plugin": "^0.0.3",
+    "astro-graphql-plugin": "^0.0.6",
     "graphql": "^16.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

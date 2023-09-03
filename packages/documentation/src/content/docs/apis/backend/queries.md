@@ -6,7 +6,7 @@ title: Queries
 
 ## asset
 
-**Type:** [Asset](objects#asset)
+**Type:** [Asset](/apis/backend/objects#asset)
 
 Fetch an asset
 
@@ -18,7 +18,7 @@ Fetch an asset
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -29,7 +29,7 @@ id<br />
 
 ## assets
 
-**Type:** [AssetsConnection!](objects#assetsconnection)
+**Type:** [AssetsConnection!](/apis/backend/objects#assetsconnection)
 
 Fetch a page of assets.
 
@@ -41,7 +41,7 @@ Fetch a page of assets.
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -50,7 +50,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -59,7 +59,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -68,7 +68,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -79,7 +79,7 @@ last<br />
 
 ## incomingPayment
 
-**Type:** [IncomingPayment](objects#incomingpayment)
+**Type:** [IncomingPayment](/apis/backend/objects#incomingpayment)
 
 Fetch an Open Payments incoming payment
 
@@ -91,7 +91,7 @@ Fetch an Open Payments incoming payment
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -102,7 +102,7 @@ id<br />
 
 ## outgoingPayment
 
-**Type:** [OutgoingPayment](objects#outgoingpayment)
+**Type:** [OutgoingPayment](/apis/backend/objects#outgoingpayment)
 
 Fetch an Open Payments outgoing payment
 
@@ -114,7 +114,7 @@ Fetch an Open Payments outgoing payment
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -125,7 +125,7 @@ id<br />
 
 ## paymentPointer
 
-**Type:** [PaymentPointer](objects#paymentpointer)
+**Type:** [PaymentPointer](/apis/backend/objects#paymentpointer)
 
 Fetch a payment pointer
 
@@ -137,7 +137,7 @@ Fetch a payment pointer
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -148,7 +148,7 @@ id<br />
 
 ## paymentPointers
 
-**Type:** [PaymentPointersConnection!](objects#paymentpointersconnection)
+**Type:** [PaymentPointersConnection!](/apis/backend/objects#paymentpointersconnection)
 
 Fetch a page of payment pointers.
 
@@ -160,7 +160,7 @@ Fetch a page of payment pointers.
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -169,7 +169,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -178,7 +178,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -187,7 +187,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -198,7 +198,7 @@ last<br />
 
 ## payments
 
-**Type:** [PaymentConnection!](objects#paymentconnection)
+**Type:** [PaymentConnection!](/apis/backend/objects#paymentconnection)
 
 Fetch a page of combined payments
 
@@ -210,7 +210,7 @@ Fetch a page of combined payments
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -219,7 +219,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -228,7 +228,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -237,7 +237,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -246,7 +246,7 @@ last<br />
 <tr>
 <td>
 filter<br />
-<a href="inputObjects#paymentfilter"><code>PaymentFilter</code></a>
+<a href="/apis/backend/inputObjects#paymentfilter"><code>PaymentFilter</code></a>
 </td>
 <td>
 <p>Filter payment events based on specific criteria.</p>
@@ -257,7 +257,7 @@ filter<br />
 
 ## peer
 
-**Type:** [Peer](objects#peer)
+**Type:** [Peer](/apis/backend/objects#peer)
 
 Fetch a peer
 
@@ -269,7 +269,7 @@ Fetch a peer
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -280,7 +280,7 @@ id<br />
 
 ## peers
 
-**Type:** [PeersConnection!](objects#peersconnection)
+**Type:** [PeersConnection!](/apis/backend/objects#peersconnection)
 
 Fetch a page of peers.
 
@@ -292,7 +292,7 @@ Fetch a page of peers.
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -301,7 +301,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -310,7 +310,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -319,7 +319,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -330,7 +330,7 @@ last<br />
 
 ## quote
 
-**Type:** [Quote](objects#quote)
+**Type:** [Quote](/apis/backend/objects#quote)
 
 Fetch an Open Payments quote
 
@@ -342,7 +342,7 @@ Fetch an Open Payments quote
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -353,7 +353,7 @@ id<br />
 
 ## webhookEvents
 
-**Type:** [WebhookEventsConnection!](objects#webhookeventsconnection)
+**Type:** [WebhookEventsConnection!](/apis/backend/objects#webhookeventsconnection)
 
 Fetch a page of webhook events
 
@@ -365,7 +365,7 @@ Fetch a page of webhook events
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -374,7 +374,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -383,7 +383,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -392,7 +392,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -401,7 +401,7 @@ last<br />
 <tr>
 <td>
 filter<br />
-<a href="inputObjects#webhookeventfilter"><code>WebhookEventFilter</code></a>
+<a href="/apis/backend/inputObjects#webhookeventfilter"><code>WebhookEventFilter</code></a>
 </td>
 <td>
 <p>Filter webhook events based on specific criteria.</p>

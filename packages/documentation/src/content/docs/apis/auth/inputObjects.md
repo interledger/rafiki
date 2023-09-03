@@ -16,7 +16,7 @@ title: Input objects
 <tr>
 <td>
 in<br />
-<a href="enums#grantstate"><code>[GrantState!]</code></a>
+<a href="/apis/auth/enums#grantstate"><code>[GrantState!]</code></a>
 </td>
 <td>
 
@@ -25,7 +25,7 @@ in<br />
 <tr>
 <td>
 notIn<br />
-<a href="enums#grantstate"><code>[GrantState!]</code></a>
+<a href="/apis/auth/enums#grantstate"><code>[GrantState!]</code></a>
 </td>
 <td>
 
@@ -46,7 +46,7 @@ notIn<br />
 <tr>
 <td>
 in<br />
-<a href="scalars#string"><code>[String!]</code></a>
+<a href="/apis/auth/scalars#string"><code>[String!]</code></a>
 </td>
 <td>
 
@@ -67,7 +67,7 @@ in<br />
 <tr>
 <td>
 identifier<br />
-<a href="inputObjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/auth/inputObjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -76,7 +76,7 @@ identifier<br />
 <tr>
 <td>
 state<br />
-<a href="inputObjects#filtergrantstate"><code>FilterGrantState</code></a>
+<a href="/apis/auth/inputObjects#filtergrantstate"><code>FilterGrantState</code></a>
 </td>
 <td>
 
@@ -97,7 +97,7 @@ state<br />
 <tr>
 <td>
 grantId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 

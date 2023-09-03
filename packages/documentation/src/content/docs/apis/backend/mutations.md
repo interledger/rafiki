@@ -6,7 +6,7 @@ title: Mutations
 
 ## addAssetLiquidity
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Add asset liquidity
 
@@ -18,7 +18,7 @@ Add asset liquidity
 <tr>
 <td>
 input<br />
-<a href="inputObjects#addassetliquidityinput"><code>AddAssetLiquidityInput!</code></a>
+<a href="/apis/backend/inputObjects#addassetliquidityinput"><code>AddAssetLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -29,7 +29,7 @@ input<br />
 
 ## addPeerLiquidity
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Add peer liquidity
 
@@ -41,7 +41,7 @@ Add peer liquidity
 <tr>
 <td>
 input<br />
-<a href="inputObjects#addpeerliquidityinput"><code>AddPeerLiquidityInput!</code></a>
+<a href="/apis/backend/inputObjects#addpeerliquidityinput"><code>AddPeerLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -52,7 +52,7 @@ input<br />
 
 ## createAsset
 
-**Type:** [AssetMutationResponse!](objects#assetmutationresponse)
+**Type:** [AssetMutationResponse!](/apis/backend/objects#assetmutationresponse)
 
 Create an asset
 
@@ -64,7 +64,7 @@ Create an asset
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createassetinput"><code>CreateAssetInput!</code></a>
+<a href="/apis/backend/inputObjects#createassetinput"><code>CreateAssetInput!</code></a>
 </td>
 <td>
 
@@ -75,7 +75,7 @@ input<br />
 
 ## createAssetLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Withdraw asset liquidity
 
@@ -87,7 +87,7 @@ Withdraw asset liquidity
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createassetliquiditywithdrawalinput"><code>CreateAssetLiquidityWithdrawalInput!</code></a>
+<a href="/apis/backend/inputObjects#createassetliquiditywithdrawalinput"><code>CreateAssetLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -98,7 +98,7 @@ input<br />
 
 ## createIncomingPayment
 
-**Type:** [IncomingPaymentResponse!](objects#incomingpaymentresponse)
+**Type:** [IncomingPaymentResponse!](/apis/backend/objects#incomingpaymentresponse)
 
 Create an internal Open Payments Incoming Payment. The receiver has a payment pointer on this Rafiki instance.
 
@@ -110,7 +110,7 @@ Create an internal Open Payments Incoming Payment. The receiver has a payment po
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createincomingpaymentinput"><code>CreateIncomingPaymentInput!</code></a>
+<a href="/apis/backend/inputObjects#createincomingpaymentinput"><code>CreateIncomingPaymentInput!</code></a>
 </td>
 <td>
 
@@ -121,7 +121,7 @@ input<br />
 
 ## createOutgoingPayment
 
-**Type:** [OutgoingPaymentResponse!](objects#outgoingpaymentresponse)
+**Type:** [OutgoingPaymentResponse!](/apis/backend/objects#outgoingpaymentresponse)
 
 Create an Open Payments Outgoing Payment
 
@@ -133,7 +133,7 @@ Create an Open Payments Outgoing Payment
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createoutgoingpaymentinput"><code>CreateOutgoingPaymentInput!</code></a>
+<a href="/apis/backend/inputObjects#createoutgoingpaymentinput"><code>CreateOutgoingPaymentInput!</code></a>
 </td>
 <td>
 
@@ -144,7 +144,7 @@ input<br />
 
 ## createPaymentPointer
 
-**Type:** [CreatePaymentPointerMutationResponse!](objects#createpaymentpointermutationresponse)
+**Type:** [CreatePaymentPointerMutationResponse!](/apis/backend/objects#createpaymentpointermutationresponse)
 
 Create a payment pointer
 
@@ -156,7 +156,7 @@ Create a payment pointer
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createpaymentpointerinput"><code>CreatePaymentPointerInput!</code></a>
+<a href="/apis/backend/inputObjects#createpaymentpointerinput"><code>CreatePaymentPointerInput!</code></a>
 </td>
 <td>
 
@@ -167,7 +167,7 @@ input<br />
 
 ## createPaymentPointerKey
 
-**Type:** [CreatePaymentPointerKeyMutationResponse](objects#createpaymentpointerkeymutationresponse)
+**Type:** [CreatePaymentPointerKeyMutationResponse](/apis/backend/objects#createpaymentpointerkeymutationresponse)
 
 Add a public key to a payment pointer that is used to verify Open Payments requests.
 
@@ -179,7 +179,7 @@ Add a public key to a payment pointer that is used to verify Open Payments reque
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createpaymentpointerkeyinput"><code>CreatePaymentPointerKeyInput!</code></a>
+<a href="/apis/backend/inputObjects#createpaymentpointerkeyinput"><code>CreatePaymentPointerKeyInput!</code></a>
 </td>
 <td>
 
@@ -190,7 +190,7 @@ input<br />
 
 ## createPaymentPointerWithdrawal
 
-**Type:** [PaymentPointerWithdrawalMutationResponse](objects#paymentpointerwithdrawalmutationresponse)
+**Type:** [PaymentPointerWithdrawalMutationResponse](/apis/backend/objects#paymentpointerwithdrawalmutationresponse)
 
 Withdraw liquidity from a payment pointer received via Web Monetization.
 
@@ -202,7 +202,7 @@ Withdraw liquidity from a payment pointer received via Web Monetization.
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createpaymentpointerwithdrawalinput"><code>CreatePaymentPointerWithdrawalInput!</code></a>
+<a href="/apis/backend/inputObjects#createpaymentpointerwithdrawalinput"><code>CreatePaymentPointerWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -213,7 +213,7 @@ input<br />
 
 ## createPeer
 
-**Type:** [CreatePeerMutationResponse!](objects#createpeermutationresponse)
+**Type:** [CreatePeerMutationResponse!](/apis/backend/objects#createpeermutationresponse)
 
 Create a peer
 
@@ -225,7 +225,7 @@ Create a peer
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createpeerinput"><code>CreatePeerInput!</code></a>
+<a href="/apis/backend/inputObjects#createpeerinput"><code>CreatePeerInput!</code></a>
 </td>
 <td>
 
@@ -236,7 +236,7 @@ input<br />
 
 ## createPeerLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Withdraw peer liquidity
 
@@ -248,7 +248,7 @@ Withdraw peer liquidity
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createpeerliquiditywithdrawalinput"><code>CreatePeerLiquidityWithdrawalInput!</code></a>
+<a href="/apis/backend/inputObjects#createpeerliquiditywithdrawalinput"><code>CreatePeerLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -259,7 +259,7 @@ input<br />
 
 ## createQuote
 
-**Type:** [QuoteResponse!](objects#quoteresponse)
+**Type:** [QuoteResponse!](/apis/backend/objects#quoteresponse)
 
 Create an Open Payments Quote
 
@@ -271,7 +271,7 @@ Create an Open Payments Quote
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createquoteinput"><code>CreateQuoteInput!</code></a>
+<a href="/apis/backend/inputObjects#createquoteinput"><code>CreateQuoteInput!</code></a>
 </td>
 <td>
 
@@ -282,7 +282,7 @@ input<br />
 
 ## createReceiver
 
-**Type:** [CreateReceiverResponse!](objects#createreceiverresponse)
+**Type:** [CreateReceiverResponse!](/apis/backend/objects#createreceiverresponse)
 
 Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server.
 
@@ -294,7 +294,7 @@ Create an internal or external Open Payments Incoming Payment. The receiver has 
 <tr>
 <td>
 input<br />
-<a href="inputObjects#createreceiverinput"><code>CreateReceiverInput!</code></a>
+<a href="/apis/backend/inputObjects#createreceiverinput"><code>CreateReceiverInput!</code></a>
 </td>
 <td>
 
@@ -305,7 +305,7 @@ input<br />
 
 ## deletePeer
 
-**Type:** [DeletePeerMutationResponse!](objects#deletepeermutationresponse)
+**Type:** [DeletePeerMutationResponse!](/apis/backend/objects#deletepeermutationresponse)
 
 Delete a peer
 
@@ -317,7 +317,7 @@ Delete a peer
 <tr>
 <td>
 input<br />
-<a href="inputObjects#deletepeerinput"><code>DeletePeerInput!</code></a>
+<a href="/apis/backend/inputObjects#deletepeerinput"><code>DeletePeerInput!</code></a>
 </td>
 <td>
 
@@ -328,7 +328,7 @@ input<br />
 
 ## depositEventLiquidity
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Deposit webhook event liquidity
 
@@ -340,7 +340,7 @@ Deposit webhook event liquidity
 <tr>
 <td>
 input<br />
-<a href="inputObjects#depositeventliquidityinput"><code>DepositEventLiquidityInput!</code></a>
+<a href="/apis/backend/inputObjects#depositeventliquidityinput"><code>DepositEventLiquidityInput!</code></a>
 </td>
 <td>
 
@@ -351,7 +351,7 @@ input<br />
 
 ## postLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Post liquidity withdrawal. Withdrawals are two-phase commits and are committed via this mutation.
 
@@ -363,7 +363,7 @@ Post liquidity withdrawal. Withdrawals are two-phase commits and are committed v
 <tr>
 <td>
 input<br />
-<a href="inputObjects#postliquiditywithdrawalinput"><code>PostLiquidityWithdrawalInput!</code></a>
+<a href="/apis/backend/inputObjects#postliquiditywithdrawalinput"><code>PostLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -374,7 +374,7 @@ input<br />
 
 ## revokePaymentPointerKey
 
-**Type:** [RevokePaymentPointerKeyMutationResponse](objects#revokepaymentpointerkeymutationresponse)
+**Type:** [RevokePaymentPointerKeyMutationResponse](/apis/backend/objects#revokepaymentpointerkeymutationresponse)
 
 Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward.
 
@@ -386,7 +386,7 @@ Revoke a public key associated with a payment pointer. Open Payment requests usi
 <tr>
 <td>
 input<br />
-<a href="inputObjects#revokepaymentpointerkeyinput"><code>RevokePaymentPointerKeyInput!</code></a>
+<a href="/apis/backend/inputObjects#revokepaymentpointerkeyinput"><code>RevokePaymentPointerKeyInput!</code></a>
 </td>
 <td>
 
@@ -397,7 +397,7 @@ input<br />
 
 ## setFee
 
-**Type:** [SetFeeResponse!](objects#setfeeresponse)
+**Type:** [SetFeeResponse!](/apis/backend/objects#setfeeresponse)
 
 Set the fee on an asset
 
@@ -409,7 +409,7 @@ Set the fee on an asset
 <tr>
 <td>
 input<br />
-<a href="inputObjects#setfeeinput"><code>SetFeeInput!</code></a>
+<a href="/apis/backend/inputObjects#setfeeinput"><code>SetFeeInput!</code></a>
 </td>
 <td>
 
@@ -420,7 +420,7 @@ input<br />
 
 ## triggerPaymentPointerEvents
 
-**Type:** [TriggerPaymentPointerEventsMutationResponse!](objects#triggerpaymentpointereventsmutationresponse)
+**Type:** [TriggerPaymentPointerEventsMutationResponse!](/apis/backend/objects#triggerpaymentpointereventsmutationresponse)
 
 If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events.
 
@@ -432,7 +432,7 @@ If automatic withdrawal of funds received via Web Monetization by the payment po
 <tr>
 <td>
 input<br />
-<a href="inputObjects#triggerpaymentpointereventsinput"><code>TriggerPaymentPointerEventsInput!</code></a>
+<a href="/apis/backend/inputObjects#triggerpaymentpointereventsinput"><code>TriggerPaymentPointerEventsInput!</code></a>
 </td>
 <td>
 
@@ -443,7 +443,7 @@ input<br />
 
 ## updateAssetWithdrawalThreshold
 
-**Type:** [AssetMutationResponse!](objects#assetmutationresponse)
+**Type:** [AssetMutationResponse!](/apis/backend/objects#assetmutationresponse)
 
 Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn.
 
@@ -455,7 +455,7 @@ Update an asset's withdrawal threshold. The withdrawal threshold indicates the M
 <tr>
 <td>
 input<br />
-<a href="inputObjects#updateassetinput"><code>UpdateAssetInput!</code></a>
+<a href="/apis/backend/inputObjects#updateassetinput"><code>UpdateAssetInput!</code></a>
 </td>
 <td>
 
@@ -466,7 +466,7 @@ input<br />
 
 ## updatePaymentPointer
 
-**Type:** [UpdatePaymentPointerMutationResponse!](objects#updatepaymentpointermutationresponse)
+**Type:** [UpdatePaymentPointerMutationResponse!](/apis/backend/objects#updatepaymentpointermutationresponse)
 
 Update a payment pointer
 
@@ -478,7 +478,7 @@ Update a payment pointer
 <tr>
 <td>
 input<br />
-<a href="inputObjects#updatepaymentpointerinput"><code>UpdatePaymentPointerInput!</code></a>
+<a href="/apis/backend/inputObjects#updatepaymentpointerinput"><code>UpdatePaymentPointerInput!</code></a>
 </td>
 <td>
 
@@ -489,7 +489,7 @@ input<br />
 
 ## updatePeer
 
-**Type:** [UpdatePeerMutationResponse!](objects#updatepeermutationresponse)
+**Type:** [UpdatePeerMutationResponse!](/apis/backend/objects#updatepeermutationresponse)
 
 Update a peer
 
@@ -501,7 +501,7 @@ Update a peer
 <tr>
 <td>
 input<br />
-<a href="inputObjects#updatepeerinput"><code>UpdatePeerInput!</code></a>
+<a href="/apis/backend/inputObjects#updatepeerinput"><code>UpdatePeerInput!</code></a>
 </td>
 <td>
 
@@ -512,7 +512,7 @@ input<br />
 
 ## voidLiquidityWithdrawal
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation.
 
@@ -524,7 +524,7 @@ Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back
 <tr>
 <td>
 input<br />
-<a href="inputObjects#voidliquiditywithdrawalinput"><code>VoidLiquidityWithdrawalInput!</code></a>
+<a href="/apis/backend/inputObjects#voidliquiditywithdrawalinput"><code>VoidLiquidityWithdrawalInput!</code></a>
 </td>
 <td>
 
@@ -535,7 +535,7 @@ input<br />
 
 ## withdrawEventLiquidity
 
-**Type:** [LiquidityMutationResponse](objects#liquiditymutationresponse)
+**Type:** [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
 
 Withdraw webhook event liquidity
 
@@ -547,7 +547,7 @@ Withdraw webhook event liquidity
 <tr>
 <td>
 input<br />
-<a href="inputObjects#withdraweventliquidityinput"><code>WithdrawEventLiquidityInput!</code></a>
+<a href="/apis/backend/inputObjects#withdraweventliquidityinput"><code>WithdrawEventLiquidityInput!</code></a>
 </td>
 <td>
 

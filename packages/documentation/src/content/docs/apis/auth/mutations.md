@@ -6,7 +6,7 @@ title: Mutations
 
 ## revokeGrant
 
-**Type:** [RevokeGrantMutationResponse!](objects#revokegrantmutationresponse)
+**Type:** [RevokeGrantMutationResponse!](/apis/auth/objects#revokegrantmutationresponse)
 
 Revoke Grant
 
@@ -18,7 +18,7 @@ Revoke Grant
 <tr>
 <td>
 input<br />
-<a href="inputObjects#revokegrantinput"><code>RevokeGrantInput!</code></a>
+<a href="/apis/auth/inputObjects#revokegrantinput"><code>RevokeGrantInput!</code></a>
 </td>
 <td>
 

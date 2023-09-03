@@ -10,8 +10,8 @@ title: Interfaces
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [Grant](objects#grant)
-- [Access](objects#access)
+- [Grant](/apis/auth/objects#grant)
+- [Access](/apis/auth/objects#access)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -21,7 +21,7 @@ title: Interfaces
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/auth/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -30,7 +30,7 @@ id<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -45,7 +45,7 @@ createdAt<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [RevokeGrantMutationResponse](objects#revokegrantmutationresponse)
+- [RevokeGrantMutationResponse](/apis/auth/objects#revokegrantmutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -55,7 +55,7 @@ createdAt<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -64,7 +64,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/auth/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -73,7 +73,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/auth/scalars#string"><code>String!</code></a>
 </td>
 <td>
 

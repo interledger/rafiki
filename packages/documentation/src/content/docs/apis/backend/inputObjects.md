@@ -16,7 +16,7 @@ title: Input objects
 <tr>
 <td>
 assetId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the asset to add liquidity.</p>
@@ -25,7 +25,7 @@ assetId<br />
 <tr>
 <td>
 amount<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of liquidity to add.</p>
@@ -34,7 +34,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the transfer.</p>
@@ -43,7 +43,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -64,7 +64,7 @@ idempotencyKey<br />
 <tr>
 <td>
 peerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the peer to add liquidity.</p>
@@ -73,7 +73,7 @@ peerId<br />
 <tr>
 <td>
 amount<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of liquidity to add.</p>
@@ -82,7 +82,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the transfer.</p>
@@ -91,7 +91,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -112,7 +112,7 @@ idempotencyKey<br />
 <tr>
 <td>
 value<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 
@@ -121,7 +121,7 @@ value<br />
 <tr>
 <td>
 assetCode<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -130,7 +130,7 @@ assetCode<br />
 <tr>
 <td>
 assetScale<br />
-<a href="scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -151,7 +151,7 @@ assetScale<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -160,7 +160,7 @@ code<br />
 <tr>
 <td>
 scale<br />
-<a href="scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -169,7 +169,7 @@ scale<br />
 <tr>
 <td>
 withdrawalThreshold<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Minimum amount of liquidity that can be withdrawn from the asset</p>
@@ -178,7 +178,7 @@ withdrawalThreshold<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -199,7 +199,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the asset to create the withdrawal for.</p>
@@ -208,7 +208,7 @@ assetId<br />
 <tr>
 <td>
 amount<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of withdrawal.</p>
@@ -217,7 +217,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the withdrawal.</p>
@@ -226,7 +226,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -247,7 +247,7 @@ idempotencyKey<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which the incoming payment will be created</p>
@@ -256,7 +256,7 @@ paymentPointerId<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Expiration date-time</p>
@@ -265,7 +265,7 @@ expiresAt<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -274,7 +274,7 @@ metadata<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="inputObjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/backend/inputObjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Maximum amount to be received</p>
@@ -283,7 +283,7 @@ incomingAmount<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -304,7 +304,7 @@ idempotencyKey<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which the outgoing payment will be created</p>
@@ -313,7 +313,7 @@ paymentPointerId<br />
 <tr>
 <td>
 quoteId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the corresponding quote for that outgoing payment</p>
@@ -322,7 +322,7 @@ quoteId<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the outgoing payment.</p>
@@ -331,7 +331,7 @@ metadata<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -352,7 +352,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset of the payment pointer</p>
@@ -361,7 +361,7 @@ assetId<br />
 <tr>
 <td>
 url<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Payment Pointer URL</p>
@@ -370,7 +370,7 @@ url<br />
 <tr>
 <td>
 publicName<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Public name associated with the payment pointer</p>
@@ -379,7 +379,7 @@ publicName<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -400,7 +400,7 @@ idempotencyKey<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -409,7 +409,7 @@ paymentPointerId<br />
 <tr>
 <td>
 jwk<br />
-<a href="inputObjects#jwkinput"><code>JwkInput!</code></a>
+<a href="/apis/backend/inputObjects#jwkinput"><code>JwkInput!</code></a>
 </td>
 <td>
 <p>Public key</p>
@@ -418,7 +418,7 @@ jwk<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -439,7 +439,7 @@ idempotencyKey<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the Open Payments payment pointer to create the withdrawal for.</p>
@@ -448,7 +448,7 @@ paymentPointerId<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the withdrawal.</p>
@@ -457,7 +457,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -478,7 +478,7 @@ idempotencyKey<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Maximum packet amount that the peer accepts</p>
@@ -487,7 +487,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 http<br />
-<a href="inputObjects#httpinput"><code>HttpInput!</code></a>
+<a href="/apis/backend/inputObjects#httpinput"><code>HttpInput!</code></a>
 </td>
 <td>
 <p>Peering connection details</p>
@@ -496,7 +496,7 @@ http<br />
 <tr>
 <td>
 assetId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset id of peering relationship</p>
@@ -505,7 +505,7 @@ assetId<br />
 <tr>
 <td>
 staticIlpAddress<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s ILP address</p>
@@ -514,7 +514,7 @@ staticIlpAddress<br />
 <tr>
 <td>
 name<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s internal name</p>
@@ -523,7 +523,7 @@ name<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -544,7 +544,7 @@ idempotencyKey<br />
 <tr>
 <td>
 peerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the peer to create the withdrawal for.</p>
@@ -553,7 +553,7 @@ peerId<br />
 <tr>
 <td>
 amount<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount of withdrawal.</p>
@@ -562,7 +562,7 @@ amount<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the withdrawal.</p>
@@ -571,7 +571,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -592,7 +592,7 @@ idempotencyKey<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which the quote will be created</p>
@@ -601,7 +601,7 @@ paymentPointerId<br />
 <tr>
 <td>
 sendAmount<br />
-<a href="inputObjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/backend/inputObjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -610,7 +610,7 @@ sendAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="inputObjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/backend/inputObjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Amount to receive (fixed receive)</p>
@@ -619,7 +619,7 @@ receiveAmount<br />
 <tr>
 <td>
 receiver<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Payment pointer URL of the receiver</p>
@@ -628,7 +628,7 @@ receiver<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -649,7 +649,7 @@ idempotencyKey<br />
 <tr>
 <td>
 paymentPointerUrl<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Receiving payment pointer URL</p>
@@ -658,7 +658,7 @@ paymentPointerUrl<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Expiration date-time</p>
@@ -667,7 +667,7 @@ expiresAt<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="inputObjects#amountinput"><code>AmountInput</code></a>
+<a href="/apis/backend/inputObjects#amountinput"><code>AmountInput</code></a>
 </td>
 <td>
 <p>Maximum amount to be received</p>
@@ -676,7 +676,7 @@ incomingAmount<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -685,7 +685,7 @@ metadata<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -706,7 +706,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -715,7 +715,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -736,7 +736,7 @@ idempotencyKey<br />
 <tr>
 <td>
 eventId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the event to deposit into.</p>
@@ -745,7 +745,7 @@ eventId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -766,7 +766,7 @@ idempotencyKey<br />
 <tr>
 <td>
 fixed<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>A flat fee</p>
@@ -775,7 +775,7 @@ fixed<br />
 <tr>
 <td>
 basisPoints<br />
-<a href="scalars#int"><code>Int!</code></a>
+<a href="/apis/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
@@ -796,7 +796,7 @@ basisPoints<br />
 <tr>
 <td>
 in<br />
-<a href="scalars#string"><code>[String!]!</code></a>
+<a href="/apis/backend/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 
@@ -817,7 +817,7 @@ in<br />
 <tr>
 <td>
 authTokens<br />
-<a href="scalars#string"><code>[String!]!</code></a>
+<a href="/apis/backend/scalars#string"><code>[String!]!</code></a>
 </td>
 <td>
 <p>Array of auth tokens accepted by this Rafiki instance</p>
@@ -838,7 +838,7 @@ authTokens<br />
 <tr>
 <td>
 incoming<br />
-<a href="inputObjects#httpincominginput"><code>HttpIncomingInput</code></a>
+<a href="/apis/backend/inputObjects#httpincominginput"><code>HttpIncomingInput</code></a>
 </td>
 <td>
 <p>Incoming connection details</p>
@@ -847,7 +847,7 @@ incoming<br />
 <tr>
 <td>
 outgoing<br />
-<a href="inputObjects#httpoutgoinginput"><code>HttpOutgoingInput!</code></a>
+<a href="/apis/backend/inputObjects#httpoutgoinginput"><code>HttpOutgoingInput!</code></a>
 </td>
 <td>
 <p>Outgoing connection details</p>
@@ -868,7 +868,7 @@ outgoing<br />
 <tr>
 <td>
 authToken<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Auth token to present at the peering Rafiki instance</p>
@@ -877,7 +877,7 @@ authToken<br />
 <tr>
 <td>
 endpoint<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s connection endpoint</p>
@@ -898,7 +898,7 @@ endpoint<br />
 <tr>
 <td>
 kid<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Key id</p>
@@ -907,7 +907,7 @@ kid<br />
 <tr>
 <td>
 x<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Base64 url-encoded public key.</p>
@@ -916,7 +916,7 @@ x<br />
 <tr>
 <td>
 alg<br />
-<a href="enums#alg"><code>Alg!</code></a>
+<a href="/apis/backend/enums#alg"><code>Alg!</code></a>
 </td>
 <td>
 <p>Cryptographic algorithm family used with the key. The only allowed value is <code>EdDSA</code>.</p>
@@ -925,7 +925,7 @@ alg<br />
 <tr>
 <td>
 kty<br />
-<a href="enums#kty"><code>Kty!</code></a>
+<a href="/apis/backend/enums#kty"><code>Kty!</code></a>
 </td>
 <td>
 <p>Key type. The only allowed value is <code>OKP</code>.</p>
@@ -934,7 +934,7 @@ kty<br />
 <tr>
 <td>
 crv<br />
-<a href="enums#crv"><code>Crv!</code></a>
+<a href="/apis/backend/enums#crv"><code>Crv!</code></a>
 </td>
 <td>
 <p>Curve that the key pair is derived from. The only allowed value is <code>Ed25519</code>.</p>
@@ -955,7 +955,7 @@ crv<br />
 <tr>
 <td>
 type<br />
-<a href="inputObjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/backend/inputObjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -964,7 +964,7 @@ type<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="inputObjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/backend/inputObjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -985,7 +985,7 @@ paymentPointerId<br />
 <tr>
 <td>
 withdrawalId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the liquidity withdrawal to post.</p>
@@ -994,7 +994,7 @@ withdrawalId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1015,7 +1015,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Internal id of key</p>
@@ -1024,7 +1024,7 @@ id<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1045,7 +1045,7 @@ idempotencyKey<br />
 <tr>
 <td>
 assetId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id to add the fee to</p>
@@ -1054,7 +1054,7 @@ assetId<br />
 <tr>
 <td>
 type<br />
-<a href="enums#feetype"><code>FeeType!</code></a>
+<a href="/apis/backend/enums#feetype"><code>FeeType!</code></a>
 </td>
 <td>
 <p>Type of fee (sending or receiving)</p>
@@ -1063,7 +1063,7 @@ type<br />
 <tr>
 <td>
 fee<br />
-<a href="inputObjects#feedetails"><code>FeeDetails!</code></a>
+<a href="/apis/backend/inputObjects#feedetails"><code>FeeDetails!</code></a>
 </td>
 <td>
 <p>Fee values</p>
@@ -1072,7 +1072,7 @@ fee<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1093,7 +1093,7 @@ idempotencyKey<br />
 <tr>
 <td>
 limit<br />
-<a href="scalars#int"><code>Int!</code></a>
+<a href="/apis/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>Maximum number of events being triggered (n).</p>
@@ -1102,7 +1102,7 @@ limit<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1123,7 +1123,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Asset id</p>
@@ -1132,7 +1132,7 @@ id<br />
 <tr>
 <td>
 withdrawalThreshold<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>New minimum amount of liquidity that can be withdrawn from the asset</p>
@@ -1141,7 +1141,7 @@ withdrawalThreshold<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1162,7 +1162,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>ID of payment pointer to update</p>
@@ -1171,7 +1171,7 @@ id<br />
 <tr>
 <td>
 publicName<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>New public name for payment pointer</p>
@@ -1180,7 +1180,7 @@ publicName<br />
 <tr>
 <td>
 status<br />
-<a href="enums#paymentpointerstatus"><code>PaymentPointerStatus</code></a>
+<a href="/apis/backend/enums#paymentpointerstatus"><code>PaymentPointerStatus</code></a>
 </td>
 <td>
 <p>New status to set the payment pointer to</p>
@@ -1189,7 +1189,7 @@ status<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1210,7 +1210,7 @@ idempotencyKey<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer id</p>
@@ -1219,7 +1219,7 @@ id<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>New maximum packet amount that the peer accepts</p>
@@ -1228,7 +1228,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 http<br />
-<a href="inputObjects#httpinput"><code>HttpInput</code></a>
+<a href="/apis/backend/inputObjects#httpinput"><code>HttpInput</code></a>
 </td>
 <td>
 <p>New peering connection details</p>
@@ -1237,7 +1237,7 @@ http<br />
 <tr>
 <td>
 staticIlpAddress<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s new ILP address</p>
@@ -1246,7 +1246,7 @@ staticIlpAddress<br />
 <tr>
 <td>
 name<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s new public name</p>
@@ -1255,7 +1255,7 @@ name<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1276,7 +1276,7 @@ idempotencyKey<br />
 <tr>
 <td>
 withdrawalId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the liquidity withdrawal to void.</p>
@@ -1285,7 +1285,7 @@ withdrawalId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>
@@ -1306,7 +1306,7 @@ idempotencyKey<br />
 <tr>
 <td>
 type<br />
-<a href="inputObjects#filterstring"><code>FilterString</code></a>
+<a href="/apis/backend/inputObjects#filterstring"><code>FilterString</code></a>
 </td>
 <td>
 
@@ -1327,7 +1327,7 @@ type<br />
 <tr>
 <td>
 eventId<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>The id of the event to withdraw from.</p>
@@ -1336,7 +1336,7 @@ eventId<br />
 <tr>
 <td>
 idempotencyKey<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Unique key to ensure duplicate or retried requests are processed only once. See <a href="https://en.wikipedia.org/wiki/Idempotence">idempotence</a></p>

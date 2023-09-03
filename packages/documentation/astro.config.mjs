@@ -6,7 +6,7 @@ import react from '@astrojs/react'
 
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
-import GraphQL from 'astro-graphql-plugin';
+import GraphQL from 'astro-graphql-plugin'
 
 // https://astro.build/config
 export default defineConfig({
@@ -166,8 +166,16 @@ export default defineConfig({
       ]
     }),
     react(),
-    GraphQL({schema: "../backend/src/graphql/schema.graphql", output: "./src/content/docs/apis/backend/"}),
-    GraphQL({schema: "../auth/src/graphql/schema.graphql", output: "./src/content/docs/apis/auth/"})
+    GraphQL({
+      schema: '../backend/src/graphql/schema.graphql',
+      output: './src/content/docs/apis/backend/',
+      linkPrefix: '/apis/backend/'
+    }),
+    GraphQL({
+      schema: '../auth/src/graphql/schema.graphql',
+      output: './src/content/docs/apis/auth/',
+      linkPrefix: '/apis/auth/'
+    })
   ],
   // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
   image: {

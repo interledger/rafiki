@@ -16,7 +16,7 @@ title: Objects
 <tr>
 <td>
 value<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 
@@ -25,7 +25,7 @@ value<br />
 <tr>
 <td>
 assetCode<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -34,7 +34,7 @@ assetCode<br />
 <tr>
 <td>
 assetScale<br />
-<a href="scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -49,7 +49,7 @@ assetScale<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](interfaces#model)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -59,7 +59,7 @@ assetScale<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id</p>
@@ -68,7 +68,7 @@ id<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p><a href="https://en.wikipedia.org/wiki/ISO_4217">ISO 4217 currency code</a>, e.g. <code>USD</code></p>
@@ -77,7 +77,7 @@ code<br />
 <tr>
 <td>
 scale<br />
-<a href="scalars#uint8"><code>UInt8!</code></a>
+<a href="/apis/backend/scalars#uint8"><code>UInt8!</code></a>
 </td>
 <td>
 <p>Difference in orders of magnitude between the standard unit of an asset and a corresponding fractional unit</p>
@@ -86,7 +86,7 @@ scale<br />
 <tr>
 <td>
 liquidity<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -95,7 +95,7 @@ liquidity<br />
 <tr>
 <td>
 withdrawalThreshold<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Minimum amount of liquidity that can be withdrawn from the asset</p>
@@ -104,7 +104,7 @@ withdrawalThreshold<br />
 <tr>
 <td>
 receivingFee<br />
-<a href="objects#fee"><code>Fee</code></a>
+<a href="/apis/backend/objects#fee"><code>Fee</code></a>
 </td>
 <td>
 <p>The receiving fee structure for the asset</p>
@@ -113,7 +113,7 @@ receivingFee<br />
 <tr>
 <td>
 sendingFee<br />
-<a href="objects#fee"><code>Fee</code></a>
+<a href="/apis/backend/objects#fee"><code>Fee</code></a>
 </td>
 <td>
 <p>The sending fee structure for the asset</p>
@@ -122,7 +122,7 @@ sendingFee<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -143,7 +143,7 @@ createdAt<br />
 <tr>
 <td>
 node<br />
-<a href="objects#asset"><code>Asset!</code></a>
+<a href="/apis/backend/objects#asset"><code>Asset!</code></a>
 </td>
 <td>
 
@@ -152,7 +152,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -167,7 +167,7 @@ cursor<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -177,7 +177,7 @@ cursor<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -186,7 +186,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -195,7 +195,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -204,7 +204,7 @@ message<br />
 <tr>
 <td>
 asset<br />
-<a href="objects#asset"><code>Asset</code></a>
+<a href="/apis/backend/objects#asset"><code>Asset</code></a>
 </td>
 <td>
 
@@ -225,7 +225,7 @@ asset<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -234,7 +234,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#assetedge"><code>[AssetEdge!]!</code></a>
+<a href="/apis/backend/objects#assetedge"><code>[AssetEdge!]!</code></a>
 </td>
 <td>
 
@@ -249,7 +249,7 @@ edges<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -259,7 +259,7 @@ edges<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -268,7 +268,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -277,7 +277,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -286,7 +286,7 @@ message<br />
 <tr>
 <td>
 paymentPointerKey<br />
-<a href="objects#paymentpointerkey"><code>PaymentPointerKey</code></a>
+<a href="/apis/backend/objects#paymentpointerkey"><code>PaymentPointerKey</code></a>
 </td>
 <td>
 
@@ -301,7 +301,7 @@ paymentPointerKey<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -311,7 +311,7 @@ paymentPointerKey<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -320,7 +320,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -329,7 +329,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -338,7 +338,7 @@ message<br />
 <tr>
 <td>
 paymentPointer<br />
-<a href="objects#paymentpointer"><code>PaymentPointer</code></a>
+<a href="/apis/backend/objects#paymentpointer"><code>PaymentPointer</code></a>
 </td>
 <td>
 
@@ -353,7 +353,7 @@ paymentPointer<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -363,7 +363,7 @@ paymentPointer<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -372,7 +372,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -381,7 +381,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -390,7 +390,7 @@ message<br />
 <tr>
 <td>
 peer<br />
-<a href="objects#peer"><code>Peer</code></a>
+<a href="/apis/backend/objects#peer"><code>Peer</code></a>
 </td>
 <td>
 
@@ -411,7 +411,7 @@ peer<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -420,7 +420,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -429,7 +429,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -438,7 +438,7 @@ message<br />
 <tr>
 <td>
 receiver<br />
-<a href="objects#receiver"><code>Receiver</code></a>
+<a href="/apis/backend/objects#receiver"><code>Receiver</code></a>
 </td>
 <td>
 
@@ -453,7 +453,7 @@ receiver<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -463,7 +463,7 @@ receiver<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -472,7 +472,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -481,7 +481,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -496,7 +496,7 @@ message<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](interfaces#model)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -506,7 +506,7 @@ message<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Fee id</p>
@@ -515,7 +515,7 @@ id<br />
 <tr>
 <td>
 assetId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Asset id associated with the fee</p>
@@ -524,7 +524,7 @@ assetId<br />
 <tr>
 <td>
 type<br />
-<a href="enums#feetype"><code>FeeType!</code></a>
+<a href="/apis/backend/enums#feetype"><code>FeeType!</code></a>
 </td>
 <td>
 <p>Type of fee (sending or receiving)</p>
@@ -533,7 +533,7 @@ type<br />
 <tr>
 <td>
 fixed<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Fixed fee</p>
@@ -542,7 +542,7 @@ fixed<br />
 <tr>
 <td>
 basisPoints<br />
-<a href="scalars#int"><code>Int!</code></a>
+<a href="/apis/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 <p>Basis points fee. 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%</p>
@@ -551,7 +551,7 @@ basisPoints<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -572,7 +572,7 @@ createdAt<br />
 <tr>
 <td>
 outgoing<br />
-<a href="objects#httpoutgoing"><code>HttpOutgoing!</code></a>
+<a href="/apis/backend/objects#httpoutgoing"><code>HttpOutgoing!</code></a>
 </td>
 <td>
 <p>Outgoing connection details</p>
@@ -593,7 +593,7 @@ outgoing<br />
 <tr>
 <td>
 authToken<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Auth token to present at the peering Rafiki instance</p>
@@ -602,7 +602,7 @@ authToken<br />
 <tr>
 <td>
 endpoint<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s connection endpoint</p>
@@ -617,8 +617,8 @@ endpoint<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [BasePayment](interfaces#basepayment)
-- [Model](interfaces#model)
+- [BasePayment](/apis/backend/interfaces#basepayment)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -628,7 +628,7 @@ endpoint<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Incoming Payment id</p>
@@ -637,7 +637,7 @@ id<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which this incoming payment was created</p>
@@ -646,7 +646,7 @@ paymentPointerId<br />
 <tr>
 <td>
 state<br />
-<a href="enums#incomingpaymentstate"><code>IncomingPaymentState!</code></a>
+<a href="/apis/backend/enums#incomingpaymentstate"><code>IncomingPaymentState!</code></a>
 </td>
 <td>
 <p>Incoming payment state</p>
@@ -655,7 +655,7 @@ state<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of expiry. After this time, the incoming payment will not accept further payments made to it.</p>
@@ -664,7 +664,7 @@ expiresAt<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="objects#amount"><code>Amount</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount</code></a>
 </td>
 <td>
 <p>The maximum amount that should be paid into the payment pointer under this incoming payment.</p>
@@ -673,7 +673,7 @@ incomingAmount<br />
 <tr>
 <td>
 receivedAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>The total amount that has been paid into the payment pointer under this incoming payment.</p>
@@ -682,7 +682,7 @@ receivedAmount<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -691,7 +691,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -712,7 +712,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -721,7 +721,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#incomingpaymentedge"><code>[IncomingPaymentEdge!]!</code></a>
+<a href="/apis/backend/objects#incomingpaymentedge"><code>[IncomingPaymentEdge!]!</code></a>
 </td>
 <td>
 
@@ -742,7 +742,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="objects#incomingpayment"><code>IncomingPayment!</code></a>
+<a href="/apis/backend/objects#incomingpayment"><code>IncomingPayment!</code></a>
 </td>
 <td>
 
@@ -751,7 +751,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -772,7 +772,7 @@ cursor<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -781,7 +781,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -790,7 +790,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -799,7 +799,7 @@ message<br />
 <tr>
 <td>
 payment<br />
-<a href="objects#incomingpayment"><code>IncomingPayment</code></a>
+<a href="/apis/backend/objects#incomingpayment"><code>IncomingPayment</code></a>
 </td>
 <td>
 
@@ -820,7 +820,7 @@ payment<br />
 <tr>
 <td>
 kid<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Key id</p>
@@ -829,7 +829,7 @@ kid<br />
 <tr>
 <td>
 x<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Base64 url-encoded public key.</p>
@@ -838,7 +838,7 @@ x<br />
 <tr>
 <td>
 alg<br />
-<a href="enums#alg"><code>Alg!</code></a>
+<a href="/apis/backend/enums#alg"><code>Alg!</code></a>
 </td>
 <td>
 <p>Cryptographic algorithm family used with the key. The only allowed value is <code>EdDSA</code>.</p>
@@ -847,7 +847,7 @@ alg<br />
 <tr>
 <td>
 kty<br />
-<a href="enums#kty"><code>Kty!</code></a>
+<a href="/apis/backend/enums#kty"><code>Kty!</code></a>
 </td>
 <td>
 <p>Key type. The only allowed value is <code>OKP</code>.</p>
@@ -856,7 +856,7 @@ kty<br />
 <tr>
 <td>
 crv<br />
-<a href="enums#crv"><code>Crv!</code></a>
+<a href="/apis/backend/enums#crv"><code>Crv!</code></a>
 </td>
 <td>
 <p>Curve that the key pair is derived from. The only allowed value is <code>Ed25519</code>.</p>
@@ -871,7 +871,7 @@ crv<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -881,7 +881,7 @@ crv<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -890,7 +890,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -899,7 +899,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -908,7 +908,7 @@ message<br />
 <tr>
 <td>
 error<br />
-<a href="enums#liquidityerror"><code>LiquidityError</code></a>
+<a href="/apis/backend/enums#liquidityerror"><code>LiquidityError</code></a>
 </td>
 <td>
 
@@ -923,8 +923,8 @@ error<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [BasePayment](interfaces#basepayment)
-- [Model](interfaces#model)
+- [BasePayment](/apis/backend/interfaces#basepayment)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -934,7 +934,7 @@ error<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Outgoing payment id</p>
@@ -943,7 +943,7 @@ id<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which this outgoing payment was created</p>
@@ -952,7 +952,7 @@ paymentPointerId<br />
 <tr>
 <td>
 state<br />
-<a href="enums#outgoingpaymentstate"><code>OutgoingPaymentState!</code></a>
+<a href="/apis/backend/enums#outgoingpaymentstate"><code>OutgoingPaymentState!</code></a>
 </td>
 <td>
 <p>Outgoing payment state</p>
@@ -961,7 +961,7 @@ state<br />
 <tr>
 <td>
 error<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -970,7 +970,7 @@ error<br />
 <tr>
 <td>
 stateAttempts<br />
-<a href="scalars#int"><code>Int!</code></a>
+<a href="/apis/backend/scalars#int"><code>Int!</code></a>
 </td>
 <td>
 
@@ -979,7 +979,7 @@ stateAttempts<br />
 <tr>
 <td>
 sendAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -988,7 +988,7 @@ sendAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to receive (fixed receive)</p>
@@ -997,7 +997,7 @@ receiveAmount<br />
 <tr>
 <td>
 receiver<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Payment pointer URL of the receiver</p>
@@ -1006,7 +1006,7 @@ receiver<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the outgoing payment.</p>
@@ -1015,7 +1015,7 @@ metadata<br />
 <tr>
 <td>
 quote<br />
-<a href="objects#quote"><code>Quote</code></a>
+<a href="/apis/backend/objects#quote"><code>Quote</code></a>
 </td>
 <td>
 <p>Quote for this outgoing payment</p>
@@ -1024,7 +1024,7 @@ quote<br />
 <tr>
 <td>
 sentAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount already sent</p>
@@ -1033,7 +1033,7 @@ sentAmount<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1054,7 +1054,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1063,7 +1063,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#outgoingpaymentedge"><code>[OutgoingPaymentEdge!]!</code></a>
+<a href="/apis/backend/objects#outgoingpaymentedge"><code>[OutgoingPaymentEdge!]!</code></a>
 </td>
 <td>
 
@@ -1084,7 +1084,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="objects#outgoingpayment"><code>OutgoingPayment!</code></a>
+<a href="/apis/backend/objects#outgoingpayment"><code>OutgoingPayment!</code></a>
 </td>
 <td>
 
@@ -1093,7 +1093,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1114,7 +1114,7 @@ cursor<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1123,7 +1123,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -1132,7 +1132,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -1141,7 +1141,7 @@ message<br />
 <tr>
 <td>
 payment<br />
-<a href="objects#outgoingpayment"><code>OutgoingPayment</code></a>
+<a href="/apis/backend/objects#outgoingpayment"><code>OutgoingPayment</code></a>
 </td>
 <td>
 
@@ -1162,7 +1162,7 @@ payment<br />
 <tr>
 <td>
 endCursor<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor to continue.</p>
@@ -1171,7 +1171,7 @@ endCursor<br />
 <tr>
 <td>
 hasNextPage<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Paginating forwards: Are there more pages?</p>
@@ -1180,7 +1180,7 @@ hasNextPage<br />
 <tr>
 <td>
 hasPreviousPage<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Paginating backwards: Are there more pages?</p>
@@ -1189,7 +1189,7 @@ hasPreviousPage<br />
 <tr>
 <td>
 startCursor<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor to continue.</p>
@@ -1204,8 +1204,8 @@ startCursor<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [BasePayment](interfaces#basepayment)
-- [Model](interfaces#model)
+- [BasePayment](/apis/backend/interfaces#basepayment)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1215,7 +1215,7 @@ startCursor<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Payment id</p>
@@ -1224,7 +1224,7 @@ id<br />
 <tr>
 <td>
 type<br />
-<a href="enums#paymenttype"><code>PaymentType!</code></a>
+<a href="/apis/backend/enums#paymenttype"><code>PaymentType!</code></a>
 </td>
 <td>
 <p>Type of payment</p>
@@ -1233,7 +1233,7 @@ type<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which this payment was created</p>
@@ -1242,7 +1242,7 @@ paymentPointerId<br />
 <tr>
 <td>
 state<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Either the IncomingPaymentState or OutgoingPaymentState according to type</p>
@@ -1251,7 +1251,7 @@ state<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the payment.</p>
@@ -1260,7 +1260,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1281,7 +1281,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1290,7 +1290,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#paymentedge"><code>[PaymentEdge!]!</code></a>
+<a href="/apis/backend/objects#paymentedge"><code>[PaymentEdge!]!</code></a>
 </td>
 <td>
 
@@ -1311,7 +1311,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="objects#payment"><code>Payment!</code></a>
+<a href="/apis/backend/objects#payment"><code>Payment!</code></a>
 </td>
 <td>
 
@@ -1320,7 +1320,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1335,7 +1335,7 @@ cursor<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](interfaces#model)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1345,7 +1345,7 @@ cursor<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Payment pointer id</p>
@@ -1354,7 +1354,7 @@ id<br />
 <tr>
 <td>
 asset<br />
-<a href="objects#asset"><code>Asset!</code></a>
+<a href="/apis/backend/objects#asset"><code>Asset!</code></a>
 </td>
 <td>
 <p>Asset of the payment pointer</p>
@@ -1363,7 +1363,7 @@ asset<br />
 <tr>
 <td>
 url<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Payment Pointer URL</p>
@@ -1372,7 +1372,7 @@ url<br />
 <tr>
 <td>
 publicName<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Public name associated with the payment pointer</p>
@@ -1381,7 +1381,7 @@ publicName<br />
 <tr>
 <td>
 incomingPayments<br />
-<a href="objects#incomingpaymentconnection"><code>IncomingPaymentConnection</code></a>
+<a href="/apis/backend/objects#incomingpaymentconnection"><code>IncomingPaymentConnection</code></a>
 </td>
 <td>
 <p>List of incoming payments received by this payment pointer</p>
@@ -1394,7 +1394,7 @@ incomingPayments<br />
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -1403,7 +1403,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -1412,7 +1412,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -1421,7 +1421,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -1435,7 +1435,7 @@ last<br />
 <tr>
 <td>
 quotes<br />
-<a href="objects#quoteconnection"><code>QuoteConnection</code></a>
+<a href="/apis/backend/objects#quoteconnection"><code>QuoteConnection</code></a>
 </td>
 <td>
 <p>List of quotes created at this payment pointer</p>
@@ -1448,7 +1448,7 @@ quotes<br />
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -1457,7 +1457,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -1466,7 +1466,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -1475,7 +1475,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -1489,7 +1489,7 @@ last<br />
 <tr>
 <td>
 outgoingPayments<br />
-<a href="objects#outgoingpaymentconnection"><code>OutgoingPaymentConnection</code></a>
+<a href="/apis/backend/objects#outgoingpaymentconnection"><code>OutgoingPaymentConnection</code></a>
 </td>
 <td>
 <p>List of outgoing payments sent from this payment pointer</p>
@@ -1502,7 +1502,7 @@ outgoingPayments<br />
 <tr>
 <td>
 after<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating forwards: the cursor before the the requested page.</p>
@@ -1511,7 +1511,7 @@ after<br />
 <tr>
 <td>
 before<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Paginating backwards: the cursor after the the requested page.</p>
@@ -1520,7 +1520,7 @@ before<br />
 <tr>
 <td>
 first<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating forwards: The first <strong>n</strong> elements from the page.</p>
@@ -1529,7 +1529,7 @@ first<br />
 <tr>
 <td>
 last<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Paginating backwards: The last <strong>n</strong> elements from the page.</p>
@@ -1543,7 +1543,7 @@ last<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1552,7 +1552,7 @@ createdAt<br />
 <tr>
 <td>
 status<br />
-<a href="enums#paymentpointerstatus"><code>PaymentPointerStatus!</code></a>
+<a href="/apis/backend/enums#paymentpointerstatus"><code>PaymentPointerStatus!</code></a>
 </td>
 <td>
 <p>Status of the payment pointer</p>
@@ -1573,7 +1573,7 @@ status<br />
 <tr>
 <td>
 node<br />
-<a href="objects#paymentpointer"><code>PaymentPointer!</code></a>
+<a href="/apis/backend/objects#paymentpointer"><code>PaymentPointer!</code></a>
 </td>
 <td>
 
@@ -1582,7 +1582,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1597,7 +1597,7 @@ cursor<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](interfaces#model)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1607,7 +1607,7 @@ cursor<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Internal id of key</p>
@@ -1616,7 +1616,7 @@ id<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer to which this key belongs to</p>
@@ -1625,7 +1625,7 @@ paymentPointerId<br />
 <tr>
 <td>
 jwk<br />
-<a href="objects#jwk"><code>Jwk!</code></a>
+<a href="/apis/backend/objects#jwk"><code>Jwk!</code></a>
 </td>
 <td>
 <p>Public key</p>
@@ -1634,7 +1634,7 @@ jwk<br />
 <tr>
 <td>
 revoked<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Indicator whether the key has been revoked</p>
@@ -1643,7 +1643,7 @@ revoked<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1664,7 +1664,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1673,7 +1673,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#paymentpointeredge"><code>[PaymentPointerEdge!]!</code></a>
+<a href="/apis/backend/objects#paymentpointeredge"><code>[PaymentPointerEdge!]!</code></a>
 </td>
 <td>
 
@@ -1694,7 +1694,7 @@ edges<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Withdrawal Id</p>
@@ -1703,7 +1703,7 @@ id<br />
 <tr>
 <td>
 amount<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Amount to withdraw</p>
@@ -1712,7 +1712,7 @@ amount<br />
 <tr>
 <td>
 paymentPointer<br />
-<a href="objects#paymentpointer"><code>PaymentPointer!</code></a>
+<a href="/apis/backend/objects#paymentpointer"><code>PaymentPointer!</code></a>
 </td>
 <td>
 <p>Payment pointer details</p>
@@ -1727,7 +1727,7 @@ paymentPointer<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1737,7 +1737,7 @@ paymentPointer<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1746,7 +1746,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -1755,7 +1755,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1764,7 +1764,7 @@ message<br />
 <tr>
 <td>
 error<br />
-<a href="enums#liquidityerror"><code>LiquidityError</code></a>
+<a href="/apis/backend/enums#liquidityerror"><code>LiquidityError</code></a>
 </td>
 <td>
 
@@ -1773,7 +1773,7 @@ error<br />
 <tr>
 <td>
 withdrawal<br />
-<a href="objects#paymentpointerwithdrawal"><code>PaymentPointerWithdrawal</code></a>
+<a href="/apis/backend/objects#paymentpointerwithdrawal"><code>PaymentPointerWithdrawal</code></a>
 </td>
 <td>
 
@@ -1788,7 +1788,7 @@ withdrawal<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](interfaces#model)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1798,7 +1798,7 @@ withdrawal<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Peer id</p>
@@ -1807,7 +1807,7 @@ id<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Maximum packet amount that the peer accepts</p>
@@ -1816,7 +1816,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 http<br />
-<a href="objects#http"><code>Http!</code></a>
+<a href="/apis/backend/objects#http"><code>Http!</code></a>
 </td>
 <td>
 <p>Peering connection details</p>
@@ -1825,7 +1825,7 @@ http<br />
 <tr>
 <td>
 asset<br />
-<a href="objects#asset"><code>Asset!</code></a>
+<a href="/apis/backend/objects#asset"><code>Asset!</code></a>
 </td>
 <td>
 <p>Asset of peering relationship</p>
@@ -1834,7 +1834,7 @@ asset<br />
 <tr>
 <td>
 staticIlpAddress<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Peer&#39;s ILP address</p>
@@ -1843,7 +1843,7 @@ staticIlpAddress<br />
 <tr>
 <td>
 name<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Peer&#39;s public name</p>
@@ -1852,7 +1852,7 @@ name<br />
 <tr>
 <td>
 liquidity<br />
-<a href="scalars#uint64"><code>UInt64</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64</code></a>
 </td>
 <td>
 <p>Available liquidity</p>
@@ -1861,7 +1861,7 @@ liquidity<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -1882,7 +1882,7 @@ createdAt<br />
 <tr>
 <td>
 node<br />
-<a href="objects#peer"><code>Peer!</code></a>
+<a href="/apis/backend/objects#peer"><code>Peer!</code></a>
 </td>
 <td>
 
@@ -1891,7 +1891,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -1912,7 +1912,7 @@ cursor<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -1921,7 +1921,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#peeredge"><code>[PeerEdge!]!</code></a>
+<a href="/apis/backend/objects#peeredge"><code>[PeerEdge!]!</code></a>
 </td>
 <td>
 
@@ -1942,7 +1942,7 @@ edges<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Quote id</p>
@@ -1951,7 +1951,7 @@ id<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Id of the payment pointer under which this quote was created</p>
@@ -1960,7 +1960,7 @@ paymentPointerId<br />
 <tr>
 <td>
 receiver<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Payment pointer URL of the receiver</p>
@@ -1969,7 +1969,7 @@ receiver<br />
 <tr>
 <td>
 sendAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to send (fixed send)</p>
@@ -1978,7 +1978,7 @@ sendAmount<br />
 <tr>
 <td>
 receiveAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>Amount to receive (fixed receive)</p>
@@ -1987,7 +1987,7 @@ receiveAmount<br />
 <tr>
 <td>
 maxPacketAmount<br />
-<a href="scalars#uint64"><code>UInt64!</code></a>
+<a href="/apis/backend/scalars#uint64"><code>UInt64!</code></a>
 </td>
 <td>
 <p>Maximum value per packet allowed on the possible routes</p>
@@ -1996,7 +1996,7 @@ maxPacketAmount<br />
 <tr>
 <td>
 minExchangeRate<br />
-<a href="scalars#float"><code>Float!</code></a>
+<a href="/apis/backend/scalars#float"><code>Float!</code></a>
 </td>
 <td>
 <p>Aggregate exchange rate the payment is guaranteed to meet</p>
@@ -2005,7 +2005,7 @@ minExchangeRate<br />
 <tr>
 <td>
 lowEstimatedExchangeRate<br />
-<a href="scalars#float"><code>Float!</code></a>
+<a href="/apis/backend/scalars#float"><code>Float!</code></a>
 </td>
 <td>
 <p>Lower bound of probed exchange rate</p>
@@ -2014,7 +2014,7 @@ lowEstimatedExchangeRate<br />
 <tr>
 <td>
 highEstimatedExchangeRate<br />
-<a href="scalars#float"><code>Float!</code></a>
+<a href="/apis/backend/scalars#float"><code>Float!</code></a>
 </td>
 <td>
 <p>Upper bound of probed exchange rate</p>
@@ -2023,7 +2023,7 @@ highEstimatedExchangeRate<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -2032,7 +2032,7 @@ createdAt<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of expiration</p>
@@ -2053,7 +2053,7 @@ expiresAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -2062,7 +2062,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#quoteedge"><code>[QuoteEdge!]!</code></a>
+<a href="/apis/backend/objects#quoteedge"><code>[QuoteEdge!]!</code></a>
 </td>
 <td>
 
@@ -2083,7 +2083,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="objects#quote"><code>Quote!</code></a>
+<a href="/apis/backend/objects#quote"><code>Quote!</code></a>
 </td>
 <td>
 
@@ -2092,7 +2092,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2113,7 +2113,7 @@ cursor<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2122,7 +2122,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2131,7 +2131,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 
@@ -2140,7 +2140,7 @@ message<br />
 <tr>
 <td>
 quote<br />
-<a href="objects#quote"><code>Quote</code></a>
+<a href="/apis/backend/objects#quote"><code>Quote</code></a>
 </td>
 <td>
 
@@ -2161,7 +2161,7 @@ quote<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Incoming payment URL</p>
@@ -2170,7 +2170,7 @@ id<br />
 <tr>
 <td>
 paymentPointerUrl<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Payment pointer URL under which the incoming payment was created</p>
@@ -2179,7 +2179,7 @@ paymentPointerUrl<br />
 <tr>
 <td>
 completed<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 <p>Describes whether the incoming payment has completed receiving funds.</p>
@@ -2188,7 +2188,7 @@ completed<br />
 <tr>
 <td>
 incomingAmount<br />
-<a href="objects#amount"><code>Amount</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount</code></a>
 </td>
 <td>
 <p>The maximum amount that should be paid into the payment pointer under this incoming payment.</p>
@@ -2197,7 +2197,7 @@ incomingAmount<br />
 <tr>
 <td>
 receivedAmount<br />
-<a href="objects#amount"><code>Amount!</code></a>
+<a href="/apis/backend/objects#amount"><code>Amount!</code></a>
 </td>
 <td>
 <p>The total amount that has been paid into the payment pointer under this incoming payment.</p>
@@ -2206,7 +2206,7 @@ receivedAmount<br />
 <tr>
 <td>
 expiresAt<br />
-<a href="scalars#string"><code>String</code></a>
+<a href="/apis/backend/scalars#string"><code>String</code></a>
 </td>
 <td>
 <p>Date-time of expiry. After this time, the incoming payment will accept further payments made to it.</p>
@@ -2215,7 +2215,7 @@ expiresAt<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 <p>Additional metadata associated with the incoming payment.</p>
@@ -2224,7 +2224,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -2233,7 +2233,7 @@ createdAt<br />
 <tr>
 <td>
 updatedAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of last update</p>
@@ -2248,7 +2248,7 @@ updatedAt<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2258,7 +2258,7 @@ updatedAt<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2267,7 +2267,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2276,7 +2276,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2285,7 +2285,7 @@ message<br />
 <tr>
 <td>
 paymentPointerKey<br />
-<a href="objects#paymentpointerkey"><code>PaymentPointerKey</code></a>
+<a href="/apis/backend/objects#paymentpointerkey"><code>PaymentPointerKey</code></a>
 </td>
 <td>
 
@@ -2300,7 +2300,7 @@ paymentPointerKey<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2310,7 +2310,7 @@ paymentPointerKey<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2319,7 +2319,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2328,7 +2328,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2337,7 +2337,7 @@ message<br />
 <tr>
 <td>
 fee<br />
-<a href="objects#fee"><code>Fee</code></a>
+<a href="/apis/backend/objects#fee"><code>Fee</code></a>
 </td>
 <td>
 
@@ -2352,7 +2352,7 @@ fee<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2362,7 +2362,7 @@ fee<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2371,7 +2371,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2380,7 +2380,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2395,7 +2395,7 @@ message<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2405,7 +2405,7 @@ message<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2414,7 +2414,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2423,7 +2423,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2432,7 +2432,7 @@ message<br />
 <tr>
 <td>
 count<br />
-<a href="scalars#int"><code>Int</code></a>
+<a href="/apis/backend/scalars#int"><code>Int</code></a>
 </td>
 <td>
 <p>Number of events triggered</p>
@@ -2447,7 +2447,7 @@ count<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2457,7 +2457,7 @@ count<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2466,7 +2466,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2475,7 +2475,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2484,7 +2484,7 @@ message<br />
 <tr>
 <td>
 paymentPointer<br />
-<a href="objects#paymentpointer"><code>PaymentPointer</code></a>
+<a href="/apis/backend/objects#paymentpointer"><code>PaymentPointer</code></a>
 </td>
 <td>
 
@@ -2499,7 +2499,7 @@ paymentPointer<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [MutationResponse](interfaces#mutationresponse)
+- [MutationResponse](/apis/backend/interfaces#mutationresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2509,7 +2509,7 @@ paymentPointer<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2518,7 +2518,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -2527,7 +2527,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -2536,7 +2536,7 @@ message<br />
 <tr>
 <td>
 peer<br />
-<a href="objects#peer"><code>Peer</code></a>
+<a href="/apis/backend/objects#peer"><code>Peer</code></a>
 </td>
 <td>
 
@@ -2551,7 +2551,7 @@ peer<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
-- [Model](interfaces#model)
+- [Model](/apis/backend/interfaces#model)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2561,7 +2561,7 @@ peer<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 <p>Event id</p>
@@ -2570,7 +2570,7 @@ id<br />
 <tr>
 <td>
 type<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Type of event</p>
@@ -2579,7 +2579,7 @@ type<br />
 <tr>
 <td>
 data<br />
-<a href="scalars#jsonobject"><code>JSONObject!</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject!</code></a>
 </td>
 <td>
 <p>Stringified JSON data</p>
@@ -2588,7 +2588,7 @@ data<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 <p>Date-time of creation</p>
@@ -2609,7 +2609,7 @@ createdAt<br />
 <tr>
 <td>
 pageInfo<br />
-<a href="objects#pageinfo"><code>PageInfo!</code></a>
+<a href="/apis/backend/objects#pageinfo"><code>PageInfo!</code></a>
 </td>
 <td>
 
@@ -2618,7 +2618,7 @@ pageInfo<br />
 <tr>
 <td>
 edges<br />
-<a href="objects#webhookeventsedge"><code>[WebhookEventsEdge!]!</code></a>
+<a href="/apis/backend/objects#webhookeventsedge"><code>[WebhookEventsEdge!]!</code></a>
 </td>
 <td>
 
@@ -2639,7 +2639,7 @@ edges<br />
 <tr>
 <td>
 node<br />
-<a href="objects#webhookevent"><code>WebhookEvent!</code></a>
+<a href="/apis/backend/objects#webhookevent"><code>WebhookEvent!</code></a>
 </td>
 <td>
 
@@ -2648,7 +2648,7 @@ node<br />
 <tr>
 <td>
 cursor<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 

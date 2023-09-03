@@ -10,9 +10,9 @@ title: Interfaces
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [IncomingPayment](objects#incomingpayment)
-- [OutgoingPayment](objects#outgoingpayment)
-- [Payment](objects#payment)
+- [IncomingPayment](/apis/backend/objects#incomingpayment)
+- [OutgoingPayment](/apis/backend/objects#outgoingpayment)
+- [Payment](/apis/backend/objects#payment)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -22,7 +22,7 @@ title: Interfaces
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -31,7 +31,7 @@ id<br />
 <tr>
 <td>
 paymentPointerId<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -40,7 +40,7 @@ paymentPointerId<br />
 <tr>
 <td>
 metadata<br />
-<a href="scalars#jsonobject"><code>JSONObject</code></a>
+<a href="/apis/backend/scalars#jsonobject"><code>JSONObject</code></a>
 </td>
 <td>
 
@@ -49,7 +49,7 @@ metadata<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -64,15 +64,15 @@ createdAt<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [Asset](objects#asset)
-- [Peer](objects#peer)
-- [PaymentPointer](objects#paymentpointer)
-- [IncomingPayment](objects#incomingpayment)
-- [OutgoingPayment](objects#outgoingpayment)
-- [Payment](objects#payment)
-- [PaymentPointerKey](objects#paymentpointerkey)
-- [WebhookEvent](objects#webhookevent)
-- [Fee](objects#fee)
+- [Asset](/apis/backend/objects#asset)
+- [Peer](/apis/backend/objects#peer)
+- [PaymentPointer](/apis/backend/objects#paymentpointer)
+- [IncomingPayment](/apis/backend/objects#incomingpayment)
+- [OutgoingPayment](/apis/backend/objects#outgoingpayment)
+- [Payment](/apis/backend/objects#payment)
+- [PaymentPointerKey](/apis/backend/objects#paymentpointerkey)
+- [WebhookEvent](/apis/backend/objects#webhookevent)
+- [Fee](/apis/backend/objects#fee)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -82,7 +82,7 @@ createdAt<br />
 <tr>
 <td>
 id<br />
-<a href="scalars#id"><code>ID!</code></a>
+<a href="/apis/backend/scalars#id"><code>ID!</code></a>
 </td>
 <td>
 
@@ -91,7 +91,7 @@ id<br />
 <tr>
 <td>
 createdAt<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -106,19 +106,19 @@ createdAt<br />
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
-- [CreatePaymentPointerMutationResponse](objects#createpaymentpointermutationresponse)
-- [UpdatePaymentPointerMutationResponse](objects#updatepaymentpointermutationresponse)
-- [TriggerPaymentPointerEventsMutationResponse](objects#triggerpaymentpointereventsmutationresponse)
-- [AssetMutationResponse](objects#assetmutationresponse)
-- [CreatePeerMutationResponse](objects#createpeermutationresponse)
-- [UpdatePeerMutationResponse](objects#updatepeermutationresponse)
-- [DeletePeerMutationResponse](objects#deletepeermutationresponse)
-- [TransferMutationResponse](objects#transfermutationresponse)
-- [LiquidityMutationResponse](objects#liquiditymutationresponse)
-- [PaymentPointerWithdrawalMutationResponse](objects#paymentpointerwithdrawalmutationresponse)
-- [CreatePaymentPointerKeyMutationResponse](objects#createpaymentpointerkeymutationresponse)
-- [RevokePaymentPointerKeyMutationResponse](objects#revokepaymentpointerkeymutationresponse)
-- [SetFeeResponse](objects#setfeeresponse)
+- [CreatePaymentPointerMutationResponse](/apis/backend/objects#createpaymentpointermutationresponse)
+- [UpdatePaymentPointerMutationResponse](/apis/backend/objects#updatepaymentpointermutationresponse)
+- [TriggerPaymentPointerEventsMutationResponse](/apis/backend/objects#triggerpaymentpointereventsmutationresponse)
+- [AssetMutationResponse](/apis/backend/objects#assetmutationresponse)
+- [CreatePeerMutationResponse](/apis/backend/objects#createpeermutationresponse)
+- [UpdatePeerMutationResponse](/apis/backend/objects#updatepeermutationresponse)
+- [DeletePeerMutationResponse](/apis/backend/objects#deletepeermutationresponse)
+- [TransferMutationResponse](/apis/backend/objects#transfermutationresponse)
+- [LiquidityMutationResponse](/apis/backend/objects#liquiditymutationresponse)
+- [PaymentPointerWithdrawalMutationResponse](/apis/backend/objects#paymentpointerwithdrawalmutationresponse)
+- [CreatePaymentPointerKeyMutationResponse](/apis/backend/objects#createpaymentpointerkeymutationresponse)
+- [RevokePaymentPointerKeyMutationResponse](/apis/backend/objects#revokepaymentpointerkeymutationresponse)
+- [SetFeeResponse](/apis/backend/objects#setfeeresponse)
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -128,7 +128,7 @@ createdAt<br />
 <tr>
 <td>
 code<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
@@ -137,7 +137,7 @@ code<br />
 <tr>
 <td>
 success<br />
-<a href="scalars#boolean"><code>Boolean!</code></a>
+<a href="/apis/backend/scalars#boolean"><code>Boolean!</code></a>
 </td>
 <td>
 
@@ -146,7 +146,7 @@ success<br />
 <tr>
 <td>
 message<br />
-<a href="scalars#string"><code>String!</code></a>
+<a href="/apis/backend/scalars#string"><code>String!</code></a>
 </td>
 <td>
 
