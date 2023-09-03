@@ -6,6 +6,8 @@ title: Interfaces
 
 ## Model
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
 - [Grant](objects#grant)
@@ -38,6 +40,8 @@ createdAt<br />
 </table>
 
 ## MutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implemented by</strong></p>
 
@@ -77,3 +81,4 @@ message<br />
 </tr>
 </tbody>
 </table>
+

@@ -6,6 +6,8 @@ title: Objects
 
 ## Amount
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -42,6 +44,8 @@ assetScale<br />
 </table>
 
 ## Asset
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -129,6 +133,8 @@ createdAt<br />
 
 ## AssetEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -156,6 +162,8 @@ cursor<br />
 </table>
 
 ## AssetMutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -207,6 +215,8 @@ asset<br />
 
 ## AssetsConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -234,6 +244,8 @@ edges<br />
 </table>
 
 ## CreatePaymentPointerKeyMutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -285,6 +297,8 @@ paymentPointerKey<br />
 
 ## CreatePaymentPointerMutationResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [MutationResponse](interfaces#mutationresponse)
@@ -334,6 +348,8 @@ paymentPointer<br />
 </table>
 
 ## CreatePeerMutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -385,6 +401,8 @@ peer<br />
 
 ## CreateReceiverResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -431,6 +449,8 @@ receiver<br />
 
 ## DeletePeerMutationResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [MutationResponse](interfaces#mutationresponse)
@@ -471,6 +491,8 @@ message<br />
 </table>
 
 ## Fee
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -540,6 +562,8 @@ createdAt<br />
 
 ## Http
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -558,6 +582,8 @@ outgoing<br />
 </table>
 
 ## HttpOutgoing
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -586,6 +612,8 @@ endpoint<br />
 </table>
 
 ## IncomingPayment
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -674,6 +702,8 @@ createdAt<br />
 
 ## IncomingPaymentConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -702,6 +732,8 @@ edges<br />
 
 ## IncomingPaymentEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -729,6 +761,8 @@ cursor<br />
 </table>
 
 ## IncomingPaymentResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -775,6 +809,8 @@ payment<br />
 </table>
 
 ## Jwk
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -831,6 +867,8 @@ crv<br />
 
 ## LiquidityMutationResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [MutationResponse](interfaces#mutationresponse)
@@ -880,6 +918,8 @@ error<br />
 </table>
 
 ## OutgoingPayment
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1004,6 +1044,8 @@ createdAt<br />
 
 ## OutgoingPaymentConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1032,6 +1074,8 @@ edges<br />
 
 ## OutgoingPaymentEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1059,6 +1103,8 @@ cursor<br />
 </table>
 
 ## OutgoingPaymentResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1106,6 +1152,8 @@ payment<br />
 
 ## PageInfo
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1151,6 +1199,8 @@ startCursor<br />
 </table>
 
 ## Payment
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1221,6 +1271,8 @@ createdAt<br />
 
 ## PaymentConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1249,6 +1301,8 @@ edges<br />
 
 ## PaymentEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1276,6 +1330,8 @@ cursor<br />
 </table>
 
 ## PaymentPointer
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1507,6 +1563,8 @@ status<br />
 
 ## PaymentPointerEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1534,6 +1592,8 @@ cursor<br />
 </table>
 
 ## PaymentPointerKey
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1594,6 +1654,8 @@ createdAt<br />
 
 ## PaymentPointersConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1621,6 +1683,8 @@ edges<br />
 </table>
 
 ## PaymentPointerWithdrawal
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1658,6 +1722,8 @@ paymentPointer<br />
 </table>
 
 ## PaymentPointerWithdrawalMutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1717,6 +1783,8 @@ withdrawal<br />
 </table>
 
 ## Peer
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -1804,6 +1872,8 @@ createdAt<br />
 
 ## PeerEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1832,6 +1902,8 @@ cursor<br />
 
 ## PeersConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1859,6 +1931,8 @@ edges<br />
 </table>
 
 ## Quote
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -1969,6 +2043,8 @@ expiresAt<br />
 
 ## QuoteConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -1997,6 +2073,8 @@ edges<br />
 
 ## QuoteEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2024,6 +2102,8 @@ cursor<br />
 </table>
 
 ## QuoteResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2070,6 +2150,8 @@ quote<br />
 </table>
 
 ## Receiver
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
@@ -2162,6 +2244,8 @@ updatedAt<br />
 
 ## RevokePaymentPointerKeyMutationResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [MutationResponse](interfaces#mutationresponse)
@@ -2211,6 +2295,8 @@ paymentPointerKey<br />
 </table>
 
 ## SetFeeResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -2262,6 +2348,8 @@ fee<br />
 
 ## TransferMutationResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [MutationResponse](interfaces#mutationresponse)
@@ -2302,6 +2390,8 @@ message<br />
 </table>
 
 ## TriggerPaymentPointerEventsMutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -2353,6 +2443,8 @@ count<br />
 
 ## UpdatePaymentPointerMutationResponse
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [MutationResponse](interfaces#mutationresponse)
@@ -2402,6 +2494,8 @@ paymentPointer<br />
 </table>
 
 ## UpdatePeerMutationResponse
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
@@ -2453,6 +2547,8 @@ peer<br />
 
 ## WebhookEvent
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Implements</strong></p>
 
 - [Model](interfaces#model)
@@ -2503,6 +2599,8 @@ createdAt<br />
 
 ## WebhookEventsConnection
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2531,6 +2629,8 @@ edges<br />
 
 ## WebhookEventsEdge
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Fields</strong></p>
 
 <table>
@@ -2556,3 +2656,4 @@ cursor<br />
 </tr>
 </tbody>
 </table>
+

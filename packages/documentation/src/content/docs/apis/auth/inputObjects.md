@@ -6,6 +6,8 @@ title: Input objects
 
 ## FilterGrantState
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -34,6 +36,8 @@ notIn<br />
 
 ## FilterString
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -52,6 +56,8 @@ in<br />
 </table>
 
 ## GrantFilter
+
+
 
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
@@ -81,6 +87,8 @@ state<br />
 
 ## RevokeGrantInput
 
+
+
 <p style={{ marginBottom: "0.4em" }}><strong>Arguments</strong></p>
 
 <table>
@@ -97,3 +105,4 @@ grantId<br />
 </tr>
 </tbody>
 </table>
+
