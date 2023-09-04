@@ -82,7 +82,7 @@ export default function WebhookEventsPage() {
             <div className='flex items-center'>
               <PopoverFilter
                 label='Event type'
-                values={type ? type : ['all']}
+                values={type.length > 0 ? type : ['all']}
                 options={[
                   {
                     name: 'All',
