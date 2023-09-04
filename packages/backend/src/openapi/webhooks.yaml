@@ -160,7 +160,7 @@ components:
             - createdAt
             - updatedAt
             - expiresAt
-            - sendAmount
+            - debitAmount
             - receiveAmount
             - state
             - stateAttempts
@@ -183,7 +183,7 @@ components:
             receiver:
               type: string
               format: uri
-            sendAmount:
+            debitAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
             sentAmount:
               $ref: ./schemas.yaml#/components/schemas/amount

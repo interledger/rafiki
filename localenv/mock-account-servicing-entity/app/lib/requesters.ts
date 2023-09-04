@@ -303,7 +303,7 @@ export async function getPaymentPointerPayments(
               id
               state
               error
-              sendAmount {
+              debitAmount {
                 value
                 assetCode
                 assetScale
