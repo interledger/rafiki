@@ -1,5 +1,4 @@
-import { createHmac } from 'crypto'
-import { ModelObject, TransactionOrKnex } from 'objection'
+import { TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { BaseService } from '../../shared/baseService'
