@@ -30,19 +30,19 @@ export const PopoverFilter = ({
         leaveTo='opacity-0'
       >
         <Popover.Panel className='absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm'>
-          <div>
+          <div className='space-y-2 p-2'>
             {options.map((option) => (
-              <div key={option.value} className='flex items-center space-x-2'>
+              <div key={option.value} className='flex items-center'>
                 <input
                   type='checkbox'
                   id={option.value}
-                  className='relative cursor-default select-none py-2 pl-3 pr-9'
+                  className='w-5 h-5 rounded border-gray-300 text-[#F37F64] focus:ring-[#F37F64]'
                   checked={values ? values.includes(option.value) : false}
                   onChange={option.action}
                 />
                 <label
-                  htmlFor={`checkbox-${option.value}`}
-                  className='ml-2 block truncate text-sm text-gray-900'
+                  htmlFor={option.value}
+                  className='ml-3 min-w-0 flex-1 text-gray-900'
                 >
                   {option.name}
                 </label>
