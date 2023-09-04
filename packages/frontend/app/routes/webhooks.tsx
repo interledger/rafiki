@@ -34,12 +34,18 @@ export const loader = async ({ request }: LoaderArgs) => {
   let previousPageUrl = '',
     nextPageUrl = ''
 
-  if (webhooks.pageInfo.hasPreviousPage) {
-    previousPageUrl = `${webhooks.pageInfo.startCursor}`
+  if (webhooks.pageInfo.hasPreviousPage && webhooks.pageInfo.startCursor) {
+    const previousPageSearchParams = new URLSearchParams()
+    previousPageSearchParams.set('before', webhooks.pageInfo.startCursor)
+    if (type.length > 0) previousPageSearchParams.set('type', type.join(','))
+    previousPageUrl = `/webhooks?${previousPageSearchParams.toString()}`
   }
 
-  if (webhooks.pageInfo.hasNextPage) {
-    nextPageUrl = `${webhooks.pageInfo.endCursor}`
+  if (webhooks.pageInfo.hasNextPage && webhooks.pageInfo.endCursor) {
+    const nextPageSearchParams = new URLSearchParams()
+    nextPageSearchParams.set('after', webhooks.pageInfo.endCursor)
+    if (type.length > 0) nextPageSearchParams.set('type', type.join(','))
+    nextPageUrl = `/webhooks?${nextPageSearchParams.toString()}`
   }
 
   return json({ webhooks, previousPageUrl, nextPageUrl, type })
@@ -137,9 +143,7 @@ export default function WebhookEventsPage() {
               aria-label='go to previous page'
               disabled={!webhooks.pageInfo.hasPreviousPage}
               onClick={() => {
-                searchParams.delete('after')
-                searchParams.set('before', previousPageUrl)
-                setSearchParams(searchParams)
+                navigate(previousPageUrl)
               }}
             >
               Previous
@@ -148,9 +152,7 @@ export default function WebhookEventsPage() {
               aria-label='go to next page'
               disabled={!webhooks.pageInfo.hasNextPage}
               onClick={() => {
-                searchParams.delete('before')
-                searchParams.set('after', nextPageUrl)
-                setSearchParams(searchParams)
+                navigate(nextPageUrl)
               }}
             >
               Next
