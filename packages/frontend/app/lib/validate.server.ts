@@ -24,13 +24,12 @@ export const paginationSchemaTest = z.object({
 })
 
 export const paginationSearchParams = paginationSchemaTest.partial()
-export const webhooksSearchParams = paginationSearchParams
+export const webhooksSearchParams = paginationSchema
   .merge(
     z.object({
-      type: z.array(z.nativeEnum(WebhookEventType))
+      type: z.array(z.nativeEnum(WebhookEventType)).default([])
     })
   )
-  .partial()
 
 export const peerGeneralInfoSchema = z
   .object({
