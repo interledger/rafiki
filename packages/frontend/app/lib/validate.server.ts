@@ -16,14 +16,6 @@ export const paginationSchema = z
   })
   .partial()
 
-export const paginationSchemaTest = z.object({
-  after: z.string().uuid(),
-  before: z.string().uuid(),
-  first: z.coerce.number().int().positive(),
-  last: z.coerce.number().int().positive()
-})
-
-export const paginationSearchParams = paginationSchemaTest.partial()
 export const webhooksSearchParams = paginationSchema
   .merge(
     z.object({
