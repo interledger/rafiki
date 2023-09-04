@@ -101,7 +101,7 @@ describe('Quote Routes', (): void => {
           id: `${paymentPointer.url}/quotes/${quote.id}`,
           paymentPointer: paymentPointer.url,
           receiver: quote.receiver,
-          sendAmount: serializeAmount(quote.sendAmount),
+          sendAmount: serializeAmount(quote.debitAmount),
           receiveAmount: serializeAmount(quote.receiveAmount),
           createdAt: quote.createdAt.toISOString(),
           expiresAt: quote.expiresAt.toISOString()
@@ -221,8 +221,8 @@ describe('Quote Routes', (): void => {
             paymentPointer: paymentPointer.url,
             receiver: quote.receiver,
             sendAmount: {
-              ...quote.sendAmount,
-              value: quote.sendAmount.value.toString()
+              ...quote.debitAmount,
+              value: quote.debitAmount.value.toString()
             },
             receiveAmount: {
               ...quote.receiveAmount,
@@ -268,8 +268,8 @@ describe('Quote Routes', (): void => {
           paymentPointer: paymentPointer.url,
           receiver: options.receiver,
           sendAmount: {
-            ...quote.sendAmount,
-            value: quote.sendAmount.value.toString()
+            ...quote.debitAmount,
+            value: quote.debitAmount.value.toString()
           },
           receiveAmount: {
             ...quote.receiveAmount,

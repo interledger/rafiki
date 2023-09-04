@@ -44,7 +44,7 @@ export class OutgoingPayment
   }
 
   public get sendAmount(): Amount {
-    return this.quote.sendAmount
+    return this.quote.debitAmount
   }
 
   private sentAmountValue?: bigint

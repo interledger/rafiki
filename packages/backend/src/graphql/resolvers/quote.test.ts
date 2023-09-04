@@ -107,9 +107,9 @@ describe('Quote Resolvers', (): void => {
         paymentPointerId,
         receiver: quote.receiver,
         debitAmount: {
-          value: quote.sendAmount.value.toString(),
-          assetCode: quote.sendAmount.assetCode,
-          assetScale: quote.sendAmount.assetScale,
+          value: quote.debitAmount.value.toString(),
+          assetCode: quote.debitAmount.assetCode,
+          assetScale: quote.debitAmount.assetScale,
           __typename: 'Amount'
         },
         receiveAmount: {

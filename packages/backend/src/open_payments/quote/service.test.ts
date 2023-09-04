@@ -198,7 +198,7 @@ describe('QuoteService', (): void => {
                 expect(quote).toMatchObject({
                   paymentPointerId: sendingPaymentPointer.id,
                   receiver: options.receiver,
-                  sendAmount: sendAmount || {
+                  debitAmount: sendAmount || {
                     value: BigInt(
                       Math.ceil(
                         Number(receiveAmount.value) /
@@ -272,7 +272,7 @@ describe('QuoteService', (): void => {
                 expect(quote).toMatchObject({
                   ...options,
                   maxPacketAmount: BigInt('9223372036854775807'),
-                  sendAmount: {
+                  debitAmount: {
                     value: BigInt(
                       Math.ceil(
                         Number(incomingAmount.value) /
@@ -357,7 +357,7 @@ describe('QuoteService', (): void => {
         expect(quote).toMatchObject({
           paymentPointerId: sendingPaymentPointer.id,
           receiver: options.receiver,
-          sendAmount: {
+          debitAmount: {
             value: BigInt(
               Math.ceil(
                 Number(receiveAmount.value) / quote.minExchangeRate.valueOf()
@@ -544,7 +544,7 @@ describe('QuoteService', (): void => {
           const quote = await quoteService.create(options)
           assert.ok(!isQuoteError(quote))
 
-          expect(quote.sendAmount.value).toBe(expectedQuoteDebitAmountValue)
+          expect(quote.debitAmount.value).toBe(expectedQuoteDebitAmountValue)
         }
       )
     )

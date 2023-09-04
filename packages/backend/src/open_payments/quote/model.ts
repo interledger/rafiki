@@ -16,7 +16,7 @@ export class Quote extends PaymentPointerSubresource {
 
   static get virtualAttributes(): string[] {
     return [
-      'sendAmount',
+      'debitAmount',
       'receiveAmount',
       'minExchangeRate',
       'lowEstimatedExchangeRate',
@@ -63,7 +63,7 @@ export class Quote extends PaymentPointerSubresource {
     return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
   }
 
-  public get sendAmount(): Amount {
+  public get debitAmount(): Amount {
     return {
       value: this.debitAmountValue,
       assetCode: this.asset.code,
@@ -71,7 +71,7 @@ export class Quote extends PaymentPointerSubresource {
     }
   }
 
-  public set sendAmount(amount: Amount) {
+  public set debitAmount(amount: Amount) {
     this.debitAmountValue = amount.value
   }
 
@@ -156,9 +156,9 @@ export class Quote extends PaymentPointerSubresource {
       id: json.id,
       paymentPointerId: json.paymentPointerId,
       receiver: json.receiver,
-      sendAmount: {
-        ...json.sendAmount,
-        value: json.sendAmount.value.toString()
+      debitAmount: {
+        ...json.debitAmount,
+        value: json.debitAmount.value.toString()
       },
       receiveAmount: {
         ...json.receiveAmount,
@@ -174,7 +174,7 @@ export class Quote extends PaymentPointerSubresource {
       id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,
       receiveAmount: serializeAmount(this.receiveAmount),
-      sendAmount: serializeAmount(this.sendAmount),
+      sendAmount: serializeAmount(this.debitAmount), // TODO: update to debitAmount when this pr is merged: https://github.com/interledger/open-payments/pull/275
       receiver: this.receiver,
       expiresAt: this.expiresAt.toISOString(),
       createdAt: this.createdAt.toISOString()

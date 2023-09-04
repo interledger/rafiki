@@ -371,7 +371,7 @@ describe('OutgoingPaymentService', (): void => {
               id: quote.id,
               paymentPointerId,
               receiver: quote.receiver,
-              sendAmount: quote.sendAmount,
+              sendAmount: quote.debitAmount,
               receiveAmount: quote.receiveAmount,
               metadata: options.metadata,
               state: OutgoingPaymentState.Funding,

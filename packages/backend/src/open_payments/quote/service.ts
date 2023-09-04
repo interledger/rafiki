@@ -134,7 +134,7 @@ async function createQuote(
           paymentPointerId: options.paymentPointerId,
           assetId: quoteAssetId,
           receiver: options.receiver,
-          sendAmount: {
+          debitAmount: {
             value: ilpQuote.maxSourceAmount,
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale
@@ -311,7 +311,7 @@ async function finalizeQuote(
   receiver: Receiver,
   maxReceiveAmountValue?: bigint
 ): Promise<Quote> {
-  let debitAmountValue = quote.sendAmount.value
+  let debitAmountValue = quote.debitAmount.value
   let receiveAmountValue = quote.receiveAmount.value
 
   if (!maxReceiveAmountValue) {
@@ -320,7 +320,7 @@ async function finalizeQuote(
     debitAmountValue = BigInt(debitAmountValue) + fees
     if (
       receiveAmountValue !== quote.receiveAmount.value ||
-      debitAmountValue < quote.sendAmount.value ||
+      debitAmountValue < quote.debitAmount.value ||
       debitAmountValue <= BigInt(0)
     ) {
       throw QuoteError.InvalidAmount
@@ -335,7 +335,7 @@ async function finalizeQuote(
     }
 
     if (
-      debitAmountValue !== quote.sendAmount.value ||
+      debitAmountValue !== quote.debitAmount.value ||
       receiveAmountValue > maxReceiveAmountValue ||
       receiveAmountValue <= BigInt(0)
     ) {

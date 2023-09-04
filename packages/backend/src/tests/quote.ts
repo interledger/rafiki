@@ -113,7 +113,7 @@ export async function createQuote(
       paymentPointerId,
       assetId: paymentPointer.assetId,
       receiver: receiverUrl,
-      sendAmount,
+      debitAmount: sendAmount,
       receiveAmount,
       maxPacketAmount: BigInt('9223372036854775807'),
       lowEstimatedExchangeRate: Pay.Ratio.of(
