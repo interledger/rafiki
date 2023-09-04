@@ -506,11 +506,11 @@ describe('QuoteService', (): void => {
     })
 
     test.each`
-      incomingAmountValue | fixedFee | basisPointFee | expectedQuoteSendAmountValue | description
-      ${3364n}            | ${0}     | ${0}          | ${3365n}                     | ${'no fees'}
-      ${3364n}            | ${150}   | ${0}          | ${3515n}                     | ${'fixed fee'}
-      ${3364n}            | ${0}     | ${200}        | ${3432n}                     | ${'basis point fee'}
-      ${3364n}            | ${150}   | ${200}        | ${3582n}                     | ${'fixed and basis point fee'}
+      incomingAmountValue | fixedFee | basisPointFee | expectedQuoteDebitAmountValue | description
+      ${3364n}            | ${0}     | ${0}          | ${3365n}                      | ${'no fees'}
+      ${3364n}            | ${150}   | ${0}          | ${3515n}                      | ${'fixed fee'}
+      ${3364n}            | ${0}     | ${200}        | ${3432n}                      | ${'basis point fee'}
+      ${3364n}            | ${150}   | ${200}        | ${3582n}                      | ${'fixed and basis point fee'}
     `(
       '$description',
       withConfigOverride(
@@ -520,7 +520,7 @@ describe('QuoteService', (): void => {
           incomingAmountValue,
           fixedFee,
           basisPointFee,
-          expectedQuoteSendAmountValue
+          expectedQuoteDebitAmountValue
         }): Promise<void> => {
           const incomingPayment = await createIncomingPayment(deps, {
             paymentPointerId: receivingPaymentPointer.id,
@@ -544,7 +544,7 @@ describe('QuoteService', (): void => {
           const quote = await quoteService.create(options)
           assert.ok(!isQuoteError(quote))
 
-          expect(quote.sendAmount.value).toBe(expectedQuoteSendAmountValue)
+          expect(quote.sendAmount.value).toBe(expectedQuoteDebitAmountValue)
         }
       )
     )

@@ -311,17 +311,17 @@ async function finalizeQuote(
   receiver: Receiver,
   maxReceiveAmountValue?: bigint
 ): Promise<Quote> {
-  let sendAmountValue = quote.sendAmount.value
+  let debitAmountValue = quote.sendAmount.value
   let receiveAmountValue = quote.receiveAmount.value
 
   if (!maxReceiveAmountValue) {
     // FixedDelivery
-    const fees = getFees(quote.fee, sendAmountValue)
-    sendAmountValue = BigInt(sendAmountValue) + fees
+    const fees = getFees(quote.fee, debitAmountValue)
+    debitAmountValue = BigInt(debitAmountValue) + fees
     if (
       receiveAmountValue !== quote.receiveAmount.value ||
-      sendAmountValue < quote.sendAmount.value ||
-      sendAmountValue <= BigInt(0)
+      debitAmountValue < quote.sendAmount.value ||
+      debitAmountValue <= BigInt(0)
     ) {
       throw QuoteError.InvalidAmount
     }
@@ -335,7 +335,7 @@ async function finalizeQuote(
     }
 
     if (
-      sendAmountValue !== quote.sendAmount.value ||
+      debitAmountValue !== quote.sendAmount.value ||
       receiveAmountValue > maxReceiveAmountValue ||
       receiveAmountValue <= BigInt(0)
     ) {
@@ -344,7 +344,7 @@ async function finalizeQuote(
   }
 
   const patchOptions = {
-    sendAmountValue,
+    debitAmountValue,
     receiveAmountValue,
     expiresAt: new Date(quote.createdAt.getTime() + deps.config.quoteLifespan)
   }

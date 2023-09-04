@@ -57,7 +57,7 @@ export class Quote extends PaymentPointerSubresource {
 
   public receiver!: string
 
-  private sendAmountValue!: bigint
+  private debitAmountValue!: bigint
 
   public getUrl(paymentPointer: PaymentPointer): string {
     return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
@@ -65,14 +65,14 @@ export class Quote extends PaymentPointerSubresource {
 
   public get sendAmount(): Amount {
     return {
-      value: this.sendAmountValue,
+      value: this.debitAmountValue,
       assetCode: this.asset.code,
       assetScale: this.asset.scale
     }
   }
 
   public set sendAmount(amount: Amount) {
-    this.sendAmountValue = amount.value
+    this.debitAmountValue = amount.value
   }
 
   private receiveAmountValue!: bigint
@@ -102,7 +102,7 @@ export class Quote extends PaymentPointerSubresource {
   private highEstimatedExchangeRateDenominator!: bigint
 
   public get maxSourceAmount(): bigint {
-    return this.sendAmountValue
+    return this.debitAmountValue
   }
 
   public get minDeliveryAmount(): bigint {
