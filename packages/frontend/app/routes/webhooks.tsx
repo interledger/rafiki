@@ -54,24 +54,28 @@ export const loader = async ({ request }: LoaderArgs) => {
 export default function WebhookEventsPage() {
   const { webhooks, previousPageUrl, nextPageUrl, type } =
     useLoaderData<typeof loader>()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+
   function setTypeFilterParams(selectedType: WebhookEventType): void {
-    // When modifying a filter load the first page of results
-    searchParams.delete('before')
-    searchParams.delete('after')
-    const selectedTypeSet: Set<WebhookEventType> = type
-      ? new Set(type)
-      : new Set<WebhookEventType>()
-    selectedTypeSet.has(selectedType)
-      ? selectedTypeSet.delete(selectedType)
-      : selectedTypeSet.add(selectedType)
-    if (selectedTypeSet.size > 0) {
-      searchParams.set('type', Array.from(selectedTypeSet).join(','))
-    } else {
-      searchParams.delete('type')
+    const selected = type
+
+    if (!selected.includes(selectedType)) {
+      selected.push(selectedType)
+      setSearchParams(new URLSearchParams({ type: selected.join(',') }))
+      return
     }
-    setSearchParams(searchParams)
+
+    setSearchParams(() => {
+      const newParams = selected.filter((t) => t !== selectedType).join(',')
+      if (newParams.length === 0) {
+        return ''
+      }
+
+      return new URLSearchParams({
+        type: newParams
+      })
+    })
   }
 
   return (
