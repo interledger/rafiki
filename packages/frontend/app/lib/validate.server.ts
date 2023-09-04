@@ -16,12 +16,11 @@ export const paginationSchema = z
   })
   .partial()
 
-export const webhooksSearchParams = paginationSchema
-  .merge(
-    z.object({
-      type: z.array(z.nativeEnum(WebhookEventType)).default([])
-    })
-  )
+export const webhooksSearchParams = paginationSchema.merge(
+  z.object({
+    type: z.array(z.nativeEnum(WebhookEventType)).default([])
+  })
+)
 
 export const peerGeneralInfoSchema = z
   .object({
