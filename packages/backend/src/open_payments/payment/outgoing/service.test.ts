@@ -371,7 +371,7 @@ describe('OutgoingPaymentService', (): void => {
               id: quote.id,
               paymentPointerId,
               receiver: quote.receiver,
-              sendAmount: quote.debitAmount,
+              debitAmount: quote.debitAmount,
               receiveAmount: quote.receiveAmount,
               metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
@@ -838,7 +838,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.fund({
             id: payment.id,
-            amount: payment.sendAmount.value,
+            amount: payment.debitAmount.value,
             transferId: uuid()
           })
         ).resolves.toMatchObject({
@@ -865,11 +865,11 @@ describe('OutgoingPaymentService', (): void => {
         )
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - amountSent,
+          accountBalance: payment.debitAmount.value - amountSent,
           amountSent,
           amountDelivered: payment.receiveAmount.value,
           incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value - amountSent
+          withdrawAmount: payment.debitAmount.value - amountSent
         })
       })
 
@@ -899,11 +899,11 @@ describe('OutgoingPaymentService', (): void => {
         )
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - amountSent,
+          accountBalance: payment.debitAmount.value - amountSent,
           amountSent,
           amountDelivered: payment.receiveAmount.value,
           incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value - amountSent
+          withdrawAmount: payment.debitAmount.value - amountSent
         })
       })
 
@@ -936,7 +936,7 @@ describe('OutgoingPaymentService', (): void => {
           ? payment.receiveAmount.value * BigInt(2)
           : (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - amountSent,
+          accountBalance: payment.debitAmount.value - amountSent,
           amountSent,
           amountDelivered: toConnection
             ? payment.receiveAmount.value
@@ -944,7 +944,7 @@ describe('OutgoingPaymentService', (): void => {
           incomingPaymentReceived: toConnection
             ? payment.receiveAmount.value + amountAlreadyDelivered
             : payment.receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value - amountSent
+          withdrawAmount: payment.debitAmount.value - amountSent
         })
       })
 
@@ -1037,7 +1037,7 @@ describe('OutgoingPaymentService', (): void => {
         mockFn.mockRestore()
         fastForwardToAttempt(1)
         await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - BigInt(10),
+          accountBalance: payment.debitAmount.value - BigInt(10),
           amountSent: BigInt(10),
           amountDelivered: BigInt(5)
         })
@@ -1049,7 +1049,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         const sentAmount = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment2, {
-          accountBalance: payment.sendAmount.value - sentAmount,
+          accountBalance: payment.debitAmount.value - sentAmount,
           amountSent: sentAmount,
           amountDelivered: payment.receiveAmount.value
         })
@@ -1076,7 +1076,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         const sentAmount = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - sentAmount,
+          accountBalance: payment.debitAmount.value - sentAmount,
           amountSent: sentAmount,
           amountDelivered: payment.receiveAmount.value
         })
@@ -1098,11 +1098,11 @@ describe('OutgoingPaymentService', (): void => {
           OutgoingPaymentState.Completed
         )
         await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value,
+          accountBalance: payment.debitAmount.value,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           incomingPaymentReceived: receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value
+          withdrawAmount: payment.debitAmount.value
         })
       })
 
@@ -1162,7 +1162,7 @@ describe('OutgoingPaymentService', (): void => {
         sendAmount,
         validDestination: false
       })
-      quoteAmount = payment.sendAmount.value
+      quoteAmount = payment.debitAmount.value
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     }, 10_000)
 

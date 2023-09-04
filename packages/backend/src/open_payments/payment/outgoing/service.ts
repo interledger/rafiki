@@ -266,7 +266,7 @@ async function validateGrant(
   if (!paymentLimits.sendAmount && !paymentLimits.receiveAmount) return true
   if (
     (paymentLimits.sendAmount &&
-      paymentLimits.sendAmount.value < payment.sendAmount.value) ||
+      paymentLimits.sendAmount.value < payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value < payment.receiveAmount.value)
   ) {
@@ -321,16 +321,17 @@ async function validateGrant(
         // Estimate delivered amount of failed payment
         receivedAmount +=
           (grantPayment.receiveAmount.value * totalSent) /
-          grantPayment.sendAmount.value
+          grantPayment.debitAmount.value
       } else {
-        sentAmount += grantPayment.sendAmount.value
+        sentAmount += grantPayment.debitAmount.value
         receivedAmount += grantPayment.receiveAmount.value
       }
     }
   }
   if (
     (paymentLimits.sendAmount &&
-      paymentLimits.sendAmount.value - sentAmount < payment.sendAmount.value) ||
+      paymentLimits.sendAmount.value - sentAmount <
+        payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value - receivedAmount <
         payment.receiveAmount.value)
@@ -359,7 +360,7 @@ async function fundPayment(
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
-    if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
+    if (amount !== payment.debitAmount.value) return FundingError.InvalidAmount
 
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {

@@ -628,7 +628,7 @@ type OutgoingPayment implements BasePayment & Model {
   error: String
   stateAttempts: Int!
   "Amount to send (fixed send)"
-  sendAmount: Amount!
+  debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
   "Payment pointer URL of the receiver"

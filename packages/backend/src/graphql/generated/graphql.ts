@@ -650,6 +650,8 @@ export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** Amount to send (fixed send) */
+  debitAmount: Amount;
   error?: Maybe<Scalars['String']['output']>;
   /** Outgoing payment id */
   id: Scalars['ID']['output'];
@@ -663,8 +665,6 @@ export type OutgoingPayment = BasePayment & Model & {
   receiveAmount: Amount;
   /** Payment pointer URL of the receiver */
   receiver: Scalars['String']['output'];
-  /** Amount to send (fixed send) */
-  sendAmount: Amount;
   /** Amount already sent */
   sentAmount: Amount;
   /** Outgoing payment state */
@@ -1692,6 +1692,7 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
@@ -1699,7 +1700,6 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  sendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;

@@ -107,7 +107,7 @@ describe('Outgoing Payment Routes', (): void => {
           paymentPointer: paymentPointer.url,
           receiver: outgoingPayment.receiver,
           quoteId: outgoingPayment.quote.getUrl(paymentPointer),
-          sendAmount: serializeAmount(outgoingPayment.sendAmount),
+          sendAmount: serializeAmount(outgoingPayment.debitAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
           metadata: outgoingPayment.metadata,
@@ -199,8 +199,8 @@ describe('Outgoing Payment Routes', (): void => {
           receiver: payment.receiver,
           quoteId: options.quoteId,
           sendAmount: {
-            ...payment.sendAmount,
-            value: payment.sendAmount.value.toString()
+            ...payment.debitAmount,
+            value: payment.debitAmount.value.toString()
           },
           receiveAmount: {
             ...payment.receiveAmount,

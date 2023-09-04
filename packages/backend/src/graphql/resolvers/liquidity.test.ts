@@ -1650,15 +1650,15 @@ describe('Liquidity Resolvers', (): void => {
             expect(response.success).toBe(true)
             expect(response.code).toEqual('200')
             expect(response.error).toBeNull()
-            assert.ok(payment.sendAmount)
+            assert.ok(payment.debitAmount)
             await expect(depositSpy).toHaveBeenCalledWith({
               id: eventId,
               account: expect.any(OutgoingPayment),
-              amount: payment.sendAmount.value
+              amount: payment.debitAmount.value
             })
             await expect(
               accountingService.getBalance(payment.id)
-            ).resolves.toEqual(payment.sendAmount.value)
+            ).resolves.toEqual(payment.debitAmount.value)
           })
 
           test("Can't deposit for non-existent webhook event id", async (): Promise<void> => {
