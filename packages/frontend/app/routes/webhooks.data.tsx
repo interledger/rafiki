@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react'
-import { useLocation, useNavigate } from '@remix-run/react'
+import { useLocation, useNavigate, useSearchParams } from '@remix-run/react'
 import { Fragment, useEffect } from 'react'
 import { XIcon } from '~/components/icons'
 import { prettify } from '~/shared/utils'
