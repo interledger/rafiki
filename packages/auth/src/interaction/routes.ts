@@ -66,7 +66,7 @@ export interface InteractionRoutes {
 function isInteractionExpired(interaction: Interaction): boolean {
   const now = new Date(Date.now())
   const expiresAt =
-    interaction.updatedAt.getTime() + interaction.expiresIn * 1000
+    interaction.createdAt.getTime() + interaction.expiresIn * 1000
   return expiresAt < now.getTime()
 }
 
@@ -244,6 +244,8 @@ async function finishInteraction(
     const { grant } = interaction
     const clientRedirectUri = new URL(grant.finishUri as string)
     if (interaction.state === InteractionState.Approved) {
+      await grantService.approve(interaction.grantId)
+
       const {
         grant: { clientNonce },
         nonce: interactNonce,
