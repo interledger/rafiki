@@ -7,8 +7,12 @@ import { prettify } from '~/shared/utils'
 export default function WebhookEventData() {
   const location = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const state = location.state as { data: string }
-  const dismiss = () => navigate('/webhooks', { preventScrollReset: true })
+  const dismiss = () =>
+    navigate(`/webhooks${searchParams ? `?${searchParams}` : null}`, {
+      preventScrollReset: true
+    })
 
   useEffect(() => {
     if (!state) dismiss()

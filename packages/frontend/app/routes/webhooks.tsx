@@ -54,7 +54,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 export default function WebhookEventsPage() {
   const { webhooks, previousPageUrl, nextPageUrl, type } =
     useLoaderData<typeof loader>()
-  const [, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
   function setTypeFilterParams(selectedType: WebhookEventType): void {
@@ -126,7 +126,9 @@ export default function WebhookEventsPage() {
                       <Button
                         aria-label='view webhook data'
                         state={{ data: webhook.node.data }}
-                        to={'/webhooks/data'}
+                        to={`/webhooks/data${
+                          searchParams ? `?${searchParams}` : null
+                        }`}
                       >
                         View data
                       </Button>
