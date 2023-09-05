@@ -72,6 +72,8 @@ import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
 import { CombinedPaymentService } from './open_payments/payment/combined/service'
 import { FeeService } from './fee/service'
+import { AutoPeeringService } from './auto-peering/service'
+import { AutoPeeringRoutes } from './auto-peering/routes'
 
 export interface AppContextData {
   logger: Logger
@@ -203,6 +205,8 @@ export interface AppServices {
   redis: Promise<Redis>
   combinedPaymentService: Promise<CombinedPaymentService>
   feeService: Promise<FeeService>
+  autoPeeringService: Promise<AutoPeeringService>
+  autoPeeringRoutes: Promise<AutoPeeringRoutes>
 }
 
 export type AppContainer = IocContract<AppServices>
@@ -210,6 +214,7 @@ export type AppContainer = IocContract<AppServices>
 export class App {
   private openPaymentsServer!: Server
   private adminServer!: Server
+  private autoPeeringServer!: Server
   public apolloServer!: ApolloServer
   public closeEmitter!: EventEmitter
   public isShuttingDown = false
@@ -477,19 +482,42 @@ export class App {
     this.openPaymentsServer = koa.listen(port)
   }
 
+  public async startAutoPeeringServer(port: number | string): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const autoPeeringRoutes = await this.container.use('autoPeeringRoutes')
+    const router = new Router<DefaultState, AppContext>()
+
+    router.use(bodyParser())
+
+    router.get('/', autoPeeringRoutes.get)
+
+    koa.use(router.routes())
+
+    this.autoPeeringServer = koa.listen(port)
+  }
+
   public async shutdown(): Promise<void> {
     return new Promise((resolve): void => {
+      this.isShuttingDown = true
+      this.closeEmitter.emit('shutdown')
+
       if (this.openPaymentsServer) {
-        this.isShuttingDown = true
-        this.closeEmitter.emit('shutdown')
-        this.adminServer.close((): void => {
-          resolve()
-        })
         this.openPaymentsServer.close((): void => {
           resolve()
         })
-      } else {
-        resolve()
+      }
+
+      if (this.adminServer) {
+        this.adminServer.close((): void => {
+          resolve()
+        })
+      }
+
+      if (this.autoPeeringServer) {
+        this.autoPeeringServer.close((): void => {
+          resolve()
+        })
       }
     })
   }

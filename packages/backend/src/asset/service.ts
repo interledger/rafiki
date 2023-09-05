@@ -25,6 +25,7 @@ export interface AssetService {
   update(options: UpdateOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
   getPage(pagination?: Pagination): Promise<Asset[]>
+  getAll(): Promise<Asset[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -48,7 +49,8 @@ export async function createAssetService({
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
     get: (id) => getAsset(deps, id),
-    getPage: (pagination?) => getAssetsPage(deps, pagination)
+    getPage: (pagination?) => getAssetsPage(deps, pagination),
+    getAll: () => getAll(deps)
   }
 }
 
@@ -117,4 +119,8 @@ async function getAssetsPage(
   pagination?: Pagination
 ): Promise<Asset[]> {
   return await Asset.query(deps.knex).getPage(pagination)
+}
+
+async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
+  return await Asset.query(deps.knex)
 }

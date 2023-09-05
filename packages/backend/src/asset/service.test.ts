@@ -193,4 +193,20 @@ describe('Asset Service', (): void => {
       getPage: (pagination?: Pagination) => assetService.getPage(pagination)
     })
   })
+
+  describe('getAll', (): void => {
+    test('returns all assets', async (): Promise<void> => {
+      const assets = await Promise.all([
+        assetService.create(randomAsset()),
+        assetService.create(randomAsset()),
+        assetService.create(randomAsset())
+      ])
+
+      await expect(assetService.getAll()).resolves.toEqual(assets)
+    })
+
+    test('returns empty array if no assets', async (): Promise<void> => {
+      await expect(assetService.getAll()).resolves.toEqual([])
+    })
+  })
 })
