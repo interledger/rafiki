@@ -98,14 +98,14 @@ export type GrantsConnection = {
 
 export type LimitData = {
   __typename?: 'LimitData';
+  /** Amount to debit */
+  debitAmount?: Maybe<PaymentAmount>;
   /** Interval between payments */
   interval?: Maybe<Scalars['String']['output']>;
   /** Amount to receive */
   receiveAmount?: Maybe<PaymentAmount>;
   /** Payment pointer URL of the receiver */
   receiver?: Maybe<Scalars['String']['output']>;
-  /** Amount to send */
-  sendAmount?: Maybe<PaymentAmount>;
 };
 
 export type Model = {
@@ -345,10 +345,10 @@ export type GrantsConnectionResolvers<ContextType = any, ParentType extends Reso
 };
 
 export type LimitDataResolvers<ContextType = any, ParentType extends ResolversParentTypes['LimitData'] = ResolversParentTypes['LimitData']> = {
+  debitAmount?: Resolver<Maybe<ResolversTypes['PaymentAmount']>, ParentType, ContextType>;
   interval?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   receiveAmount?: Resolver<Maybe<ResolversTypes['PaymentAmount']>, ParentType, ContextType>;
   receiver?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  sendAmount?: Resolver<Maybe<ResolversTypes['PaymentAmount']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
