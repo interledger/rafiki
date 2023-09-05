@@ -1,9 +1,9 @@
 name: Create Weekly Sync discussion
 
-# Every Tuesday at 12AM UTC
+# Every Wednesday at 12AM UTC
 on:
     schedule:
-        - cron: "0 0 * * 2"
+        - cron: "0 0 * * 3"
 
 jobs:
     create-discussion:
@@ -32,7 +32,7 @@ jobs:
 
             - name: Get current date
               id: current-date
-              run: echo "date=$(date +'%d %B %Y')" >> $GITHUB_OUTPUT
+              run: echo "date=$(date -d "next Tue" +'%d %B %Y')" >> $GITHUB_OUTPUT
 
             - name: Create repository discussion
               id: create-repository-discussion
