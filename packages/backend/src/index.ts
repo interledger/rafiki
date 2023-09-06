@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events'
-import { Server } from 'http'
 import path from 'path'
 import createLogger from 'pino'
 import { knex } from 'knex'
@@ -55,7 +53,6 @@ BigInt.prototype.toJSON = function () {
 
 const container = initIocContainer(Config)
 const app = new App(container)
-let connectorServer: Server
 
 export function initIocContainer(
   config: typeof Config
@@ -106,7 +103,6 @@ export function initIocContainer(
     )
     return db
   })
-  container.singleton('closeEmitter', async () => new EventEmitter())
   container.singleton('redis', async (deps): Promise<Redis> => {
     const config = await deps.use('config')
     return new Redis(config.redisUrl, {
@@ -445,19 +441,12 @@ export const gracefulShutdown = async (
   const logger = await container.use('logger')
   logger.info('shutting down.')
   await app.shutdown()
-  if (connectorServer) {
-    await new Promise((resolve, reject) => {
-      connectorServer.close((err?: Error) =>
-        err ? reject(err) : resolve(null)
-      )
-    })
-  }
   const knex = await container.use('knex')
   await knex.destroy()
   const tigerbeetle = await container.use('tigerbeetle')
-  await tigerbeetle.destroy()
+  tigerbeetle.destroy()
   const redis = await container.use('redis')
-  await redis.disconnect()
+  redis.disconnect()
 }
 
 export const start = async (
@@ -493,6 +482,15 @@ export const start = async (
     logger.info('received SIGTERM attempting graceful shutdown')
 
     try {
+      if (shuttingDown) {
+        logger.warn(
+          'received second SIGTERM during graceful shutdown, exiting forcefully.'
+        )
+        process.exit(1)
+      }
+
+      shuttingDown = true
+
       // Graceful shutdown
       await gracefulShutdown(container, app)
       logger.info('completed graceful shutdown.')
@@ -518,12 +516,12 @@ export const start = async (
   const config = await container.use('config')
   await app.boot()
   await app.startAdminServer(config.adminPort)
-  await app.startOpenPaymentsServer(config.openPaymentsPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
+
+  await app.startOpenPaymentsServer(config.openPaymentsPort)
   logger.info(`Open Payments listening on ${app.getOpenPaymentsPort()}`)
 
-  const connectorApp = await container.use('connectorApp')
-  connectorServer = connectorApp.listenPublic(config.connectorPort)
+  await app.startIlpConnectorServer(config.connectorPort)
   logger.info(`Connector listening on ${config.connectorPort}`)
   logger.info('🐒 has 🚀. Get ready for 🍌🍌🍌🍌🍌')
 

@@ -50,7 +50,7 @@ describe('Signature Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     nock.restore()
-    appContainer.shutdown()
+    await appContainer.shutdown()
   })
 
   describe('Signature middleware', (): void => {

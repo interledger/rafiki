@@ -1,6 +1,5 @@
 import { join } from 'path'
 import http, { Server } from 'http'
-import { EventEmitter } from 'events'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
@@ -52,7 +51,6 @@ import { InteractionRoutes } from './interaction/routes'
 
 export interface AppContextData extends DefaultContext {
   logger: Logger
-  closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router
   params: { [key: string]: string }
@@ -88,7 +86,6 @@ export interface DatabaseCleanupRule {
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
-  closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
@@ -105,8 +102,6 @@ export class App {
   private authServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
-  public apolloServer!: ApolloServer
-  private closeEmitter!: EventEmitter
   private logger!: Logger
   private config!: IAppConfig
   private databaseCleanupRules!: {
@@ -124,7 +119,6 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
 
     this.databaseCleanupRules = {
@@ -158,12 +152,12 @@ export class App {
     })
 
     // Setup Apollo
-    this.apolloServer = new ApolloServer({
+    const apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
       plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
 
-    await this.apolloServer.start()
+    await apolloServer.start()
 
     koa.use(bodyParser())
 
@@ -184,7 +178,7 @@ export class App {
     )
 
     koa.use(
-      koaMiddleware(this.apolloServer, {
+      koaMiddleware(apolloServer, {
         context: async (): Promise<ApolloContext> => {
           return {
             container: this.container,
@@ -374,7 +368,6 @@ export class App {
     const koa = new Koa<DefaultState, AppContext>()
 
     koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
     koa.context.logger = await this.container.use('logger')
 
     koa.use(
@@ -400,29 +393,28 @@ export class App {
   }
 
   public async shutdown(): Promise<void> {
-    return new Promise((resolve): void => {
-      this.isShuttingDown = true
-      this.closeEmitter.emit('shutdown')
+    this.isShuttingDown = true
 
-      if (this.adminServer) {
-        this.adminServer.close((): void => {
-          resolve()
-        })
-      }
+    if (this.authServer) {
+      await this.stopServer(this.authServer)
+    }
+    if (this.adminServer) {
+      await this.stopServer(this.adminServer)
+    }
+    if (this.introspectionServer) {
+      await this.stopServer(this.introspectionServer)
+    }
+  }
 
-      if (this.authServer) {
-        this.authServer.close((): void => {
-          resolve()
-        })
-      }
+  private async stopServer(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err)
+        }
 
-      if (this.introspectionServer) {
-        this.introspectionServer.close((): void => {
-          resolve()
-        })
-      }
-
-      resolve()
+        resolve()
+      })
     })
   }
 
