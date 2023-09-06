@@ -4,6 +4,7 @@ import { Asset } from '../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../httpToken/model'
 import { BaseModel } from '../shared/baseModel'
+import { WebhookEvent } from '../webhook/model'
 
 export class Peer
   extends BaseModel
@@ -33,7 +34,6 @@ export class Peer
   }
 
   public readonly liquidityThreshold!: bigint | null
-  public processAt!: Date | null
 
   public assetId!: string
   public asset!: Asset
@@ -54,8 +54,14 @@ export class Peer
   public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await this.$query().patch({
-          processAt: new Date(Date.now())
+        await WebhookEvent.query().insert({
+          type: 'peer-liquidity',
+          data: {
+            id: this.id,
+            asset: this.asset,
+            liquidityThreshold: this.liquidityThreshold,
+            balance
+          }
         })
       }
     }

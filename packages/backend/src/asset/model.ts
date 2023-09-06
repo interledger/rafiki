@@ -1,5 +1,6 @@
 import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
+import { WebhookEvent } from '../webhook/model'
 
 export class Asset extends BaseModel implements LiquidityAccount {
   public static get tableName(): string {
@@ -15,7 +16,6 @@ export class Asset extends BaseModel implements LiquidityAccount {
   public readonly withdrawalThreshold!: bigint | null
 
   public readonly liquidityThreshold!: bigint | null
-  public processAt!: Date | null
 
   public get asset(): LiquidityAccount['asset'] {
     return {
@@ -28,8 +28,15 @@ export class Asset extends BaseModel implements LiquidityAccount {
   public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await this.$query().patch({
-          processAt: new Date(Date.now())
+        await WebhookEvent.query().insert({
+          type: 'asset-liquidity',
+          data: {
+            id: this.id,
+            code: this.code,
+            scale: this.scale,
+            liquidityThreshold: this.liquidityThreshold,
+            balance
+          }
         })
       }
     }

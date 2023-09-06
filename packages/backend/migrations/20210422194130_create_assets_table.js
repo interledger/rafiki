@@ -13,12 +13,9 @@ exports.up = function (knex) {
     table.timestamp('createdAt').defaultTo(knex.fn.now())
     table.timestamp('updatedAt').defaultTo(knex.fn.now())
 
-    table.timestamp('processAt').nullable()
-
     table.unique(['code', 'scale'])
 
     table.index(['createdAt', 'id'])
-    table.index('processAt')
 
     table.check('?? <= 255', ['scale'])
   })
