@@ -402,6 +402,9 @@ export class App {
     if (this.adminServer) {
       await this.stopServer(this.adminServer)
     }
+    if (this.introspectionServer) {
+      await this.stopServer(this.introspectionServer)
+    }
   }
 
   private async stopServer(server: Server): Promise<void> {
