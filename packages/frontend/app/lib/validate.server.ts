@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { isValidIlpAddress } from 'ilp-packet'
+import { WebhookEventType } from '~/shared/enums'
 import { PaymentPointerStatus } from '~/generated/graphql'
 
 export const uuidSchema = z.object({
@@ -14,6 +15,12 @@ export const paginationSchema = z
     last: z.coerce.number().int().positive()
   })
   .partial()
+
+export const webhooksSearchParams = paginationSchema.merge(
+  z.object({
+    type: z.array(z.nativeEnum(WebhookEventType)).default([])
+  })
+)
 
 export const peerGeneralInfoSchema = z
   .object({

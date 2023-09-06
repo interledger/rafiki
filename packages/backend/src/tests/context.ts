@@ -1,4 +1,3 @@
-import EventEmitter from 'events'
 import * as httpMocks from 'node-mocks-http'
 import Koa from 'koa'
 import { AppContext, AppContextData, AppRequest } from '../app'
@@ -18,6 +17,5 @@ export function createContext<T extends AppContext>(
   if (reqOpts.body !== undefined) {
     ctx.request.body = reqOpts.body
   }
-  ctx.closeEmitter = new EventEmitter()
   return ctx as T
 }

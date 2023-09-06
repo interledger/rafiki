@@ -20,6 +20,10 @@ const navigation = [
   {
     name: 'Payment Pointers',
     href: '/payment-pointers'
+  },
+  {
+    name: 'Webhooks',
+    href: '/webhooks'
   }
 ]
 

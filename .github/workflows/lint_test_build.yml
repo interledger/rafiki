@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 3
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm checks
 
@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: checkout
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
 
       - name: generate backend graphql
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: checkout
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - name: generate graphql api documentation
         run: pnpm --filter documentation docs:graphql:generate && pnpm format
@@ -62,7 +62,7 @@ jobs:
     needs: [checkout]
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter backend build:deps
       - run: NODE_OPTIONS=--max-old-space-size=4096 pnpm --filter backend test:ci
@@ -72,7 +72,7 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter frontend build
 
@@ -81,7 +81,7 @@ jobs:
     needs: [checkout]
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter auth build:deps
       - run: pnpm --filter auth test
@@ -97,7 +97,7 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter mock-account-servicing-entity build
 
@@ -106,7 +106,7 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter local-http-signatures build
 
@@ -115,7 +115,7 @@ jobs:
     needs: checkout
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter token-introspection test
       - name: AsyncAPI extension
@@ -136,7 +136,7 @@ jobs:
       - local-http-signatures
       - token-introspection
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm build
 
