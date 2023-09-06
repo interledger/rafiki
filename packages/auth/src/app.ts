@@ -102,7 +102,6 @@ export class App {
   private authServer!: Server
   private introspectionServer!: Server
   private adminServer!: Server
-  public apolloServer!: ApolloServer
   private logger!: Logger
   private config!: IAppConfig
   private databaseCleanupRules!: {
@@ -153,12 +152,12 @@ export class App {
     })
 
     // Setup Apollo
-    this.apolloServer = new ApolloServer({
+    const apolloServer = new ApolloServer({
       schema: schemaWithResolvers,
       plugins: [ApolloServerPluginDrainHttpServer({ httpServer })]
     })
 
-    await this.apolloServer.start()
+    await apolloServer.start()
 
     koa.use(bodyParser())
 
@@ -179,7 +178,7 @@ export class App {
     )
 
     koa.use(
-      koaMiddleware(this.apolloServer, {
+      koaMiddleware(apolloServer, {
         context: async (): Promise<ApolloContext> => {
           return {
             container: this.container,
