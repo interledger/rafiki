@@ -65,6 +65,28 @@ describe('Payment Pointer Key Service', (): void => {
         paymentPointerKeyService.getKeysByPaymentPointerId(paymentPointer.id)
       ).resolves.toEqual([key])
     })
+
+    test('Fetching Only Retrieves Non-Revoked Keys for a Payment Pointer', async (): Promise<void> => {
+      const paymentPointer = await createPaymentPointer(deps)
+
+      const keyOption1 = {
+        paymentPointerId: paymentPointer.id,
+        jwk: TEST_KEY
+      }
+
+      const keyOption2 = {
+        paymentPointerId: paymentPointer.id,
+        jwk: generateJwk({ keyId: uuid() })
+      }
+
+      const key1 = await paymentPointerKeyService.create(keyOption1)
+      const key2 = await paymentPointerKeyService.create(keyOption2)
+      await paymentPointerKeyService.revoke(key1.id)
+
+      await expect(
+        paymentPointerKeyService.getKeysByPaymentPointerId(paymentPointer.id)
+      ).resolves.toEqual([key2])
+    })
   })
 
   describe('Revoke Payment Pointer Keys', (): void => {
