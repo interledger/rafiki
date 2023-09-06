@@ -14,13 +14,19 @@ export interface LiquidityAccount {
   asset: {
     id: string
     ledger: number
+    onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
   }
   onCredit?: (options: OnCreditOptions) => Promise<LiquidityAccount>
+  onDebit?: (options: OnDebitOptions) => Promise<LiquidityAccount>
 }
 
 export interface OnCreditOptions {
   totalReceived: bigint
   withdrawalThrottleDelay?: number
+}
+
+export interface OnDebitOptions {
+  balance: bigint
 }
 
 export interface Deposit {
@@ -81,6 +87,7 @@ interface CreateAccountToAccountTransferArgs {
   voidTransfers(transferIds: string[]): Promise<void | TransferError>
   postTransfers(transferIds: string[]): Promise<void | TransferError>
   getAccountReceived(accountRef: string): Promise<bigint | undefined>
+  getAccountBalance(accountRef: string): Promise<bigint | undefined>
   createPendingTransfers(
     transfers: TransferToCreate[]
   ): Promise<string[] | TransferError>
@@ -95,6 +102,7 @@ export async function createAccountToAccountTransfer(
     postTransfers,
     createPendingTransfers,
     getAccountReceived,
+    getAccountBalance,
     withdrawalThrottleDelay,
     transferArgs
   } = args
@@ -131,6 +139,22 @@ export async function createAccountToAccountTransfer(
     return pendingTransferIdsOrError
   }
 
+  const onDebit = async (
+    account: LiquidityAccount | LiquidityAccount['asset']
+  ) => {
+    if (account.onDebit) {
+      const balance = await getAccountBalance(account.id)
+
+      if (balance === undefined) {
+        throw new Error()
+      }
+
+      await account.onDebit({
+        balance
+      })
+    }
+  }
+
   return {
     post: async (): Promise<void | TransferError> => {
       const error = await postTransfers(pendingTransferIdsOrError)
@@ -138,6 +162,9 @@ export async function createAccountToAccountTransfer(
       if (error) {
         return error
       }
+
+      await onDebit(sourceAccount)
+      await onDebit(destinationAccount.asset)
 
       if (destinationAccount.onCredit) {
         const totalReceived = await getAccountReceived(destinationAccount.id)

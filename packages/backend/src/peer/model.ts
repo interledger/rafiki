@@ -1,5 +1,5 @@
 import { Model, Pojo } from 'objection'
-import { LiquidityAccount } from '../accounting/service'
+import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { Asset } from '../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../httpToken/model'
@@ -50,6 +50,17 @@ export class Peer
   public staticIlpAddress!: string
 
   public name?: string
+
+  public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
+    if (this.liquidityThreshold !== null) {
+      if (balance <= this.liquidityThreshold) {
+        await this.$query().patch({
+          processAt: new Date(Date.now())
+        })
+      }
+    }
+    return this
+  }
 
   $formatDatabaseJson(json: Pojo): Pojo {
     if (json.http?.outgoing) {

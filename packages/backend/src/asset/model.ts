@@ -1,4 +1,4 @@
-import { LiquidityAccount } from '../accounting/service'
+import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { BaseModel } from '../shared/baseModel'
 
 export class Asset extends BaseModel implements LiquidityAccount {
@@ -20,7 +20,19 @@ export class Asset extends BaseModel implements LiquidityAccount {
   public get asset(): LiquidityAccount['asset'] {
     return {
       id: this.id,
-      ledger: this.ledger
+      ledger: this.ledger,
+      onDebit: this.onDebit
     }
+  }
+
+  public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
+    if (this.liquidityThreshold !== null) {
+      if (balance <= this.liquidityThreshold) {
+        await this.$query().patch({
+          processAt: new Date(Date.now())
+        })
+      }
+    }
+    return this
   }
 }
