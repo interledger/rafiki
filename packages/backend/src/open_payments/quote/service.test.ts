@@ -485,68 +485,149 @@ describe('QuoteService', (): void => {
         })
       ).rejects.toThrow('missing rates')
     })
-  })
 
-  describe('fees', (): void => {
-    let asset: Asset
-    let sendingPaymentPointer: PaymentPointer
-    let receivingPaymentPointer: PaymentPointer
+    describe('fees - fixed delivery', (): void => {
+      let asset: Asset
+      let sendingPaymentPointer: PaymentPointer
+      let receivingPaymentPointer: PaymentPointer
 
-    beforeEach(async (): Promise<void> => {
-      asset = await createAsset(deps, {
-        code: 'USD',
-        scale: 2
+      beforeEach(async (): Promise<void> => {
+        asset = await createAsset(deps, {
+          code: 'USD',
+          scale: 2
+        })
+        sendingPaymentPointer = await createPaymentPointer(deps, {
+          assetId: asset.id
+        })
+        receivingPaymentPointer = await createPaymentPointer(deps, {
+          assetId: asset.id
+        })
       })
-      sendingPaymentPointer = await createPaymentPointer(deps, {
-        assetId: asset.id
-      })
-      receivingPaymentPointer = await createPaymentPointer(deps, {
-        assetId: asset.id
-      })
-    })
 
-    test.each`
-      incomingAmountValue | fixedFee | basisPointFee | expectedQuoteDebitAmountValue | description
-      ${3364n}            | ${0}     | ${0}          | ${3365n}                      | ${'no fees'}
-      ${3364n}            | ${150}   | ${0}          | ${3515n}                      | ${'fixed fee'}
-      ${3364n}            | ${0}     | ${200}        | ${3432n}                      | ${'basis point fee'}
-      ${3364n}            | ${150}   | ${200}        | ${3582n}                      | ${'fixed and basis point fee'}
-    `(
-      '$description',
-      withConfigOverride(
-        () => config,
-        { slippage: 0 },
-        async ({
-          incomingAmountValue,
-          fixedFee,
-          basisPointFee,
-          expectedQuoteDebitAmountValue
-        }): Promise<void> => {
-          const incomingPayment = await createIncomingPayment(deps, {
-            paymentPointerId: receivingPaymentPointer.id,
-            incomingAmount: {
+      test.each`
+        incomingAmountValue | fixedFee | basisPointFee | expectedQuoteDebitAmountValue | description
+        ${3364n}            | ${0}     | ${0}          | ${3365n}                      | ${'no fees'}
+        ${3364n}            | ${150}   | ${0}          | ${3515n}                      | ${'fixed fee'}
+        ${3364n}            | ${0}     | ${200}        | ${3432n}                      | ${'basis point fee'}
+        ${3364n}            | ${150}   | ${200}        | ${3582n}                      | ${'fixed and basis point fee'}
+      `(
+        '$description',
+        withConfigOverride(
+          () => config,
+          { slippage: 0 },
+          async ({
+            incomingAmountValue,
+            fixedFee,
+            basisPointFee,
+            expectedQuoteDebitAmountValue
+          }): Promise<void> => {
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: receivingPaymentPointer.id,
+              incomingAmount: {
+                assetCode: asset.code,
+                assetScale: asset.scale,
+                value: incomingAmountValue
+              }
+            })
+            await Fee.query().insertAndFetch({
+              assetId: asset.id,
+              type: FeeType.Sending,
+              fixedFee,
+              basisPointFee
+            })
+
+            const options = {
+              paymentPointerId: sendingPaymentPointer.id,
+              receiver: incomingPayment.getUrl(receivingPaymentPointer)
+            }
+            const quote = await quoteService.create(options)
+            assert.ok(!isQuoteError(quote))
+
+            expect(quote.debitAmount).toEqual({
               assetCode: asset.code,
               assetScale: asset.scale,
-              value: incomingAmountValue
-            }
-          })
-          await Fee.query().insertAndFetch({
-            assetId: asset.id,
-            type: FeeType.Sending,
-            fixedFee,
-            basisPointFee
-          })
-
-          const options = {
-            paymentPointerId: sendingPaymentPointer.id,
-            receiver: incomingPayment.getUrl(receivingPaymentPointer)
+              value: expectedQuoteDebitAmountValue
+            })
           }
-          const quote = await quoteService.create(options)
-          assert.ok(!isQuoteError(quote))
-
-          expect(quote.debitAmount.value).toBe(expectedQuoteDebitAmountValue)
-        }
+        )
       )
-    )
+    })
+
+    describe('fees - fixed send with cross-currency', (): void => {
+      let sendAsset: Asset
+      let receiveAsset: Asset
+      let sendingPaymentPointer: PaymentPointer
+      let receivingPaymentPointer: PaymentPointer
+
+      beforeEach(async (): Promise<void> => {
+        sendAsset = await createAsset(deps, {
+          code: 'USD',
+          scale: 2
+        })
+        receiveAsset = await createAsset(deps, {
+          code: 'XRP',
+          scale: 2
+        })
+        sendingPaymentPointer = await createPaymentPointer(deps, {
+          assetId: sendAsset.id
+        })
+        receivingPaymentPointer = await createPaymentPointer(deps, {
+          assetId: receiveAsset.id
+        })
+      })
+
+      test.each`
+        sendAmountValue | fixedFee | basisPointFee | expectedReceiveAmountValue | description
+        ${200n}         | ${0}     | ${0}          | ${100n}                    | ${'no fees'}
+        ${200n}         | ${20}    | ${0}          | ${90n}                     | ${'fixed fee'}
+        ${200n}         | ${0}     | ${200}        | ${99n}                     | ${'basis point fee'}
+        ${200n}         | ${20}    | ${200}        | ${89n}                     | ${'fixed and basis point fee'}
+      `(
+        '$description',
+        withConfigOverride(
+          () => config,
+          { slippage: 0 },
+          async ({
+            sendAmountValue,
+            fixedFee,
+            basisPointFee,
+            expectedReceiveAmountValue
+          }): Promise<void> => {
+            const incomingPayment = await createIncomingPayment(deps, {
+              paymentPointerId: receivingPaymentPointer.id,
+              incomingAmount: {
+                assetCode: receiveAsset.code,
+                assetScale: receiveAsset.scale,
+                value: sendAmountValue
+              }
+            })
+            await Fee.query().insertAndFetch({
+              assetId: sendAsset.id,
+              type: FeeType.Sending,
+              fixedFee,
+              basisPointFee
+            })
+
+            const options = {
+              paymentPointerId: sendingPaymentPointer.id,
+              receiver: incomingPayment.getUrl(receivingPaymentPointer),
+              sendAmount: {
+                value: sendAmountValue,
+                assetCode: sendAsset.code,
+                assetScale: sendAsset.scale
+              }
+            }
+            const quote = await quoteService.create(options)
+            assert.ok(!isQuoteError(quote))
+
+            expect(quote.receiveAmount).toEqual({
+              assetCode: receiveAsset.code,
+              assetScale: receiveAsset.scale,
+              value: expectedReceiveAmountValue
+            })
+          }
+        )
+      )
+    })
   })
 })

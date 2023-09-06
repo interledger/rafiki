@@ -326,7 +326,10 @@ async function finalizeQuote(
     }
   } else {
     // FixedSend
-    const fees = getFees(quote.fee, receiveAmountValue)
+    const fees = BigInt(
+      Number(getFees(quote.fee, receiveAmountValue)) *
+        quote.lowEstimatedExchangeRate.valueOf()
+    )
     receiveAmountValue = BigInt(receiveAmountValue) - fees
 
     if (receiveAmountValue <= fees) {
