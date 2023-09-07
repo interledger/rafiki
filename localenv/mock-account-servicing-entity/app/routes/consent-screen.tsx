@@ -296,19 +296,19 @@ export default function ConsentScreen() {
             returnUrlObject.searchParams.append(
               'currencyDisplayCode',
               outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.sendAmount.assetCode
+                ? outgoingPaymentAccess.limits.debitAmount.assetCode
                 : null
             )
             returnUrlObject.searchParams.append(
               'sendAmountValue',
               outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.sendAmount.value
+                ? outgoingPaymentAccess.limits.debitAmount.value
                 : null
             )
             returnUrlObject.searchParams.append(
               'sendAmountScale',
               outgoingPaymentAccess && outgoingPaymentAccess.limits
-                ? outgoingPaymentAccess.limits.sendAmount.assetScale
+                ? outgoingPaymentAccess.limits.debitAmount.assetScale
                 : null
             )
             setCtx({
@@ -339,10 +339,10 @@ export default function ConsentScreen() {
     ) {
       if (
         ctx.outgoingPaymentAccess.limits &&
-        ctx.outgoingPaymentAccess.limits.sendAmount &&
+        ctx.outgoingPaymentAccess.limits.debitAmount &&
         ctx.outgoingPaymentAccess.limits.receiveAmount
       ) {
-        const { receiveAmount, sendAmount } = ctx.outgoingPaymentAccess.limits
+        const { receiveAmount, debitAmount } = ctx.outgoingPaymentAccess.limits
         setCtx({
           ...ctx,
           price: {
@@ -353,8 +353,8 @@ export default function ConsentScreen() {
           },
           costToUser: {
             amount:
-              Number(sendAmount.value) / Math.pow(10, sendAmount.assetScale),
-            currencyDisplayCode: sendAmount.assetCode
+              Number(debitAmount.value) / Math.pow(10, debitAmount.assetScale),
+            currencyDisplayCode: debitAmount.assetCode
           }
         })
       } else {

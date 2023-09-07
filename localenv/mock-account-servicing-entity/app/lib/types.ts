@@ -14,7 +14,7 @@ export interface PaymentAmount {
 
 export interface AccessLimit {
   receiver: string
-  sendAmount?: PaymentAmount
+  debitAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
 }
 
