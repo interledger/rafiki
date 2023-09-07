@@ -1,4 +1,4 @@
-import { LiquidityAccount } from '../accounting/service'
+import { ConnectorAccount } from '../connector/core'
 
 // Maybe @interledger/pay should export this interface.
 export interface IlpPlugin {
@@ -37,6 +37,6 @@ export class OutgoingIlpPlugin implements IlpPlugin {
 }
 
 export interface IlpPluginOptions {
-  sourceAccount: LiquidityAccount
+  sourceAccount: ConnectorAccount
   unfulfillable?: boolean
 }

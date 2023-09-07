@@ -64,7 +64,7 @@ export interface PaymentAmount {
 
 export type OutgoingPaymentLimit = {
   receiver: string
-  sendAmount?: PaymentAmount
+  debitAmount?: PaymentAmount
   receiveAmount?: PaymentAmount
   interval?: string
 }

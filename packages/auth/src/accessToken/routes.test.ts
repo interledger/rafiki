@@ -71,7 +71,7 @@ describe('Access Token Routes', (): void => {
     limits: {
       receiver:
         'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
-      sendAmount: {
+      debitAmount: {
         value: '400',
         assetCode: 'USD',
         assetScale: 2

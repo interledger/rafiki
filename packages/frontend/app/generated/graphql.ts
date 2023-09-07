@@ -2156,3 +2156,14 @@ export type WithdrawPeerLiquidityVariables = Exact<{
 
 
 export type WithdrawPeerLiquidity = { __typename?: 'Mutation', createPeerLiquidityWithdrawal?: { __typename?: 'LiquidityMutationResponse', code: string, success: boolean, message: string, error?: LiquidityError | null } | null };
+
+export type ListWebhookEventsVariables = Exact<{
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+  filter?: InputMaybe<WebhookEventFilter>;
+}>;
+
+
+export type ListWebhookEvents = { __typename?: 'Query', webhookEvents: { __typename?: 'WebhookEventsConnection', edges: Array<{ __typename?: 'WebhookEventsEdge', cursor: string, node: { __typename?: 'WebhookEvent', id: string, data: any, type: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
