@@ -37,7 +37,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       paymentPointerId: args.input.paymentPointerId,
       receiver: args.input.receiver
     }
-    if (args.input.sendAmount) options.sendAmount = args.input.sendAmount
+    if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
     if (args.input.receiveAmount)
       options.receiveAmount = args.input.receiveAmount
     return quoteService

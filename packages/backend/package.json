@@ -50,7 +50,7 @@
     "@graphql-tools/load": "^8.0.0",
     "@graphql-tools/schema": "^10.0.0",
     "@interledger/http-signature-utils": "1.0.3",
-    "@interledger/open-payments": "2.0.0",
+    "@interledger/open-payments": "3.0.1",
     "@interledger/openapi": "1.0.3",
     "@interledger/pay": "0.4.0-alpha.9",
     "@interledger/stream-receiver": "^0.3.3-alpha.3",

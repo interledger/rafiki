@@ -65,7 +65,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     return await createOutgoingPayment(deps, {
       ...options,
       receiver: `${Config.publicHost}/${uuid()}`,
-      sendAmount: {
+      debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale

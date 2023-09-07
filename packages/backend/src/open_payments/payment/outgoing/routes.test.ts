@@ -44,7 +44,7 @@ describe('Outgoing Payment Routes', (): void => {
       ...options,
       paymentPointerId: paymentPointer.id,
       receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
-      sendAmount: {
+      debitAmount: {
         value: BigInt(56),
         assetCode: paymentPointer.asset.code,
         assetScale: paymentPointer.asset.scale

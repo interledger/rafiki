@@ -68,25 +68,25 @@ interface QuoteOptionsBase {
   client?: string
 }
 
-interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
+interface QuoteOptionsWithDebitAmount extends QuoteOptionsBase {
   receiveAmount?: never
-  sendAmount?: Amount
+  debitAmount?: Amount
 }
 
 interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
   receiveAmount?: Amount
-  sendAmount?: never
+  debitAmount?: never
 }
 
 export type CreateQuoteOptions =
-  | QuoteOptionsWithSendAmount
+  | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
-  if (options.sendAmount && options.receiveAmount) {
+  if (options.debitAmount && options.receiveAmount) {
     return QuoteError.InvalidAmount
   }
   const paymentPointer = await deps.paymentPointerService.get(
@@ -98,11 +98,11 @@ async function createQuote(
   if (!paymentPointer.isActive) {
     return QuoteError.InactivePaymentPointer
   }
-  if (options.sendAmount) {
+  if (options.debitAmount) {
     if (
-      options.sendAmount.value <= BigInt(0) ||
-      options.sendAmount.assetCode !== paymentPointer.asset.code ||
-      options.sendAmount.assetScale !== paymentPointer.asset.scale
+      options.debitAmount.value <= BigInt(0) ||
+      options.debitAmount.assetCode !== paymentPointer.asset.code ||
+      options.debitAmount.assetScale !== paymentPointer.asset.scale
     ) {
       return QuoteError.InvalidAmount
     }
@@ -159,7 +159,7 @@ async function createQuote(
         .withGraphFetched('[asset, fee.asset]')
 
       let maxReceiveAmountValue: bigint | undefined
-      if (options.sendAmount) {
+      if (options.debitAmount) {
         const receivingPaymentValue =
           receiver.incomingAmount && receiver.receivedAmount
             ? receiver.incomingAmount.value - receiver.receivedAmount.value
@@ -212,7 +212,7 @@ export async function resolveReceiver(
         throw QuoteError.InvalidAmount
       }
     }
-  } else if (!options.sendAmount && !receiver.incomingAmount) {
+  } else if (!options.debitAmount && !receiver.incomingAmount) {
     throw QuoteError.InvalidReceiver
   }
   return receiver
@@ -220,7 +220,7 @@ export async function resolveReceiver(
 
 export interface StartQuoteOptions {
   paymentPointer: PaymentPointer
-  sendAmount?: Amount
+  debitAmount?: Amount
   receiveAmount?: Amount
   receiver: Receiver
 }
@@ -250,8 +250,8 @@ export async function startQuote(
         code: options.paymentPointer.asset.code
       }
     }
-    if (options.sendAmount) {
-      quoteOptions.amountToSend = options.sendAmount.value
+    if (options.debitAmount) {
+      quoteOptions.amountToSend = options.debitAmount.value
     } else {
       quoteOptions.amountToDeliver =
         options.receiveAmount?.value || options.receiver.incomingAmount?.value
@@ -277,7 +277,7 @@ export async function startQuote(
 
     // Pay.startQuote should return PaymentError.InvalidSourceAmount or
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
-    // Outgoing payments' sendAmount or receiveAmount should never be
+    // Outgoing payments' debitAmount or receiveAmount should never be
     // zero or negative.
     if (quote.maxSourceAmount <= BigInt(0)) {
       throw new Error()

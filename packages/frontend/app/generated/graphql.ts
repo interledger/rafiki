@@ -234,6 +234,8 @@ export type CreatePeerMutationResponse = MutationResponse & {
 };
 
 export type CreateQuoteInput = {
+  /** Amount to send (fixed send) */
+  debitAmount?: InputMaybe<AmountInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Id of the payment pointer under which the quote will be created */
@@ -242,8 +244,6 @@ export type CreateQuoteInput = {
   receiveAmount?: InputMaybe<AmountInput>;
   /** Payment pointer URL of the receiver */
   receiver: Scalars['String']['input'];
-  /** Amount to send (fixed send) */
-  sendAmount?: InputMaybe<AmountInput>;
 };
 
 export type CreateReceiverInput = {

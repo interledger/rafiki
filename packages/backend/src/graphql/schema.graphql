@@ -736,7 +736,7 @@ input CreateQuoteInput {
   "Id of the payment pointer under which the quote will be created"
   paymentPointerId: String!
   "Amount to send (fixed send)"
-  sendAmount: AmountInput
+  debitAmount: AmountInput
   "Amount to receive (fixed receive)"
   receiveAmount: AmountInput
   "Payment pointer URL of the receiver"

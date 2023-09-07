@@ -174,7 +174,7 @@ export class Quote extends PaymentPointerSubresource {
       id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,
       receiveAmount: serializeAmount(this.receiveAmount),
-      sendAmount: serializeAmount(this.debitAmount), // TODO: update to debitAmount when this pr is merged: https://github.com/interledger/open-payments/pull/275
+      debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,
       expiresAt: this.expiresAt.toISOString(),
       createdAt: this.createdAt.toISOString()

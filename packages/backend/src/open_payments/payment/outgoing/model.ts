@@ -160,7 +160,7 @@ export class OutgoingPayment
       paymentPointer: paymentPointer.url,
       quoteId: this.quote?.getUrl(paymentPointer) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
-      sendAmount: serializeAmount(this.debitAmount), // TODO: update to debitAmount when this pr is merged: https://github.com/interledger/open-payments/pull/275
+      debitAmount: serializeAmount(this.debitAmount),
       sentAmount: serializeAmount(this.sentAmount),
       receiver: this.receiver,
       failed: this.failed,

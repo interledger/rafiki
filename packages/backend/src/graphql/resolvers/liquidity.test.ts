@@ -1586,7 +1586,7 @@ describe('Liquidity Resolvers', (): void => {
       payment = await createOutgoingPayment(deps, {
         paymentPointerId,
         receiver: `${Config.publicHost}/${uuid()}/incoming-payments/${uuid()}`,
-        sendAmount: {
+        debitAmount: {
           value: BigInt(456),
           assetCode: paymentPointer.asset.code,
           assetScale: paymentPointer.asset.scale

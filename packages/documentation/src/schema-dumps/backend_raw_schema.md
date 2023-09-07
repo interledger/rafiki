@@ -3707,7 +3707,7 @@ Id of the payment pointer under which the quote will be created
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
 <td>
 
