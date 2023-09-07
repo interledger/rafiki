@@ -792,6 +792,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "914fbff5-0d44-4c69-bc4d-3a0507af645a",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -804,6 +805,7 @@
 						{
 							"listen": "prerequest",
 							"script": {
+								"id": "63c84a58-3a85-44dd-86cf-8446e0afce8c",
 								"exec": [
 									"// Create an additional payment pointer to represent the account that will be sending money",
 									"",
@@ -857,8 +859,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{secondPaymentPointerId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{paymentPointerUrl}}/incoming-payments/{{incomingPaymentId}}\",\n    \"sendAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 4,\n      \"value\": 50000\n    }\n  }\n}"
+								"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{secondPaymentPointerId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{paymentPointerUrl}}/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 4,\n      \"value\": 50000\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -885,7 +887,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetQuote($id: String!) {\n    quote(id: $id) {\n        createdAt\n        highEstimatedExchangeRate\n        expiresAt\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n            assetCode\n            assetScale\n            value\n        }\n        receiver\n        sendAmount {\n            assetCode\n            assetScale\n            value\n        }\n    }\n}",
+								"query": "query GetQuote($id: String!) {\n    quote(id: $id) {\n        createdAt\n        highEstimatedExchangeRate\n        expiresAt\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n            assetCode\n            assetScale\n            value\n        }\n        receiver\n        debitAmount {\n            assetCode\n            assetScale\n            value\n        }\n    }\n}",
 								"variables": "{\n    \"id\": \"{{quoteId}}\"\n}"
 							}
 						},
@@ -907,6 +909,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "7f9d8f1d-5af7-4b24-86e4-3c54f2223f32",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -927,7 +930,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      quote {\n        createdAt\n        expiresAt\n        highEstimatedExchangeRate\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n          assetCode\n          assetScale\n          value\n        }\n        receiver\n        sendAmount {\n          assetCode\n          assetScale\n          value\n        }\n      }\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+								"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      quote {\n        createdAt\n        expiresAt\n        highEstimatedExchangeRate\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n          assetCode\n          assetScale\n          value\n        }\n        receiver\n        debitAmount {\n          assetCode\n          assetScale\n          value\n        }\n      }\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
 								"variables": "{\n  \"input\": {\n    \"metadata\": {\n        \"description\": null,\n        \"externalRef\": null\n    },\n    \"paymentPointerId\": \"{{secondPaymentPointerId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
 							}
 						},
@@ -955,7 +958,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    sendAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
+								"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    debitAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
 								"variables": "{\n    \"id\": \"{{outgoingPaymentId}}\"\n}"
 							}
 						},
@@ -1185,7 +1188,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query Grant($id: ID!) {\n    grant(id: $id) {\n        id\n        state\n        createdAt\n        client\n        access {\n            type\n            actions\n            createdAt\n            id\n            identifier\n            limits {\n                interval\n                receiveAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n                receiver\n                sendAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n            }\n        }\n    }\n}",
+								"query": "query Grant($id: ID!) {\n    grant(id: $id) {\n        id\n        state\n        createdAt\n        client\n        access {\n            type\n            actions\n            createdAt\n            id\n            identifier\n            limits {\n                interval\n                receiveAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n                receiver\n                debitAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n            }\n        }\n    }\n}",
 								"variables": "{\n    \"id\": \"056b3f93-7890-4005-9b24-2623d9cedab5\"\n}"
 							}
 						},
@@ -1213,7 +1216,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) {\n    grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {\n        edges {\n            cursor\n            node {\n                access {\n                    createdAt\n                    id\n                    identifier\n                    limits {\n                        interval\n                        receiveAmount {\n                            assetScale\n                            value\n                            assetCode\n                        }\n                        receiver\n                        sendAmount {\n                            assetCode\n                            assetScale\n                            value\n                        }\n                    }\n                    actions\n                    type\n                }\n                client\n                createdAt\n                id\n                state\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}\n",
+								"query": "query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) {\n    grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {\n        edges {\n            cursor\n            node {\n                access {\n                    createdAt\n                    id\n                    identifier\n                    limits {\n                        interval\n                        receiveAmount {\n                            assetScale\n                            value\n                            assetCode\n                        }\n                        receiver\n                        debitAmount {\n                            assetCode\n                            assetScale\n                            value\n                        }\n                    }\n                    actions\n                    type\n                }\n                client\n                createdAt\n                id\n                state\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}\n",
 								"variables": "{\n    \"after\": null,\n    \"before\": null,\n    \"first\": null,\n    \"last\": null,\n    \"filter\": {\n        \"state\": {\n            \"in\": [\"PROCESSING\", \"PENDING\", \"APPROVED\", \"FINALIZED\"]\n        },\n        \"finalizationReason\": {\n            \"notIn\": [\"REVOKED\", \"REJECTED\"]\n        }\n    }\n}\n"
 							}
 						},
@@ -1666,6 +1669,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "b506250c-95d0-464e-93fe-2dea5070c404",
 										"exec": [
 											"pm.test(\"Status code is 201\", function () {",
 											"    pm.response.to.have.status(201);",
@@ -1681,6 +1685,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "622fcc84-1b0e-4694-9e1b-77484f866e22",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignatures'))"
 										],
@@ -1706,7 +1711,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"sendAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n}",
+									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2378,6 +2383,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "5b02c3c1-cc52-4772-900c-6dd24f2a6e46",
 										"exec": [
 											"pm.test(\"Status code is 201\", function () {",
 											"    pm.response.to.have.status(201);",
@@ -2385,7 +2391,7 @@
 											"",
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"quoteId\", body.id.split(\"/\").pop());",
-											"pm.collectionVariables.set(\"quoteSendAmountValue\", body.sendAmount.value)",
+											"pm.collectionVariables.set(\"quoteDebitAmountValue\", body.debitAmount.value)",
 											"pm.collectionVariables.set(\"quoteReceiveAmountValue\", body.receiveAmount.value)",
 											""
 										],
@@ -2395,6 +2401,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "d2b13a64-4450-43b6-bd2d-212b99f7132f",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignatures'))"
 										],
@@ -2445,6 +2452,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "1ddabc8a-bdf4-4327-a426-40547ac9f16b",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
@@ -2458,6 +2466,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "44827563-e7dc-4ab9-a1e4-a741fba7ba82",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))"
 										],
@@ -2474,7 +2483,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://cloud-nine-wallet-backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"{{quoteSendAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"{{quoteReceiveAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://cloud-nine-wallet-backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"debitAmount\": {\n                        \"value\": \"{{quoteDebitAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"{{quoteReceiveAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2724,6 +2733,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "ab40891a-2e51-485d-85a6-1258ae62ae77",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -2736,6 +2746,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "9a79a4d2-cc4b-4e62-8972-776be98fba47",
 										"exec": [
 											"",
 											"const getPaymentPointersQuery = `",
@@ -2785,7 +2796,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"receiver\": \"{{receiverId}}\"\n  }\n}"
 									}
 								},
@@ -2807,6 +2818,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "bfd48dd8-38f4-48d9-a621-47498a51078d",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -2827,7 +2839,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
 									}
 								},
@@ -2855,7 +2867,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    sendAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
+										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    debitAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
 										"variables": "{\n    \"id\": \"{{outgoingPaymentId}}\"\n}"
 									}
 								},
@@ -2926,6 +2938,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "72013d98-f06d-4658-9770-03200cb7112b",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -2938,6 +2951,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "cc3ebb64-835d-4cd0-8e0f-4369049650de",
 										"exec": [
 											"",
 											"const getPaymentPointersQuery = `",
@@ -2987,7 +3001,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"receiver\": \"{{receiverId}}\"\n  }\n}"
 									}
 								},
@@ -3009,6 +3023,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "be762c93-0a02-44c6-bc23-e77a3e9d5e92",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -3029,7 +3044,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
 									}
 								},
@@ -3057,7 +3072,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    sendAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
+										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    debitAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
 										"variables": "{\n    \"id\": \"{{outgoingPaymentId}}\"\n}"
 									}
 								},
@@ -3222,6 +3237,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "1ea954c7-f395-45f8-b463-5dfd3a1e1466",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
@@ -3253,7 +3269,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"3600\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"3364\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": {\n        \"display\": {\n            \"name\": \"Shoe Shop\",\n            \"uri\": \"https://www.saagershoeshop.com\"\n        },\n        \"key\": {\n            \"proof\": \"httpsig\",\n            \"jwk\": {\n                \"alg\": \"EdDSA\",\n                \"kty\": \"OKP\",\n                \"use\": \"sig\",\n                \"crv\": \"Ed25519\",\n                \"kid\": \"http://fynbos/keys/12345\",\n                \"x\": \"jfiusdhvherui4vueurygygb8\"\n            }\n        }\n    },\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"debitAmount\": {\n                        \"value\": \"3600\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"3364\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": {\n        \"display\": {\n            \"name\": \"Shoe Shop\",\n            \"uri\": \"https://www.saagershoeshop.com\"\n        },\n        \"key\": {\n            \"proof\": \"httpsig\",\n            \"jwk\": {\n                \"alg\": \"EdDSA\",\n                \"kty\": \"OKP\",\n                \"use\": \"sig\",\n                \"crv\": \"Ed25519\",\n                \"kid\": \"http://fynbos/keys/12345\",\n                \"x\": \"jfiusdhvherui4vueurygygb8\"\n            }\n        }\n    },\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3544,7 +3560,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "83ff5ca5-119d-4e56-ba79-d7e8dc9aa1f8",
+				"id": "bbb00c25-aa21-4b39-bc93-45f8785249e5",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3554,7 +3570,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "459ca00e-dd8b-4b48-8a07-3c02f266795a",
+				"id": "4e0e42f6-0f71-404f-a772-27a285fc29ee",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3564,221 +3580,221 @@
 	],
 	"variable": [
 		{
-			"id": "5ea3f014-b89b-4adf-ab9b-51d3e311663d",
+			"id": "dea575b3-8cc0-49de-93f4-b0b411c4bc5a",
 			"key": "OpenPaymentsHost",
 			"value": "http://localhost:3000"
 		},
 		{
-			"id": "31b48aa1-d3ad-4a39-b07e-e5c6bb7b4b62",
+			"id": "1d99495f-00fc-4891-86d3-974ba64bdedd",
 			"key": "PeerOpenPaymentsHost",
 			"value": "http://localhost:4000"
 		},
 		{
-			"id": "81cf178b-1ca3-4b0c-bee7-e71cb51b7b7d",
+			"id": "db7f4f1b-185c-446c-a740-303255fed4bc",
 			"key": "OpenPaymentsAuthHost",
 			"value": "http://localhost:3006"
 		},
 		{
-			"id": "36b88741-209a-4652-9a76-b17f7bd58acc",
+			"id": "c932ed15-e0d7-478d-90a9-9643ebbfd758",
 			"key": "PeerOpenPaymentsAuthHost",
 			"value": "http://localhost:4006"
 		},
 		{
-			"id": "c66f6853-ccb9-414e-a823-695479c2cec1",
+			"id": "669a8d32-9e8a-470e-ac36-ed47b71bd387",
 			"key": "RafikiGraphqlHost",
 			"value": "http://localhost:3001"
 		},
 		{
-			"id": "ca34f9d5-eacb-495a-9f13-43b2b9516549",
+			"id": "a683e9e0-4c63-4518-934c-bda37b2ce9f5",
 			"key": "RafikiAuthGraphqlHost",
 			"value": "http://localhost:3003",
 			"type": "string"
 		},
 		{
-			"id": "70defa54-9035-4f5f-8029-539a8bf86dac",
+			"id": "9cd838ca-da4c-48de-8d78-8ad32e142079",
 			"key": "PeerGraphqlHost",
 			"value": "http://localhost:4001"
 		},
 		{
-			"id": "f84c4a0b-f5d7-4362-9c82-eba294e8c3f4",
+			"id": "6aab8826-5df2-443a-bfee-708d9d20872c",
 			"key": "PeerAuthGraphqlHost",
 			"value": "http://localhost:4003",
 			"type": "string"
 		},
 		{
-			"id": "e171d6ae-2408-4ee3-89a3-ad5cfa720717",
+			"id": "9c70b804-038b-4414-8c96-8887978ae7c0",
 			"key": "SignatureHost",
 			"value": "http://localhost:3040"
 		},
 		{
-			"id": "985a4b69-55bb-423f-a493-8ca5c1887656",
+			"id": "fe052cfe-908d-4ef8-acff-2b4f2434aabc",
 			"key": "PeerSignatureHost",
 			"value": "http://localhost:3041"
 		},
 		{
-			"id": "fcf12963-2d8e-4738-be4d-ad2d8cd4a8ce",
+			"id": "e6a98c09-dac4-481b-942a-957e7185bd88",
 			"key": "gfranklinPaymentPointer",
 			"value": "http://localhost:3000/accounts/gfranklin"
 		},
 		{
-			"id": "a9095b83-41fa-4b5d-a91d-0a287524df89",
+			"id": "5f7891f3-8464-4117-90c4-cb2779ad8cfe",
 			"key": "asmithPaymentPointer",
 			"value": "http://localhost:4000/accounts/asmith",
 			"type": "string"
 		},
 		{
-			"id": "06b9e7e4-e0bc-49cd-9e1b-bf4d5025eda8",
+			"id": "1c549d6d-82a5-4fba-bb06-68f118383d13",
 			"key": "gfranklinPaymentPointerId",
 			"value": "6abd8671-72d0-41ee-8e0a-0b28eff522a5",
 			"type": "string"
 		},
 		{
-			"id": "f3defd6f-de85-4183-b15f-98e4c6da2715",
+			"id": "37a28341-3d44-4610-bf11-b1c32725c911",
 			"key": "pfryPaymentPointer",
 			"value": "http://localhost:4000/accounts/pfry"
 		},
 		{
-			"id": "2635c0d0-0d10-4518-bc5a-ca76ecd7bf6c",
+			"id": "6ea44c48-ec32-41e0-97a7-1563ee4a61a0",
 			"key": "accessToken",
 			"value": "example-access-token"
 		},
 		{
-			"id": "dc7206ec-bc36-4efd-80ac-5ed3c7165b69",
+			"id": "b7da462c-ff6a-476f-a750-c1ecbf8cf13d",
 			"key": "paymentPointerId",
 			"value": "bde8da93-9bff-4251-90ce-abb15e7d444c"
 		},
 		{
-			"id": "5e0c81c5-c750-49af-81e0-fa7cc72ccda2",
+			"id": "f1849e73-c45b-42e2-991a-5711e5b61015",
 			"key": "incomingPaymentId",
 			"value": "dc7b71a5-d78e-450c-b4c5-7db299f2a133"
 		},
 		{
-			"id": "2d7e0913-80cd-42f8-9ebd-4740f8ac486f",
+			"id": "0ec1cc50-d97f-4f3d-951e-d23325b2d619",
 			"key": "connectionId",
 			"value": "23de6081-b340-4334-b335-a2328bbb3334"
 		},
 		{
-			"id": "9442ca3e-bdc1-49c4-827b-7ce62e84bdcc",
+			"id": "15b1b6af-b385-47d3-885b-c98ffd8f9cfc",
 			"key": "outgoingPaymentId",
 			"value": "empty"
 		},
 		{
-			"id": "e629c10b-a8c9-4dbb-91ec-2dc095762419",
+			"id": "4346ca3f-abf8-42d8-9a39-14221b7e61bd",
 			"key": "quoteId",
 			"value": "http://backend/d982ab2f-4380-4d05-be3b-43d23a57d23f/quotes/8adaa7f9-fbd2-4cc2-89b5-6f354d68728e"
 		},
 		{
-			"id": "ffca0789-cacf-4449-aa45-bfae4669c5b6",
+			"id": "c76b1680-37ee-4822-8e8f-54d50eae317c",
 			"key": "tokenId",
 			"value": "f6cf615c-70e8-4b04-bd86-0d6ac41a4c85"
 		},
 		{
-			"id": "6f002da2-bc94-42f6-875e-4140ebdc763e",
+			"id": "df998783-af3d-4c69-b5d0-1f5c2caf9953",
 			"key": "tomorrow",
 			"value": ""
 		},
 		{
-			"id": "0708cdd5-7117-439f-bea9-c17e0cf83822",
+			"id": "f7ecd77f-9a17-41c8-a521-4c164aa7d2ba",
 			"key": "uniquePaymentPointer",
 			"value": ""
 		},
 		{
-			"id": "ffb02d57-b538-46b4-8620-0b7aa4a50dab",
+			"id": "9d232ac7-1a8d-46a1-bc75-36ec54862a77",
 			"key": "quoteUrl",
 			"value": ""
 		},
 		{
-			"id": "949a9425-50e9-4800-bec8-2aab31e56d41",
+			"id": "0931cdb0-b788-4837-874c-ff81aecd0484",
 			"key": "incomingPaymentUrl",
 			"value": ""
 		},
 		{
-			"id": "f71f85df-0710-4eaa-8db1-b8d45a8e61c4",
+			"id": "5afa13c9-0157-49e8-8d0e-9bf85bf53aab",
 			"key": "continueToken",
 			"value": ""
 		},
 		{
-			"id": "1c0bc73a-b512-4bf0-8a31-67cbaecd8f99",
+			"id": "30858480-2bd4-4956-a48d-3f0202e41fd1",
 			"key": "continueId",
 			"value": ""
 		},
 		{
-			"id": "96760b4a-cbac-43cb-8c1d-fa01b2560661",
+			"id": "6b1ee2dc-039c-49bf-a9fc-e79b0893f896",
 			"key": "paymentPointerUrl",
 			"value": ""
 		},
 		{
-			"id": "5d077921-e3bb-4fee-a15d-2b1d142651ba",
+			"id": "2ce5c2fe-00f0-418b-a558-a6f09f5578fb",
 			"key": "createPaymentPointerRequest",
 			"value": ""
 		},
 		{
-			"id": "891b5e2f-81bc-4ee7-904a-ca8ccfef6c54",
+			"id": "9832994d-1273-4e0c-8f72-a62fbaa133cb",
 			"key": "secondPaymentPointerId",
 			"value": ""
 		},
 		{
-			"id": "8322df2c-c8d1-4c5a-9988-68d550e64bee",
+			"id": "9c746b74-de66-40bd-b12c-fd79764147a3",
 			"key": "assetId",
 			"value": ""
 		},
 		{
-			"id": "dfdcca07-1cd3-4253-8b63-241f0c329ed4",
+			"id": "f135b734-6f42-4606-a503-5820c7017875",
 			"key": "preRequestSignatures",
 			"value": "const requestUrl = request.url\n  .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.collectionVariables.get(key))\n  .replace(/localhost:([3,4])000/g, (_, key) =>\n    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'\n  )\nconst requestBody =\n  request.method === 'POST' && Object.keys(request.data).length !== 0\n    ? request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n        pm.collectionVariables.get(key)\n      )\n    : undefined\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n// Request Signature Headers\npm.sendRequest(\n  {\n    url: pm.collectionVariables.get('signatureUrl'),\n    method: 'POST',\n    header: {\n      'content-type': 'application/json'\n    },\n    body: {\n      mode: 'raw',\n      raw: JSON.stringify({\n        keyId: pm.collectionVariables.get('keyId'),\n        request: {\n          url: requestUrl,\n          method: request.method,\n          headers: requestHeaders,\n          body: requestBody\n        }\n      })\n    }\n  },\n  (_, res) => {\n    const headers = res.json()\n    for (let [key, value] of Object.entries(headers)) {\n      pm.request.headers.add({ key, value })\n    }\n  }\n)\n"
 		},
 		{
-			"id": "aba05b3a-5528-4869-8a83-2e9668b28319",
+			"id": "42d9f3f4-fa6b-45e0-b8f4-6c54b52bd979",
 			"key": "preRequestSignaturesGrantRequest",
 			"value": "const url = require('url')\n\nconst body = JSON.parse(request.data)\nconst client = url.parse(body.client)\nconst jwkUrl = `http://localhost:${\n  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'\n}000${client.path}/jwks.json`\npm.collectionVariables.set(\n  'signatureUrl',\n  pm.collectionVariables.get(\n    client.host === 'cloud-nine-wallet-backend'\n      ? 'SignatureHost'\n      : 'PeerSignatureHost'\n  )\n)\n\nconst requestUrl = request.url.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestBody = request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n\n// Request Client JWK\npm.sendRequest(\n  {\n    url: jwkUrl,\n    method: 'GET',\n    header: {\n      Host: client.host\n    }\n  },\n  (err, res) => {\n    const keys = res.json()\n    pm.collectionVariables.set('keyId', keys.keys[0].kid)\n\n    // Request Signature Headers\n    pm.sendRequest(\n      {\n        url: pm.collectionVariables.get('signatureUrl'),\n        method: 'POST',\n        header: {\n          'content-type': 'application/json'\n        },\n        body: {\n          mode: 'raw',\n          raw: JSON.stringify({\n            keyId: pm.collectionVariables.get('keyId'),\n            request: {\n              url: requestUrl,\n              method: request.method,\n              headers: requestHeaders,\n              body: requestBody\n            }\n          })\n        }\n      },\n      (_, res) => {\n        const headers = res.json()\n        for (let [key, value] of Object.entries(headers)) {\n          pm.request.headers.add({ key, value })\n        }\n      }\n    )\n  }\n)\n"
 		},
 		{
-			"id": "a14da3cd-a6db-4681-9973-16e8d1284e8b",
+			"id": "7896487b-e91b-4a13-b4ee-dc221afe5a5b",
 			"key": "signatureUrl",
 			"value": ""
 		},
 		{
-			"id": "df9bd98f-83bd-4751-b849-5c319025a9cf",
+			"id": "4e295d22-ed07-4211-849c-11e2cdeb3255",
 			"key": "keyId",
 			"value": ""
 		},
 		{
-			"id": "85a6000e-572d-4d57-9530-a7ff347ba6fe",
+			"id": "724e77e9-cdf9-43ba-b001-72bfffd16fb5",
 			"key": "peerId",
 			"value": ""
 		},
 		{
-			"id": "b5326003-aa0a-488b-8374-24e724cf8088",
+			"id": "e840375f-9afb-45ad-837b-03d68c1b3de4",
 			"key": "paymentPointerKeyId",
 			"value": ""
 		},
 		{
-			"id": "2fe86b77-7ef8-4fa6-b0a2-068ba6a6b1d5",
+			"id": "dc319e9c-52e6-4acf-b06f-1bfa9bbdbf40",
 			"key": "secureOpenPaymentsHost",
 			"value": ""
 		},
 		{
-			"id": "e39ab091-3cd9-4276-88f1-a19191e96613",
+			"id": "cae8e9e8-bfc3-4166-a37c-a73bd0175325",
 			"key": "tokenManagementUrl",
 			"value": ""
 		},
 		{
-			"id": "4f1a7546-22a6-40f0-9846-d6c86abd6e87",
-			"key": "quoteSendAmountValue",
+			"id": "988e93e1-8d51-42bd-94f9-460cc024b8fc",
+			"key": "quoteDebitAmountValue",
 			"value": ""
 		},
 		{
-			"id": "05604f7d-620c-4be8-a3d0-715c89741970",
+			"id": "49636fb9-26d7-4238-98a5-1e4ba13b018a",
 			"key": "quoteReceiveAmountValue",
 			"value": ""
 		},
 		{
-			"id": "a0f4b62c-53f8-4db5-a7e4-88372ff765f5",
+			"id": "e54165bd-83ca-4186-baa1-d1bfe59268dc",
 			"key": "idempotencyKey",
 			"value": ""
 		},
 		{
-			"id": "d8c534c9-a961-49a7-878b-a4b9def77643",
+			"id": "0920e8c6-d0b6-4223-8eac-b50cc7c9ef25",
 			"key": "receiverId",
 			"value": ""
 		}
