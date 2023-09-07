@@ -318,7 +318,6 @@ async function finalizeQuote(
     const fees = getFees(quote.fee, debitAmountValue)
     debitAmountValue = BigInt(debitAmountValue) + fees
     if (
-      receiveAmountValue !== quote.receiveAmount.value ||
       debitAmountValue < quote.debitAmount.value ||
       debitAmountValue <= BigInt(0)
     ) {
@@ -337,7 +336,6 @@ async function finalizeQuote(
     }
 
     if (
-      debitAmountValue !== quote.debitAmount.value ||
       receiveAmountValue > maxReceiveAmountValue ||
       receiveAmountValue <= BigInt(0)
     ) {
