@@ -20,8 +20,6 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 FROM base AS prod-deps
 
-RUN pnpm add -g typescript
-
 COPY package.json pnpm-workspace.yaml .npmrc ./
 COPY packages/backend/package.json ./packages/backend/package.json
 COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
