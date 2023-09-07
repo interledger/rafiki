@@ -163,8 +163,10 @@ export async function createAccountToAccountTransfer(
         return error
       }
 
-      await onDebit(sourceAccount)
-      await onDebit(destinationAccount.asset)
+      await Promise.all([
+        onDebit(sourceAccount),
+        onDebit(destinationAccount.asset)
+      ])
 
       if (destinationAccount.onCredit) {
         const totalReceived = await getAccountReceived(destinationAccount.id)
