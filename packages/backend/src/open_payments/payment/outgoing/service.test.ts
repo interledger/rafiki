@@ -528,7 +528,7 @@ describe('OutgoingPaymentService', (): void => {
           assert.ok(grant)
           grant.limits = {
             receiver,
-            sendAmount: debitAmount
+            debitAmount
           }
           const quotes = await Promise.all(
             [0, 1].map(async (_) => {
@@ -601,7 +601,7 @@ describe('OutgoingPaymentService', (): void => {
             const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
             assert.ok(grant)
             grant.limits = {
-              sendAmount: debitAmount,
+              debitAmount: debitAmount,
               interval: `R0/${start.toISOString()}/P1M`
             }
             await expect(
@@ -610,8 +610,8 @@ describe('OutgoingPaymentService', (): void => {
           })
           test.each`
             limits                                                                         | description
-            ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'debitAmount asset code'}
-            ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'debitAmount asset scale'}
+            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}
+            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${'debitAmount asset scale'}
             ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
             ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
           `(
@@ -643,7 +643,7 @@ describe('OutgoingPaymentService', (): void => {
               assert.ok(grant)
               grant.limits = debitAmount
                 ? {
-                    sendAmount: amount,
+                    debitAmount: amount,
                     interval
                   }
                 : {
@@ -675,7 +675,7 @@ describe('OutgoingPaymentService', (): void => {
               }
               assert.ok(grant)
               grant.limits = {
-                sendAmount: debitAmount ? grantAmount : undefined,
+                debitAmount: debitAmount ? grantAmount : undefined,
                 receiveAmount: debitAmount ? undefined : grantAmount,
                 interval
               }
@@ -756,7 +756,7 @@ describe('OutgoingPaymentService', (): void => {
               assert.ok(grant)
               grant.limits = debitAmount
                 ? {
-                    sendAmount: grantAmount,
+                    debitAmount: grantAmount,
                     interval
                   }
                 : {

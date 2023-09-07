@@ -6,19 +6,19 @@ Settings.defaultZone = 'utc'
 
 export interface AccessLimits {
   receiver?: string
-  sendAmount?: AmountJSON
+  debitAmount?: AmountJSON
   receiveAmount?: AmountJSON
   interval?: string
 }
 
-export type Limits = Omit<AccessLimits, 'sendAmount' | 'receiveAmount'> & {
-  sendAmount?: Amount
+export type Limits = Omit<AccessLimits, 'debitAmount' | 'receiveAmount'> & {
+  debitAmount?: Amount
   receiveAmount?: Amount
 }
 
 export const parseLimits = (limits: AccessLimits): Limits => ({
   ...limits,
-  sendAmount: limits.sendAmount && parseAmount(limits.sendAmount),
+  debitAmount: limits.debitAmount && parseAmount(limits.debitAmount),
   receiveAmount: limits.receiveAmount && parseAmount(limits.receiveAmount)
 })
 

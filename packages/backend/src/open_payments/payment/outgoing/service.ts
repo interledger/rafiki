@@ -232,9 +232,9 @@ function validateAmountAssets(
   limits: Limits
 ): boolean {
   if (
-    limits.sendAmount &&
-    (limits.sendAmount.assetCode !== payment.asset.code ||
-      limits.sendAmount.assetScale !== payment.asset.scale)
+    limits.debitAmount &&
+    (limits.debitAmount.assetCode !== payment.asset.code ||
+      limits.debitAmount.assetScale !== payment.asset.scale)
   ) {
     return false
   }
@@ -263,10 +263,10 @@ async function validateGrant(
   if (!paymentLimits) {
     return false
   }
-  if (!paymentLimits.sendAmount && !paymentLimits.receiveAmount) return true
+  if (!paymentLimits.debitAmount && !paymentLimits.receiveAmount) return true
   if (
-    (paymentLimits.sendAmount &&
-      paymentLimits.sendAmount.value < payment.debitAmount.value) ||
+    (paymentLimits.debitAmount &&
+      paymentLimits.debitAmount.value < payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value < payment.receiveAmount.value)
   ) {
@@ -329,8 +329,8 @@ async function validateGrant(
     }
   }
   if (
-    (paymentLimits.sendAmount &&
-      paymentLimits.sendAmount.value - sentAmount <
+    (paymentLimits.debitAmount &&
+      paymentLimits.debitAmount.value - sentAmount <
         payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value - receivedAmount <
