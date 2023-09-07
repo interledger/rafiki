@@ -48,8 +48,8 @@ importers:
   localenv/local-http-signatures:
     dependencies:
       '@interledger/http-signature-utils':
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.0.4
+        version: 1.0.4
       httpbis-digest-headers:
         specifier: ^1.0.0
         version: 1.0.0
@@ -164,8 +164,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0(graphql@16.8.0)
       '@interledger/http-signature-utils':
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.0.4
+        version: 1.0.4
       '@interledger/open-payments':
         specifier: 2.0.0
         version: 2.0.0
