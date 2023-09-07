@@ -1,5 +1,9 @@
 lockfileVersion: '6.0'
 
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
 importers:
 
   .:
@@ -90,8 +94,8 @@ importers:
         specifier: ^3.8.3
         version: 3.8.3(graphql@16.8.0)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.0.4
+        version: 1.0.4
       '@remix-run/node':
         specifier: ^1.19.3
         version: 1.19.3
@@ -299,8 +303,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0(graphql@16.8.0)
       '@interledger/http-signature-utils':
-        specifier: 1.0.3
-        version: 1.0.3
+        specifier: 1.0.4
+        version: 1.0.4
       '@interledger/open-payments':
         specifier: 2.0.0
         version: 2.0.0
@@ -1110,7 +1114,7 @@ packages:
       '@babel/traverse': 7.22.10
       '@babel/types': 7.22.10
       convert-source-map: 1.8.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -1133,7 +1137,7 @@ packages:
       '@babel/traverse': 7.22.10
       '@babel/types': 7.22.10
       convert-source-map: 1.8.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -1257,7 +1261,7 @@ packages:
       '@babel/core': 7.21.8
       '@babel/helper-compilation-targets': 7.22.10
       '@babel/helper-plugin-utils': 7.22.5
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       lodash.debounce: 4.0.8
       resolve: 1.22.2
       semver: 6.3.1
@@ -2812,7 +2816,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/parser': 7.22.10
       '@babel/types': 7.22.10
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -2830,7 +2834,7 @@ packages:
       '@babel/helper-split-export-declaration': 7.22.6
       '@babel/parser': 7.22.10
       '@babel/types': 7.22.10
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -3479,7 +3483,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dependencies:
       ajv: 6.12.6
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       espree: 9.6.1
       globals: 13.19.0
       ignore: 5.2.4
@@ -4185,7 +4189,7 @@ packages:
     engines: {node: '>=10.10.0'}
     dependencies:
       '@humanwhocodes/object-schema': 1.2.1
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -4205,6 +4209,15 @@ packages:
     dependencies:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
+      jose: 4.13.1
+      uuid: 9.0.0
+    dev: false
+
+  /@interledger/http-signature-utils@1.0.4:
+    resolution: {integrity: sha512-iiHWGzB/c0bwjV9AxkkmOeqEmWO2CY0em372xyeqTQ3DT6GCkB90qhWZ4Tte2pxOgzpowkAfo1cXMW1NMCD8AA==}
+    dependencies:
+      http-message-signatures: 0.1.2
+      httpbis-digest-headers: 1.0.0
       jose: 4.13.1
       uuid: 9.0.0
     dev: false
@@ -5866,7 +5879,7 @@ packages:
       '@typescript-eslint/type-utils': 6.6.0(eslint@8.48.0)(typescript@4.9.5)
       '@typescript-eslint/utils': 6.6.0(eslint@8.48.0)(typescript@4.9.5)
       '@typescript-eslint/visitor-keys': 6.6.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       eslint: 8.48.0
       graphemer: 1.4.0
       ignore: 5.2.4
@@ -5912,7 +5925,7 @@ packages:
       '@typescript-eslint/types': 6.6.0
       '@typescript-eslint/typescript-estree': 6.6.0(typescript@4.9.5)
       '@typescript-eslint/visitor-keys': 6.6.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       eslint: 8.48.0
       typescript: 4.9.5
     transitivePeerDependencies:
@@ -5975,7 +5988,7 @@ packages:
     dependencies:
       '@typescript-eslint/typescript-estree': 6.6.0(typescript@4.9.5)
       '@typescript-eslint/utils': 6.6.0(eslint@8.48.0)(typescript@4.9.5)
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       eslint: 8.48.0
       ts-api-utils: 1.0.1(typescript@4.9.5)
       typescript: 4.9.5
@@ -6051,7 +6064,7 @@ packages:
     dependencies:
       '@typescript-eslint/types': 6.6.0
       '@typescript-eslint/visitor-keys': 6.6.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.5.4
@@ -6351,7 +6364,7 @@ packages:
     resolution: {integrity: sha512-o/zjMZRhJxny7OyEF+Op8X+efiELC7k7yOjMzgfzVqOzXqkBkWI79YoTdOtsuWd5BWhAGAuOY/Xa6xpiaWXiNg==}
     engines: {node: '>= 14'}
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -7831,17 +7844,6 @@ packages:
       ms: 2.1.3
     dev: true
 
-  /debug@4.3.4:
-    resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
-    engines: {node: '>=6.0'}
-    peerDependencies:
-      supports-color: '*'
-    peerDependenciesMeta:
-      supports-color:
-        optional: true
-    dependencies:
-      ms: 2.1.2
-
   /debug@4.3.4(supports-color@7.2.0):
     resolution: {integrity: sha512-PRWFHuSU3eDtQJPvnNY7Jcket1j0t5OuOsFzPPzsekD52Zl8qUfFIPEiswXqIvHWGVHOgX+7G/vCNNhehwxfkQ==}
     engines: {node: '>=6.0'}
@@ -8774,7 +8776,7 @@ packages:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.3
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.2.2
@@ -9434,7 +9436,7 @@ packages:
     dependencies:
       basic-ftp: 5.0.3
       data-uri-to-buffer: 5.0.1
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       fs-extra: 8.1.0
     transitivePeerDependencies:
       - supports-color
@@ -10001,7 +10003,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -10035,7 +10037,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -10707,7 +10709,7 @@ packages:
     resolution: {integrity: sha512-n3s8EwkdFIJCG3BPKBYvskgXGoy88ARzvegkitk60NxRdwltLOTaH7CUiMRXvwYorl0Q712iEjcWB+fK/MrWVw==}
     engines: {node: '>=10'}
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       istanbul-lib-coverage: 3.2.0
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -10790,7 +10792,7 @@ packages:
       exit: 0.1.2
       graceful-fs: 4.2.10
       import-local: 3.1.0
-      jest-config: 29.6.2
+      jest-config: 29.6.2(@types/node@18.11.9)
       jest-util: 29.6.2
       jest-validate: 29.6.2
       prompts: 2.4.2
@@ -10800,45 +10802,6 @@ packages:
       - babel-plugin-macros
       - supports-color
       - ts-node
-    dev: true
-
-  /jest-config@29.6.2:
-    resolution: {integrity: sha512-VxwFOC8gkiJbuodG9CPtMRjBUNZEHxwfQXmIudSTzFWxaci3Qub1ddTRbFNQlD/zUeaifLndh/eDccFX4wCMQw==}
-    engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
-    peerDependencies:
-      '@types/node': '*'
-      ts-node: '>=9.0.0'
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      ts-node:
-        optional: true
-    dependencies:
-      '@babel/core': 7.22.10
-      '@jest/test-sequencer': 29.6.2
-      '@jest/types': 29.6.3
-      babel-jest: 29.6.2(@babel/core@7.22.10)
-      chalk: 4.1.2
-      ci-info: 3.8.0
-      deepmerge: 4.2.2
-      glob: 7.2.3
-      graceful-fs: 4.2.10
-      jest-circus: 29.6.2
-      jest-environment-node: 29.6.2
-      jest-get-type: 29.4.3
-      jest-regex-util: 29.4.3
-      jest-resolve: 29.6.2
-      jest-runner: 29.6.2
-      jest-util: 29.6.2
-      jest-validate: 29.6.2
-      micromatch: 4.0.5
-      parse-json: 5.2.0
-      pretty-format: 29.6.2
-      slash: 3.0.0
-      strip-json-comments: 3.1.1
-    transitivePeerDependencies:
-      - babel-plugin-macros
-      - supports-color
     dev: true
 
   /jest-config@29.6.2(@types/node@18.11.9):
@@ -11556,7 +11519,7 @@ packages:
       content-disposition: 0.5.4
       content-type: 1.0.4
       cookies: 0.8.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       delegates: 1.0.0
       depd: 2.0.0
       destroy: 1.2.0
@@ -12468,7 +12431,7 @@ packages:
     resolution: {integrity: sha512-ryTDy6UUunOXy2HPjelppgJ2sNfcPz1pLlMdA6Rz9jPzhLikWXv/irpWV/I2jd68Uhmny7hHxAlAhk4+vWggpg==}
     dependencies:
       '@types/debug': 4.1.7
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       decode-named-character-reference: 1.0.2
       micromark-core-commonmark: 1.0.6
       micromark-factory-space: 1.0.0
@@ -13202,7 +13165,7 @@ packages:
     dependencies:
       '@tootallnate/quickjs-emscripten': 0.23.0
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       get-uri: 6.0.1
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.1
@@ -13973,7 +13936,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.1
       lru-cache: 7.14.1
@@ -14959,7 +14922,7 @@ packages:
     engines: {node: '>= 14'}
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       socks: 2.7.1
     transitivePeerDependencies:
       - supports-color
@@ -16156,7 +16119,7 @@ packages:
     hasBin: true
     dependencies:
       cac: 6.7.14
-      debug: 4.3.4
+      debug: 4.3.4(supports-color@9.4.0)
       mlly: 1.2.0
       pathe: 1.1.0
       picocolors: 1.0.0
@@ -16684,7 +16647,3 @@ packages:
     dependencies:
       structured-headers: 0.5.0
     dev: false
-
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
