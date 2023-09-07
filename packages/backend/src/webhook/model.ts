@@ -1,6 +1,5 @@
-import { Model, Pojo } from 'objection'
+import { Pojo } from 'objection'
 
-import { Asset } from '../asset/model'
 import { BaseModel } from '../shared/baseModel'
 
 const fieldPrefixes = ['withdrawal']
@@ -20,17 +19,6 @@ export class WebhookEvent extends BaseModel {
     accountId: string
     assetId: string
     amount: bigint
-  }
-
-  static relationMappings = {
-    withdrawalAsset: {
-      relation: Model.HasOneRelation,
-      modelClass: Asset,
-      join: {
-        from: 'webhookEvents.withdrawalAssetId',
-        to: 'assets.id'
-      }
-    }
   }
 
   $formatDatabaseJson(json: Pojo): Pojo {
