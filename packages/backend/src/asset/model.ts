@@ -29,11 +29,14 @@ export class Asset extends BaseModel implements LiquidityAccount {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
         await WebhookEvent.query().insert({
-          type: 'asset-liquidity',
+          type: 'liquidity.asset',
           data: {
             id: this.id,
-            code: this.code,
-            scale: this.scale,
+            asset: {
+              id: this.id,
+              code: this.code,
+              scale: this.scale
+            },
             liquidityThreshold: this.liquidityThreshold,
             balance
           }

@@ -55,14 +55,17 @@ describe('Asset Model', (): void => {
       async ({ balance }): Promise<void> => {
         await asset.onDebit({ balance })
         const event = (
-          await WebhookEvent.query(knex).where('type', 'asset-liquidity')
+          await WebhookEvent.query(knex).where('type', 'liquidity.asset')
         )[0]
         expect(event).toMatchObject({
-          type: 'asset-liquidity',
+          type: 'liquidity.asset',
           data: {
             id: asset.id,
-            code: asset.code,
-            scale: asset.scale,
+            asset: {
+              id: asset.id,
+              code: asset.code,
+              scale: asset.scale
+            },
             liquidityThreshold: asset.liquidityThreshold?.toString(),
             balance: balance.toString()
           }
@@ -72,7 +75,7 @@ describe('Asset Model', (): void => {
     test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
       await asset.onDebit({ balance: BigInt(110) })
       await expect(
-        WebhookEvent.query(knex).where('type', 'asset-liquidity')
+        WebhookEvent.query(knex).where('type', 'liquidity.asset')
       ).resolves.toEqual([])
     })
   })
