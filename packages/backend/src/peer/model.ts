@@ -58,7 +58,11 @@ export class Peer
           type: 'peer-liquidity',
           data: {
             id: this.id,
-            asset: this.asset,
+            asset: {
+              id: this.asset.id,
+              code: this.asset.code,
+              scale: this.asset.scale
+            },
             liquidityThreshold: this.liquidityThreshold,
             balance
           }
