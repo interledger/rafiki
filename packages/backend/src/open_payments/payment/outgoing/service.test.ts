@@ -610,8 +610,8 @@ describe('OutgoingPaymentService', (): void => {
           })
           test.each`
             limits                                                                         | description
-            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}
-            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${'debitAmount asset scale'}
+            ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'debitAmount asset code'}
+            ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'debitAmount asset scale'}
             ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
             ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
           `(
