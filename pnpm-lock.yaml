@@ -161,8 +161,8 @@ importers:
         specifier: 1.0.3
         version: 1.0.3
       '@interledger/open-payments':
-        specifier: 2.0.0
-        version: 2.0.0
+        specifier: 3.0.1
+        version: 3.0.1
       '@interledger/openapi':
         specifier: 1.0.3
         version: 1.0.3
@@ -4214,21 +4214,6 @@ packages:
       httpbis-digest-headers: 1.0.0
       jose: 4.13.1
       uuid: 9.0.0
-    dev: false
-
-  /@interledger/open-payments@2.0.0:
-    resolution: {integrity: sha512-qyLAIZwyH8lSXLDwJ7Eu75Aw3kpdoRJvn7L1/0yIktnhEnVWdCzZ9t6J9kadtn+JMVkjYBQooHPnG/gZCE/39w==}
-    dependencies:
-      '@interledger/http-signature-utils': 1.0.3
-      '@interledger/openapi': 1.0.3
-      axios: 1.5.0
-      base64url: 3.0.1
-      http-message-signatures: 0.1.2
-      pino: 8.15.0
-      uuid: 9.0.0
-    transitivePeerDependencies:
-      - debug
-      - supports-color
     dev: false
 
   /@interledger/open-payments@3.0.1:
