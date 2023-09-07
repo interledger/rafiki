@@ -6,7 +6,7 @@ ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
-RUN corepack prepare pnpm@7.25.1 --activate
+RUN corepack prepare pnpm@8.7.4 --activate
 RUN apk add --no-cache \
     python3 \
     make \
