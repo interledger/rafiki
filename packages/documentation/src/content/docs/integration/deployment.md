@@ -68,7 +68,7 @@ Now, the Admin UI can be found on localhost:3010.
 | auth.accessToken.deletionDays           | `ACCESS_TOKEN_DELETION_DAYS`                      |
 | auth.accessToken.expirySeconds          | `ACCESS_TOKEN_EXPIRY_SECONDS`                     |
 | auth.cookieKey                          | `COOKIE_KEY`                                      |
-| auth.interactionExpirySeconds			  |	`INTERACTION_EXPIRY_SECONDS`					  |
+| auth.interactionExpirySeconds           | `INTERACTION_EXPIRY_SECONDS`                      |
 | auth.workers.cleanup                    | `DATABASE_CLEANUP_WORKERS`                        |
 | backend.nodeEnv                         | `NODE_ENV`                                        |
 | backend.logLevel                        | `LOG_LEVEL`                                       |
