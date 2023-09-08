@@ -7,6 +7,7 @@ import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
+
 import { Logger } from 'pino'
 import Router from '@koa/router'
 import { ApolloServer } from '@apollo/server'
@@ -73,8 +74,9 @@ import { createRedisLock } from './middleware/lock/redis'
 import { CombinedPaymentService } from './open_payments/payment/combined/service'
 import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
-import { AutoPeeringRoutes } from './auto-peering/routes'
+import { AutoPeeringRoutes, PeerRequestContext } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
+import { AxiosInstance } from 'axios'
 
 export interface AppContextData {
   logger: Logger
@@ -177,6 +179,7 @@ const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
+  axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
@@ -487,8 +490,7 @@ export class App {
     const router = new Router<DefaultState, AppContext>()
 
     router.use(bodyParser())
-
-    router.get('/', autoPeeringRoutes.get)
+    router.post('/', autoPeeringRoutes.acceptPeerRequest)
 
     koa.use(router.routes())
 
