@@ -92,6 +92,8 @@ The endpoint accepts a `POST` request with
 | `outgoing_payment.failed`          | Outgoing payment failed.                                                    |
 | `payment_pointer.not_found`        | A requested payment pointer was not found                                   |
 | `payment_pointer.web_monetization` | Web Monetization payments received via STREAM.                              |
+| `liquidity.asset`                  | Asset liquidity has dropped below defined threshold.                        |
+| `liquidity.peer`                   | Peer liquidity has dropped below defined threshold.                         |
 
 The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](/integration/event-handlers) documentation.
 
