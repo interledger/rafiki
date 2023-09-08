@@ -450,7 +450,7 @@ type Peer implements Model {
   staticIlpAddress: String!
   "Peer's public name"
   name: String
-  "Account Servicing Entity will be notified via a webhook event if pper liquidity falls below this value"
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
   liquidityThreshold: UInt64
   "Available liquidity"
   liquidity: UInt64

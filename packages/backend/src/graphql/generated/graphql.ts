@@ -869,7 +869,7 @@ export type Peer = Model & {
   id: Scalars['ID']['output'];
   /** Available liquidity */
   liquidity?: Maybe<Scalars['UInt64']['output']>;
-  /** Account Servicing Entity will be notified via a webhook event if pper liquidity falls below this value */
+  /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value */
   liquidityThreshold?: Maybe<Scalars['UInt64']['output']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: Maybe<Scalars['UInt64']['output']>;
