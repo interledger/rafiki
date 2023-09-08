@@ -14,6 +14,7 @@ export interface Asset {
   code: string
   scale: number
   liquidity: number
+  liquidityThreshold: number
 }
 
 export interface Fees {
@@ -22,6 +23,7 @@ export interface Fees {
 }
 
 export interface Peering {
+  liquidityThreshold: number
   peerUrl: string
   peerIlpAddress: string
   initialLiquidity: string

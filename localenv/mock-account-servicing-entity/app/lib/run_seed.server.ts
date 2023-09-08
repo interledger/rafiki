@@ -19,8 +19,9 @@ import { Asset } from 'generated/graphql'
 
 export async function setupFromSeed(config: Config): Promise<void> {
   const assets: Record<string, Asset> = {}
-  for (const { code, scale, liquidity } of config.seed.assets) {
-    const { asset } = await createAsset(code, scale)
+  for (const { code, scale, liquidity, liquidityThreshold } of config.seed
+    .assets) {
+    const { asset } = await createAsset(code, scale, liquidityThreshold)
     if (!asset) {
       throw new Error('asset not defined')
     }
@@ -39,7 +40,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
           peer.peerUrl,
           asset.id,
           asset.code,
-          peer.name
+          peer.name,
+          peer.liquidityThreshold
         ).then((response) => response.peer)
         if (!peerResponse) {
           throw new Error('peer response not defined')
