@@ -419,6 +419,7 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       assetService: await deps.use('assetService'),
+      peerService: await deps.use('peerService'),
       config: await deps.use('config')
     })
   })
