@@ -11,7 +11,7 @@
     "docs:graphql:generate:auth": "./node_modules/.bin/graphql-markdown ../auth/src/graphql/schema.graphql > src/schema-dumps/auth_raw_schema.md"
   },
   "dependencies": {
-    "@astrojs/react": "^2.3.2",
+    "@astrojs/react": "^3.0.2",
     "@astrojs/starlight": "^0.7.3",
     "@types/react": "^18.2.21",
     "@types/react-dom": "^18.2.7",
