@@ -4,7 +4,7 @@
  */
 exports.up = function (knex) {
   return knex.schema.alterTable('quotes', function (table) {
-    table.uuid('feeId') //.notNullable()
+    table.uuid('feeId')
     table.foreign('feeId').references('fees.id')
   })
 }
