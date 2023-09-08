@@ -37,7 +37,7 @@
     "@interledger/open-payments": "2.0.0",
     "@interledger/openapi": "1.0.3",
     "pg": "^8.11.3",
-    "pino": "^8.15.0",
+    "pino": "^8.15.1",
     "token-introspection": "workspace:../token-introspection",
     "uuid": "^9.0.0"
   },

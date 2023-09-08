@@ -203,8 +203,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.15.0
-        version: 8.15.0
+        specifier: ^8.15.1
+        version: 8.15.1
       token-introspection:
         specifier: workspace:../token-introspection
         version: link:../token-introspection
@@ -378,8 +378,8 @@ importers:
         specifier: ^8.11.3
         version: 8.11.3
       pino:
-        specifier: ^8.15.0
-        version: 8.15.0
+        specifier: ^8.15.1
+        version: 8.15.1
       raw-body:
         specifier: ^2.5.2
         version: 2.5.2
@@ -608,8 +608,8 @@ importers:
         specifier: ^1.5.0
         version: 1.5.0
       pino:
-        specifier: ^8.15.0
-        version: 8.15.0
+        specifier: ^8.15.1
+        version: 8.15.1
     devDependencies:
       '@types/node':
         specifier: ^18.7.12
@@ -4224,7 +4224,7 @@ packages:
       axios: 1.5.0
       base64url: 3.0.1
       http-message-signatures: 0.1.2
-      pino: 8.15.0
+      pino: 8.15.1
       uuid: 9.0.0
     transitivePeerDependencies:
       - debug
@@ -13449,6 +13449,14 @@ packages:
     dependencies:
       readable-stream: 4.1.0
       split2: 4.1.0
+    dev: true
+
+  /pino-abstract-transport@1.1.0:
+    resolution: {integrity: sha512-lsleG3/2a/JIWUtf9Q5gUNErBqwIu1tUKTT3dUzaf5DySw9ra1wcqKjJjLX1VTY64Wk1eEOYsVGSaGfCK85ekA==}
+    dependencies:
+      readable-stream: 4.1.0
+      split2: 4.1.0
+    dev: false
 
   /pino-pretty@10.2.0:
     resolution: {integrity: sha512-tRvpyEmGtc2D+Lr3FulIZ+R1baggQ4S3xD2Ar93KixFEDx6SEAUP3W5aYuEw1C73d6ROrNcB2IXLteW8itlwhA==}
@@ -13474,14 +13482,14 @@ packages:
     resolution: {integrity: sha512-mMMOwSKrmyl+Y12Ri2xhH1lbzQxwwpuru9VjyJpgFIH4asSj88F2csdMwN6+M5g1Ll4rmsYghHLQJw81tgZ7LQ==}
     dev: false
 
-  /pino@8.15.0:
-    resolution: {integrity: sha512-olUADJByk4twxccmAxb1RiGKOSvddHugCV3wkqjyv+3Sooa2KLrmXrKEWOKi0XPCLasRR5jBXxioE1jxUa4KzQ==}
+  /pino@8.15.1:
+    resolution: {integrity: sha512-Cp4QzUQrvWCRJaQ8Lzv0mJzXVk4z2jlq8JNKMGaixC2Pz5L4l2p95TkuRvYbrEbe85NQsDKrAd4zalf7Ml6WiA==}
     hasBin: true
     dependencies:
       atomic-sleep: 1.0.0
       fast-redact: 3.1.2
       on-exit-leak-free: 2.1.0
-      pino-abstract-transport: 1.0.0
+      pino-abstract-transport: 1.1.0
       pino-std-serializers: 6.0.0
       process-warning: 2.0.0
       quick-format-unescaped: 4.0.4
