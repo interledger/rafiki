@@ -59,7 +59,6 @@ interface ServiceDependencies extends BaseService {
   assetService: AssetService
   httpTokenService: HttpTokenService
   knex: TransactionOrKnex
-  config: IAppConfig
 }
 
 export async function createPeerService({
@@ -67,8 +66,7 @@ export async function createPeerService({
   knex,
   accountingService,
   assetService,
-  httpTokenService,
-  config
+  httpTokenService
 }: ServiceDependencies): Promise<PeerService> {
   const log = logger.child({
     service: 'PeerService'
@@ -78,8 +76,7 @@ export async function createPeerService({
     knex,
     accountingService,
     assetService,
-    httpTokenService,
-    config
+    httpTokenService
   }
   return {
     get: (id) => getPeer(deps, id),
