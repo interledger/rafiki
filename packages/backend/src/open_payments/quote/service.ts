@@ -57,9 +57,7 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex)
-    .get(options)
-    .withGraphFetched('[asset, fee.asset]')
+  return Quote.query(deps.knex).get(options).withGraphFetched('[asset, fee]')
 }
 
 interface QuoteOptionsBase {
@@ -156,7 +154,7 @@ async function createQuote(
           client: options.client,
           feeId: sendingFee?.id
         })
-        .withGraphFetched('[asset, fee.asset]')
+        .withGraphFetched('[asset, fee]')
 
       let maxReceiveAmountValue: bigint | undefined
       if (options.debitAmount) {
@@ -368,5 +366,5 @@ async function getPaymentPointerPage(
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee.asset]')
+    .withGraphFetched('[asset, fee]')
 }

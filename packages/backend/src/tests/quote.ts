@@ -104,7 +104,7 @@ export async function createQuote(
 
   const withGraphFetchedArray = ['asset']
   if (withFee) {
-    withGraphFetchedArray.push('fee.asset')
+    withGraphFetchedArray.push('fee')
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
