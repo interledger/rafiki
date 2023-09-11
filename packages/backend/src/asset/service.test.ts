@@ -188,6 +188,7 @@ describe('Asset Service', (): void => {
             })
             assert.ok(!isAssetError(asset))
             expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+            expect(asset.liquidityThreshold).toEqual(liquidityThreshold)
             await expect(assetService.get(assetId)).resolves.toEqual(asset)
           }
         )
