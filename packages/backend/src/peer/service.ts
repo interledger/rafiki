@@ -1,5 +1,6 @@
 import {
   ForeignKeyViolationError,
+  UniqueViolationError,
   NotFoundError,
   raw,
   Transaction,
@@ -16,6 +17,7 @@ import { HttpTokenError } from '../httpToken/errors'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { isValidHttpUrl } from '../shared/utils'
+import { IAppConfig } from '../config/app'
 
 export interface HttpOptions {
   incoming?: {
@@ -57,6 +59,7 @@ interface ServiceDependencies extends BaseService {
   assetService: AssetService
   httpTokenService: HttpTokenService
   knex: TransactionOrKnex
+  config: IAppConfig
 }
 
 export async function createPeerService({
@@ -64,7 +67,8 @@ export async function createPeerService({
   knex,
   accountingService,
   assetService,
-  httpTokenService
+  httpTokenService,
+  config
 }: ServiceDependencies): Promise<PeerService> {
   const log = logger.child({
     service: 'PeerService'
@@ -74,7 +78,8 @@ export async function createPeerService({
     knex,
     accountingService,
     assetService,
-    httpTokenService
+    httpTokenService,
+    config
   }
   return {
     get: (id) => getPeer(deps, id),
@@ -146,6 +151,8 @@ async function createPeer(
       if (err.constraint === 'peers_assetid_foreign') {
         return PeerError.UnknownAsset
       }
+    } else if (err instanceof UniqueViolationError) {
+      return PeerError.DuplicatePeer
     } else if (isPeerError(err)) {
       return err
     }
