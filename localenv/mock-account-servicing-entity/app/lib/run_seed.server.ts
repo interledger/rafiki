@@ -10,12 +10,13 @@ import {
   addPeerLiquidity,
   createPaymentPointer,
   createPaymentPointerKey,
-  addAssetLiquidity
+  addAssetLiquidity,
+  setFee
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
 import { generateJwk } from '@interledger/http-signature-utils'
-import { Asset } from 'generated/graphql'
+import { Asset, FeeType } from 'generated/graphql'
 
 export async function setupFromSeed(config: Config): Promise<void> {
   const assets: Record<string, Asset> = {}
@@ -30,7 +31,21 @@ export async function setupFromSeed(config: Config): Promise<void> {
 
     assets[code] = asset
     console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
+
+    const { sendingFee: fee } = config.seed
+    console.log('assetId=', asset.id)
+    console.log('fee=', fee)
+    const setFeeResponse = await setFee(
+      asset.id,
+      FeeType.Sending,
+      fee.fixed,
+      fee.basisPoints
+    )
+    console.log('setFeeResponse=', setFeeResponse)
+    console.log('end of loop')
   }
+
+  console.log('finished asset loop')
 
   for (const asset of Object.values(assets)) {
     const peerResponses = await Promise.all(
@@ -108,6 +123,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
       return paymentPointer
     })
   )
+  console.log('seed complete')
   console.log(JSON.stringify(accountResponses, null, 2))
   const envVarStrings = config.seed.accounts.map((account) => {
     return `${account.postmanEnvVar}: http://localhost:${CONFIG.seed.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.seed.self.hostname}`

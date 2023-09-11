@@ -52,6 +52,7 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
     args,
     ctx
   ): Promise<ResolversTypes['AssetMutationResponse']> => {
+    ctx.logger.info('createAsset called')
     try {
       const assetService = await ctx.container.use('assetService')
       const assetOrError = await assetService.create(args.input)

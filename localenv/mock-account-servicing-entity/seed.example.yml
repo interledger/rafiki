@@ -35,6 +35,6 @@ accounts:
     url: http://backend/accounts/wbdc
 fees:
   - fixed: 100
-    percentage: 0.02
+    basisPoints: 2
     asset: USD
     scale: 2

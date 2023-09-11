@@ -63,4 +63,4 @@ rates:
     EUR: 0.054
 sendingFee:
     fixed: 0
-    percentage: 0
+    basisPoints: 0

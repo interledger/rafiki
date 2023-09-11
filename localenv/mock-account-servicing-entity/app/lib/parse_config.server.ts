@@ -19,7 +19,7 @@ export interface Asset {
 
 export interface Fees {
   fixed: number
-  percentage: number
+  basisPoints: number
 }
 
 export interface Peering {
@@ -42,7 +42,9 @@ export interface Account {
 
 interface Fee {
   fixed: number
-  percentage: number
+  basisPoints: number
+  asset: string
+  scale: number
 }
 
 export interface SeedInstance {

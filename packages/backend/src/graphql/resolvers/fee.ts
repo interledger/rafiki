@@ -12,6 +12,7 @@ export const setFee: MutationResolvers<ApolloContext>['setFee'] = async (
   args,
   ctx
 ): Promise<ResolversTypes['SetFeeResponse']> => {
+  ctx.logger.info('setFee called with', args.input)
   const feeService = await ctx.container.use('feeService')
   try {
     const feeOrError = await feeService.create(args.input)
