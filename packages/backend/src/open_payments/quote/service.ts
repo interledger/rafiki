@@ -119,9 +119,8 @@ async function createQuote(
       receiver
     })
 
-    const quoteAssetId = paymentPointer.assetId
     const sendingFee = await deps.feeService.getLatestFee(
-      quoteAssetId,
+      paymentPointer.assetId,
       FeeType.Sending
     )
 
@@ -129,7 +128,7 @@ async function createQuote(
       const quote = await Quote.query(trx)
         .insertAndFetch({
           paymentPointerId: options.paymentPointerId,
-          assetId: quoteAssetId,
+          assetId: paymentPointer.assetId,
           receiver: options.receiver,
           debitAmount: {
             value: ilpQuote.maxSourceAmount,
