@@ -12,7 +12,8 @@
     "copy-files": "cp -r ./src/openapi/*.yaml ./dist/openapi",
     "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "prepack": "pnpm build",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:cov": "pnpm test -- --coverage --changedSince=main"
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
