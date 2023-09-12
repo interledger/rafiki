@@ -74,7 +74,7 @@ import { createRedisLock } from './middleware/lock/redis'
 import { CombinedPaymentService } from './open_payments/payment/combined/service'
 import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
-import { AutoPeeringRoutes, PeerRequestContext } from './auto-peering/routes'
+import { AutoPeeringRoutes } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
 import { AxiosInstance } from 'axios'
 

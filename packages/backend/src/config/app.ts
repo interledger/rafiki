@@ -54,6 +54,10 @@ export const Config = {
     envString('REDIS_TLS_CERT_FILE_PATH', '')
   ),
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
+  ilpConnectorAddress: envString(
+    'ILP_CONNECTOR_ADDRESS',
+    'http://127.0.0.1:3002'
+  ),
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
