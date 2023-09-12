@@ -6,7 +6,6 @@ exports.up = function (knex) {
     table.foreign('assetId').references('assets.id')
 
     table.bigInteger('maxPacketAmount').nullable()
-    table.bigInteger('liquidityThreshold').nullable()
 
     table.string('staticIlpAddress').notNullable().index()
 
