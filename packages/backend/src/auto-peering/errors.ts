@@ -5,7 +5,7 @@ export enum AutoPeeringError {
   PeerUnsupportedAsset = 'PeerUnsupportedAsset',
   InvalidPeerUrl = 'InvalidPeerUrl',
   InvalidPeeringRequest = 'InvalidPeeringRequest',
-  DuplicatePeer = 'DuplicatePeer',
+  DuplicatePeer = 'DuplicatePeer'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -21,18 +21,18 @@ export const errorToCode: {
   [AutoPeeringError.PeerUnsupportedAsset]: 400,
   [AutoPeeringError.InvalidPeerUrl]: 400,
   [AutoPeeringError.InvalidPeeringRequest]: 400,
-  [AutoPeeringError.DuplicatePeer]: 400,
+  [AutoPeeringError.DuplicatePeer]: 400
 }
 
 export const errorToMessage: {
   [key in AutoPeeringError]: string
 } = {
-  [AutoPeeringError.InvalidIlpConfiguration]: 'The ILP configuration is misconfigured',
+  [AutoPeeringError.InvalidIlpConfiguration]:
+    'The ILP configuration is misconfigured',
   [AutoPeeringError.InvalidPeerIlpConfiguration]: `Requested peer's ILP configuration is misconfigured`,
   [AutoPeeringError.UnknownAsset]: 'Unknown asset',
   [AutoPeeringError.PeerUnsupportedAsset]: 'Peer does not support asset',
   [AutoPeeringError.InvalidPeerUrl]: 'Peer URL is invalid',
   [AutoPeeringError.InvalidPeeringRequest]: 'Invalid peering request',
-  [AutoPeeringError.DuplicatePeer]: 'Duplicate peer',
+  [AutoPeeringError.DuplicatePeer]: 'Duplicate peer'
 }
-
