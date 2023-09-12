@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@interledger/http-signature-utils": "1.0.4",
-    "httpbis-digest-headers": "^1.0.0",
     "koa": "^2.14.2",
     "koa-bodyparser": "^4.4.1",
     "koa-json": "^2.0.2",
