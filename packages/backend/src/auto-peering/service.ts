@@ -1,12 +1,9 @@
-import { AxiosInstance, isAxiosError } from 'axios'
-import { v4 as uuid } from 'uuid'
 import { AssetService } from '../asset/service'
 import { IAppConfig } from '../config/app'
 import { isPeerError, PeerError } from '../peer/errors'
-import { Peer } from '../peer/model'
 import { PeerService } from '../peer/service'
 import { BaseService } from '../shared/baseService'
-import { AutoPeeringError, isAutoPeeringError } from './errors'
+import { AutoPeeringError } from './errors'
 
 interface PeeringDetails {
   staticIlpAddress: string
@@ -27,6 +24,7 @@ export interface AutoPeeringService {
 
 export interface ServiceDependencies extends BaseService {
   assetService: AssetService
+  peerService: PeerService
   config: IAppConfig
 }
 
@@ -41,13 +39,15 @@ export async function createAutoPeeringService(
   }
 
   return {
-    getPeeringDetails: () => getPeeringDetails(deps)
+    acceptPeeringRequest: (args: PeeringRequestArgs) =>
+      acceptPeeringRequest(deps, args)
   }
 }
 
-async function getPeeringDetails(
-  deps: ServiceDependencies
-): Promise<PeeringDetails> {
+async function acceptPeeringRequest(
+  deps: ServiceDependencies,
+  args: PeeringRequestArgs
+): Promise<PeeringDetails | AutoPeeringError> {
   const assets = await deps.assetService.getAll()
 
   const asset = assets.find(
