@@ -545,6 +545,18 @@
         "description": null,
         "fields": [
           {
+            "name": "debitAmount",
+            "description": "Amount to debit",
+            "args": [],
+            "type": {
+              "kind": "OBJECT",
+              "name": "PaymentAmount",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "interval",
             "description": "Interval between payments",
             "args": [],
@@ -575,18 +587,6 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
-              "ofType": null
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "sendAmount",
-            "description": "Amount to send",
-            "args": [],
-            "type": {
-              "kind": "OBJECT",
-              "name": "PaymentAmount",
               "ofType": null
             },
             "isDeprecated": false,

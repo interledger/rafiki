@@ -1,0 +1,58 @@
+name: Create Weekly Sync discussion
+
+# Every Wednesday at 12AM UTC
+on:
+    schedule:
+        - cron: "0 0 * * 3"
+
+jobs:
+    create-discussion:
+        permissions:
+            discussions: write
+        runs-on: ubuntu-22.04
+        steps:
+            - name: Get repository information
+              id: get-repository-info
+              uses: octokit/graphql-action@v2.x
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  variables: |
+                      owner: ${{ github.repository_owner }}
+                      name: ${{ github.event.repository.name }}
+                  query: |
+                      query GetRepositoryInformation ($name: String!, $owner: String!) {
+                        repository(name: $name, owner: $owner) {
+                          id
+                          discussionCategory(slug: "weekly-sync") {
+                            id
+                          }
+                        }
+                      }
+
+            - name: Get current date
+              id: current-date
+              run: echo "date=$(date -d "next Tue" +'%d %B %Y')" >> $GITHUB_OUTPUT
+
+            - name: Create repository discussion
+              id: create-repository-discussion
+              uses: octokit/graphql-action@v2.x
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  variables: |
+                      body: "<b>Please add agenda items below and give your weekly update in a comment. Thank you!</b><br/><h2>Agenda</h2>"
+                      title: "Weekly Sync - ${{ steps.current-date.outputs.date }}"
+                      repositoryId: ${{ fromJSON(steps.get-repository-info.outputs.data).repository.id }}
+                      categoryId: ${{ fromJSON(steps.get-repository-info.outputs.data).repository.discussionCategory.id }}
+                  query: |
+                      mutation CreateDiscussionMutation ($title: String!, $body: String!, $repositoryId: ID!, $categoryId: ID!) {
+                        createDiscussion(input: { title: $title, body: $body, repositoryId: $repositoryId, categoryId: $categoryId }) {
+                          discussion {
+                            title
+                          }
+                        }
+                      }
+
+            - name: Discussion successfully created
+              run: echo "Created discussion '${{ fromJSON(steps.create-repository-discussion.outputs.data).createDiscussion.discussion.title }}'"

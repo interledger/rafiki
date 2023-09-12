@@ -72,7 +72,7 @@ describe('Access Service', (): void => {
 
     test('Can create outgoing payment access', async (): Promise<void> => {
       const outgoingPaymentLimit = {
-        sendAmount: {
+        debitAmount: {
           value: '1000000000',
           assetCode: 'usd',
           assetScale: 9

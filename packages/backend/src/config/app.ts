@@ -33,6 +33,8 @@ export const Config = {
   openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
   connectorPort: envInt('CONNECTOR_PORT', 3002),
+  autoPeeringServerPort: envInt('AUTO_PEERING_SERVER_PORT', 3005),
+  enableAutoPeering: envBool('ENABLE_AUTO_PEERING', false),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`

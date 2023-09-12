@@ -359,11 +359,11 @@ Payment pointer URL of the receiver
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#paymentamount">PaymentAmount</a></td>
 <td>
 
-Amount to send
+Amount to debit
 
 </td>
 </tr>

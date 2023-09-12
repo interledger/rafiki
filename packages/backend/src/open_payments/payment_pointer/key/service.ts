@@ -80,7 +80,8 @@ async function getKeysByPaymentPointerId(
   paymentPointerId: string
 ): Promise<PaymentPointerKey[]> {
   const keys = await PaymentPointerKey.query(deps.knex).where({
-    paymentPointerId
+    paymentPointerId,
+    revoked: false
   })
   return keys
 }

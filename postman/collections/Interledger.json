@@ -1988,6 +1988,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "36b4bb00-8fe7-451a-b6b7-44ef0e698fc4",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
@@ -2001,6 +2002,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "00122ab8-e9b8-4ba7-84d9-26002667994f",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))"
 										],
@@ -2017,7 +2019,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"http://localhost:3000/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"8000\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"8000\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"123\"\n        }\n    }\n}\n",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"http://localhost:3000/accounts/gfranklin\",\n                \"limits\": {\n                    \"debitAmount\": {\n                        \"value\": \"8000\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"8000\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"123\"\n        }\n    }\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
