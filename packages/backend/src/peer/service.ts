@@ -17,7 +17,6 @@ import { HttpTokenError } from '../httpToken/errors'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { isValidHttpUrl } from '../shared/utils'
-import { IAppConfig } from '../config/app'
 
 export interface HttpOptions {
   incoming?: {
