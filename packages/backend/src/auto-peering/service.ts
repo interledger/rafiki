@@ -3,11 +3,21 @@ import { IAppConfig } from '../config/app'
 import { isPeerError, PeerError } from '../peer/errors'
 import { PeerService } from '../peer/service'
 import { BaseService } from '../shared/baseService'
-import { AutoPeeringError } from './errors'
+import { AutoPeeringError, isAutoPeeringError } from './errors'
+import { v4 as uuid } from 'uuid'
+import { Peer } from '../peer/model'
+import { AxiosInstance, isAxiosError } from 'axios'
 
 interface PeeringDetails {
   staticIlpAddress: string
   ilpConnectorAddress: string
+}
+
+interface InitiatePeeringRequestArgs {
+  peerUrl: string
+  assetId: string
+  name?: string
+  maxPacketAmount?: bigint
 }
 
 interface PeeringRequestArgs {
@@ -16,13 +26,20 @@ interface PeeringRequestArgs {
   asset: { code: string; scale: number }
   httpToken: string
 }
+
+type SendPeeringRequestArgs = { peerUrl: string } & PeeringRequestArgs
+
 export interface AutoPeeringService {
   acceptPeeringRequest(
     args: PeeringRequestArgs
   ): Promise<PeeringDetails | AutoPeeringError>
+  initiatePeeringRequest(
+    args: InitiatePeeringRequestArgs
+  ): Promise<Peer | AutoPeeringError>
 }
 
 export interface ServiceDependencies extends BaseService {
+  axios: AxiosInstance
   assetService: AssetService
   peerService: PeerService
   config: IAppConfig
@@ -39,8 +56,110 @@ export async function createAutoPeeringService(
   }
 
   return {
-    acceptPeeringRequest: (args: PeeringRequestArgs) =>
-      acceptPeeringRequest(deps, args)
+    acceptPeeringRequest: (args) => acceptPeeringRequest(deps, args),
+    initiatePeeringRequest: (args) => initiatePeeringRequest(deps, args)
+  }
+}
+
+async function initiatePeeringRequest(
+  deps: ServiceDependencies,
+  args: InitiatePeeringRequestArgs
+): Promise<Peer | AutoPeeringError> {
+  const { peerUrl } = args
+
+  const asset = await deps.assetService.get(args.assetId)
+
+  if (!asset) {
+    return AutoPeeringError.UnknownAsset
+  }
+
+  const httpToken = uuid()
+
+  const peeringDetailsOrError = await sendPeeringRequest(deps, {
+    peerUrl,
+    ilpConnectorAddress: deps.config.ilpConnectorAddress,
+    staticIlpAddress: deps.config.ilpAddress,
+    asset: { code: asset.code, scale: asset.scale },
+    httpToken
+  })
+
+  if (isAutoPeeringError(peeringDetailsOrError)) {
+    return peeringDetailsOrError
+  }
+
+  const peerOrError = await deps.peerService.create({
+    maxPacketAmount: args.maxPacketAmount,
+    name: args.name,
+    assetId: asset.id,
+    staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
+    http: {
+      incoming: {
+        authTokens: [httpToken]
+      },
+      outgoing: {
+        authToken: httpToken,
+        endpoint: peeringDetailsOrError.ilpConnectorAddress
+      }
+    }
+  })
+
+  if (isPeerError(peerOrError)) {
+    if (
+      peerOrError === PeerError.InvalidHTTPEndpoint ||
+      peerOrError === PeerError.InvalidStaticIlpAddress
+    ) {
+      return AutoPeeringError.InvalidPeerIlpConfiguration
+    } else if (peerOrError === PeerError.DuplicatePeer) {
+      return AutoPeeringError.DuplicatePeer
+    } else {
+      deps.logger.error(
+        { error: peerOrError, request: args },
+        'Could not create peer'
+      )
+      return AutoPeeringError.InvalidPeeringRequest
+    }
+  }
+
+  return peerOrError
+}
+
+async function sendPeeringRequest(
+  deps: ServiceDependencies,
+  args: SendPeeringRequestArgs
+): Promise<PeeringDetails | AutoPeeringError> {
+  try {
+    let peeringDetails: PeeringDetails
+    ;({ data: peeringDetails } = await deps.axios.post(args.peerUrl, {
+      asset: args.asset,
+      staticIlpAddress: args.staticIlpAddress,
+      ilpConnectorAddress: args.ilpConnectorAddress,
+      httpToken: args.httpToken
+    }))
+
+    return peeringDetails
+  } catch (error) {
+    if (isAxiosError(error)) {
+      if (error.code === 'ENOTFOUND') {
+        return AutoPeeringError.InvalidPeerUrl
+      }
+
+      const errorType = error.response?.data?.error?.type
+      if (errorType === AutoPeeringError.InvalidPeerIlpConfiguration) {
+        return AutoPeeringError.InvalidIlpConfiguration
+      } else if (errorType === AutoPeeringError.UnknownAsset) {
+        return AutoPeeringError.PeerUnsupportedAsset
+      }
+    }
+
+    deps.logger.error(
+      {
+        errorMessage:
+          error instanceof Error && error.message ? error.message : error
+      },
+      'error when making peering request'
+    )
+
+    return AutoPeeringError.InvalidPeeringRequest
   }
 }
 

@@ -1,5 +1,6 @@
 import assert from 'assert'
 import { IocContract } from '@adonisjs/fold'
+import nock from 'nock'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { Config, IAppConfig } from '../config/app'
@@ -8,18 +9,23 @@ import { createAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AutoPeeringError, isAutoPeeringError } from './errors'
 import { AutoPeeringService } from './service'
+import { PeerService } from '../peer/service'
+import { PeerError } from '../peer/errors'
+import { v4 as uuid } from 'uuid'
 
 describe('Auto Peering Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
   let autoPeeringService: AutoPeeringService
+  let peerService: PeerService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({ ...Config, enableAutoPeering: true })
     appContainer = await createTestApp(deps)
     config = await deps.use('config')
     autoPeeringService = await deps.use('autoPeeringService')
+    peerService = await deps.use('peerService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -136,6 +142,204 @@ describe('Auto Peering Service', (): void => {
           staticIlpAddress: 'test.other-rafiki' // expecting to fail on DuplicateIncomingToken
         })
       ).resolves.toBe(AutoPeeringError.InvalidPeeringRequest)
+    })
+  })
+
+  describe('initiatePeeringRequest', () => {
+    test('returns error if unknown asset', async (): Promise<void> => {
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: uuid()
+      }
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.UnknownAsset)
+    })
+
+    test('creates peer correctly', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const peerDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com'
+      }
+
+      const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
+
+      const peer = await autoPeeringService.initiatePeeringRequest(args)
+
+      assert(!isAutoPeeringError(peer))
+
+      expect(await peerService.get(peer.id)).toEqual(peer)
+      expect(peer.staticIlpAddress).toBe(peerDetails.staticIlpAddress)
+      expect(peer.http.outgoing.endpoint).toBe(peerDetails.ilpConnectorAddress)
+      scope.done()
+    })
+
+    test('returns error if invalid peer URL', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: `http://${uuid()}.test`,
+        assetId: asset.id
+      }
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.InvalidPeerUrl)
+    })
+
+    test('returns error if invalid ILP configuration', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const scope = nock(args.peerUrl)
+        .post('/')
+        .reply(400, {
+          error: { type: AutoPeeringError.InvalidPeerIlpConfiguration }
+        })
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.InvalidIlpConfiguration)
+      scope.done()
+    })
+
+    test('returns error if peer does not support asset', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const scope = nock(args.peerUrl)
+        .post('/')
+        .reply(400, {
+          error: { type: AutoPeeringError.UnknownAsset }
+        })
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.PeerUnsupportedAsset)
+      scope.done()
+    })
+
+    test('returns error if peer URL request error', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const scope = nock(args.peerUrl).post('/').replyWithError('some  error')
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.InvalidPeeringRequest)
+      scope.done()
+    })
+
+    test('returns error if misconfigured ILP static address in peer response', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const peerDetails = {
+        staticIlpAddress: '',
+        ilpConnectorAddress: 'http://peer-two.com'
+      }
+
+      const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.InvalidPeerIlpConfiguration)
+      scope.done()
+    })
+
+    test('returns error if misconfigured ILP connector address in peer response', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const peerDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: ''
+      }
+
+      const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.InvalidPeerIlpConfiguration)
+      scope.done()
+    })
+
+    test('returns error if attemped to create duplicate peer', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const peerDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com'
+      }
+
+      const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
+
+      const peer = await autoPeeringService.initiatePeeringRequest(args)
+      assert(!isAutoPeeringError(peer))
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.DuplicatePeer)
+      scope.done()
+    })
+
+    test('returns error if other peer creation error', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id
+      }
+
+      const peerDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com'
+      }
+
+      const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
+
+      jest
+        .spyOn(peerService, 'create')
+        .mockResolvedValueOnce(PeerError.DuplicateIncomingToken)
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.InvalidPeeringRequest)
+      scope.done()
     })
   })
 })
