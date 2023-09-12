@@ -102,6 +102,11 @@ type Mutation {
   "Create a peer"
   createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
 
+  "Create a peer using a URL"
+  createPeerByUrl(
+    input: CreatePeerByUrlInput!
+  ): CreatePeerByUrlMutationResponse!
+
   "Update a peer"
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
 
@@ -246,6 +251,19 @@ input CreatePeerInput {
   assetId: String!
   "Peer's ILP address"
   staticIlpAddress: String!
+  "Peer's internal name"
+  name: String
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
+
+input CreatePeerByUrlInput {
+  "Maximum packet amount that the peer accepts"
+  maxPacketAmount: UInt64
+  "Asset id of peering relationship"
+  assetId: String!
+  "Peer's URL address"
+  peerUrl: String!
   "Peer's internal name"
   name: String
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
@@ -990,6 +1008,13 @@ type AssetMutationResponse implements MutationResponse {
 }
 
 type CreatePeerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  peer: Peer
+}
+
+type CreatePeerByUrlMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
