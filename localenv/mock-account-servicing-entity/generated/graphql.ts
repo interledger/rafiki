@@ -208,7 +208,7 @@ export type CreatePeerByUrlInput = {
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
   /** Peer's internal name */
   name?: InputMaybe<Scalars['String']['input']>;
-  /** Peer's URL address */
+  /** Peer's URL address at which the peer accepts auto-peering requests */
   peerUrl: Scalars['String']['input'];
 };
 

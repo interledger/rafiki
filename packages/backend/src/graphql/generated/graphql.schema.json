@@ -1369,7 +1369,7 @@
           },
           {
             "name": "peerUrl",
-            "description": "Peer's URL address",
+            "description": "Peer's URL address at which the peer accepts auto-peering requests",
             "type": {
               "kind": "NON_NULL",
               "name": null,

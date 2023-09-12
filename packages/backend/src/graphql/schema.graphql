@@ -262,7 +262,7 @@ input CreatePeerByUrlInput {
   maxPacketAmount: UInt64
   "Asset id of peering relationship"
   assetId: String!
-  "Peer's URL address"
+  "Peer's URL address at which the peer accepts auto-peering requests"
   peerUrl: String!
   "Peer's internal name"
   name: String
