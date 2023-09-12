@@ -8,10 +8,9 @@ import type {
   CreatePaymentPointerKeyInput,
   CreatePaymentPointerInput,
   JwkInput,
-  SetFeeInput,
   SetFeeResponse,
   FeeType
-} from '../../generated/graphql'
+} from 'generated/graphql'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 
@@ -381,27 +380,27 @@ export async function setFee(
     }
   `
 
-  const setFeeInput: SetFeeInput = {
+  const setFeeInput = {
     assetId,
     type,
     fee: {
-      fixed: BigInt(fixed),
+      fixed: String(fixed),
       basisPoints
     }
   }
 
-  console.log('input=', setFeeInput)
-
-  return apolloClient.mutate({
-    mutation: setFeeMutation,
-    variables: {
-      input: setFeeInput
-    }
-  }).then(({ data }): SetFeeResponse => {
-    console.log(data)
-    if (!data.setFee) {
-      throw new Error('Data was empty')
-    }
-    return data.setFee
-  })
+  return apolloClient
+    .mutate({
+      mutation: setFeeMutation,
+      variables: {
+        input: setFeeInput
+      }
+    })
+    .then(({ data }): SetFeeResponse => {
+      console.log(data)
+      if (!data.setFee) {
+        throw new Error('Data was empty')
+      }
+      return data.setFee
+    })
 }

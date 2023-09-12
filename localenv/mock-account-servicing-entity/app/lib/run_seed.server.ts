@@ -33,19 +33,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
     console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
 
     const { sendingFee: fee } = config.seed
-    console.log('assetId=', asset.id)
-    console.log('fee=', fee)
-    const setFeeResponse = await setFee(
-      asset.id,
-      FeeType.Sending,
-      fee.fixed,
-      fee.basisPoints
-    )
-    console.log('setFeeResponse=', setFeeResponse)
-    console.log('end of loop')
+    await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints)
   }
-
-  console.log('finished asset loop')
 
   for (const asset of Object.values(assets)) {
     const peerResponses = await Promise.all(
