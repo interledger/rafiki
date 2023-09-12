@@ -128,13 +128,13 @@ async function sendPeeringRequest(
   args: SendPeeringRequestArgs
 ): Promise<PeeringDetails | AutoPeeringError> {
   try {
-    let peeringDetails: PeeringDetails
-    ;({ data: peeringDetails } = await deps.axios.post(args.peerUrl, {
-      asset: args.asset,
-      staticIlpAddress: args.staticIlpAddress,
-      ilpConnectorAddress: args.ilpConnectorAddress,
-      httpToken: args.httpToken
-    }))
+    const { data: peeringDetails }: { data: PeeringDetails } =
+      await deps.axios.post(args.peerUrl, {
+        asset: args.asset,
+        staticIlpAddress: args.staticIlpAddress,
+        ilpConnectorAddress: args.ilpConnectorAddress,
+        httpToken: args.httpToken
+      })
 
     return peeringDetails
   } catch (error) {
