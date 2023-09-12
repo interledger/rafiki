@@ -121,8 +121,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       uuid:
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^9.0.1
+        version: 9.0.1
       yaml:
         specifier: ^2.3.2
         version: 2.3.2
@@ -209,8 +209,8 @@ importers:
         specifier: workspace:../token-introspection
         version: link:../token-introspection
       uuid:
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
       '@apollo/client':
         specifier: ^3.8.3
@@ -390,8 +390,8 @@ importers:
         specifier: workspace:../token-introspection
         version: link:../token-introspection
       uuid:
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
       '@apollo/client':
         specifier: ^3.8.3
@@ -550,8 +550,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0(react@18.2.0)
       uuid:
-        specifier: ^9.0.0
-        version: 9.0.0
+        specifier: ^9.0.1
+        version: 9.0.1
       zod:
         specifier: ^3.22.2
         version: 3.22.2
@@ -765,7 +765,7 @@ packages:
       negotiator: 0.6.3
       node-abort-controller: 3.1.1
       node-fetch: 2.6.12
-      uuid: 9.0.0
+      uuid: 9.0.1
       whatwg-mimetype: 3.0.0
     transitivePeerDependencies:
       - encoding
@@ -4204,7 +4204,7 @@ packages:
       http-message-signatures: 0.1.2
       httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
       jose: 4.13.1
-      uuid: 9.0.0
+      uuid: 9.0.1
     dev: false
 
   /@interledger/http-signature-utils@1.0.4:
@@ -4225,7 +4225,7 @@ packages:
       base64url: 3.0.1
       http-message-signatures: 0.1.2
       pino: 8.15.1
-      uuid: 9.0.0
+      uuid: 9.0.1
     transitivePeerDependencies:
       - debug
       - supports-color
@@ -16056,6 +16056,11 @@ packages:
 
   /uuid@9.0.0:
     resolution: {integrity: sha512-MXcSTerfPa4uqyzStbRoTgt5XIe3x5+42+q1sDuy3R5MDk66URdLMOZe5aPX/SQd+kuYAh0FdP/pO28IkQyTeg==}
+    hasBin: true
+    dev: false
+
+  /uuid@9.0.1:
+    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
     hasBin: true
     dev: false
 
