@@ -75,10 +75,10 @@ describe('Peer Model', (): void => {
       async ({ balance }): Promise<void> => {
         await peer.onDebit({ balance })
         const event = (
-          await WebhookEvent.query(knex).where('type', 'liquidity.peer')
+          await WebhookEvent.query(knex).where('type', 'peer.liquidity_low')
         )[0]
         expect(event).toMatchObject({
-          type: 'liquidity.peer',
+          type: 'peer.liquidity_low',
           data: {
             id: peer.id,
             asset: {
@@ -95,7 +95,7 @@ describe('Peer Model', (): void => {
     test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
       await peer.onDebit({ balance: BigInt(110) })
       await expect(
-        WebhookEvent.query(knex).where('type', 'liquidity.peer')
+        WebhookEvent.query(knex).where('type', 'peer.liquidity_low')
       ).resolves.toEqual([])
     })
   })

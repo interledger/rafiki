@@ -19,8 +19,8 @@ export enum EventType {
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed',
   PaymentPointerNotFound = 'payment_pointer.not_found',
-  LiquidityAsset = 'liquidity.asset',
-  LiquidityPeer = 'liquidity.peer'
+  LiquidityAsset = 'asset.liquidity_low',
+  LiquidityPeer = 'peer.liquidity_low'
 }
 
 export interface WebHook {
@@ -208,7 +208,7 @@ export async function handleLowLiquidity(wh: WebHook) {
     throw new Error('id not found')
   }
 
-  if (wh.type == 'liquidity.asset') {
+  if (wh.type == 'asset.liquidity_low') {
     await addAssetLiquidity(id, 1000000, uuid())
   } else {
     await addPeerLiquidity(id, '1000000', uuid())

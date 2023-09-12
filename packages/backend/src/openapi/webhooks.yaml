@@ -300,8 +300,8 @@ components:
         type:
           type: string
           enum:
-            - liquidity.asset
-            - liquidity.peer
+            - asset.liquidity_low
+            - peer.liquidity_low
         data:
           type: object
           required:
