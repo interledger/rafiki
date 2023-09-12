@@ -21,7 +21,7 @@
     "isbot": "^3.6.13",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "uuid": "^9.0.0",
+    "uuid": "^9.0.1",
     "zod": "^3.22.2"
   },
   "devDependencies": {
@@ -32,7 +32,7 @@
     "@types/react-dom": "^18.2.7",
     "@types/uuid": "^9.0.3",
     "autoprefixer": "^10.4.15",
-    "eslint": "^8.48.0",
+    "eslint": "^8.49.0",
     "eslint-plugin-jsx-a11y": "^6.7.1",
     "eslint-plugin-react": "^7.33.2",
     "postcss": "^8.4.29",
