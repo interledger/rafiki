@@ -18,7 +18,7 @@
     "@interledger/http-signature-utils": "1.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "uuid": "^9.0.0",
+    "uuid": "^9.0.1",
     "yaml": "^2.3.2"
   },
   "devDependencies": {
