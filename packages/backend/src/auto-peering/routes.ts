@@ -1,13 +1,27 @@
 import { AppContext } from '../app'
 import { BaseService } from '../shared/baseService'
+import { errorToCode, errorToMessage, isAutoPeeringError } from './errors'
 import { AutoPeeringService } from './service'
+
+interface PeeringRequestArgs {
+  staticIlpAddress: string
+  ilpConnectorAddress: string
+  asset: { code: string; scale: number }
+  httpToken: string
+}
+
+export type PeerRequestContext = Exclude<AppContext, 'request'> & {
+  request: {
+    body: PeeringRequestArgs
+  }
+}
 
 export interface ServiceDependencies extends BaseService {
   autoPeeringService: AutoPeeringService
 }
 
 export interface AutoPeeringRoutes {
-  get(ctx: AppContext): Promise<void>
+  acceptPeerRequest(ctx: PeerRequestContext): Promise<void>
 }
 
 export async function createAutoPeeringRoutes(
@@ -21,15 +35,28 @@ export async function createAutoPeeringRoutes(
   }
 
   return {
-    get: (ctx: AppContext) => getPeeringDetails(deps, ctx)
+    acceptPeerRequest: (ctx: PeerRequestContext) => acceptPeerRequest(deps, ctx)
   }
 }
 
-async function getPeeringDetails(
+async function acceptPeerRequest(
   deps: ServiceDependencies,
-  ctx: AppContext
+  ctx: PeerRequestContext
 ): Promise<void> {
-  const peeringDetails = await deps.autoPeeringService.getPeeringDetails()
+  const peeringDetailsOrError =
+    await deps.autoPeeringService.acceptPeeringRequest(ctx.request.body)
 
-  ctx.body = peeringDetails
+  if (isAutoPeeringError(peeringDetailsOrError)) {
+    const errorCode = errorToCode[peeringDetailsOrError]
+    ctx.status = errorCode
+    ctx.body = {
+      error: {
+        code: errorCode,
+        message: errorToMessage[peeringDetailsOrError]
+      }
+    }
+  } else {
+    ctx.status = 200
+    ctx.body = peeringDetailsOrError
+  }
 }
