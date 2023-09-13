@@ -148,7 +148,7 @@ async function sendPeeringRequest(
     return peeringDetails
   } catch (error) {
     if (isAxiosError(error)) {
-      if (error.code === 'ENOTFOUND') {
+      if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
         return AutoPeeringError.InvalidPeerUrl
       }
 
