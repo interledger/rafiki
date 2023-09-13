@@ -76,6 +76,7 @@ import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
+import { AxiosInstance } from 'axios'
 
 export interface AppContextData {
   logger: Logger
@@ -178,6 +179,7 @@ const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
+  axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
