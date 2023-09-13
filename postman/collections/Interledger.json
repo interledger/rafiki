@@ -35,8 +35,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateAsset($input: CreateAssetInput!) {\n  createAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n    }\n    code\n    message\n    success\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"code\": \"USD\",\n    \"scale\": 6,\n    \"withdrawalThreshold\": null\n  }\n}"
+								"query": "mutation CreateAsset($input: CreateAssetInput!) {\n  createAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n      liquidityThreshold\n    }\n    code\n    message\n    success\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"code\": \"USD\",\n    \"scale\": 6,\n    \"withdrawalThreshold\": null,\n    \"liquidityThreshold\": \"100000000\"\n  }\n}"
 							}
 						},
 						"url": {
@@ -52,11 +52,12 @@
 					"response": []
 				},
 				{
-					"name": "Update Asset Withdrawal Threshold",
+					"name": "Update Asset",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
+								"id": "e024410d-9eb8-41f5-9cab-691f76721bb6",
 								"exec": [
 									""
 								],
@@ -74,8 +75,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation UpdateAssetWithdrawalThreshold($input: UpdateAssetInput!) {\n  updateAssetWithdrawalThreshold(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n    }\n    code\n    message\n    success\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"id\": \"{{assetId}}\",\n    \"withdrawalThreshold\": 100\n  }\n}"
+								"query": "mutation UpdateAsset($input: UpdateAssetInput!) {\n  updateAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n      liquidityThreshold\n    }\n    code\n    message\n    success\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"id\": \"{{assetId}}\",\n    \"withdrawalThreshold\": 100,\n    \"liquidityThreshold\": 100\n  }\n}"
 							}
 						},
 						"url": {
@@ -102,7 +103,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetAsset($id: String!) {\n    asset(id: $id) {\n    code\n    createdAt\n    id\n    scale\n    withdrawalThreshold\n    sendingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n    receivingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n  }\n}",
+								"query": "query GetAsset($id: String!) {\n    asset(id: $id) {\n    code\n    createdAt\n    id\n    scale\n    withdrawalThreshold\n    liquidityThreshold\n    sendingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n    receivingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n  }\n}",
 								"variables": "{\n    \"id\": \"{{assetId}}\"\n}"
 							}
 						},
@@ -130,7 +131,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetAssets($after: String, $before: String, $first: Int, $last: Int) {\n    assets(after: $after, before: $before, first:$first, last: $last) {\n        edges {\n            cursor\n            node {\n                code\n                createdAt\n                id\n                scale\n                withdrawalThreshold\n                liquidity\n                sendingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n                receivingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}",
+								"query": "query GetAssets($after: String, $before: String, $first: Int, $last: Int) {\n    assets(after: $after, before: $before, first:$first, last: $last) {\n        edges {\n            cursor\n            node {\n                code\n                createdAt\n                id\n                scale\n                withdrawalThreshold\n                liquidityThreshold\n                liquidity\n                sendingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n                receivingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}",
 								"variables": "{\n  \"after\": null,\n  \"before\": null,\n  \"first\": null,\n  \"last\": null\n}"
 							}
 						},
@@ -248,6 +249,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "8b5efee8-1414-4786-af23-49ffa323cbd1",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -267,8 +269,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreatePeer ($input: CreatePeerInput!) {\n    createPeer (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset{\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
-								"variables": "{\n  \"input\": {\n    \"name\": \"Wallet1\",\n    \"staticIlpAddress\": \"test.peer\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test123abc\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test123abc\"}\n    },\n    \"assetId\": \"{{assetId}}\",\n    \"maxPacketAmount\": 1000\n  }\n}"
+								"query": "mutation CreatePeer ($input: CreatePeerInput!) {\n    createPeer (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            liquidity\n            liquidityThreshold\n            asset{\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
+								"variables": "{\n  \"input\": {\n    \"name\": \"Wallet1\",\n    \"staticIlpAddress\": \"test.peer\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test123abc\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test123abc\"}\n    },\n    \"assetId\": \"{{assetId}}\",\n    \"maxPacketAmount\": 1000,\n    \"liquidityThreshold\": 100000000\n  }\n}"
 							}
 						},
 						"url": {
@@ -295,8 +297,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation UpdatePeer ($input: UpdatePeerInput!){  \n  updatePeer(input: $input) {\n    code\n    success\n    message\n    peer {\n      id\n      name\n      http {\n        outgoing {\n          authToken\n          endpoint\n        }\n      }\n    }\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"id\": \"{{peerId}}\",\n    \"name\": \"Wall-y\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test-123\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test\"}\n    },\n    \"maxPacketAmount\": 1000\n  }\n}"
+								"query": "mutation UpdatePeer ($input: UpdatePeerInput!){  \n  updatePeer(input: $input) {\n    code\n    success\n    message\n    peer {\n      id\n      name\n      http {\n        outgoing {\n          authToken\n          endpoint\n        }\n      }\n      liquidity\n      liquidityThreshold\n    }\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"id\": \"{{peerId}}\",\n    \"name\": \"Wall-y\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test-123\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test\"}\n    },\n    \"maxPacketAmount\": 1000,\n    \"liquidityThreshold\": 100\n  }\n}"
 							}
 						},
 						"url": {
@@ -323,7 +325,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetPeer {\n  peer (id: \"{{peerId}}\") {\n    id\n    name\n    http {\n      outgoing {\n        authToken\n        endpoint\n      }\n    }\n  }\n}",
+								"query": "query GetPeer {\n  peer (id: \"{{peerId}}\") {\n    id\n    name\n    http {\n      outgoing {\n        authToken\n        endpoint\n      }\n    }\n    liquidity\n    liquidityThreshold\n  }\n}",
 								"variables": ""
 							}
 						},
@@ -351,7 +353,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetPeers {\n    peers {\n        edges {\n            cursor\n            node {\n                id\n                name\n                asset {\n                    code\n                    scale\n                }\n                liquidity\n                staticIlpAddress\n                http {\n                    outgoing {\n                        authToken\n                        endpoint\n                    }\n                }\n            }\n        }\n    }\n}",
+								"query": "query GetPeers {\n    peers {\n        edges {\n            cursor\n            node {\n                id\n                name\n                asset {\n                    code\n                    scale\n                }\n                liquidity\n                liquidityThreshold\n                staticIlpAddress\n                http {\n                    outgoing {\n                        authToken\n                        endpoint\n                    }\n                }\n            }\n        }\n    }\n}",
 								"variables": ""
 							}
 						},
@@ -3580,201 +3582,201 @@
 	],
 	"variable": [
 		{
-			"id": "dea575b3-8cc0-49de-93f4-b0b411c4bc5a",
+			"id": "4ee6dea3-c780-409d-af41-ec0c7344c83f",
 			"key": "OpenPaymentsHost",
 			"value": "http://localhost:3000"
 		},
 		{
-			"id": "1d99495f-00fc-4891-86d3-974ba64bdedd",
+			"id": "346e5927-9aeb-4475-b6d3-7eeebcf0ef1c",
 			"key": "PeerOpenPaymentsHost",
 			"value": "http://localhost:4000"
 		},
 		{
-			"id": "db7f4f1b-185c-446c-a740-303255fed4bc",
+			"id": "496e3b8e-12ed-44ac-b639-70e885797194",
 			"key": "OpenPaymentsAuthHost",
 			"value": "http://localhost:3006"
 		},
 		{
-			"id": "c932ed15-e0d7-478d-90a9-9643ebbfd758",
+			"id": "89fe5e25-e9af-49bc-b7e9-c60863458f21",
 			"key": "PeerOpenPaymentsAuthHost",
 			"value": "http://localhost:4006"
 		},
 		{
-			"id": "669a8d32-9e8a-470e-ac36-ed47b71bd387",
+			"id": "787a43bd-09ed-40e8-81a0-56a93eff3eaf",
 			"key": "RafikiGraphqlHost",
 			"value": "http://localhost:3001"
 		},
 		{
-			"id": "a683e9e0-4c63-4518-934c-bda37b2ce9f5",
+			"id": "f013914a-0126-4f29-ba38-20b00f50afc0",
 			"key": "RafikiAuthGraphqlHost",
 			"value": "http://localhost:3003",
 			"type": "string"
 		},
 		{
-			"id": "9cd838ca-da4c-48de-8d78-8ad32e142079",
+			"id": "44a6339c-d2a5-43b3-baa5-3fac0293e62a",
 			"key": "PeerGraphqlHost",
 			"value": "http://localhost:4001"
 		},
 		{
-			"id": "6aab8826-5df2-443a-bfee-708d9d20872c",
+			"id": "fd5857c3-522e-482b-b2ab-868a8d3df2dd",
 			"key": "PeerAuthGraphqlHost",
 			"value": "http://localhost:4003",
 			"type": "string"
 		},
 		{
-			"id": "9c70b804-038b-4414-8c96-8887978ae7c0",
+			"id": "d9e28ccc-4e81-46a6-a469-8543514cf5ba",
 			"key": "SignatureHost",
 			"value": "http://localhost:3040"
 		},
 		{
-			"id": "fe052cfe-908d-4ef8-acff-2b4f2434aabc",
+			"id": "bcf10d43-89be-4d8e-ae82-840a8dad5bad",
 			"key": "PeerSignatureHost",
 			"value": "http://localhost:3041"
 		},
 		{
-			"id": "e6a98c09-dac4-481b-942a-957e7185bd88",
+			"id": "5c9bcd71-3b6b-46cb-b61b-94e9d275aaf2",
 			"key": "gfranklinPaymentPointer",
 			"value": "http://localhost:3000/accounts/gfranklin"
 		},
 		{
-			"id": "5f7891f3-8464-4117-90c4-cb2779ad8cfe",
+			"id": "004fb735-6127-4cfe-971f-c5ba3b2db4c4",
 			"key": "asmithPaymentPointer",
 			"value": "http://localhost:4000/accounts/asmith",
 			"type": "string"
 		},
 		{
-			"id": "1c549d6d-82a5-4fba-bb06-68f118383d13",
+			"id": "e5037a18-1e62-41cd-b98b-18efec927470",
 			"key": "gfranklinPaymentPointerId",
 			"value": "6abd8671-72d0-41ee-8e0a-0b28eff522a5",
 			"type": "string"
 		},
 		{
-			"id": "37a28341-3d44-4610-bf11-b1c32725c911",
+			"id": "6459f543-714b-470c-b31a-216f4a135a67",
 			"key": "pfryPaymentPointer",
 			"value": "http://localhost:4000/accounts/pfry"
 		},
 		{
-			"id": "6ea44c48-ec32-41e0-97a7-1563ee4a61a0",
+			"id": "7ae91d54-b4fd-48fe-8c7d-f314cb68e1f3",
 			"key": "accessToken",
 			"value": "example-access-token"
 		},
 		{
-			"id": "b7da462c-ff6a-476f-a750-c1ecbf8cf13d",
+			"id": "e5aaf38c-b48a-440d-ace4-2e56d4875eef",
 			"key": "paymentPointerId",
 			"value": "bde8da93-9bff-4251-90ce-abb15e7d444c"
 		},
 		{
-			"id": "f1849e73-c45b-42e2-991a-5711e5b61015",
+			"id": "683684e7-85b5-4e92-bc1a-8dcbb3056723",
 			"key": "incomingPaymentId",
 			"value": "dc7b71a5-d78e-450c-b4c5-7db299f2a133"
 		},
 		{
-			"id": "0ec1cc50-d97f-4f3d-951e-d23325b2d619",
+			"id": "ee9a05f9-acf7-4fad-8725-2ff86f53f0a1",
 			"key": "connectionId",
 			"value": "23de6081-b340-4334-b335-a2328bbb3334"
 		},
 		{
-			"id": "15b1b6af-b385-47d3-885b-c98ffd8f9cfc",
+			"id": "55d07b63-d5a9-499d-bf84-40f0132dcee8",
 			"key": "outgoingPaymentId",
 			"value": "empty"
 		},
 		{
-			"id": "4346ca3f-abf8-42d8-9a39-14221b7e61bd",
+			"id": "a39653ef-9502-4378-9705-a4729d7757fd",
 			"key": "quoteId",
 			"value": "http://backend/d982ab2f-4380-4d05-be3b-43d23a57d23f/quotes/8adaa7f9-fbd2-4cc2-89b5-6f354d68728e"
 		},
 		{
-			"id": "c76b1680-37ee-4822-8e8f-54d50eae317c",
+			"id": "319b27c4-765f-4138-adc4-9e15016ac28d",
 			"key": "tokenId",
 			"value": "f6cf615c-70e8-4b04-bd86-0d6ac41a4c85"
 		},
 		{
-			"id": "df998783-af3d-4c69-b5d0-1f5c2caf9953",
+			"id": "6a520e93-7fc1-4dc5-bbbc-aa56a28b13f3",
 			"key": "tomorrow",
 			"value": ""
 		},
 		{
-			"id": "f7ecd77f-9a17-41c8-a521-4c164aa7d2ba",
+			"id": "3a5918fa-3822-4399-9dc7-cdec6464c46b",
 			"key": "uniquePaymentPointer",
 			"value": ""
 		},
 		{
-			"id": "9d232ac7-1a8d-46a1-bc75-36ec54862a77",
+			"id": "aef2f78a-551c-45e2-981d-30fb35059693",
 			"key": "quoteUrl",
 			"value": ""
 		},
 		{
-			"id": "0931cdb0-b788-4837-874c-ff81aecd0484",
+			"id": "e5460cae-87e6-4608-ae55-d7d897f7cb38",
 			"key": "incomingPaymentUrl",
 			"value": ""
 		},
 		{
-			"id": "5afa13c9-0157-49e8-8d0e-9bf85bf53aab",
+			"id": "c79c3e36-ea19-4a26-ac04-87bb1476c462",
 			"key": "continueToken",
 			"value": ""
 		},
 		{
-			"id": "30858480-2bd4-4956-a48d-3f0202e41fd1",
+			"id": "565e679c-ae68-428e-8b97-d936ebc83aaa",
 			"key": "continueId",
 			"value": ""
 		},
 		{
-			"id": "6b1ee2dc-039c-49bf-a9fc-e79b0893f896",
+			"id": "ecc46a5b-91c0-4661-ab34-dc7ecd902d8e",
 			"key": "paymentPointerUrl",
 			"value": ""
 		},
 		{
-			"id": "2ce5c2fe-00f0-418b-a558-a6f09f5578fb",
+			"id": "fbac2b60-3775-4a36-88e7-7f6b1900d35c",
 			"key": "createPaymentPointerRequest",
 			"value": ""
 		},
 		{
-			"id": "9832994d-1273-4e0c-8f72-a62fbaa133cb",
+			"id": "3ea240c0-b03d-449e-b341-a97550e5fbf9",
 			"key": "secondPaymentPointerId",
 			"value": ""
 		},
 		{
-			"id": "9c746b74-de66-40bd-b12c-fd79764147a3",
+			"id": "b3a7868b-af13-4550-846c-36950086c90d",
 			"key": "assetId",
 			"value": ""
 		},
 		{
-			"id": "f135b734-6f42-4606-a503-5820c7017875",
+			"id": "79893faa-4c7d-4555-b8a7-6440a9baa774",
 			"key": "preRequestSignatures",
 			"value": "const requestUrl = request.url\n  .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.collectionVariables.get(key))\n  .replace(/localhost:([3,4])000/g, (_, key) =>\n    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'\n  )\nconst requestBody =\n  request.method === 'POST' && Object.keys(request.data).length !== 0\n    ? request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n        pm.collectionVariables.get(key)\n      )\n    : undefined\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n// Request Signature Headers\npm.sendRequest(\n  {\n    url: pm.collectionVariables.get('signatureUrl'),\n    method: 'POST',\n    header: {\n      'content-type': 'application/json'\n    },\n    body: {\n      mode: 'raw',\n      raw: JSON.stringify({\n        keyId: pm.collectionVariables.get('keyId'),\n        request: {\n          url: requestUrl,\n          method: request.method,\n          headers: requestHeaders,\n          body: requestBody\n        }\n      })\n    }\n  },\n  (_, res) => {\n    const headers = res.json()\n    for (let [key, value] of Object.entries(headers)) {\n      pm.request.headers.add({ key, value })\n    }\n  }\n)\n"
 		},
 		{
-			"id": "42d9f3f4-fa6b-45e0-b8f4-6c54b52bd979",
+			"id": "9b94ec03-326c-4890-949b-e88a5d5dd2d3",
 			"key": "preRequestSignaturesGrantRequest",
 			"value": "const url = require('url')\n\nconst body = JSON.parse(request.data)\nconst client = url.parse(body.client)\nconst jwkUrl = `http://localhost:${\n  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'\n}000${client.path}/jwks.json`\npm.collectionVariables.set(\n  'signatureUrl',\n  pm.collectionVariables.get(\n    client.host === 'cloud-nine-wallet-backend'\n      ? 'SignatureHost'\n      : 'PeerSignatureHost'\n  )\n)\n\nconst requestUrl = request.url.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestBody = request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n\n// Request Client JWK\npm.sendRequest(\n  {\n    url: jwkUrl,\n    method: 'GET',\n    header: {\n      Host: client.host\n    }\n  },\n  (err, res) => {\n    const keys = res.json()\n    pm.collectionVariables.set('keyId', keys.keys[0].kid)\n\n    // Request Signature Headers\n    pm.sendRequest(\n      {\n        url: pm.collectionVariables.get('signatureUrl'),\n        method: 'POST',\n        header: {\n          'content-type': 'application/json'\n        },\n        body: {\n          mode: 'raw',\n          raw: JSON.stringify({\n            keyId: pm.collectionVariables.get('keyId'),\n            request: {\n              url: requestUrl,\n              method: request.method,\n              headers: requestHeaders,\n              body: requestBody\n            }\n          })\n        }\n      },\n      (_, res) => {\n        const headers = res.json()\n        for (let [key, value] of Object.entries(headers)) {\n          pm.request.headers.add({ key, value })\n        }\n      }\n    )\n  }\n)\n"
 		},
 		{
-			"id": "7896487b-e91b-4a13-b4ee-dc221afe5a5b",
+			"id": "e3c9ec7a-4390-4060-8868-1d32e04aa2cf",
 			"key": "signatureUrl",
 			"value": ""
 		},
 		{
-			"id": "4e295d22-ed07-4211-849c-11e2cdeb3255",
+			"id": "c228e981-36da-4033-8015-4eacfad854a3",
 			"key": "keyId",
 			"value": ""
 		},
 		{
-			"id": "724e77e9-cdf9-43ba-b001-72bfffd16fb5",
+			"id": "3ca5880b-b386-430b-9f27-eea5ebfbfb1e",
 			"key": "peerId",
 			"value": ""
 		},
 		{
-			"id": "e840375f-9afb-45ad-837b-03d68c1b3de4",
+			"id": "2322ddf9-43f0-41a6-b515-2a9258825f5b",
 			"key": "paymentPointerKeyId",
 			"value": ""
 		},
 		{
-			"id": "dc319e9c-52e6-4acf-b06f-1bfa9bbdbf40",
+			"id": "ec874c4d-cd4b-454a-9e1b-d9b5a76f113c",
 			"key": "secureOpenPaymentsHost",
 			"value": ""
 		},
 		{
-			"id": "cae8e9e8-bfc3-4166-a37c-a73bd0175325",
+			"id": "d4170010-6447-4fef-b08d-84ca0f9885bb",
 			"key": "tokenManagementUrl",
 			"value": ""
 		},
@@ -3789,12 +3791,12 @@
 			"value": ""
 		},
 		{
-			"id": "e54165bd-83ca-4186-baa1-d1bfe59268dc",
+			"id": "b3bc3f0c-da96-4ec8-a0eb-c822bbe7fd6c",
 			"key": "idempotencyKey",
 			"value": ""
 		},
 		{
-			"id": "0920e8c6-d0b6-4223-8eac-b50cc7c9ef25",
+			"id": "493478f0-6ea2-4f69-bc5e-a27cbb0122d5",
 			"key": "receiverId",
 			"value": ""
 		}

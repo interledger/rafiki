@@ -37,9 +37,9 @@
     "@interledger/open-payments": "3.0.1",
     "@interledger/openapi": "1.0.3",
     "pg": "^8.11.3",
-    "pino": "^8.15.0",
+    "pino": "^8.15.1",
     "token-introspection": "workspace:../token-introspection",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@apollo/client": "^3.8.3",

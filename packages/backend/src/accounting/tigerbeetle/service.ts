@@ -244,6 +244,8 @@ export async function createTransfer(
     },
     getAccountReceived: async (accountRef) =>
       getAccountTotalReceived(deps, accountRef),
+    getAccountBalance: async (accountRef) =>
+      getAccountBalance(deps, accountRef),
     createPendingTransfers: async (transfersToCreate) => {
       const tbTransfers: NewTransferOptions[] = transfersToCreate.map(
         (transfer) => ({
