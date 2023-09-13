@@ -12,6 +12,7 @@ export interface PeeringDetails {
   staticIlpAddress: string
   ilpConnectorAddress: string
   httpToken: string
+  name: string
 }
 
 export interface InitiatePeeringRequestArgs {
@@ -276,6 +277,7 @@ async function peeringDetailsOrError(
   return {
     ilpConnectorAddress: deps.config.ilpConnectorAddress,
     staticIlpAddress: deps.config.ilpAddress,
-    httpToken: peerOrError.http.outgoing.authToken
+    httpToken: peerOrError.http.outgoing.authToken,
+    name: deps.config.instanceName
   }
 }
