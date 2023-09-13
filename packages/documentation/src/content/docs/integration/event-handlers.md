@@ -135,3 +135,35 @@ participant R as Rafiki
 R->>ASE: webhook event: payment pointer not found,<br>payment pointer: https://example-wallet.com/carla_garcia
 ASE->>R: admin API call: CreatePaymentPointer<br>url: https://example-wallet.com/carla_garcia,<br>public name: Carla Eva Garcia
 ```
+
+## `asset.liquidity_low`
+
+The `asset.liquidity_low` event indicates that the liquidity of an [asset](../reference/glossary#asset) has dropped below a predefined liquidity threshold. When receiving this event, the Account Servicing Entity should check if they have or can acquire additional liquidity of said asset and if so, deposit it in Rafiki. If the Account Servicing Entity cannot or does not increase the asset liquidity in Rafiki, cross-currency transfers will fail.
+
+Example: The asset liquidity for USD (scale: 2) drops below 100.00 USD.
+
+```mermaid
+sequenceDiagram
+
+participant ASE as Account Servicing Entity
+participant R as Rafiki
+
+R->>ASE: webhook event: liquidity (asset) low,<br>asset: USD (scale: 2, id: "abc")
+ASE->>R: admin API call: AddAssetLiquidity
+```
+
+## `peer.liquidity_low`
+
+The `peer.liquidity_low` event indicates that the liquidity of a [peer](../reference/glossary#peer) has dropped below a predefined liquidity threshold. When receiving this event, the Account Servicing Entity need to decide if they can extend said peer's credit line or whether they need to settle first and then extend a new line of credit. If the Account Servicing Entity cannot or does not increase the peer liquidity in Rafiki, transfers to that peer will fail.
+
+Example: The peer liquidity for Happy Life Bank drops below 100.00 USD.
+
+```mermaid
+sequenceDiagram
+
+participant ASE as Account Servicing Entity
+participant R as Rafiki
+
+R->>ASE: webhook event: liquidity (peer) low,<br>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
+ASE->>R: admin API call: AddPeerLiquidity
+```
