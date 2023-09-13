@@ -26,7 +26,8 @@ export const errorToMessage: {
   [key in PeerError]: string
 } = {
   [PeerError.DuplicateIncomingToken]: 'duplicate incoming token',
-  [PeerError.DuplicatePeer]: 'duplicate peer',
+  [PeerError.DuplicatePeer]:
+    'duplicate peer found for same ILP address and asset',
   [PeerError.InvalidStaticIlpAddress]: 'invalid ILP address',
   [PeerError.InvalidHTTPEndpoint]: 'invalid HTTP endpoint',
   [PeerError.UnknownAsset]: 'unknown asset',
