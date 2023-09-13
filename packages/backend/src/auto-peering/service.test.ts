@@ -8,7 +8,12 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AutoPeeringError, isAutoPeeringError } from './errors'
-import { AutoPeeringService, PeeringDetails } from './service'
+import {
+  AutoPeeringService,
+  InitiatePeeringRequestArgs,
+  PeeringDetails,
+  PeeringRequestArgs
+} from './service'
 import { PeerService } from '../peer/service'
 import { PeerError } from '../peer/errors'
 import { v4 as uuid } from 'uuid'
@@ -40,7 +45,7 @@ describe('Auto Peering Service', (): void => {
     test('creates peer and resolves connection details', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
@@ -61,7 +66,7 @@ describe('Auto Peering Service', (): void => {
       expect(peerCreateSpy).toHaveBeenCalledWith({
         staticIlpAddress: args.staticIlpAddress,
         assetId: asset.id,
-        maxPacketAmount: BigInt(args.maxPacketAmount),
+        maxPacketAmount: BigInt(args.maxPacketAmount!),
         name: args.name,
         http: {
           incoming: { authTokens: [args.httpToken] },
@@ -76,7 +81,7 @@ describe('Auto Peering Service', (): void => {
     test('updates connection details if duplicate peer request', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
@@ -115,7 +120,7 @@ describe('Auto Peering Service', (): void => {
     })
 
     test('returns error if unknown asset', async (): Promise<void> => {
-      const args = {
+      const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: 'USD', scale: 2 },
@@ -130,7 +135,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if invalid ILP connector address', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'invalid',
         asset: { code: asset.code, scale: asset.scale },
@@ -145,7 +150,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if invalid static ILP address', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: PeeringRequestArgs = {
         staticIlpAddress: 'invalid',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
@@ -160,7 +165,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if other peer creation error', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: PeeringRequestArgs = {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
@@ -182,7 +187,7 @@ describe('Auto Peering Service', (): void => {
 
   describe('initiatePeeringRequest', () => {
     test('returns error if unknown asset', async (): Promise<void> => {
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: uuid()
       }
@@ -195,9 +200,10 @@ describe('Auto Peering Service', (): void => {
     test('creates peer correctly', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
-        assetId: asset.id
+        assetId: asset.id,
+        maxPacketAmount: 1000n
       }
 
       const peerDetails: PeeringDetails = {
@@ -206,7 +212,22 @@ describe('Auto Peering Service', (): void => {
         httpToken: 'peerHttpToken'
       }
 
-      const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
+      const scope = nock(args.peerUrl)
+        .post('/', (body) => {
+          expect(body).toEqual({
+            asset: {
+              code: asset.code,
+              scale: asset.scale
+            },
+            httpToken: expect.any(String),
+            ilpConnectorAddress: config.ilpConnectorAddress,
+            maxPacketAmount: Number(args.maxPacketAmount),
+            name: config.instanceName,
+            staticIlpAddress: config.ilpAddress
+          })
+          return body
+        })
+        .reply(200, peerDetails)
 
       const peerCreationSpy = jest.spyOn(peerService, 'create')
 
@@ -226,8 +247,8 @@ describe('Auto Peering Service', (): void => {
             authToken: expect.any(String)
           }
         },
-        name: undefined,
-        maxPacketAmount: undefined
+        maxPacketAmount: args.maxPacketAmount,
+        name: args.name
       })
 
       scope.done()
@@ -236,7 +257,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if invalid peer URL', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: `http://${uuid()}.test`,
         assetId: asset.id
       }
@@ -249,7 +270,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if invalid ILP configuration', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }
@@ -269,7 +290,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if peer does not support asset', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }
@@ -289,7 +310,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if peer URL request error', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }
@@ -305,7 +326,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if misconfigured ILP static address in peer response', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }
@@ -327,7 +348,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if misconfigured ILP connector address in peer response', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }
@@ -349,7 +370,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if attemped to create duplicate peer', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }
@@ -374,7 +395,7 @@ describe('Auto Peering Service', (): void => {
     test('returns error if other peer creation error', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
-      const args = {
+      const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id
       }

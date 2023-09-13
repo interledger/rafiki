@@ -14,14 +14,14 @@ export interface PeeringDetails {
   httpToken: string
 }
 
-interface InitiatePeeringRequestArgs {
+export interface InitiatePeeringRequestArgs {
   peerUrl: string
   assetId: string
   name?: string
   maxPacketAmount?: bigint
 }
 
-interface PeeringRequestArgs {
+export interface PeeringRequestArgs {
   staticIlpAddress: string
   ilpConnectorAddress: string
   asset: { code: string; scale: number }
@@ -29,8 +29,6 @@ interface PeeringRequestArgs {
   maxPacketAmount?: number
   name?: string
 }
-
-type SendPeeringRequestArgs = { peerUrl: string } & PeeringRequestArgs
 
 interface UpdatePeerArgs {
   staticIlpAddress: string
@@ -88,12 +86,13 @@ async function initiatePeeringRequest(
 
   const outgoingHttpToken = uuid()
 
-  const peeringDetailsOrError = await sendPeeringRequest(deps, {
-    peerUrl,
+  const peeringDetailsOrError = await sendPeeringRequest(deps, peerUrl, {
     ilpConnectorAddress: deps.config.ilpConnectorAddress,
     staticIlpAddress: deps.config.ilpAddress,
     asset: { code: asset.code, scale: asset.scale },
-    httpToken: outgoingHttpToken
+    httpToken: outgoingHttpToken,
+    maxPacketAmount: Number(args.maxPacketAmount),
+    name: deps.config.instanceName
   })
 
   if (isAutoPeeringError(peeringDetailsOrError)) {
@@ -138,16 +137,12 @@ async function initiatePeeringRequest(
 
 async function sendPeeringRequest(
   deps: ServiceDependencies,
-  args: SendPeeringRequestArgs
+  peerUrl: string,
+  args: PeeringRequestArgs
 ): Promise<PeeringDetails | AutoPeeringError> {
   try {
     const { data: peeringDetails }: { data: PeeringDetails } =
-      await deps.axios.post(args.peerUrl, {
-        asset: args.asset,
-        staticIlpAddress: args.staticIlpAddress,
-        ilpConnectorAddress: args.ilpConnectorAddress,
-        httpToken: args.httpToken
-      })
+      await deps.axios.post(peerUrl, args)
 
     return peeringDetails
   } catch (error) {
