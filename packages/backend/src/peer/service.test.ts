@@ -180,13 +180,9 @@ describe('Peer Service', (): void => {
       const peer = await peerService.create(options)
       assert.ok(!isPeerError(peer))
 
-      await expect(
-        peerService.create({
-          ...options,
-          staticIlpAddress: options.staticIlpAddress,
-          assetId: options.assetId
-        })
-      ).resolves.toEqual(PeerError.DuplicatePeer)
+      await expect(peerService.create(options)).resolves.toEqual(
+        PeerError.DuplicatePeer
+      )
     })
   })
 
