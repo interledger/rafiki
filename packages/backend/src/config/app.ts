@@ -58,9 +58,7 @@ export const Config = {
     'ILP_CONNECTOR_ADDRESS',
     'http://127.0.0.1:3002'
   ),
-  get instanceName() {
-    return envString('INSTANCE_NAME', Config.publicHost)
-  },
+  instanceName: envString('INSTANCE_NAME', 'Rafiki'),
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
