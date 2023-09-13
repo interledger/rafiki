@@ -8,6 +8,8 @@ interface PeeringRequestArgs {
   ilpConnectorAddress: string
   asset: { code: string; scale: number }
   httpToken: string
+  maxPacketAmount?: number
+  name?: string
 }
 
 export type PeerRequestContext = Exclude<AppContext, 'request'> & {
