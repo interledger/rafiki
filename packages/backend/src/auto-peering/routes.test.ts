@@ -51,7 +51,8 @@ describe('Auto Peering Routes', (): void => {
       expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress
+        ilpConnectorAddress: config.ilpConnectorAddress,
+        httpToken: expect.any(String)
       })
     })
 
