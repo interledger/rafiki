@@ -41,8 +41,12 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        name: 'Rafiki Money',
+        maxPacketAmount: 1000
       }
+
+      const peerCreateSpy = jest.spyOn(peerService, 'create')
 
       await expect(
         autoPeeringService.acceptPeeringRequest(args)
@@ -50,6 +54,19 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: config.ilpAddress,
         ilpConnectorAddress: config.ilpConnectorAddress,
         httpToken: expect.any(String)
+      })
+      expect(peerCreateSpy).toHaveBeenCalledWith({
+        staticIlpAddress: args.staticIlpAddress,
+        assetId: asset.id,
+        maxPacketAmount: BigInt(args.maxPacketAmount),
+        name: args.name,
+        http: {
+          incoming: { authTokens: [args.httpToken] },
+          outgoing: {
+            authToken: expect.any(String),
+            endpoint: args.ilpConnectorAddress
+          }
+        }
       })
     })
 
