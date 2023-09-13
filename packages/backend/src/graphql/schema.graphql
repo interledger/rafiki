@@ -268,7 +268,7 @@ input CreatePeerByUrlInput {
   assetId: String!
   "Peer's URL address at which the peer accepts auto-peering requests"
   peerUrl: String!
-  "Peer's internal name"
+  "Peer's internal name for overriding auto-peer's default naming"
   name: String
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String

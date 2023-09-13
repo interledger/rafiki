@@ -1381,7 +1381,7 @@
           },
           {
             "name": "name",
-            "description": "Peer's internal name",
+            "description": "Peer's internal name for overriding auto-peer's default naming",
             "type": {
               "kind": "SCALAR",
               "name": "String",

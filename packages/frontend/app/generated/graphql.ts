@@ -210,7 +210,7 @@ export type CreatePeerByUrlInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
-  /** Peer's internal name */
+  /** Peer's internal name for overriding auto-peer's default naming */
   name?: InputMaybe<Scalars['String']['input']>;
   /** Peer's URL address at which the peer accepts auto-peering requests */
   peerUrl: Scalars['String']['input'];

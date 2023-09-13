@@ -102,7 +102,7 @@ async function initiatePeeringRequest(
 
   const peerOrError = await deps.peerService.create({
     maxPacketAmount: args.maxPacketAmount,
-    name: args.name,
+    name: args.name ?? peeringDetailsOrError.name,
     assetId: asset.id,
     staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
     http: {
