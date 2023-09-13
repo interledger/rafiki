@@ -21,7 +21,7 @@ export const errorToCode: {
   [AutoPeeringError.PeerUnsupportedAsset]: 400,
   [AutoPeeringError.InvalidPeerUrl]: 400,
   [AutoPeeringError.InvalidPeeringRequest]: 400,
-  [AutoPeeringError.DuplicatePeer]: 400
+  [AutoPeeringError.DuplicatePeer]: 409
 }
 
 export const errorToMessage: {
