@@ -1,21 +1,62 @@
-FROM node:18.13.0-slim as builder
+FROM node:18-alpine3.18 AS base
 
-WORKDIR /workspace
+WORKDIR /home/rafiki
 
-RUN apt update
-RUN apt install -y curl xz-utils python3 build-essential
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 
-# version in curl is not the version used. Dependent on the last command
 RUN corepack enable
-RUN corepack prepare pnpm@7.25.1 --activate
+RUN corepack prepare pnpm@8.7.4 --activate
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++
 
-# pnpm fetch does require only lockfile
 COPY pnpm-lock.yaml ./
-RUN pnpm fetch
 
-ADD . ./
-RUN pnpm install -r --offline
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm fetch \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
 
+FROM base AS prod-deps
+
+COPY package.json pnpm-workspace.yaml .npmrc ./
+COPY localenv/mock-account-servicing-entity/package.json ./localenv/mock-account-servicing-entity/package.json
+
+RUN pnpm clean
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --recursive \
+    --prefer-offline \
+    --frozen-lockfile \
+    --prod \
+    | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
+
+FROM base AS builder   
+
+COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json ./
+COPY localenv/mock-account-servicing-entity ./localenv/mock-account-servicing-entity
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --recursive \
+    --offline \
+    --frozen-lockfile
 RUN pnpm --filter mock-account-servicing-entity build
 
-CMD pnpm --filter mock-account-servicing-entity start
+FROM node:18-alpine3.18 AS runner
+
+WORKDIR /home/rafiki
+
+COPY localenv/cloud-nine-wallet/seed.yml ./localenv/cloud-nine-wallet/seed.yml
+COPY localenv/happy-life-bank/seed.yml ./localenv/happy-life-bank/seed.yml
+
+COPY --from=prod-deps /home/rafiki/node_modules ./node_modules
+COPY --from=prod-deps /home/rafiki/localenv/mock-account-servicing-entity/node_modules ./localenv/mock-account-servicing-entity/node_modules
+COPY --from=prod-deps /home/rafiki/localenv/mock-account-servicing-entity/package.json ./localenv/mock-account-servicing-entity/package.json
+
+COPY --from=builder /home/rafiki/localenv/mock-account-servicing-entity/build ./localenv/mock-account-servicing-entity/build
+COPY --from=builder /home/rafiki/localenv/mock-account-servicing-entity/public ./localenv/mock-account-servicing-entity/public
+
+WORKDIR /home/rafiki/localenv/mock-account-servicing-entity
+CMD ["sh", "./node_modules/.bin/remix-serve", "build"]

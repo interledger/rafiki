@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Rafiki Webhooks
-  version: 1.0.0
+  version: 1.1.0
   description: 'Webhook Events fired by Rafiki'
   contact:
     email: tech@interledger.org
@@ -80,6 +80,28 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/webMonetizationEvent'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  assetLiquidity:
+    post:
+      requestBody:
+        description: Notify account servicing entity that asset liquidity is low.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/liquidityEvent'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  peerLiquidity:
+    post:
+      requestBody:
+        description: Notify account servicing entity that peer liquidity is low.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/liquidityEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -265,4 +287,50 @@ components:
                 received:
                   type: string
                   format: uint64
+      additionalProperties: false
+    liquidityEvent:
+      required:
+        - id
+        - type
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - asset.liquidity_low
+            - peer.liquidity_low
+        data:
+          type: object
+          required:
+            - id
+            - asset
+            - liquidityThreshold
+            - balance
+          properties:
+            id:
+              type: string
+              format: uuid
+            asset:
+              $ref: '#/components/schemas/asset'
+            liquidityThreshold:
+              type: string
+            balance:
+              type: string
+      additionalProperties: false
+    asset:
+      required:
+        - id
+        - code
+        - scale
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        scale:
+          type: number
       additionalProperties: false

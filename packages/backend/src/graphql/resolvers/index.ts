@@ -10,7 +10,7 @@ import {
   getAsset,
   getAssets,
   createAsset,
-  updateAssetWithdrawalThreshold,
+  updateAsset,
   getAssetReceivingFee,
   getAssetSendingFee
 } from './asset'
@@ -87,7 +87,7 @@ export const resolvers: Resolvers = {
     updatePaymentPointer,
     triggerPaymentPointerEvents,
     createAsset,
-    updateAssetWithdrawalThreshold,
+    updateAsset: updateAsset,
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,
