@@ -26,6 +26,8 @@ interface PeeringRequestArgs {
   ilpConnectorAddress: string
   asset: { code: string; scale: number }
   httpToken: string
+  maxPacketAmount?: number
+  name?: string
 }
 
 type SendPeeringRequestArgs = { peerUrl: string } & PeeringRequestArgs
@@ -36,6 +38,8 @@ interface UpdatePeerArgs {
   assetId: string
   incomingHttpToken: string
   outgoingHttpToken: string
+  maxPacketAmount?: number
+  name?: string
 }
 
 export interface AutoPeeringService {
@@ -189,6 +193,10 @@ async function acceptPeeringRequest(
   const outgoingHttpToken = uuid()
 
   const createdPeerOrError = await deps.peerService.create({
+    maxPacketAmount: args.maxPacketAmount
+      ? BigInt(args.maxPacketAmount)
+      : undefined,
+    name: args.name,
     staticIlpAddress: args.staticIlpAddress,
     assetId: asset.id,
     http: {
@@ -208,6 +216,8 @@ async function acceptPeeringRequest(
 
   const peerOrError = isDuplicatePeeringRequest
     ? await updatePeer(deps, {
+        maxPacketAmount: args.maxPacketAmount,
+        name: args.name,
         staticIlpAddress: args.staticIlpAddress,
         assetId: asset.id,
         outgoingHttpToken,
@@ -235,6 +245,10 @@ async function updatePeer(
 
   return deps.peerService.update({
     id: peer.id,
+    maxPacketAmount: args.maxPacketAmount
+      ? BigInt(args.maxPacketAmount)
+      : undefined,
+    name: args.name,
     http: {
       incoming: { authTokens: [args.incomingHttpToken] },
       outgoing: {

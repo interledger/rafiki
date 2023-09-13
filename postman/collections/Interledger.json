@@ -35,8 +35,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateAsset($input: CreateAssetInput!) {\n  createAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n    }\n    code\n    message\n    success\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"code\": \"USD\",\n    \"scale\": 6,\n    \"withdrawalThreshold\": null\n  }\n}"
+								"query": "mutation CreateAsset($input: CreateAssetInput!) {\n  createAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n      liquidityThreshold\n    }\n    code\n    message\n    success\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"code\": \"USD\",\n    \"scale\": 6,\n    \"withdrawalThreshold\": null,\n    \"liquidityThreshold\": \"100000000\"\n  }\n}"
 							}
 						},
 						"url": {
@@ -52,11 +52,12 @@
 					"response": []
 				},
 				{
-					"name": "Update Asset Withdrawal Threshold",
+					"name": "Update Asset",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
+								"id": "e024410d-9eb8-41f5-9cab-691f76721bb6",
 								"exec": [
 									""
 								],
@@ -74,8 +75,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation UpdateAssetWithdrawalThreshold($input: UpdateAssetInput!) {\n  updateAssetWithdrawalThreshold(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n    }\n    code\n    message\n    success\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"id\": \"{{assetId}}\",\n    \"withdrawalThreshold\": 100\n  }\n}"
+								"query": "mutation UpdateAsset($input: UpdateAssetInput!) {\n  updateAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n      liquidityThreshold\n    }\n    code\n    message\n    success\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"id\": \"{{assetId}}\",\n    \"withdrawalThreshold\": 100,\n    \"liquidityThreshold\": 100\n  }\n}"
 							}
 						},
 						"url": {
@@ -102,7 +103,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetAsset($id: String!) {\n    asset(id: $id) {\n    code\n    createdAt\n    id\n    scale\n    withdrawalThreshold\n    sendingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n    receivingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n  }\n}",
+								"query": "query GetAsset($id: String!) {\n    asset(id: $id) {\n    code\n    createdAt\n    id\n    scale\n    withdrawalThreshold\n    liquidityThreshold\n    sendingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n    receivingFee {\n        id\n        type\n        basisPoints\n        fixed\n    }\n  }\n}",
 								"variables": "{\n    \"id\": \"{{assetId}}\"\n}"
 							}
 						},
@@ -130,7 +131,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetAssets($after: String, $before: String, $first: Int, $last: Int) {\n    assets(after: $after, before: $before, first:$first, last: $last) {\n        edges {\n            cursor\n            node {\n                code\n                createdAt\n                id\n                scale\n                withdrawalThreshold\n                liquidity\n                sendingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n                receivingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}",
+								"query": "query GetAssets($after: String, $before: String, $first: Int, $last: Int) {\n    assets(after: $after, before: $before, first:$first, last: $last) {\n        edges {\n            cursor\n            node {\n                code\n                createdAt\n                id\n                scale\n                withdrawalThreshold\n                liquidityThreshold\n                liquidity\n                sendingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n                receivingFee {\n                    id\n                    type\n                    basisPoints\n                    fixed\n                }\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}",
 								"variables": "{\n  \"after\": null,\n  \"before\": null,\n  \"first\": null,\n  \"last\": null\n}"
 							}
 						},
@@ -248,6 +249,7 @@
 						{
 							"listen": "test",
 							"script": {
+								"id": "8b5efee8-1414-4786-af23-49ffa323cbd1",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -267,8 +269,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreatePeer ($input: CreatePeerInput!) {\n    createPeer (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset{\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
-								"variables": "{\n  \"input\": {\n    \"name\": \"Wallet1\",\n    \"staticIlpAddress\": \"test.peer\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test123abc\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test123abc\"}\n    },\n    \"assetId\": \"{{assetId}}\",\n    \"maxPacketAmount\": 1000\n  }\n}"
+								"query": "mutation CreatePeer ($input: CreatePeerInput!) {\n    createPeer (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            liquidity\n            liquidityThreshold\n            asset{\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
+								"variables": "{\n  \"input\": {\n    \"name\": \"Wallet1\",\n    \"staticIlpAddress\": \"test.peer\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test123abc\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test123abc\"}\n    },\n    \"assetId\": \"{{assetId}}\",\n    \"maxPacketAmount\": 1000,\n    \"liquidityThreshold\": 100000000\n  }\n}"
 							}
 						},
 						"url": {
@@ -337,8 +339,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation UpdatePeer ($input: UpdatePeerInput!){  \n  updatePeer(input: $input) {\n    code\n    success\n    message\n    peer {\n      id\n      name\n      http {\n        outgoing {\n          authToken\n          endpoint\n        }\n      }\n    }\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"id\": \"{{peerId}}\",\n    \"name\": \"Wall-y\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test-123\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test\"}\n    },\n    \"maxPacketAmount\": 1000\n  }\n}"
+								"query": "mutation UpdatePeer ($input: UpdatePeerInput!){  \n  updatePeer(input: $input) {\n    code\n    success\n    message\n    peer {\n      id\n      name\n      http {\n        outgoing {\n          authToken\n          endpoint\n        }\n      }\n      liquidity\n      liquidityThreshold\n    }\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"id\": \"{{peerId}}\",\n    \"name\": \"Wall-y\",\n    \"http\": {\n      \"incoming\": {\"authTokens\": [\"test-123\"]},\n      \"outgoing\": {\"endpoint\": \"http://peer-backend:3002\", \"authToken\": \"test\"}\n    },\n    \"maxPacketAmount\": 1000,\n    \"liquidityThreshold\": 100\n  }\n}"
 							}
 						},
 						"url": {
@@ -365,7 +367,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetPeer {\n  peer (id: \"{{peerId}}\") {\n    id\n    name\n    http {\n      outgoing {\n        authToken\n        endpoint\n      }\n    }\n  }\n}",
+								"query": "query GetPeer {\n  peer (id: \"{{peerId}}\") {\n    id\n    name\n    http {\n      outgoing {\n        authToken\n        endpoint\n      }\n    }\n    liquidity\n    liquidityThreshold\n  }\n}",
 								"variables": ""
 							}
 						},
@@ -393,7 +395,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetPeers {\n    peers {\n        edges {\n            cursor\n            node {\n                id\n                name\n                asset {\n                    code\n                    scale\n                }\n                liquidity\n                staticIlpAddress\n                http {\n                    outgoing {\n                        authToken\n                        endpoint\n                    }\n                }\n            }\n        }\n    }\n}",
+								"query": "query GetPeers {\n    peers {\n        edges {\n            cursor\n            node {\n                id\n                name\n                asset {\n                    code\n                    scale\n                }\n                liquidity\n                liquidityThreshold\n                staticIlpAddress\n                http {\n                    outgoing {\n                        authToken\n                        endpoint\n                    }\n                }\n            }\n        }\n    }\n}",
 								"variables": ""
 							}
 						},

@@ -207,6 +207,8 @@ export async function createTransfer(
     postTransfers: async (transferRefs) => postTransfers(deps, transferRefs),
     getAccountReceived: async (accountRef) =>
       getAccountTotalReceived(deps, accountRef),
+    getAccountBalance: async (accountRef) =>
+      getLiquidityAccountBalance(deps, accountRef),
     createPendingTransfers: async (transfersToCreate) => {
       const [
         sourceAccount,
