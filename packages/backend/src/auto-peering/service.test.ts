@@ -8,7 +8,7 @@ import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset } from '../tests/asset'
 import { truncateTables } from '../tests/tableManager'
 import { AutoPeeringError, isAutoPeeringError } from './errors'
-import { AutoPeeringService } from './service'
+import { AutoPeeringService, PeeringDetails } from './service'
 import { PeerService } from '../peer/service'
 import { PeerError } from '../peer/errors'
 import { v4 as uuid } from 'uuid'
@@ -183,20 +183,36 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id
       }
 
-      const peerDetails = {
+      const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com'
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: 'peerHttpToken'
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
+
+      const peerCreationSpy = jest.spyOn(peerService, 'create')
 
       const peer = await autoPeeringService.initiatePeeringRequest(args)
 
       assert(!isAutoPeeringError(peer))
 
-      expect(await peerService.get(peer.id)).toEqual(peer)
-      expect(peer.staticIlpAddress).toBe(peerDetails.staticIlpAddress)
-      expect(peer.http.outgoing.endpoint).toBe(peerDetails.ilpConnectorAddress)
+      expect(peerCreationSpy).toHaveBeenCalledWith({
+        assetId: asset.id,
+        staticIlpAddress: peerDetails.staticIlpAddress,
+        http: {
+          incoming: {
+            authTokens: [peerDetails.httpToken]
+          },
+          outgoing: {
+            endpoint: peerDetails.ilpConnectorAddress,
+            authToken: expect.any(String)
+          }
+        },
+        name: undefined,
+        maxPacketAmount: undefined
+      })
+
       scope.done()
     })
 
@@ -277,9 +293,10 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id
       }
 
-      const peerDetails = {
+      const peerDetails: PeeringDetails = {
         staticIlpAddress: '',
-        ilpConnectorAddress: 'http://peer-two.com'
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: 'peerHttpToken'
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
@@ -298,9 +315,10 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id
       }
 
-      const peerDetails = {
+      const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: ''
+        ilpConnectorAddress: '',
+        httpToken: 'peerHttpToken'
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)
@@ -319,9 +337,10 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id
       }
 
-      const peerDetails = {
+      const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com'
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: 'peerHttpToken'
       }
 
       const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
@@ -343,9 +362,10 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id
       }
 
-      const peerDetails = {
+      const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com'
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: 'peerHttpToken'
       }
 
       const scope = nock(args.peerUrl).post('/').reply(200, peerDetails)

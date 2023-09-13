@@ -8,7 +8,7 @@ import { v4 as uuid } from 'uuid'
 import { Peer } from '../peer/model'
 import { AxiosInstance, isAxiosError } from 'axios'
 
-interface PeeringDetails {
+export interface PeeringDetails {
   staticIlpAddress: string
   ilpConnectorAddress: string
   httpToken: string
@@ -82,14 +82,14 @@ async function initiatePeeringRequest(
     return AutoPeeringError.UnknownAsset
   }
 
-  const httpToken = uuid()
+  const outgoingHttpToken = uuid()
 
   const peeringDetailsOrError = await sendPeeringRequest(deps, {
     peerUrl,
     ilpConnectorAddress: deps.config.ilpConnectorAddress,
     staticIlpAddress: deps.config.ilpAddress,
     asset: { code: asset.code, scale: asset.scale },
-    httpToken
+    httpToken: outgoingHttpToken
   })
 
   if (isAutoPeeringError(peeringDetailsOrError)) {
@@ -103,10 +103,10 @@ async function initiatePeeringRequest(
     staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
     http: {
       incoming: {
-        authTokens: [httpToken]
+        authTokens: [peeringDetailsOrError.httpToken]
       },
       outgoing: {
-        authToken: httpToken,
+        authToken: outgoingHttpToken,
         endpoint: peeringDetailsOrError.ilpConnectorAddress
       }
     }
