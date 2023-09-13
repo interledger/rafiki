@@ -329,7 +329,7 @@ async function finalizeQuote(
     receiveAmountValue = BigInt(receiveAmountValue) - fees
 
     if (receiveAmountValue <= fees) {
-      throw QuoteError.FeeExceedsReceiveAmount
+      throw QuoteError.NegativeReceiveAmount
     }
 
     if (

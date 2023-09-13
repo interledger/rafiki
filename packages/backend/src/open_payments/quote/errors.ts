@@ -3,7 +3,7 @@ export enum QuoteError {
   InvalidAmount = 'InvalidAmount',
   InvalidReceiver = 'InvalidReceiver',
   InactivePaymentPointer = 'InactivePaymentPointer',
-  FeeExceedsReceiveAmount = 'FeeExceedsReceiveAmount'
+  NegativeReceiveAmount = 'NegativeReceiveAmount'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -17,7 +17,7 @@ export const errorToCode: {
   [QuoteError.InvalidAmount]: 400,
   [QuoteError.InvalidReceiver]: 400,
   [QuoteError.InactivePaymentPointer]: 400,
-  [QuoteError.FeeExceedsReceiveAmount]: 400
+  [QuoteError.NegativeReceiveAmount]: 400
 }
 
 export const errorToMessage: {
@@ -27,5 +27,5 @@ export const errorToMessage: {
   [QuoteError.InvalidAmount]: 'invalid amount',
   [QuoteError.InvalidReceiver]: 'invalid receiver',
   [QuoteError.InactivePaymentPointer]: 'inactive payment pointer',
-  [QuoteError.FeeExceedsReceiveAmount]: 'fee exceeds receive amount'
+  [QuoteError.NegativeReceiveAmount]: 'negative receive amount'
 }
