@@ -11,6 +11,7 @@ import { AxiosInstance, isAxiosError } from 'axios'
 interface PeeringDetails {
   staticIlpAddress: string
   ilpConnectorAddress: string
+  httpToken: string
 }
 
 interface InitiatePeeringRequestArgs {
@@ -28,6 +29,14 @@ interface PeeringRequestArgs {
 }
 
 type SendPeeringRequestArgs = { peerUrl: string } & PeeringRequestArgs
+
+interface UpdatePeerArgs {
+  staticIlpAddress: string
+  ilpConnectorAddress: string
+  assetId: string
+  incomingHttpToken: string
+  outgoingHttpToken: string
+}
 
 export interface AutoPeeringService {
   acceptPeeringRequest(
@@ -177,7 +186,9 @@ async function acceptPeeringRequest(
     return AutoPeeringError.UnknownAsset
   }
 
-  const peerOrError = await deps.peerService.create({
+  const outgoingHttpToken = uuid()
+
+  const createdPeerOrError = await deps.peerService.create({
     staticIlpAddress: args.staticIlpAddress,
     assetId: asset.id,
     http: {
@@ -186,22 +197,67 @@ async function acceptPeeringRequest(
       },
       outgoing: {
         endpoint: args.ilpConnectorAddress,
-        authToken: args.httpToken
+        authToken: outgoingHttpToken
       }
     }
   })
 
+  const isDuplicatePeeringRequest =
+    isPeerError(createdPeerOrError) &&
+    createdPeerOrError === PeerError.DuplicatePeer
+
+  const peerOrError = isDuplicatePeeringRequest
+    ? await updatePeer(deps, {
+        staticIlpAddress: args.staticIlpAddress,
+        assetId: asset.id,
+        outgoingHttpToken,
+        incomingHttpToken: args.httpToken,
+        ilpConnectorAddress: args.ilpConnectorAddress
+      })
+    : createdPeerOrError
+
+  return peeringDetailsOrError(deps, peerOrError)
+}
+
+async function updatePeer(
+  deps: ServiceDependencies,
+  args: UpdatePeerArgs
+): Promise<Peer | PeerError> {
+  const peer = await deps.peerService.getByDestinationAddress(
+    args.staticIlpAddress,
+    args.assetId
+  )
+
+  if (!peer) {
+    deps.logger.error({ request: args }, 'could not find peer by ILP address')
+    return PeerError.UnknownPeer
+  }
+
+  return deps.peerService.update({
+    id: peer.id,
+    http: {
+      incoming: { authTokens: [args.incomingHttpToken] },
+      outgoing: {
+        authToken: args.outgoingHttpToken,
+        endpoint: args.ilpConnectorAddress
+      }
+    }
+  })
+}
+
+async function peeringDetailsOrError(
+  deps: ServiceDependencies,
+  peerOrError: Peer | PeerError
+): Promise<AutoPeeringError | PeeringDetails> {
   if (isPeerError(peerOrError)) {
-    if (peerOrError === PeerError.DuplicatePeer) {
-      /* If previously peered, treat as success */
-    } else if (
+    if (
       peerOrError === PeerError.InvalidHTTPEndpoint ||
       peerOrError === PeerError.InvalidStaticIlpAddress
     ) {
       return AutoPeeringError.InvalidPeerIlpConfiguration
     } else {
       deps.logger.error(
-        { error: peerOrError, request: args },
+        { error: peerOrError },
         'Could not accept peering request'
       )
       return AutoPeeringError.InvalidPeeringRequest
@@ -210,6 +266,7 @@ async function acceptPeeringRequest(
 
   return {
     ilpConnectorAddress: deps.config.ilpConnectorAddress,
-    staticIlpAddress: deps.config.ilpAddress
+    staticIlpAddress: deps.config.ilpAddress,
+    httpToken: peerOrError.http.outgoing.authToken
   }
 }

@@ -51,11 +51,12 @@ describe('Auto Peering Service', (): void => {
         autoPeeringService.acceptPeeringRequest(args)
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress
+        ilpConnectorAddress: config.ilpConnectorAddress,
+        httpToken: expect.any(String)
       })
     })
 
-    test('resolves connection details even if duplicate peer', async (): Promise<void> => {
+    test('updates connection details if duplicate peer request', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
       const args = {
@@ -65,18 +66,35 @@ describe('Auto Peering Service', (): void => {
         httpToken: 'someHttpToken'
       }
 
+      const peerUpdateSpy = jest.spyOn(peerService, 'update')
+
       await expect(
         autoPeeringService.acceptPeeringRequest(args)
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress
+        ilpConnectorAddress: config.ilpConnectorAddress,
+        httpToken: expect.any(String)
       })
+      expect(peerUpdateSpy).toHaveBeenCalledTimes(0)
+
       await expect(
         autoPeeringService.acceptPeeringRequest(args)
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
-        ilpConnectorAddress: config.ilpConnectorAddress
+        ilpConnectorAddress: config.ilpConnectorAddress,
+        httpToken: expect.any(String)
       })
+      expect(peerUpdateSpy).toHaveBeenCalledWith({
+        id: expect.any(String),
+        http: {
+          incoming: { authTokens: [args.httpToken] },
+          outgoing: {
+            authToken: expect.any(String),
+            endpoint: args.ilpConnectorAddress
+          }
+        }
+      })
+      expect(peerUpdateSpy).toHaveBeenCalledTimes(1)
     })
 
     test('returns error if unknown asset', async (): Promise<void> => {
