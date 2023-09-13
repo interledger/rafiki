@@ -5,6 +5,8 @@ info:
   description: 'Webhook Events fired by Rafiki'
   contact:
     email: tech@interledger.org
+servers:
+  - url: 'https://account-servicing-entity.com/webhooks'
 webhooks:
   incomingPaymentCompleted:
     post:
