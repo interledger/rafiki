@@ -1,5 +1,6 @@
 import {
   ForeignKeyViolationError,
+  UniqueViolationError,
   NotFoundError,
   raw,
   Transaction,
@@ -148,6 +149,8 @@ async function createPeer(
       if (err.constraint === 'peers_assetid_foreign') {
         return PeerError.UnknownAsset
       }
+    } else if (err instanceof UniqueViolationError) {
+      return PeerError.DuplicatePeer
     } else if (isPeerError(err)) {
       return err
     }

@@ -183,6 +183,17 @@ describe('Peer Service', (): void => {
         PeerError.InvalidHTTPEndpoint
       )
     })
+
+    test('Cannot create a peer with duplicate ILP address and asset', async (): Promise<void> => {
+      const options = randomPeer()
+
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+
+      await expect(peerService.create(options)).resolves.toEqual(
+        PeerError.DuplicatePeer
+      )
+    })
   })
 
   describe('Update Peer', (): void => {

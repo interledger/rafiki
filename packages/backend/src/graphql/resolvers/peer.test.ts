@@ -154,6 +154,7 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.InvalidStaticIlpAddress}
       ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownAsset}
+      ${PeerError.DuplicatePeer}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
       const peer = randomPeer()
