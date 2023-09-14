@@ -73,8 +73,8 @@ importers:
         specifier: ^4.3.10
         version: 4.3.10
       '@types/koa-json':
-        specifier: ^2.0.20
-        version: 2.0.20
+        specifier: ^2.0.21
+        version: 2.0.21
       '@types/koa-logger':
         specifier: ^3.1.2
         version: 3.1.2
@@ -5569,8 +5569,8 @@ packages:
       '@types/koa': 2.13.8
     dev: true
 
-  /@types/koa-json@2.0.20:
-    resolution: {integrity: sha512-RuQ1Vlpsm/EC5wo2oWCgNnwneixnSQ9aHQAE7nwnbSiCibgfUO2wwSQN6rn8SfF97cRdN9hKAtoc9KSIuiGP6Q==}
+  /@types/koa-json@2.0.21:
+    resolution: {integrity: sha512-739zYb0TaSdWPs8OAY7kMbefF4JaBj9LeAMJb/veFRp9Sol1Siq7Vw/WjSwMkyxlG48sgELr8gzVfM3bytvLxQ==}
     dependencies:
       '@types/koa': 2.13.8
     dev: true
