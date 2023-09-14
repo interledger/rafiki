@@ -656,7 +656,7 @@ type OutgoingPayment implements BasePayment & Model {
   error: String
   stateAttempts: Int!
   "Amount to send (fixed send)"
-  sendAmount: Amount!
+  debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
   "Payment pointer URL of the receiver"
@@ -735,7 +735,7 @@ type Quote {
   "Payment pointer URL of the receiver"
   receiver: String!
   "Amount to send (fixed send)"
-  sendAmount: Amount!
+  debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
   "Maximum value per packet allowed on the possible routes"
@@ -764,7 +764,7 @@ input CreateQuoteInput {
   "Id of the payment pointer under which the quote will be created"
   paymentPointerId: String!
   "Amount to send (fixed send)"
-  sendAmount: AmountInput
+  debitAmount: AmountInput
   "Amount to receive (fixed receive)"
   receiveAmount: AmountInput
   "Payment pointer URL of the receiver"

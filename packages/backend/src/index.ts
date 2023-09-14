@@ -344,17 +344,14 @@ export function initIocContainer(
   container.singleton('quoteService', async (deps) => {
     const config = await deps.use('config')
     return await createQuoteService({
-      slippage: config.slippage,
-      quoteLifespan: config.quoteLifespan,
-      quoteUrl: config.quoteUrl,
-      signatureSecret: config.signatureSecret,
-      signatureVersion: config.signatureVersion,
+      config,
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       makeIlpPlugin: await deps.use('makeIlpPlugin'),
       receiverService: await deps.use('receiverService'),
       paymentPointerService: await deps.use('paymentPointerService'),
-      ratesService: await deps.use('ratesService')
+      ratesService: await deps.use('ratesService'),
+      feeService: await deps.use('feeService')
     })
   })
   container.singleton('quoteRoutes', async (deps) => {

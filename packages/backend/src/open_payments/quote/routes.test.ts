@@ -32,7 +32,7 @@ describe('Quote Routes', (): void => {
 
   const receiver = `https://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
-  const sendAmount: Amount = {
+  const debitAmount: Amount = {
     value: BigInt(123),
     assetCode: asset.code,
     assetScale: asset.scale
@@ -48,7 +48,7 @@ describe('Quote Routes', (): void => {
     return await createQuote(deps, {
       paymentPointerId,
       receiver,
-      sendAmount: {
+      debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale
@@ -71,8 +71,8 @@ describe('Quote Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const { id: assetId } = await createAsset(deps, {
-      code: sendAmount.assetCode,
-      scale: sendAmount.assetScale
+      code: debitAmount.assetCode,
+      scale: debitAmount.assetScale
     })
     paymentPointer = await createPaymentPointer(deps, {
       assetId
@@ -101,7 +101,7 @@ describe('Quote Routes', (): void => {
           id: `${paymentPointer.url}/quotes/${quote.id}`,
           paymentPointer: paymentPointer.url,
           receiver: quote.receiver,
-          sendAmount: serializeAmount(quote.sendAmount),
+          debitAmount: serializeAmount(quote.debitAmount),
           receiveAmount: serializeAmount(quote.receiveAmount),
           createdAt: quote.createdAt.toISOString(),
           expiresAt: quote.expiresAt.toISOString()
@@ -129,13 +129,13 @@ describe('Quote Routes', (): void => {
         client
       })
 
-    test('returns error on invalid sendAmount asset', async (): Promise<void> => {
+    test('returns error on invalid debitAmount asset', async (): Promise<void> => {
       options = {
         receiver,
-        sendAmount: {
-          ...sendAmount,
-          value: sendAmount.value.toString(),
-          assetScale: sendAmount.assetScale + 1
+        debitAmount: {
+          ...debitAmount,
+          value: debitAmount.value.toString(),
+          assetScale: debitAmount.assetScale + 1
         }
       }
       const ctx = setup({})
@@ -162,18 +162,18 @@ describe('Quote Routes', (): void => {
       ${undefined}                                  | ${'no client'}
     `('returns the quote on success ($description)', ({ client }): void => {
       test.each`
-        sendAmount   | receiveAmount | description
-        ${'123'}     | ${undefined}  | ${'sendAmount'}
+        debitAmount  | receiveAmount | description
+        ${'123'}     | ${undefined}  | ${'debitAmount'}
         ${undefined} | ${'56'}       | ${'receiveAmount'}
       `(
         '$description',
-        async ({ sendAmount, receiveAmount }): Promise<void> => {
+        async ({ debitAmount, receiveAmount }): Promise<void> => {
           options = {
             receiver
           }
-          if (sendAmount)
-            options.sendAmount = {
-              value: sendAmount,
+          if (debitAmount)
+            options.debitAmount = {
+              value: debitAmount,
               assetCode: asset.code,
               assetScale: asset.scale
             }
@@ -199,9 +199,9 @@ describe('Quote Routes', (): void => {
           expect(quoteSpy).toHaveBeenCalledWith({
             paymentPointerId: paymentPointer.id,
             receiver,
-            sendAmount: options.sendAmount && {
-              ...options.sendAmount,
-              value: BigInt(options.sendAmount.value)
+            debitAmount: options.debitAmount && {
+              ...options.debitAmount,
+              value: BigInt(options.debitAmount.value)
             },
             receiveAmount: options.receiveAmount && {
               ...options.receiveAmount,
@@ -220,9 +220,9 @@ describe('Quote Routes', (): void => {
             id: `${paymentPointer.url}/quotes/${quoteId}`,
             paymentPointer: paymentPointer.url,
             receiver: quote.receiver,
-            sendAmount: {
-              ...quote.sendAmount,
-              value: quote.sendAmount.value.toString()
+            debitAmount: {
+              ...quote.debitAmount,
+              value: quote.debitAmount.value.toString()
             },
             receiveAmount: {
               ...quote.receiveAmount,
@@ -267,9 +267,9 @@ describe('Quote Routes', (): void => {
           id: `${paymentPointer.url}/quotes/${quoteId}`,
           paymentPointer: paymentPointer.url,
           receiver: options.receiver,
-          sendAmount: {
-            ...quote.sendAmount,
-            value: quote.sendAmount.value.toString()
+          debitAmount: {
+            ...quote.debitAmount,
+            value: quote.debitAmount.value.toString()
           },
           receiveAmount: {
             ...quote.receiveAmount,

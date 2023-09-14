@@ -64,7 +64,7 @@ sequenceDiagram
 participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>ASE: webhook event: outgoing payment created,<br>sendAmount: $12
+R->>ASE: webhook event: outgoing payment created,<br>debitAmount: $12
 ASE->>ASE: put hold of $12 on sender's account
 ASE->>R: admin API call: DepositEventLiquidity
 ```
@@ -81,7 +81,7 @@ sequenceDiagram
 participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>ASE: webhook event: outgoing completed,<br>sendAmount: $12, sentAmount:$11.50
+R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
 ASE->>R: admin API call: WithdrawEventLiquidity
 ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
 ```
@@ -98,7 +98,7 @@ sequenceDiagram
 participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>ASE: webhook event: outgoing failed,<br>sendAmount: $12, sentAmount:$8
+R->>ASE: webhook event: outgoing failed,<br>debitAmount: $12, sentAmount:$8
 ASE->>R: admin API call: WithdrawEventLiquidity
 ASE->>ASE: remove the hold and deduct $8 from the sender's account
 ```

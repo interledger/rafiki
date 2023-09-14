@@ -13,7 +13,7 @@ export async function createIncomingPayment(
   const incomingPaymentService = await deps.use('incomingPaymentService')
   const incomingPaymentOrError = await incomingPaymentService.create(options)
   if (isIncomingPaymentError(incomingPaymentOrError)) {
-    throw new Error()
+    throw incomingPaymentOrError
   }
 
   const accountingService = await deps.use('accountingService')
