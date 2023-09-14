@@ -3,7 +3,9 @@
   "scripts": {
     "test": "jest --passWithNoTests --maxWorkers=50%",
     "test:ci": "jest --passWithNoTests --maxWorkers=2",
-    "test:cov": "pnpm test -- --coverage --changedSince=main",
+    "test:cov": "pnpm test -- --coverage",
+    "test:sincemain": "pnpm test -- --changedSince=main",
+    "test:sincemain:cov": "pnpm test:sincemain --coverage",
     "knex": "knex",
     "generate": "graphql-codegen --config codegen.yml",
     "build:deps": "pnpm --filter token-introspection build",
