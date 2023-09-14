@@ -53,7 +53,8 @@ describe('Auto Peering Service', (): void => {
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
         ilpConnectorAddress: config.ilpConnectorAddress,
-        httpToken: expect.any(String)
+        httpToken: expect.any(String),
+        name: config.instanceName
       })
       expect(peerCreateSpy).toHaveBeenCalledWith({
         staticIlpAddress: args.staticIlpAddress,
@@ -77,7 +78,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        name: 'Rafiki Money'
       }
 
       const peerUpdateSpy = jest.spyOn(peerService, 'update')
@@ -87,7 +89,8 @@ describe('Auto Peering Service', (): void => {
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
         ilpConnectorAddress: config.ilpConnectorAddress,
-        httpToken: expect.any(String)
+        httpToken: expect.any(String),
+        name: config.instanceName
       })
       expect(peerUpdateSpy).toHaveBeenCalledTimes(0)
 
@@ -96,10 +99,12 @@ describe('Auto Peering Service', (): void => {
       ).resolves.toEqual({
         staticIlpAddress: config.ilpAddress,
         ilpConnectorAddress: config.ilpConnectorAddress,
-        httpToken: expect.any(String)
+        httpToken: expect.any(String),
+        name: config.instanceName
       })
       expect(peerUpdateSpy).toHaveBeenCalledWith({
         id: expect.any(String),
+        name: args.name,
         http: {
           incoming: { authTokens: [args.httpToken] },
           outgoing: {
