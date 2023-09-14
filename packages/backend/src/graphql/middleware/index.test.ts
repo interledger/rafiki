@@ -100,7 +100,7 @@ describe('GraphQL Middleware', (): void => {
         withdrawalThreshold: null
       })
 
-      createAssetSpy.mockReset()
+      createAssetSpy.mockClear()
 
       const repeatResponse = await callCreateAssetMutation(input)
 
@@ -155,7 +155,7 @@ describe('GraphQL Middleware', (): void => {
         }
       })
 
-      createAssetSpy.mockReset()
+      createAssetSpy.mockClear()
 
       const repeatResponse = await callCreateAssetMutation({
         ...input,
