@@ -28,7 +28,7 @@ RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
     --recursive \
-    --prefer-offline \
+    --ignore-scripts \
     --frozen-lockfile \
     --prod \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
