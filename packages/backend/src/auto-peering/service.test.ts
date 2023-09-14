@@ -86,7 +86,8 @@ describe('Auto Peering Service', (): void => {
         staticIlpAddress: 'test.rafiki-money',
         ilpConnectorAddress: 'http://peer.rafiki.money',
         asset: { code: asset.code, scale: asset.scale },
-        httpToken: 'someHttpToken'
+        httpToken: 'someHttpToken',
+        name: 'Rafiki Money'
       }
 
       const peerUpdateSpy = jest.spyOn(peerService, 'update')
@@ -111,6 +112,7 @@ describe('Auto Peering Service', (): void => {
       })
       expect(peerUpdateSpy).toHaveBeenCalledWith({
         id: expect.any(String),
+        name: args.name,
         http: {
           incoming: { authTokens: [args.httpToken] },
           outgoing: {
