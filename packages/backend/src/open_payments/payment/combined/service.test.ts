@@ -67,7 +67,7 @@ describe('Combined Payment Service', (): void => {
     const outgoingPayment = await createOutgoingPayment(deps, {
       paymentPointerId: sendPaymentPointerId,
       receiver: receiverUrl,
-      sendAmount: {
+      debitAmount: {
         value: BigInt(123),
         assetCode: sendAsset.code,
         assetScale: sendAsset.scale

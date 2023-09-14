@@ -65,7 +65,7 @@ describe('OutgoingPayment Resolvers', (): void => {
     return await createOutgoingPayment(deps, {
       ...options,
       receiver: `${Config.publicHost}/${uuid()}`,
-      sendAmount: {
+      debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale
@@ -126,7 +126,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     error
                     stateAttempts
                     receiver
-                    sendAmount {
+                    debitAmount {
                       value
                       assetCode
                       assetScale
@@ -168,10 +168,10 @@ describe('OutgoingPayment Resolvers', (): void => {
             error,
             stateAttempts: 0,
             receiver: payment.receiver,
-            sendAmount: {
-              value: payment.sendAmount.value.toString(),
-              assetCode: payment.sendAmount.assetCode,
-              assetScale: payment.sendAmount.assetScale,
+            debitAmount: {
+              value: payment.debitAmount.value.toString(),
+              assetCode: payment.debitAmount.assetCode,
+              assetScale: payment.debitAmount.assetScale,
               __typename: 'Amount'
             },
             sentAmount: {

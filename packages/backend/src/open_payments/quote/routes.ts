@@ -48,17 +48,17 @@ interface CreateBodyBase {
   receiver: string
 }
 
-interface CreateBodyWithSendAmount extends CreateBodyBase {
-  sendAmount?: AmountJSON
+interface CreateBodyWithDebitAmount extends CreateBodyBase {
+  debitAmount?: AmountJSON
   receiveAmount?: never
 }
 
 interface CreateBodyWithReceiveAmount extends CreateBodyBase {
-  sendAmount?: never
+  debitAmount?: never
   receiveAmount?: AmountJSON
 }
 
-export type CreateBody = CreateBodyWithSendAmount | CreateBodyWithReceiveAmount
+export type CreateBody = CreateBodyWithDebitAmount | CreateBodyWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
@@ -70,7 +70,7 @@ async function createQuote(
     receiver: body.receiver,
     client: ctx.client
   }
-  if (body.sendAmount) options.sendAmount = parseAmount(body.sendAmount)
+  if (body.debitAmount) options.debitAmount = parseAmount(body.debitAmount)
   if (body.receiveAmount)
     options.receiveAmount = parseAmount(body.receiveAmount)
   try {
