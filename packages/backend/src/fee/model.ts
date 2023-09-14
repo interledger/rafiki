@@ -1,3 +1,4 @@
+import { Asset } from '../asset/model'
 import { BaseModel } from '../shared/baseModel'
 
 export enum FeeType {
@@ -13,8 +14,8 @@ export class Fee extends BaseModel {
   public static get relationMappings() {
     return {
       asset: {
-        relation: BaseModel.BelongsToOneRelation,
-        modelClass: `${__dirname}/../asset/model`,
+        relation: BaseModel.HasOneRelation,
+        modelClass: Asset,
         join: {
           from: 'fees.assetId',
           to: 'assets.id'
@@ -27,4 +28,12 @@ export class Fee extends BaseModel {
   public type!: FeeType
   public fixedFee!: bigint
   public basisPointFee!: number
+  public asset!: Asset
+
+  public calculate(principal: bigint): bigint {
+    const feePercentage = this.basisPointFee / 10_000
+
+    // TODO: bigint/float multiplication
+    return BigInt(Math.floor(Number(principal) * feePercentage)) + this.fixedFee
+  }
 }

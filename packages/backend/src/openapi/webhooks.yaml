@@ -5,6 +5,8 @@ info:
   description: 'Webhook Events fired by Rafiki'
   contact:
     email: tech@interledger.org
+servers:
+  - url: 'https://account-servicing-entity.com/webhooks'
 webhooks:
   incomingPaymentCompleted:
     post:
@@ -182,7 +184,7 @@ components:
             - createdAt
             - updatedAt
             - expiresAt
-            - sendAmount
+            - debitAmount
             - receiveAmount
             - state
             - stateAttempts
@@ -205,7 +207,7 @@ components:
             receiver:
               type: string
               format: uri
-            sendAmount:
+            debitAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
             sentAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
