@@ -35,6 +35,7 @@ export const createTestApp = async (
   config.adminPort = 0
   config.openPaymentsPort = 0
   config.connectorPort = 0
+  config.autoPeeringServerPort = 0
   config.publicHost = 'https://wallet.example'
   config.openPaymentsUrl = 'https://op.example'
   config.paymentPointerUrl = 'https://wallet.example/.well-known/pay'

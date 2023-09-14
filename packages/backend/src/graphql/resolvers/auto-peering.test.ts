@@ -57,7 +57,9 @@ describe('Auto Peering Resolvers', (): void => {
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
-        ilpConnectorAddress: 'http://peer-two.com'
+        ilpConnectorAddress: 'http://peer-two.com',
+        name: 'Test Peer',
+        httpToken: 'httpToken'
       }
 
       const scope = nock(input.peerUrl).post('/').reply(200, peerDetails)
