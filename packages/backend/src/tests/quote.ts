@@ -9,7 +9,6 @@ import { CreateQuoteOptions } from '../open_payments/quote/service'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
   validDestination?: boolean
-  withFee?: boolean
 }
 
 export async function createQuote(
@@ -17,11 +16,10 @@ export async function createQuote(
   {
     paymentPointerId,
     receiver: receiverUrl,
-    debitAmount,
+    sendAmount,
     receiveAmount,
     client,
-    validDestination = true,
-    withFee = false
+    validDestination = true
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
   const paymentPointerService = await deps.use('paymentPointerService')
@@ -30,9 +28,9 @@ export async function createQuote(
     throw new Error()
   }
   if (
-    debitAmount &&
-    (paymentPointer.asset.code !== debitAmount.assetCode ||
-      paymentPointer.asset.scale !== debitAmount.assetScale)
+    sendAmount &&
+    (paymentPointer.asset.code !== sendAmount.assetCode ||
+      paymentPointer.asset.scale !== sendAmount.assetScale)
   ) {
     throw new Error()
   }
@@ -45,7 +43,7 @@ export async function createQuote(
     if (!receiver) {
       throw new Error()
     }
-    if (!receiver.incomingAmount && !receiveAmount && !debitAmount) {
+    if (!receiver.incomingAmount && !receiveAmount && !sendAmount) {
       throw new Error()
     }
     if (receiveAmount) {
@@ -63,13 +61,13 @@ export async function createQuote(
       }
     } else {
       receiveAsset = receiver.asset
-      if (!debitAmount) {
+      if (!sendAmount) {
         receiveAmount = receiver.incomingAmount
       }
     }
   } else {
     receiveAsset = randomAsset()
-    if (!debitAmount && !receiveAmount) {
+    if (!sendAmount && !receiveAmount) {
       receiveAmount = {
         value: BigInt(56),
         assetCode: receiveAsset.code,
@@ -78,13 +76,13 @@ export async function createQuote(
     }
   }
 
-  if (debitAmount) {
+  if (sendAmount) {
     if (!receiveAsset) {
       throw new Error()
     }
     receiveAmount = {
       value: BigInt(
-        Math.ceil(Number(debitAmount.value) / (2 * (1 + config.slippage)))
+        Math.ceil(Number(sendAmount.value) / (2 * (1 + config.slippage)))
       ),
       assetCode: receiveAsset.code,
       assetScale: receiveAsset.scale
@@ -93,7 +91,7 @@ export async function createQuote(
     if (!receiveAmount) {
       throw new Error()
     }
-    debitAmount = {
+    sendAmount = {
       value: BigInt(
         Math.ceil(Number(receiveAmount.value) * 2 * (1 + config.slippage))
       ),
@@ -102,18 +100,12 @@ export async function createQuote(
     }
   }
 
-  const withGraphFetchedArray = ['asset']
-  if (withFee) {
-    withGraphFetchedArray.push('fee')
-  }
-  const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
-
   return await Quote.query()
     .insertAndFetch({
       paymentPointerId,
       assetId: paymentPointer.assetId,
       receiver: receiverUrl,
-      debitAmount,
+      sendAmount,
       receiveAmount,
       maxPacketAmount: BigInt('9223372036854775807'),
       lowEstimatedExchangeRate: Pay.Ratio.of(
@@ -131,5 +123,5 @@ export async function createQuote(
       expiresAt: new Date(Date.now() + config.quoteLifespan),
       client
     })
-    .withGraphFetched(withGraphFetchedExpression)
+    .withGraphFetched('asset')
 }

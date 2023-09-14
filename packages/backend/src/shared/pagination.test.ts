@@ -61,7 +61,7 @@ describe('Pagination', (): void => {
     describe('payment pointer resources', (): void => {
       let defaultPaymentPointer: PaymentPointer
       let secondaryPaymentPointer: PaymentPointer
-      let debitAmount: Amount
+      let sendAmount: Amount
 
       beforeEach(async (): Promise<void> => {
         incomingPaymentService = await deps.use('incomingPaymentService')
@@ -75,7 +75,7 @@ describe('Pagination', (): void => {
         secondaryPaymentPointer = await createPaymentPointer(deps, {
           assetId: asset.id
         })
-        debitAmount = {
+        sendAmount = {
           value: BigInt(42),
           assetCode: asset.code,
           assetScale: asset.scale
@@ -157,7 +157,7 @@ describe('Pagination', (): void => {
               const payment = await createOutgoingPayment(deps, {
                 paymentPointerId: defaultPaymentPointer.id,
                 receiver: secondaryPaymentPointer.url,
-                debitAmount,
+                sendAmount,
                 validDestination: false
               })
               paymentIds.push(payment.id)
@@ -211,7 +211,7 @@ describe('Pagination', (): void => {
               const quote = await createQuote(deps, {
                 paymentPointerId: defaultPaymentPointer.id,
                 receiver: secondaryPaymentPointer.url,
-                debitAmount,
+                sendAmount,
                 validDestination: false
               })
               quoteIds.push(quote.id)

@@ -76,6 +76,7 @@ Now, the Admin UI can be found on localhost:3010.
 | backend.serviceUrls.PAYMENT_POINTER_URL | `PAYMENT_POINTER_URL`                             |
 | backend.serviceUrls.WEBHOOK_URL         | `WEBHOOK_URL`                                     |
 | backend.serviceUrls.EXCHANGE_RATES_URL  | `EXCHANGE_RATES_URL`                              |
+| backend.serviceUrls.QUOTE_URL           | `QUOTE_URL`                                       |
 | backend.redis.host                      | Redis host                                        |
 | backend.redis.port                      | Redis port                                        |
 | backend.redis.tlsCaFile                 | `REDIS_TLS_CA_FILE_PATH`                          |
@@ -144,6 +145,7 @@ Now, the Admin UI can be found on localhost:3010.
 | `PRIVATE_KEY_FILE`                                     | `undefined`                                                 | Rafiki instance client private key                                                                                          |
 | `PUBLIC_HOST`                                          | `http://127.0.0.1:3001`                                     | (testing) public Host for Open Payments APIs                                                                                |
 | `QUOTE_LIFESPAN`                                       | `5 * 60_000`                                                | milliseconds                                                                                                                |
+| `QUOTE_URL`                                            | `http://127.0.0.1:4001/quote`                               | endpoint on the Account Servicing Entity to request sender fees                                                             |
 | `REDIS_TLS_CA_FILE_PATH`                               | `''`                                                        | Redis TLS info                                                                                                              |
 | `REDIS_TLS_CERT_FILE_PATH`                             | `''`                                                        | Redis TLS info                                                                                                              |
 | `REDIS_TLS_KEY_FILE_PATH`                              | `''`                                                        | Redis TLS info                                                                                                              |

@@ -8,7 +8,6 @@ import {
 } from '../payment_pointer/model'
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
-import { Fee } from '../../fee/model'
 
 export class Quote extends PaymentPointerSubresource {
   public static readonly tableName = 'quotes'
@@ -16,7 +15,7 @@ export class Quote extends PaymentPointerSubresource {
 
   static get virtualAttributes(): string[] {
     return [
-      'debitAmount',
+      'sendAmount',
       'receiveAmount',
       'minExchangeRate',
       'lowEstimatedExchangeRate',
@@ -28,9 +27,6 @@ export class Quote extends PaymentPointerSubresource {
   public assetId!: string
   public asset!: Asset
 
-  public feeId?: string
-  public fee?: Fee
-
   static get relationMappings() {
     return {
       ...super.relationMappings,
@@ -41,14 +37,6 @@ export class Quote extends PaymentPointerSubresource {
           from: 'quotes.assetId',
           to: 'assets.id'
         }
-      },
-      fee: {
-        relation: Model.HasOneRelation,
-        modelClass: Fee,
-        join: {
-          from: 'quotes.feeId',
-          to: 'fees.id'
-        }
       }
     }
   }
@@ -57,22 +45,22 @@ export class Quote extends PaymentPointerSubresource {
 
   public receiver!: string
 
-  private debitAmountValue!: bigint
+  private sendAmountValue!: bigint
 
   public getUrl(paymentPointer: PaymentPointer): string {
     return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
   }
 
-  public get debitAmount(): Amount {
+  public get sendAmount(): Amount {
     return {
-      value: this.debitAmountValue,
+      value: this.sendAmountValue,
       assetCode: this.asset.code,
       assetScale: this.asset.scale
     }
   }
 
-  public set debitAmount(amount: Amount) {
-    this.debitAmountValue = amount.value
+  public set sendAmount(amount: Amount) {
+    this.sendAmountValue = amount.value
   }
 
   private receiveAmountValue!: bigint
@@ -102,7 +90,7 @@ export class Quote extends PaymentPointerSubresource {
   private highEstimatedExchangeRateDenominator!: bigint
 
   public get maxSourceAmount(): bigint {
-    return this.debitAmountValue
+    return this.sendAmountValue
   }
 
   public get minDeliveryAmount(): bigint {
@@ -156,9 +144,9 @@ export class Quote extends PaymentPointerSubresource {
       id: json.id,
       paymentPointerId: json.paymentPointerId,
       receiver: json.receiver,
-      debitAmount: {
-        ...json.debitAmount,
-        value: json.debitAmount.value.toString()
+      sendAmount: {
+        ...json.sendAmount,
+        value: json.sendAmount.value.toString()
       },
       receiveAmount: {
         ...json.receiveAmount,
@@ -174,7 +162,7 @@ export class Quote extends PaymentPointerSubresource {
       id: this.getUrl(paymentPointer),
       paymentPointer: paymentPointer.url,
       receiveAmount: serializeAmount(this.receiveAmount),
-      debitAmount: serializeAmount(this.debitAmount),
+      sendAmount: serializeAmount(this.sendAmount),
       receiver: this.receiver,
       expiresAt: this.expiresAt.toISOString(),
       createdAt: this.createdAt.toISOString()

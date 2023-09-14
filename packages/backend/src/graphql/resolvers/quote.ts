@@ -37,7 +37,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       paymentPointerId: args.input.paymentPointerId,
       receiver: args.input.receiver
     }
-    if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
+    if (args.input.sendAmount) options.sendAmount = args.input.sendAmount
     if (args.input.receiveAmount)
       options.receiveAmount = args.input.receiveAmount
     return quoteService
@@ -92,7 +92,7 @@ export function quoteToGraphql(quote: Quote): SchemaQuote {
     id: quote.id,
     paymentPointerId: quote.paymentPointerId,
     receiver: quote.receiver,
-    debitAmount: quote.debitAmount,
+    sendAmount: quote.sendAmount,
     receiveAmount: quote.receiveAmount,
     maxPacketAmount: quote.maxPacketAmount,
     minExchangeRate: quote.minExchangeRate.valueOf(),

@@ -56,7 +56,7 @@ describe('Payment', (): void => {
     const outgoingPayment = await createOutgoingPayment(deps, {
       paymentPointerId: outPaymentPointerId,
       receiver: `${Config.publicHost}/${uuid()}`,
-      debitAmount: {
+      sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale
@@ -141,7 +141,7 @@ describe('Payment', (): void => {
 
     const baseOutgoingPayment = {
       receiver: `${Config.publicHost}/${uuid()}`,
-      debitAmount: {
+      sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale

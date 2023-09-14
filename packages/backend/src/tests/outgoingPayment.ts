@@ -22,7 +22,7 @@ export async function createOutgoingPayment(
     receiver: options.receiver,
     validDestination: options.validDestination
   }
-  if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
+  if (options.sendAmount) quoteOptions.sendAmount = options.sendAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
   const quote = await createQuote(deps, quoteOptions)
   const outgoingPaymentService = await deps.use('outgoingPaymentService')

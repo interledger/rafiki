@@ -161,8 +161,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       '@interledger/open-payments':
-        specifier: 3.0.1
-        version: 3.0.1
+        specifier: 2.0.0
+        version: 2.0.0
       '@interledger/openapi':
         specifier: 1.0.3
         version: 1.0.3
@@ -300,8 +300,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       '@interledger/open-payments':
-        specifier: 3.0.1
-        version: 3.0.1
+        specifier: 2.0.0
+        version: 2.0.0
       '@interledger/openapi':
         specifier: 1.0.3
         version: 1.0.3
@@ -4198,6 +4198,15 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
+  /@interledger/http-signature-utils@1.0.3:
+    resolution: {integrity: sha512-jh+sVSvJYdub1gB9OHXIGziKrEiIvoFG3SFjW/fBCWyUabjq0Bt3RYmz5C29GjoKORvYTor+hO2m7e5EtJwdog==}
+    dependencies:
+      http-message-signatures: 0.1.2
+      httpbis-digest-headers: github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b
+      jose: 4.13.1
+      uuid: 9.0.1
+    dev: false
+
   /@interledger/http-signature-utils@1.0.4:
     resolution: {integrity: sha512-iiHWGzB/c0bwjV9AxkkmOeqEmWO2CY0em372xyeqTQ3DT6GCkB90qhWZ4Tte2pxOgzpowkAfo1cXMW1NMCD8AA==}
     dependencies:
@@ -4207,10 +4216,10 @@ packages:
       uuid: 9.0.0
     dev: false
 
-  /@interledger/open-payments@3.0.1:
-    resolution: {integrity: sha512-B9ZEEVlE2xPKWHr+JHgWgxdW09UwmAedpHxORovRshwo18em2iQbifYPv3THnIUqGnpy+RLzIPuP0LoQK4m4oQ==}
+  /@interledger/open-payments@2.0.0:
+    resolution: {integrity: sha512-qyLAIZwyH8lSXLDwJ7Eu75Aw3kpdoRJvn7L1/0yIktnhEnVWdCzZ9t6J9kadtn+JMVkjYBQooHPnG/gZCE/39w==}
     dependencies:
-      '@interledger/http-signature-utils': 1.0.4
+      '@interledger/http-signature-utils': 1.0.3
       '@interledger/openapi': 1.0.3
       axios: 1.5.0
       base64url: 3.0.1
@@ -16635,3 +16644,13 @@ packages:
 
   /zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
+
+  github.com/interledger/httpbis-digest-headers/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b:
+    resolution: {tarball: https://codeload.github.com/interledger/httpbis-digest-headers/tar.gz/eb2e41c25cb6f2b8c610b74a853f36c6be8dbb4b}
+    name: httpbis-digest-headers
+    version: 1.0.0
+    prepare: true
+    requiresBuild: true
+    dependencies:
+      structured-headers: 0.5.0
+    dev: false

@@ -58,10 +58,10 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amtDebit = parseAmount(payment['debitAmount'])
+  const amtSend = parseAmount(payment['sendAmount'])
   const amtSent = parseAmount(payment['sentAmount'])
 
-  const toVoid = amtDebit.value - amtSent.value
+  const toVoid = amtSend.value - amtSent.value
 
   await mockAccounts.debit(acc.id, amtSent.value, true)
   if (toVoid > 0) {
@@ -86,7 +86,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amt = parseAmount(payment['debitAmount'])
+  const amt = parseAmount(payment['sendAmount'])
 
   await mockAccounts.pendingDebit(acc.id, amt.value)
 

@@ -1599,18 +1599,6 @@
         "fields": null,
         "inputFields": [
           {
-            "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
-            "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "AmountInput",
-              "ofType": null
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "idempotencyKey",
             "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
             "type": {
@@ -1661,6 +1649,18 @@
                 "name": "String",
                 "ofType": null
               }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sendAmount",
+            "description": "Amount to send (fixed send)",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "AmountInput",
+              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -4110,22 +4110,6 @@
             "deprecationReason": null
           },
           {
-            "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Amount",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "error",
             "description": null,
             "args": [],
@@ -4219,6 +4203,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sendAmount",
+            "description": "Amount to send (fixed send)",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
                 "ofType": null
               }
             },
@@ -6311,22 +6311,6 @@
             "deprecationReason": null
           },
           {
-            "name": "debitAmount",
-            "description": "Amount to send (fixed send)",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Amount",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
             "name": "expiresAt",
             "description": "Date-time of expiration",
             "args": [],
@@ -6464,6 +6448,22 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "sendAmount",
+            "description": "Amount to send (fixed send)",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
                 "ofType": null
               }
             },

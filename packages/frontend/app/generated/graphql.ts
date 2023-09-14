@@ -240,8 +240,6 @@ export type CreatePeerMutationResponse = MutationResponse & {
 };
 
 export type CreateQuoteInput = {
-  /** Amount to send (fixed send) */
-  debitAmount?: InputMaybe<AmountInput>;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Id of the payment pointer under which the quote will be created */
@@ -250,6 +248,8 @@ export type CreateQuoteInput = {
   receiveAmount?: InputMaybe<AmountInput>;
   /** Payment pointer URL of the receiver */
   receiver: Scalars['String']['input'];
+  /** Amount to send (fixed send) */
+  sendAmount?: InputMaybe<AmountInput>;
 };
 
 export type CreateReceiverInput = {
@@ -656,8 +656,6 @@ export type OutgoingPayment = BasePayment & Model & {
   __typename?: 'OutgoingPayment';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
-  /** Amount to send (fixed send) */
-  debitAmount: Amount;
   error?: Maybe<Scalars['String']['output']>;
   /** Outgoing payment id */
   id: Scalars['ID']['output'];
@@ -671,6 +669,8 @@ export type OutgoingPayment = BasePayment & Model & {
   receiveAmount: Amount;
   /** Payment pointer URL of the receiver */
   receiver: Scalars['String']['output'];
+  /** Amount to send (fixed send) */
+  sendAmount: Amount;
   /** Amount already sent */
   sentAmount: Amount;
   /** Outgoing payment state */
@@ -1000,8 +1000,6 @@ export type Quote = {
   __typename?: 'Quote';
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
-  /** Amount to send (fixed send) */
-  debitAmount: Amount;
   /** Date-time of expiration */
   expiresAt: Scalars['String']['output'];
   /** Upper bound of probed exchange rate */
@@ -1020,6 +1018,8 @@ export type Quote = {
   receiveAmount: Amount;
   /** Payment pointer URL of the receiver */
   receiver: Scalars['String']['output'];
+  /** Amount to send (fixed send) */
+  sendAmount: Amount;
 };
 
 export type QuoteConnection = {
@@ -1705,7 +1705,6 @@ export type MutationResponseResolvers<ContextType = any, ParentType extends Reso
 
 export type OutgoingPaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['OutgoingPayment'] = ResolversParentTypes['OutgoingPayment']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
@@ -1713,6 +1712,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  sendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   sentAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['OutgoingPaymentState'], ParentType, ContextType>;
   stateAttempts?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
@@ -1860,7 +1860,6 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
 
 export type QuoteResolvers<ContextType = any, ParentType extends ResolversParentTypes['Quote'] = ResolversParentTypes['Quote']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   highEstimatedExchangeRate?: Resolver<ResolversTypes['Float'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
@@ -1870,6 +1869,7 @@ export type QuoteResolvers<ContextType = any, ParentType extends ResolversParent
   paymentPointerId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   receiver?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  sendAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 

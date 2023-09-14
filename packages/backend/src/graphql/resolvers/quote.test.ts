@@ -53,7 +53,7 @@ describe('Quote Resolvers', (): void => {
     return await createQuote(deps, {
       paymentPointerId,
       receiver,
-      debitAmount: {
+      sendAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale
@@ -77,7 +77,7 @@ describe('Quote Resolvers', (): void => {
                 id
                 paymentPointerId
                 receiver
-                debitAmount {
+                sendAmount {
                   value
                   assetCode
                   assetScale
@@ -106,10 +106,10 @@ describe('Quote Resolvers', (): void => {
         id: quote.id,
         paymentPointerId,
         receiver: quote.receiver,
-        debitAmount: {
-          value: quote.debitAmount.value.toString(),
-          assetCode: quote.debitAmount.assetCode,
-          assetScale: quote.debitAmount.assetScale,
+        sendAmount: {
+          value: quote.sendAmount.value.toString(),
+          assetCode: quote.sendAmount.assetCode,
+          assetScale: quote.sendAmount.assetScale,
           __typename: 'Amount'
         },
         receiveAmount: {
@@ -156,11 +156,11 @@ describe('Quote Resolvers', (): void => {
       assetCode: receiveAsset.code,
       assetScale: receiveAsset.scale
     }
-    let debitAmount: Amount
+    let sendAmount: Amount
     let input: CreateQuoteInput
 
     beforeEach((): void => {
-      debitAmount = {
+      sendAmount = {
         value: BigInt(123),
         assetCode: asset.code,
         assetScale: asset.scale
@@ -168,7 +168,7 @@ describe('Quote Resolvers', (): void => {
       input = {
         paymentPointerId: uuid(),
         receiver,
-        debitAmount
+        sendAmount
       }
     })
 
@@ -178,13 +178,13 @@ describe('Quote Resolvers', (): void => {
       ${false}   | ${receiveAmount} | ${'fixed receive to incoming payment'}
       ${false}   | ${undefined}     | ${'incoming payment'}
     `('200 ($type)', async ({ withAmount, receiveAmount }): Promise<void> => {
-      const amount = withAmount ? debitAmount : undefined
+      const amount = withAmount ? sendAmount : undefined
       const { id: paymentPointerId } = await createPaymentPointer(deps, {
         assetId: asset.id
       })
       const input = {
         paymentPointerId,
-        debitAmount: amount,
+        sendAmount: amount,
         receiveAmount,
         receiver
       }

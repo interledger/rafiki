@@ -269,7 +269,7 @@ describe('Auth Middleware', (): void => {
               assetCode: 'EUR',
               assetScale: 2
             },
-            debitAmount: {
+            sendAmount: {
               value: '811',
               assetCode: 'USD',
               assetScale: 2

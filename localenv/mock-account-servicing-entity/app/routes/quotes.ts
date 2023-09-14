@@ -19,7 +19,7 @@ export type Quote = {
   paymentType: PaymentType
   paymentPointerId: string
   receiver: string
-  debitAmount: Amount
+  sendAmount: Amount
   receiveAmount: Amount
   maxPacketAmount: number // bigint
   minExchangeRate: number
@@ -37,16 +37,16 @@ export async function action({ request }: ActionArgs) {
 
   if (receivedQuote.paymentType == PaymentType.FixedDelivery) {
     // TODO: handle quote fee calculation for different assets
-    if (!supportedAssets.includes(receivedQuote.debitAmount.assetCode)) {
+    if (!supportedAssets.includes(receivedQuote.sendAmount.assetCode)) {
       throw json('Invalid quote sendAmount asset', { status: 400 })
     }
-    const sendAmountValue = BigInt(receivedQuote.debitAmount.value)
+    const sendAmountValue = BigInt(receivedQuote.sendAmount.value)
     const fees =
       // TODO: bigint/float multiplication
       BigInt(Math.floor(Number(sendAmountValue) * fee.percentage)) +
-      BigInt(fee.fixed * Math.pow(10, receivedQuote.debitAmount.assetScale))
+      BigInt(fee.fixed * Math.pow(10, receivedQuote.sendAmount.assetScale))
 
-    receivedQuote.debitAmount.value = (sendAmountValue + fees).toString()
+    receivedQuote.sendAmount.value = (sendAmountValue + fees).toString()
   } else if (receivedQuote.paymentType === PaymentType.FixedSend) {
     if (!supportedAssets.includes(receivedQuote.receiveAmount.assetCode)) {
       throw json('Invalid quote receiveAmount asset', { status: 400 })

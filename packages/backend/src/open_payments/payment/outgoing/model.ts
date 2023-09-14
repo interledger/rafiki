@@ -29,7 +29,7 @@ export class OutgoingPayment
   public static readonly urlPath = '/outgoing-payments'
 
   static get virtualAttributes(): string[] {
-    return ['debitAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
+    return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
   }
 
   public state!: OutgoingPaymentState
@@ -43,8 +43,8 @@ export class OutgoingPayment
     return this.quote.receiver
   }
 
-  public get debitAmount(): Amount {
-    return this.quote.debitAmount
+  public get sendAmount(): Amount {
+    return this.quote.sendAmount
   }
 
   private sentAmountValue?: bigint
@@ -122,16 +122,16 @@ export class OutgoingPayment
         paymentPointerId: this.paymentPointerId,
         state: this.state,
         receiver: this.receiver,
-        debitAmount: {
-          ...this.debitAmount,
-          value: this.debitAmount.value.toString()
+        sendAmount: {
+          ...this.sendAmount,
+          value: this.sendAmount.value.toString()
         },
         receiveAmount: {
           ...this.receiveAmount,
           value: this.receiveAmount.value.toString()
         },
         sentAmount: {
-          ...this.debitAmount,
+          ...this.sendAmount,
           value: amountSent.toString()
         },
         stateAttempts: this.stateAttempts,
@@ -160,7 +160,7 @@ export class OutgoingPayment
       paymentPointer: paymentPointer.url,
       quoteId: this.quote?.getUrl(paymentPointer) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
-      debitAmount: serializeAmount(this.debitAmount),
+      sendAmount: serializeAmount(this.sendAmount),
       sentAmount: serializeAmount(this.sentAmount),
       receiver: this.receiver,
       failed: this.failed,
@@ -206,7 +206,7 @@ export interface OutgoingPaymentResponse {
   paymentPointerId: string
   createdAt: string
   receiver: string
-  debitAmount: AmountJSON
+  sendAmount: AmountJSON
   receiveAmount: AmountJSON
   metadata?: Record<string, unknown>
   failed: boolean

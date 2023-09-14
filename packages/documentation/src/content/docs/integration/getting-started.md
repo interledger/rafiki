@@ -17,7 +17,7 @@ Furthermore, each payment account managed by the Account Servicing Entity needs 
 
 ## Quotes / Rates and Fees
 
-Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may set fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity.
+Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity.
 
 ### Exchange Rates
 
@@ -37,64 +37,34 @@ The `backend` package requires an environment variable called `EXCHANGE_RATES_UR
 
 ### Fees
 
-Sending fees can be set on a given asset using the `setFee` graphql mutation if desired:
+If the Account Servicing Entity decides to add sending fees, it is required to provide an endpoint that is accessible to the Rafiki backend. It accepts a `POST` request with
 
-Mutation:
+#### Request Body
 
-```gql
-mutation SetFee($input: SetFeeInput!) {
-  setFee(input: $input) {
-    code
-    success
-    message
-    fee {
-      id
-      assetId
-      type
-      fixed
-      basisPoints
-      createdAt
-    }
-  }
-}
-```
+| Variable Name      | Type                                     | Description                                 |
+| ------------------ | ---------------------------------------- | ------------------------------------------- |
+| `id`               | String                                   | Interledger quote id                        |
+| `paymentType`      | Enum: `'FixedSend'` \| `'FixedDelivery'` | fixed-send or fixed-receive payment         |
+| `paymentPointerId` | String                                   | id of sending payment pointer               |
+| `receiver`         | String                                   | receiving payment pointer                   |
+| `sendAmount`       | [Amount](#amount)                        | defined or quoted send amount               |
+| `receiveAmount`    | [Amount](#amount)                        | defined or quoted receive amount            |
+| `createdAt`        | String                                   | creation date and time of Interledger quote |
+| `expiresAt`        | String                                   | expiry date and time of Interledger quote   |
 
-Query Variables:
+#### Amount
 
-```json
-{
-  "input": {
-    "assetId": "14863f6f-4bda-42ef-8715-bf4762898af8",
-    "type": "SENDING",
-    "fee": {
-      "fixed": 100,
-      "basisPoints": 100
-    }
-  }
-}
-```
+(The example amount is $42.42.)
 
-Example Successful Response
+| Variable Name | Type                       | Description                                                                                               |
+| ------------- | -------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `value`       | String // Number // bigint | e.g. `"4242"` or `4242`                                                                                   |
+| `assetCode`   | String                     | [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), e.g. `USD`                              |
+| `assetScale`  | Number                     | difference in orders of magnitude between the standard unit and a corresponding fractional unit, e.g. `2` |
 
-```json
-{
-  "data": {
-    "setFee": {
-      "code": "200",
-      "success": true,
-      "message": "Fee set",
-      "fee": {
-        "id": "140fd9c0-8f14-4850-9724-102f04d97e69",
-        "assetId": "14863f6f-4bda-42ef-8715-bf4762898af8",
-        "type": "SENDING",
-        "fixed": "100",
-        "basisPoints": 100,
-        "createdAt": "2023-09-13T14:59:53.435Z"
-      }
-    }
-  }
-}
-```
+If the payment is a `FixedSend` payment, this endpoint should deduct its fees from the receive amount value. If the payment is a `FixedDelivery` payment, this endpoint should add the fees to the send amount value. The response body MUST be equal to the [request body](#request-body) apart from the updated `sendAmount` or `receiveAmount` values. The response status code for a successful request is a `201`. The `mock-account-servicing-entity` includes a [minimalistic example](https://github.com/interledger/rafiki/blob/main/localenv/mock-account-servicing-entity/app/routes/quotes.ts).
+
+The `backend` package requires an environment variable called `QUOTE_URL` which MUST specify the URL of this endpoint.
 
 ## Webhook Events Listener
 

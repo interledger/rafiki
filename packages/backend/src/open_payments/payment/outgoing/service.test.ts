@@ -67,7 +67,7 @@ describe('OutgoingPaymentService', (): void => {
     code: 'USD'
   }
 
-  const debitAmount: Amount = {
+  const sendAmount: Amount = {
     value: BigInt(123),
     assetCode: asset.code,
     assetScale: asset.scale
@@ -289,7 +289,7 @@ describe('OutgoingPaymentService', (): void => {
           paymentPointerId,
           client,
           receiver,
-          debitAmount,
+          sendAmount,
           validDestination: false
         }),
       get: (options) => outgoingPaymentService.get(options),
@@ -349,7 +349,7 @@ describe('OutgoingPaymentService', (): void => {
             const quote = await createQuote(deps, {
               paymentPointerId,
               receiver,
-              debitAmount
+              sendAmount
             })
             const options = {
               paymentPointerId,
@@ -371,7 +371,7 @@ describe('OutgoingPaymentService', (): void => {
               id: quote.id,
               paymentPointerId,
               receiver: quote.receiver,
-              debitAmount: quote.debitAmount,
+              sendAmount: quote.sendAmount,
               receiveAmount: quote.receiveAmount,
               metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
@@ -411,7 +411,7 @@ describe('OutgoingPaymentService', (): void => {
         const { id: quoteId } = await createQuote(deps, {
           paymentPointerId,
           receiver,
-          debitAmount,
+          sendAmount,
           validDestination: false
         })
         await expect(
@@ -449,7 +449,7 @@ describe('OutgoingPaymentService', (): void => {
         const quote = await createQuote(deps, {
           paymentPointerId,
           receiver,
-          debitAmount,
+          sendAmount,
           validDestination: false
         })
         await expect(
@@ -464,7 +464,7 @@ describe('OutgoingPaymentService', (): void => {
         const quote = await createQuote(deps, {
           paymentPointerId,
           receiver,
-          debitAmount,
+          sendAmount,
           validDestination: false
         })
         await quote.$query(knex).patch({
@@ -487,7 +487,7 @@ describe('OutgoingPaymentService', (): void => {
           const quote = await createQuote(deps, {
             paymentPointerId,
             receiver,
-            debitAmount
+            sendAmount
           })
           await incomingPayment.$query(knex).patch({
             state,
@@ -507,7 +507,7 @@ describe('OutgoingPaymentService', (): void => {
         const { id: quoteId } = await createQuote(deps, {
           paymentPointerId,
           receiver,
-          debitAmount,
+          sendAmount,
           validDestination: false
         })
         const paymentPointer = await createPaymentPointer(deps)
@@ -528,14 +528,14 @@ describe('OutgoingPaymentService', (): void => {
           assert.ok(grant)
           grant.limits = {
             receiver,
-            debitAmount
+            sendAmount
           }
           const quotes = await Promise.all(
             [0, 1].map(async (_) => {
               return await createQuote(deps, {
                 paymentPointerId,
                 receiver,
-                debitAmount
+                sendAmount
               })
             })
           )
@@ -583,7 +583,7 @@ describe('OutgoingPaymentService', (): void => {
             quote = await createQuote(deps, {
               paymentPointerId,
               receiver,
-              debitAmount
+              sendAmount
             })
             options = {
               paymentPointerId,
@@ -601,7 +601,7 @@ describe('OutgoingPaymentService', (): void => {
             const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
             assert.ok(grant)
             grant.limits = {
-              debitAmount: debitAmount,
+              sendAmount,
               interval: `R0/${start.toISOString()}/P1M`
             }
             await expect(
@@ -610,8 +610,8 @@ describe('OutgoingPaymentService', (): void => {
           })
           test.each`
             limits                                                                         | description
-            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}
-            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${'debitAmount asset scale'}
+            ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'sendAmount asset code'}
+            ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'sendAmount asset scale'}
             ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
             ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
           `(
@@ -625,25 +625,25 @@ describe('OutgoingPaymentService', (): void => {
             }
           )
           test.each`
-            debitAmount | description
-            ${true}     | ${'debitAmount'}
-            ${false}    | ${'receiveAmount'}
+            sendAmount | description
+            ${true}    | ${'sendAmount'}
+            ${false}   | ${'receiveAmount'}
           `(
             'fails if grant limit $description is not enough for payment',
-            async ({ debitAmount }): Promise<void> => {
+            async ({ sendAmount }): Promise<void> => {
               const amount = {
                 value: BigInt(12),
-                assetCode: debitAmount
+                assetCode: sendAmount
                   ? quote.asset.code
                   : quote.receiveAmount.assetCode,
-                assetScale: debitAmount
+                assetScale: sendAmount
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
-              grant.limits = debitAmount
+              grant.limits = sendAmount
                 ? {
-                    debitAmount: amount,
+                    sendAmount: amount,
                     interval
                   }
                 : {
@@ -656,27 +656,27 @@ describe('OutgoingPaymentService', (): void => {
             }
           )
           test.each`
-            debitAmount | failed   | description
-            ${true}     | ${false} | ${'debitAmount'}
-            ${false}    | ${false} | ${'receiveAmount'}
-            ${true}     | ${true}  | ${'debitAmount, failed first payment'}
-            ${false}    | ${true}  | ${'receiveAmount, failed first payment'}
+            sendAmount | failed   | description
+            ${true}    | ${false} | ${'sendAmount'}
+            ${false}   | ${false} | ${'receiveAmount'}
+            ${true}    | ${true}  | ${'sendAmount, failed first payment'}
+            ${false}   | ${true}  | ${'receiveAmount, failed first payment'}
           `(
             'fails if limit was already used up - $description',
-            async ({ debitAmount, failed }): Promise<void> => {
+            async ({ sendAmount, failed }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(200),
-                assetCode: debitAmount
+                assetCode: sendAmount
                   ? quote.asset.code
                   : quote.receiveAmount.assetCode,
-                assetScale: debitAmount
+                assetScale: sendAmount
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
               grant.limits = {
-                debitAmount: debitAmount ? grantAmount : undefined,
-                receiveAmount: debitAmount ? undefined : grantAmount,
+                sendAmount: sendAmount ? grantAmount : undefined,
+                receiveAmount: sendAmount ? undefined : grantAmount,
                 interval
               }
               const paymentAmount = {
@@ -688,8 +688,8 @@ describe('OutgoingPaymentService', (): void => {
                 receiver: `${
                   Config.publicHost
                 }/${uuid()}/incoming-payments/${uuid()}`,
-                debitAmount: debitAmount ? paymentAmount : undefined,
-                receiveAmount: debitAmount ? undefined : paymentAmount,
+                sendAmount: sendAmount ? paymentAmount : undefined,
+                receiveAmount: sendAmount ? undefined : paymentAmount,
                 grant,
                 validDestination: false
               })
@@ -702,7 +702,7 @@ describe('OutgoingPaymentService', (): void => {
                 jest
                   .spyOn(accountingService, 'getTotalSent')
                   .mockResolvedValueOnce(
-                    debitAmount ? BigInt(188) : BigInt(188 * 2)
+                    sendAmount ? BigInt(188) : BigInt(188 * 2)
                   )
               }
 
@@ -727,36 +727,36 @@ describe('OutgoingPaymentService', (): void => {
           )
 
           test.each`
-            debitAmount | competingPayment | failed       | half     | description
-            ${true}     | ${false}         | ${undefined} | ${false} | ${'debitAmount w/o competing payment'}
-            ${false}    | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
-            ${true}     | ${true}          | ${false}     | ${false} | ${'debitAmount w/ competing payment'}
-            ${false}    | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
-            ${true}     | ${true}          | ${true}      | ${false} | ${'debitAmount w/ failed competing payment'}
-            ${false}    | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
-            ${true}     | ${true}          | ${true}      | ${true}  | ${'debitAmount w/ half-way failed competing payment'}
-            ${false}    | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
+            sendAmount | competingPayment | failed       | half     | description
+            ${true}    | ${false}         | ${undefined} | ${false} | ${'sendAmount w/o competing payment'}
+            ${false}   | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
+            ${true}    | ${true}          | ${false}     | ${false} | ${'sendAmount w/ competing payment'}
+            ${false}   | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
+            ${true}    | ${true}          | ${true}      | ${false} | ${'sendAmount w/ failed competing payment'}
+            ${false}   | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
+            ${true}    | ${true}          | ${true}      | ${true}  | ${'sendAmount w/ half-way failed competing payment'}
+            ${false}   | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
           `(
             'succeeds if grant limit is enough for payment - $description',
             async ({
-              debitAmount,
+              sendAmount,
               competingPayment,
               failed,
               half
             }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(1234567),
-                assetCode: debitAmount
+                assetCode: sendAmount
                   ? quote.asset.code
                   : quote.receiveAmount.assetCode,
-                assetScale: debitAmount
+                assetScale: sendAmount
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
-              grant.limits = debitAmount
+              grant.limits = sendAmount
                 ? {
-                    debitAmount: grantAmount,
+                    sendAmount: grantAmount,
                     interval
                   }
                 : {
@@ -773,8 +773,8 @@ describe('OutgoingPaymentService', (): void => {
                   receiver: `${
                     Config.publicHost
                   }/${uuid()}/incoming-payments/${uuid()}`,
-                  debitAmount: debitAmount ? paymentAmount : undefined,
-                  receiveAmount: debitAmount ? undefined : paymentAmount,
+                  sendAmount: sendAmount ? paymentAmount : undefined,
+                  receiveAmount: sendAmount ? undefined : paymentAmount,
                   client,
                   grant,
                   validDestination: false
@@ -838,7 +838,7 @@ describe('OutgoingPaymentService', (): void => {
         await expect(
           outgoingPaymentService.fund({
             id: payment.id,
-            amount: payment.debitAmount.value,
+            amount: payment.sendAmount.value,
             transferId: uuid()
           })
         ).resolves.toMatchObject({
@@ -849,13 +849,13 @@ describe('OutgoingPaymentService', (): void => {
       }
 
       test.each`
-        debitAmount    | receiveAmount
-        ${debitAmount} | ${undefined}
-        ${undefined}   | ${receiveAmount}
-      `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
+        sendAmount    | receiveAmount
+        ${sendAmount} | ${undefined}
+        ${undefined}  | ${receiveAmount}
+      `('COMPLETED', async ({ sendAmount, receiveAmount }): Promise<void> => {
         const paymentId = await setup({
           receiver,
-          debitAmount,
+          sendAmount,
           receiveAmount
         })
 
@@ -865,11 +865,11 @@ describe('OutgoingPaymentService', (): void => {
         )
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - amountSent,
+          accountBalance: payment.sendAmount.value - amountSent,
           amountSent,
           amountDelivered: payment.receiveAmount.value,
           incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value - amountSent
+          withdrawAmount: payment.sendAmount.value - amountSent
         })
       })
 
@@ -899,11 +899,11 @@ describe('OutgoingPaymentService', (): void => {
         )
         const amountSent = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - amountSent,
+          accountBalance: payment.sendAmount.value - amountSent,
           amountSent,
           amountDelivered: payment.receiveAmount.value,
           incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value - amountSent
+          withdrawAmount: payment.sendAmount.value - amountSent
         })
       })
 
@@ -936,7 +936,7 @@ describe('OutgoingPaymentService', (): void => {
           ? payment.receiveAmount.value * BigInt(2)
           : (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - amountSent,
+          accountBalance: payment.sendAmount.value - amountSent,
           amountSent,
           amountDelivered: toConnection
             ? payment.receiveAmount.value
@@ -944,7 +944,7 @@ describe('OutgoingPaymentService', (): void => {
           incomingPaymentReceived: toConnection
             ? payment.receiveAmount.value + amountAlreadyDelivered
             : payment.receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value - amountSent
+          withdrawAmount: payment.sendAmount.value - amountSent
         })
       })
 
@@ -959,7 +959,7 @@ describe('OutgoingPaymentService', (): void => {
 
         const paymentId = await setup({
           receiver,
-          debitAmount
+          sendAmount
         })
 
         for (let i = 0; i < 4; i++) {
@@ -1001,7 +1001,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         const paymentId = await setup({
           receiver,
-          debitAmount
+          sendAmount
         })
 
         const payment = await processNext(
@@ -1037,7 +1037,7 @@ describe('OutgoingPaymentService', (): void => {
         mockFn.mockRestore()
         fastForwardToAttempt(1)
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - BigInt(10),
+          accountBalance: payment.sendAmount.value - BigInt(10),
           amountSent: BigInt(10),
           amountDelivered: BigInt(5)
         })
@@ -1049,7 +1049,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         const sentAmount = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment2, {
-          accountBalance: payment.debitAmount.value - sentAmount,
+          accountBalance: payment.sendAmount.value - sentAmount,
           amountSent: sentAmount,
           amountDelivered: payment.receiveAmount.value
         })
@@ -1076,7 +1076,7 @@ describe('OutgoingPaymentService', (): void => {
         )
         const sentAmount = payment.receiveAmount.value * BigInt(2)
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - sentAmount,
+          accountBalance: payment.sendAmount.value - sentAmount,
           amountSent: sentAmount,
           amountDelivered: payment.receiveAmount.value
         })
@@ -1098,18 +1098,18 @@ describe('OutgoingPaymentService', (): void => {
           OutgoingPaymentState.Completed
         )
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value,
+          accountBalance: payment.sendAmount.value,
           amountSent: BigInt(0),
           amountDelivered: BigInt(0),
           incomingPaymentReceived: receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value
+          withdrawAmount: payment.sendAmount.value
         })
       })
 
       it('FAILED (source asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
           receiver,
-          debitAmount
+          sendAmount
         })
         const { id: assetId } = await createAsset(deps, {
           code: asset.code,
@@ -1131,7 +1131,7 @@ describe('OutgoingPaymentService', (): void => {
       it('FAILED (destination asset changed)', async (): Promise<void> => {
         const paymentId = await setup({
           receiver,
-          debitAmount
+          sendAmount
         })
         // Pretend that the destination asset was initially different.
         await OutgoingPayment.relatedQuery('quote')
@@ -1159,10 +1159,10 @@ describe('OutgoingPaymentService', (): void => {
       payment = await createOutgoingPayment(deps, {
         paymentPointerId,
         receiver,
-        debitAmount,
+        sendAmount,
         validDestination: false
       })
-      quoteAmount = payment.debitAmount.value
+      quoteAmount = payment.sendAmount.value
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     }, 10_000)
 

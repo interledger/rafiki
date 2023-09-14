@@ -1894,7 +1894,7 @@ receiver<br />
 </tr>
 <tr>
 <td>
-debitAmount<br />
+sendAmount<br />
 <a href="objects#amount"><code>Amount!</code></a>
 </td>
 <td>

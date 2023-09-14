@@ -794,7 +794,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "914fbff5-0d44-4c69-bc4d-3a0507af645a",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -807,7 +806,6 @@
 						{
 							"listen": "prerequest",
 							"script": {
-								"id": "63c84a58-3a85-44dd-86cf-8446e0afce8c",
 								"exec": [
 									"// Create an additional payment pointer to represent the account that will be sending money",
 									"",
@@ -861,8 +859,8 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{secondPaymentPointerId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{paymentPointerUrl}}/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 4,\n      \"value\": 50000\n    }\n  }\n}"
+								"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+								"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{secondPaymentPointerId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{paymentPointerUrl}}/incoming-payments/{{incomingPaymentId}}\",\n    \"sendAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 4,\n      \"value\": 50000\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -889,7 +887,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetQuote($id: String!) {\n    quote(id: $id) {\n        createdAt\n        highEstimatedExchangeRate\n        expiresAt\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n            assetCode\n            assetScale\n            value\n        }\n        receiver\n        debitAmount {\n            assetCode\n            assetScale\n            value\n        }\n    }\n}",
+								"query": "query GetQuote($id: String!) {\n    quote(id: $id) {\n        createdAt\n        highEstimatedExchangeRate\n        expiresAt\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n            assetCode\n            assetScale\n            value\n        }\n        receiver\n        sendAmount {\n            assetCode\n            assetScale\n            value\n        }\n    }\n}",
 								"variables": "{\n    \"id\": \"{{quoteId}}\"\n}"
 							}
 						},
@@ -911,7 +909,6 @@
 						{
 							"listen": "test",
 							"script": {
-								"id": "7f9d8f1d-5af7-4b24-86e4-3c54f2223f32",
 								"exec": [
 									"const body = pm.response.json();",
 									"",
@@ -932,7 +929,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      quote {\n        createdAt\n        expiresAt\n        highEstimatedExchangeRate\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n          assetCode\n          assetScale\n          value\n        }\n        receiver\n        debitAmount {\n          assetCode\n          assetScale\n          value\n        }\n      }\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+								"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      quote {\n        createdAt\n        expiresAt\n        highEstimatedExchangeRate\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        paymentPointerId\n        receiveAmount {\n          assetCode\n          assetScale\n          value\n        }\n        receiver\n        sendAmount {\n          assetCode\n          assetScale\n          value\n        }\n      }\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
 								"variables": "{\n  \"input\": {\n    \"metadata\": {\n        \"description\": null,\n        \"externalRef\": null\n    },\n    \"paymentPointerId\": \"{{secondPaymentPointerId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
 							}
 						},
@@ -960,7 +957,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    debitAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
+								"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    sendAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
 								"variables": "{\n    \"id\": \"{{outgoingPaymentId}}\"\n}"
 							}
 						},
@@ -1190,7 +1187,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query Grant($id: ID!) {\n    grant(id: $id) {\n        id\n        state\n        createdAt\n        client\n        access {\n            type\n            actions\n            createdAt\n            id\n            identifier\n            limits {\n                interval\n                receiveAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n                receiver\n                debitAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n            }\n        }\n    }\n}",
+								"query": "query Grant($id: ID!) {\n    grant(id: $id) {\n        id\n        state\n        createdAt\n        client\n        access {\n            type\n            actions\n            createdAt\n            id\n            identifier\n            limits {\n                interval\n                receiveAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n                receiver\n                sendAmount {\n                    assetCode\n                    assetScale\n                    value\n                }\n            }\n        }\n    }\n}",
 								"variables": "{\n    \"id\": \"056b3f93-7890-4005-9b24-2623d9cedab5\"\n}"
 							}
 						},
@@ -1218,7 +1215,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) {\n    grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {\n        edges {\n            cursor\n            node {\n                access {\n                    createdAt\n                    id\n                    identifier\n                    limits {\n                        interval\n                        receiveAmount {\n                            assetScale\n                            value\n                            assetCode\n                        }\n                        receiver\n                        debitAmount {\n                            assetCode\n                            assetScale\n                            value\n                        }\n                    }\n                    actions\n                    type\n                }\n                client\n                createdAt\n                id\n                state\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}\n",
+								"query": "query Grants($after: String, $before: String, $first: Int, $last: Int, $filter: GrantFilter) {\n    grants(after: $after, before: $before, first: $first, last: $last, filter: $filter) {\n        edges {\n            cursor\n            node {\n                access {\n                    createdAt\n                    id\n                    identifier\n                    limits {\n                        interval\n                        receiveAmount {\n                            assetScale\n                            value\n                            assetCode\n                        }\n                        receiver\n                        sendAmount {\n                            assetCode\n                            assetScale\n                            value\n                        }\n                    }\n                    actions\n                    type\n                }\n                client\n                createdAt\n                id\n                state\n            }\n        }\n        pageInfo {\n            endCursor\n            hasNextPage\n            hasPreviousPage\n            startCursor\n        }\n    }\n}\n",
 								"variables": "{\n    \"after\": null,\n    \"before\": null,\n    \"first\": null,\n    \"last\": null,\n    \"filter\": {\n        \"state\": {\n            \"in\": [\"PROCESSING\", \"PENDING\", \"APPROVED\", \"FINALIZED\"]\n        },\n        \"finalizationReason\": {\n            \"notIn\": [\"REVOKED\", \"REJECTED\"]\n        }\n    }\n}\n"
 							}
 						},
@@ -1671,7 +1668,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "b506250c-95d0-464e-93fe-2dea5070c404",
 										"exec": [
 											"pm.test(\"Status code is 201\", function () {",
 											"    pm.response.to.have.status(201);",
@@ -1687,7 +1683,6 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"id": "622fcc84-1b0e-4694-9e1b-77484f866e22",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignatures'))"
 										],
@@ -1713,7 +1708,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n}",
+									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"sendAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2385,7 +2380,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "5b02c3c1-cc52-4772-900c-6dd24f2a6e46",
 										"exec": [
 											"pm.test(\"Status code is 201\", function () {",
 											"    pm.response.to.have.status(201);",
@@ -2393,7 +2387,7 @@
 											"",
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"quoteId\", body.id.split(\"/\").pop());",
-											"pm.collectionVariables.set(\"quoteDebitAmountValue\", body.debitAmount.value)",
+											"pm.collectionVariables.set(\"quoteSendAmountValue\", body.sendAmount.value)",
 											"pm.collectionVariables.set(\"quoteReceiveAmountValue\", body.receiveAmount.value)",
 											""
 										],
@@ -2403,7 +2397,6 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"id": "d2b13a64-4450-43b6-bd2d-212b99f7132f",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignatures'))"
 										],
@@ -2454,7 +2447,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "1ddabc8a-bdf4-4327-a426-40547ac9f16b",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
@@ -2468,7 +2460,6 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"id": "44827563-e7dc-4ab9-a1e4-a741fba7ba82",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))"
 										],
@@ -2485,7 +2476,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://cloud-nine-wallet-backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"debitAmount\": {\n                        \"value\": \"{{quoteDebitAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"{{quoteReceiveAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://cloud-nine-wallet-backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"{{quoteSendAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"{{quoteReceiveAmountValue}}\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": \"https://happy-life-bank-backend/accounts/pfry\",\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2735,7 +2726,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "ab40891a-2e51-485d-85a6-1258ae62ae77",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -2748,7 +2738,6 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"id": "9a79a4d2-cc4b-4e62-8972-776be98fba47",
 										"exec": [
 											"",
 											"const getPaymentPointersQuery = `",
@@ -2798,7 +2787,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"receiver\": \"{{receiverId}}\"\n  }\n}"
 									}
 								},
@@ -2820,7 +2809,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "bfd48dd8-38f4-48d9-a621-47498a51078d",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -2841,7 +2829,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
 									}
 								},
@@ -2869,7 +2857,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    debitAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
+										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    sendAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
 										"variables": "{\n    \"id\": \"{{outgoingPaymentId}}\"\n}"
 									}
 								},
@@ -2940,7 +2928,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "72013d98-f06d-4658-9770-03200cb7112b",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -2953,7 +2940,6 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"id": "cc3ebb64-835d-4cd0-8e0f-4369049650de",
 										"exec": [
 											"",
 											"const getPaymentPointersQuery = `",
@@ -3003,7 +2989,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+										"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"receiver\": \"{{receiverId}}\"\n  }\n}"
 									}
 								},
@@ -3025,7 +3011,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "be762c93-0a02-44c6-bc23-e77a3e9d5e92",
 										"exec": [
 											"const body = pm.response.json();",
 											"",
@@ -3046,7 +3031,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+										"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      paymentPointerId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      sendAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
 										"variables": "{\n  \"input\": {\n    \"paymentPointerId\": \"{{gfranklinPaymentPointerId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
 									}
 								},
@@ -3074,7 +3059,7 @@
 								"body": {
 									"mode": "graphql",
 									"graphql": {
-										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    debitAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
+										"query": "query GetOutgoingPayment($id: String!) {\noutgoingPayment(id: $id) {\n    createdAt\n    error\n    metadata\n    id\n    paymentPointerId\n    quote {\n      id\n    }\n    receiveAmount {\n      assetCode\n      assetScale\n      value\n    }\n    receiver\n    sendAmount {\n      assetCode\n      assetScale\n      value\n    }\n    sentAmount {\n      assetCode\n      assetScale\n      value\n    }\n    state\n    stateAttempts\n  }\n}",
 										"variables": "{\n    \"id\": \"{{outgoingPaymentId}}\"\n}"
 									}
 								},
@@ -3239,7 +3224,6 @@
 								{
 									"listen": "test",
 									"script": {
-										"id": "1ea954c7-f395-45f8-b463-5dfd3a1e1466",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
@@ -3271,7 +3255,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"debitAmount\": {\n                        \"value\": \"3600\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"3364\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": {\n        \"display\": {\n            \"name\": \"Shoe Shop\",\n            \"uri\": \"https://www.saagershoeshop.com\"\n        },\n        \"key\": {\n            \"proof\": \"httpsig\",\n            \"jwk\": {\n                \"alg\": \"EdDSA\",\n                \"kty\": \"OKP\",\n                \"use\": \"sig\",\n                \"crv\": \"Ed25519\",\n                \"kid\": \"http://fynbos/keys/12345\",\n                \"x\": \"jfiusdhvherui4vueurygygb8\"\n            }\n        }\n    },\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
+									"raw": "{\n    \"access_token\": {\n        \"access\": [\n            {\n                \"type\": \"quote\",\n                \"actions\": [\n                    \"create\", \"read\"\n                ]\n            },\n            {\n                \"type\": \"outgoing-payment\",\n                \"actions\": [\n                    \"create\", \"read\", \"list\"\n                ],\n                \"identifier\": \"https://backend/accounts/gfranklin\",\n                \"limits\": {\n                    \"sendAmount\": {\n                        \"value\": \"3600\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    },\n                    \"receiveAmount\": {\n                        \"value\": \"3364\",\n                        \"assetCode\": \"USD\",\n                        \"assetScale\": 2\n                    }\n                }\n            }\n        ]\n    },\n    \"client\": {\n        \"display\": {\n            \"name\": \"Shoe Shop\",\n            \"uri\": \"https://www.saagershoeshop.com\"\n        },\n        \"key\": {\n            \"proof\": \"httpsig\",\n            \"jwk\": {\n                \"alg\": \"EdDSA\",\n                \"kty\": \"OKP\",\n                \"use\": \"sig\",\n                \"crv\": \"Ed25519\",\n                \"kid\": \"http://fynbos/keys/12345\",\n                \"x\": \"jfiusdhvherui4vueurygygb8\"\n            }\n        }\n    },\n    \"interact\": {\n        \"start\": [\n            \"redirect\"\n        ],\n        \"finish\": {\n            \"method\": \"redirect\",\n            \"uri\": \"http://localhost:3030/mock-idp/fake-client\",\n            \"nonce\": \"456\"\n        }\n    }\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3562,7 +3546,7 @@
 		{
 			"listen": "prerequest",
 			"script": {
-				"id": "bbb00c25-aa21-4b39-bc93-45f8785249e5",
+				"id": "83ff5ca5-119d-4e56-ba79-d7e8dc9aa1f8",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3572,7 +3556,7 @@
 		{
 			"listen": "test",
 			"script": {
-				"id": "4e0e42f6-0f71-404f-a772-27a285fc29ee",
+				"id": "459ca00e-dd8b-4b48-8a07-3c02f266795a",
 				"type": "text/javascript",
 				"exec": [
 					""
@@ -3781,12 +3765,12 @@
 			"value": ""
 		},
 		{
-			"id": "988e93e1-8d51-42bd-94f9-460cc024b8fc",
-			"key": "quoteDebitAmountValue",
+			"id": "e5cbb52e-397c-40ae-8abb-69785df85df0",
+			"key": "quoteSendAmountValue",
 			"value": ""
 		},
 		{
-			"id": "49636fb9-26d7-4238-98a5-1e4ba13b018a",
+			"id": "67ca2f99-ac86-422e-9b68-624620213508",
 			"key": "quoteReceiveAmountValue",
 			"value": ""
 		},

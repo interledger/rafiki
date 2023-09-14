@@ -54,7 +54,7 @@ export enum LifecycleError {
   RatesUnavailable = 'RatesUnavailable',
   // Edge error due to retries, partial payment, and database write errors.
   BadState = 'BadState',
-  // Account asset conflicts with debitAmount asset
+  // Account asset conflicts with sendAmount asset
   SourceAssetConflict = 'SourceAssetConflict',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:

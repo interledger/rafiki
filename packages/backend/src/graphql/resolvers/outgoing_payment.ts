@@ -103,7 +103,7 @@ export function paymentToGraphql(
     error: payment.error,
     stateAttempts: payment.stateAttempts,
     receiver: payment.receiver,
-    debitAmount: payment.debitAmount,
+    sendAmount: payment.sendAmount,
     sentAmount: payment.sentAmount,
     receiveAmount: payment.receiveAmount,
     metadata: payment.metadata,

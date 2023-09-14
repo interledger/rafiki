@@ -44,7 +44,7 @@ describe('Outgoing Payment Routes', (): void => {
       ...options,
       paymentPointerId: paymentPointer.id,
       receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
-      debitAmount: {
+      sendAmount: {
         value: BigInt(56),
         assetCode: paymentPointer.asset.code,
         assetScale: paymentPointer.asset.scale
@@ -107,7 +107,7 @@ describe('Outgoing Payment Routes', (): void => {
           paymentPointer: paymentPointer.url,
           receiver: outgoingPayment.receiver,
           quoteId: outgoingPayment.quote.getUrl(paymentPointer),
-          debitAmount: serializeAmount(outgoingPayment.debitAmount),
+          sendAmount: serializeAmount(outgoingPayment.sendAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
           metadata: outgoingPayment.metadata,
@@ -198,9 +198,9 @@ describe('Outgoing Payment Routes', (): void => {
           paymentPointer: paymentPointer.url,
           receiver: payment.receiver,
           quoteId: options.quoteId,
-          debitAmount: {
-            ...payment.debitAmount,
-            value: payment.debitAmount.value.toString()
+          sendAmount: {
+            ...payment.sendAmount,
+            value: payment.sendAmount.value.toString()
           },
           receiveAmount: {
             ...payment.receiveAmount,

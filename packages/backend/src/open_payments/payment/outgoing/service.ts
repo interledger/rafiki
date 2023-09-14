@@ -232,9 +232,9 @@ function validateAmountAssets(
   limits: Limits
 ): boolean {
   if (
-    limits.debitAmount &&
-    (limits.debitAmount.assetCode !== payment.asset.code ||
-      limits.debitAmount.assetScale !== payment.asset.scale)
+    limits.sendAmount &&
+    (limits.sendAmount.assetCode !== payment.asset.code ||
+      limits.sendAmount.assetScale !== payment.asset.scale)
   ) {
     return false
   }
@@ -263,10 +263,10 @@ async function validateGrant(
   if (!paymentLimits) {
     return false
   }
-  if (!paymentLimits.debitAmount && !paymentLimits.receiveAmount) return true
+  if (!paymentLimits.sendAmount && !paymentLimits.receiveAmount) return true
   if (
-    (paymentLimits.debitAmount &&
-      paymentLimits.debitAmount.value < payment.debitAmount.value) ||
+    (paymentLimits.sendAmount &&
+      paymentLimits.sendAmount.value < payment.sendAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value < payment.receiveAmount.value)
   ) {
@@ -321,17 +321,16 @@ async function validateGrant(
         // Estimate delivered amount of failed payment
         receivedAmount +=
           (grantPayment.receiveAmount.value * totalSent) /
-          grantPayment.debitAmount.value
+          grantPayment.sendAmount.value
       } else {
-        sentAmount += grantPayment.debitAmount.value
+        sentAmount += grantPayment.sendAmount.value
         receivedAmount += grantPayment.receiveAmount.value
       }
     }
   }
   if (
-    (paymentLimits.debitAmount &&
-      paymentLimits.debitAmount.value - sentAmount <
-        payment.debitAmount.value) ||
+    (paymentLimits.sendAmount &&
+      paymentLimits.sendAmount.value - sentAmount < payment.sendAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value - receivedAmount <
         payment.receiveAmount.value)
@@ -360,7 +359,7 @@ async function fundPayment(
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
-    if (amount !== payment.debitAmount.value) return FundingError.InvalidAmount
+    if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
 
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
