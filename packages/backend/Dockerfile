@@ -12,18 +12,23 @@ RUN apk add --no-cache \
     make \
     g++
 
-COPY pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml .npmrc tsconfig.json tsconfig.build.json pnpm-lock.yaml  ./
+COPY openapi ./openapi
+COPY packages/backend ./packages/backend
+COPY packages/token-introspection ./packages/token-introspection
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm fetch \
     | grep -v "cross-device link not permitted\|Falling back to copying packages from store"
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install \
+    --recursive \
+    --offline \
+    --frozen-lockfile
 
 FROM base AS prod-deps
 
-COPY package.json pnpm-workspace.yaml .npmrc ./
-COPY packages/backend/package.json ./packages/backend/package.json
-COPY packages/token-introspection/package.json ./packages/token-introspection/package.json
-
+RUN pnpm add -g typescript
 RUN pnpm clean
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install \
@@ -40,11 +45,6 @@ COPY openapi ./openapi
 COPY packages/backend ./packages/backend
 COPY packages/token-introspection ./packages/token-introspection
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install \
-    --recursive \
-    --offline \
-    --frozen-lockfile
 RUN pnpm --filter backend build
 
 FROM node:18-alpine3.18 AS runner
