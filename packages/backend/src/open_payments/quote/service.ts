@@ -20,7 +20,7 @@ import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 import { convertRatesToIlpPrices } from '../../rates/util'
 import { FeeService } from '../../fee/service'
-import { Fee, FeeType } from '../../fee/model'
+import { FeeType } from '../../fee/model'
 import { IAppConfig } from '../../config/app'
 
 const MAX_INT64 = BigInt('9223372036854775807')
