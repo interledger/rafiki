@@ -1643,7 +1643,7 @@ Outgoing payment state
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
 <td>
 
@@ -2545,7 +2545,7 @@ Payment pointer URL of the receiver
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
 <td>
 
@@ -3743,7 +3743,7 @@ Id of the payment pointer under which the quote will be created
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
 <td>
 

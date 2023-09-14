@@ -1,12 +1,10 @@
-import axios from 'axios'
-import { createHmac } from 'crypto'
-import { ModelObject, TransactionOrKnex } from 'objection'
+import { TransactionOrKnex } from 'objection'
 import * as Pay from '@interledger/pay'
 
 import { BaseService } from '../../shared/baseService'
 import { QuoteError, isQuoteError } from './errors'
 import { Quote } from './model'
-import { Amount, parseAmount } from '../amount'
+import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
 import { Receiver } from '../receiver/model'
 import {
@@ -21,6 +19,9 @@ import {
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
 import { convertRatesToIlpPrices } from '../../rates/util'
+import { FeeService } from '../../fee/service'
+import { Fee, FeeType } from '../../fee/model'
+import { IAppConfig } from '../../config/app'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -29,16 +30,13 @@ export interface QuoteService extends PaymentPointerSubresourceService<Quote> {
 }
 
 export interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   knex: TransactionOrKnex
-  slippage: number
-  quoteUrl: string
-  quoteLifespan: number // milliseconds
-  signatureSecret?: string
-  signatureVersion: number
   receiverService: ReceiverService
   paymentPointerService: PaymentPointerService
   ratesService: RatesService
   makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  feeService: FeeService
 }
 
 export async function createQuoteService(
@@ -59,7 +57,7 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex).get(options).withGraphFetched('asset')
+  return Quote.query(deps.knex).get(options).withGraphFetched('[asset, fee]')
 }
 
 interface QuoteOptionsBase {
@@ -68,25 +66,25 @@ interface QuoteOptionsBase {
   client?: string
 }
 
-interface QuoteOptionsWithSendAmount extends QuoteOptionsBase {
+interface QuoteOptionsWithDebitAmount extends QuoteOptionsBase {
   receiveAmount?: never
-  sendAmount?: Amount
+  debitAmount?: Amount
 }
 
 interface QuoteOptionsWithReceiveAmount extends QuoteOptionsBase {
   receiveAmount?: Amount
-  sendAmount?: never
+  debitAmount?: never
 }
 
 export type CreateQuoteOptions =
-  | QuoteOptionsWithSendAmount
+  | QuoteOptionsWithDebitAmount
   | QuoteOptionsWithReceiveAmount
 
 async function createQuote(
   deps: ServiceDependencies,
   options: CreateQuoteOptions
 ): Promise<Quote | QuoteError> {
-  if (options.sendAmount && options.receiveAmount) {
+  if (options.debitAmount && options.receiveAmount) {
     return QuoteError.InvalidAmount
   }
   const paymentPointer = await deps.paymentPointerService.get(
@@ -98,11 +96,11 @@ async function createQuote(
   if (!paymentPointer.isActive) {
     return QuoteError.InactivePaymentPointer
   }
-  if (options.sendAmount) {
+  if (options.debitAmount) {
     if (
-      options.sendAmount.value <= BigInt(0) ||
-      options.sendAmount.assetCode !== paymentPointer.asset.code ||
-      options.sendAmount.assetScale !== paymentPointer.asset.scale
+      options.debitAmount.value <= BigInt(0) ||
+      options.debitAmount.assetCode !== paymentPointer.asset.code ||
+      options.debitAmount.assetScale !== paymentPointer.asset.scale
     ) {
       return QuoteError.InvalidAmount
     }
@@ -121,13 +119,18 @@ async function createQuote(
       receiver
     })
 
+    const sendingFee = await deps.feeService.getLatestFee(
+      paymentPointer.assetId,
+      FeeType.Sending
+    )
+
     return await Quote.transaction(deps.knex, async (trx) => {
       const quote = await Quote.query(trx)
         .insertAndFetch({
           paymentPointerId: options.paymentPointerId,
           assetId: paymentPointer.assetId,
           receiver: options.receiver,
-          sendAmount: {
+          debitAmount: {
             value: ilpQuote.maxSourceAmount,
             assetCode: paymentPointer.asset.code,
             assetScale: paymentPointer.asset.scale
@@ -147,12 +150,13 @@ async function createQuote(
           highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
           // Patch using createdAt below
           expiresAt: new Date(0),
-          client: options.client
+          client: options.client,
+          feeId: sendingFee?.id
         })
-        .withGraphFetched('asset')
+        .withGraphFetched('[asset, fee]')
 
       let maxReceiveAmountValue: bigint | undefined
-      if (options.sendAmount) {
+      if (options.debitAmount) {
         const receivingPaymentValue =
           receiver.incomingAmount && receiver.receivedAmount
             ? receiver.incomingAmount.value - receiver.receivedAmount.value
@@ -205,7 +209,7 @@ export async function resolveReceiver(
         throw QuoteError.InvalidAmount
       }
     }
-  } else if (!options.sendAmount && !receiver.incomingAmount) {
+  } else if (!options.debitAmount && !receiver.incomingAmount) {
     throw QuoteError.InvalidReceiver
   }
   return receiver
@@ -213,7 +217,7 @@ export async function resolveReceiver(
 
 export interface StartQuoteOptions {
   paymentPointer: PaymentPointer
-  sendAmount?: Amount
+  debitAmount?: Amount
   receiveAmount?: Amount
   receiver: Receiver
 }
@@ -243,15 +247,15 @@ export async function startQuote(
         code: options.paymentPointer.asset.code
       }
     }
-    if (options.sendAmount) {
-      quoteOptions.amountToSend = options.sendAmount.value
+    if (options.debitAmount) {
+      quoteOptions.amountToSend = options.debitAmount.value
     } else {
       quoteOptions.amountToDeliver =
         options.receiveAmount?.value || options.receiver.incomingAmount?.value
     }
     const quote = await Pay.startQuote({
       ...quoteOptions,
-      slippage: deps.slippage,
+      slippage: deps.config.slippage,
       prices: convertRatesToIlpPrices(rates)
     }).finally(() => {
       return Pay.closeConnection(
@@ -270,7 +274,7 @@ export async function startQuote(
 
     // Pay.startQuote should return PaymentError.InvalidSourceAmount or
     // PaymentError.InvalidDestinationAmount for non-positive amounts.
-    // Outgoing payments' sendAmount or receiveAmount should never be
+    // Outgoing payments' debitAmount or receiveAmount should never be
     // zero or negative.
     if (quote.maxSourceAmount <= BigInt(0)) {
       throw new Error()
@@ -288,77 +292,58 @@ export async function startQuote(
   }
 }
 
-type QuoteHeaders = {
-  Accept: string
-  'Content-Type': string
-  'Rafiki-Signature'?: string
+function getFees(fee: Fee | undefined, principal: bigint): bigint {
+  const basisPoints = fee?.basisPointFee ?? 0
+  const fixedFee = fee?.fixedFee ?? 0n
+  const feePercentage = basisPoints / 10_000
+
+  // TODO: bigint/float multiplication
+  return BigInt(Math.floor(Number(principal) * feePercentage)) + fixedFee
 }
 
-export async function finalizeQuote(
+async function finalizeQuote(
   deps: ServiceDependencies,
   quote: Quote,
   receiver: Receiver,
   maxReceiveAmountValue?: bigint
 ): Promise<Quote> {
-  const requestHeaders: QuoteHeaders = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json'
-  }
+  let debitAmountValue = quote.debitAmount.value
+  let receiveAmountValue = quote.receiveAmount.value
 
-  const body = {
-    ...quote.toJSON(),
-    paymentType: maxReceiveAmountValue
-      ? Pay.PaymentType.FixedSend
-      : Pay.PaymentType.FixedDelivery
-  }
-
-  if (deps.signatureSecret) {
-    requestHeaders['Rafiki-Signature'] = generateQuoteSignature(
-      body,
-      deps.signatureSecret,
-      deps.signatureVersion
-    )
-  }
-
-  const res = await axios.post(deps.quoteUrl, body, {
-    headers: requestHeaders,
-    validateStatus: (status) => status === 201
-  })
-
-  // TODO: validate res.data is quote
-  if (!res.data.sendAmount?.value || !res.data.receiveAmount?.value) {
-    throw QuoteError.InvalidAmount
-  }
-  let sendAmount: Amount
-  let receiveAmount: Amount
-  try {
-    sendAmount = parseAmount(res.data.sendAmount)
-    receiveAmount = parseAmount(res.data.receiveAmount)
-  } catch (_) {
-    throw QuoteError.InvalidAmount
-  }
-  if (maxReceiveAmountValue) {
+  if (!maxReceiveAmountValue) {
+    // FixedDelivery
+    const fees = getFees(quote.fee, debitAmountValue)
+    debitAmountValue = BigInt(debitAmountValue) + fees
     if (
-      sendAmount.value !== quote.sendAmount.value ||
-      receiveAmount.value > maxReceiveAmountValue ||
-      receiveAmount.value <= BigInt(0)
+      debitAmountValue < quote.debitAmount.value ||
+      debitAmountValue <= BigInt(0)
     ) {
       throw QuoteError.InvalidAmount
     }
   } else {
+    // FixedSend
+    const fees = BigInt(
+      Number(getFees(quote.fee, receiveAmountValue)) *
+        quote.lowEstimatedExchangeRate.valueOf()
+    )
+    receiveAmountValue = BigInt(receiveAmountValue) - fees
+
+    if (receiveAmountValue <= fees) {
+      throw QuoteError.NegativeReceiveAmount
+    }
+
     if (
-      receiveAmount.value !== quote.receiveAmount.value ||
-      sendAmount.value < quote.sendAmount.value ||
-      sendAmount.value <= BigInt(0)
+      receiveAmountValue > maxReceiveAmountValue ||
+      receiveAmountValue <= BigInt(0)
     ) {
       throw QuoteError.InvalidAmount
     }
   }
 
   const patchOptions = {
-    sendAmount,
-    receiveAmount,
-    expiresAt: new Date(quote.createdAt.getTime() + deps.quoteLifespan)
+    debitAmountValue,
+    receiveAmountValue,
+    expiresAt: new Date(quote.createdAt.getTime() + deps.config.quoteLifespan)
   }
   // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
   if (
@@ -374,24 +359,11 @@ export async function finalizeQuote(
   return quote
 }
 
-export function generateQuoteSignature(
-  quote: ModelObject<Quote>,
-  secret: string,
-  version: number
-): string {
-  const timestamp = Math.round(new Date().getTime() / 1000)
-
-  const payload = `${timestamp}.${quote}`
-  const hmac = createHmac('sha256', secret)
-  hmac.update(payload)
-  const digest = hmac.digest('hex')
-
-  return `t=${timestamp}, v${version}=${digest}`
-}
-
 async function getPaymentPointerPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
-  return await Quote.query(deps.knex).list(options).withGraphFetched('asset')
+  return await Quote.query(deps.knex)
+    .list(options)
+    .withGraphFetched('[asset, fee]')
 }

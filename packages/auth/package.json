@@ -34,7 +34,7 @@
     "koa-session": "^6.4.0",
     "objection": "^3.1.1",
     "objection-db-errors": "^1.1.2",
-    "@interledger/open-payments": "2.0.0",
+    "@interledger/open-payments": "3.0.1",
     "@interledger/openapi": "1.0.3",
     "pg": "^8.11.3",
     "pino": "^8.15.1",
