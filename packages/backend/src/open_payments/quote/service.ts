@@ -292,15 +292,6 @@ export async function startQuote(
   }
 }
 
-function getFees(fee: Fee | undefined, principal: bigint): bigint {
-  const basisPoints = fee?.basisPointFee ?? 0
-  const fixedFee = fee?.fixedFee ?? 0n
-  const feePercentage = basisPoints / 10_000
-
-  // TODO: bigint/float multiplication
-  return BigInt(Math.floor(Number(principal) * feePercentage)) + fixedFee
-}
-
 async function finalizeQuote(
   deps: ServiceDependencies,
   quote: Quote,
@@ -312,7 +303,8 @@ async function finalizeQuote(
 
   if (!maxReceiveAmountValue) {
     // FixedDelivery
-    const fees = getFees(quote.fee, debitAmountValue)
+    // const fees = getFees(quote.fee, debitAmountValue)
+    const fees = quote.fee?.calculate(debitAmountValue) ?? 0n
     debitAmountValue = BigInt(debitAmountValue) + fees
     if (
       debitAmountValue < quote.debitAmount.value ||
@@ -322,13 +314,13 @@ async function finalizeQuote(
     }
   } else {
     // FixedSend
-    const fees = BigInt(
-      Number(getFees(quote.fee, receiveAmountValue)) *
-        quote.lowEstimatedExchangeRate.valueOf()
+    const fees = quote.fee?.calculate(receiveAmountValue) ?? 0n
+    const exchangeAdjustedFees = BigInt(
+      Number(fees) * quote.lowEstimatedExchangeRate.valueOf()
     )
-    receiveAmountValue = BigInt(receiveAmountValue) - fees
+    receiveAmountValue = BigInt(receiveAmountValue) - exchangeAdjustedFees
 
-    if (receiveAmountValue <= fees) {
+    if (receiveAmountValue <= exchangeAdjustedFees) {
       throw QuoteError.NegativeReceiveAmount
     }
 
