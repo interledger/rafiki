@@ -303,7 +303,6 @@ async function finalizeQuote(
 
   if (!maxReceiveAmountValue) {
     // FixedDelivery
-    // const fees = getFees(quote.fee, debitAmountValue)
     const fees = quote.fee?.calculate(debitAmountValue) ?? 0n
     debitAmountValue = BigInt(debitAmountValue) + fees
     if (
