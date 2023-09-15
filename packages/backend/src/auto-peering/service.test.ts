@@ -208,7 +208,8 @@ describe('Auto Peering Service', (): void => {
       const args: InitiatePeeringRequestArgs = {
         peerUrl: 'http://peer.rafiki.money',
         assetId: asset.id,
-        maxPacketAmount: 1000n
+        maxPacketAmount: 1000n,
+        liquidityThreshold: 100n
       }
 
       const peerDetails: PeeringDetails = {
@@ -254,7 +255,8 @@ describe('Auto Peering Service', (): void => {
           }
         },
         maxPacketAmount: args.maxPacketAmount,
-        name: peerDetails.name
+        name: peerDetails.name,
+        liquidityThreshold: args.liquidityThreshold
       })
 
       scope.done()
