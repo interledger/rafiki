@@ -15,14 +15,16 @@ import { getPageTests } from '../shared/baseModel.test'
 import { createAsset } from '../tests/asset'
 import { createPeer } from '../tests/peer'
 import { truncateTables } from '../tests/tableManager'
+import { AccountingService } from '../accounting/service'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let peerService: PeerService
+  let accountingService: AccountingService
   let asset: Asset
 
-  const randomPeer = (): CreateOptions => ({
+  const randomPeer = (override?: Partial<CreateOptions>): CreateOptions => ({
     assetId: asset.id,
     http: {
       incoming: {
@@ -36,13 +38,15 @@ describe('Peer Service', (): void => {
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
-    liquidityThreshold: BigInt(10000)
+    liquidityThreshold: BigInt(10000),
+    ...override
   })
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     peerService = await deps.use('peerService')
+    accountingService = await deps.use('accountingService')
   })
 
   beforeEach(async (): Promise<void> => {
@@ -119,6 +123,26 @@ describe('Peer Service', (): void => {
       assert.ok(!isPeerError(peer))
       await expect(accountingService.getBalance(peer.id)).resolves.toEqual(
         BigInt(0)
+      )
+    })
+
+    test('Can create peer with an initial amount of liquidity', async (): Promise<void> => {
+      const initialLiquidity = 100n
+      const options = randomPeer({ initialLiquidity })
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+
+      await expect(accountingService.getBalance(peer.id)).resolves.toBe(
+        initialLiquidity
+      )
+    })
+
+    test('Cannot create peer with invalid initial liquidity', async (): Promise<void> => {
+      const initialLiquidity = -100n
+      const options = randomPeer({ initialLiquidity })
+
+      await expect(peerService.create(options)).resolves.toEqual(
+        PeerError.InvalidInitialLiquidity
       )
     })
 
