@@ -34,17 +34,17 @@ import {
   RequestAction
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import { spspMiddleware } from './spsp/middleware'
+import { spspMiddleware, SPSPConnectionContext } from './spsp/middleware'
 import { SPSPRoutes } from './spsp/routes'
-import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
+import { IncomingPaymentRoutes, CreateBody as IncomingCreateBody } from './open_payments/payment/incoming/routes'
 import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
-import { QuoteRoutes } from './open_payments/quote/routes'
+import { QuoteRoutes, CreateBody as QuoteCreateBody } from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
-import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
+import { OutgoingPaymentRoutes, CreateBody as OutgoingCreateBody } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import {
@@ -75,6 +75,7 @@ import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
+import { createPaymentPointer } from './tests/paymentPointer'
 
 export interface AppContextData {
   logger: Logger
@@ -124,6 +125,7 @@ export type HttpSigContext = AppContext & {
   client: string
 }
 
+
 // Payment pointer subresources
 type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   PaymentPointerContext['request'],
@@ -142,6 +144,8 @@ type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
+type SignedCollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = CollectionContext<BodyT, QueryT> & HttpSigContext
+
 type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
   params: Record<'id', string>
 }
@@ -154,6 +158,8 @@ type SubresourceContext = Omit<
   client: NonNullable<PaymentPointerContext['client']>
   accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
+
+type SignedSubresourceContext = SubresourceContext & HttpSigContext
 
 export type CreateContext<BodyT> = CollectionContext<BodyT>
 export type ReadContext = SubresourceContext
@@ -343,109 +349,201 @@ export class App {
     const quoteRoutes = await this.container.use('quoteRoutes')
     const connectionRoutes = await this.container.use('connectionRoutes')
     const { resourceServerSpec } = await this.container.use('openApi')
-    const toRouterPath = (path: string): string =>
-      path.replace(/{/g, ':').replace(/}/g, '')
 
-    const toAction = ({
-      path,
-      method
-    }: {
-      path: string
-      method: HttpMethod
-    }): RequestAction | undefined => {
-      switch (method) {
-        case HttpMethod.GET:
-          return path.endsWith('{id}') ? RequestAction.Read : RequestAction.List
-        case HttpMethod.POST:
-          return path.endsWith('/complete')
-            ? RequestAction.Complete
-            : RequestAction.Create
-        default:
-          return undefined
-      }
-    }
-
-    const actionToRoute: {
-      [key in RequestAction]: string
-    } = {
-      create: 'create',
-      read: 'get',
-      complete: 'complete',
-      list: 'list'
-    }
-
-    for (const path in resourceServerSpec.paths) {
-      for (const method in resourceServerSpec.paths[path]) {
-        if (isHttpMethod(method)) {
-          const requestAction = toAction({ path, method })
-          if (!requestAction) {
-            throw new Error()
-          }
-
-          let requestType: AccessType
-          let route: (ctx: AppContext) => Promise<void>
-          if (path.includes('incoming-payments')) {
-            requestType = AccessType.IncomingPayment
-            // Use of ts-ignore will be obsolete once we get rid of this for-loop, see https://github.com/interledger/rafiki/issues/916
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            route = incomingPaymentRoutes[actionToRoute[requestAction]]
-          } else if (path.includes('outgoing-payments')) {
-            requestType = AccessType.OutgoingPayment
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            route = outgoingPaymentRoutes[actionToRoute[requestAction]]
-          } else if (path.includes('quotes')) {
-            requestType = AccessType.Quote
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            route = quoteRoutes[actionToRoute[requestAction]]
-          } else {
-            if (path.includes('connections')) {
-              route = connectionRoutes.get
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              router[method](
-                toRouterPath(path),
-                connectionMiddleware,
-                spspMiddleware,
-                createValidatorMiddleware<ContextType<typeof route>>(
-                  resourceServerSpec,
-                  {
-                    path,
-                    method
-                  }
-                ),
-                route
-              )
-            } else if (path !== '/' || method !== HttpMethod.GET) {
-              // The payment pointer query route is added last below
-              this.logger.warn({ path, method }, 'unexpected path/method')
-            }
-            continue
-          }
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          router[method](
-            PAYMENT_POINTER_PATH + toRouterPath(path),
-            createPaymentPointerMiddleware(),
-            createValidatorMiddleware<ContextType<typeof route>>(
-              resourceServerSpec,
-              {
-                path,
-                method
-              }
-            ),
-            createTokenIntrospectionMiddleware({
-              requestType,
-              requestAction
-            }),
-            httpsigMiddleware,
-            route
-          )
+    // GET /connections/{id}
+    router.get<DefaultState, SPSPConnectionContext>(
+      PAYMENT_POINTER_PATH + '/connections/:id',
+      connectionMiddleware,
+      spspMiddleware,
+      createValidatorMiddleware<ContextType<SPSPConnectionContext>>(
+        resourceServerSpec,
+        {
+          path: '/connections/{id}',
+          method: HttpMethod.GET
         }
-      }
-    }
+      ),
+      connectionRoutes.get
+    )
+
+    // POST /incoming-payments
+    // Create incoming payment
+    router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
+      PAYMENT_POINTER_PATH + '/incoming-payments',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedCollectionContext<IncomingCreateBody>>>(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments',
+          method: HttpMethod.POST
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.Create
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.create
+    )
+
+    // GET /incoming-payments
+    // List incoming payments
+    router.get<DefaultState, SignedCollectionContext>(
+      PAYMENT_POINTER_PATH + '/incoming-payments',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedCollectionContext>>(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.List
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.list
+    )
+
+    // POST /outgoing-payment
+    // Create outgoing payment
+    router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
+      PAYMENT_POINTER_PATH + '/outgoing-payments',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedCollectionContext<OutgoingCreateBody>>>(
+        resourceServerSpec,
+        {
+          path: '/outgoing-payments',
+          method: HttpMethod.POST
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.Create
+      }),
+      httpsigMiddleware,
+      outgoingPaymentRoutes.create
+    )
+
+    // GET /outgoing-payment
+    // List outgoing payments
+    router.get<DefaultState, SignedCollectionContext>(
+      PAYMENT_POINTER_PATH + '/outgoing-payments',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedCollectionContext>>(
+        resourceServerSpec,
+        {
+          path: '/outgoing-payments',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.List
+      }),
+      httpsigMiddleware,
+      outgoingPaymentRoutes.list
+    )
+
+    // POST /quotes
+    // Create quote
+    router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
+      PAYMENT_POINTER_PATH + '/quotes',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedCollectionContext<QuoteCreateBody>>>(
+        resourceServerSpec,
+        {
+          path: '/quotes',
+          method: HttpMethod.POST
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.Quote,
+        requestAction: RequestAction.Create
+      }),
+      httpsigMiddleware,
+      quoteRoutes.create
+    )
+
+    // GET /incoming-payments/{id}
+    // Read incoming payment
+    router.get<DefaultState, SignedSubresourceContext>(
+      PAYMENT_POINTER_PATH + '/incoming-payments/:id',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments/{id}',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.Read
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.get
+    )
+
+    // POST /incoming-payments/{id}/complete
+    // Complete incoming payment
+    router.post<DefaultState, SignedSubresourceContext>(
+      PAYMENT_POINTER_PATH + '/incoming-payments/:id/complete',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments/{id}/complete',
+          method: HttpMethod.POST
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.Complete
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.complete
+    )
+
+    // GET /outgoing-payments/{id}
+    // Read outgoing payment
+    router.get<DefaultState, SignedSubresourceContext>(
+      PAYMENT_POINTER_PATH + '/outgoing-payments/:id',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/outgoing-payments/{id}',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.Read
+      }),
+      httpsigMiddleware,
+      outgoingPaymentRoutes.get
+    )
+
+    // GET /quotes/{id}
+    // Read quote
+    router.get<DefaultState, SignedSubresourceContext>(
+      PAYMENT_POINTER_PATH + '/quotes/:id',
+      createPaymentPointerMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/quotes/{id}',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.Quote,
+        requestAction: RequestAction.Read
+      }),
+      httpsigMiddleware,
+      quoteRoutes.get
+    )
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
