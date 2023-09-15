@@ -1,10 +1,8 @@
 # Contributing to this repository <!-- omit in toc -->
 
-## Getting started <!-- omit in toc -->
+Thank you for contributing to Rafiki :tada: Your contributions are essential to making this project better.
 
-Thank you for contributing to Rafiki :tada:
-
-Before you begin:
+### Before you begin:
 - Have you read the [code of conduct](code_of_conduct.md)?
 - Check out the [existing issues](https://github.com/interledger/rafiki/issues) & see if we [accept contributions](#types-of-contributions) for your type of issue.
 
@@ -24,6 +22,9 @@ Before you begin:
     - [Commit hooks](#commit-hooks)
     - [Language](#language)
     - [CI](#ci)
+  - [Reporting Issues](#reporting-issues)
+  - [Submitting Pull Requests](#submitting-pull-requests)
+  - [Review Process](#review-process)
 
 ## Types of contributions
 You can contribute to Rafiki in several ways. 
@@ -163,3 +164,32 @@ each package to suit the package's requirements.
 We use GitHub actions to manage our CI pipeline.
 
 The workflows can be found in `.github/workflows`
+
+## Reporting Issues
+
+If you encounter any issues or have a feature request, please [create a new issue](https://github.com/interledger/rafiki/issues/new/choose) and provide the following details:
+
+- A clear and descriptive title.
+- A detailed description of the issue, including steps to reproduce if applicable.
+- Information about your environment (e.g., operating system, browser, version).
+- Any relevant screenshots or error messages.
+
+## Submitting Pull Requests
+
+1. [Fork](https://github.com/interledger/rafiki) the repository.
+2. Create a new branch from `main`.
+3. Make your changes and commit them.
+4. Create a pull request (PR) to `main`.
+5. Ensure your PR includes a clear title and description.
+6. If your PR addresses an issue, reference the issue in the description using `Closes #123`.
+7. Be patient and be prepared to address feedback and make changes if needed.
+
+## Review Process
+
+- Project maintainers will review your PR for code quality, correctness, and adherence to guidelines.
+- Please respond to any feedback promptly and make necessary changes.
+- Once the PR is approved, it will be merged into the main branch.
+
+Thank you for contributing to Rafiki! We appreciate your time and effort in helping make Rafiki better. Join our community on [Slack](https://communityinviter.com/apps/interledger/interledger-working-groups-slack) to connect with other contributors and stay updated on project developments.
+
+Happy coding!
