@@ -7,7 +7,9 @@ import {
   GrantFinalization,
   GrantState,
   toOpenPaymentPendingGrant,
-  toOpenPaymentsGrant
+  toOpenPaymentsGrant,
+  isRevokedGrant,
+  isRejectedGrant
 } from './model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
@@ -19,12 +21,14 @@ import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
+import { InteractionService } from '../interaction/service'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
   clientService: ClientService
   accessTokenService: AccessTokenService
   accessService: AccessService
+  interactionService: InteractionService
   config: IAppConfig
 }
 
@@ -67,6 +71,7 @@ export function createGrantRoutes({
   clientService,
   accessTokenService,
   accessService,
+  interactionService,
   logger,
   config
 }: ServiceDependencies): GrantRoutes {
@@ -79,6 +84,7 @@ export function createGrantRoutes({
     clientService,
     accessTokenService,
     accessService,
+    interactionService,
     logger: log,
     config
   }
@@ -144,7 +150,7 @@ async function createPendingGrant(
   ctx: CreateContext
 ): Promise<void> {
   const { body } = ctx.request
-  const { grantService, config } = deps
+  const { grantService, interactionService, config } = deps
   if (!body.interact) {
     ctx.throw(400, { error: 'interaction_required' })
   }
@@ -154,15 +160,45 @@ async function createPendingGrant(
     ctx.throw(400, 'invalid_client', { error: 'invalid_client' })
   }
 
-  const grant = await grantService.create(body)
-  ctx.status = 200
-  ctx.body = toOpenPaymentPendingGrant(grant, {
-    client,
-    authServerUrl: config.authServerDomain,
-    waitTimeSeconds: config.waitTimeSeconds
-  })
+  const trx = await Grant.startTransaction()
+
+  try {
+    const grant = await grantService.create(body, trx)
+    const interaction = await interactionService.create(grant.id, trx)
+    await trx.commit()
+
+    ctx.status = 200
+    ctx.body = toOpenPaymentPendingGrant(grant, interaction, {
+      client,
+      authServerUrl: config.authServerDomain,
+      waitTimeSeconds: config.waitTimeSeconds
+    })
+  } catch (err) {
+    await trx.rollback()
+    ctx.throw(500)
+  }
 }
 
+function isMatchingContinueRequest(
+  reqContinueId: string,
+  reqContinueToken: string,
+  grant: Grant
+): boolean {
+  return (
+    reqContinueId === grant.continueId &&
+    reqContinueToken === grant.continueToken
+  )
+}
+
+function isContinuableGrant(grant: Grant): boolean {
+  return !isRejectedGrant(grant) && !isRevokedGrant(grant)
+}
+
+/* 
+  GNAP indicates that a grant may be continued even if it didn't require interaction.
+  Rafiki only needs to continue a grant if it required an interaction, noninteractive grants immediately issue an access token without needing continuation
+  so continuation only expects interactive grants to be continued.
+*/
 async function continueGrant(
   deps: ServiceDependencies,
   ctx: ContinueContext
@@ -177,13 +213,23 @@ async function continueGrant(
     ctx.throw(401, { error: 'invalid_request' })
   }
 
-  const { config, accessTokenService, grantService, accessService } = deps
-  const grant = await grantService.getByContinue(continueId, continueToken, {
-    interactRef
-  })
-  if (!grant) {
+  const {
+    config,
+    accessTokenService,
+    grantService,
+    accessService,
+    interactionService
+  } = deps
+
+  const interaction = await interactionService.getByRef(interactRef)
+  if (
+    !interaction ||
+    !isContinuableGrant(interaction.grant) ||
+    !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
+  ) {
     ctx.throw(404, { error: 'unknown_request' })
   } else {
+    const { grant } = interaction
     if (grant.state !== GrantState.Approved) {
       ctx.throw(401, { error: 'request_denied' })
     }
@@ -194,7 +240,7 @@ async function continueGrant(
 
     // TODO: add "continue" to response if additional grant request steps are added
     ctx.body = toOpenPaymentsGrant(
-      grant,
+      interaction.grant,
       { authServerUrl: config.authServerDomain },
       accessToken,
       access

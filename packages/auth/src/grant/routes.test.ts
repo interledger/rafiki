@@ -25,12 +25,15 @@ import {
   GrantState,
   GrantFinalization
 } from '../grant/model'
+import { Interaction, InteractionState } from '../interaction/model'
 import { AccessToken } from '../accessToken/model'
 import { AccessTokenService } from '../accessToken/service'
-import { generateNonce, generateToken } from '../shared/utils'
+import { generateNonce } from '../shared/utils'
 import { ClientService } from '../client/service'
 import { withConfigOverride } from '../tests/helpers'
 import { AccessAction, AccessType } from '@interledger/open-payments'
+import { generateBaseGrant } from '../tests/grant'
+import { generateBaseInteraction } from '../tests/interaction'
 
 export const TEST_CLIENT_DISPLAY = {
   name: 'Test Client',
@@ -75,20 +78,6 @@ describe('Grant Routes', (): void => {
   let clientService: ClientService
 
   let grant: Grant
-
-  const generateBaseGrant = () => ({
-    state: GrantState.Processing,
-    startMethod: [StartMethod.Redirect],
-    continueToken: generateToken(),
-    continueId: v4(),
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com',
-    clientNonce: generateNonce(),
-    client: CLIENT,
-    interactId: v4(),
-    interactRef: v4(),
-    interactNonce: generateNonce()
-  })
 
   beforeEach(async (): Promise<void> => {
     grant = await Grant.query().insert(generateBaseGrant())
@@ -336,17 +325,29 @@ describe('Grant Routes', (): void => {
     })
 
     describe('/continue', (): void => {
-      test('Can issue access token', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Approved
-        })
+      let grant: Grant
+      let interaction: Interaction
+      let access: Access
+      beforeEach(async (): Promise<void> => {
+        grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Approved
+          })
+        )
 
-        const access = await Access.query().insert({
+        access = await Access.query().insert({
           ...BASE_GRANT_ACCESS,
           grantId: grant.id
         })
 
+        interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant, {
+            state: InteractionState.Approved
+          })
+        )
+      })
+
+      test('Can issue access token', async (): Promise<void> => {
         const ctx = createContext<ContinueContext>(
           {
             headers: {
@@ -362,10 +363,8 @@ describe('Grant Routes', (): void => {
           }
         )
 
-        assert.ok(grant.interactRef)
-
         ctx.request.body = {
-          interact_ref: grant.interactRef
+          interact_ref: interaction.ref
         }
 
         await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
@@ -427,10 +426,19 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot issue access token if grant has not been granted', async (): Promise<void> => {
+        const grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Pending
+          })
+        )
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
           grantId: grant.id
         })
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
 
         const ctx = createContext<ContinueContext>(
           {
@@ -445,10 +453,8 @@ describe('Grant Routes', (): void => {
           }
         )
 
-        assert.ok(grant.interactRef)
-
         ctx.request.body = {
-          interact_ref: grant.interactRef
+          interact_ref: interaction.ref
         }
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
@@ -458,15 +464,20 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot issue access token if grant has been revoked', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
-        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          })
+        )
         await Access.query().insert({
           ...BASE_GRANT_ACCESS,
           grantId: grant.id
         })
+
+        const interaction = await Interaction.query().insert(
+          generateBaseInteraction(grant)
+        )
 
         const ctx = createContext<ContinueContext>(
           {
@@ -481,10 +492,8 @@ describe('Grant Routes', (): void => {
           }
         )
 
-        assert.ok(grant.interactRef)
-
         ctx.request.body = {
-          interact_ref: grant.interactRef
+          interact_ref: interaction.ref
         }
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
@@ -530,10 +539,8 @@ describe('Grant Routes', (): void => {
           }
         )
 
-        assert.ok(grant.interactRef)
-
         ctx.request.body = {
-          interact_ref: grant.interactRef
+          interact_ref: interaction.ref
         }
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
@@ -554,10 +561,8 @@ describe('Grant Routes', (): void => {
           {}
         )
 
-        assert.ok(grant.interactRef)
-
         ctx.request.body = {
-          interact_ref: grant.interactRef
+          interact_ref: interaction.ref
         }
 
         await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
@@ -585,11 +590,12 @@ describe('Grant Routes', (): void => {
       })
 
       test('Can revoke an existing grant', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Issued
-        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Issued
+          })
+        )
         const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
@@ -608,11 +614,12 @@ describe('Grant Routes', (): void => {
       })
 
       test('Cannot revoke an already revoked grant', async (): Promise<void> => {
-        const grant = await Grant.query().insert({
-          ...generateBaseGrant(),
-          state: GrantState.Finalized,
-          finalizationReason: GrantFinalization.Revoked
-        })
+        const grant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          })
+        )
         const ctx = createContext<RevokeContext>(
           {
             url: '/continue/{id}',
