@@ -36,22 +36,27 @@ import {
 import { RatesService } from './rates/service'
 import { spspMiddleware, SPSPConnectionContext } from './spsp/middleware'
 import { SPSPRoutes } from './spsp/routes'
-import { IncomingPaymentRoutes, CreateBody as IncomingCreateBody } from './open_payments/payment/incoming/routes'
+import {
+  IncomingPaymentRoutes,
+  CreateBody as IncomingCreateBody
+} from './open_payments/payment/incoming/routes'
 import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
 import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
-import { QuoteRoutes, CreateBody as QuoteCreateBody } from './open_payments/quote/routes'
+import {
+  QuoteRoutes,
+  CreateBody as QuoteCreateBody
+} from './open_payments/quote/routes'
 import { QuoteService } from './open_payments/quote/service'
-import { OutgoingPaymentRoutes, CreateBody as OutgoingCreateBody } from './open_payments/payment/outgoing/routes'
+import {
+  OutgoingPaymentRoutes,
+  CreateBody as OutgoingCreateBody
+} from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
 import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
-import {
-  createValidatorMiddleware,
-  HttpMethod,
-  isHttpMethod
-} from '@interledger/openapi'
+import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import {
   AccessAction,
@@ -75,7 +80,6 @@ import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
-import { createPaymentPointer } from './tests/paymentPointer'
 
 export interface AppContextData {
   logger: Logger
@@ -125,7 +129,6 @@ export type HttpSigContext = AppContext & {
   client: string
 }
 
-
 // Payment pointer subresources
 type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   PaymentPointerContext['request'],
@@ -144,7 +147,10 @@ type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
-type SignedCollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = CollectionContext<BodyT, QueryT> & HttpSigContext
+type SignedCollectionContext<
+  BodyT = never,
+  QueryT = ParsedUrlQuery
+> = CollectionContext<BodyT, QueryT> & HttpSigContext
 
 type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
   params: Record<'id', string>
@@ -370,13 +376,12 @@ export class App {
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
       PAYMENT_POINTER_PATH + '/incoming-payments',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<ContextType<SignedCollectionContext<IncomingCreateBody>>>(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<IncomingCreateBody>>
+      >(resourceServerSpec, {
+        path: '/incoming-payments',
+        method: HttpMethod.POST
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.Create
@@ -410,13 +415,12 @@ export class App {
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
       PAYMENT_POINTER_PATH + '/outgoing-payments',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<ContextType<SignedCollectionContext<OutgoingCreateBody>>>(
-        resourceServerSpec,
-        {
-          path: '/outgoing-payments',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<OutgoingCreateBody>>
+      >(resourceServerSpec, {
+        path: '/outgoing-payments',
+        method: HttpMethod.POST
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
         requestAction: RequestAction.Create
@@ -450,13 +454,12 @@ export class App {
     router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
       PAYMENT_POINTER_PATH + '/quotes',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<ContextType<SignedCollectionContext<QuoteCreateBody>>>(
-        resourceServerSpec,
-        {
-          path: '/quotes',
-          method: HttpMethod.POST
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<QuoteCreateBody>>
+      >(resourceServerSpec, {
+        path: '/quotes',
+        method: HttpMethod.POST
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.Quote,
         requestAction: RequestAction.Create
