@@ -106,6 +106,7 @@ async function initiatePeeringRequest(
     maxPacketAmount: args.maxPacketAmount,
     name: args.name ?? peeringDetailsOrError.name,
     assetId: asset.id,
+    liquidityThreshold: args.liquidityThreshold,
     staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
     http: {
       incoming: {
@@ -116,8 +117,7 @@ async function initiatePeeringRequest(
         endpoint: peeringDetailsOrError.ilpConnectorAddress
       }
     },
-    initialLiquidity: args.initialLiquidity,
-    liquidityThreshold: args.liquidityThreshold
+    initialLiquidity: args.initialLiquidity
   })
 
   if (isPeerError(peerOrError)) {
@@ -207,7 +207,8 @@ async function acceptPeeringRequest(
         endpoint: args.ilpConnectorAddress,
         authToken: outgoingHttpToken
       }
-    }
+    },
+    initialLiquidity: BigInt(Number.MAX_SAFE_INTEGER)
   })
 
   const isDuplicatePeeringRequest =
