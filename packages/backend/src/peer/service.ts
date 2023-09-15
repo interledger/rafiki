@@ -18,7 +18,7 @@ import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { isValidHttpUrl } from '../shared/utils'
 import { v4 as uuid } from 'uuid'
-import { isTransferError, TransferError } from '../accounting/errors'
+import { TransferError } from '../accounting/errors'
 
 export interface HttpOptions {
   incoming?: {
