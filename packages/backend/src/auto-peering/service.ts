@@ -20,6 +20,7 @@ export interface InitiatePeeringRequestArgs {
   assetId: string
   name?: string
   maxPacketAmount?: bigint
+  liquidityThreshold?: bigint
 }
 
 export interface PeeringRequestArgs {
@@ -104,6 +105,7 @@ async function initiatePeeringRequest(
     maxPacketAmount: args.maxPacketAmount,
     name: args.name ?? peeringDetailsOrError.name,
     assetId: asset.id,
+    liquidityThreshold: args.liquidityThreshold,
     staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
     http: {
       incoming: {
