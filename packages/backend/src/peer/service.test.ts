@@ -16,6 +16,7 @@ import { createAsset } from '../tests/asset'
 import { createPeer } from '../tests/peer'
 import { truncateTables } from '../tests/tableManager'
 import { AccountingService } from '../accounting/service'
+import { TransferError } from '../accounting/errors'
 
 describe('Peer Service', (): void => {
   let deps: IocContract<AppServices>
@@ -447,6 +448,45 @@ describe('Peer Service', (): void => {
 
       await expect(peerService.delete(peer.id)).resolves.toEqual(peer)
       await expect(peerService.delete(peer.id)).resolves.toBeUndefined()
+    })
+  })
+
+  describe('Add Liquidity', (): void => {
+    test('Can add liquidity to peer', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+
+      const liquidity = 100n
+
+      await expect(
+        peerService.addLiquidity({ peerId: peer.id, amount: liquidity })
+      ).resolves.toBeUndefined()
+
+      await expect(accountingService.getBalance(peer.id)).resolves.toBe(
+        liquidity
+      )
+    })
+
+    test('Returns error if transfer error', async (): Promise<void> => {
+      const peer = await createPeer(deps)
+
+      await expect(
+        peerService.addLiquidity({
+          peerId: peer.id,
+          amount: 100n,
+          transferId: ''
+        })
+      ).resolves.toBe(TransferError.InvalidId)
+
+      await expect(accountingService.getBalance(peer.id)).resolves.toBe(0n)
+    })
+
+    test('Returns error if cannot find peer', async (): Promise<void> => {
+      await expect(
+        peerService.addLiquidity({
+          peerId: uuid(),
+          amount: 100n
+        })
+      ).resolves.toBe(PeerError.UnknownPeer)
     })
   })
 })
