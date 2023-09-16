@@ -359,6 +359,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "receivingFee",
             "description": "The receiving fee structure for the asset",
             "args": [],
@@ -718,6 +730,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
               "ofType": null
             },
             "defaultValue": null,
@@ -1360,6 +1384,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "maxPacketAmount",
             "description": "Maximum packet amount that the peer accepts",
             "type": {
@@ -1563,6 +1599,18 @@
         "fields": null,
         "inputFields": [
           {
+            "name": "debitAmount",
+            "description": "Amount to send (fixed send)",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "AmountInput",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "idempotencyKey",
             "description": "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)",
             "type": {
@@ -1613,18 +1661,6 @@
                 "name": "String",
                 "ofType": null
               }
-            },
-            "defaultValue": null,
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "sendAmount",
-            "description": "Amount to send (fixed send)",
-            "type": {
-              "kind": "INPUT_OBJECT",
-              "name": "AmountInput",
-              "ofType": null
             },
             "defaultValue": null,
             "isDeprecated": false,
@@ -3765,8 +3801,8 @@
             "deprecationReason": null
           },
           {
-            "name": "updateAssetWithdrawalThreshold",
-            "description": "Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn.",
+            "name": "updateAsset",
+            "description": "Update an asset",
             "args": [
               {
                 "name": "input",
@@ -4074,6 +4110,22 @@
             "deprecationReason": null
           },
           {
+            "name": "debitAmount",
+            "description": "Amount to send (fixed send)",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "error",
             "description": null,
             "args": [],
@@ -4167,22 +4219,6 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "sendAmount",
-            "description": "Amount to send (fixed send)",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Amount",
                 "ofType": null
               }
             },
@@ -5519,6 +5555,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "maxPacketAmount",
             "description": "Maximum packet amount that the peer accepts",
             "args": [],
@@ -6263,6 +6311,22 @@
             "deprecationReason": null
           },
           {
+            "name": "debitAmount",
+            "description": "Amount to send (fixed send)",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Amount",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "expiresAt",
             "description": "Date-time of expiration",
             "args": [],
@@ -6400,22 +6464,6 @@
               "ofType": {
                 "kind": "SCALAR",
                 "name": "String",
-                "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          },
-          {
-            "name": "sendAmount",
-            "description": "Amount to send (fixed send)",
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "kind": "OBJECT",
-                "name": "Amount",
                 "ofType": null
               }
             },
@@ -7242,6 +7290,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "withdrawalThreshold",
             "description": "New minimum amount of liquidity that can be withdrawn from the asset",
             "type": {
@@ -7438,6 +7498,18 @@
             "type": {
               "kind": "SCALAR",
               "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidityThreshold",
+            "description": "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
               "ofType": null
             },
             "defaultValue": null,

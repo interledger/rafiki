@@ -12,17 +12,20 @@
     "copy-files": "cp -r ./src/openapi/*.yaml ./dist/openapi",
     "generate:types": "openapi-typescript src/openapi/token-introspection.yaml --output src/openapi/generated/types.ts -t",
     "prepack": "pnpm build",
-    "test": "jest --passWithNoTests"
+    "test": "jest --passWithNoTests",
+    "test:cov": "pnpm test -- --coverage",
+    "test:sincemain": "pnpm test -- --changedSince=main",
+    "test:sincemain:cov": "pnpm test:sincemain --coverage"
   },
   "devDependencies": {
     "@types/node": "^18.7.12",
     "nock": "^13.3.3",
-    "openapi-typescript": "^6.5.3",
+    "openapi-typescript": "^6.6.1",
     "typescript": "^4.9.5"
   },
   "dependencies": {
     "@interledger/openapi": "1.0.3",
-    "axios": "^1.4.0",
-    "pino": "^8.15.0"
+    "axios": "^1.5.0",
+    "pino": "^8.15.1"
   }
 }

@@ -49,6 +49,8 @@ export type components = {
   pathItems: never;
 };
 
+export type $defs = Record<string, never>;
+
 export type external = {
   "auth-server.yaml": {
     paths: {
@@ -230,7 +232,9 @@ export type external = {
          */
         "limits-outgoing": {
           receiver?: external["schemas.yaml"]["components"]["schemas"]["receiver"];
-          sendAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
+          /** @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant. */
+          debitAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
+          /** @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant. */
           receiveAmount?: external["schemas.yaml"]["components"]["schemas"]["amount"];
           interval?: external["auth-server.yaml"]["components"]["schemas"]["interval"];
         };
@@ -241,16 +245,14 @@ export type external = {
       headers: never;
       pathItems: never;
     };
+    $defs: Record<string, never>;
   };
   "schemas.yaml": {
     paths: Record<string, never>;
     webhooks: Record<string, never>;
     components: {
       schemas: {
-        /**
-         * amount
-         * @description All amounts are maxima, i.e. multiple payments can be created under a grant as long as the total amounts of these payments do not exceed the maximum amount per interval as specified in the grant.
-         */
+        /** amount */
         amount: {
           /**
            * Format: uint64
@@ -283,6 +285,7 @@ export type external = {
       headers: never;
       pathItems: never;
     };
+    $defs: Record<string, never>;
   };
 };
 
@@ -313,7 +316,9 @@ export type operations = {
         };
       };
       /** @description Not Found */
-      404: never;
+      404: {
+        content: never;
+      };
     };
   };
   /**
@@ -336,7 +341,7 @@ export type operations = {
       /** @description OK */
       200: {
         content: {
-          "application/json": Record<string, never> & OneOf<[{
+          "application/json": OneOf<[{
             interact: external["auth-server.yaml"]["components"]["schemas"]["interact-response"];
             continue: external["auth-server.yaml"]["components"]["schemas"]["continue"];
           }, {
@@ -346,11 +351,17 @@ export type operations = {
         };
       };
       /** @description Bad Request */
-      400: never;
+      400: {
+        content: never;
+      };
       /** @description Unauthorized */
-      401: never;
+      401: {
+        content: never;
+      };
       /** @description Internal Server Error */
-      500: never;
+      500: {
+        content: never;
+      };
     };
   };
   /**
@@ -385,11 +396,17 @@ export type operations = {
         };
       };
       /** @description Bad Request */
-      400: never;
+      400: {
+        content: never;
+      };
       /** @description Unauthorized */
-      401: never;
+      401: {
+        content: never;
+      };
       /** @description Not Found */
-      404: never;
+      404: {
+        content: never;
+      };
     };
   };
   /**
@@ -404,13 +421,21 @@ export type operations = {
     };
     responses: {
       /** @description No Content */
-      204: never;
+      204: {
+        content: never;
+      };
       /** @description Bad Request */
-      400: never;
+      400: {
+        content: never;
+      };
       /** @description Unauthorized */
-      401: never;
+      401: {
+        content: never;
+      };
       /** @description Not Found */
-      404: never;
+      404: {
+        content: never;
+      };
     };
   };
   /**
@@ -433,11 +458,17 @@ export type operations = {
         };
       };
       /** @description Bad Request */
-      400: never;
+      400: {
+        content: never;
+      };
       /** @description Unauthorized */
-      401: never;
+      401: {
+        content: never;
+      };
       /** @description Not Found */
-      404: never;
+      404: {
+        content: never;
+      };
     };
   };
   /**
@@ -452,11 +483,17 @@ export type operations = {
     };
     responses: {
       /** @description No Content */
-      204: never;
+      204: {
+        content: never;
+      };
       /** @description Bad Request */
-      400: never;
+      400: {
+        content: never;
+      };
       /** @description Unauthorized */
-      401: never;
+      401: {
+        content: never;
+      };
     };
   };
 };

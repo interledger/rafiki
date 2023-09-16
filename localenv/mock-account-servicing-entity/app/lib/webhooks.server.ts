@@ -4,7 +4,11 @@ import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
-import { createPaymentPointer } from './requesters'
+import {
+  addAssetLiquidity,
+  addPeerLiquidity,
+  createPaymentPointer
+} from './requesters'
 import { CONFIG } from './parse_config.server'
 
 export enum EventType {
@@ -14,7 +18,9 @@ export enum EventType {
   OutgoingPaymentCreated = 'outgoing_payment.created',
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed',
-  PaymentPointerNotFound = 'payment_pointer.not_found'
+  PaymentPointerNotFound = 'payment_pointer.not_found',
+  LiquidityAsset = 'asset.liquidity_low',
+  LiquidityPeer = 'peer.liquidity_low'
 }
 
 export interface WebHook {
@@ -52,10 +58,10 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amtSend = parseAmount(payment['sendAmount'])
+  const amtDebit = parseAmount(payment['debitAmount'])
   const amtSent = parseAmount(payment['sentAmount'])
 
-  const toVoid = amtSend.value - amtSent.value
+  const toVoid = amtDebit.value - amtSent.value
 
   await mockAccounts.debit(acc.id, amtSent.value, true)
   if (toVoid > 0) {
@@ -80,7 +86,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amt = parseAmount(payment['sendAmount'])
+  const amt = parseAmount(payment['debitAmount'])
 
   await mockAccounts.pendingDebit(acc.id, amt.value)
 
@@ -193,4 +199,18 @@ export async function handlePaymentPointerNotFound(wh: WebHook) {
     paymentPointer.id,
     paymentPointer.url
   )
+}
+
+export async function handleLowLiquidity(wh: WebHook) {
+  const id = wh.data['id'] as string | undefined
+
+  if (!id) {
+    throw new Error('id not found')
+  }
+
+  if (wh.type == 'asset.liquidity_low') {
+    await addAssetLiquidity(id, 1000000, uuid())
+  } else {
+    await addPeerLiquidity(id, '1000000', uuid())
+  }
 }

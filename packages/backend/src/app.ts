@@ -1,7 +1,7 @@
 import { join } from 'path'
 import http, { Server } from 'http'
-import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
+import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
@@ -74,10 +74,10 @@ import { CombinedPaymentService } from './open_payments/payment/combined/service
 import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
+import { Rafiki as ConnectorApp } from './connector/core'
 
 export interface AppContextData {
   logger: Logger
-  closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
@@ -177,7 +177,6 @@ const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
-  closeEmitter: Promise<EventEmitter>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
@@ -207,21 +206,21 @@ export interface AppServices {
   feeService: Promise<FeeService>
   autoPeeringService: Promise<AutoPeeringService>
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
+  connectorApp: Promise<ConnectorApp>
+  tigerbeetle: Promise<TigerbeetleClient>
 }
 
 export type AppContainer = IocContract<AppServices>
 
 export class App {
   private openPaymentsServer!: Server
+  private ilpConnectorService!: Server
   private adminServer!: Server
   private autoPeeringServer!: Server
   public apolloServer!: ApolloServer
-  public closeEmitter!: EventEmitter
   public isShuttingDown = false
   private logger!: Logger
   private config!: IAppConfig
-  private outgoingPaymentTimer!: NodeJS.Timer
-  private deactivateInvoiceTimer!: NodeJS.Timer
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -233,7 +232,6 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
 
     // Workers are in the way during tests.
@@ -253,7 +251,7 @@ export class App {
     }
   }
 
-  public async startAdminServer(port: number | string): Promise<void> {
+  public async startAdminServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
     const httpServer = http.createServer(koa.callback())
 
@@ -321,7 +319,7 @@ export class App {
     this.adminServer = httpServer.listen(port)
   }
 
-  public async startOpenPaymentsServer(port: number | string): Promise<void> {
+  public async startOpenPaymentsServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
@@ -482,7 +480,7 @@ export class App {
     this.openPaymentsServer = koa.listen(port)
   }
 
-  public async startAutoPeeringServer(port: number | string): Promise<void> {
+  public async startAutoPeeringServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
 
     const autoPeeringRoutes = await this.container.use('autoPeeringRoutes')
@@ -497,28 +495,37 @@ export class App {
     this.autoPeeringServer = koa.listen(port)
   }
 
+  public async startIlpConnectorServer(port: number): Promise<void> {
+    const ilpConnectorService = await this.container.use('connectorApp')
+    this.ilpConnectorService = ilpConnectorService.listenPublic(port)
+  }
+
   public async shutdown(): Promise<void> {
-    return new Promise((resolve): void => {
-      this.isShuttingDown = true
-      this.closeEmitter.emit('shutdown')
+    this.isShuttingDown = true
 
-      if (this.openPaymentsServer) {
-        this.openPaymentsServer.close((): void => {
-          resolve()
-        })
-      }
+    if (this.openPaymentsServer) {
+      await this.stopServer(this.openPaymentsServer)
+    }
+    if (this.adminServer) {
+      await this.stopServer(this.adminServer)
+    }
+    if (this.ilpConnectorService) {
+      await this.stopServer(this.ilpConnectorService)
+    }
+    if (this.autoPeeringServer) {
+      await this.stopServer(this.autoPeeringServer)
+    }
+  }
 
-      if (this.adminServer) {
-        this.adminServer.close((): void => {
-          resolve()
-        })
-      }
+  private async stopServer(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err)
+        }
 
-      if (this.autoPeeringServer) {
-        this.autoPeeringServer.close((): void => {
-          resolve()
-        })
-      }
+        resolve()
+      })
     })
   }
 
@@ -583,7 +590,6 @@ export class App {
     const koa = new Koa<DefaultState, AppContext>()
 
     koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
     koa.context.logger = await this.container.use('logger')
 
     koa.use(

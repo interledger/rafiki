@@ -4,22 +4,22 @@
 
 ## What is Rafiki?
 
-Rafiki is open source software that allows an [Account Servicing Entity](./packages/documentation/docs/reference/glossary.md#account-servicing-entity) to enable [Interledger](./packages/documentation/docs/reference/glossary.md#interledger-protocol) functionality on its users' accounts.
+Rafiki is open source software that allows an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/) to enable [Interledger](https://rafiki.dev/concepts/interledger-protocol/overview/) functionality on its users' accounts.
 
 This includes
 
-- sending and receiving payments (via [SPSP](./packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) and [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments))
-- allowing third-party access to initiate payments and view transation data (via [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments))
+- sending and receiving payments (via [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) and [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
+- allowing third-party access to initiate payments and view transation data (via [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
 
-**❗ Rafiki is intended to be run by [Account Servicing Entities](./packages/documentation/docs/reference/glossary.md#account-servicing-entity) only and should not be used in production by non-regulated entities.**
+**❗ Rafiki is intended to be run by [Account Servicing Entities](https://rafiki.dev/reference/glossary/#account-servicing-entity) only and should not be used in production by non-regulated entities.**
 
-Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](./packages/documentation/docs/reference/glossary.md#tigerbeetle), and several APIs:
+Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/concepts/accounting/tigerbeetle/), and several APIs:
 
-- the [Admin API](./docs/admin-api.md) to create [peering relationships](./packages/documentation/docs/reference/glossary.md#peer), add supported [assets](./packages/documentation/docs/reference/glossary.md#asset), and issue [payment pointers](./packages/documentation/docs/reference/glossary.md#payment-pointer)
-- the [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
-- the [SPSP](./packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
+- the [Admin API](https://rafiki.dev/apis/backend/schema/) to create [peering relationships](https://rafiki.dev/concepts/interledger-protocol/peering/), add supported [assets](https://rafiki.dev/concepts/asset/), and issue [payment pointers](https://rafiki.dev/reference/glossary/#payment-pointer)
+- the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
+- the [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
 
-Additionally, this package also includes a reference implementation of a [GNAP](./packages/documentation/docs/reference/glossary.md#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](./packages/documentation/docs/reference/glossary.md#open-payments) API. For more information on the architecture, check out the [Architecture documentation](./packages/documentation/docs/introduction/architecture.md).
+Additionally, this package also includes a reference implementation of a [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API. For more information on the architecture, check out the [Architecture documentation](https://rafiki.dev/introduction/architecture/).
 
 ### New to Interledger?
 

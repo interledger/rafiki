@@ -112,7 +112,7 @@ export const updateAsset = async (args: UpdateAssetInput) => {
   >({
     mutation: gql`
       mutation UpdateAssetMutation($input: UpdateAssetInput!) {
-        updateAssetWithdrawalThreshold(input: $input) {
+        updateAsset(input: $input) {
           code
           success
           message
@@ -124,7 +124,7 @@ export const updateAsset = async (args: UpdateAssetInput) => {
     }
   })
 
-  return response.data?.updateAssetWithdrawalThreshold
+  return response.data?.updateAsset
 }
 
 export const addAssetLiquidity = async (args: AddAssetLiquidityInput) => {

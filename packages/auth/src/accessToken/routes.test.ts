@@ -58,10 +58,7 @@ describe('Access Token Routes', (): void => {
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: generateNonce(),
-    client: CLIENT,
-    interactId: v4(),
-    interactRef: generateNonce(),
-    interactNonce: generateNonce()
+    client: CLIENT
   }
 
   const BASE_ACCESS = {
@@ -71,7 +68,7 @@ describe('Access Token Routes', (): void => {
     limits: {
       receiver:
         'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
-      sendAmount: {
+      debitAmount: {
         value: '400',
         assetCode: 'USD',
         assetScale: 2

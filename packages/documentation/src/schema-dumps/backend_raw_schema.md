@@ -485,11 +485,11 @@ Create an asset
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>updateAssetWithdrawalThreshold</strong></td>
+<td colspan="2" valign="top"><strong>updateAsset</strong></td>
 <td valign="top"><a href="#assetmutationresponse">AssetMutationResponse</a>!</td>
 <td>
 
-Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn.
+Update an asset
 
 </td>
 </tr>
@@ -903,6 +903,15 @@ Available liquidity
 <td>
 
 Minimum amount of liquidity that can be withdrawn from the asset
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>liquidityThreshold</strong></td>
+<td valign="top"><a href="#uint64">UInt64</a></td>
+<td>
+
+Account Servicing Entity will be notified via a webhook event if liquidity falls below this value
 
 </td>
 </tr>
@@ -1634,7 +1643,7 @@ Outgoing payment state
 <td></td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
 <td>
 
@@ -2417,6 +2426,15 @@ Peer's public name
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>liquidityThreshold</strong></td>
+<td valign="top"><a href="#uint64">UInt64</a></td>
+<td>
+
+Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value
+
+</td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>liquidity</strong></td>
 <td valign="top"><a href="#uint64">UInt64</a></td>
 <td>
@@ -2527,7 +2545,7 @@ Payment pointer URL of the receiver
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amount">Amount</a>!</td>
 <td>
 
@@ -3270,6 +3288,15 @@ Minimum amount of liquidity that can be withdrawn from the asset
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>liquidityThreshold</strong></td>
+<td valign="top"><a href="#uint64">UInt64</a></td>
+<td>
+
+Account Servicing Entity will be notified via a webhook event if liquidity falls below this value
+
+</td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>idempotencyKey</strong></td>
 <td valign="top"><a href="#string">String</a></td>
 <td>
@@ -3625,6 +3652,15 @@ Peer's internal name
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>liquidityThreshold</strong></td>
+<td valign="top"><a href="#uint64">UInt64</a></td>
+<td>
+
+Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value
+
+</td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>idempotencyKey</strong></td>
 <td valign="top"><a href="#string">String</a></td>
 <td>
@@ -3707,7 +3743,7 @@ Id of the payment pointer under which the quote will be created
 </td>
 </tr>
 <tr>
-<td colspan="2" valign="top"><strong>sendAmount</strong></td>
+<td colspan="2" valign="top"><strong>debitAmount</strong></td>
 <td valign="top"><a href="#amountinput">AmountInput</a></td>
 <td>
 
@@ -4261,6 +4297,15 @@ New minimum amount of liquidity that can be withdrawn from the asset
 </td>
 </tr>
 <tr>
+<td colspan="2" valign="top"><strong>liquidityThreshold</strong></td>
+<td valign="top"><a href="#uint64">UInt64</a></td>
+<td>
+
+Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value
+
+</td>
+</tr>
+<tr>
 <td colspan="2" valign="top"><strong>idempotencyKey</strong></td>
 <td valign="top"><a href="#string">String</a></td>
 <td>
@@ -4375,6 +4420,15 @@ Peer's new ILP address
 <td>
 
 Peer's new public name
+
+</td>
+</tr>
+<tr>
+<td colspan="2" valign="top"><strong>liquidityThreshold</strong></td>
+<td valign="top"><a href="#uint64">UInt64</a></td>
+<td>
+
+Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value
 
 </td>
 </tr>

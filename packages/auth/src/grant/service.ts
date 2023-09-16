@@ -2,15 +2,13 @@ import { v4 } from 'uuid'
 import { Transaction, TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
-import { generateNonce, generateToken } from '../shared/utils'
+import { generateToken } from '../shared/utils'
 import {
   Grant,
   GrantState,
   GrantFinalization,
   StartMethod,
-  FinishMethod,
-  InteractiveGrant,
-  isInteractiveGrant
+  FinishMethod
 } from './model'
 import { AccessRequest } from '../access/types'
 import { AccessService } from '../access/service'
@@ -18,21 +16,21 @@ import { Pagination } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
 
+interface GrantFilter {
+  identifier?: FilterString
+}
+
 export interface GrantService {
   getByIdWithAccess(grantId: string): Promise<Grant | undefined>
   create(grantRequest: GrantRequest, trx?: Transaction): Promise<Grant>
-  getByInteractionSession(
-    interactId: string,
-    interactNonce: string,
-    options?: GetByInteractionSessionOpts
-  ): Promise<InteractiveGrant | undefined>
-  approve(grantId: string): Promise<Grant>
+  markPending(grantId: string, trx?: Transaction): Promise<Grant | undefined>
+  approve(grantId: string, trx?: Transaction): Promise<Grant>
   finalize(grantId: string, reason: GrantFinalization): Promise<Grant>
   getByContinue(
     continueId: string,
     continueToken: string,
     options?: GetByContinueOpts
-  ): Promise<Grant | null>
+  ): Promise<Grant | undefined>
   revokeGrant(grantId: string): Promise<boolean>
   getPage(pagination?: Pagination, filter?: GrantFilter): Promise<Grant[]>
   lock(grantId: string, trx: Transaction, timeoutMs?: number): Promise<void>
@@ -109,12 +107,9 @@ export async function createGrantService({
     getByIdWithAccess: (grantId: string) => getByIdWithAccess(grantId),
     create: (grantRequest: GrantRequest, trx?: Transaction) =>
       create(deps, grantRequest, trx),
-    getByInteractionSession: (
-      interactId: string,
-      interactNonce: string,
-      options: GetByInteractionSessionOpts
-    ) => getByInteractionSession(interactId, interactNonce, options),
-    approve: (grantId: string) => approve(deps, grantId),
+    markPending: (grantId: string, trx?: Transaction) =>
+      markPending(deps, grantId, trx),
+    approve: (grantId: string) => approve(grantId),
     finalize: (id: string, reason: GrantFinalization) => finalize(id, reason),
     getByContinue: (
       continueId: string,
@@ -132,13 +127,32 @@ async function getByIdWithAccess(grantId: string): Promise<Grant | undefined> {
   return Grant.query().findById(grantId).withGraphJoined('access')
 }
 
-async function approve(
-  deps: ServiceDependencies,
-  grantId: string
-): Promise<Grant> {
+async function approve(grantId: string): Promise<Grant> {
   return Grant.query().patchAndFetchById(grantId, {
     state: GrantState.Approved
   })
+}
+
+async function markPending(
+  deps: ServiceDependencies,
+  id: string,
+  trx?: Transaction
+): Promise<Grant> {
+  const grantTrx = trx || (await deps.knex.transaction())
+  try {
+    const grant = await Grant.query(trx).patchAndFetchById(id, {
+      state: GrantState.Pending
+    })
+
+    if (!trx) {
+      await grantTrx.commit()
+    }
+
+    return grant
+  } catch (err) {
+    await grantTrx.rollback()
+    throw err
+  }
 }
 
 async function finalize(id: string, reason: GrantFinalization): Promise<Grant> {
@@ -205,9 +219,6 @@ async function create(
       finishUri: interact?.finish?.uri,
       clientNonce: interact?.finish?.nonce,
       client,
-      interactId: interact ? v4() : undefined,
-      interactRef: interact ? v4() : undefined,
-      interactNonce: interact ? generateNonce() : undefined,
       continueId: v4(),
       continueToken: generateToken()
     }
@@ -231,38 +242,7 @@ async function create(
   }
 }
 
-interface GetByInteractionSessionOpts {
-  includeRevoked?: boolean
-}
-
-async function getByInteractionSession(
-  interactId: string,
-  interactNonce: string,
-  options: GetByInteractionSessionOpts = {}
-): Promise<InteractiveGrant | undefined> {
-  const { includeRevoked = false } = options
-
-  const queryBuilder = Grant.query()
-    .findOne({ interactId, interactNonce })
-    .withGraphFetched('access')
-
-  if (!includeRevoked) {
-    queryBuilder
-      .whereNull('finalizationReason')
-      .orWhereNot('finalizationReason', GrantFinalization.Revoked)
-  }
-
-  const grant = await queryBuilder
-
-  if (!grant || !isInteractiveGrant(grant)) {
-    return undefined
-  } else {
-    return grant
-  }
-}
-
 interface GetByContinueOpts {
-  interactRef?: string
   includeRevoked?: boolean
 }
 
@@ -270,10 +250,12 @@ async function getByContinue(
   continueId: string,
   continueToken: string,
   options: GetByContinueOpts = {}
-): Promise<Grant | null> {
-  const { interactRef, includeRevoked = false } = options
+): Promise<Grant | undefined> {
+  const { includeRevoked = false } = options
 
-  const queryBuilder = Grant.query().findOne({ continueId })
+  const queryBuilder = Grant.query()
+    .findOne({ continueId, continueToken })
+    .withGraphFetched('interaction')
 
   if (!includeRevoked) {
     queryBuilder
@@ -283,11 +265,6 @@ async function getByContinue(
 
   const grant = await queryBuilder
 
-  if (
-    continueToken !== grant?.continueToken ||
-    (interactRef && interactRef !== grant?.interactRef)
-  )
-    return null
   return grant
 }
 

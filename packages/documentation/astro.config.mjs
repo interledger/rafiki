@@ -125,6 +125,10 @@ export default defineConfig({
                 {
                   label: 'Management',
                   link: 'integration/management'
+                },
+                {
+                  label: 'Event Handlers',
+                  link: 'integration/event-handlers'
                 }
               ]
             },

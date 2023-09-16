@@ -27,7 +27,8 @@ export interface GraphqlResponseElement {
 
 export async function createAsset(
   code: string,
-  scale: number
+  scale: number,
+  liquidityThreshold: number
 ): Promise<AssetMutationResponse> {
   const createAssetMutation = gql`
     mutation CreateAsset($input: CreateAssetInput!) {
@@ -39,6 +40,7 @@ export async function createAsset(
           id
           code
           scale
+          liquidityThreshold
         }
       }
     }
@@ -46,7 +48,8 @@ export async function createAsset(
   const createAssetInput = {
     input: {
       code,
-      scale
+      scale,
+      liquidityThreshold
     }
   }
   return apolloClient
@@ -67,7 +70,8 @@ export async function createPeer(
   outgoingEndpoint: string,
   assetId: string,
   assetCode: string,
-  name: string
+  name: string,
+  liquidityThreshold: number
 ): Promise<CreatePeerMutationResponse> {
   const createPeerMutation = gql`
     mutation CreatePeer($input: CreatePeerInput!) {
@@ -79,6 +83,7 @@ export async function createPeer(
           id
           staticIlpAddress
           name
+          liquidityThreshold
         }
       }
     }
@@ -91,7 +96,8 @@ export async function createPeer(
         outgoing: { endpoint: outgoingEndpoint, authToken: `test-${assetCode}` }
       },
       assetId,
-      name
+      name,
+      liquidityThreshold
     }
   }
   return apolloClient
@@ -303,7 +309,7 @@ export async function getPaymentPointerPayments(
               id
               state
               error
-              sendAmount {
+              debitAmount {
                 value
                 assetCode
                 assetScale

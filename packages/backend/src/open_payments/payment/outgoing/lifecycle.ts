@@ -42,7 +42,7 @@ export async function handleSending(
   validateAssets(deps, payment, receiver)
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
-  const newMaxSourceAmount = payment.sendAmount.value - amountSent
+  const newMaxSourceAmount = payment.debitAmount.value - amountSent
 
   // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
   // eslint-disable-next-line no-case-declarations

@@ -54,7 +54,6 @@ services:
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
       REDIS_URL: redis://shared-redis:6379/0
-      QUOTE_URL: http://cloud-nine-wallet/quotes
       PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
     depends_on:
       - shared-database

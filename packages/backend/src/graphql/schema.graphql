@@ -86,10 +86,8 @@ type Mutation {
   "Create an asset"
   createAsset(input: CreateAssetInput!): AssetMutationResponse!
 
-  "Update an asset's withdrawal threshold. The withdrawal threshold indicates the MINIMUM amount that can be withdrawn."
-  updateAssetWithdrawalThreshold(
-    input: UpdateAssetInput!
-  ): AssetMutationResponse!
+  "Update an asset"
+  updateAsset(input: UpdateAssetInput!): AssetMutationResponse!
 
   "Add asset liquidity"
   addAssetLiquidity(input: AddAssetLiquidityInput!): LiquidityMutationResponse
@@ -214,6 +212,8 @@ input CreateAssetInput {
   scale: UInt8!
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -223,6 +223,8 @@ input UpdateAssetInput {
   id: String!
   "New minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Account Servicing Entity will be notified via a webhook event if liquidity falls below this new value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -248,6 +250,8 @@ input CreatePeerInput {
   staticIlpAddress: String!
   "Peer's internal name"
   name: String
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -263,6 +267,8 @@ input UpdatePeerInput {
   staticIlpAddress: String
   "Peer's new public name"
   name: String
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value"
+  liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -406,6 +412,8 @@ type Asset implements Model {
   liquidity: UInt64
   "Minimum amount of liquidity that can be withdrawn from the asset"
   withdrawalThreshold: UInt64
+  "Account Servicing Entity will be notified via a webhook event if liquidity falls below this value"
+  liquidityThreshold: UInt64
   "The receiving fee structure for the asset"
   receivingFee: Fee
   "The sending fee structure for the asset"
@@ -442,6 +450,8 @@ type Peer implements Model {
   staticIlpAddress: String!
   "Peer's public name"
   name: String
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
+  liquidityThreshold: UInt64
   "Available liquidity"
   liquidity: UInt64
   "Date-time of creation"
@@ -628,7 +638,7 @@ type OutgoingPayment implements BasePayment & Model {
   error: String
   stateAttempts: Int!
   "Amount to send (fixed send)"
-  sendAmount: Amount!
+  debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
   "Payment pointer URL of the receiver"
@@ -707,7 +717,7 @@ type Quote {
   "Payment pointer URL of the receiver"
   receiver: String!
   "Amount to send (fixed send)"
-  sendAmount: Amount!
+  debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
   "Maximum value per packet allowed on the possible routes"
@@ -736,7 +746,7 @@ input CreateQuoteInput {
   "Id of the payment pointer under which the quote will be created"
   paymentPointerId: String!
   "Amount to send (fixed send)"
-  sendAmount: AmountInput
+  debitAmount: AmountInput
   "Amount to receive (fixed receive)"
   receiveAmount: AmountInput
   "Payment pointer URL of the receiver"

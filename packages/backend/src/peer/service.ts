@@ -1,5 +1,6 @@
 import {
   ForeignKeyViolationError,
+  UniqueViolationError,
   NotFoundError,
   raw,
   Transaction,
@@ -32,6 +33,7 @@ export type Options = {
   maxPacketAmount?: bigint
   staticIlpAddress: string
   name?: string
+  liquidityThreshold?: bigint
 }
 
 export type CreateOptions = Options & {
@@ -115,7 +117,8 @@ async function createPeer(
           http: options.http,
           maxPacketAmount: options.maxPacketAmount,
           staticIlpAddress: options.staticIlpAddress,
-          name: options.name
+          name: options.name,
+          liquidityThreshold: options.liquidityThreshold
         })
         .withGraphFetched('asset')
 
@@ -146,6 +149,8 @@ async function createPeer(
       if (err.constraint === 'peers_assetid_foreign') {
         return PeerError.UnknownAsset
       }
+    } else if (err instanceof UniqueViolationError) {
+      return PeerError.DuplicatePeer
     } else if (isPeerError(err)) {
       return err
     }

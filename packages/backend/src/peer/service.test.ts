@@ -35,7 +35,8 @@ describe('Peer Service', (): void => {
     },
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
-    name: faker.person.fullName()
+    name: faker.person.fullName(),
+    liquidityThreshold: BigInt(10000)
   })
 
   beforeAll(async (): Promise<void> => {
@@ -57,32 +58,41 @@ describe('Peer Service', (): void => {
   })
 
   describe('Create/Get Peer', (): void => {
-    test('A peer can be created and fetched', async (): Promise<void> => {
-      const options = {
-        assetId: asset.id,
-        http: {
-          outgoing: {
-            authToken: faker.string.sample(32),
-            endpoint: faker.internet.url({ appendSlash: false })
-          }
-        },
-        staticIlpAddress: 'test.' + uuid(),
-        name: faker.person.fullName()
+    test.each`
+      liquidityThreshold
+      ${undefined}
+      ${BigInt(1000)}
+    `(
+      'A peer can be created and fetched, liquidityThreshold: $liquidityThreshold',
+      async ({ liquidityThreshold }): Promise<void> => {
+        const options = {
+          assetId: asset.id,
+          http: {
+            outgoing: {
+              authToken: faker.string.sample(32),
+              endpoint: faker.internet.url({ appendSlash: false })
+            }
+          },
+          staticIlpAddress: 'test.' + uuid(),
+          name: faker.person.fullName(),
+          liquidityThreshold
+        }
+        const peer = await peerService.create(options)
+        assert.ok(!isPeerError(peer))
+        expect(peer).toMatchObject({
+          asset,
+          http: {
+            outgoing: options.http.outgoing
+          },
+          staticIlpAddress: options.staticIlpAddress,
+          name: options.name,
+          liquidityThreshold: liquidityThreshold || null
+        })
+        const retrievedPeer = await peerService.get(peer.id)
+        if (!retrievedPeer) throw new Error('peer not found')
+        expect(retrievedPeer).toEqual(peer)
       }
-      const peer = await peerService.create(options)
-      assert.ok(!isPeerError(peer))
-      expect(peer).toMatchObject({
-        asset,
-        http: {
-          outgoing: options.http.outgoing
-        },
-        staticIlpAddress: options.staticIlpAddress,
-        name: options.name
-      })
-      const retrievedPeer = await peerService.get(peer.id)
-      if (!retrievedPeer) throw new Error('peer not found')
-      expect(retrievedPeer).toEqual(peer)
-    })
+    )
 
     test('A peer can be created with all settings', async (): Promise<void> => {
       const options = randomPeer()
@@ -173,36 +183,56 @@ describe('Peer Service', (): void => {
         PeerError.InvalidHTTPEndpoint
       )
     })
+
+    test('Cannot create a peer with duplicate ILP address and asset', async (): Promise<void> => {
+      const options = randomPeer()
+
+      const peer = await peerService.create(options)
+      assert.ok(!isPeerError(peer))
+
+      await expect(peerService.create(options)).resolves.toEqual(
+        PeerError.DuplicatePeer
+      )
+    })
   })
 
   describe('Update Peer', (): void => {
-    test('Can update a peer', async (): Promise<void> => {
-      const peer = await createPeer(deps)
-      const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
-      const updateOptions: UpdateOptions = {
-        id: peer.id,
-        http,
-        maxPacketAmount,
-        staticIlpAddress,
-        name
-      }
+    test.each`
+      liquidityThreshold
+      ${null}
+      ${BigInt(2000)}
+    `(
+      'Can update a peer, liquidityThreshold: $liquidityThreshold',
+      async ({ liquidityThreshold }): Promise<void> => {
+        const peer = await createPeer(deps)
+        const { http, maxPacketAmount, staticIlpAddress, name } = randomPeer()
+        const updateOptions: UpdateOptions = {
+          id: peer.id,
+          http,
+          maxPacketAmount,
+          staticIlpAddress,
+          name,
+          liquidityThreshold
+        }
 
-      const peerOrError = await peerService.update(updateOptions)
-      assert.ok(!isPeerError(peerOrError))
-      assert.ok(updateOptions.http)
-      delete updateOptions.http.incoming
-      const expectedPeer = {
-        asset: peer.asset,
-        http: {
-          outgoing: updateOptions.http.outgoing
-        },
-        maxPacketAmount: updateOptions.maxPacketAmount,
-        staticIlpAddress: updateOptions.staticIlpAddress,
-        name: updateOptions.name
+        const peerOrError = await peerService.update(updateOptions)
+        assert.ok(!isPeerError(peerOrError))
+        assert.ok(updateOptions.http)
+        delete updateOptions.http.incoming
+        const expectedPeer = {
+          asset: peer.asset,
+          http: {
+            outgoing: updateOptions.http.outgoing
+          },
+          maxPacketAmount: updateOptions.maxPacketAmount,
+          staticIlpAddress: updateOptions.staticIlpAddress,
+          name: updateOptions.name,
+          liquidityThreshold: updateOptions.liquidityThreshold || null
+        }
+        expect(peerOrError).toMatchObject(expectedPeer)
+        await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)
       }
-      expect(peerOrError).toMatchObject(expectedPeer)
-      await expect(peerService.get(peer.id)).resolves.toEqual(peerOrError)
-    })
+    )
 
     test('Cannot update nonexistent peer', async (): Promise<void> => {
       const updateOptions: UpdateOptions = {

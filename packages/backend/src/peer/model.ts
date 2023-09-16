@@ -1,9 +1,10 @@
 import { Model, Pojo } from 'objection'
-import { LiquidityAccount } from '../accounting/service'
+import { LiquidityAccount, OnDebitOptions } from '../accounting/service'
 import { Asset } from '../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../httpToken/model'
 import { BaseModel } from '../shared/baseModel'
+import { WebhookEvent } from '../webhook/model'
 
 export class Peer
   extends BaseModel
@@ -32,6 +33,8 @@ export class Peer
     }
   }
 
+  public readonly liquidityThreshold!: bigint | null
+
   public assetId!: string
   public asset!: Asset
 
@@ -47,6 +50,27 @@ export class Peer
   public staticIlpAddress!: string
 
   public name?: string
+
+  public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
+    if (this.liquidityThreshold !== null) {
+      if (balance <= this.liquidityThreshold) {
+        await WebhookEvent.query().insert({
+          type: 'peer.liquidity_low',
+          data: {
+            id: this.id,
+            asset: {
+              id: this.asset.id,
+              code: this.asset.code,
+              scale: this.asset.scale
+            },
+            liquidityThreshold: this.liquidityThreshold,
+            balance
+          }
+        })
+      }
+    }
+    return this
+  }
 
   $formatDatabaseJson(json: Pojo): Pojo {
     if (json.http?.outgoing) {

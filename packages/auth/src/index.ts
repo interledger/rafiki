@@ -1,5 +1,4 @@
 import path from 'path'
-import { EventEmitter } from 'events'
 import createLogger from 'pino'
 import { knex } from 'knex'
 import { Model } from 'objection'
@@ -16,6 +15,7 @@ import { createGrantRoutes } from './grant/routes'
 import { createInteractionRoutes } from './interaction/routes'
 import { createOpenAPI } from '@interledger/openapi'
 import { createUnauthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import { createInteractionService } from './interaction/service'
 
 const container = initIocContainer(Config)
 const app = new App(container)
@@ -73,8 +73,6 @@ export function initIocContainer(
     return db
   })
 
-  container.singleton('closeEmitter', async () => new EventEmitter())
-
   container.singleton('openPaymentsClient', async (deps) => {
     const logger = await deps.use('logger')
     return createOpenPaymentsClient({ logger })
@@ -112,12 +110,25 @@ export function initIocContainer(
     }
   )
 
+  container.singleton(
+    'interactionService',
+    async (deps: IocContract<AppServices>) => {
+      return createInteractionService({
+        logger: await deps.use('logger'),
+        knex: await deps.use('knex'),
+        config: await deps.use('config'),
+        grantService: await deps.use('grantService')
+      })
+    }
+  )
+
   container.singleton('grantRoutes', async (deps: IocContract<AppServices>) => {
     return createGrantRoutes({
       grantService: await deps.use('grantService'),
       clientService: await deps.use('clientService'),
       accessTokenService: await deps.use('accessTokenService'),
       accessService: await deps.use('accessService'),
+      interactionService: await deps.use('interactionService'),
       logger: await deps.use('logger'),
       config: await deps.use('config')
     })
@@ -127,6 +138,8 @@ export function initIocContainer(
     'interactionRoutes',
     async (deps: IocContract<AppServices>) => {
       return createInteractionRoutes({
+        accessService: await deps.use('accessService'),
+        interactionService: await deps.use('interactionService'),
         grantService: await deps.use('grantService'),
         logger: await deps.use('logger'),
         config: await deps.use('config')
@@ -228,6 +241,14 @@ export const start = async (
     logger.info('received SIGTERM attempting graceful shutdown')
 
     try {
+      if (shuttingDown) {
+        logger.warn(
+          'received second SIGTERM during graceful shutdown, exiting forcefully.'
+        )
+        process.exit(1)
+      }
+
+      shuttingDown = true
       // Graceful shutdown
       await gracefulShutdown(container, app)
       logger.info('completed graceful shutdown.')
@@ -254,11 +275,14 @@ export const start = async (
 
   const config = await container.use('config')
   await app.boot()
+
   await app.startAdminServer(config.adminPort)
-  await app.startAuthServer(config.authPort)
-  await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Admin listening on ${app.getAdminPort()}`)
+
+  await app.startAuthServer(config.authPort)
   logger.info(`Auth server listening on ${app.getAuthPort()}`)
+
+  await app.startIntrospectionServer(config.introspectionPort)
   logger.info(`Introspection server listening on ${app.getIntrospectionPort()}`)
 }
 
