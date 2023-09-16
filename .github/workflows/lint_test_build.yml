@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./.github/workflows/rafiki/env-setup
       - name: generate graphql api documentation
-        run: pnpm --filter documentation docs:graphql:generate && pnpm format
+        run: pnpm --filter documentation build && pnpm format
       - name: verify changed files
         uses: tj-actions/verify-changed-files@v16
         id: verify-changed-files
