@@ -493,8 +493,8 @@ importers:
         specifier: 2.10.15
         version: 2.10.15(sharp@0.32.5)
       astro-graphql-plugin:
-        specifier: ^0.0.7
-        version: 0.0.7(astro@2.10.15)(graphql@16.8.0)
+        specifier: ^0.0.9
+        version: 0.0.9(graphql@16.8.0)
       graphql:
         specifier: ^16.8.0
         version: 16.8.0
@@ -6616,16 +6616,13 @@ packages:
     resolution: {integrity: sha512-sRpyiNrx2dEYIMmUXprS8nlpRg2Drs8m9ElX9vVEXaCB4XEAJhKfs7IcX0IwShjuOAjLR6wzIrgoptz1n19i1A==}
     hasBin: true
 
-  /astro-graphql-plugin@0.0.7(astro@2.10.15)(graphql@16.8.0):
-    resolution: {integrity: sha512-8ktD5lT6Acj1y6hVNHsLDRSmJqQRAaJ8rylZJKLbLzjf29hnrXG/ek5gMP3gT+FAnvMUbBmDwM2m8Q9BPJZ+nA==}
-    peerDependencies:
-      astro: ^2.0.0-beta.0
+  /astro-graphql-plugin@0.0.9(graphql@16.8.0):
+    resolution: {integrity: sha512-4bjIROE1A3ax8DlSZF8Y1nF4o/WSSEEnNICNDXdYY90TI++diPW2QTZLA41KWv+VZMBCxfCq20l43mrWbIfwCA==}
     dependencies:
       '@graphql-tools/graphql-file-loader': 8.0.0(graphql@16.8.0)
       '@graphql-tools/json-file-loader': 8.0.0(graphql@16.8.0)
       '@graphql-tools/load': 8.0.0(graphql@16.8.0)
       '@graphql-tools/url-loader': 8.0.0(@types/node@18.11.9)(graphql@16.8.0)
-      astro: 2.10.15(sharp@0.32.5)
       fs-extra: 11.1.1
       marked: 2.0.3
     transitivePeerDependencies:
