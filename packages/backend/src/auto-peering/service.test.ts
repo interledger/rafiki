@@ -421,7 +421,7 @@ describe('Auto Peering Service', (): void => {
       scope.done()
     })
 
-    test('returns error if attemped to create duplicate peer', async (): Promise<void> => {
+    test('updates peer if duplicate peer found', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
       const args: InitiatePeeringRequestArgs = {
@@ -432,18 +432,47 @@ describe('Auto Peering Service', (): void => {
       const peerDetails: PeeringDetails = {
         staticIlpAddress: 'test.peer2',
         ilpConnectorAddress: 'http://peer-two.com',
-        httpToken: 'peerHttpToken',
+        httpToken: uuid(),
         name: 'Peer 2'
       }
 
-      const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
+      const secondPeerDetails: PeeringDetails = {
+        ...peerDetails,
+        httpToken: uuid()
+      }
 
-      const peer = await autoPeeringService.initiatePeeringRequest(args)
-      assert(!isAutoPeeringError(peer))
+      const scope = nock(args.peerUrl)
+        .post('/')
+        .reply(200, peerDetails)
+        .post('/')
+        .reply(200, secondPeerDetails)
 
-      await expect(
-        autoPeeringService.initiatePeeringRequest(args)
-      ).resolves.toBe(AutoPeeringError.DuplicatePeer)
+      const createdPeer = await autoPeeringService.initiatePeeringRequest(args)
+      assert(!isAutoPeeringError(createdPeer))
+
+      const newArgs: InitiatePeeringRequestArgs = {
+        ...args,
+        name: 'New Peer Name',
+        maxPacketAmount: 1000n
+      }
+
+      const updatedPeer =
+        await autoPeeringService.initiatePeeringRequest(newArgs)
+      assert(!isAutoPeeringError(updatedPeer))
+
+      expect(createdPeer.id).toBe(updatedPeer.id)
+      expect(updatedPeer.name).toBe(newArgs.name)
+      expect(updatedPeer.maxPacketAmount).toBe(newArgs.maxPacketAmount)
+
+      const updatedIncomigHttpTokens = (
+        await updatedPeer.$fetchGraph('incomingTokens')
+      ).incomingTokens
+
+      expect(updatedIncomigHttpTokens).toHaveLength(1)
+      expect(updatedIncomigHttpTokens[0].token).toBe(
+        secondPeerDetails.httpToken
+      )
+
       scope.done()
     })
 

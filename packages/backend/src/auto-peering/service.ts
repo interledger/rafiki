@@ -101,7 +101,7 @@ async function initiatePeeringRequest(
     return peeringDetailsOrError
   }
 
-  const peerOrError = await deps.peerService.create({
+  const createdPeerOrError = await deps.peerService.create({
     maxPacketAmount: args.maxPacketAmount,
     name: args.name ?? peeringDetailsOrError.name,
     assetId: asset.id,
@@ -118,17 +118,33 @@ async function initiatePeeringRequest(
     }
   })
 
+  const isDuplicatePeer =
+    isPeerError(createdPeerOrError) &&
+    createdPeerOrError === PeerError.DuplicatePeer
+
+  const peerOrError = isDuplicatePeer
+    ? await updatePeer(deps, {
+        maxPacketAmount: args.maxPacketAmount
+          ? Number(args.maxPacketAmount)
+          : undefined,
+        name: args.name ?? peeringDetailsOrError.name,
+        staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
+        assetId: asset.id,
+        outgoingHttpToken,
+        incomingHttpToken: peeringDetailsOrError.httpToken,
+        ilpConnectorAddress: peeringDetailsOrError.ilpConnectorAddress
+      })
+    : createdPeerOrError
+
   if (isPeerError(peerOrError)) {
     if (
       peerOrError === PeerError.InvalidHTTPEndpoint ||
       peerOrError === PeerError.InvalidStaticIlpAddress
     ) {
       return AutoPeeringError.InvalidPeerIlpConfiguration
-    } else if (peerOrError === PeerError.DuplicatePeer) {
-      return AutoPeeringError.DuplicatePeer
     } else {
       deps.logger.error(
-        { error: peerOrError, request: args },
+        { error: peerOrError, peeringDetailsOrError },
         'Could not create peer'
       )
       return AutoPeeringError.InvalidPeeringRequest
