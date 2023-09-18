@@ -292,8 +292,7 @@ describe('Interaction Routes', (): void => {
         const { clientNonce } = grant
         const { nonce: interactNonce, ref: interactRef } = interaction
 
-        const grantRequestUrl =
-          config.authServerDomain + `/`
+        const grantRequestUrl = config.authServerDomain + `/`
 
         const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
         const hash = crypto.createHash('sha3-512').update(data).digest('base64')

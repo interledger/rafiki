@@ -251,8 +251,7 @@ async function finishInteraction(
         nonce: interactNonce,
         ref: interactRef
       } = interaction
-      const grantRequestUrl =
-        config.authServerDomain + `/`
+      const grantRequestUrl = config.authServerDomain + `/`
 
       // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
       const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
