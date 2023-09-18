@@ -35,9 +35,11 @@ export interface Account {
   skipPaymentPointerCreation?: boolean
 }
 
-interface Fee {
+export interface Fee {
   fixed: number
   basisPoints: number
+  asset: string
+  scale: number
 }
 
 export interface SeedInstance {
@@ -45,7 +47,7 @@ export interface SeedInstance {
   assets: Array<Asset>
   peers: Array<Peering>
   accounts: Array<Account>
-  sendingFee: Fee
+  fees: Array<Fee>
   rates: Record<string, Record<string, number>>
 }
 

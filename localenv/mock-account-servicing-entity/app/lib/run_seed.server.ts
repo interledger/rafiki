@@ -32,8 +32,11 @@ export async function setupFromSeed(config: Config): Promise<void> {
     assets[code] = asset
     console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
 
-    const { sendingFee: fee } = config.seed
-    await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints)
+    const { fees } = config.seed
+    const fee = fees.find(fee => fee.asset === code && fee.scale == scale)
+    if (fee) {
+      await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints)
+    }
   }
 
   for (const asset of Object.values(assets)) {
