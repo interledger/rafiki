@@ -33,7 +33,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     console.log(JSON.stringify({ asset, addedLiquidity }, null, 2))
 
     const { fees } = config.seed
-    const fee = fees.find(fee => fee.asset === code && fee.scale == scale)
+    const fee = fees.find((fee) => fee.asset === code && fee.scale == scale)
     if (fee) {
       await setFee(asset.id, FeeType.Sending, fee.fixed, fee.basisPoints)
     }
