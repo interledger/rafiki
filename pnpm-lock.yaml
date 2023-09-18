@@ -161,8 +161,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       '@interledger/open-payments':
-        specifier: 3.0.1
-        version: 3.0.1
+        specifier: 3.1.0
+        version: 3.1.0
       '@interledger/openapi':
         specifier: 1.0.3
         version: 1.0.3
@@ -300,8 +300,8 @@ importers:
         specifier: 1.0.4
         version: 1.0.4
       '@interledger/open-payments':
-        specifier: 3.0.1
-        version: 3.0.1
+        specifier: 3.1.0
+        version: 3.1.0
       '@interledger/openapi':
         specifier: 1.0.3
         version: 1.0.3
@@ -4176,8 +4176,8 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@3.0.1:
-    resolution: {integrity: sha512-B9ZEEVlE2xPKWHr+JHgWgxdW09UwmAedpHxORovRshwo18em2iQbifYPv3THnIUqGnpy+RLzIPuP0LoQK4m4oQ==}
+  /@interledger/open-payments@3.1.0:
+    resolution: {integrity: sha512-b158SxGD0AbhSM+68nN7/cJCAA7Y/hBOmsfeZbyJggZq38eBvOoXMaxsvbFHvVrs3zQs/NkHFwzmaI0txvuLaA==}
     dependencies:
       '@interledger/http-signature-utils': 1.0.4
       '@interledger/openapi': 1.0.3
