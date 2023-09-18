@@ -17,11 +17,6 @@ export interface Asset {
   liquidityThreshold: number
 }
 
-export interface Fees {
-  fixed: number
-  basisPoints: number
-}
-
 export interface Peering {
   liquidityThreshold: number
   peerUrl: string
@@ -43,8 +38,6 @@ export interface Account {
 interface Fee {
   fixed: number
   basisPoints: number
-  asset: string
-  scale: number
 }
 
 export interface SeedInstance {
