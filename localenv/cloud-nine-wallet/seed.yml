@@ -51,15 +51,15 @@ rates:
     USD: 0.059
     EUR: 0.054
 fees:
-  - fixed: 0
+  - fixed: 100
     basisPoints: 200
     asset: USD
     scale: 2
-  - fixed: 0
+  - fixed: 100
     basisPoints: 200
     asset: EUR
     scale: 2
-  - fixed: 0
+  - fixed: 100
     basisPoints: 200
     asset: MXN
     scale: 2
