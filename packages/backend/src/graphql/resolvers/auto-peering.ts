@@ -9,12 +9,12 @@ import {
 } from '../../auto-peering/errors'
 import { peerToGraphql } from './peer'
 
-export const createPeerByUrl: MutationResolvers<ApolloContext>['createPeerByUrl'] =
+export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOrUpdatePeerByUrl'] =
   async (
     _,
     args,
     ctx
-  ): Promise<ResolversTypes['CreatePeerByUrlMutationResponse']> => {
+  ): Promise<ResolversTypes['CreateOrUpdatePeerByUrlMutationResponse']> => {
     const autoPeeringService = await ctx.container.use('autoPeeringService')
     return autoPeeringService
       .initiatePeeringRequest(args.input)
@@ -28,7 +28,7 @@ export const createPeerByUrl: MutationResolvers<ApolloContext>['createPeerByUrl'
           : {
               code: '200',
               success: true,
-              message: 'Created ILP Peer',
+              message: 'ILP peer created or updated',
               peer: peerToGraphql(peerOrError)
             }
       )

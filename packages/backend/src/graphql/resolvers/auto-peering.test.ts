@@ -16,8 +16,9 @@ import {
   AutoPeeringError
 } from '../../auto-peering/errors'
 import { createAsset } from '../../tests/asset'
-import { CreatePeerByUrlInput } from '../generated/graphql'
+import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
 import { AutoPeeringService } from '../../auto-peering/service'
+import { v4 as uuid } from 'uuid'
 
 describe('Auto Peering Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -25,12 +26,63 @@ describe('Auto Peering Resolvers', (): void => {
   let autoPeeringService: AutoPeeringService
   let asset: Asset
 
-  const createPeerByUrlInput = (): CreatePeerByUrlInput => ({
+  const createOrUpdatePeerByUrlInput = (
+    override?: Partial<CreateOrUpdatePeerByUrlInput>
+  ): CreateOrUpdatePeerByUrlInput => ({
     assetId: asset.id,
     maxPacketAmount: BigInt(100),
     peerUrl: faker.internet.url(),
-    name: faker.person.fullName()
+    name: faker.person.fullName(),
+    ...override
   })
+
+  const callCreateOrUpdatePeerByUrl = async (
+    input: CreateOrUpdatePeerByUrlInput
+  ) => {
+    const response = await appContainer.apolloClient
+      .mutate({
+        mutation: gql`
+          mutation CreateOrUpdatePeerByUrl(
+            $input: CreateOrUpdatePeerByUrlInput!
+          ) {
+            createOrUpdatePeerByUrl(input: $input) {
+              code
+              success
+              message
+              peer {
+                id
+                asset {
+                  code
+                  scale
+                }
+                maxPacketAmount
+                http {
+                  outgoing {
+                    authToken
+                    endpoint
+                  }
+                }
+                staticIlpAddress
+                liquidity
+                name
+              }
+            }
+          }
+        `,
+        variables: {
+          input
+        }
+      })
+      .then((query) => {
+        if (query.data) {
+          return query.data.createOrUpdatePeerByUrl
+        } else {
+          throw new Error('Data was empty')
+        }
+      })
+
+    return response
+  }
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -53,7 +105,7 @@ describe('Auto Peering Resolvers', (): void => {
 
   describe('Create Peer By Url', (): void => {
     test('Can create a peer', async (): Promise<void> => {
-      const input = createPeerByUrlInput()
+      const input = createOrUpdatePeerByUrlInput()
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
@@ -64,45 +116,7 @@ describe('Auto Peering Resolvers', (): void => {
 
       const scope = nock(input.peerUrl).post('/').reply(200, peerDetails)
 
-      const response = await appContainer.apolloClient
-        .mutate({
-          mutation: gql`
-            mutation CreatePeerByUrl($input: CreatePeerByUrlInput!) {
-              createPeerByUrl(input: $input) {
-                code
-                success
-                message
-                peer {
-                  id
-                  asset {
-                    code
-                    scale
-                  }
-                  maxPacketAmount
-                  http {
-                    outgoing {
-                      authToken
-                      endpoint
-                    }
-                  }
-                  staticIlpAddress
-                  liquidity
-                  name
-                }
-              }
-            }
-          `,
-          variables: {
-            input
-          }
-        })
-        .then((query) => {
-          if (query.data) {
-            return query.data.createPeerByUrl
-          } else {
-            throw new Error('Data was empty')
-          }
-        })
+      const response = await callCreateOrUpdatePeerByUrl(input)
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
@@ -131,6 +145,90 @@ describe('Auto Peering Resolvers', (): void => {
       scope.done()
     })
 
+    test('Can update a peer', async (): Promise<void> => {
+      const input = createOrUpdatePeerByUrlInput()
+
+      const peerDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com',
+        name: 'Test Peer',
+        httpToken: 'httpToken'
+      }
+
+      const secondPeerDetails = {
+        ...peerDetails,
+        httpToken: uuid()
+      }
+
+      const scope = nock(input.peerUrl)
+        .post('/')
+        .reply(200, peerDetails)
+        .post('/')
+        .reply(200, secondPeerDetails)
+
+      const response = await callCreateOrUpdatePeerByUrl(input)
+
+      expect(response.success).toBe(true)
+      expect(response.code).toEqual('200')
+      assert.ok(response.peer)
+      expect(response.peer).toEqual({
+        __typename: 'Peer',
+        id: response.peer.id,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        },
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            authToken: expect.any(String),
+            endpoint: peerDetails.ilpConnectorAddress
+          }
+        },
+        maxPacketAmount: input.maxPacketAmount?.toString(),
+        staticIlpAddress: peerDetails.staticIlpAddress,
+        liquidity: '0',
+        name: input.name
+      })
+
+      const secondInput = createOrUpdatePeerByUrlInput({
+        ...input,
+        name: 'Updated Name',
+        maxPacketAmount: 1000n
+      })
+
+      const secondResponse = await callCreateOrUpdatePeerByUrl(secondInput)
+
+      expect(secondResponse.success).toBe(true)
+      expect(secondResponse.code).toEqual('200')
+      assert.ok(secondResponse.peer)
+      expect(secondResponse.peer).toEqual({
+        __typename: 'Peer',
+        id: response.peer.id,
+        asset: {
+          __typename: 'Asset',
+          code: asset.code,
+          scale: asset.scale
+        },
+        http: {
+          __typename: 'Http',
+          outgoing: {
+            __typename: 'HttpOutgoing',
+            authToken: expect.any(String),
+            endpoint: peerDetails.ilpConnectorAddress
+          }
+        },
+        maxPacketAmount: secondInput.maxPacketAmount?.toString(),
+        staticIlpAddress: peerDetails.staticIlpAddress,
+        liquidity: '0',
+        name: secondInput.name
+      })
+
+      scope.done()
+    })
+
     test.each`
       error
       ${AutoPeeringError.InvalidIlpConfiguration}
@@ -144,12 +242,14 @@ describe('Auto Peering Resolvers', (): void => {
       jest
         .spyOn(autoPeeringService, 'initiatePeeringRequest')
         .mockResolvedValueOnce(error)
-      const input = createPeerByUrlInput()
+      const input = createOrUpdatePeerByUrlInput()
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreatePeerByUrl($input: CreatePeerByUrlInput!) {
-              createPeerByUrl(input: $input) {
+            mutation CreateOrUpdatePeerByUrl(
+              $input: CreateOrUpdatePeerByUrlInput!
+            ) {
+              createOrUpdatePeerByUrl(input: $input) {
                 code
                 success
                 message
@@ -165,7 +265,7 @@ describe('Auto Peering Resolvers', (): void => {
         })
         .then((query) => {
           if (query.data) {
-            return query.data.createPeerByUrl
+            return query.data.createOrUpdatePeerByUrl
           } else {
             throw new Error('Data was empty')
           }
@@ -190,8 +290,10 @@ describe('Auto Peering Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreatePeerByUrl($input: CreatePeerByUrlInput!) {
-              createPeerByUrl(input: $input) {
+            mutation CreateOrUpdatePeerByUrl(
+              $input: CreateOrUpdatePeerByUrlInput!
+            ) {
+              createOrUpdatePeerByUrl(input: $input) {
                 code
                 success
                 message
@@ -202,12 +304,12 @@ describe('Auto Peering Resolvers', (): void => {
             }
           `,
           variables: {
-            input: createPeerByUrlInput()
+            input: createOrUpdatePeerByUrlInput()
           }
         })
         .then((query) => {
           if (query.data) {
-            return query.data.createPeerByUrl
+            return query.data.createOrUpdatePeerByUrl
           } else {
             throw new Error('Data was empty')
           }
