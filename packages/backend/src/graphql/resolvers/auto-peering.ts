@@ -28,7 +28,7 @@ export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOr
           : {
               code: '200',
               success: true,
-              message: 'Created ILP Peer',
+              message: 'ILP peer created or updated',
               peer: peerToGraphql(peerOrError)
             }
       )
