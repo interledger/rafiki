@@ -101,9 +101,9 @@ type Mutation {
   createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
 
   "Create a peer using a URL"
-  createPeerByUrl(
-    input: CreatePeerByUrlInput!
-  ): CreatePeerByUrlMutationResponse!
+  createOrUpdatePeerByUrl(
+    input: CreateOrUpdatePeerByUrlInput!
+  ): CreateOrUpdatePeerByUrlMutationResponse!
 
   "Update a peer"
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
@@ -261,7 +261,7 @@ input CreatePeerInput {
   idempotencyKey: String
 }
 
-input CreatePeerByUrlInput {
+input CreateOrUpdatePeerByUrlInput {
   "Maximum packet amount that the peer accepts"
   maxPacketAmount: UInt64
   "Asset id of peering relationship"
@@ -1026,7 +1026,7 @@ type CreatePeerMutationResponse implements MutationResponse {
   peer: Peer
 }
 
-type CreatePeerByUrlMutationResponse implements MutationResponse {
+type CreateOrUpdatePeerByUrlMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
