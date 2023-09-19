@@ -33,6 +33,8 @@ import {
 import { AccessTokenService } from '../accessToken/service'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { ContinueContext, CreateContext } from '../grant/routes'
+import { Interaction, InteractionState } from '../interaction/model'
+import { generateNonce } from '../shared/utils'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -55,6 +57,7 @@ describe('Signature Service', (): void => {
 
   describe('Signature middleware', (): void => {
     let grant: Grant
+    let interaction: Interaction
     let token: AccessToken
     let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,10 +75,15 @@ describe('Signature Service', (): void => {
       finishUri: 'https://example.com/finish',
       clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
       client: CLIENT,
-      interactId: v4(),
-      interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
       ...overrides
+    })
+
+    const generateBaseInteraction = (grant: Grant) => ({
+      ref: v4(),
+      nonce: generateNonce(),
+      state: InteractionState.Pending,
+      grantId: grant.id,
+      expiresIn: Config.interactionExpirySeconds
     })
 
     const BASE_ACCESS = {
@@ -108,6 +116,9 @@ describe('Signature Service', (): void => {
         grantId: grant.id,
         ...BASE_ACCESS
       })
+      interaction = await Interaction.query(trx).insertAndFetch(
+        generateBaseInteraction(grant)
+      )
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
@@ -175,7 +186,7 @@ describe('Signature Service', (): void => {
           method: 'POST'
         },
         { id: grant.continueId },
-        { interact_ref: grant.interactRef },
+        { interact_ref: interaction.ref },
         testKeys.privateKey,
         testKeys.publicKey.kid,
         deps
@@ -304,7 +315,7 @@ describe('Signature Service', (): void => {
           method: 'POST'
         },
         { id: grant.continueId },
-        { interact_ref: grant.interactRef },
+        { interact_ref: interaction.ref },
         testKeys.privateKey,
         testKeys.publicKey.kid,
         deps
@@ -337,7 +348,7 @@ describe('Signature Service', (): void => {
           method: 'POST'
         },
         { id: grant.continueId },
-        { interact_ref: grant.interactRef },
+        { interact_ref: interaction.ref },
         testKeys.privateKey,
         testKeys.publicKey.kid,
         deps

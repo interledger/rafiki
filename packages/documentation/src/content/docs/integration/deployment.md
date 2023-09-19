@@ -68,6 +68,7 @@ Now, the Admin UI can be found on localhost:3010.
 | auth.accessToken.deletionDays           | `ACCESS_TOKEN_DELETION_DAYS`                      |
 | auth.accessToken.expirySeconds          | `ACCESS_TOKEN_EXPIRY_SECONDS`                     |
 | auth.cookieKey                          | `COOKIE_KEY`                                      |
+| auth.interactionExpirySeconds           | `INTERACTION_EXPIRY_SECONDS`                      |
 | auth.workers.cleanup                    | `DATABASE_CLEANUP_WORKERS`                        |
 | backend.nodeEnv                         | `NODE_ENV`                                        |
 | backend.logLevel                        | `LOG_LEVEL`                                       |
@@ -186,6 +187,7 @@ Now, the Admin UI can be found on localhost:3010.
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |
 | `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server, same as in `AUTH_SERVER_DOMAIN`    |
 | `WAIT_SECONDS`                 | `5`                                                              | wait time included in `grant.continue`                                     |
+| `INTERACTION_EXPIRY_SECONDS`   | `600`                                                            | amount of time an interaction is active                                    |
 
 #### Frontend
 
