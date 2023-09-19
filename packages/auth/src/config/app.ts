@@ -40,6 +40,7 @@ export const Config = {
   ),
   waitTimeSeconds: envInt('WAIT_SECONDS', 5),
   cookieKey: envString('COOKIE_KEY', crypto.randomBytes(32).toString('hex')),
+  interactionExpirySeconds: envInt('INTERACTION_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   accessTokenExpirySeconds: envInt('ACCESS_TOKEN_EXPIRY_SECONDS', 10 * 60), // Default 10 minutes
   databaseCleanupWorkers: envInt('DATABASE_CLEANUP_WORKERS', 1),
   accessTokenDeletionDays: envInt('ACCESS_TOKEN_DELETION_DAYS', 30),
