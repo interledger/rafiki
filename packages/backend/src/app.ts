@@ -588,8 +588,7 @@ export class App {
     const router = new Router<DefaultState, AppContext>()
 
     router.use(bodyParser())
-
-    router.get('/', autoPeeringRoutes.get)
+    router.post('/', autoPeeringRoutes.acceptPeerRequest)
 
     koa.use(router.routes())
 
