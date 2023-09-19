@@ -19,7 +19,7 @@ interface TelemetryServiceDependencies extends BaseService {
 }
 
 export enum Metrics {
-  TRANSACTION_COMPLETED_TOTAL = 'transaction_completed_total'
+  TRANSACTIONS_TOTAL = 'transactions_total'
 }
 
 export function createTelemetryService(
@@ -49,8 +49,8 @@ class TelemetryServiceImpl implements TelemetryService {
     metrics.setGlobalMeterProvider(meterProvider)
 
     //* init counters
-    this.createCounter(Metrics.TRANSACTION_COMPLETED_TOTAL, {
-      description: 'Count of completed transactions'
+    this.createCounter(Metrics.TRANSACTIONS_TOTAL, {
+      description: 'Count of funded transactions'
     })
   }
 
