@@ -150,11 +150,11 @@ const handleCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> => {
-  deps.telemetryService?.getCounter(Metrics.TRANSACTION_COMPLETED_TOTAL)?.add(1)
-
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
+  deps.telemetryService?.getCounter(Metrics.TRANSACTION_COMPLETED_TOTAL)?.add(1)
+
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }
 
