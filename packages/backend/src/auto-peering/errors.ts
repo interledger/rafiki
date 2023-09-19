@@ -5,7 +5,7 @@ export enum AutoPeeringError {
   PeerUnsupportedAsset = 'PeerUnsupportedAsset',
   InvalidPeerUrl = 'InvalidPeerUrl',
   InvalidPeeringRequest = 'InvalidPeeringRequest',
-  DuplicatePeer = 'DuplicatePeer'
+  LiquidityError = 'LiquidityError'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -21,7 +21,7 @@ export const errorToCode: {
   [AutoPeeringError.PeerUnsupportedAsset]: 400,
   [AutoPeeringError.InvalidPeerUrl]: 400,
   [AutoPeeringError.InvalidPeeringRequest]: 400,
-  [AutoPeeringError.DuplicatePeer]: 409
+  [AutoPeeringError.LiquidityError]: 400
 }
 
 export const errorToMessage: {
@@ -35,5 +35,5 @@ export const errorToMessage: {
   [AutoPeeringError.InvalidPeerUrl]:
     'Peer URL is invalid or peer does not support auto-peering',
   [AutoPeeringError.InvalidPeeringRequest]: 'Invalid peering request',
-  [AutoPeeringError.DuplicatePeer]: 'Duplicate peer'
+  [AutoPeeringError.LiquidityError]: 'Could not add liquidity to peer'
 }

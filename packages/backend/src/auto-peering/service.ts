@@ -7,6 +7,7 @@ import { AutoPeeringError, isAutoPeeringError } from './errors'
 import { v4 as uuid } from 'uuid'
 import { Peer } from '../peer/model'
 import { AxiosInstance, isAxiosError } from 'axios'
+import { isTransferError } from '../accounting/errors'
 
 export interface PeeringDetails {
   staticIlpAddress: string
@@ -20,7 +21,7 @@ export interface InitiatePeeringRequestArgs {
   assetId: string
   name?: string
   maxPacketAmount?: bigint
-  initialLiquidity?: bigint
+  addedLiquidity?: bigint
   liquidityThreshold?: bigint
 }
 
@@ -41,6 +42,11 @@ interface UpdatePeerArgs {
   outgoingHttpToken: string
   maxPacketAmount?: number
   name?: string
+}
+
+interface AddLiquidityArgs {
+  peer: Peer
+  amount: bigint
 }
 
 export interface AutoPeeringService {
@@ -102,7 +108,7 @@ async function initiatePeeringRequest(
     return peeringDetailsOrError
   }
 
-  const peerOrError = await deps.peerService.create({
+  const createdPeerOrError = await deps.peerService.create({
     maxPacketAmount: args.maxPacketAmount,
     name: args.name ?? peeringDetailsOrError.name,
     assetId: asset.id,
@@ -116,28 +122,61 @@ async function initiatePeeringRequest(
         authToken: outgoingHttpToken,
         endpoint: peeringDetailsOrError.ilpConnectorAddress
       }
-    },
-    initialLiquidity: args.initialLiquidity
+    }
   })
 
+  const isDuplicatePeer =
+    isPeerError(createdPeerOrError) &&
+    createdPeerOrError === PeerError.DuplicatePeer
+
+  const peerOrError = isDuplicatePeer
+    ? await updatePeer(deps, {
+        maxPacketAmount: args.maxPacketAmount
+          ? Number(args.maxPacketAmount)
+          : undefined,
+        name: args.name ?? peeringDetailsOrError.name,
+        staticIlpAddress: peeringDetailsOrError.staticIlpAddress,
+        assetId: asset.id,
+        outgoingHttpToken,
+        incomingHttpToken: peeringDetailsOrError.httpToken,
+        ilpConnectorAddress: peeringDetailsOrError.ilpConnectorAddress
+      })
+    : createdPeerOrError
+
   if (isPeerError(peerOrError)) {
-    if (
-      peerOrError === PeerError.InvalidHTTPEndpoint ||
-      peerOrError === PeerError.InvalidStaticIlpAddress
-    ) {
-      return AutoPeeringError.InvalidPeerIlpConfiguration
-    } else if (peerOrError === PeerError.DuplicatePeer) {
-      return AutoPeeringError.DuplicatePeer
-    } else {
-      deps.logger.error(
-        { error: peerOrError, request: args },
-        'Could not create peer'
-      )
-      return AutoPeeringError.InvalidPeeringRequest
-    }
+    return handlePeerError(deps, peerOrError, 'Could not create or update peer')
   }
 
-  return peerOrError
+  return args.addedLiquidity
+    ? await addLiquidity(deps, {
+        peer: peerOrError,
+        amount: args.addedLiquidity
+      })
+    : peerOrError
+}
+
+async function addLiquidity(
+  deps: ServiceDependencies,
+  args: AddLiquidityArgs
+): Promise<Peer | AutoPeeringError.LiquidityError> {
+  const transferOrPeerError = await deps.peerService.addLiquidity({
+    peerId: args.peer.id,
+    amount: args.amount
+  })
+
+  if (
+    isTransferError(transferOrPeerError) ||
+    isPeerError(transferOrPeerError)
+  ) {
+    deps.logger.error(
+      { error: transferOrPeerError, args, peerId: args.peer.id },
+      'Could not add liquidity to peer'
+    )
+
+    return AutoPeeringError.LiquidityError
+  }
+
+  return args.peer
 }
 
 async function sendPeeringRequest(
@@ -227,7 +266,20 @@ async function acceptPeeringRequest(
       })
     : createdPeerOrError
 
-  return peeringDetailsOrError(deps, peerOrError)
+  if (isPeerError(peerOrError)) {
+    return handlePeerError(
+      deps,
+      peerOrError,
+      'Could not accept peering request'
+    )
+  }
+
+  return {
+    ilpConnectorAddress: deps.config.ilpConnectorAddress,
+    staticIlpAddress: deps.config.ilpAddress,
+    httpToken: peerOrError.http.outgoing.authToken,
+    name: deps.config.instanceName
+  }
 }
 
 async function updatePeer(
@@ -260,29 +312,18 @@ async function updatePeer(
   })
 }
 
-async function peeringDetailsOrError(
+function handlePeerError(
   deps: ServiceDependencies,
-  peerOrError: Peer | PeerError
-): Promise<AutoPeeringError | PeeringDetails> {
-  if (isPeerError(peerOrError)) {
-    if (
-      peerOrError === PeerError.InvalidHTTPEndpoint ||
-      peerOrError === PeerError.InvalidStaticIlpAddress
-    ) {
-      return AutoPeeringError.InvalidPeerIlpConfiguration
-    } else {
-      deps.logger.error(
-        { error: peerOrError },
-        'Could not accept peering request'
-      )
-      return AutoPeeringError.InvalidPeeringRequest
-    }
-  }
-
-  return {
-    ilpConnectorAddress: deps.config.ilpConnectorAddress,
-    staticIlpAddress: deps.config.ilpAddress,
-    httpToken: peerOrError.http.outgoing.authToken,
-    name: deps.config.instanceName
+  peerError: PeerError,
+  logMessage: string
+): AutoPeeringError {
+  if (
+    peerError === PeerError.InvalidHTTPEndpoint ||
+    peerError === PeerError.InvalidStaticIlpAddress
+  ) {
+    return AutoPeeringError.InvalidPeerIlpConfiguration
+  } else {
+    deps.logger.error({ error: peerError }, logMessage)
+    return AutoPeeringError.InvalidPeeringRequest
   }
 }
