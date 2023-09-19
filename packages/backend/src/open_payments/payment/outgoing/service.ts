@@ -35,6 +35,7 @@ import * as worker from './worker'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
+import { TelemetryService } from '../../../telemetry/meter'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -49,6 +50,7 @@ export interface OutgoingPaymentService
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
+  telemetryService?: TelemetryService
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService

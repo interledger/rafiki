@@ -75,6 +75,7 @@ import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
+import { TelemetryService } from './telemetry/meter'
 
 export interface AppContextData {
   logger: Logger
@@ -176,6 +177,7 @@ const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
+  telemetry: Promise<TelemetryService>
   knex: Promise<Knex>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>

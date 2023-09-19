@@ -46,6 +46,7 @@ import { createCombinedPaymentService } from './open_payments/payment/combined/s
 import { createFeeService } from './fee/service'
 import { createAutoPeeringService } from './auto-peering/service'
 import { createAutoPeeringRoutes } from './auto-peering/routes'
+import { createTelemetryService } from './telemetry/meter'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -124,6 +125,19 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
+
+  if (config.enableTelemetry) {
+    container.singleton('telemetry', async (deps) => {
+      const config = await deps.use('config')
+      return createTelemetryService({
+        logger: await deps.use('logger'),
+        serviceName: 'Rafiki',
+        collectorUrl: config.openTelemetryCollectorUrl,
+        exportIntervalMillis: config.openTelemetryExportInterval
+      })
+    })
+  }
+
   container.singleton('openApi', async () => {
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')

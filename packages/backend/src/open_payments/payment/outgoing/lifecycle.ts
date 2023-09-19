@@ -10,6 +10,7 @@ import {
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
 import { IlpPlugin } from '../../../shared/ilp_plugin'
+import { Metrics } from '../../../telemetry/meter'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -149,6 +150,8 @@ const handleCompleted = async (
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> => {
+  deps.telemetryService?.getCounter(Metrics.TRANSACTION_COMPLETED_TOTAL)?.add(1)
+
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
