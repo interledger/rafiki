@@ -493,8 +493,8 @@ importers:
         specifier: 3.1.0
         version: 3.1.0
       astro-graphql-plugin:
-        specifier: ^0.0.9
-        version: 0.0.9(graphql@16.8.1)
+        specifier: ^0.1.0
+        version: 0.1.0(graphql@16.8.1)
       graphql:
         specifier: ^16.8.1
         version: 16.8.1
@@ -6604,8 +6604,8 @@ packages:
     resolution: {integrity: sha512-sRpyiNrx2dEYIMmUXprS8nlpRg2Drs8m9ElX9vVEXaCB4XEAJhKfs7IcX0IwShjuOAjLR6wzIrgoptz1n19i1A==}
     hasBin: true
 
-  /astro-graphql-plugin@0.0.9(graphql@16.8.1):
-    resolution: {integrity: sha512-4bjIROE1A3ax8DlSZF8Y1nF4o/WSSEEnNICNDXdYY90TI++diPW2QTZLA41KWv+VZMBCxfCq20l43mrWbIfwCA==}
+  /astro-graphql-plugin@0.1.0(graphql@16.8.1):
+    resolution: {integrity: sha512-lBrd/9PW90MlODsFktn8V1CeZ63ELUp6O272RYdZNtcXiGFQq0h7dX4wEbH+oGsn90Zs5cBmPflIXxynYBCNqw==}
     dependencies:
       '@graphql-tools/graphql-file-loader': 8.0.0(graphql@16.8.1)
       '@graphql-tools/json-file-loader': 8.0.0(graphql@16.8.1)
