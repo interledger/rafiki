@@ -15,6 +15,3 @@
 
   # Default build command.
   command = "pnpm install && npx playwright install chromium && pnpm build"
-
-# [[plugins]]
-#   package = "netlify-plugin-playwright-cache"
