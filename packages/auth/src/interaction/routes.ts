@@ -256,7 +256,7 @@ async function finishInteraction(
       // https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol#section-4.2.3
       const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
 
-      const hash = crypto.createHash('sha3-512').update(data).digest('base64')
+      const hash = crypto.createHash('sha-256').update(data).digest('base64')
       clientRedirectUri.searchParams.set('hash', hash)
       clientRedirectUri.searchParams.set('interact_ref', interactRef)
       ctx.redirect(clientRedirectUri.toString())

@@ -295,7 +295,7 @@ describe('Interaction Routes', (): void => {
         const grantRequestUrl = config.authServerDomain + `/`
 
         const data = `${clientNonce}\n${interactNonce}\n${interactRef}\n${grantRequestUrl}`
-        const hash = crypto.createHash('sha3-512').update(data).digest('base64')
+        const hash = crypto.createHash('sha-256').update(data).digest('base64')
         clientRedirectUri.searchParams.set('hash', hash)
         assert.ok(interactRef)
         clientRedirectUri.searchParams.set('interact_ref', interactRef)
