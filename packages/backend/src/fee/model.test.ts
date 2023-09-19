@@ -51,8 +51,6 @@ describe('Fee Model', (): void => {
           basisPointFee,
           fixedFee
         })
-        const result = fee.calculate(principal)
-        console.log(result)
         expect(fee.calculate(principal)).toEqual(expectedResult)
       }
     )
