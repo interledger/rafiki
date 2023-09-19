@@ -499,7 +499,7 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0(graphql@16.8.1)
       graphql:
-        specifier: ^16.8.0
+        specifier: ^16.8.1
         version: 16.8.1
       react:
         specifier: ^18.2.0
