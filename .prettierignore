@@ -16,3 +16,4 @@ build
 .cache-loader
 postman
 .postman
+packages/documentation/src/content/docs/apis

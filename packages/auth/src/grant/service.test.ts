@@ -21,6 +21,7 @@ import { generateNonce, generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { createGrant } from '../tests/grant'
 import { AccessToken } from '../accessToken/model'
+import { Interaction, InteractionState } from '../interaction/model'
 
 describe('Grant Service', (): void => {
   let deps: IocContract<AppServices>
@@ -47,10 +48,15 @@ describe('Grant Service', (): void => {
       finishMethod: FinishMethod.Redirect,
       finishUri: 'https://example.com',
       clientNonce: generateNonce(),
-      client: CLIENT,
-      interactId: v4(),
-      interactRef: v4(),
-      interactNonce: generateNonce()
+      client: CLIENT
+    })
+
+    await Interaction.query().insert({
+      ref: v4(),
+      nonce: generateNonce(),
+      state: InteractionState.Pending,
+      expiresIn: Config.interactionExpirySeconds,
+      grantId: grant.id
     })
 
     await Access.query().insert({
@@ -112,9 +118,6 @@ describe('Grant Service', (): void => {
         state: GrantState.Pending,
         continueId: expect.any(String),
         continueToken: expect.any(String),
-        interactRef: expect.any(String),
-        interactId: expect.any(String),
-        interactNonce: expect.any(String),
         finishMethod: FinishMethod.Redirect,
         finishUri: BASE_GRANT_REQUEST.interact.finish.uri,
         clientNonce: BASE_GRANT_REQUEST.interact.finish.nonce,
@@ -166,6 +169,14 @@ describe('Grant Service', (): void => {
     })
   })
 
+  describe('pending', (): void => {
+    test('Can mark a grant pending for an interaction', async (): Promise<void> => {
+      const pendingGrant = await grantService.markPending(grant.id)
+      assert.ok(pendingGrant)
+      expect(pendingGrant.state).toEqual(GrantState.Pending)
+    })
+  })
+
   describe('issue', (): void => {
     test('Can issue an approved grant', async (): Promise<void> => {
       const issuedGrant = await grantService.approve(grant.id)
@@ -175,18 +186,15 @@ describe('Grant Service', (): void => {
 
   describe('continue', (): void => {
     test('Can fetch a grant by its continuation information', async (): Promise<void> => {
-      const { continueId, continueToken, interactRef } = grant
-      assert.ok(interactRef)
+      const { continueId, continueToken } = grant
 
       const fetchedGrant = await grantService.getByContinue(
         continueId,
-        continueToken,
-        { interactRef }
+        continueToken
       )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.continueId).toEqual(continueId)
       expect(fetchedGrant?.continueToken).toEqual(continueToken)
-      expect(fetchedGrant?.interactRef).toEqual(interactRef)
     })
 
     test('Defaults to excluding revoked grants', async (): Promise<void> => {
@@ -195,15 +203,13 @@ describe('Grant Service', (): void => {
         finalizationReason: GrantFinalization.Revoked
       })
 
-      const { continueId, continueToken, interactRef } = grant
-      assert.ok(interactRef)
+      const { continueId, continueToken } = grant
 
       const fetchedGrant = await grantService.getByContinue(
         continueId,
-        continueToken,
-        { interactRef }
+        continueToken
       )
-      expect(fetchedGrant).toBeNull()
+      expect(fetchedGrant).toBeUndefined()
     })
 
     test('Can fetch revoked grants with includeRevoked', async (): Promise<void> => {
@@ -212,18 +218,16 @@ describe('Grant Service', (): void => {
         finalizationReason: GrantFinalization.Revoked
       })
 
-      const { continueId, continueToken, interactRef } = grant
-      assert.ok(interactRef)
+      const { continueId, continueToken } = grant
 
       const fetchedGrant = await grantService.getByContinue(
         continueId,
         continueToken,
-        { interactRef, includeRevoked: true }
+        { includeRevoked: true }
       )
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.continueId).toEqual(continueId)
       expect(fetchedGrant?.continueToken).toEqual(continueToken)
-      expect(fetchedGrant?.interactRef).toEqual(interactRef)
     })
   })
 
@@ -232,64 +236,6 @@ describe('Grant Service', (): void => {
       const fetchedGrant = await grantService.getByIdWithAccess(grant.id)
       expect(fetchedGrant?.id).toEqual(grant.id)
       expect(fetchedGrant?.access?.length).toBeGreaterThan(0)
-    })
-  })
-
-  describe('getByInteractiveSession', (): void => {
-    test('Can fetch a grant by interact id and nonce', async () => {
-      assert.ok(grant.interactId)
-      assert.ok(grant.interactNonce)
-      const fetchedGrant = await grantService.getByInteractionSession(
-        grant.interactId,
-        grant.interactNonce
-      )
-      expect(fetchedGrant?.id).toEqual(grant.id)
-    })
-    test.each`
-      interactId | interactNonce | description
-      ${true}    | ${false}      | ${'interactId'}
-      ${false}   | ${true}       | ${'interactNonce'}
-      ${false}   | ${false}      | ${'interactId and interactNonce'}
-    `(
-      'Cannot fetch a grant by unknown $description',
-      async ({ interactId, interactNonce }): Promise<void> => {
-        assert.ok(grant.interactId)
-        assert.ok(grant.interactNonce)
-
-        await expect(
-          grantService.getByInteractionSession(
-            interactId ? grant.interactId : v4(),
-            interactNonce ? grant.interactNonce : v4()
-          )
-        ).resolves.toBeUndefined()
-      }
-    )
-    test('Defaults to excluding revoked grants', async () => {
-      await grant.$query().patch({
-        state: GrantState.Finalized,
-        finalizationReason: GrantFinalization.Revoked
-      })
-      assert.ok(grant.interactId)
-      assert.ok(grant.interactNonce)
-      const fetchedGrant = await grantService.getByInteractionSession(
-        grant.interactId,
-        grant.interactNonce
-      )
-      expect(fetchedGrant).toBeUndefined()
-    })
-    test('Can fetch revoked grants with includeRevoked', async () => {
-      await grant.$query().patch({
-        state: GrantState.Finalized,
-        finalizationReason: GrantFinalization.Revoked
-      })
-      assert.ok(grant.interactId)
-      assert.ok(grant.interactNonce)
-      const fetchedGrant = await grantService.getByInteractionSession(
-        grant.interactId,
-        grant.interactNonce,
-        { includeRevoked: true }
-      )
-      expect(fetchedGrant?.id).toEqual(grant.id)
     })
   })
 
