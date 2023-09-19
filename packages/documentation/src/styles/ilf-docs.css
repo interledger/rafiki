@@ -69,7 +69,7 @@
   font-size: var(--sl-text-body);
 }
 
-.container.container {
+.sl-container.sl-container {
   max-width: 100%;
 }
 
@@ -183,11 +183,11 @@
 }
 
 /* Stylized title and headings */
-.container > h1:first-of-type {
+.sl-container > h1:first-of-type {
   width: max-content;
 }
 
-.container > h1:first-of-type::after {
+.sl-container > h1:first-of-type::after {
   background-color: var(--color-accent-secondary);
   height: 12px;
   top: -12px;
@@ -251,7 +251,7 @@ h3::after {
 /* Rounded corners and shadow flair */
 table,
 pre,
-img,
+.content img,
 .starlight-aside {
   border-radius: var(--border-radius);
   box-shadow: var(--sl-shadow-sm);
@@ -261,7 +261,7 @@ code {
   border-radius: var(--border-radius);
 }
 
-img {
+.content img {
   border: 1px solid var(--sl-color-hairline-light);
 }
 
@@ -406,6 +406,10 @@ aside.starlight-aside {
 
 .content astro-island > button[aria-expanded='false'] + div {
   margin-top: 0;
+}
+
+.content :is(iframe):not(:where(.not-content *)) {
+  aspect-ratio: 16 / 9;
 }
 
 /* MathJax styles */

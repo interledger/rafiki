@@ -20,6 +20,7 @@ import { loadSchemaSync } from '@graphql-tools/load'
 import { resolvers } from './graphql/resolvers'
 import { ClientService } from './client/service'
 import { GrantService } from './grant/service'
+import { InteractionService } from './interaction/service'
 import {
   CreateContext,
   ContinueContext,
@@ -89,6 +90,7 @@ export interface AppServices {
   config: Promise<IAppConfig>
   clientService: Promise<ClientService>
   grantService: Promise<GrantService>
+  interactionService: Promise<InteractionService>
   accessService: Promise<AccessService>
   accessTokenRoutes: Promise<AccessTokenRoutes>
   accessTokenService: Promise<AccessTokenService>
