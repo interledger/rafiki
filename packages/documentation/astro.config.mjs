@@ -20,7 +20,11 @@ export default defineConfig({
     // overrideIntegration(), # TODO: figure out the path problem for this plugin
     starlight({
       title: 'Rafiki',
-      customCss: ['./src/styles/ilf-docs.css', './src/styles/rafiki.css'],
+      customCss: [
+        './node_modules/@interledger/docs-design-system/src/styles/orange-theme.css',
+        './node_modules/@interledger/docs-design-system/src/styles/ilf-docs.css',
+        './src/styles/rafiki.css'
+      ],
       head: [
         {
           tag: 'script',

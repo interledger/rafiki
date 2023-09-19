@@ -48,7 +48,10 @@ export interface PeerService {
   get(id: string): Promise<Peer | undefined>
   create(options: CreateOptions): Promise<Peer | PeerError>
   update(options: UpdateOptions): Promise<Peer | PeerError>
-  getByDestinationAddress(address: string): Promise<Peer | undefined>
+  getByDestinationAddress(
+    address: string,
+    assetId?: string
+  ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination): Promise<Peer[]>
   delete(id: string): Promise<Peer | undefined>
@@ -82,8 +85,8 @@ export async function createPeerService({
     get: (id) => getPeer(deps, id),
     create: (options) => createPeer(deps, options),
     update: (options) => updatePeer(deps, options),
-    getByDestinationAddress: (destinationAddress) =>
-      getPeerByDestinationAddress(deps, destinationAddress),
+    getByDestinationAddress: (destinationAddress, assetId) =>
+      getPeerByDestinationAddress(deps, destinationAddress, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?) => getPeersPage(deps, pagination),
     delete: (id) => deletePeer(deps, id)
@@ -238,12 +241,13 @@ async function addIncomingHttpTokens({
 
 async function getPeerByDestinationAddress(
   deps: ServiceDependencies,
-  destinationAddress: string
+  destinationAddress: string,
+  assetId?: string
 ): Promise<Peer | undefined> {
   // This query does the equivalent of the following regex
   // for `staticIlpAddress`s in the accounts table:
   // new RegExp('^' + staticIlpAddress + '($|\\.)')).test(destinationAddress)
-  const peer = await Peer.query(deps.knex)
+  const peerQuery = Peer.query(deps.knex)
     .withGraphJoined('asset')
     .where(
       raw('?', [destinationAddress]),
@@ -268,7 +272,13 @@ async function getPeerByDestinationAddress(
           '.'
         )
     })
-    .first()
+
+  if (assetId) {
+    peerQuery.andWhere('assetId', assetId)
+  }
+
+  const peer = await peerQuery.first()
+
   return peer || undefined
 }
 

@@ -350,6 +350,28 @@ describe('Peer Service', (): void => {
         peerService.getByDestinationAddress('test.rafiki-with-wildcards')
       ).resolves.toBeUndefined()
     })
+
+    test('returns peer by ILP address and asset', async (): Promise<void> => {
+      const staticIlpAddress = 'test.rafiki'
+
+      const peer = await createPeer(deps, {
+        staticIlpAddress,
+        assetId: asset.id
+      })
+
+      const secondAsset = await createAsset(deps)
+      const peerWithSecondAsset = await createPeer(deps, {
+        staticIlpAddress,
+        assetId: secondAsset.id
+      })
+
+      await expect(
+        peerService.getByDestinationAddress('test.rafiki')
+      ).resolves.toEqual(peer)
+      await expect(
+        peerService.getByDestinationAddress('test.rafiki', secondAsset.id)
+      ).resolves.toEqual(peerWithSecondAsset)
+    })
   })
 
   describe('Get Peer by Incoming Token', (): void => {

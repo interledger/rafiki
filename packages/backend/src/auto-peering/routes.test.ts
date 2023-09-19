@@ -1,22 +1,25 @@
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
-import { AppContext, AppServices } from '../app'
-import { Config } from '../config/app'
+import { AppServices } from '../app'
+import { Config, IAppConfig } from '../config/app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset } from '../tests/asset'
 import { createContext } from '../tests/context'
 import { truncateTables } from '../tests/tableManager'
-import { AutoPeeringRoutes } from './routes'
+import { AutoPeeringError, errorToCode, errorToMessage } from './errors'
+import { AutoPeeringRoutes, PeerRequestContext } from './routes'
 
 describe('Auto Peering Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let autoPeeringRoutes: AutoPeeringRoutes
+  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({ ...Config, enableAutoPeering: true })
     appContainer = await createTestApp(deps)
     autoPeeringRoutes = await deps.use('autoPeeringRoutes')
+    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -27,41 +30,56 @@ describe('Auto Peering Routes', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get', (): void => {
-    test('returns peering details with assets', async (): Promise<void> => {
-      const assets = await Promise.all([
-        createAsset(deps),
-        createAsset(deps),
-        createAsset(deps)
-      ])
+  describe('acceptPeerRequest', (): void => {
+    test('returns peering details', async (): Promise<void> => {
+      const asset = await createAsset(deps)
 
-      const ctx = createContext<AppContext>({
+      const ctx = createContext<PeerRequestContext>({
         headers: { Accept: 'application/json' },
-        url: `/`
+        url: `/`,
+        body: {
+          staticIlpAddress: 'test.rafiki-money',
+          ilpConnectorAddress: 'http://peer.rafiki.money',
+          asset: { code: asset.code, scale: asset.scale },
+          httpToken: 'someHttpToken',
+          maxPacketAmount: 1000,
+          name: 'Rafiki Money'
+        }
       })
 
-      await expect(autoPeeringRoutes.get(ctx)).resolves.toBeUndefined()
+      await expect(
+        autoPeeringRoutes.acceptPeerRequest(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.status).toBe(200)
       expect(ctx.body).toEqual({
-        ilpAddress: Config.ilpAddress,
-        assets: expect.arrayContaining(
-          assets.map((asset) => ({
-            code: asset.code,
-            scale: asset.scale
-          }))
-        )
+        staticIlpAddress: config.ilpAddress,
+        ilpConnectorAddress: config.ilpConnectorAddress,
+        httpToken: expect.any(String),
+        name: config.instanceName
       })
     })
 
-    test('returns peering details without assets', async (): Promise<void> => {
-      const ctx = createContext<AppContext>({
+    test('properly handles error', async (): Promise<void> => {
+      const ctx = createContext<PeerRequestContext>({
         headers: { Accept: 'application/json' },
-        url: `/`
+        url: `/`,
+        body: {
+          staticIlpAddress: 'test.rafiki-money',
+          ilpConnectorAddress: 'http://peer.rafiki.money',
+          asset: { code: 'ABC', scale: 2 },
+          httpToken: 'someHttpToken'
+        }
       })
 
-      await expect(autoPeeringRoutes.get(ctx)).resolves.toBeUndefined()
+      await expect(
+        autoPeeringRoutes.acceptPeerRequest(ctx)
+      ).resolves.toBeUndefined()
+      expect(ctx.status).toBe(errorToCode[AutoPeeringError.UnknownAsset])
       expect(ctx.body).toEqual({
-        ilpAddress: Config.ilpAddress,
-        assets: []
+        error: {
+          code: errorToCode[AutoPeeringError.UnknownAsset],
+          message: errorToMessage[AutoPeeringError.UnknownAsset]
+        }
       })
     })
   })
