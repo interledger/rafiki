@@ -327,11 +327,11 @@ Example successful response:
 
 ## Auto-peering
 
-Additionally, certain peers (testnet?) will have _auto-peering_ available. This feature is not (and should not) be used in production enviornments, however, it allows local and staging environment Rafiki instances to environments for easier peering integration. This requires the peer you want to peer with to publish an "auto-peering" url. Once this `peerUrl` is provided, and it is communicated that the peer supports auto-peering, instead of using `createPeer` mutation to create a peer, you can call `createPeerByUrl`:
+Additionally, certain peers will have _auto-peering_ available. This feature is not (and should not) be used in production environments, however, it allows local and staging environment Rafiki instances to environments for easier peering integration. This requires the peer you want to peer with to publish an "auto-peering" url. Once this `peerUrl` is provided, and it is communicated that the peer supports auto-peering, instead of using `createPeer` mutation to create a peer, you can call `createOrUpdatePeerByUrl`:
 
 ```gql
-mutation CreatePeerByUrl($input: CreatePeerByUrlInput!) {
-  createPeerByUrl(input: $input) {
+mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
+  createOrUpdatePeerByUrl(input: $input) {
     code
     success
     message
@@ -355,7 +355,7 @@ with the input being:
   "input": {
     "peerUrl: "PEER_URL",
     "assetId": "INSERT_ASSET_ID",
-    "initialLiquidity: <optionally, and intial amount of liquity to provision>
+    "initialLiquidity: <optionally, and initial amount of liquidiy to provision>
   }
 }
 ```
@@ -364,7 +364,7 @@ Calling this mutation will exchange ILP peering information (`staticIlpAddress` 
 
 ### Pre-requisites
 
-Before making the `createPeerByUrl` request, a few `backend` environment varibles about the Rafiki instance need to be configured:
+Before making the `createOrUpdatePeerByUrl` request, a few `backend` environment variables about the Rafiki instance need to be configured:
 
 1. `ILP_ADDRESS`: The static ILP address of your Rafiki instance. This should already be defined in order to support ILP payments.
 2. `ILP_CONNECTOR_ADDRESS`: The full address of the ILP connector that will receive ILP packets. Locally and by default, it is on `0.0.0.0:3002`.
@@ -380,4 +380,4 @@ Other than setting up the environment variables from the pre-requisite step abov
 
 1. `ENABLE_AUTO_PEERING`: true
 2. Optionally, update the `AUTO_PEERING_SERVER_PORT` that the auto-peering server will run on. By default, it is `3005`.
-3. Now, your Rafiki instance is ready to accept auto-peering requests. Your `peerUrl` will be the URL you've mapped to correspond with `AUTO_PEERING_SERVER_PORT`, and you can being comminicating this URL to potential peers.
+3. Now, your Rafiki instance is ready to accept auto-peering requests. Your `peerUrl` will be the URL you've mapped to correspond with `AUTO_PEERING_SERVER_PORT`, and you can being communicating this URL to potential peers.
