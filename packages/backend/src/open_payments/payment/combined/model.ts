@@ -19,7 +19,7 @@ export class CombinedPayment extends PaginationModel {
   // common to both incoming and outgoing payments
   public id!: string
   public state!: OutgoingPaymentState | IncomingPaymentState
-  public paymentPointerId!: string
+  public walletAddressId!: string
   public metadata?: Record<string, unknown>
   public client?: string
   public createdAt!: Date

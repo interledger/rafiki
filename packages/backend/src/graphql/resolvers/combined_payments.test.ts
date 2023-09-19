@@ -115,7 +115,7 @@ describe('Payment', (): void => {
       id: combinedOutgoingPayment.id,
       type: combinedOutgoingPayment.type,
       metadata: combinedOutgoingPayment.metadata,
-      paymentPointerId: combinedOutgoingPayment.paymentPointerId,
+      paymentPointerId: combinedOutgoingPayment.walletAddressId,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString()
     })

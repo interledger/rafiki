@@ -98,7 +98,7 @@ export function paymentToGraphql(
 ): SchemaOutgoingPayment {
   return {
     id: payment.id,
-    paymentPointerId: payment.paymentPointerId,
+    paymentPointerId: payment.walletAddressId,
     state: payment.state,
     error: payment.error,
     stateAttempts: payment.stateAttempts,

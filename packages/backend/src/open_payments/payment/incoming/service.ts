@@ -132,7 +132,7 @@ async function createIncomingPayment(
   }
   const incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
-      paymentPointerId,
+      walletAddressId: paymentPointerId,
       client,
       assetId: paymentPointer.asset.id,
       expiresAt,

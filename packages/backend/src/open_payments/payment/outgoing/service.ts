@@ -121,7 +121,7 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
-          paymentPointerId,
+          walletAddressId: paymentPointerId,
           metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
           client: options.client,
@@ -130,7 +130,7 @@ async function createOutgoingPayment(
         .withGraphFetched('[quote.asset]')
 
       if (
-        payment.paymentPointerId !== payment.quote.paymentPointerId ||
+        payment.walletAddressId !== payment.quote.walletAddressId ||
         payment.quote.expiresAt.getTime() <= payment.createdAt.getTime()
       ) {
         throw OutgoingPaymentError.InvalidQuote
