@@ -286,7 +286,7 @@
 					"response": []
 				},
 				{
-					"name": "Create Peer By Url",
+					"name": "Create Or Update Peer By Url",
 					"event": [
 						{
 							"listen": "test",
@@ -295,7 +295,7 @@
 								"exec": [
 									"const body = pm.response.json();",
 									"",
-									"pm.collectionVariables.set(\"peerId\", body.data.createPeerByUrl.peer.id);"
+									"pm.collectionVariables.set(\"peerId\", body.data.createOrUpdatePeerByUrl.peer.id);"
 								],
 								"type": "text/javascript"
 							}
@@ -311,7 +311,7 @@
 						"body": {
 							"mode": "graphql",
 							"graphql": {
-								"query": "mutation CreatePeerByUrl ($input: CreatePeerByUrlInput!) {\n    createPeerByUrl (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset {\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
+								"query": "mutation CreateOrUpdatePeerByUrl ($input: CreateOrUpdatePeerByUrlInput!) {\n    createOrUpdatePeerByUrl (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset {\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
 								"variables": "{\n  \"input\": {\n    \"peerUrl\": \"http://happy-life-bank-backend:3005\",\n    \"assetId\": \"{{assetId}}\"\n  }\n}"
 							}
 						},
