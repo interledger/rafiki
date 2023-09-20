@@ -5,11 +5,10 @@
 exports.up = function(knex) {
   return Promise.all([
     knex.schema.renameTable('paymentPointers', 'walletAddresses'),
-  	knex.schema.renameTable('paymentPointerKeys', 'walletAddressKeys').then(() => {
-      knex.schema.alterTable('walletAddressKeys', function (table) {
-        table.renameColumn('paymentPointerId', 'walletAddressId')
-        table.foreign('walletAddressId').references('walletAddresses.id')
-      })
+  	knex.schema.renameTable('paymentPointerKeys', 'walletAddressKeys'),
+    knex.schema.alterTable('walletAddressKeys', function (table) {
+      table.renameColumn('paymentPointerId', 'walletAddressId')
+      table.foreign('walletAddressId').references('walletAddresses.id')
     }),
   	knex.schema.alterTable('quotes', function (table) {
   	  table.renameColumn('paymentPointerId', 'walletAddressId')
@@ -36,7 +35,8 @@ exports.up = function(knex) {
 exports.down = function(knex) {
   return Promise.all([
   	knex.schema.renameTable('walletAddresses', 'paymentPointers'),
-  	knex.schema.renameTable('walletAddressKeys', 'paymentPointerKeys').then(() => {
+  	knex.schema.renameTable('walletAddressKeys', 'paymentPointerKeys'),
+    knex.schema.alterTable('paymentPointerKeys', function (table) {
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
     }),
