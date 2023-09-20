@@ -338,16 +338,16 @@ Example successful response:
 }
 ```
 
-### Create Payment Pointers to Send and Receive Payments
+### Create Wallet Addresses to Send and Receive Payments
 
-In this step we will provision payment pointers on the primary and secondary Rafiki instances.
-Payment pointers are not accounts. Rafiki operators must supply their own "account servicing entity"
-service for actually "holding" currency. Rafiki provides payment pointers--addresses within the
+In this step we will provision wallet addresses on the primary and secondary Rafiki instances.
+Wallet addresses are not accounts. Rafiki operators must supply their own "account servicing entity"
+service for actually "holding" currency. Rafiki provides wallet addresses--addresses within the
 ILP network to which other nodes on the network can send payments, which will then be routed
 to the account servicing entity's system and into the appropriate account.
 
-At the end of this step, we will have two payment pointer IDs: one provisioned on the primary
-instance and one provisioned on the secondary instance. We will use these payment pointer IDs in
+At the end of this step, we will have two wallet address IDs: one provisioned on the primary
+instance and one provisioned on the secondary instance. We will use these wallet address IDs in
 subsequent steps to send payments between the Rafiki instances.
 
 #### On the Primary Instance
@@ -358,12 +358,12 @@ pointer ID:
 Query
 
 ```
-mutation CreatePaymentPointer ($input: CreateAccountInput!) {
-  createPaymentPointer(input: $input) {
+mutation CreateWalletAddress ($input: CreateAccountInput!) {
+  createWalletAddress(input: $input) {
     code
     success
     message
-    paymentPointer {
+    walletAddress {
       id
       asset {
         id
@@ -392,11 +392,11 @@ Example successful response
 ```
 {
   "data": {
-    "createPaymentPointer": {
+    "createWalletAddress": {
       "code": "200",
       "success": true,
       "message": "Created Account",
-      "paymentPointer": {
+      "walletAddress": {
         "id": "afb2b1de-d819-4e85-b901-859c27445936",
         "asset": {
           "id": "5a27f8ec-17a5-4388-8d1e-8243d1926778",
@@ -418,12 +418,12 @@ pointer ID:
 Query
 
 ```
-mutation CreatePaymentPointer ($input: CreateAccountInput!) {
-  createPaymentPointer(input: $input) {
+mutation CreateWalletAddress ($input: CreateAccountInput!) {
+  createWalletAddress(input: $input) {
     code
     success
     message
-    paymentPointer {
+    walletAddress {
       id
       asset {
         id
@@ -452,11 +452,11 @@ Example successful response
 ```
 {
   "data": {
-    "createPaymentPointer": {
+    "createWalletAddress": {
       "code": "200",
       "success": true,
       "message": "Created Account",
-      "paymentPointer": {
+      "walletAddress": {
         "id": "7e8b99f5-0861-49bd-95ab-e871c021d84d",
         "asset": {
           "id": "209fe717-bf02-4deb-826f-b7ed4f179713",
@@ -470,8 +470,8 @@ Example successful response
 }
 ```
 
-#### Note the Payment Pointer IDs
+#### Note the Wallet Address IDs
 
-The `data.createPaymentPointer.paymentPointer.id` field in the response is the payment pointer ID, which we will
-use in the next steps. In this example, the primary payment pointer ID is `afb2b1de-d819-4e85-b901-859c27445936`,
-and the secondary payment pointer ID is `7e8b99f5-0861-49bd-95ab-e871c021d84d`.
+The `data.createWalletAddress.walletAddress.id` field in the response is the wallet address ID, which we will
+use in the next steps. In this example, the primary wallet address ID is `afb2b1de-d819-4e85-b901-859c27445936`,
+and the secondary wallet address ID is `7e8b99f5-0861-49bd-95ab-e871c021d84d`.

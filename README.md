@@ -15,7 +15,7 @@ This includes
 
 Rafiki is made up of several components, including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/concepts/accounting/tigerbeetle/), and several APIs:
 
-- the [Admin API](https://rafiki.dev/apis/backend/schema/) to create [peering relationships](https://rafiki.dev/concepts/interledger-protocol/peering/), add supported [assets](https://rafiki.dev/concepts/asset/), and issue [payment pointers](https://rafiki.dev/reference/glossary/#payment-pointer)
+- the [Admin API](https://rafiki.dev/apis/backend/schema/) to create [peering relationships](https://rafiki.dev/concepts/interledger-protocol/peering/), add supported [assets](https://rafiki.dev/concepts/asset/), and issue [wallet addresses](https://rafiki.dev/reference/glossary/#wallet-address)
 - the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API to allow third parties (with the account holder's consent) to initiate payments and to view the transaction history
 - the [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
 
@@ -28,7 +28,7 @@ Never heard of Interledger before? Or would you like to learn more? Here are som
 - [Interledger Website](https://interledger.org/)
 - [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
 - [Interledger Explainer Video](https://twitter.com/Interledger/status/1567916000074678272)
-- [Payment pointers](https://paymentpointers.org/)
+- [Wallet addresses](https://paymentpointers.org/)
 - [Open Payments](https://openpayments.guide/)
 - [Web monetization](https://webmonetization.org/)
 

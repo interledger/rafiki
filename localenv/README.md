@@ -170,7 +170,7 @@ In addition to the using the Admin UI for interacting with the Admin APIs, you c
 
 #### SPSP
 
-Every payment pointer also serves as an SPSP endpoint. A GET request to e.g. `http://localhost:3000/accounts/gfranklin` with `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details.
+Every wallet address also serves as an SPSP endpoint. A GET request to e.g. `http://localhost:3000/accounts/gfranklin` with `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details.
 
 ```http
 http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json
