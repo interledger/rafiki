@@ -327,7 +327,7 @@ Example successful response:
 
 ## Auto-peering
 
-Additionally, certain peers will have _auto-peering_ available. This feature is not (and should not) be used in production environments, however, it allows local and staging environment Rafiki instances to environments for easier peering integration. This requires the peer you want to peer with to publish an "auto-peering" url. Once this `peerUrl` is provided, and it is communicated that the peer supports auto-peering, instead of using `createPeer` mutation to create a peer, you can call `createOrUpdatePeerByUrl`:
+Additionally, certain peers will have _auto-peering_ available. This feature is only for sandbox environments, and should not be used in production environments. Auto-peering enables easier peering integration between Rafiki instances. In order to use this feature, it requires the peer you want to peer with to publish an "auto-peering" URL. Once this `peerUrl` is provided, instead of using `createPeer` mutation to create a peer, you can call `createOrUpdatePeerByUrl`:
 
 ```gql
 mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
@@ -355,28 +355,28 @@ with the input being:
   "input": {
     "peerUrl: "PEER_URL",
     "assetId": "INSERT_ASSET_ID",
-    "initialLiquidity: <optionally, and initial amount of liquidiy to provision>
+    "initialLiquidity: <optionally, and initial amount of liquidity to provision>
   }
 }
 ```
 
-Calling this mutation will exchange ILP peering information (`staticIlpAddress` `ilpConnectorAddress`, auth tokens) automatically. The instance being peered with will issue a default amount of liquidity, and you can begin sending payments to wallet addresses at the other Rafiki.
+Calling this mutation will exchange ILP peering information (`staticIlpAddress` `ilpConnectorAddress`, auth tokens) automatically. The instance being peered with will issue a default amount of liquidity, and you can begin sending payments to wallet addresses at the other Rafiki instance.
 
-### Pre-requisites
+### Prerequisites
 
-Before making the `createOrUpdatePeerByUrl` request, a few `backend` environment variables about the Rafiki instance need to be configured:
+Before making the `createOrUpdatePeerByUrl` request, a few `backend` environment variables about your Rafiki instance need to be configured:
 
 1. `ILP_ADDRESS`: The static ILP address of your Rafiki instance. This should already be defined in order to support ILP payments.
 2. `ILP_CONNECTOR_ADDRESS`: The full address of the ILP connector that will receive ILP packets. Locally and by default, it is on `0.0.0.0:3002`.
-3. `INSTANCE_NAME`: The name of the Rafiki instance. This should be your wallet name, as this is what the Rafiki being peered with will store as the name for _your_ instance.
+3. `INSTANCE_NAME`: The name of your Rafiki instance. This is how your peer will identify you.
 
 ### How to enable auto-peering
 
 :::caution
-Auto-peering should _not_ be enabled in production environments. Only enable this feature if you predict many instances will want to auto-peer with your Rafiki.
+Auto-peering should _not_ be enabled in production environments. Only enable this feature in sandbox environments.
 :::
 
-Other than setting up the environment variables from the pre-requisite step above, you will need to set additional `backend` environment variables:
+Other than setting up the environment variables from the prerequisite step above, you will need to set additional `backend` environment variables:
 
 1. `ENABLE_AUTO_PEERING`: true
 2. Optionally, update the `AUTO_PEERING_SERVER_PORT` that the auto-peering server will run on. By default, it is `3005`.
