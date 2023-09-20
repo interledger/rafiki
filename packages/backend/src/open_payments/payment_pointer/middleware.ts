@@ -5,9 +5,6 @@ export function createPaymentPointerMiddleware() {
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    console.log('createPaymentPointerMiddleware called', {
-      response: JSON.stringify(ctx.response, null, 2)
-    })
     ctx.paymentPointerUrl = `https://${ctx.request.host}/${ctx.params.paymentPointerPath}`
     const config = await ctx.container.use('config')
     if (ctx.paymentPointerUrl !== config.paymentPointerUrl) {
@@ -23,9 +20,6 @@ export function createPaymentPointerMiddleware() {
       }
       ctx.paymentPointer = paymentPointer
     }
-    console.log('createPaymentPointerMiddleware ended', {
-      response: JSON.stringify(ctx.response, null, 2)
-    })
     await next()
   }
 }

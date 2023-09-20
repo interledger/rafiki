@@ -68,14 +68,8 @@ async function getIncomingPayment(
 ) {
   if (ctx.authenticated) {
     await getIncomingPaymentPrivate(deps, ctx)
-    console.log('getIncomingPaymentPrivate')
   } else {
     await getIncomingPaymentPublic(deps, ctx)
-    console.log('getIncomingPaymentPublic: ', ctx.body)
-    console.log(
-      'getIncomingPaymentPublic response: ',
-      JSON.stringify(ctx.response, null, 2)
-    )
   }
 }
 

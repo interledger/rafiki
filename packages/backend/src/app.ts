@@ -492,15 +492,6 @@ export class App {
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.Read,
-        // authenticated path:
-        //   - createTokenIntrospectionMiddleware succeeds
-        //   - authenticatedStatusMiddleware sets ctx.authenticated to true
-        //   - incomingPaymentRoutes.get calls private getIncomingPayment
-
-        // non-authenticated path:
-        //   - createTokenIntrospectionMiddleware fails, but error is bypassed
-        //   - authenticatedStatusMiddleware sets ctx.authenticated to false
-        //   - incomingPaymentRoutes.get calls public getIncomingPayment
         bypassError: true
       }),
       authenticatedStatusMiddleware,
