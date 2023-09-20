@@ -55,7 +55,7 @@ export function createTokenIntrospectionMiddleware({
 }) {
   return async (
     ctx: PaymentPointerContext,
-    next: () => Promise<unknown>
+    next: () => Promise<void>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
@@ -128,8 +128,13 @@ export function createTokenIntrospectionMiddleware({
       }
       await next()
     } catch (err) {
-      // TODO: narrow this to not include any error? maybe: bypassError && err instanceof HttpError && [401,403].includes(err.status)
-      if (bypassError) await next()
+      if (
+        bypassError &&
+        err instanceof HttpError &&
+        [401, 403].includes(err.status)
+      ) {
+        return await next()
+      }
 
       if (err instanceof HttpError && err.status === 401) {
         ctx.status = 401
