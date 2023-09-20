@@ -69,7 +69,10 @@ export interface AccountingService {
   getAccountsTotalReceived(ids: string[]): Promise<(bigint | undefined)[]>
   getSettlementBalance(ledger: number): Promise<bigint | undefined>
   createTransfer(options: TransferOptions): Promise<Transaction | TransferError>
-  createDeposit(deposit: Deposit): Promise<void | TransferError>
+  createDeposit(
+    deposit: Deposit,
+    trx?: TransactionOrKnex
+  ): Promise<void | TransferError>
   createWithdrawal(withdrawal: Withdrawal): Promise<void | TransferError>
   postWithdrawal(id: string): Promise<void | TransferError>
   voidWithdrawal(id: string): Promise<void | TransferError>

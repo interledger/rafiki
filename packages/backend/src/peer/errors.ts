@@ -4,7 +4,8 @@ export enum PeerError {
   InvalidStaticIlpAddress = 'InvalidStaticIlpAddress',
   InvalidHTTPEndpoint = 'InvalidHTTPEndpoint',
   UnknownAsset = 'UnknownAsset',
-  UnknownPeer = 'UnknownPeer'
+  UnknownPeer = 'UnknownPeer',
+  InvalidInitialLiquidity = 'InvalidInitialLiquidity'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -19,7 +20,8 @@ export const errorToCode: {
   [PeerError.InvalidStaticIlpAddress]: 400,
   [PeerError.InvalidHTTPEndpoint]: 400,
   [PeerError.UnknownAsset]: 400,
-  [PeerError.UnknownPeer]: 404
+  [PeerError.UnknownPeer]: 404,
+  [PeerError.InvalidInitialLiquidity]: 400
 }
 
 export const errorToMessage: {
@@ -31,5 +33,6 @@ export const errorToMessage: {
   [PeerError.InvalidStaticIlpAddress]: 'invalid ILP address',
   [PeerError.InvalidHTTPEndpoint]: 'invalid HTTP endpoint',
   [PeerError.UnknownAsset]: 'unknown asset',
-  [PeerError.UnknownPeer]: 'unknown peer'
+  [PeerError.UnknownPeer]: 'unknown peer',
+  [PeerError.InvalidInitialLiquidity]: 'invalid initial liquidity for peer'
 }

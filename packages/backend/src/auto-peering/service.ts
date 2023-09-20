@@ -221,7 +221,8 @@ async function acceptPeeringRequest(
         endpoint: args.ilpConnectorAddress,
         authToken: outgoingHttpToken
       }
-    }
+    },
+    initialLiquidity: BigInt(Number.MAX_SAFE_INTEGER)
   })
 
   const isDuplicatePeeringRequest =

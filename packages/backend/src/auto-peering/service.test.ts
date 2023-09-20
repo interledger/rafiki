@@ -69,6 +69,7 @@ describe('Auto Peering Service', (): void => {
         assetId: asset.id,
         maxPacketAmount: BigInt(args.maxPacketAmount!),
         name: args.name,
+        initialLiquidity: BigInt(Number.MAX_SAFE_INTEGER),
         http: {
           incoming: { authTokens: [args.httpToken] },
           outgoing: {

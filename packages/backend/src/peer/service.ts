@@ -17,6 +17,8 @@ import { HttpTokenError } from '../httpToken/errors'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { isValidHttpUrl } from '../shared/utils'
+import { v4 as uuid } from 'uuid'
+import { TransferError } from '../accounting/errors'
 
 export interface HttpOptions {
   incoming?: {
@@ -34,6 +36,7 @@ export type Options = {
   staticIlpAddress: string
   name?: string
   liquidityThreshold?: bigint
+  initialLiquidity?: bigint
 }
 
 export type CreateOptions = Options & {
@@ -142,8 +145,26 @@ async function createPeer(
           id: peer.id,
           asset: peer.asset
         },
-        LiquidityAccountType.PEER
+        LiquidityAccountType.PEER,
+        trx
       )
+
+      if (options.initialLiquidity) {
+        const transferError = await addLiquidity(
+          deps,
+          { peer, amount: options.initialLiquidity },
+          trx
+        )
+
+        if (transferError) {
+          deps.logger.error(
+            { transferError },
+            'error trying to add initial liquidity'
+          )
+
+          throw PeerError.InvalidInitialLiquidity
+        }
+      }
 
       return peer
     })
@@ -210,6 +231,23 @@ async function updatePeer(
     }
     throw err
   }
+}
+
+async function addLiquidity(
+  deps: ServiceDependencies,
+  args: { peer: Peer; amount: bigint; transferId?: string },
+  trx?: TransactionOrKnex
+): Promise<void | TransferError> {
+  const { peer, amount, transferId } = args
+
+  return deps.accountingService.createDeposit(
+    {
+      id: transferId ?? uuid(),
+      account: peer,
+      amount
+    },
+    trx
+  )
 }
 
 async function addIncomingHttpTokens({

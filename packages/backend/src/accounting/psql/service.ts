@@ -60,7 +60,7 @@ export function createAccountingService(
       getAccountsTotalReceived(deps, accountRefs),
     getSettlementBalance: (ledger) => getSettlementBalance(deps, ledger),
     createTransfer: (options) => createTransfer(deps, options),
-    createDeposit: (transfer) => createAccountDeposit(deps, transfer),
+    createDeposit: (transfer, trx) => createAccountDeposit(deps, transfer, trx),
     createWithdrawal: (transfer) => createAccountWithdrawal(deps, transfer),
     postWithdrawal: (withdrawalRef) => postTransfers(deps, [withdrawalRef]),
     voidWithdrawal: (withdrawalRef) => voidTransfers(deps, [withdrawalRef])
@@ -290,7 +290,8 @@ function handleTransferCreateResults(
 
 async function createAccountDeposit(
   deps: ServiceDependencies,
-  args: Deposit
+  args: Deposit,
+  trx?: TransactionOrKnex
 ): Promise<void | TransferError> {
   const {
     id: transferRef,
@@ -302,8 +303,8 @@ async function createAccountDeposit(
   } = args
 
   const [account, settlementAccount] = await Promise.all([
-    getLiquidityAccount(deps, accountRef),
-    getSettlementAccount(deps, assetRef)
+    getLiquidityAccount(deps, accountRef, trx),
+    getSettlementAccount(deps, assetRef, trx)
   ])
 
   if (!account) {
@@ -322,7 +323,7 @@ async function createAccountDeposit(
     type: LedgerTransferType.DEPOSIT
   }
 
-  const { errors } = await createTransfers(deps, [transfer])
+  const { errors } = await createTransfers(deps, [transfer], trx)
 
   if (errors[0]) {
     return errors[0].error
