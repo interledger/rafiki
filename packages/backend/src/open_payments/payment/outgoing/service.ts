@@ -104,8 +104,7 @@ async function createOutgoingPayment(
   const walletAddressId = options.walletAddressId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      const walletAddress =
-        await deps.walletAddressService.get(walletAddressId)
+      const walletAddress = await deps.walletAddressService.get(walletAddressId)
       if (!walletAddress) {
         throw OutgoingPaymentError.UnknownWalletAddress
       }

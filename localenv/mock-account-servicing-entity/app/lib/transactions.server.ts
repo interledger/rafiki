@@ -42,8 +42,9 @@ export async function getAccountTransactions(
     return []
   }
 
-  const { incomingPayments, outgoingPayments } =
-    await getWalletAddressPayments(account.walletAddressID)
+  const { incomingPayments, outgoingPayments } = await getWalletAddressPayments(
+    account.walletAddressID
+  )
   const transactions = incomingPayments.edges.map(({ node }) => {
     return {
       id: node.id,

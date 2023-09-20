@@ -8,11 +8,7 @@ import {
   WalletAddressEvent,
   WalletAddressEventType
 } from './model'
-import {
-  CreateOptions,
-  FORBIDDEN_PATHS,
-  WalletAddressService
-} from './service'
+import { CreateOptions, FORBIDDEN_PATHS, WalletAddressService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
