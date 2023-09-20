@@ -52,6 +52,9 @@ export const setup = <T extends PaymentPointerContext>(
   ctx.grant = options.grant
   ctx.client = options.client
   ctx.accessAction = options.accessAction
+  // TODO: fix @ts-ignroe
+  // @ts-ignore
+  ctx.authenticated = true
   return ctx
 }
 

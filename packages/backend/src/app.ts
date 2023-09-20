@@ -31,7 +31,8 @@ import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware,
   Grant,
-  RequestAction
+  RequestAction,
+  authenticatedStatusMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
 import { spspMiddleware, SPSPConnectionContext } from './spsp/middleware'
@@ -129,6 +130,9 @@ export type HttpSigContext = AppContext & {
   client: string
 }
 
+export type HttpSigWithAuthenticatedStausContext = HttpSigContext &
+  AuthenticatedStatusContext
+
 // Payment pointer subresources
 type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   PaymentPointerContext['request'],
@@ -165,7 +169,13 @@ type SubresourceContext = Omit<
   accessAction: NonNullable<PaymentPointerContext['accessAction']>
 }
 
+export type AuthenticatedStatusContext = { authenticated: boolean }
+
 type SignedSubresourceContext = SubresourceContext & HttpSigContext
+
+type SubresourceContextWithAuthenticatedStatus = SubresourceContext &
+  HttpSigContext &
+  AuthenticatedStatusContext
 
 export type CreateContext<BodyT> = CollectionContext<BodyT>
 export type ReadContext = SubresourceContext
@@ -470,21 +480,30 @@ export class App {
 
     // GET /incoming-payments/{id}
     // Read incoming payment
-    router.get<DefaultState, SignedSubresourceContext>(
+    router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
       PAYMENT_POINTER_PATH + '/incoming-payments/:id',
       createPaymentPointerMiddleware(),
-      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments/{id}',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SubresourceContextWithAuthenticatedStatus>
+      >(resourceServerSpec, {
+        path: '/incoming-payments/{id}',
+        method: HttpMethod.GET
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
-        requestAction: RequestAction.Read
+        requestAction: RequestAction.Read,
+        // authenticated path:
+        //   - createTokenIntrospectionMiddleware succeeds
+        //   - authenticatedStatusMiddleware sets ctx.authenticated to true
+        //   - incomingPaymentRoutes.get calls private getIncomingPayment
+
+        // non-authenticated path:
+        //   - createTokenIntrospectionMiddleware fails, but error is bypassed
+        //   - authenticatedStatusMiddleware sets ctx.authenticated to false
+        //   - incomingPaymentRoutes.get calls public getIncomingPayment
+        bypassError: true
       }),
-      httpsigMiddleware,
+      authenticatedStatusMiddleware,
       incomingPaymentRoutes.get
     )
 

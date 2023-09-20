@@ -5,7 +5,11 @@ import {
 } from '@interledger/http-signature-utils'
 import Koa, { HttpError } from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
-import { HttpSigContext, PaymentPointerContext } from '../../app'
+import {
+  HttpSigContext,
+  HttpSigWithAuthenticatedStausContext,
+  PaymentPointerContext
+} from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
@@ -37,12 +41,17 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
+
+// TODO: unauthed requests are getting screwed up here.
+// unauthed requests work without this middleware, but with it im seeing an error: InternalServerError: response must be null.
 export function createTokenIntrospectionMiddleware({
   requestType,
-  requestAction
+  requestAction,
+  bypassError = false
 }: {
   requestType: AccessType
   requestAction: RequestAction
+  bypassError?: boolean
 }) {
   return async (
     ctx: PaymentPointerContext,
@@ -119,6 +128,9 @@ export function createTokenIntrospectionMiddleware({
       }
       await next()
     } catch (err) {
+      // TODO: narrow this to not include any error? maybe: bypassError && err instanceof HttpError && [401,403].includes(err.status)
+      if (bypassError) await next()
+
       if (err instanceof HttpError && err.status === 401) {
         ctx.status = 401
         ctx.message = err.message
@@ -130,10 +142,23 @@ export function createTokenIntrospectionMiddleware({
   }
 }
 
-export const httpsigMiddleware = async (
-  ctx: HttpSigContext,
+export const authenticatedStatusMiddleware = async (
+  ctx: HttpSigWithAuthenticatedStausContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
+  ctx.authenticated = false
+  try {
+    await throwIfSignatureInvalid(ctx)
+    ctx.authenticated = true
+  } catch (err) {
+    if (err instanceof Koa.HttpError && err.status !== 401) {
+      throw err
+    }
+  }
+  await next()
+}
+
+export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
   const keyId = getKeyId(ctx.request.headers['signature-input'])
   if (!keyId) {
     ctx.throw(401, 'Invalid signature input')
@@ -177,5 +202,62 @@ export const httpsigMiddleware = async (
     )
     ctx.throw(401, `Invalid signature`)
   }
+}
+
+export const httpsigMiddleware = async (
+  ctx: HttpSigContext,
+  next: () => Promise<unknown>
+): Promise<void> => {
+  await throwIfSignatureInvalid(ctx)
   await next()
 }
+
+// export const httpsigMiddleware = async (
+//   ctx: HttpSigContext,
+//   next: () => Promise<unknown>
+// ): Promise<void> => {
+//   const keyId = getKeyId(ctx.request.headers['signature-input'])
+//   if (!keyId) {
+//     ctx.throw(401, 'Invalid signature input')
+//   }
+//   // TODO
+//   // cache client key(s)
+//   let jwks: JWKS | undefined
+//   try {
+//     const openPaymentsClient = await ctx.container.use('openPaymentsClient')
+//     jwks = await openPaymentsClient.paymentPointer.getKeys({
+//       url: ctx.client
+//     })
+//   } catch (error) {
+//     const logger = await ctx.container.use('logger')
+//     logger.debug(
+//       {
+//         error,
+//         client: ctx.client
+//       },
+//       'retrieving client key'
+//     )
+//   }
+//   const key = jwks?.keys.find((key) => key.kid === keyId)
+//   if (!key) {
+//     ctx.throw(401, 'Invalid signature input')
+//   }
+//   try {
+//     if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
+//       ctx.throw(401, 'Invalid signature')
+//     }
+//   } catch (err) {
+//     if (err instanceof Koa.HttpError) {
+//       throw err
+//     }
+//     const logger = await ctx.container.use('logger')
+//     logger.warn(
+//       {
+//         err
+//       },
+//       'httpsig error'
+//     )
+//     ctx.throw(401, `Invalid signature`)
+//   }
+//   await next()
+// }

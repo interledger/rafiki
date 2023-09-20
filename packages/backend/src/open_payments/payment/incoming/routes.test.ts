@@ -85,7 +85,7 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount,
           metadata
         }),
-      get: (ctx) => incomingPaymentRoutes.get(ctx),
+      get: (ctx) => incomingPaymentRoutes.get(ctx as any), // TODO: fix any
       getBody: (incomingPayment, list) => {
         return {
           id: incomingPayment.getUrl(paymentPointer),

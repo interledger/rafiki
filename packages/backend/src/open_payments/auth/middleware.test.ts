@@ -10,13 +10,19 @@ import {
 } from '@interledger/http-signature-utils'
 
 import {
+  authenticatedStatusMiddleware,
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppServices, HttpSigContext, PaymentPointerContext } from '../../app'
+import {
+  AppServices,
+  HttpSigContext,
+  HttpSigWithAuthenticatedStausContext,
+  PaymentPointerContext
+} from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
 import { createPaymentPointer } from '../../tests/paymentPointer'
@@ -346,6 +352,78 @@ describe('Auth Middleware', (): void => {
       }
     }
   )
+})
+
+describe('authenticatedStatusMiddleware', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  test('sets ctx.authenticated to false if http signature is invalid', async (): Promise<void> => {
+    const ctx = createContext<HttpSigWithAuthenticatedStausContext>({
+      headers: { 'signature-input': '' }
+    })
+
+    expect(authenticatedStatusMiddleware(ctx, next)).resolves.toBeUndefined()
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.authenticated).toBe(false)
+  })
+
+  test('sets ctx.authenticated to true if http signature is valid', async (): Promise<void> => {
+    const keyId = uuid()
+    const privateKey = generateKeyPairSync('ed25519').privateKey
+    const method = 'GET'
+    const url = faker.internet.url({ appendSlash: false })
+    const request = {
+      method,
+      url,
+      headers: {
+        Accept: 'application/json',
+        Authorization: `GNAP ${token}`
+      }
+    }
+    const ctx = createContext<HttpSigWithAuthenticatedStausContext>({
+      headers: {
+        Accept: 'application/json',
+        Authorization: `GNAP ${token}`,
+        ...(await createHeaders({
+          request,
+          privateKey,
+          keyId
+        }))
+      },
+      method,
+      url
+    })
+    ctx.container = deps
+    ctx.client = faker.internet.url({ appendSlash: false })
+    const key = generateJwk({
+      keyId,
+      privateKey
+    })
+
+    const scope = nock(ctx.client)
+      .get('/jwks.json')
+      .reply(200, {
+        keys: [key]
+      })
+
+    await expect(
+      authenticatedStatusMiddleware(ctx, next)
+    ).resolves.toBeUndefined()
+    expect(next).toHaveBeenCalled()
+    expect(ctx.authenticated).toBe(true)
+
+    scope.done()
+  })
 })
 
 describe('HTTP Signature Middleware', (): void => {
