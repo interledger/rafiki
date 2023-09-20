@@ -100,6 +100,11 @@ type Mutation {
   "Create a peer"
   createPeer(input: CreatePeerInput!): CreatePeerMutationResponse!
 
+  "Create a peer using a URL"
+  createOrUpdatePeerByUrl(
+    input: CreateOrUpdatePeerByUrlInput!
+  ): CreateOrUpdatePeerByUrlMutationResponse!
+
   "Update a peer"
   updatePeer(input: UpdatePeerInput!): UpdatePeerMutationResponse!
 
@@ -251,6 +256,21 @@ input CreatePeerInput {
   "Peer's internal name"
   name: String
   "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value"
+  liquidityThreshold: UInt64
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String
+}
+
+input CreateOrUpdatePeerByUrlInput {
+  "Maximum packet amount that the peer accepts"
+  maxPacketAmount: UInt64
+  "Asset id of peering relationship"
+  assetId: String!
+  "Peer's URL address at which the peer accepts auto-peering requests"
+  peerUrl: String!
+  "Peer's internal name for overriding auto-peer's default naming"
+  name: String
+  "Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value"
   liquidityThreshold: UInt64
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
@@ -1000,6 +1020,13 @@ type AssetMutationResponse implements MutationResponse {
 }
 
 type CreatePeerMutationResponse implements MutationResponse {
+  code: String!
+  success: Boolean!
+  message: String!
+  peer: Peer
+}
+
+type CreateOrUpdatePeerByUrlMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!

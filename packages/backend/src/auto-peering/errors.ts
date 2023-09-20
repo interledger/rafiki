@@ -32,7 +32,8 @@ export const errorToMessage: {
   [AutoPeeringError.InvalidPeerIlpConfiguration]: `Requested peer's ILP configuration is misconfigured`,
   [AutoPeeringError.UnknownAsset]: 'Unknown asset',
   [AutoPeeringError.PeerUnsupportedAsset]: 'Peer does not support asset',
-  [AutoPeeringError.InvalidPeerUrl]: 'Peer URL is invalid',
+  [AutoPeeringError.InvalidPeerUrl]:
+    'Peer URL is invalid or peer does not support auto-peering',
   [AutoPeeringError.InvalidPeeringRequest]: 'Invalid peering request',
   [AutoPeeringError.DuplicatePeer]: 'Duplicate peer'
 }

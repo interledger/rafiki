@@ -78,7 +78,8 @@ describe('Auto Peering Routes', (): void => {
       expect(ctx.body).toEqual({
         error: {
           code: errorToCode[AutoPeeringError.UnknownAsset],
-          message: errorToMessage[AutoPeeringError.UnknownAsset]
+          message: errorToMessage[AutoPeeringError.UnknownAsset],
+          type: AutoPeeringError.UnknownAsset
         }
       })
     })
