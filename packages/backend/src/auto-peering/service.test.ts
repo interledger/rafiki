@@ -17,6 +17,7 @@ import {
 import { PeerService } from '../peer/service'
 import { PeerError } from '../peer/errors'
 import { v4 as uuid } from 'uuid'
+import { AccountingService } from '../accounting/service'
 
 describe('Auto Peering Service', (): void => {
   let deps: IocContract<AppServices>
@@ -24,6 +25,7 @@ describe('Auto Peering Service', (): void => {
   let config: IAppConfig
   let autoPeeringService: AutoPeeringService
   let peerService: PeerService
+  let accountingService: AccountingService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({ ...Config, enableAutoPeering: true })
@@ -31,6 +33,7 @@ describe('Auto Peering Service', (): void => {
     config = await deps.use('config')
     autoPeeringService = await deps.use('autoPeeringService')
     peerService = await deps.use('peerService')
+    accountingService = await deps.use('accountingService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -263,6 +266,93 @@ describe('Auto Peering Service', (): void => {
       scope.done()
     })
 
+    test('adds liquidity during peer creation', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args: InitiatePeeringRequestArgs = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id,
+        maxPacketAmount: 1000n,
+        liquidityThreshold: 100n,
+        addedLiquidity: 10000n
+      }
+
+      const peerDetails: PeeringDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: 'peerHttpToken',
+        name: 'Peer 2'
+      }
+
+      const scope = nock(args.peerUrl)
+        .post('/', (body) => {
+          expect(body).toEqual({
+            asset: {
+              code: asset.code,
+              scale: asset.scale
+            },
+            httpToken: expect.any(String),
+            ilpConnectorAddress: config.ilpConnectorAddress,
+            maxPacketAmount: Number(args.maxPacketAmount),
+            name: config.instanceName,
+            staticIlpAddress: config.ilpAddress
+          })
+          return body
+        })
+        .reply(200, peerDetails)
+
+      const peer = await autoPeeringService.initiatePeeringRequest(args)
+
+      assert(!isAutoPeeringError(peer))
+
+      await expect(accountingService.getBalance(peer.id)).resolves.toBe(
+        args.addedLiquidity
+      )
+
+      scope.done()
+    })
+
+    test('returns error if could not add liquidity during peer creation', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args: InitiatePeeringRequestArgs = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id,
+        maxPacketAmount: 1000n,
+        liquidityThreshold: 100n,
+        addedLiquidity: -10000n
+      }
+
+      const peerDetails: PeeringDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: 'peerHttpToken',
+        name: 'Peer 2'
+      }
+
+      const scope = nock(args.peerUrl)
+        .post('/', (body) => {
+          expect(body).toEqual({
+            asset: {
+              code: asset.code,
+              scale: asset.scale
+            },
+            httpToken: expect.any(String),
+            ilpConnectorAddress: config.ilpConnectorAddress,
+            maxPacketAmount: Number(args.maxPacketAmount),
+            name: config.instanceName,
+            staticIlpAddress: config.ilpAddress
+          })
+          return body
+        })
+        .reply(200, peerDetails)
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(args)
+      ).resolves.toBe(AutoPeeringError.LiquidityError)
+      scope.done()
+    })
+
     test('overrides peer default name if different name provided', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
@@ -473,6 +563,77 @@ describe('Auto Peering Service', (): void => {
       expect(updatedIncomigHttpTokens[0].token).toBe(
         secondPeerDetails.httpToken
       )
+
+      scope.done()
+    })
+
+    test('adds liquidity on peer update', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args: InitiatePeeringRequestArgs = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id,
+        addedLiquidity: 1000n
+      }
+
+      const peerDetails: PeeringDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: uuid(),
+        name: 'Peer 2'
+      }
+
+      const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
+
+      const createdPeer = await autoPeeringService.initiatePeeringRequest(args)
+      assert(!isAutoPeeringError(createdPeer))
+
+      const newArgs: InitiatePeeringRequestArgs = {
+        ...args,
+        addedLiquidity: 2000n
+      }
+
+      const updatedPeer =
+        await autoPeeringService.initiatePeeringRequest(newArgs)
+      assert(!isAutoPeeringError(updatedPeer))
+
+      expect(createdPeer.id).toBe(updatedPeer.id)
+
+      await expect(accountingService.getBalance(createdPeer.id)).resolves.toBe(
+        args.addedLiquidity! + newArgs.addedLiquidity!
+      )
+      scope.done()
+    })
+
+    test('returns error if could not add liquidity during peer update', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+
+      const args: InitiatePeeringRequestArgs = {
+        peerUrl: 'http://peer.rafiki.money',
+        assetId: asset.id,
+        addedLiquidity: 1000n
+      }
+
+      const peerDetails: PeeringDetails = {
+        staticIlpAddress: 'test.peer2',
+        ilpConnectorAddress: 'http://peer-two.com',
+        httpToken: uuid(),
+        name: 'Peer 2'
+      }
+
+      const scope = nock(args.peerUrl).post('/').twice().reply(200, peerDetails)
+
+      const createdPeer = await autoPeeringService.initiatePeeringRequest(args)
+      assert(!isAutoPeeringError(createdPeer))
+
+      const newArgs: InitiatePeeringRequestArgs = {
+        ...args,
+        addedLiquidity: -2000n
+      }
+
+      await expect(
+        autoPeeringService.initiatePeeringRequest(newArgs)
+      ).resolves.toBe(AutoPeeringError.LiquidityError)
 
       scope.done()
     })

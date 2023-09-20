@@ -105,7 +105,9 @@ describe('Auto Peering Resolvers', (): void => {
 
   describe('Create Peer By Url', (): void => {
     test('Can create a peer', async (): Promise<void> => {
-      const input = createOrUpdatePeerByUrlInput()
+      const input = createOrUpdatePeerByUrlInput({
+        addedLiquidity: 1000n
+      })
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
@@ -139,14 +141,14 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: '0',
+        liquidity: input.addedLiquidity?.toString(),
         name: input.name
       })
       scope.done()
     })
 
     test('Can update a peer', async (): Promise<void> => {
-      const input = createOrUpdatePeerByUrlInput()
+      const input = createOrUpdatePeerByUrlInput({ addedLiquidity: 1000n })
 
       const peerDetails = {
         staticIlpAddress: 'test.peer2',
@@ -189,14 +191,15 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: input.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: '0',
+        liquidity: input.addedLiquidity?.toString(),
         name: input.name
       })
 
       const secondInput = createOrUpdatePeerByUrlInput({
         ...input,
         name: 'Updated Name',
-        maxPacketAmount: 1000n
+        maxPacketAmount: 1000n,
+        addedLiquidity: 2000n
       })
 
       const secondResponse = await callCreateOrUpdatePeerByUrl(secondInput)
@@ -222,7 +225,9 @@ describe('Auto Peering Resolvers', (): void => {
         },
         maxPacketAmount: secondInput.maxPacketAmount?.toString(),
         staticIlpAddress: peerDetails.staticIlpAddress,
-        liquidity: '0',
+        liquidity: (
+          input.addedLiquidity! + secondInput.addedLiquidity!
+        ).toString(),
         name: secondInput.name
       })
 
@@ -237,7 +242,7 @@ describe('Auto Peering Resolvers', (): void => {
       ${AutoPeeringError.PeerUnsupportedAsset}
       ${AutoPeeringError.InvalidPeerUrl}
       ${AutoPeeringError.InvalidPeeringRequest}
-      ${AutoPeeringError.DuplicatePeer}
+      ${AutoPeeringError.LiquidityError}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest
         .spyOn(autoPeeringService, 'initiatePeeringRequest')

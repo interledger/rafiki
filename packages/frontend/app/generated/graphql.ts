@@ -149,11 +149,13 @@ export type CreateIncomingPaymentInput = {
 };
 
 export type CreateOrUpdatePeerByUrlInput = {
+  /** Initial amount of liquidity to add for peer */
+  addedLiquidity?: InputMaybe<Scalars['UInt64']['input']>;
   /** Asset id of peering relationship */
   assetId: Scalars['String']['input'];
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
-  /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this new value */
+  /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts */
   maxPacketAmount?: InputMaybe<Scalars['UInt64']['input']>;
@@ -233,6 +235,8 @@ export type CreatePeerInput = {
   http: HttpInput;
   /** Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence) */
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  /** Initial amount of liquidity to add for peer */
+  initialLiquidity?: InputMaybe<Scalars['UInt64']['input']>;
   /** Account Servicing Entity will be notified via a webhook event if peer liquidity falls below this value */
   liquidityThreshold?: InputMaybe<Scalars['UInt64']['input']>;
   /** Maximum packet amount that the peer accepts */

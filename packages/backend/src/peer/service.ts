@@ -47,6 +47,12 @@ export type UpdateOptions = Partial<Options> & {
   id: string
 }
 
+interface AddPeerLiquidityArgs {
+  amount: bigint
+  transferId?: string
+  peerId: string
+}
+
 export interface PeerService {
   get(id: string): Promise<Peer | undefined>
   create(options: CreateOptions): Promise<Peer | PeerError>
@@ -57,6 +63,9 @@ export interface PeerService {
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination): Promise<Peer[]>
+  addLiquidity(
+    args: AddPeerLiquidityArgs
+  ): Promise<void | PeerError.UnknownPeer | TransferError>
   delete(id: string): Promise<Peer | undefined>
 }
 
@@ -92,6 +101,7 @@ export async function createPeerService({
       getPeerByDestinationAddress(deps, destinationAddress, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?) => getPeersPage(deps, pagination),
+    addLiquidity: (args) => addLiquidityById(deps, args),
     delete: (id) => deletePeer(deps, id)
   }
 }
@@ -231,6 +241,20 @@ async function updatePeer(
     }
     throw err
   }
+}
+
+async function addLiquidityById(
+  deps: ServiceDependencies,
+  args: AddPeerLiquidityArgs
+): Promise<void | PeerError.UnknownPeer | TransferError> {
+  const { peerId, amount, transferId } = args
+
+  const peer = await getPeer(deps, peerId)
+  if (!peer) {
+    return PeerError.UnknownPeer
+  }
+
+  return addLiquidity(deps, { peer, amount, transferId })
 }
 
 async function addLiquidity(
