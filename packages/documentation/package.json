@@ -19,7 +19,7 @@
     "graphql": "^16.8.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "rehype-mathjax": "^4.0.3",
+    "rehype-mathjax": "^5.0.0",
     "remark-math": "^5.1.1",
     "sharp": "^0.32.6"
   }
