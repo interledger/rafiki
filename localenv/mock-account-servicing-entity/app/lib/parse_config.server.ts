@@ -17,11 +17,6 @@ export interface Asset {
   liquidityThreshold: number
 }
 
-export interface Fees {
-  fixed: number
-  percentage: number
-}
-
 export interface Peering {
   liquidityThreshold: number
   peerUrl: string
@@ -40,9 +35,11 @@ export interface Account {
   skipPaymentPointerCreation?: boolean
 }
 
-interface Fee {
+export interface Fee {
   fixed: number
-  percentage: number
+  basisPoints: number
+  asset: string
+  scale: number
 }
 
 export interface SeedInstance {
@@ -50,7 +47,7 @@ export interface SeedInstance {
   assets: Array<Asset>
   peers: Array<Peering>
   accounts: Array<Account>
-  sendingFee: Fee
+  fees: Array<Fee>
   rates: Record<string, Record<string, number>>
 }
 

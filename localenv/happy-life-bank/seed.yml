@@ -16,6 +16,10 @@ assets:
     scale: 2
     liquidity: 1000000
     liquidityThreshold: 100000
+  - code: JPY
+    scale: 0
+    liquidity: 10000
+    liquidityThreshold: 1000
 peers:
   - initialLiquidity: '1000000000000'
     peerUrl: http://cloud-nine-wallet-backend:3002
@@ -55,12 +59,33 @@ rates:
   EUR:
     MXN: 18.78
     USD: 1.10
+    JPY: 157.83
   USD:
     MXN: 17.07
     EUR: 0.91
+    JPY: 147.71
   MXN:
     USD: 0.059
     EUR: 0.054
-sendingFee:
-    fixed: 0
-    percentage: 0
+    JPY: 8.65
+  JPY:
+    USD: 0.007
+    EUR: 0.006
+    MXN: 0.12
+fees:
+  - fixed: 100
+    basisPoints: 200
+    asset: USD
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: EUR
+    scale: 2
+  - fixed: 100
+    basisPoints: 200
+    asset: MXN
+    scale: 2
+  - fixed: 1
+    basisPoints: 200
+    asset: JPY
+    scale: 0

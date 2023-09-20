@@ -7,8 +7,10 @@ import type {
   CreatePaymentPointerKeyMutationResponse,
   CreatePaymentPointerKeyInput,
   CreatePaymentPointerInput,
-  JwkInput
-} from '../../generated/graphql'
+  JwkInput,
+  SetFeeResponse,
+  FeeType
+} from 'generated/graphql'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 
@@ -352,5 +354,53 @@ export async function getPaymentPointerPayments(
         throw new Error('Data was empty')
       }
       return data.paymentPointer
+    })
+}
+
+export async function setFee(
+  assetId: string,
+  type: FeeType,
+  fixed: number,
+  basisPoints: number
+): Promise<SetFeeResponse> {
+  const setFeeMutation = gql`
+    mutation SetFee($input: SetFeeInput!) {
+      setFee(input: $input) {
+        code
+        success
+        message
+        fee {
+          id
+          assetId
+          type
+          fixed
+          basisPoints
+        }
+      }
+    }
+  `
+
+  const setFeeInput = {
+    assetId,
+    type,
+    fee: {
+      fixed: String(fixed),
+      basisPoints
+    }
+  }
+
+  return apolloClient
+    .mutate({
+      mutation: setFeeMutation,
+      variables: {
+        input: setFeeInput
+      }
+    })
+    .then(({ data }): SetFeeResponse => {
+      console.log(data)
+      if (!data.setFee) {
+        throw new Error('Data was empty')
+      }
+      return data.setFee
     })
 }
