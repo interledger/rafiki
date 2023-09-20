@@ -80,7 +80,9 @@ describe('Wallet Address Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              mutation CreateWalletAddress(
+                $input: CreateWalletAddressInput!
+              ) {
                 createWalletAddress(input: $input) {
                   code
                   success

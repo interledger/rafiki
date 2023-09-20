@@ -49,8 +49,9 @@ describe('Incoming Payment Resolver', (): void => {
 
   describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      walletAddressId = (await createWalletAddress(deps, { assetId: asset.id }))
-        .id
+      walletAddressId = (
+        await createWalletAddress(deps, { assetId: asset.id })
+      ).id
     })
 
     getPageTests({

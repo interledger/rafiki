@@ -23,7 +23,9 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
     args,
     ctx
   ): Promise<ResolversTypes['WalletAddressesConnection']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddressService = await ctx.container.use(
+      'walletAddressService'
+    )
     const walletAddresses = await walletAddressService.getPage(args)
     const pageInfo = await getPageInfo(
       (pagination: Pagination) => walletAddressService.getPage(pagination),
@@ -54,7 +56,9 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
     args,
     ctx
   ): Promise<ResolversTypes['CreateWalletAddressMutationResponse']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddressService = await ctx.container.use(
+      'walletAddressService'
+    )
     return walletAddressService
       .create(args.input)
       .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
@@ -83,7 +87,9 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
     args,
     ctx
   ): Promise<ResolversTypes['UpdateWalletAddressMutationResponse']> => {
-    const walletAddressService = await ctx.container.use('walletAddressService')
+    const walletAddressService = await ctx.container.use(
+      'walletAddressService'
+    )
     return walletAddressService
       .update(args.input)
       .then((walletAddressOrError: WalletAddress | WalletAddressError) =>
