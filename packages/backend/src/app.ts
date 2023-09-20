@@ -35,8 +35,7 @@ import {
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
 import {
-  spspMiddleware,
-  SPSPConnectionContext
+  spspMiddleware
 } from './payment-method/ilp/spsp/middleware'
 import { SPSPRoutes } from './payment-method/ilp/spsp/routes'
 import {
@@ -360,23 +359,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const connectionRoutes = await this.container.use('connectionRoutes')
     const { resourceServerSpec } = await this.container.use('openApi')
-
-    // GET /connections/{id}
-    router.get<DefaultState, SPSPConnectionContext>(
-      WALLET_ADDRESS_PATH + '/connections/:id',
-      connectionMiddleware,
-      spspMiddleware,
-      createValidatorMiddleware<ContextType<SPSPConnectionContext>>(
-        resourceServerSpec,
-        {
-          path: '/connections/{id}',
-          method: HttpMethod.GET
-        }
-      ),
-      connectionRoutes.get
-    )
 
     // POST /incoming-payments
     // Create incoming payment
