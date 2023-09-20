@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@astrojs/react": "^3.0.2",
-    "@astrojs/starlight": "^0.10.0",
+    "@astrojs/starlight": "^0.10.1",
     "@interledger/docs-design-system": "^0.0.12",
     "@types/react": "^18.2.22",
     "@types/react-dom": "^18.2.7",
