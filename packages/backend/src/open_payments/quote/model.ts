@@ -3,14 +3,14 @@ import * as Pay from '@interledger/pay'
 
 import { Amount, serializeAmount } from '../amount'
 import {
-  PaymentPointer,
-  PaymentPointerSubresource
-} from '../payment_pointer/model'
+  WalletAddress,
+  WalletAddressSubresource
+} from '../wallet_address/model'
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
 import { Fee } from '../../fee/model'
 
-export class Quote extends PaymentPointerSubresource {
+export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
   public static readonly urlPath = '/quotes'
 
@@ -61,8 +61,8 @@ export class Quote extends PaymentPointerSubresource {
 
   private debitAmountValue!: bigint
 
-  public getUrl(paymentPointer: PaymentPointer): string {
-    return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
+  public getUrl(walletAddress: WalletAddress): string {
+    return `${walletAddress.url}${Quote.urlPath}/${this.id}`
   }
 
   public get debitAmount(): Amount {
@@ -156,7 +156,7 @@ export class Quote extends PaymentPointerSubresource {
     json = super.$formatJson(json)
     return {
       id: json.id,
-      paymentPointerId: json.walletAddressId,
+      walletAddressId: json.walletAddressId,
       receiver: json.receiver,
       debitAmount: {
         ...json.debitAmount,
@@ -171,10 +171,10 @@ export class Quote extends PaymentPointerSubresource {
     }
   }
 
-  public toOpenPaymentsType(paymentPointer: PaymentPointer): OpenPaymentsQuote {
+  public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
     return {
-      id: this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.url,
+      id: this.getUrl(walletAddress),
+      paymentPointer: walletAddress.url,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,

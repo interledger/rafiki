@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { isValidIlpAddress } from 'ilp-packet'
 import { WebhookEventType } from '~/shared/enums'
-import { PaymentPointerStatus } from '~/generated/graphql'
+import { WalletAddressStatus } from '~/generated/graphql'
 
 export const uuidSchema = z.object({
   id: z.string().uuid()
@@ -102,6 +102,6 @@ export const createPaymentPointerSchema = z.object({
 export const updatePaymentPointerSchema = z
   .object({
     publicName: z.string().optional(),
-    status: z.enum([PaymentPointerStatus.Active, PaymentPointerStatus.Inactive])
+    status: z.enum([WalletAddressStatus.Active, WalletAddressStatus.Inactive])
   })
   .merge(uuidSchema)

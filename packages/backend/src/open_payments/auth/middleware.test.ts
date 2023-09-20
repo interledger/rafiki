@@ -16,16 +16,16 @@ import {
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppServices, HttpSigContext, PaymentPointerContext } from '../../app'
+import { AppServices, HttpSigContext, WalletAddressContext } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
-import { createPaymentPointer } from '../../tests/paymentPointer'
-import { setup } from '../payment_pointer/model.test'
+import { createWalletAddress } from '../../tests/walletAddress'
+import { setup } from '../wallet_address/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 
 type AppMiddleware = (
-  ctx: PaymentPointerContext,
+  ctx: WalletAddressContext,
   next: () => Promise<void>
 ) => Promise<void>
 
@@ -36,7 +36,7 @@ describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let middleware: AppMiddleware
-  let ctx: PaymentPointerContext
+  let ctx: WalletAddressContext
   let tokenIntrospectionClient: Client
 
   const type = AccessType.IncomingPayment
@@ -60,7 +60,7 @@ describe('Auth Middleware', (): void => {
           Authorization: `GNAP ${token}`
         }
       },
-      paymentPointer: await createPaymentPointer(deps)
+      walletAddress: await createWalletAddress(deps)
     })
     ctx.container = deps
   })
@@ -142,7 +142,7 @@ describe('Auth Middleware', (): void => {
 
       beforeEach(async (): Promise<void> => {
         if (identifierOption === IdentifierOption.Matching) {
-          identifier = ctx.paymentPointer.url
+          identifier = ctx.walletAddress.url
         } else if (identifierOption === IdentifierOption.Conflicting) {
           identifier = faker.internet.url({ appendSlash: false })
         }

@@ -7,7 +7,7 @@ import { v4 as uuid } from 'uuid'
 import {
   addAssetLiquidity,
   addPeerLiquidity,
-  createPaymentPointer
+  createWalletAddress
 } from './requesters'
 import { CONFIG } from './parse_config.server'
 
@@ -18,7 +18,7 @@ export enum EventType {
   OutgoingPaymentCreated = 'outgoing_payment.created',
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed',
-  PaymentPointerNotFound = 'payment_pointer.not_found',
+  WalletAddressNotFound = 'wallet_address.not_found',
   AssetLiquidityLow = 'asset.liquidity_low',
   PeerLiquidityLow = 'peer.liquidity_low'
 }
@@ -51,8 +51,8 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
   const payment = wh.data['payment']
-  const pp = payment['paymentPointerId'] as string
-  const acc = await mockAccounts.getByPaymentPointerId(pp)
+  const wa = payment['walletAddressId'] as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
     throw new Error('No account found for payment pointer')
@@ -79,8 +79,8 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   }
 
   const payment = wh.data['payment']
-  const pp = payment['paymentPointerId'] as string
-  const acc = await mockAccounts.getByPaymentPointerId(pp)
+  const wa = payment['walletAddressId'] as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
     throw new Error('No account found for payment pointer')
@@ -130,8 +130,8 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   }
 
   const payment = wh.data['incomingPayment']
-  const pp = payment['paymentPointerId'] as string
-  const acc = await mockAccounts.getByPaymentPointerId(pp)
+  const wa = payment['walletAddressId'] as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
     throw new Error('No account found for payment pointer')
@@ -171,14 +171,14 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   return
 }
 
-export async function handlePaymentPointerNotFound(wh: WebHook) {
-  const paymentPointerUrl = wh.data['paymentPointerUrl'] as string | undefined
+export async function handleWalletAddressNotFound(wh: WebHook) {
+  const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
 
-  if (!paymentPointerUrl) {
-    throw new Error('No paymentPointerUrl found')
+  if (!walletAddressUrl) {
+    throw new Error('No walletAddressUrl found')
   }
 
-  const accountPath = paymentPointerUrl.split(
+  const accountPath = walletAddressUrl.split(
     `https://${CONFIG.seed.self.hostname}/`
   )[1]
 
@@ -188,16 +188,16 @@ export async function handlePaymentPointerNotFound(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const paymentPointer = await createPaymentPointer(
+  const walletAddress = await createWalletAddress(
     account.name,
-    paymentPointerUrl,
+    walletAddressUrl,
     account.assetId
   )
 
-  await mockAccounts.setPaymentPointer(
+  await mockAccounts.setWalletAddress(
     account.id,
-    paymentPointer.id,
-    paymentPointer.url
+    walletAddress.id,
+    walletAddress.url
   )
 }
 

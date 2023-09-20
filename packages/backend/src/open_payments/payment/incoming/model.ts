@@ -4,9 +4,9 @@ import { v4 as uuid } from 'uuid'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { Connection } from '../../connection/model'
 import {
-  PaymentPointer,
-  PaymentPointerSubresource
-} from '../../payment_pointer/model'
+  WalletAddress,
+  WalletAddressSubresource
+} from '../../wallet_address/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
@@ -38,7 +38,7 @@ export enum IncomingPaymentState {
 
 export interface IncomingPaymentResponse {
   id: string
-  paymentPointerId: string
+  walletAddressId: string
   createdAt: string
   updatedAt: string
   expiresAt: string
@@ -58,7 +58,7 @@ export class IncomingPaymentEvent extends WebhookEvent {
 }
 
 export class IncomingPayment
-  extends PaymentPointerSubresource
+  extends WalletAddressSubresource
   implements ConnectorAccount, LiquidityAccount
 {
   public static get tableName(): string {
@@ -129,8 +129,8 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public getUrl(paymentPointer: PaymentPointer): string {
-    return `${paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
+  public getUrl(walletAddress: WalletAddress): string {
+    return `${walletAddress.url}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -168,7 +168,7 @@ export class IncomingPayment
     const data: IncomingPaymentData = {
       incomingPayment: {
         id: this.id,
-        paymentPointerId: this.walletAddressId,
+        walletAddressId: this.walletAddressId,
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {
@@ -211,33 +211,33 @@ export class IncomingPayment
   }
 
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer
+    walletAddress: WalletAddress
   ): OpenPaymentsIncomingPayment
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
+    walletAddress: WalletAddress,
     ilpStreamConnection: Connection
   ): OpenPaymentsIncomingPaymentWithConnection
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
+    walletAddress: WalletAddress,
     ilpStreamConnection: string
   ): OpenPaymentsIncomingPaymentWithConnectionUrl
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
+    walletAddress: WalletAddress,
     ilpStreamConnection?: Connection | string
   ):
     | OpenPaymentsIncomingPaymentWithConnection
     | OpenPaymentsIncomingPaymentWithConnectionUrl
 
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
+    walletAddress: WalletAddress,
     ilpStreamConnection?: Connection | string
   ):
     | OpenPaymentsIncomingPayment
     | OpenPaymentsIncomingPaymentWithConnection
     | OpenPaymentsIncomingPaymentWithConnectionUrl {
     const baseIncomingPayment: OpenPaymentsIncomingPayment = {
-      id: this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.url,
+      id: this.getUrl(walletAddress),
+      paymentPointer: walletAddress.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,

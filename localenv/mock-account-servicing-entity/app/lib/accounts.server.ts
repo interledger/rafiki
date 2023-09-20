@@ -2,8 +2,8 @@ export interface Account {
   id: string
   name: string
   path: string
-  paymentPointerID: string
-  paymentPointer: string
+  walletAddressID: string
+  walletAddress: string
   debitsPending: bigint
   debitsPosted: bigint
   creditsPending: bigint
@@ -15,7 +15,7 @@ export interface Account {
 
 export interface AccountsServer {
   clearAccounts(): Promise<void>
-  setPaymentPointer(
+  setWalletAddress(
     id: string,
     pointerID: string,
     paymentPointer: string
@@ -30,7 +30,7 @@ export interface AccountsServer {
   ): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
-  getByPaymentPointerId(paymentPointerId: string): Promise<Account | undefined>
+  getByWalletAddressId(paymentPointerId: string): Promise<Account | undefined>
   getByPath(path: string): Promise<Account | undefined>
   getByPaymentPointerUrl(
     paymentPointerUrl: string
@@ -50,7 +50,7 @@ export class AccountProvider implements AccountsServer {
     this.accounts.clear()
   }
 
-  async setPaymentPointer(
+  async setWalletAddress(
     id: string,
     pointerID: string,
     paymentPointer: string
@@ -65,8 +65,8 @@ export class AccountProvider implements AccountsServer {
       throw new Error()
     }
 
-    acc.paymentPointer = paymentPointer
-    acc.paymentPointerID = pointerID
+    acc.walletAddress = paymentPointer
+    acc.walletAddressID = pointerID
   }
 
   async create(
@@ -84,8 +84,8 @@ export class AccountProvider implements AccountsServer {
       id,
       name,
       path,
-      paymentPointer: '',
-      paymentPointerID: '',
+      walletAddress: '',
+      walletAddressID: '',
       creditsPending: BigInt(0),
       creditsPosted: BigInt(0),
       debitsPending: BigInt(0),
@@ -104,11 +104,11 @@ export class AccountProvider implements AccountsServer {
     return this.accounts.get(id)
   }
 
-  async getByPaymentPointerId(
+  async getByWalletAddressId(
     paymentPointerId: string
   ): Promise<Account | undefined> {
     for (const acc of this.accounts.values()) {
-      if (acc.paymentPointerID == paymentPointerId) {
+      if (acc.walletAddressID == paymentPointerId) {
         return acc
       }
     }
@@ -118,7 +118,7 @@ export class AccountProvider implements AccountsServer {
     paymentPointerUrl: string
   ): Promise<Account | undefined> {
     return (await this.listAll()).find(
-      (acc) => acc.paymentPointer === paymentPointerUrl
+      (acc) => acc.walletAddress === paymentPointerUrl
     )
   }
 

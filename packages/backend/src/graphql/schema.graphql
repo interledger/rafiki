@@ -29,11 +29,11 @@ type Query {
     last: Int
   ): PeersConnection!
 
-  "Fetch a payment pointer"
-  paymentPointer(id: String!): PaymentPointer
+  "Fetch a wallet address"
+  walletAddress(id: String!): WalletAddress
 
-  "Fetch a page of payment pointers."
-  paymentPointers(
+  "Fetch a page of wallet addresses."
+  walletAddresses(
     "Paginating forwards: the cursor before the the requested page."
     after: String
     "Paginating backwards: the cursor after the the requested page."
@@ -42,7 +42,7 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
-  ): PaymentPointersConnection!
+  ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote"
   quote(id: String!): Quote
@@ -129,32 +129,32 @@ type Mutation {
     input: VoidLiquidityWithdrawalInput!
   ): LiquidityMutationResponse
 
-  "Create a payment pointer"
-  createPaymentPointer(
-    input: CreatePaymentPointerInput!
-  ): CreatePaymentPointerMutationResponse!
+  "Create a wallet address"
+  createWalletAddress(
+    input: CreateWalletAddressInput!
+  ): CreateWalletAddressMutationResponse!
 
-  "Update a payment pointer"
-  updatePaymentPointer(
-    input: UpdatePaymentPointerInput!
-  ): UpdatePaymentPointerMutationResponse!
+  "Update a wallet address"
+  updateWalletAddress(
+    input: UpdateWalletAddressInput!
+  ): UpdateWalletAddressMutationResponse!
 
-  "Add a public key to a payment pointer that is used to verify Open Payments requests."
-  createPaymentPointerKey(
-    input: CreatePaymentPointerKeyInput!
-  ): CreatePaymentPointerKeyMutationResponse
+  "Add a public key to a wallet address that is used to verify Open Payments requests."
+  createWalletAddressKey(
+    input: CreateWalletAddressKeyInput!
+  ): CreateWalletAddressKeyMutationResponse
 
-  "Revoke a public key associated with a payment pointer. Open Payment requests using this key for request signatures will be denied going forward."
-  revokePaymentPointerKey(
-    input: RevokePaymentPointerKeyInput!
-  ): RevokePaymentPointerKeyMutationResponse
+  "Revoke a public key associated with a wallet address. Open Payment requests using this key for request signatures will be denied going forward."
+  revokeWalletAddressKey(
+    input: RevokeWalletAddressKeyInput!
+  ): RevokeWalletAddressKeyMutationResponse
 
-  "Create an internal Open Payments Incoming Payment. The receiver has a payment pointer on this Rafiki instance."
+  "Create an internal Open Payments Incoming Payment. The receiver has a wallet address on this Rafiki instance."
   createIncomingPayment(
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
-  "Create an internal or external Open Payments Incoming Payment. The receiver has a payment pointer on either this or another Open Payments resource server."
+  "Create an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 
   "Create an Open Payments Quote"
@@ -175,15 +175,15 @@ type Mutation {
     input: WithdrawEventLiquidityInput!
   ): LiquidityMutationResponse
 
-  "Withdraw liquidity from a payment pointer received via Web Monetization."
-  createPaymentPointerWithdrawal(
-    input: CreatePaymentPointerWithdrawalInput!
-  ): PaymentPointerWithdrawalMutationResponse
+  "Withdraw liquidity from a wallet address received via Web Monetization."
+  createWalletAddressWithdrawal(
+    input: CreateWalletAddressWithdrawalInput!
+  ): WalletAddressWithdrawalMutationResponse
 
-  "If automatic withdrawal of funds received via Web Monetization by the payment pointer are disabled, this mutation can be used to trigger up to n withdrawal events."
-  triggerPaymentPointerEvents(
-    input: TriggerPaymentPointerEventsInput!
-  ): TriggerPaymentPointerEventsMutationResponse!
+  "If automatic withdrawal of funds received via Web Monetization by the wallet address are disabled, this mutation can be used to trigger up to n withdrawal events."
+  triggerWalletAddressEvents(
+    input: TriggerWalletAddressEventsInput!
+  ): TriggerWalletAddressEventsMutationResponse!
 
   "Set the fee on an asset"
   setFee(input: SetFeeInput!): SetFeeResponse!
@@ -388,9 +388,9 @@ input WithdrawEventLiquidityInput {
   idempotencyKey: String!
 }
 
-input CreatePaymentPointerWithdrawalInput {
-  "The id of the Open Payments payment pointer to create the withdrawal for."
-  paymentPointerId: String!
+input CreateWalletAddressWithdrawalInput {
+  "The id of the Open Payments wallet address to create the withdrawal for."
+  walletAddressId: String!
   "The id of the withdrawal."
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
@@ -410,15 +410,15 @@ input JwkInput {
   crv: Crv!
 }
 
-input CreatePaymentPointerKeyInput {
-  paymentPointerId: String!
+input CreateWalletAddressKeyInput {
+  walletAddressId: String!
   "Public key"
   jwk: JwkInput!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
 
-input RevokePaymentPointerKeyInput {
+input RevokeWalletAddressKeyInput {
   "Internal id of key"
   id: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
@@ -456,7 +456,7 @@ enum LiquidityError {
   UnknownAsset
   UnknownIncomingPayment
   UnknownPayment
-  UnknownPaymentPointer
+  UnknownWalletAddress
   UnknownPeer
   UnknownTransfer
 }
@@ -501,26 +501,26 @@ type HttpOutgoing {
   endpoint: String!
 }
 
-type PaymentPointersConnection {
+type WalletAddressesConnection {
   pageInfo: PageInfo!
-  edges: [PaymentPointerEdge!]!
+  edges: [WalletAddressEdge!]!
 }
 
-type PaymentPointerEdge {
-  node: PaymentPointer!
+type WalletAddressEdge {
+  node: WalletAddress!
   cursor: String!
 }
 
-type PaymentPointer implements Model {
+type WalletAddress implements Model {
   "Payment pointer id"
   id: ID!
-  "Asset of the payment pointer"
+  "Asset of the wallet address"
   asset: Asset!
   "Payment Pointer URL"
   url: String!
-  "Public name associated with the payment pointer"
+  "Public name associated with the wallet address"
   publicName: String
-  "List of incoming payments received by this payment pointer"
+  "List of incoming payments received by this wallet address"
   incomingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -531,7 +531,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): IncomingPaymentConnection
-  "List of quotes created at this payment pointer"
+  "List of quotes created at this wallet address"
   quotes(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -542,7 +542,7 @@ type PaymentPointer implements Model {
     "Paginating backwards: The last **n** elements from the page."
     last: Int
   ): QuoteConnection
-  "List of outgoing payments sent from this payment pointer"
+  "List of outgoing payments sent from this wallet address"
   outgoingPayments(
     "Paginating forwards: the cursor before the the requested page."
     after: String
@@ -555,11 +555,11 @@ type PaymentPointer implements Model {
   ): OutgoingPaymentConnection
   "Date-time of creation"
   createdAt: String!
-  "Status of the payment pointer"
-  status: PaymentPointerStatus!
+  "Status of the wallet address"
+  status: WalletAddressStatus!
 }
 
-enum PaymentPointerStatus {
+enum WalletAddressStatus {
   "Status after deactivating"
   INACTIVE
   "Default status"
@@ -578,7 +578,7 @@ type IncomingPaymentEdge {
 
 interface BasePayment {
   id: ID!
-  paymentPointerId: ID!
+  walletAddressId: ID!
   metadata: JSONObject
   createdAt: String!
 }
@@ -586,15 +586,15 @@ interface BasePayment {
 type IncomingPayment implements BasePayment & Model {
   "Incoming Payment id"
   id: ID!
-  "Id of the payment pointer under which this incoming payment was created"
-  paymentPointerId: ID!
+  "Id of the wallet address under which this incoming payment was created"
+  walletAddressId: ID!
   "Incoming payment state"
   state: IncomingPaymentState!
   "Date-time of expiry. After this time, the incoming payment will not accept further payments made to it."
   expiresAt: String!
-  "The maximum amount that should be paid into the payment pointer under this incoming payment."
+  "The maximum amount that should be paid into the wallet address under this incoming payment."
   incomingAmount: Amount
-  "The total amount that has been paid into the payment pointer under this incoming payment."
+  "The total amount that has been paid into the wallet address under this incoming payment."
   receivedAmount: Amount!
   "Additional metadata associated with the incoming payment."
   metadata: JSONObject
@@ -606,12 +606,12 @@ type Receiver {
   "Incoming payment URL"
   id: String!
   "Payment pointer URL under which the incoming payment was created"
-  paymentPointerUrl: String!
+  walletAddressUrl: String!
   "Describes whether the incoming payment has completed receiving funds."
   completed: Boolean!
-  "The maximum amount that should be paid into the payment pointer under this incoming payment."
+  "The maximum amount that should be paid into the wallet address under this incoming payment."
   incomingAmount: Amount
-  "The total amount that has been paid into the payment pointer under this incoming payment."
+  "The total amount that has been paid into the wallet address under this incoming payment."
   receivedAmount: Amount!
   "Date-time of expiry. After this time, the incoming payment will accept further payments made to it."
   expiresAt: String
@@ -655,8 +655,8 @@ type OutgoingPaymentEdge {
 type OutgoingPayment implements BasePayment & Model {
   "Outgoing payment id"
   id: ID!
-  "Id of the payment pointer under which this outgoing payment was created"
-  paymentPointerId: ID!
+  "Id of the wallet address under which this outgoing payment was created"
+  walletAddressId: ID!
   "Outgoing payment state"
   state: OutgoingPaymentState!
   error: String
@@ -703,8 +703,8 @@ type Payment implements BasePayment & Model {
   id: ID!
   "Type of payment"
   type: PaymentType!
-  "Id of the payment pointer under which this payment was created"
-  paymentPointerId: ID!
+  "Id of the wallet address under which this payment was created"
+  walletAddressId: ID!
   "Either the IncomingPaymentState or OutgoingPaymentState according to type"
   state: String!
   "Additional metadata associated with the payment."
@@ -720,7 +720,7 @@ enum PaymentType {
 
 input PaymentFilter {
   type: FilterString
-  paymentPointerId: FilterString
+  walletAddressId: FilterString
 }
 
 type QuoteConnection {
@@ -736,8 +736,8 @@ type QuoteEdge {
 type Quote {
   "Quote id"
   id: ID!
-  "Id of the payment pointer under which this quote was created"
-  paymentPointerId: ID!
+  "Id of the wallet address under which this quote was created"
+  walletAddressId: ID!
   "Payment pointer URL of the receiver"
   receiver: String!
   "Amount to send (fixed send)"
@@ -767,8 +767,8 @@ input AmountInput {
 }
 
 input CreateQuoteInput {
-  "Id of the payment pointer under which the quote will be created"
-  paymentPointerId: String!
+  "Id of the wallet address under which the quote will be created"
+  walletAddressId: String!
   "Amount to send (fixed send)"
   debitAmount: AmountInput
   "Amount to receive (fixed receive)"
@@ -787,8 +787,8 @@ type QuoteResponse {
 }
 
 input CreateOutgoingPaymentInput {
-  "Id of the payment pointer under which the outgoing payment will be created"
-  paymentPointerId: String!
+  "Id of the wallet address under which the outgoing payment will be created"
+  walletAddressId: String!
   "Id of the corresponding quote for that outgoing payment"
   quoteId: String!
   "Additional metadata associated with the outgoing payment."
@@ -798,8 +798,8 @@ input CreateOutgoingPaymentInput {
 }
 
 input CreateIncomingPaymentInput {
-  "Id of the payment pointer under which the incoming payment will be created"
-  paymentPointerId: String!
+  "Id of the wallet address under which the incoming payment will be created"
+  walletAddressId: String!
   "Expiration date-time"
   expiresAt: String
   "Additional metadata associated with the incoming payment."
@@ -811,8 +811,8 @@ input CreateIncomingPaymentInput {
 }
 
 input CreateReceiverInput {
-  "Receiving payment pointer URL"
-  paymentPointerUrl: String!
+  "Receiving wallet address URL"
+  walletAddressUrl: String!
   "Expiration date-time"
   expiresAt: String
   "Maximum amount to be received"
@@ -844,24 +844,24 @@ type CreateReceiverResponse {
   receiver: Receiver
 }
 
-input CreatePaymentPointerInput {
-  "Asset of the payment pointer"
+input CreateWalletAddressInput {
+  "Asset of the wallet address"
   assetId: String!
   "Payment Pointer URL"
   url: String!
-  "Public name associated with the payment pointer"
+  "Public name associated with the wallet address"
   publicName: String
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
 
-input UpdatePaymentPointerInput {
-  "ID of payment pointer to update"
+input UpdateWalletAddressInput {
+  "ID of wallet address to update"
   id: ID!
-  "New public name for payment pointer"
+  "New public name for wallet address"
   publicName: String
-  "New status to set the payment pointer to"
-  status: PaymentPointerStatus
+  "New status to set the wallet address to"
+  status: WalletAddressStatus
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
@@ -891,11 +891,11 @@ type Jwk {
   crv: Crv!
 }
 
-type PaymentPointerKey implements Model {
+type WalletAddressKey implements Model {
   "Internal id of key"
   id: ID!
-  "Id of the payment pointer to which this key belongs to"
-  paymentPointerId: ID!
+  "Id of the wallet address to which this key belongs to"
+  walletAddressId: ID!
   "Public key"
   jwk: Jwk!
   "Indicator whether the key has been revoked"
@@ -904,20 +904,20 @@ type PaymentPointerKey implements Model {
   createdAt: String!
 }
 
-input TriggerPaymentPointerEventsInput {
+input TriggerWalletAddressEventsInput {
   "Maximum number of events being triggered (n)."
   limit: Int!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
 }
 
-type PaymentPointerWithdrawal {
+type WalletAddressWithdrawal {
   "Withdrawal Id"
   id: ID!
   "Amount to withdraw"
   amount: UInt64!
   "Payment pointer details"
-  paymentPointer: PaymentPointer!
+  walletAddress: WalletAddress!
 }
 
 type WebhookEvent implements Model {
@@ -994,21 +994,21 @@ interface Model {
   createdAt: String!
 }
 
-type CreatePaymentPointerMutationResponse implements MutationResponse {
+type CreateWalletAddressMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
 }
 
-type UpdatePaymentPointerMutationResponse implements MutationResponse {
+type UpdateWalletAddressMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
 }
 
-type TriggerPaymentPointerEventsMutationResponse implements MutationResponse {
+type TriggerWalletAddressEventsMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
@@ -1063,26 +1063,26 @@ type LiquidityMutationResponse implements MutationResponse {
   error: LiquidityError
 }
 
-type PaymentPointerWithdrawalMutationResponse implements MutationResponse {
+type WalletAddressWithdrawalMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
   error: LiquidityError
-  withdrawal: PaymentPointerWithdrawal
+  withdrawal: WalletAddressWithdrawal
 }
 
-type CreatePaymentPointerKeyMutationResponse implements MutationResponse {
+type CreateWalletAddressKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  paymentPointerKey: PaymentPointerKey
+  walletAddressKey: WalletAddressKey
 }
 
-type RevokePaymentPointerKeyMutationResponse implements MutationResponse {
+type RevokeWalletAddressKeyMutationResponse implements MutationResponse {
   code: String!
   success: Boolean!
   message: String!
-  paymentPointerKey: PaymentPointerKey
+  walletAddressKey: WalletAddressKey
 }
 
 type SetFeeResponse implements MutationResponse {

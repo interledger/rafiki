@@ -1,9 +1,9 @@
 import {
   spspMiddleware,
   SPSPConnectionContext,
-  SPSPPaymentPointerContext
+  SPSPWalletAddressContext
 } from './middleware'
-import { setup } from '../../../open_payments/payment_pointer/model.test'
+import { setup } from '../../../open_payments/wallet_address/model.test'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -12,7 +12,7 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { createAsset } from '../../../tests/asset'
 import { createContext } from '../../../tests/context'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 
 describe('SPSP Middleware', (): void => {
@@ -37,17 +37,17 @@ describe('SPSP Middleware', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Payment Pointer', (): void => {
-    let ctx: SPSPPaymentPointerContext
+  describe('Wallet Address', (): void => {
+    let ctx: SPSPWalletAddressContext
 
     beforeEach(async (): Promise<void> => {
       const asset = await createAsset(deps)
-      const paymentPointer = await createPaymentPointer(deps, {
+      const walletAddress = await createWalletAddress(deps, {
         assetId: asset.id
       })
-      ctx = setup<SPSPPaymentPointerContext>({
+      ctx = setup<SPSPWalletAddressContext>({
         reqOpts: {},
-        paymentPointer
+        walletAddress
       })
       ctx.container = deps
     })
@@ -71,10 +71,10 @@ describe('SPSP Middleware', (): void => {
       await expect(spspMiddleware(ctx, next)).resolves.toBeUndefined()
       expect(spspSpy).toHaveBeenCalledTimes(1)
       expect(next).not.toHaveBeenCalled()
-      expect(ctx.paymentTag).toEqual(ctx.paymentPointer.id)
+      expect(ctx.paymentTag).toEqual(ctx.walletAddress.id)
       expect(ctx.asset).toEqual({
-        code: ctx.paymentPointer.asset.code,
-        scale: ctx.paymentPointer.asset.scale
+        code: ctx.walletAddress.asset.code,
+        scale: ctx.walletAddress.asset.scale
       })
     })
   })
@@ -92,11 +92,11 @@ describe('SPSP Middleware', (): void => {
         {}
       )
       const asset = await createAsset(deps)
-      const { id: paymentPointerId } = await createPaymentPointer(deps, {
+      const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId
+        walletAddressId
       })
       ctx.incomingPayment = incomingPayment
       ctx.container = deps

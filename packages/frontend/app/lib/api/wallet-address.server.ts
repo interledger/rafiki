@@ -1,26 +1,26 @@
 import { gql } from '@apollo/client'
 import { apolloClient } from '../apollo.server'
 import type {
-  CreatePaymentPointerMutation,
-  CreatePaymentPointerInput,
-  GetPaymentPointerQuery,
-  GetPaymentPointerQueryVariables,
-  ListPaymentPointersQuery,
-  ListPaymentPointersQueryVariables,
-  QueryPaymentPointerArgs,
-  QueryPaymentPointersArgs,
-  UpdatePaymentPointerInput,
-  CreatePaymentPointerMutationVariables
+  CreateWalletAddressMutation,
+  CreateWalletAddressInput,
+  GetWalletAddressQuery,
+  GetWalletAddressQueryVariables,
+  ListWalletAddresssQuery,
+  ListWalletAddresssQueryVariables,
+  QueryWalletAddressArgs,
+  QueryWalletAddressesArgs,
+  UpdateWalletAddressInput,
+  CreateWalletAddressMutationVariables
 } from '~/generated/graphql'
 
-export const getPaymentPointer = async (args: QueryPaymentPointerArgs) => {
+export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
   const response = await apolloClient.query<
-    GetPaymentPointerQuery,
-    GetPaymentPointerQueryVariables
+    GetWalletAddressQuery,
+    GetWalletAddressQueryVariables
   >({
     query: gql`
-      query GetPaymentPointerQuery($id: String!) {
-        paymentPointer(id: $id) {
+      query GetWalletAddressQuery($id: String!) {
+        walletAddress(id: $id) {
           id
           url
           publicName
@@ -38,22 +38,22 @@ export const getPaymentPointer = async (args: QueryPaymentPointerArgs) => {
     variables: args
   })
 
-  return response.data.paymentPointer
+  return response.data.walletAddress
 }
 
-export const listPaymentPointers = async (args: QueryPaymentPointersArgs) => {
+export const listWalletAddresss = async (args: QueryWalletAddressesArgs) => {
   const response = await apolloClient.query<
-    ListPaymentPointersQuery,
-    ListPaymentPointersQueryVariables
+    ListWalletAddresssQuery,
+    ListWalletAddresssQueryVariables
   >({
     query: gql`
-      query ListPaymentPointersQuery(
+      query ListWalletAddresssQuery(
         $after: String
         $before: String
         $first: Int
         $last: Int
       ) {
-        paymentPointers(
+        walletAddresses(
           after: $after
           before: $before
           first: $first
@@ -80,16 +80,16 @@ export const listPaymentPointers = async (args: QueryPaymentPointersArgs) => {
     variables: args
   })
 
-  return response.data.paymentPointers
+  return response.data.walletAddresses
 }
 
-export const updatePaymentPointer = async (args: UpdatePaymentPointerInput) => {
+export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
   const response = await apolloClient.mutate({
     mutation: gql`
-      mutation UpdatePaymentPointerMutation(
-        $input: UpdatePaymentPointerInput!
+      mutation UpdateWalletAddressMutation(
+        $input: UpdateWalletAddressInput!
       ) {
-        updatePaymentPointer(input: $input) {
+        updateWalletAddress(input: $input) {
           code
           message
           success
@@ -101,23 +101,23 @@ export const updatePaymentPointer = async (args: UpdatePaymentPointerInput) => {
     }
   })
 
-  return response.data.updatePaymentPointer
+  return response.data.updateWalletAddress
 }
 
-export const createPaymentPointer = async (args: CreatePaymentPointerInput) => {
+export const createWalletAddress = async (args: CreateWalletAddressInput) => {
   const response = await apolloClient.mutate<
-    CreatePaymentPointerMutation,
-    CreatePaymentPointerMutationVariables
+    CreateWalletAddressMutation,
+    CreateWalletAddressMutationVariables
   >({
     mutation: gql`
-      mutation CreatePaymentPointerMutation(
-        $input: CreatePaymentPointerInput!
+      mutation CreateWalletAddressMutation(
+        $input: CreateWalletAddressInput!
       ) {
-        createPaymentPointer(input: $input) {
+        createWalletAddress(input: $input) {
           code
           success
           message
-          paymentPointer {
+          walletAddress {
             id
           }
         }
@@ -128,5 +128,5 @@ export const createPaymentPointer = async (args: CreatePaymentPointerInput) => {
     }
   })
 
-  return response.data?.createPaymentPointer
+  return response.data?.createWalletAddress
 }

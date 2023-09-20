@@ -40,7 +40,7 @@ function paymentToGraphql(payment: CombinedPayment): SchemaPayment {
     id: payment.id,
     type: payment.type,
     state: payment.state,
-    paymentPointerId: payment.walletAddressId,
+    walletAddressId: payment.walletAddressId,
     metadata: payment.metadata,
     createdAt: new Date(payment.createdAt).toISOString(),
     __typename: 'Payment'

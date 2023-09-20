@@ -2,21 +2,21 @@ import assert from 'assert'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
-import { isPaymentPointerError, PaymentPointerError } from './errors'
+import { isWalletAddressError, WalletAddressError } from './errors'
 import {
-  PaymentPointer,
-  PaymentPointerEvent,
-  PaymentPointerEventType
+  WalletAddress,
+  WalletAddressEvent,
+  WalletAddressEventType
 } from './model'
 import {
   CreateOptions,
   FORBIDDEN_PATHS,
-  PaymentPointerService
+  WalletAddressService
 } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { Config, IAppConfig } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -30,11 +30,11 @@ import { Pagination } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 
-describe('Open Payments Payment Pointer Service', (): void => {
+describe('Open Payments Wallet Address Service', (): void => {
   let deps: IocContract<AppServices>
   let config: IAppConfig
   let appContainer: TestContainer
-  let paymentPointerService: PaymentPointerService
+  let walletAddressService: WalletAddressService
   let accountingService: AccountingService
   let knex: Knex
 
@@ -43,7 +43,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     config = await deps.use('config')
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
-    paymentPointerService = await deps.use('paymentPointerService')
+    walletAddressService = await deps.use('walletAddressService')
     accountingService = await deps.use('accountingService')
   })
 
@@ -56,7 +56,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create or Get Payment Pointer', (): void => {
+  describe('Create or Get Wallet Address', (): void => {
     let options: CreateOptions
 
     beforeEach(async (): Promise<void> => {
@@ -72,27 +72,27 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${undefined}                | ${''}
       ${faker.person.firstName()} | ${'with publicName'}
     `(
-      'Payment pointer can be created or fetched $description',
+      'Wallet address can be created or fetched $description',
       async ({ publicName }): Promise<void> => {
         if (publicName) {
           options.publicName = publicName
         }
-        const paymentPointer = await paymentPointerService.create(options)
-        assert.ok(!isPaymentPointerError(paymentPointer))
-        await expect(paymentPointer).toMatchObject(options)
+        const walletAddress = await walletAddressService.create(options)
+        assert.ok(!isWalletAddressError(walletAddress))
+        await expect(walletAddress).toMatchObject(options)
         await expect(
-          paymentPointerService.get(paymentPointer.id)
-        ).resolves.toEqual(paymentPointer)
+          walletAddressService.get(walletAddress.id)
+        ).resolves.toEqual(walletAddress)
       }
     )
 
-    test('Cannot create payment pointer with unknown asset', async (): Promise<void> => {
+    test('Cannot create wallet address with unknown asset', async (): Promise<void> => {
       await expect(
-        paymentPointerService.create({
+        walletAddressService.create({
           ...options,
           assetId: uuid()
         })
-      ).resolves.toEqual(PaymentPointerError.UnknownAsset)
+      ).resolves.toEqual(WalletAddressError.UnknownAsset)
     })
 
     test.each`
@@ -102,46 +102,46 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${'https://alice.me'}    | ${'with a url without a path'}
       ${'https://alice.me/'}   | ${'with a url without a path'}
     `(
-      'Payment pointer cannot be created $description ($url)',
+      'Wallet address cannot be created $description ($url)',
       async ({ url }): Promise<void> => {
         await expect(
-          paymentPointerService.create({
+          walletAddressService.create({
             ...options,
             url
           })
-        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+        ).resolves.toEqual(WalletAddressError.InvalidUrl)
       }
     )
 
     test.each(FORBIDDEN_PATHS.map((path) => [path]))(
-      'Payment pointer cannot be created with forbidden url path (%s)',
+      'Wallet address cannot be created with forbidden url path (%s)',
       async (path): Promise<void> => {
         const url = `https://alice.me${path}`
         await expect(
-          paymentPointerService.create({
+          walletAddressService.create({
             ...options,
             url
           })
-        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+        ).resolves.toEqual(WalletAddressError.InvalidUrl)
         await expect(
-          paymentPointerService.create({
+          walletAddressService.create({
             ...options,
             url: `${url}/more/path`
           })
-        ).resolves.toEqual(PaymentPointerError.InvalidUrl)
+        ).resolves.toEqual(WalletAddressError.InvalidUrl)
       }
     )
 
-    test('Creating a payment pointer does not create an SPSP fallback account', async (): Promise<void> => {
-      const paymentPointer = await paymentPointerService.create(options)
-      assert.ok(!isPaymentPointerError(paymentPointer))
+    test('Creating a wallet address does not create an SPSP fallback account', async (): Promise<void> => {
+      const walletAddress = await walletAddressService.create(options)
+      assert.ok(!isWalletAddressError(walletAddress))
       await expect(
-        accountingService.getBalance(paymentPointer.id)
+        accountingService.getBalance(walletAddress.id)
       ).resolves.toBeUndefined()
     })
   })
 
-  describe('Update Payment Pointer', (): void => {
+  describe('Update Wallet Address', (): void => {
     test.each`
       initialIsActive | status        | expectedIsActive
       ${true}         | ${undefined}  | ${true}
@@ -149,69 +149,69 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${false}        | ${'ACTIVE'}   | ${true}
       ${false}        | ${undefined}  | ${false}
     `(
-      'Payment pointer with initial isActive of $initialIsActive can be updated with $status status ',
+      'Wallet address with initial isActive of $initialIsActive can be updated with $status status ',
       async ({ initialIsActive, status, expectedIsActive }): Promise<void> => {
-        const paymentPointer = await createPaymentPointer(deps)
+        const walletAddress = await createWalletAddress(deps)
 
         if (!initialIsActive) {
-          await paymentPointer.$query(knex).patch({ deactivatedAt: new Date() })
+          await walletAddress.$query(knex).patch({ deactivatedAt: new Date() })
         }
 
-        const updatedPaymentPointer = await paymentPointerService.update({
-          id: paymentPointer.id,
+        const updatedWalletAddress = await walletAddressService.update({
+          id: walletAddress.id,
           status
         })
-        assert.ok(!isPaymentPointerError(updatedPaymentPointer))
+        assert.ok(!isWalletAddressError(updatedWalletAddress))
 
-        expect(updatedPaymentPointer.isActive).toEqual(expectedIsActive)
+        expect(updatedWalletAddress.isActive).toEqual(expectedIsActive)
 
         await expect(
-          paymentPointerService.get(paymentPointer.id)
-        ).resolves.toEqual(updatedPaymentPointer)
+          walletAddressService.get(walletAddress.id)
+        ).resolves.toEqual(updatedWalletAddress)
       }
     )
 
     test('publicName', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
+      const walletAddress = await createWalletAddress(deps, {
         publicName: 'Initial Name'
       })
       const newName = 'New Name'
-      const updatedPaymentPointer = await paymentPointerService.update({
-        id: paymentPointer.id,
+      const updatedWalletAddress = await walletAddressService.update({
+        id: walletAddress.id,
         publicName: newName
       })
-      assert.ok(!isPaymentPointerError(updatedPaymentPointer))
-      expect(updatedPaymentPointer.deactivatedAt).toEqual(null)
-      expect(updatedPaymentPointer.publicName).toEqual(newName)
+      assert.ok(!isWalletAddressError(updatedWalletAddress))
+      expect(updatedWalletAddress.deactivatedAt).toEqual(null)
+      expect(updatedWalletAddress.publicName).toEqual(newName)
       await expect(
-        paymentPointerService.get(paymentPointer.id)
-      ).resolves.toEqual(updatedPaymentPointer)
+        walletAddressService.get(walletAddress.id)
+      ).resolves.toEqual(updatedWalletAddress)
     })
 
-    describe('Deactivating payment pointer', (): void => {
+    describe('Deactivating wallet address', (): void => {
       test(
         'Updates expiry dates of related incoming payments',
         withConfigOverride(
           () => config,
           {
-            paymentPointerDeactivationPaymentGracePeriodMs: 2592000000,
+            walletAddressDeactivationPaymentGracePeriodMs: 2592000000,
             incomingPaymentExpiryMaxMs: 2592000000 * 3
           },
           async (): Promise<void> => {
-            const paymentPointer = await createPaymentPointer(deps)
+            const walletAddress = await createWalletAddress(deps)
             const now = new Date('2023-06-01T00:00:00Z').getTime()
             jest.useFakeTimers({ now })
 
             const duration =
-              config.paymentPointerDeactivationPaymentGracePeriodMs + 10_000
+              config.walletAddressDeactivationPaymentGracePeriodMs + 10_000
             const expiresAt = new Date(Date.now() + duration)
 
             const incomingPayment = await createIncomingPayment(deps, {
-              paymentPointerId: paymentPointer.id,
+              walletAddressId: walletAddress.id,
               incomingAmount: {
                 value: BigInt(123),
-                assetCode: paymentPointer.asset.code,
-                assetScale: paymentPointer.asset.scale
+                assetCode: walletAddress.asset.code,
+                assetScale: walletAddress.asset.scale
               },
               expiresAt,
               metadata: {
@@ -220,15 +220,15 @@ describe('Open Payments Payment Pointer Service', (): void => {
               }
             })
 
-            await paymentPointerService.update({
-              id: paymentPointer.id,
+            await walletAddressService.update({
+              id: walletAddress.id,
               status: 'INACTIVE'
             })
             const incomingPaymentUpdated = await incomingPayment.$query(knex)
 
             expect(incomingPaymentUpdated.expiresAt.getTime()).toEqual(
               expiresAt.getTime() +
-                config.paymentPointerDeactivationPaymentGracePeriodMs -
+                config.walletAddressDeactivationPaymentGracePeriodMs -
                 duration
             )
           }
@@ -239,9 +239,9 @@ describe('Open Payments Payment Pointer Service', (): void => {
         'Does not update expiry dates of related incoming payments when new expiry is greater',
         withConfigOverride(
           () => config,
-          { paymentPointerDeactivationPaymentGracePeriodMs: 2592000000 },
+          { walletAddressDeactivationPaymentGracePeriodMs: 2592000000 },
           async (): Promise<void> => {
-            const paymentPointer = await createPaymentPointer(deps)
+            const walletAddress = await createWalletAddress(deps)
             const now = new Date('2023-06-01T00:00:00Z').getTime()
             jest.useFakeTimers({ now })
 
@@ -249,11 +249,11 @@ describe('Open Payments Payment Pointer Service', (): void => {
             const expiresAt = new Date(Date.now() + duration)
 
             const incomingPayment = await createIncomingPayment(deps, {
-              paymentPointerId: paymentPointer.id,
+              walletAddressId: walletAddress.id,
               incomingAmount: {
                 value: BigInt(123),
-                assetCode: paymentPointer.asset.code,
-                assetScale: paymentPointer.asset.scale
+                assetCode: walletAddress.asset.code,
+                assetScale: walletAddress.asset.scale
               },
               expiresAt,
               metadata: {
@@ -262,8 +262,8 @@ describe('Open Payments Payment Pointer Service', (): void => {
               }
             })
 
-            await paymentPointerService.update({
-              id: paymentPointer.id,
+            await walletAddressService.update({
+              id: walletAddress.id,
               status: 'INACTIVE'
             })
             const incomingPaymentUpdated = await incomingPayment.$query(knex)
@@ -274,114 +274,114 @@ describe('Open Payments Payment Pointer Service', (): void => {
       )
     })
 
-    test('Cannot update unknown payment pointer', async (): Promise<void> => {
+    test('Cannot update unknown wallet address', async (): Promise<void> => {
       await expect(
-        paymentPointerService.update({
+        walletAddressService.update({
           id: uuid(),
           status: 'INACTIVE',
           publicName: 'Some Public Name'
         })
-      ).resolves.toEqual(PaymentPointerError.UnknownPaymentPointer)
+      ).resolves.toEqual(WalletAddressError.UnknownWalletAddress)
     })
   })
 
-  describe('Get Payment Pointer By Url', (): void => {
-    test('can retrieve payment pointer by url', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps)
+  describe('Get Wallet Address By Url', (): void => {
+    test('can retrieve wallet address by url', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps)
       await expect(
-        paymentPointerService.getByUrl(paymentPointer.url)
-      ).resolves.toEqual(paymentPointer)
+        walletAddressService.getByUrl(walletAddress.url)
+      ).resolves.toEqual(walletAddress)
 
       await expect(
-        paymentPointerService.getByUrl(paymentPointer.url + '/path')
+        walletAddressService.getByUrl(walletAddress.url + '/path')
       ).resolves.toBeUndefined()
 
       await expect(
-        paymentPointerService.getByUrl('prefix+' + paymentPointer.url)
+        walletAddressService.getByUrl('prefix+' + walletAddress.url)
       ).resolves.toBeUndefined()
     })
 
     test(
-      'returns undefined if no payment pointer exists with url',
+      'returns undefined if no wallet address exists with url',
       withConfigOverride(
         () => config,
-        { paymentPointerLookupTimeoutMs: 1 },
+        { walletAddressLookupTimeoutMs: 1 },
         async (): Promise<void> => {
           await expect(
-            paymentPointerService.getByUrl('test.nope')
+            walletAddressService.getByUrl('test.nope')
           ).resolves.toBeUndefined()
         }
       )
     )
   })
 
-  describe('Get Or Poll Payment Pointer By Url', (): void => {
-    describe('existing payment pointer', (): void => {
-      test('can retrieve payment pointer by url', async (): Promise<void> => {
-        const paymentPointer = await createPaymentPointer(deps)
+  describe('Get Or Poll Wallet Addres By Url', (): void => {
+    describe('existing wallet address', (): void => {
+      test('can retrieve wallet address by url', async (): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
         await expect(
-          paymentPointerService.getOrPollByUrl(paymentPointer.url)
-        ).resolves.toEqual(paymentPointer)
+          walletAddressService.getOrPollByUrl(walletAddress.url)
+        ).resolves.toEqual(walletAddress)
       })
     })
 
-    describe('non-existing payment pointer', (): void => {
+    describe('non-existing wallet address', (): void => {
       test(
-        'creates payment pointer not found event',
+        'creates wallet address not found event',
         withConfigOverride(
           () => config,
-          { paymentPointerLookupTimeoutMs: 0 },
+          { walletAddressLookupTimeoutMs: 0 },
           async (): Promise<void> => {
-            const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
             await expect(
-              paymentPointerService.getOrPollByUrl(paymentPointerUrl)
+              walletAddressService.getOrPollByUrl(walletAddressUrl)
             ).resolves.toBeUndefined()
 
-            const paymentPointerNotFoundEvents =
-              await PaymentPointerEvent.query(knex).where({
-                type: PaymentPointerEventType.PaymentPointerNotFound
+            const walletAddressNotFoundEvents =
+              await WalletAddressEvent.query(knex).where({
+                type: WalletAddressEventType.WalletAddressNotFound
               })
 
-            expect(paymentPointerNotFoundEvents[0]).toMatchObject({
-              data: { paymentPointerUrl }
+            expect(walletAddressNotFoundEvents[0]).toMatchObject({
+              data: { walletAddressUrl }
             })
           }
         )
       )
 
       test(
-        'polls for payment pointer',
+        'polls for wallet address',
         withConfigOverride(
           () => config,
-          { paymentPointerPollingFrequencyMs: 10 },
+          { walletAddressPollingFrequencyMs: 10 },
           async (): Promise<void> => {
-            const paymentPointerUrl = `https://${faker.internet.domainName()}/.well-known/pay`
+            const walletAddressUrl = `https://${faker.internet.domainName()}/.well-known/pay`
 
-            const [getOrPollByUrlPaymentPointer, createdPaymentPointer] =
+            const [getOrPollByUrlWalletAddress, createdWalletAddress] =
               await Promise.all([
-                paymentPointerService.getOrPollByUrl(paymentPointerUrl),
+                walletAddressService.getOrPollByUrl(walletAddressUrl),
                 (async () => {
                   await sleep(5)
-                  return createPaymentPointer(deps, {
-                    url: paymentPointerUrl
+                  return createWalletAddress(deps, {
+                    url: walletAddressUrl
                   })
                 })()
               ])
 
-            assert.ok(getOrPollByUrlPaymentPointer)
-            expect(getOrPollByUrlPaymentPointer).toEqual(createdPaymentPointer)
+            assert.ok(getOrPollByUrlWalletAddress)
+            expect(getOrPollByUrlWalletAddress).toEqual(createdWalletAddress)
           }
         )
       )
 
       test(
-        'returns undefined if no payment pointer exists with url',
+        'returns undefined if no wallet address exists with url',
         withConfigOverride(
           () => config,
-          { paymentPointerLookupTimeoutMs: 1 },
+          { walletAddressLookupTimeoutMs: 1 },
           async (): Promise<void> => {
             await expect(
-              paymentPointerService.getByUrl('test.nope')
+              walletAddressService.getByUrl('test.nope')
             ).resolves.toBeUndefined()
           }
         )
@@ -389,7 +389,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
     })
   })
 
-  describe('Payment Pointer pagination', (): void => {
+  describe('Wallet Address pagination', (): void => {
     test.each`
       num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
       ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
@@ -408,23 +408,23 @@ describe('Open Payments Payment Pointer Service', (): void => {
         hasNextPage,
         hasPreviousPage
       }): Promise<void> => {
-        const paymentPointerIds: string[] = []
+        const walletAddressIds: string[] = []
         for (let i = 0; i < num; i++) {
-          const paymentPointer = await createPaymentPointer(deps)
-          paymentPointerIds.push(paymentPointer.id)
+          const walletAddress = await createWalletAddress(deps)
+          walletAddressIds.push(walletAddress.id)
         }
         if (cursor) {
-          if (pagination.last) pagination.before = paymentPointerIds[cursor]
-          else pagination.after = paymentPointerIds[cursor]
+          if (pagination.last) pagination.before = walletAddressIds[cursor]
+          else pagination.after = walletAddressIds[cursor]
         }
-        const page = await paymentPointerService.getPage(pagination)
+        const page = await walletAddressService.getPage(pagination)
         const pageInfo = await getPageInfo(
-          (pagination) => paymentPointerService.getPage(pagination),
+          (pagination) => walletAddressService.getPage(pagination),
           page
         )
         expect(pageInfo).toEqual({
-          startCursor: paymentPointerIds[start],
-          endCursor: paymentPointerIds[end],
+          startCursor: walletAddressIds[start],
+          endCursor: walletAddressIds[end],
           hasNextPage,
           hasPreviousPage
         })
@@ -432,18 +432,18 @@ describe('Open Payments Payment Pointer Service', (): void => {
     )
     describe('getPage', (): void => {
       getPageTests({
-        createModel: () => createPaymentPointer(deps),
+        createModel: () => createWalletAddress(deps),
         getPage: (pagination?: Pagination) =>
-          paymentPointerService.getPage(pagination)
+          walletAddressService.getPage(pagination)
       })
     })
   })
 
   describe('onCredit', (): void => {
-    let paymentPointer: PaymentPointer
+    let walletAddress: WalletAddress
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await createPaymentPointer(deps)
+      walletAddress = await createWalletAddress(deps)
     })
 
     describe.each`
@@ -475,7 +475,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
             let thresholdProcessAt: Date | null = null
 
             beforeEach(async (): Promise<void> => {
-              await paymentPointer.asset.$query(knex).patch({
+              await walletAddress.asset.$query(knex).patch({
                 withdrawalThreshold
               })
               if (withdrawalThreshold !== null) {
@@ -491,7 +491,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
               'startingProcessAt: $startingProcessAt',
               ({ startingProcessAt }): void => {
                 beforeEach(async (): Promise<void> => {
-                  await paymentPointer.$query(knex).patch({
+                  await walletAddress.$query(knex).patch({
                     processAt: startingProcessAt
                   })
                 })
@@ -504,14 +504,14 @@ describe('Open Payments Payment Pointer Service', (): void => {
                   'totalEventsAmount: $totalEventsAmount',
                   ({ totalEventsAmount }): void => {
                     beforeEach(async (): Promise<void> => {
-                      await paymentPointer.$query(knex).patch({
+                      await walletAddress.$query(knex).patch({
                         totalEventsAmount
                       })
                     })
                     if (withdrawalThreshold !== BigInt(0)) {
                       test("Balance doesn't meet withdrawal threshold", async (): Promise<void> => {
                         await expect(
-                          paymentPointer.onCredit({
+                          walletAddress.onCredit({
                             totalReceived: totalEventsAmount + BigInt(1),
                             withdrawalThrottleDelay
                           })
@@ -519,7 +519,7 @@ describe('Open Payments Payment Pointer Service', (): void => {
                           processAt: startingProcessAt || delayProcessAt
                         })
                         await expect(
-                          paymentPointerService.get(paymentPointer.id)
+                          walletAddressService.get(walletAddress.id)
                         ).resolves.toMatchObject({
                           processAt: startingProcessAt || delayProcessAt
                         })
@@ -535,14 +535,14 @@ describe('Open Payments Payment Pointer Service', (): void => {
                         'Balance $description withdrawal threshold',
                         async ({ totalReceived }): Promise<void> => {
                           await expect(
-                            paymentPointer.onCredit({
+                            walletAddress.onCredit({
                               totalReceived
                             })
                           ).resolves.toMatchObject({
                             processAt: thresholdProcessAt
                           })
                           await expect(
-                            paymentPointerService.get(paymentPointer.id)
+                            walletAddressService.get(walletAddress.id)
                           ).resolves.toMatchObject({
                             processAt: thresholdProcessAt
                           })
@@ -560,10 +560,10 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('processNext', (): void => {
-    let paymentPointer: PaymentPointer
+    let walletAddress: WalletAddress
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await createPaymentPointer(deps, {
+      walletAddress = await createWalletAddress(deps, {
         createLiquidityAccount: true
       })
     })
@@ -573,15 +573,15 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${null}                          | ${'not scheduled'}
       ${new Date(Date.now() + 60_000)} | ${'not ready'}
     `(
-      'Does not process payment pointer $description for withdrawal',
+      'Does not process wallet address $description for withdrawal',
       async ({ processAt }): Promise<void> => {
-        await paymentPointer.$query(knex).patch({ processAt })
+        await walletAddress.$query(knex).patch({ processAt })
         await expect(
-          paymentPointerService.processNext()
+          walletAddressService.processNext()
         ).resolves.toBeUndefined()
         await expect(
-          paymentPointerService.get(paymentPointer.id)
-        ).resolves.toEqual(paymentPointer)
+          walletAddressService.get(walletAddress.id)
+        ).resolves.toEqual(walletAddress)
       }
     )
 
@@ -599,28 +599,28 @@ describe('Open Payments Payment Pointer Service', (): void => {
         await expect(
           accountingService.createDeposit({
             id: uuid(),
-            account: paymentPointer,
+            account: walletAddress,
             amount: totalReceived
           })
         ).resolves.toBeUndefined()
-        await paymentPointer.$query(knex).patch({
+        await walletAddress.$query(knex).patch({
           processAt: new Date(),
           totalEventsAmount
         })
-        await expect(paymentPointerService.processNext()).resolves.toBe(
-          paymentPointer.id
+        await expect(walletAddressService.processNext()).resolves.toBe(
+          walletAddress.id
         )
         await expect(
-          paymentPointerService.get(paymentPointer.id)
+          walletAddressService.get(walletAddress.id)
         ).resolves.toMatchObject({
           processAt: null,
           totalEventsAmount: totalEventsAmount + withdrawalAmount
         })
         await expect(
-          PaymentPointerEvent.query(knex).where({
-            type: PaymentPointerEventType.PaymentPointerWebMonetization,
-            withdrawalAccountId: paymentPointer.id,
-            withdrawalAssetId: paymentPointer.assetId,
+          WalletAddressEvent.query(knex).where({
+            type: WalletAddressEventType.WalletAddressWebMonetization,
+            withdrawalAccountId: walletAddress.id,
+            withdrawalAssetId: walletAddress.assetId,
             withdrawalAmount
           })
         ).resolves.toHaveLength(1)
@@ -629,14 +629,14 @@ describe('Open Payments Payment Pointer Service', (): void => {
   })
 
   describe('triggerEvents', (): void => {
-    let paymentPointers: PaymentPointer[]
+    let walletAddresses: WalletAddress[]
 
     beforeEach(async (): Promise<void> => {
       const { id: assetId } = await createAsset(deps)
-      paymentPointers = []
+      walletAddresses = []
       for (let i = 0; i < 5; i++) {
-        paymentPointers.push(
-          await createPaymentPointer(deps, {
+        walletAddresses.push(
+          await createWalletAddress(deps, {
             assetId,
             createLiquidityAccount: true
           })
@@ -649,12 +649,12 @@ describe('Open Payments Payment Pointer Service', (): void => {
       ${null}                          | ${'not scheduled'}
       ${new Date(Date.now() + 60_000)} | ${'not ready'}
     `(
-      'Does not process payment pointer $description for withdrawal',
+      'Does not process wallet address $description for withdrawal',
       async ({ processAt }): Promise<void> => {
-        for (let i = 1; i < paymentPointers.length; i++) {
-          await paymentPointers[i].$query(knex).patch({ processAt })
+        for (let i = 1; i < walletAddresses.length; i++) {
+          await walletAddresses[i].$query(knex).patch({ processAt })
         }
-        await expect(paymentPointerService.triggerEvents(10)).resolves.toEqual(
+        await expect(walletAddressService.triggerEvents(10)).resolves.toEqual(
           0
         )
       }
@@ -669,38 +669,38 @@ describe('Open Payments Payment Pointer Service', (): void => {
       'Creates withdrawal webhook event(s) (limit: $limit)',
       async ({ limit, count }): Promise<void> => {
         const withdrawalAmount = BigInt(10)
-        for (let i = 1; i < paymentPointers.length; i++) {
+        for (let i = 1; i < walletAddresses.length; i++) {
           await expect(
             accountingService.createDeposit({
               id: uuid(),
-              account: paymentPointers[i],
+              account: walletAddresses[i],
               amount: withdrawalAmount
             })
           ).resolves.toBeUndefined()
-          await paymentPointers[i].$query(knex).patch({
+          await walletAddresses[i].$query(knex).patch({
             processAt: new Date()
           })
         }
-        await expect(paymentPointerService.triggerEvents(limit)).resolves.toBe(
+        await expect(walletAddressService.triggerEvents(limit)).resolves.toBe(
           count
         )
         await expect(
-          PaymentPointerEvent.query(knex).where({
-            type: PaymentPointerEventType.PaymentPointerWebMonetization
+          WalletAddressEvent.query(knex).where({
+            type: WalletAddressEventType.WalletAddressWebMonetization
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {
           await expect(
-            paymentPointerService.get(paymentPointers[i].id)
+            walletAddressService.get(walletAddresses[i].id)
           ).resolves.toMatchObject({
             processAt: null,
             totalEventsAmount: withdrawalAmount
           })
         }
-        for (let i = count + 1; i < paymentPointers.length; i++) {
+        for (let i = count + 1; i < walletAddresses.length; i++) {
           await expect(
-            paymentPointerService.get(paymentPointers[i].id)
-          ).resolves.toEqual(paymentPointers[i])
+            walletAddressService.get(walletAddresses[i].id)
+          ).resolves.toEqual(walletAddresses[i])
         }
       }
     )

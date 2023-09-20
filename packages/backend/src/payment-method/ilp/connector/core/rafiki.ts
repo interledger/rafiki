@@ -23,14 +23,14 @@ import {
   Transaction
 } from '../../../../accounting/service'
 import { AssetOptions } from '../../../../asset/service'
-import { PaymentPointerService } from '../../../../open_payments/payment_pointer/service'
+import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
 import { PeerService } from '../../peer/service'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
 // Such models include:
-//   ../../open_payments/payment_pointer/model
+//   ../../open_payments/wallet_address/model
 //   ../../open_payments/payment/incoming/model
 //   ../../open_payments/payment/outgoing/model
 //   ../../peer/model
@@ -71,7 +71,7 @@ export interface AccountingService {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
-  paymentPointers: PaymentPointerService
+  walletAddresses: WalletAddressService
   logger: Logger
   incomingPayments: IncomingPaymentService
   peers: PeerService
@@ -156,8 +156,8 @@ export class Rafiki<T = any> {
       get accounting(): AccountingService {
         return config.accounting
       },
-      get paymentPointers(): PaymentPointerService {
-        return config.paymentPointers
+      get walletAddresses(): WalletAddressService {
+        return config.walletAddresses
       },
       logger
     }

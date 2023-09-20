@@ -10,25 +10,25 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  CreatePaymentPointerKeyInput,
-  CreatePaymentPointerKeyMutationResponse,
-  RevokePaymentPointerKeyMutationResponse,
+  CreateWalletAddressKeyInput,
+  CreateWalletAddressKeyMutationResponse,
+  RevokeWalletAddressKeyMutationResponse,
   JwkInput
 } from '../generated/graphql'
-import { PaymentPointerKeyService } from '../../open_payments/payment_pointer/key/service'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { WalletAddressKeyService } from '../../open_payments/wallet_address/key/service'
+import { createWalletAddress } from '../../tests/walletAddress'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
-describe('Payment Pointer Key Resolvers', (): void => {
+describe('Wallet Address Key Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let paymentPointerKeyService: PaymentPointerKeyService
+  let walletAddressKeyService: WalletAddressKeyService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    paymentPointerKeyService = await deps.use('paymentPointerKeyService')
+    walletAddressKeyService = await deps.use('walletAddressKeyService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -40,28 +40,28 @@ describe('Payment Pointer Key Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create Payment Pointer Keys', (): void => {
-    test('Can create payment pointer key', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps)
+  describe('Create Wallet Address Keys', (): void => {
+    test('Can create wallet address key', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps)
 
-      const input: CreatePaymentPointerKeyInput = {
-        paymentPointerId: paymentPointer.id,
+      const input: CreateWalletAddressKeyInput = {
+        walletAddressId: walletAddress.id,
         jwk: TEST_KEY as JwkInput
       }
 
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreatePaymentPointerKey(
-              $input: CreatePaymentPointerKeyInput!
+            mutation CreateWalletAddressKey(
+              $input: CreateWalletAddressKeyInput!
             ) {
-              createPaymentPointerKey(input: $input) {
+              createWalletAddressKey(input: $input) {
                 code
                 success
                 message
-                paymentPointerKey {
+                walletAddressKey {
                   id
-                  paymentPointerId
+                  walletAddressId
                   jwk {
                     kid
                     x
@@ -79,9 +79,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
             input
           }
         })
-        .then((query): CreatePaymentPointerKeyMutationResponse => {
+        .then((query): CreateWalletAddressKeyMutationResponse => {
           if (query.data) {
-            return query.data.createPaymentPointerKey
+            return query.data.createWalletAddressKey
           } else {
             throw new Error('Data was empty')
           }
@@ -89,10 +89,10 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      assert.ok(response.paymentPointerKey)
-      expect(response.paymentPointerKey).toMatchObject({
-        __typename: 'PaymentPointerKey',
-        paymentPointerId: input.paymentPointerId,
+      assert.ok(response.walletAddressKey)
+      expect(response.walletAddressKey).toMatchObject({
+        __typename: 'WalletAddressKey',
+        walletAddressId: input.walletAddressId,
         jwk: {
           __typename: 'Jwk',
           ...TEST_KEY
@@ -103,31 +103,31 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
     test('500', async (): Promise<void> => {
       jest
-        .spyOn(paymentPointerKeyService, 'create')
+        .spyOn(walletAddressKeyService, 'create')
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
 
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
 
       const input = {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         jwk: TEST_KEY
       }
 
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreatePaymentPointerKey(
-              $input: CreatePaymentPointerKeyInput!
+            mutation CreateWalletAddressKey(
+              $input: CreateWalletAddressKeyInput!
             ) {
-              createPaymentPointerKey(input: $input) {
+              createWalletAddressKey(input: $input) {
                 code
                 success
                 message
-                paymentPointerKey {
+                walletAddressKey {
                   id
-                  paymentPointerId
+                  walletAddressId
                   jwk {
                     kid
                     x
@@ -144,9 +144,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
             input
           }
         })
-        .then((query): CreatePaymentPointerKeyMutationResponse => {
+        .then((query): CreateWalletAddressKeyMutationResponse => {
           if (query.data) {
-            return query.data.createPaymentPointerKey
+            return query.data.createWalletAddressKey
           } else {
             throw new Error('Data was empty')
           }
@@ -154,33 +154,33 @@ describe('Payment Pointer Key Resolvers', (): void => {
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe(
-        'Error trying to create payment pointer key'
+        'Error trying to create wallet address key'
       )
     })
   })
 
   describe('Revoke key', (): void => {
     test('Can revoke a key', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
 
-      const key = await paymentPointerKeyService.create({
-        paymentPointerId: paymentPointer.id,
+      const key = await walletAddressKeyService.create({
+        walletAddressId: walletAddress.id,
         jwk: TEST_KEY
       })
 
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation revokePaymentPointerKey(
-              $input: RevokePaymentPointerKeyInput!
+            mutation revokeWalletAddressKey(
+              $input: RevokeWalletAddressKeyInput!
             ) {
-              revokePaymentPointerKey(input: $input) {
+              revokeWalletAddressKey(input: $input) {
                 code
                 success
                 message
-                paymentPointerKey {
+                walletAddressKey {
                   id
-                  paymentPointerId
+                  walletAddressId
                   jwk {
                     kid
                     x
@@ -199,9 +199,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
             }
           }
         })
-        .then((query): RevokePaymentPointerKeyMutationResponse => {
+        .then((query): RevokeWalletAddressKeyMutationResponse => {
           if (query.data) {
-            return query.data.revokePaymentPointerKey
+            return query.data.revokeWalletAddressKey
           } else {
             throw new Error('Data was empty')
           }
@@ -209,11 +209,11 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toBe('200')
-      assert.ok(response.paymentPointerKey)
-      expect(response.paymentPointerKey).toMatchObject({
-        __typename: 'PaymentPointerKey',
+      assert.ok(response.walletAddressKey)
+      expect(response.walletAddressKey).toMatchObject({
+        __typename: 'WalletAddressKey',
         id: key.id,
-        paymentPointerId: key.paymentPointerId,
+        walletAddressId: key.walletAddressId,
         jwk: {
           ...key.jwk,
           __typename: 'Jwk'
@@ -226,16 +226,16 @@ describe('Payment Pointer Key Resolvers', (): void => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation revokePaymentPointerKey(
-              $input: RevokePaymentPointerKeyInput!
+            mutation revokeWalletAddressKey(
+              $input: RevokeWalletAddressKeyInput!
             ) {
-              revokePaymentPointerKey(input: $input) {
+              revokeWalletAddressKey(input: $input) {
                 code
                 success
                 message
-                paymentPointerKey {
+                walletAddressKey {
                   id
-                  paymentPointerId
+                  walletAddressId
                 }
               }
             }
@@ -246,9 +246,9 @@ describe('Payment Pointer Key Resolvers', (): void => {
             }
           }
         })
-        .then((query): RevokePaymentPointerKeyMutationResponse => {
+        .then((query): RevokeWalletAddressKeyMutationResponse => {
           if (query.data) {
-            return query.data.revokePaymentPointerKey
+            return query.data.revokeWalletAddressKey
           } else {
             throw new Error('Data was empty')
           }
@@ -256,8 +256,8 @@ describe('Payment Pointer Key Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toBe('404')
-      expect(response.message).toBe('Payment pointer key not found')
-      expect(response.paymentPointerKey).toBeNull()
+      expect(response.message).toBe('Wallet address key not found')
+      expect(response.walletAddressKey).toBeNull()
     })
   })
 })

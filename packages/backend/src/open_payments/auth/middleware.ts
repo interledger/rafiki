@@ -5,7 +5,7 @@ import {
 } from '@interledger/http-signature-utils'
 import Koa, { HttpError } from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
-import { HttpSigContext, PaymentPointerContext } from '../../app'
+import { HttpSigContext, WalletAddressContext } from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
@@ -45,7 +45,7 @@ export function createTokenIntrospectionMiddleware({
   requestAction: RequestAction
 }) {
   return async (
-    ctx: PaymentPointerContext,
+    ctx: WalletAddressContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
@@ -75,7 +75,7 @@ export function createTokenIntrospectionMiddleware({
       const access = tokenInfo.access.find((access: Access) => {
         if (
           access.type !== requestType ||
-          (access.identifier && access.identifier !== ctx.paymentPointer.url)
+          (access.identifier && access.identifier !== ctx.walletAddress.url)
         ) {
           return false
         }

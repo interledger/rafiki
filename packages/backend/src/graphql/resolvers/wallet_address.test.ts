@@ -12,26 +12,26 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  PaymentPointerError,
+  WalletAddressError,
   errorToCode,
   errorToMessage
-} from '../../open_payments/payment_pointer/errors'
+} from '../../open_payments/wallet_address/errors'
 import {
-  PaymentPointer as PaymentPointerModel,
-  PaymentPointerEvent,
-  PaymentPointerEventType
-} from '../../open_payments/payment_pointer/model'
-import { PaymentPointerService } from '../../open_payments/payment_pointer/service'
+  WalletAddress as WalletAddressModel,
+  WalletAddressEvent,
+  WalletAddressEventType
+} from '../../open_payments/wallet_address/model'
+import { WalletAddressService } from '../../open_payments/wallet_address/service'
 import { createAsset } from '../../tests/asset'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import {
-  CreatePaymentPointerInput,
-  CreatePaymentPointerMutationResponse,
-  TriggerPaymentPointerEventsMutationResponse,
-  PaymentPointer,
-  PaymentPointerStatus,
-  UpdatePaymentPointerMutationResponse,
-  PaymentPointersConnection
+  CreateWalletAddressInput,
+  CreateWalletAddressMutationResponse,
+  TriggerWalletAddressEventsMutationResponse,
+  WalletAddress,
+  WalletAddressStatus,
+  UpdateWalletAddressMutationResponse,
+  WalletAddressesConnection
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
 
@@ -39,13 +39,13 @@ describe('Payment Pointer Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
-  let paymentPointerService: PaymentPointerService
+  let walletAddressService: WalletAddressService
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     knex = appContainer.knex
-    paymentPointerService = await deps.use('paymentPointerService')
+    walletAddressService = await deps.use('walletAddressService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -59,7 +59,7 @@ describe('Payment Pointer Resolvers', (): void => {
 
   describe('Create Payment Pointer', (): void => {
     let asset: Asset
-    let input: CreatePaymentPointerInput
+    let input: CreateWalletAddressInput
 
     beforeEach(async (): Promise<void> => {
       asset = await createAsset(deps)
@@ -80,14 +80,14 @@ describe('Payment Pointer Resolvers', (): void => {
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation CreatePaymentPointer(
-                $input: CreatePaymentPointerInput!
+              mutation CreateWalletAddress(
+                $input: CreateWalletAddressInput!
               ) {
-                createPaymentPointer(input: $input) {
+                createWalletAddress(input: $input) {
                   code
                   success
                   message
-                  paymentPointer {
+                  walletAddress {
                     id
                     asset {
                       code
@@ -103,9 +103,9 @@ describe('Payment Pointer Resolvers', (): void => {
               input
             }
           })
-          .then((query): CreatePaymentPointerMutationResponse => {
+          .then((query): CreateWalletAddressMutationResponse => {
             if (query.data) {
-              return query.data.createPaymentPointer
+              return query.data.createWalletAddress
             } else {
               throw new Error('Data was empty')
             }
@@ -113,10 +113,10 @@ describe('Payment Pointer Resolvers', (): void => {
 
         expect(response.success).toBe(true)
         expect(response.code).toEqual('200')
-        assert.ok(response.paymentPointer)
-        expect(response.paymentPointer).toEqual({
-          __typename: 'PaymentPointer',
-          id: response.paymentPointer.id,
+        assert.ok(response.walletAddress)
+        expect(response.walletAddress).toEqual({
+          __typename: 'WalletAddress',
+          id: response.walletAddress.id,
           url: input.url,
           asset: {
             __typename: 'Asset',
@@ -126,9 +126,9 @@ describe('Payment Pointer Resolvers', (): void => {
           publicName: publicName ?? null
         })
         await expect(
-          paymentPointerService.get(response.paymentPointer.id)
+          walletAddressService.get(response.walletAddress.id)
         ).resolves.toMatchObject({
-          id: response.paymentPointer.id,
+          id: response.walletAddress.id,
           asset
         })
       }
@@ -136,19 +136,19 @@ describe('Payment Pointer Resolvers', (): void => {
 
     test.each`
       error
-      ${PaymentPointerError.InvalidUrl}
-      ${PaymentPointerError.UnknownAsset}
+      ${WalletAddressError.InvalidUrl}
+      ${WalletAddressError.UnknownAsset}
     `('4XX - $error', async ({ error }): Promise<void> => {
-      jest.spyOn(paymentPointerService, 'create').mockResolvedValueOnce(error)
+      jest.spyOn(walletAddressService, 'create').mockResolvedValueOnce(error)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
-              createPaymentPointer(input: $input) {
+            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              createWalletAddress(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                walletAddress {
                   id
                   asset {
                     code
@@ -162,9 +162,9 @@ describe('Payment Pointer Resolvers', (): void => {
             input
           }
         })
-        .then((query): CreatePaymentPointerMutationResponse => {
+        .then((query): CreateWalletAddressMutationResponse => {
           if (query.data) {
-            return query.data.createPaymentPointer
+            return query.data.createWalletAddress
           } else {
             throw new Error('Data was empty')
           }
@@ -172,28 +172,28 @@ describe('Payment Pointer Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual(
-        errorToCode[error as PaymentPointerError].toString()
+        errorToCode[error as WalletAddressError].toString()
       )
       expect(response.message).toEqual(
-        errorToMessage[error as PaymentPointerError]
+        errorToMessage[error as WalletAddressError]
       )
     })
 
     test('500', async (): Promise<void> => {
       jest
-        .spyOn(paymentPointerService, 'create')
+        .spyOn(walletAddressService, 'create')
         .mockImplementationOnce(async (_args) => {
           throw new Error('unexpected')
         })
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
-              createPaymentPointer(input: $input) {
+            mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+              createWalletAddress(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                walletAddress {
                   id
                   asset {
                     code
@@ -207,9 +207,9 @@ describe('Payment Pointer Resolvers', (): void => {
             input
           }
         })
-        .then((query): CreatePaymentPointerMutationResponse => {
+        .then((query): CreateWalletAddressMutationResponse => {
           if (query.data) {
-            return query.data.createPaymentPointer
+            return query.data.createWalletAddress
           } else {
             throw new Error('Data was empty')
           }
@@ -221,27 +221,27 @@ describe('Payment Pointer Resolvers', (): void => {
   })
 
   describe('Update Payment Pointer', (): void => {
-    let paymentPointer: PaymentPointerModel
+    let walletAddress: WalletAddressModel
 
     beforeEach(async (): Promise<void> => {
-      paymentPointer = await createPaymentPointer(deps)
+      walletAddress = await createWalletAddress(deps)
     })
 
     test('Can update a payment pointer', async (): Promise<void> => {
       const updateOptions = {
-        id: paymentPointer.id,
-        status: PaymentPointerStatus.Inactive,
+        id: walletAddress.id,
+        status: WalletAddressStatus.Inactive,
         publicName: 'Public Payment Pointer'
       }
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdatePaymentPointer($input: UpdatePaymentPointerInput!) {
-              updatePaymentPointer(input: $input) {
+            mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+              updateWalletAddress(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                walletAddress {
                   id
                   status
                   publicName
@@ -253,9 +253,9 @@ describe('Payment Pointer Resolvers', (): void => {
             input: updateOptions
           }
         })
-        .then((query): UpdatePaymentPointerMutationResponse => {
+        .then((query): UpdateWalletAddressMutationResponse => {
           if (query.data) {
-            return query.data.updatePaymentPointer
+            return query.data.updateWalletAddress
           } else {
             throw new Error('Data was empty')
           }
@@ -263,49 +263,49 @@ describe('Payment Pointer Resolvers', (): void => {
 
       expect(response.success).toBe(true)
       expect(response.code).toEqual('200')
-      expect(response.paymentPointer).toEqual({
-        __typename: 'PaymentPointer',
+      expect(response.walletAddress).toEqual({
+        __typename: 'WalletAddress',
         ...updateOptions
       })
 
-      const updatedPaymentPointer = await paymentPointerService.get(
-        paymentPointer.id
+      const updatedWalletAddress = await walletAddressService.get(
+        walletAddress.id
       )
-      assert.ok(updatedPaymentPointer)
+      assert.ok(updatedWalletAddress)
 
       const {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         deactivatedAt,
         updatedAt: originalUpdatedAt,
         ...originalRest
-      } = paymentPointer
-      expect(updatedPaymentPointer).toMatchObject({
+      } = walletAddress
+      expect(updatedWalletAddress).toMatchObject({
         ...originalRest,
         publicName: updateOptions.publicName
       })
-      expect(updatedPaymentPointer.deactivatedAt).toBeDefined()
-      expect(updatedPaymentPointer.isActive).toBe(false)
-      expect(updatedPaymentPointer.updatedAt.getTime()).toBeGreaterThan(
+      expect(updatedWalletAddress.deactivatedAt).toBeDefined()
+      expect(updatedWalletAddress.isActive).toBe(false)
+      expect(updatedWalletAddress.updatedAt.getTime()).toBeGreaterThan(
         originalUpdatedAt.getTime()
       )
     })
 
     test.each`
       error
-      ${PaymentPointerError.InvalidUrl}
-      ${PaymentPointerError.UnknownAsset}
-      ${PaymentPointerError.UnknownPaymentPointer}
+      ${WalletAddressError.InvalidUrl}
+      ${WalletAddressError.UnknownAsset}
+      ${WalletAddressError.UnknownWalletAddress}
     `('4XX - $error', async ({ error }): Promise<void> => {
-      jest.spyOn(paymentPointerService, 'update').mockResolvedValueOnce(error)
+      jest.spyOn(walletAddressService, 'update').mockResolvedValueOnce(error)
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdatePaymentPointer($input: UpdatePaymentPointerInput!) {
-              updatePaymentPointer(input: $input) {
+            mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+              updateWalletAddress(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                walletAddress {
                   id
                 }
               }
@@ -313,14 +313,14 @@ describe('Payment Pointer Resolvers', (): void => {
           `,
           variables: {
             input: {
-              id: paymentPointer.id,
-              status: PaymentPointerStatus.Inactive
+              id: walletAddress.id,
+              status: WalletAddressStatus.Inactive
             }
           }
         })
-        .then((query): UpdatePaymentPointerMutationResponse => {
+        .then((query): UpdateWalletAddressMutationResponse => {
           if (query.data) {
-            return query.data.updatePaymentPointer
+            return query.data.updateWalletAddress
           } else {
             throw new Error('Data was empty')
           }
@@ -328,28 +328,28 @@ describe('Payment Pointer Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual(
-        errorToCode[error as PaymentPointerError].toString()
+        errorToCode[error as WalletAddressError].toString()
       )
       expect(response.message).toEqual(
-        errorToMessage[error as PaymentPointerError]
+        errorToMessage[error as WalletAddressError]
       )
     })
 
     test('Returns error if unexpected error', async (): Promise<void> => {
       jest
-        .spyOn(paymentPointerService, 'update')
+        .spyOn(walletAddressService, 'update')
         .mockImplementationOnce(async () => {
           throw new Error('unexpected')
         })
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation UpdatePaymentPointer($input: UpdatePaymentPointerInput!) {
-              updatePaymentPointer(input: $input) {
+            mutation UpdateWalletAddress($input: UpdateWalletAddressInput!) {
+              updateWalletAddress(input: $input) {
                 code
                 success
                 message
-                paymentPointer {
+                walletAddress {
                   id
                 }
               }
@@ -357,14 +357,14 @@ describe('Payment Pointer Resolvers', (): void => {
           `,
           variables: {
             input: {
-              id: paymentPointer.id,
-              status: PaymentPointerStatus.Inactive
+              id: walletAddress.id,
+              status: WalletAddressStatus.Inactive
             }
           }
         })
-        .then((query): UpdatePaymentPointerMutationResponse => {
+        .then((query): UpdateWalletAddressMutationResponse => {
           if (query.data) {
-            return query.data.updatePaymentPointer
+            return query.data.updateWalletAddress
           } else {
             throw new Error('Data was empty')
           }
@@ -384,14 +384,14 @@ describe('Payment Pointer Resolvers', (): void => {
     `(
       'Can get an payment pointer (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
-        const paymentPointer = await createPaymentPointer(deps, {
+        const walletAddress = await createWalletAddress(deps, {
           publicName
         })
         const query = await appContainer.apolloClient
           .query({
             query: gql`
-              query PaymentPointer($paymentPointerId: String!) {
-                paymentPointer(id: $paymentPointerId) {
+              query WalletAddress($walletAddressId: String!) {
+                walletAddress(id: $walletAddressId) {
                   id
                   asset {
                     code
@@ -403,26 +403,26 @@ describe('Payment Pointer Resolvers', (): void => {
               }
             `,
             variables: {
-              paymentPointerId: paymentPointer.id
+              walletAddressId: walletAddress.id
             }
           })
-          .then((query): PaymentPointer => {
+          .then((query): WalletAddress => {
             if (query.data) {
-              return query.data.paymentPointer
+              return query.data.walletAddress
             } else {
               throw new Error('Data was empty')
             }
           })
 
         expect(query).toEqual({
-          __typename: 'PaymentPointer',
-          id: paymentPointer.id,
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
           asset: {
             __typename: 'Asset',
-            code: paymentPointer.asset.code,
-            scale: paymentPointer.asset.scale
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
           },
-          url: paymentPointer.url,
+          url: walletAddress.url,
           publicName: publicName ?? null
         })
       }
@@ -432,19 +432,19 @@ describe('Payment Pointer Resolvers', (): void => {
       const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointer($paymentPointerId: String!) {
-              paymentPointer(id: $paymentPointerId) {
+            query WalletAddress($walletAddressId: String!) {
+              walletAddress(id: $walletAddressId) {
                 id
               }
             }
           `,
           variables: {
-            paymentPointerId: uuid()
+            walletAddressId: uuid()
           }
         })
-        .then((query): PaymentPointer => {
+        .then((query): WalletAddress => {
           if (query.data) {
-            return query.data.paymentPointer
+            return query.data.walletAddress
           } else {
             throw new Error('Data was empty')
           }
@@ -455,20 +455,20 @@ describe('Payment Pointer Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createPaymentPointer(deps),
-      pagedQuery: 'paymentPointers'
+      createModel: () => createWalletAddress(deps),
+      pagedQuery: 'walletAddresses'
     })
 
     test('Can get page of payment pointers', async (): Promise<void> => {
-      const paymentPointers: PaymentPointerModel[] = []
+      const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
-        paymentPointers.push(await createPaymentPointer(deps))
+        walletAddresses.push(await createWalletAddress(deps))
       }
       const query = await appContainer.apolloClient
         .query({
           query: gql`
-            query PaymentPointers {
-              paymentPointers {
+            query WalletAddresses {
+              walletAddresses {
                 edges {
                   node {
                     id
@@ -485,9 +485,9 @@ describe('Payment Pointer Resolvers', (): void => {
             }
           `
         })
-        .then((query): PaymentPointersConnection => {
+        .then((query): WalletAddressesConnection => {
           if (query.data) {
-            return query.data.paymentPointers
+            return query.data.walletAddresses
           } else {
             throw new Error('Data was empty')
           }
@@ -495,18 +495,18 @@ describe('Payment Pointer Resolvers', (): void => {
 
       expect(query.edges).toHaveLength(2)
       query.edges.forEach((edge, idx) => {
-        const paymentPointer = paymentPointers[idx]
-        expect(edge.cursor).toEqual(paymentPointer.id)
+        const walletAddress = walletAddresses[idx]
+        expect(edge.cursor).toEqual(walletAddress.id)
         expect(edge.node).toEqual({
-          __typename: 'PaymentPointer',
-          id: paymentPointer.id,
+          __typename: 'WalletAddress',
+          id: walletAddress.id,
           asset: {
             __typename: 'Asset',
-            code: paymentPointer.asset.code,
-            scale: paymentPointer.asset.scale
+            code: walletAddress.asset.code,
+            scale: walletAddress.asset.scale
           },
-          url: paymentPointer.url,
-          publicName: paymentPointer.publicName
+          url: walletAddress.url,
+          publicName: walletAddress.publicName
         })
       })
     })
@@ -521,33 +521,33 @@ describe('Payment Pointer Resolvers', (): void => {
       'Can trigger payment pointer events (limit: $limit)',
       async ({ limit, count }): Promise<void> => {
         const accountingService = await deps.use('accountingService')
-        const paymentPointers: PaymentPointerModel[] = []
+        const walletAddresses: WalletAddressModel[] = []
         const withdrawalAmount = BigInt(10)
         for (let i = 0; i < 3; i++) {
-          const paymentPointer = await createPaymentPointer(deps, {
+          const walletAddress = await createWalletAddress(deps, {
             createLiquidityAccount: true
           })
           if (i) {
             await expect(
               accountingService.createDeposit({
                 id: uuid(),
-                account: paymentPointer,
+                account: walletAddress,
                 amount: withdrawalAmount
               })
             ).resolves.toBeUndefined()
-            await paymentPointer.$query(knex).patch({
+            await walletAddress.$query(knex).patch({
               processAt: new Date()
             })
           }
-          paymentPointers.push(paymentPointer)
+          walletAddresses.push(walletAddress)
         }
         const response = await appContainer.apolloClient
           .mutate({
             mutation: gql`
-              mutation TriggerPaymentPointerEvents(
-                $input: TriggerPaymentPointerEventsInput!
+              mutation TriggerWalletAddressEvents(
+                $input: TriggerWalletAddressEventsInput!
               ) {
-                triggerPaymentPointerEvents(input: $input) {
+                triggerWalletAddressEvents(input: $input) {
                   code
                   success
                   message
@@ -562,9 +562,9 @@ describe('Payment Pointer Resolvers', (): void => {
               }
             }
           })
-          .then((query): TriggerPaymentPointerEventsMutationResponse => {
+          .then((query): TriggerWalletAddressEventsMutationResponse => {
             if (query.data) {
-              return query.data.triggerPaymentPointerEvents
+              return query.data.triggerWalletAddressEvents
             } else {
               throw new Error('Data was empty')
             }
@@ -574,13 +574,13 @@ describe('Payment Pointer Resolvers', (): void => {
         expect(response.code).toEqual('200')
         expect(response.count).toEqual(count)
         await expect(
-          PaymentPointerEvent.query(knex).where({
-            type: PaymentPointerEventType.PaymentPointerWebMonetization
+          WalletAddressEvent.query(knex).where({
+            type: WalletAddressEventType.WalletAddressWebMonetization
           })
         ).resolves.toHaveLength(count)
         for (let i = 1; i <= count; i++) {
           await expect(
-            paymentPointerService.get(paymentPointers[i].id)
+            walletAddressService.get(walletAddresses[i].id)
           ).resolves.toMatchObject({
             processAt: null,
             totalEventsAmount: withdrawalAmount
@@ -591,15 +591,15 @@ describe('Payment Pointer Resolvers', (): void => {
 
     test('500', async (): Promise<void> => {
       jest
-        .spyOn(paymentPointerService, 'triggerEvents')
+        .spyOn(walletAddressService, 'triggerEvents')
         .mockRejectedValueOnce(new Error('unexpected'))
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
-            mutation TriggerPaymentPointerEvents(
-              $input: TriggerPaymentPointerEventsInput!
+            mutation TriggerWalletAddressEvents(
+              $input: TriggerWalletAddressEventsInput!
             ) {
-              triggerPaymentPointerEvents(input: $input) {
+              triggerWalletAddressEvents(input: $input) {
                 code
                 success
                 message
@@ -613,9 +613,9 @@ describe('Payment Pointer Resolvers', (): void => {
             }
           }
         })
-        .then((query): TriggerPaymentPointerEventsMutationResponse => {
+        .then((query): TriggerWalletAddressEventsMutationResponse => {
           if (query.data) {
-            return query.data.triggerPaymentPointerEvents
+            return query.data.triggerWalletAddressEvents
           } else {
             throw new Error('Data was empty')
           }

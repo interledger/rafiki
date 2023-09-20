@@ -9,7 +9,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
 import { createContext } from '../../tests/context'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 
 describe('Connection Middleware', (): void => {
@@ -55,11 +55,11 @@ describe('Connection Middleware', (): void => {
 
   test('sets the context incomingPayment and calls next', async (): Promise<void> => {
     const asset = await createAsset(deps)
-    const { id: paymentPointerId } = await createPaymentPointer(deps, {
+    const { id: walletAddressId } = await createWalletAddress(deps, {
       assetId: asset.id
     })
     const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId
+      walletAddressId
     })
     assert.ok(incomingPayment.connectionId)
     ctx.params.id = incomingPayment.connectionId

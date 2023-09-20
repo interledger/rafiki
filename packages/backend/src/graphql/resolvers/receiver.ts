@@ -17,7 +17,7 @@ export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] 
 
     try {
       const receiverOrError = await receiverService.create({
-        paymentPointerUrl: args.input.paymentPointerUrl,
+        walletAddressUrl: args.input.walletAddressUrl,
         expiresAt: args.input.expiresAt
           ? new Date(args.input.expiresAt)
           : undefined,
@@ -57,7 +57,7 @@ export function receiverToGraphql(receiver: Receiver): SchemaReceiver {
 
   return {
     id: receiver.incomingPayment.id,
-    paymentPointerUrl: receiver.incomingPayment.paymentPointer,
+    walletAddressUrl: receiver.incomingPayment.paymentPointer,
     expiresAt: receiver.incomingPayment.expiresAt?.toISOString(),
     incomingAmount: receiver.incomingPayment.incomingAmount,
     receivedAmount: receiver.incomingPayment.receivedAmount,

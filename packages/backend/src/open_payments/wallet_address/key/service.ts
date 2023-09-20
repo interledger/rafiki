@@ -1,27 +1,27 @@
 import { TransactionOrKnex } from 'objection'
 
-import { PaymentPointerKey } from './model'
+import { WalletAddressKey } from './model'
 import { BaseService } from '../../../shared/baseService'
 import { JWK } from '@interledger/http-signature-utils'
 
-export interface PaymentPointerKeyService {
-  create(options: CreateOptions): Promise<PaymentPointerKey>
-  revoke(id: string): Promise<PaymentPointerKey | undefined>
-  getKeysByPaymentPointerId(
-    paymentPointerId: string
-  ): Promise<PaymentPointerKey[]>
+export interface WalletAddressKeyService {
+  create(options: CreateOptions): Promise<WalletAddressKey>
+  revoke(id: string): Promise<WalletAddressKey | undefined>
+  getKeysByWalletAddressId(
+    walletAddressId: string
+  ): Promise<WalletAddressKey[]>
 }
 
 interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
 }
 
-export async function createPaymentPointerKeyService({
+export async function createWalletAddressKeyService({
   logger,
   knex
-}: ServiceDependencies): Promise<PaymentPointerKeyService> {
+}: ServiceDependencies): Promise<WalletAddressKeyService> {
   const log = logger.child({
-    service: 'PaymentPointerKeyService'
+    service: 'WalletAddressKeyService'
   })
   const deps: ServiceDependencies = {
     logger: log,
@@ -30,22 +30,22 @@ export async function createPaymentPointerKeyService({
   return {
     create: (options) => create(deps, options),
     revoke: (id) => revoke(deps, id),
-    getKeysByPaymentPointerId: (paymentPointerId) =>
-      getKeysByPaymentPointerId(deps, paymentPointerId)
+    getKeysByWalletAddressId: (walletAddressId) =>
+      getKeysByWalletAddressId(deps, walletAddressId)
   }
 }
 
 interface CreateOptions {
-  paymentPointerId: string
+  walletAddressId: string
   jwk: JWK
 }
 
 async function create(
   deps: ServiceDependencies,
   options: CreateOptions
-): Promise<PaymentPointerKey> {
-  const key = await PaymentPointerKey.query(deps.knex).insertAndFetch({
-    paymentPointerId: options.paymentPointerId,
+): Promise<WalletAddressKey> {
+  const key = await WalletAddressKey.query(deps.knex).insertAndFetch({
+    walletAddressId: options.walletAddressId,
     jwk: options.jwk
   })
   return key
@@ -54,8 +54,8 @@ async function create(
 async function revoke(
   deps: ServiceDependencies,
   id: string
-): Promise<PaymentPointerKey | undefined> {
-  const key = await PaymentPointerKey.query(deps.knex).findById(id)
+): Promise<WalletAddressKey | undefined> {
+  const key = await WalletAddressKey.query(deps.knex).findById(id)
   if (!key) {
     return undefined
   } else if (key.revoked) {
@@ -75,12 +75,12 @@ async function revoke(
   }
 }
 
-async function getKeysByPaymentPointerId(
+async function getKeysByWalletAddressId(
   deps: ServiceDependencies,
-  paymentPointerId: string
-): Promise<PaymentPointerKey[]> {
-  const keys = await PaymentPointerKey.query(deps.knex).where({
-    paymentPointerId,
+  walletAddressId: string
+): Promise<WalletAddressKey[]> {
+  const keys = await WalletAddressKey.query(deps.knex).where({
+    walletAddressId,
     revoked: false
   })
   return keys

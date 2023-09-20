@@ -7,19 +7,19 @@ import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
-import { AppServices, PaymentPointerKeysContext } from '../../../app'
+import { AppServices, WalletAddressKeysContext } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { PaymentPointerKeyRoutes } from './routes'
-import { PaymentPointerKeyService } from './service'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import { WalletAddressKeyRoutes } from './routes'
+import { WalletAddressKeyService } from './service'
+import { createWalletAddress } from '../../../tests/walletAddress'
 
 const TEST_KEY = generateJwk({ keyId: uuid() })
 
-describe('Payment Pointer Keys Routes', (): void => {
+describe('Wallet Address Keys Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let paymentPointerKeyService: PaymentPointerKeyService
-  let paymentPointerKeyRoutes: PaymentPointerKeyRoutes
+  let walletAddressKeyService: WalletAddressKeyService
+  let walletAddressKeyRoutes: WalletAddressKeyRoutes
   const mockMessageProducer = {
     send: jest.fn()
   }
@@ -30,11 +30,11 @@ describe('Payment Pointer Keys Routes', (): void => {
     appContainer = await createTestApp(deps)
     const { resourceServerSpec } = await deps.use('openApi')
     jestOpenAPI(resourceServerSpec)
-    paymentPointerKeyService = await deps.use('paymentPointerKeyService')
+    walletAddressKeyService = await deps.use('walletAddressKeyService')
   })
 
   beforeEach(async (): Promise<void> => {
-    paymentPointerKeyRoutes = await deps.use('paymentPointerKeyRoutes')
+    walletAddressKeyRoutes = await deps.use('walletAddressKeyRoutes')
   })
 
   afterEach(async (): Promise<void> => {
@@ -46,24 +46,24 @@ describe('Payment Pointer Keys Routes', (): void => {
   })
 
   describe('getKeys', (): void => {
-    test('returns 200 with all keys for a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps)
+    test('returns 200 with all keys for a wallet address', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps)
 
       const keyOption = {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         jwk: TEST_KEY
       }
-      const key = await paymentPointerKeyService.create(keyOption)
+      const key = await walletAddressKeyService.create(keyOption)
 
-      const ctx = createContext<PaymentPointerKeysContext>({
+      const ctx = createContext<WalletAddressKeysContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.paymentPointer = paymentPointer
-      ctx.paymentPointerUrl = paymentPointer.url
+      ctx.walletAddress = walletAddress
+      ctx.walletAddressUrl = walletAddress.url
 
       await expect(
-        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
       ).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
@@ -71,18 +71,18 @@ describe('Payment Pointer Keys Routes', (): void => {
       })
     })
 
-    test('returns 200 with empty array if no keys for a payment pointer', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps)
+    test('returns 200 with empty array if no keys for a wallet address', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps)
 
-      const ctx = createContext<PaymentPointerKeysContext>({
+      const ctx = createContext<WalletAddressKeysContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.paymentPointer = paymentPointer
-      ctx.paymentPointerUrl = paymentPointer.url
+      ctx.walletAddress = walletAddress
+      ctx.walletAddressUrl = walletAddress.url
 
       await expect(
-        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
       ).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         keys: []
@@ -96,29 +96,29 @@ describe('Payment Pointer Keys Routes', (): void => {
         keyId: config.keyId
       })
 
-      const ctx = createContext<PaymentPointerKeysContext>({
+      const ctx = createContext<WalletAddressKeysContext>({
         headers: { Accept: 'application/json' },
         url: '/jwks.json'
       })
-      ctx.paymentPointerUrl = config.paymentPointerUrl
+      ctx.walletAddressUrl = config.walletAddressUrl
 
       await expect(
-        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
       ).resolves.toBeUndefined()
       expect(ctx.body).toEqual({
         keys: [jwk]
       })
     })
 
-    test('returns 404 if payment pointer does not exist', async (): Promise<void> => {
-      const ctx = createContext<PaymentPointerKeysContext>({
+    test('returns 404 if wallet address does not exist', async (): Promise<void> => {
+      const ctx = createContext<WalletAddressKeysContext>({
         headers: { Accept: 'application/json' },
         url: `/jwks.json`
       })
-      ctx.paymentPointer = undefined
+      ctx.walletAddress = undefined
 
       await expect(
-        paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+        walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
       ).rejects.toHaveProperty('status', 404)
     })
   })

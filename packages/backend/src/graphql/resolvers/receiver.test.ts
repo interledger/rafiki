@@ -37,7 +37,7 @@ describe('Receiver Resolver', (): void => {
       assetCode: 'USD',
       assetScale: 2
     }
-    const paymentPointer = mockPaymentPointer()
+    const walletAddress = mockPaymentPointer()
 
     test.each`
       incomingAmount | expiresAt                        | metadata
@@ -48,8 +48,8 @@ describe('Receiver Resolver', (): void => {
       async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
         const receiver = Receiver.fromIncomingPayment(
           mockIncomingPaymentWithConnection({
-            id: `${paymentPointer.id}/incoming-payments/${uuid()}`,
-            paymentPointer: paymentPointer.id,
+            id: `${walletAddress.id}/incoming-payments/${uuid()}`,
+            paymentPointer: walletAddress.id,
             metadata,
             expiresAt: expiresAt?.toISOString(),
             incomingAmount: incomingAmount
@@ -63,7 +63,7 @@ describe('Receiver Resolver', (): void => {
           .mockResolvedValueOnce(receiver)
 
         const input = {
-          paymentPointerUrl: paymentPointer.id,
+          walletAddressUrl: walletAddress.id,
           incomingAmount,
           expiresAt,
           metadata
@@ -79,7 +79,7 @@ describe('Receiver Resolver', (): void => {
                   message
                   receiver {
                     id
-                    paymentPointerUrl
+                    walletAddressUrl
                     completed
                     expiresAt
                     incomingAmount {
@@ -112,7 +112,7 @@ describe('Receiver Resolver', (): void => {
           receiver: {
             __typename: 'Receiver',
             id: receiver.incomingPayment?.id,
-            paymentPointerUrl: receiver.incomingPayment?.paymentPointer,
+            walletAddressUrl: receiver.incomingPayment?.paymentPointer,
             completed: false,
             expiresAt:
               receiver.incomingPayment?.expiresAt?.toISOString() || null,
@@ -138,10 +138,10 @@ describe('Receiver Resolver', (): void => {
     test('returns error if error returned when creating receiver', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(receiverService, 'create')
-        .mockResolvedValueOnce(ReceiverError.UnknownPaymentPointer)
+        .mockResolvedValueOnce(ReceiverError.UnknownWalletAddress)
 
       const input = {
-        paymentPointerUrl: paymentPointer.id
+        walletAddressUrl: walletAddress.id
       }
 
       const query = await appContainer.apolloClient
@@ -154,7 +154,7 @@ describe('Receiver Resolver', (): void => {
                 message
                 receiver {
                   id
-                  paymentPointerUrl
+                  walletAddressUrl
                   completed
                   expiresAt
                   incomingAmount {
@@ -183,7 +183,7 @@ describe('Receiver Resolver', (): void => {
         __typename: 'CreateReceiverResponse',
         code: '404',
         success: false,
-        message: 'unknown payment pointer',
+        message: 'unknown wallet address',
         receiver: null
       })
     })
@@ -196,7 +196,7 @@ describe('Receiver Resolver', (): void => {
         })
 
       const input = {
-        paymentPointerUrl: paymentPointer.id
+        walletAddressUrl: walletAddress.id
       }
 
       const query = await appContainer.apolloClient
@@ -209,7 +209,7 @@ describe('Receiver Resolver', (): void => {
                 message
                 receiver {
                   id
-                  paymentPointerUrl
+                  walletAddressUrl
                   completed
                   expiresAt
                   incomingAmount {

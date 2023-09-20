@@ -2,19 +2,19 @@ import jestOpenAPI from 'jest-openapi'
 import { IocContract } from '@adonisjs/fold'
 import { faker } from '@faker-js/faker'
 import { initIocContainer } from '../../'
-import { AppServices, PaymentPointerContext } from '../../app'
+import { AppServices, WalletAddressContext } from '../../app'
 import { Config, IAppConfig } from '../../config/app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { PaymentPointerRoutes } from './routes'
+import { WalletAddressRoutes } from './routes'
 
-describe('Payment Pointer Routes', (): void => {
+describe('Wallet Address Routes', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let config: IAppConfig
-  let paymentPointerRoutes: PaymentPointerRoutes
+  let walletAddressRoutes: WalletAddressRoutes
 
   beforeAll(async (): Promise<void> => {
     config = Config
@@ -27,7 +27,7 @@ describe('Payment Pointer Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     config = await deps.use('config')
-    paymentPointerRoutes = await deps.use('paymentPointerRoutes')
+    walletAddressRoutes = await deps.use('walletAddressRoutes')
   })
 
   afterEach(async (): Promise<void> => {
@@ -39,33 +39,33 @@ describe('Payment Pointer Routes', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns 404 for nonexistent payment pointer', async (): Promise<void> => {
-      const ctx = createContext<PaymentPointerContext>({
+    test('returns 404 for nonexistent wallet address', async (): Promise<void> => {
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' }
       })
-      await expect(paymentPointerRoutes.get(ctx)).rejects.toHaveProperty(
+      await expect(walletAddressRoutes.get(ctx)).rejects.toHaveProperty(
         'status',
         404
       )
     })
 
-    test('returns 200 with an open payments payment pointer', async (): Promise<void> => {
-      const paymentPointer = await createPaymentPointer(deps, {
+    test('returns 200 with an open payments wallet address', async (): Promise<void> => {
+      const walletAddress = await createWalletAddress(deps, {
         publicName: faker.person.firstName()
       })
 
-      const ctx = createContext<PaymentPointerContext>({
+      const ctx = createContext<WalletAddressContext>({
         headers: { Accept: 'application/json' },
         url: '/'
       })
-      ctx.paymentPointer = paymentPointer
-      await expect(paymentPointerRoutes.get(ctx)).resolves.toBeUndefined()
+      ctx.walletAddress = walletAddress
+      await expect(walletAddressRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: paymentPointer.url,
-        publicName: paymentPointer.publicName,
-        assetCode: paymentPointer.asset.code,
-        assetScale: paymentPointer.asset.scale,
+        id: walletAddress.url,
+        publicName: walletAddress.publicName,
+        assetCode: walletAddress.asset.code,
+        assetScale: walletAddress.asset.scale,
         authServer: 'https://auth.wallet.example/authorize'
       })
     })

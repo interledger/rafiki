@@ -2,7 +2,7 @@ import type { ActionArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
 import {
   handleLowLiquidity,
-  handlePaymentPointerNotFound,
+  handleWalletAddressNotFound,
   WebHook
 } from '~/lib/webhooks.server'
 import {

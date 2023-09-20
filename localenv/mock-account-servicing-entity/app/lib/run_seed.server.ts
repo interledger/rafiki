@@ -8,10 +8,10 @@ import {
   createAsset,
   createPeer,
   addPeerLiquidity,
-  createPaymentPointer,
-  createPaymentPointerKey,
-  addAssetLiquidity,
-  setFee
+  createWalletAddress,
+  createWalletAddressKey,
+  setFee,
+  addAssetLiquidity
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
@@ -92,27 +92,27 @@ export async function setupFromSeed(config: Config): Promise<void> {
         return
       }
 
-      const paymentPointer = await createPaymentPointer(
+      const walletAddress = await createWalletAddress(
         account.name,
         `https://${CONFIG.seed.self.hostname}/${account.path}`,
         accountAsset.id
       )
 
-      await mockAccounts.setPaymentPointer(
+      await mockAccounts.setWalletAddress(
         account.id,
-        paymentPointer.id,
-        paymentPointer.url
+        walletAddress.id,
+        walletAddress.url
       )
 
-      await createPaymentPointerKey({
-        paymentPointerId: paymentPointer.id,
+      await createWalletAddressKey({
+        walletAddressId: walletAddress.id,
         jwk: generateJwk({
           keyId: `keyid-${account.id}`,
           privateKey: config.key
         }) as unknown as string
       })
 
-      return paymentPointer
+      return walletAddress
     })
   )
   console.log('seed complete')

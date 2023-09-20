@@ -1,6 +1,6 @@
 import {
   ResolversTypes,
-  PaymentPointerResolvers,
+  WalletAddressResolvers,
   MutationResolvers,
   IncomingPayment as SchemaIncomingPayment,
   QueryResolvers
@@ -28,7 +28,7 @@ export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'
     return paymentToGraphql(payment)
   }
 
-export const getPaymentPointerIncomingPayments: PaymentPointerResolvers<ApolloContext>['incomingPayments'] =
+export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloContext>['incomingPayments'] =
   async (
     parent,
     args,
@@ -38,16 +38,16 @@ export const getPaymentPointerIncomingPayments: PaymentPointerResolvers<ApolloCo
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const incomingPayments = await incomingPaymentService.getPaymentPointerPage(
+    const incomingPayments = await incomingPaymentService.getWalletAddressPage(
       {
-        paymentPointerId: parent.id,
+        walletAddressId: parent.id,
         pagination: args
       }
     )
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        incomingPaymentService.getPaymentPointerPage({
-          paymentPointerId: parent.id as string,
+        incomingPaymentService.getWalletAddressPage({
+          walletAddressId: parent.id as string,
           pagination
         }),
       incomingPayments
@@ -74,7 +74,7 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
     )
     return incomingPaymentService
       .create({
-        paymentPointerId: args.input.paymentPointerId,
+        walletAddressId: args.input.walletAddressId,
         expiresAt: !args.input.expiresAt
           ? undefined
           : new Date(args.input.expiresAt),
@@ -106,7 +106,7 @@ export function paymentToGraphql(
 ): SchemaIncomingPayment {
   return {
     id: payment.id,
-    paymentPointerId: payment.walletAddressId,
+    walletAddressId: payment.walletAddressId,
     state: payment.state,
     expiresAt: payment.expiresAt.toISOString(),
     incomingAmount: payment.incomingAmount,

@@ -16,7 +16,7 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
-import { listSubresource } from '../../payment_pointer/routes'
+import { listSubresource } from '../../wallet_address/routes'
 import { Connection } from '../../connection/model'
 import { ConnectionService } from '../../connection/service'
 import {
@@ -25,7 +25,7 @@ import {
   IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
   IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
 } from '@interledger/open-payments'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { WalletAddress } from '../../wallet_address/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -66,7 +66,7 @@ async function getIncomingPayment(
     incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
       client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      paymentPointerId: ctx.paymentPointer.id
+      walletAddressId: ctx.walletAddress.id
     })
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
@@ -74,7 +74,7 @@ async function getIncomingPayment(
   if (!incomingPayment) return ctx.throw(404)
   const connection = deps.connectionService.get(incomingPayment)
   ctx.body = incomingPaymentToBody(
-    ctx.paymentPointer,
+    ctx.walletAddress,
     incomingPayment,
     connection
   )
@@ -98,7 +98,7 @@ async function createIncomingPayment(
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    paymentPointerId: ctx.paymentPointer.id,
+    walletAddressId: ctx.walletAddress.id,
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,
@@ -115,7 +115,7 @@ async function createIncomingPayment(
   ctx.status = 201
   const connection = deps.connectionService.get(incomingPaymentOrError)
   ctx.body = incomingPaymentToBody(
-    ctx.paymentPointer,
+    ctx.walletAddress,
     incomingPaymentOrError,
     connection
   )
@@ -140,7 +140,7 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(ctx.paymentPointer, incomingPaymentOrError)
+  ctx.body = incomingPaymentToBody(ctx.walletAddress, incomingPaymentOrError)
 }
 
 async function listIncomingPayments(
@@ -150,10 +150,10 @@ async function listIncomingPayments(
   try {
     await listSubresource({
       ctx,
-      getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
+      getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
       toBody: (payment) =>
         incomingPaymentToBody(
-          ctx.paymentPointer,
+          ctx.walletAddress,
           payment,
           deps.connectionService.getUrl(payment)
         )
@@ -166,12 +166,12 @@ async function listIncomingPayments(
   }
 }
 function incomingPaymentToBody(
-  paymentPointer: PaymentPointer,
+  walletAddress: WalletAddress,
   incomingPayment: IncomingPayment,
   ilpStreamConnection?: Connection | string
 ):
   | OpenPaymentsIncomingPayment
   | OpenPaymentsIncomingPaymentWithConnection
   | OpenPaymentsIncomingPaymentWithConnectionUrl {
-  return incomingPayment.toOpenPaymentsType(paymentPointer, ilpStreamConnection)
+  return incomingPayment.toOpenPaymentsType(walletAddress, ilpStreamConnection)
 }

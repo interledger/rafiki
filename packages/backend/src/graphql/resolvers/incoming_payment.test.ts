@@ -8,7 +8,7 @@ import { Asset } from '../../asset/model'
 import { Config } from '../../config/app'
 import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { v4 as uuid } from 'uuid'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
@@ -30,7 +30,7 @@ import { Amount, serializeAmount } from '../../open_payments/amount'
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let paymentPointerId: string
+  let walletAddressId: string
   let incomingPaymentService: IncomingPaymentService
   let asset: Asset
 
@@ -47,10 +47,10 @@ describe('Incoming Payment Resolver', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Payment pointer incoming payments', (): void => {
+  describe('Wallet address incoming payments', (): void => {
     beforeEach(async (): Promise<void> => {
-      paymentPointerId = (
-        await createPaymentPointer(deps, { assetId: asset.id })
+      walletAddressId = (
+        await createWalletAddress(deps, { assetId: asset.id })
       ).id
     })
 
@@ -58,7 +58,7 @@ describe('Incoming Payment Resolver', (): void => {
       getClient: () => appContainer.apolloClient,
       createModel: () =>
         createIncomingPayment(deps, {
-          paymentPointerId,
+          walletAddressId,
           incomingAmount: {
             value: BigInt(123),
             assetCode: asset.code,
@@ -72,8 +72,8 @@ describe('Incoming Payment Resolver', (): void => {
         }),
       pagedQuery: 'incomingPayments',
       parent: {
-        query: 'paymentPointer',
-        getId: () => paymentPointerId
+        query: 'walletAddress',
+        getId: () => walletAddressId
       }
     })
   })
@@ -98,11 +98,11 @@ describe('Incoming Payment Resolver', (): void => {
       '200 ($desc)',
       async ({ metadata, expiresAt, withAmount }): Promise<void> => {
         const incomingAmount = withAmount ? amount : undefined
-        const { id: paymentPointerId } = await createPaymentPointer(deps, {
+        const { id: walletAddressId } = await createWalletAddress(deps, {
           assetId: asset.id
         })
         const payment = await createIncomingPayment(deps, {
-          paymentPointerId,
+          walletAddressId,
           metadata,
           expiresAt,
           incomingAmount
@@ -113,7 +113,7 @@ describe('Incoming Payment Resolver', (): void => {
           .mockResolvedValueOnce(payment)
 
         const input = {
-          paymentPointerId,
+          walletAddressId,
           incomingAmount,
           expiresAt,
           metadata
@@ -131,7 +131,7 @@ describe('Incoming Payment Resolver', (): void => {
                   message
                   payment {
                     id
-                    paymentPointerId
+                    walletAddressId
                     state
                     expiresAt
                     incomingAmount {
@@ -166,7 +166,7 @@ describe('Incoming Payment Resolver', (): void => {
           payment: {
             __typename: 'IncomingPayment',
             id: payment.id,
-            paymentPointerId,
+            walletAddressId,
             state: SchemaPaymentState.Pending,
             expiresAt:
               expiresAt?.toISOString() || payment.expiresAt.toISOString(),
@@ -191,10 +191,10 @@ describe('Incoming Payment Resolver', (): void => {
     test('400', async (): Promise<void> => {
       const createSpy = jest
         .spyOn(incomingPaymentService, 'create')
-        .mockResolvedValueOnce(IncomingPaymentError.UnknownPaymentPointer)
+        .mockResolvedValueOnce(IncomingPaymentError.UnknownWalletAddress)
 
       const input = {
-        paymentPointerId: uuid()
+        walletAddressId: uuid()
       }
 
       const query = await appContainer.apolloClient
@@ -222,7 +222,7 @@ describe('Incoming Payment Resolver', (): void => {
       expect(query.code).toBe('404')
       expect(query.success).toBe(false)
       expect(query.message).toBe(
-        errorToMessage[IncomingPaymentError.UnknownPaymentPointer]
+        errorToMessage[IncomingPaymentError.UnknownWalletAddress]
       )
       expect(query.payment).toBeNull()
       expect(createSpy).toHaveBeenCalledWith(input)
@@ -234,7 +234,7 @@ describe('Incoming Payment Resolver', (): void => {
         .mockRejectedValueOnce(new Error('unexpected'))
 
       const input = {
-        paymentPointerId: uuid()
+        walletAddressId: uuid()
       }
 
       const query = await appContainer.apolloClient
@@ -271,7 +271,7 @@ describe('Incoming Payment Resolver', (): void => {
     let payment: IncomingPaymentModel
 
     const createPayment = async (options: {
-      paymentPointerId: string
+      walletAddressId: string
       metadata?: Record<string, unknown>
     }): Promise<IncomingPaymentModel> => {
       return await createIncomingPayment(deps, {
@@ -290,10 +290,10 @@ describe('Incoming Payment Resolver', (): void => {
         externalRef: '202201'
       }
       beforeEach(async (): Promise<void> => {
-        const { id: paymentPointerId } = await createPaymentPointer(deps, {
+        const { id: walletAddressId } = await createWalletAddress(deps, {
           assetId: asset.id
         })
-        payment = await createPayment({ paymentPointerId, metadata })
+        payment = await createPayment({ walletAddressId, metadata })
       })
 
       // Query with each payment state
@@ -315,7 +315,7 @@ describe('Incoming Payment Resolver', (): void => {
               query IncomingPayment($paymentId: String!) {
                 incomingPayment(id: $paymentId) {
                   id
-                  paymentPointerId
+                  walletAddressId
                   state
                   expiresAt
                   incomingAmount {
@@ -341,7 +341,7 @@ describe('Incoming Payment Resolver', (): void => {
 
         expect(query).toEqual({
           id: payment.id,
-          paymentPointerId: payment.paymentPointerId,
+          walletAddressId: payment.walletAddressId,
           state,
           expiresAt: expiresAt.toISOString(),
           incomingAmount: {

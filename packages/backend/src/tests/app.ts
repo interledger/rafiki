@@ -38,7 +38,7 @@ export const createTestApp = async (
   config.autoPeeringServerPort = 0
   config.publicHost = 'https://wallet.example'
   config.openPaymentsUrl = 'https://op.example'
-  config.paymentPointerUrl = 'https://wallet.example/.well-known/pay'
+  config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
   const logger = createLogger({
     transport: {
       target: 'pino-pretty',

@@ -16,13 +16,13 @@ import { OutgoingPayment, OutgoingPaymentState } from './model'
 import { OutgoingPaymentRoutes, CreateBody } from './routes'
 import { serializeAmount } from '../../amount'
 import { Grant } from '../../auth/middleware'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { WalletAddress } from '../../wallet_address/model'
 import {
   getRouteTests,
   setup as setupContext
-} from '../../payment_pointer/model.test'
+} from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import { createWalletAddress } from '../../../tests/walletAddress'
 
 describe('Outgoing Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -31,9 +31,9 @@ describe('Outgoing Payment Routes', (): void => {
   let config: IAppConfig
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
-  let paymentPointer: PaymentPointer
+  let walletAddress: WalletAddress
 
-  const receivingPaymentPointer = `https://wallet.example/${uuid()}`
+  const receivingWalletAddress = `https://wallet.example/${uuid()}`
 
   const createPayment = async (options: {
     client?: string
@@ -42,12 +42,12 @@ describe('Outgoing Payment Routes', (): void => {
   }): Promise<OutgoingPayment> => {
     return await createOutgoingPayment(deps, {
       ...options,
-      paymentPointerId: paymentPointer.id,
-      receiver: `${receivingPaymentPointer}/incoming-payments/${uuid()}`,
+      walletAddressId: walletAddress.id,
+      receiver: `${receivingWalletAddress}/incoming-payments/${uuid()}`,
       debitAmount: {
         value: BigInt(56),
-        assetCode: paymentPointer.asset.code,
-        assetScale: paymentPointer.asset.scale
+        assetCode: walletAddress.asset.code,
+        assetScale: walletAddress.asset.scale
       },
       validDestination: false
     })
@@ -67,7 +67,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
-    paymentPointer = await createPaymentPointer(deps, { assetId: asset.id })
+    walletAddress = await createWalletAddress(deps, { assetId: asset.id })
   })
 
   afterEach(async (): Promise<void> => {
@@ -84,7 +84,7 @@ describe('Outgoing Payment Routes', (): void => {
     ${true}  | ${' failed'}
   `('get/list$description outgoing payment', ({ failed }): void => {
     getRouteTests({
-      getPaymentPointer: async () => paymentPointer,
+      getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) => {
         const outgoingPayment = await createPayment({
           client,
@@ -103,10 +103,10 @@ describe('Outgoing Payment Routes', (): void => {
       get: (ctx) => outgoingPaymentRoutes.get(ctx),
       getBody: (outgoingPayment) => {
         return {
-          id: `${paymentPointer.url}/outgoing-payments/${outgoingPayment.id}`,
-          paymentPointer: paymentPointer.url,
+          id: `${walletAddress.url}/outgoing-payments/${outgoingPayment.id}`,
+          walletAddress: walletAddress.url,
           receiver: outgoingPayment.receiver,
-          quoteId: outgoingPayment.quote.getUrl(paymentPointer),
+          quoteId: outgoingPayment.quote.getUrl(walletAddress),
           debitAmount: serializeAmount(outgoingPayment.debitAmount),
           sentAmount: serializeAmount(outgoingPayment.sentAmount),
           receiveAmount: serializeAmount(outgoingPayment.receiveAmount),
@@ -122,11 +122,11 @@ describe('Outgoing Payment Routes', (): void => {
 
     test('returns 500 for unexpected error', async (): Promise<void> => {
       jest
-        .spyOn(outgoingPaymentService, 'getPaymentPointerPage')
+        .spyOn(outgoingPaymentService, 'getWalletAddressPage')
         .mockRejectedValueOnce(new Error('unexpected'))
       const ctx = setupContext<ListContext>({
         reqOpts: {},
-        paymentPointer
+        walletAddress
       })
       await expect(outgoingPaymentRoutes.list(ctx)).rejects.toMatchObject({
         status: 500,
@@ -137,7 +137,7 @@ describe('Outgoing Payment Routes', (): void => {
 
   describe('create', (): void => {
     const setup = (
-      options: Omit<CreateOutgoingPaymentOptions, 'paymentPointerId'>
+      options: Omit<CreateOutgoingPaymentOptions, 'walletAddressId'>
     ): CreateContext<CreateBody> =>
       setupContext<CreateContext<CreateBody>>({
         reqOpts: {
@@ -149,7 +149,7 @@ describe('Outgoing Payment Routes', (): void => {
           url: `/outgoing-payments`,
           body: options
         },
-        paymentPointer,
+        walletAddress,
         client: options.client,
         grant: options.grant
       })
@@ -170,7 +170,7 @@ describe('Outgoing Payment Routes', (): void => {
           metadata
         })
         const options = {
-          quoteId: `${paymentPointer.url}/quotes/${payment.quote.id}`,
+          quoteId: `${walletAddress.url}/quotes/${payment.quote.id}`,
           client,
           grant,
           metadata
@@ -181,7 +181,7 @@ describe('Outgoing Payment Routes', (): void => {
           .mockResolvedValueOnce(payment)
         await expect(outgoingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
-          paymentPointerId: paymentPointer.id,
+          walletAddressId: walletAddress.id,
           quoteId: payment.quote.id,
           metadata,
           client,
@@ -194,8 +194,8 @@ describe('Outgoing Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${paymentPointer.url}/outgoing-payments/${outgoingPaymentId}`,
-          paymentPointer: paymentPointer.url,
+          id: `${walletAddress.url}/outgoing-payments/${outgoingPaymentId}`,
+          walletAddress: walletAddress.url,
           receiver: payment.receiver,
           quoteId: options.quoteId,
           debitAmount: {
@@ -209,8 +209,8 @@ describe('Outgoing Payment Routes', (): void => {
           metadata: options.metadata,
           sentAmount: {
             value: '0',
-            assetCode: paymentPointer.asset.code,
-            assetScale: paymentPointer.asset.scale
+            assetCode: walletAddress.asset.code,
+            assetScale: walletAddress.asset.scale
           },
           failed: false,
           createdAt: expect.any(String),
@@ -224,7 +224,7 @@ describe('Outgoing Payment Routes', (): void => {
       async (error): Promise<void> => {
         const quoteId = uuid()
         const ctx = setup({
-          quoteId: `${paymentPointer.url}/quotes/${quoteId}`
+          quoteId: `${walletAddress.url}/quotes/${quoteId}`
         })
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
@@ -234,7 +234,7 @@ describe('Outgoing Payment Routes', (): void => {
           status: errorToCode[error]
         })
         expect(createSpy).toHaveBeenCalledWith({
-          paymentPointerId: paymentPointer.id,
+          walletAddressId: walletAddress.id,
           quoteId
         })
       }

@@ -22,7 +22,7 @@ export const RafikiServicesFactory = Factory.define<MockRafikiServices>(
   })
   .attr('logger', TestLoggerFactory.build())
   .attr(
-    'paymentPointers',
+    'walletAddresses',
     ['accounting'],
     (accounting: MockAccountingService) => ({
       get: async (id: string) => await accounting._getAccount(id)

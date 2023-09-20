@@ -3,14 +3,14 @@ import type {
   AssetMutationResponse,
   CreatePeerMutationResponse,
   LiquidityMutationResponse,
-  PaymentPointer,
-  CreatePaymentPointerKeyMutationResponse,
-  CreatePaymentPointerKeyInput,
-  CreatePaymentPointerInput,
+  WalletAddress,
+  CreateWalletAddressKeyMutationResponse,
+  CreateWalletAddressKeyInput,
+  CreateWalletAddressInput,
   JwkInput,
   SetFeeResponse,
   FeeType
-} from 'generated/graphql'
+} from '../../generated/graphql'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 
@@ -190,18 +190,18 @@ export async function addAssetLiquidity(
     })
 }
 
-export async function createPaymentPointer(
+export async function createWalletAddress(
   accountName: string,
   accountUrl: string,
   assetId: string
-): Promise<PaymentPointer> {
-  const createPaymentPointerMutation = gql`
-    mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
-      createPaymentPointer(input: $input) {
+): Promise<WalletAddress> {
+  const createWalletAddressMutation = gql`
+    mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+      createWalletAddress(input: $input) {
         code
         success
         message
-        paymentPointer {
+        walletAddress {
           id
           url
           publicName
@@ -209,7 +209,7 @@ export async function createPaymentPointer(
       }
     }
   `
-  const createPaymentPointerInput: CreatePaymentPointerInput = {
+  const createWalletAddressInput: CreateWalletAddressInput = {
     assetId,
     url: accountUrl,
     publicName: accountName
@@ -217,68 +217,68 @@ export async function createPaymentPointer(
 
   return apolloClient
     .mutate({
-      mutation: createPaymentPointerMutation,
+      mutation: createWalletAddressMutation,
       variables: {
-        input: createPaymentPointerInput
+        input: createWalletAddressInput
       }
     })
     .then(({ data }) => {
       console.log(data)
 
       if (
-        !data.createPaymentPointer.success ||
-        !data.createPaymentPointer.paymentPointer
+        !data.createWalletAddress.success ||
+        !data.createWalletAddress.walletAddress
       ) {
         throw new Error('Data was empty')
       }
 
-      return data.createPaymentPointer.paymentPointer
+      return data.createWalletAddress.walletAddress
     })
 }
 
-export async function createPaymentPointerKey({
-  paymentPointerId,
+export async function createWalletAddressKey({
+  walletAddressId,
   jwk
 }: {
-  paymentPointerId: string
+  walletAddressId: string
   jwk: string
-}): Promise<CreatePaymentPointerKeyMutationResponse> {
-  const createPaymentPointerKeyMutation = gql`
-    mutation CreatePaymentPointerKey($input: CreatePaymentPointerKeyInput!) {
-      createPaymentPointerKey(input: $input) {
+}): Promise<CreateWalletAddressKeyMutationResponse> {
+  const createWalletAddressKeyMutation = gql`
+    mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
+      createWalletAddressKey(input: $input) {
         code
         success
         message
       }
     }
   `
-  const createPaymentPointerKeyInput: CreatePaymentPointerKeyInput = {
-    paymentPointerId,
+  const createWalletAddressKeyInput: CreateWalletAddressKeyInput = {
+    walletAddressId,
     jwk: jwk as unknown as JwkInput
   }
 
   return apolloClient
     .mutate({
-      mutation: createPaymentPointerKeyMutation,
+      mutation: createWalletAddressKeyMutation,
       variables: {
-        input: createPaymentPointerKeyInput
+        input: createWalletAddressKeyInput
       }
     })
-    .then(({ data }): CreatePaymentPointerKeyMutationResponse => {
+    .then(({ data }): CreateWalletAddressKeyMutationResponse => {
       console.log(data)
-      if (!data.createPaymentPointerKey.success) {
+      if (!data.createWalletAddressKey.success) {
         throw new Error('Data was empty')
       }
-      return data.createPaymentPointerKey
+      return data.createWalletAddressKey
     })
 }
 
-export async function getPaymentPointerPayments(
-  paymentPointerId: string
-): Promise<PaymentPointer> {
+export async function getWalletAddressPayments(
+  walletAddressId: string
+): Promise<WalletAddress> {
   const query = gql`
-    query PaymentPointer($id: String!) {
-      paymentPointer(id: $id) {
+    query WalletAddress($id: String!) {
+      walletAddress(id: $id) {
         incomingPayments {
           edges {
             node {
@@ -346,14 +346,14 @@ export async function getPaymentPointerPayments(
     .query({
       query,
       variables: {
-        id: paymentPointerId
+        id: walletAddressId
       }
     })
-    .then(({ data }): PaymentPointer => {
-      if (!data.paymentPointer) {
+    .then(({ data }): WalletAddress => {
+      if (!data.walletAddress) {
         throw new Error('Data was empty')
       }
-      return data.paymentPointer
+      return data.walletAddress
     })
 }
 

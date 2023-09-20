@@ -4,7 +4,7 @@ import { Config } from '../../config/app'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { ConnectionService } from '../connection/service'
 import { Receiver } from './model'
@@ -34,9 +34,9 @@ describe('Receiver Model', (): void => {
 
   describe('fromIncomingPayment', () => {
     test('creates receiver', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id
+        walletAddressId: walletAddress.id
       })
 
       const connection = connectionService.get(incomingPayment)
@@ -44,7 +44,7 @@ describe('Receiver Model', (): void => {
       assert(connection instanceof Connection)
 
       const receiver = Receiver.fromIncomingPayment(
-        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        await incomingPayment.toOpenPaymentsType(walletAddress, connection)
       )
 
       expect(receiver).toEqual({
@@ -53,8 +53,8 @@ describe('Receiver Model', (): void => {
         ilpAddress: expect.any(String),
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
-          id: incomingPayment.getUrl(paymentPointer),
-          paymentPointer: paymentPointer.url,
+          id: incomingPayment.getUrl(walletAddress),
+          paymentPointer: walletAddress.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
           completed: incomingPayment.completed,
@@ -66,9 +66,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if incoming payment is completed', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id
+        walletAddressId: walletAddress.id
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
@@ -76,7 +76,7 @@ describe('Receiver Model', (): void => {
 
       assert(connection instanceof Connection)
       const openPaymentsIncomingPayment =
-        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        await incomingPayment.toOpenPaymentsType(walletAddress, connection)
 
       expect(() =>
         Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
@@ -84,9 +84,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if incoming payment is expired', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id
+        walletAddressId: walletAddress.id
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
@@ -94,7 +94,7 @@ describe('Receiver Model', (): void => {
 
       assert(connection instanceof Connection)
       const openPaymentsIncomingPayment =
-        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        await incomingPayment.toOpenPaymentsType(walletAddress, connection)
 
       expect(() =>
         Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
@@ -102,9 +102,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('throws if stream connection has invalid ILP address', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id
+        walletAddressId: walletAddress.id
       })
 
       const connection = connectionService.get(incomingPayment)
@@ -112,7 +112,7 @@ describe('Receiver Model', (): void => {
       ;(connection.ilpAddress as string) = 'not base 64 encoded'
 
       const openPaymentsIncomingPayment =
-        await incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        await incomingPayment.toOpenPaymentsType(walletAddress, connection)
 
       expect(() =>
         Receiver.fromIncomingPayment(openPaymentsIncomingPayment)
@@ -122,9 +122,9 @@ describe('Receiver Model', (): void => {
 
   describe('fromConnection', () => {
     test('creates receiver', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id
+        walletAddressId: walletAddress.id
       })
 
       const connection = connectionService.get(incomingPayment)
@@ -144,9 +144,9 @@ describe('Receiver Model', (): void => {
     })
 
     test('returns undefined if invalid ilpAdress', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id
+        walletAddressId: walletAddress.id
       })
 
       const connection = connectionService.get(incomingPayment)

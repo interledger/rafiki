@@ -4,7 +4,7 @@ import { Config, IAppConfig } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 import { Connection } from '../../connection/model'
 import { serializeAmount } from '../../amount'
@@ -33,15 +33,15 @@ describe('Incoming Payment Model', (): void => {
 
   describe('toOpenPaymentsType', () => {
     test('returns incoming payment without connection provided', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' }
       })
 
-      expect(incomingPayment.toOpenPaymentsType(paymentPointer)).toEqual({
-        id: `${paymentPointer.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        paymentPointer: paymentPointer.url,
+      expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
+        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        paymentPointer: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
@@ -55,19 +55,19 @@ describe('Incoming Payment Model', (): void => {
     })
 
     test('returns incoming payment with connection as string', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' }
       })
 
       const connection = `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
 
       expect(
-        incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        incomingPayment.toOpenPaymentsType(walletAddress, connection)
       ).toEqual({
-        id: `${paymentPointer.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        paymentPointer: paymentPointer.url,
+        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        paymentPointer: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
@@ -82,9 +82,9 @@ describe('Incoming Payment Model', (): void => {
     })
 
     test('returns incoming payment with connection as object', async () => {
-      const paymentPointer = await createPaymentPointer(deps)
+      const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' }
       })
 
@@ -98,10 +98,10 @@ describe('Incoming Payment Model', (): void => {
       })
 
       expect(
-        incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        incomingPayment.toOpenPaymentsType(walletAddress, connection)
       ).toEqual({
-        id: `${paymentPointer.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        paymentPointer: paymentPointer.url,
+        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        paymentPointer: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount

@@ -9,10 +9,10 @@ import {
 import { ConnectionService } from '../connection/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
-import { PaymentPointerService } from '../payment_pointer/service'
+import { WalletAddressService } from '../wallet_address/service'
 import { BaseService } from '../../shared/baseService'
 import { IncomingPaymentService } from '../payment/incoming/service'
-import { PaymentPointer } from '../payment_pointer/model'
+import { WalletAddress } from '../wallet_address/model'
 import { Receiver } from './model'
 import { Amount } from '../amount'
 import { RemoteIncomingPaymentService } from '../payment/incoming_remote/service'
@@ -24,7 +24,7 @@ import {
 } from './errors'
 
 interface CreateReceiverArgs {
-  paymentPointerUrl: string
+  walletAddressUrl: string
   expiresAt?: Date
   incomingAmount?: Amount
   metadata?: Record<string, unknown>
@@ -41,14 +41,14 @@ interface ServiceDependencies extends BaseService {
   grantService: GrantService
   incomingPaymentService: IncomingPaymentService
   openPaymentsUrl: string
-  paymentPointerService: PaymentPointerService
+  walletAddressService: WalletAddressService
   openPaymentsClient: AuthenticatedClient
   remoteIncomingPaymentService: RemoteIncomingPaymentService
 }
 
 const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
 const INCOMING_PAYMENT_URL_REGEX =
-  /(?<paymentPointerUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
+  /(?<walletAddressUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
 
 export async function createReceiverService(
   deps_: ServiceDependencies
@@ -71,12 +71,12 @@ async function createReceiver(
   deps: ServiceDependencies,
   args: CreateReceiverArgs
 ): Promise<Receiver | ReceiverError> {
-  const localPaymentPointer = await deps.paymentPointerService.getByUrl(
-    args.paymentPointerUrl
+  const localWalletAddress = await deps.walletAddressService.getByUrl(
+    args.walletAddressUrl
   )
 
-  const incomingPaymentOrError = localPaymentPointer
-    ? await createLocalIncomingPayment(deps, args, localPaymentPointer)
+  const incomingPaymentOrError = localWalletAddress
+    ? await createLocalIncomingPayment(deps, args, localWalletAddress)
     : await deps.remoteIncomingPaymentService.create(args)
 
   if (isReceiverError(incomingPaymentOrError)) {
@@ -104,12 +104,12 @@ async function createReceiver(
 async function createLocalIncomingPayment(
   deps: ServiceDependencies,
   args: CreateReceiverArgs,
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
 ): Promise<OpenPaymentsIncomingPayment | ReceiverError> {
   const { expiresAt, incomingAmount, metadata } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    paymentPointerId: paymentPointer.id,
+    walletAddressId: walletAddress.id,
     expiresAt,
     incomingAmount,
     metadata
@@ -134,7 +134,7 @@ async function createLocalIncomingPayment(
     throw new Error(errorMessage)
   }
 
-  return incomingPaymentOrError.toOpenPaymentsType(paymentPointer, connection)
+  return incomingPaymentOrError.toOpenPaymentsType(walletAddress, connection)
 }
 
 async function getReceiver(
@@ -199,15 +199,15 @@ async function getConnection(
 
 function parseIncomingPaymentUrl(
   url: string
-): { id: string; paymentPointerUrl: string } | undefined {
+): { id: string; walletAddressUrl: string } | undefined {
   const match = url.match(INCOMING_PAYMENT_URL_REGEX)?.groups
-  if (!match || !match.paymentPointerUrl || !match.id) {
+  if (!match || !match.walletAddressUrl || !match.id) {
     return undefined
   }
 
   return {
     id: match.id,
-    paymentPointerUrl: match.paymentPointerUrl
+    walletAddressUrl: match.walletAddressUrl
   }
 }
 
@@ -221,20 +221,20 @@ async function getIncomingPayment(
       return undefined
     }
     // Check if this is a local payment pointer
-    const paymentPointer = await deps.paymentPointerService.getByUrl(
-      urlParseResult.paymentPointerUrl
+    const walletAddress = await deps.walletAddressService.getByUrl(
+      urlParseResult.walletAddressUrl
     )
-    if (paymentPointer) {
+    if (walletAddress) {
       return await getLocalIncomingPayment({
         deps,
         id: urlParseResult.id,
-        paymentPointer
+        walletAddress
       })
     }
 
     const grant = await getIncomingPaymentGrant(
       deps,
-      urlParseResult.paymentPointerUrl
+      urlParseResult.walletAddressUrl
     )
     if (!grant) {
       throw new Error('Could not find grant')
@@ -256,15 +256,15 @@ async function getIncomingPayment(
 async function getLocalIncomingPayment({
   deps,
   id,
-  paymentPointer
+  walletAddress
 }: {
   deps: ServiceDependencies
   id: string
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
 }): Promise<OpenPaymentsIncomingPayment | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id,
-    paymentPointerId: paymentPointer.id
+    walletAddressId: walletAddress.id
   })
 
   if (!incomingPayment) {
@@ -277,21 +277,21 @@ async function getLocalIncomingPayment({
     return undefined
   }
 
-  return incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+  return incomingPayment.toOpenPaymentsType(walletAddress, connection)
 }
 
 async function getIncomingPaymentGrant(
   deps: ServiceDependencies,
-  paymentPointerUrl: string
+  walletAddressUrl: string
 ): Promise<Grant | undefined> {
-  const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
-    url: paymentPointerUrl
+  const walletAddress = await deps.openPaymentsClient.paymentPointer.get({
+    url: walletAddressUrl
   })
-  if (!paymentPointer) {
+  if (!walletAddress) {
     return undefined
   }
   const grantOptions = {
-    authServer: paymentPointer.authServer,
+    authServer: walletAddress.authServer,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.ReadAll]
   }
@@ -322,7 +322,7 @@ async function getIncomingPaymentGrant(
   }
 
   const grant = await deps.openPaymentsClient.grant.request(
-    { url: paymentPointer.authServer },
+    { url: walletAddress.authServer },
     {
       access_token: {
         access: [
