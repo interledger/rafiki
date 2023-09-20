@@ -18,7 +18,7 @@ export interface AccountsServer {
   setWalletAddress(
     id: string,
     pointerID: string,
-    paymentPointer: string
+    walletAddress: string
   ): Promise<void>
   create(
     id: string,
@@ -30,10 +30,10 @@ export interface AccountsServer {
   ): Promise<void>
   listAll(): Promise<Account[]>
   get(id: string): Promise<Account | undefined>
-  getByWalletAddressId(paymentPointerId: string): Promise<Account | undefined>
+  getByWalletAddressId(walletAddressId: string): Promise<Account | undefined>
   getByPath(path: string): Promise<Account | undefined>
-  getByPaymentPointerUrl(
-    paymentPointerUrl: string
+  getByWalletAddressUrl(
+    walletAddressUrl: string
   ): Promise<Account | undefined>
   voidPendingDebit(id: string, amount: bigint): Promise<void>
   voidPendingCredit(id: string, amount: bigint): Promise<void>
@@ -53,7 +53,7 @@ export class AccountProvider implements AccountsServer {
   async setWalletAddress(
     id: string,
     pointerID: string,
-    paymentPointer: string
+    walletAddress: string
   ): Promise<void> {
     if (!this.accounts.has(id)) {
       throw new Error('account already exists')
@@ -65,7 +65,7 @@ export class AccountProvider implements AccountsServer {
       throw new Error()
     }
 
-    acc.walletAddress = paymentPointer
+    acc.walletAddress = walletAddress
     acc.walletAddressID = pointerID
   }
 
@@ -105,20 +105,20 @@ export class AccountProvider implements AccountsServer {
   }
 
   async getByWalletAddressId(
-    paymentPointerId: string
+    walletAddressId: string
   ): Promise<Account | undefined> {
     for (const acc of this.accounts.values()) {
-      if (acc.walletAddressID == paymentPointerId) {
+      if (acc.walletAddressID == walletAddressId) {
         return acc
       }
     }
   }
 
-  async getByPaymentPointerUrl(
-    paymentPointerUrl: string
+  async getByWalletAddressUrl(
+    walletAddressUrl: string
   ): Promise<Account | undefined> {
     return (await this.listAll()).find(
-      (acc) => acc.walletAddress === paymentPointerUrl
+      (acc) => acc.walletAddress === walletAddressUrl
     )
   }
 

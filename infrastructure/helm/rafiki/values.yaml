@@ -4,7 +4,7 @@ rafiki-backend:
   serviceUrls:
     PUBLIC_HOST: http://rafiki-rafiki-backend
     OPEN_PAYMENTS_URL: http://rafiki-rafiki-backend
-    PAYMENT_POINTER_URL: http://rafiki-rafiki-backend/.well-known/pay
+    WALLET_ADDRESS_URL: http://rafiki-rafiki-backend/.well-known/pay
     WEBHOOK_URL: http://cloud-nine-wallet/webhooks
     EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
     AUTH_SERVER_GRANT_URL: http://rafiki-rafiki-auth:3006

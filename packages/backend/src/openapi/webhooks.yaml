@@ -246,7 +246,7 @@ components:
         type:
           type: string
           enum:
-            - payment_pointer.not_found
+            - wallet_address.not_found
         data:
           type: object
           required:
@@ -267,7 +267,7 @@ components:
         type:
           type: string
           enum:
-            - payment_pointer.web_monetization
+            - wallet_address.web_monetization
         data:
           type: object
           required:

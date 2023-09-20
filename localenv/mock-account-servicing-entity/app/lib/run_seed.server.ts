@@ -88,7 +88,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
         )
       }
 
-      if (account.skipPaymentPointerCreation) {
+      if (account.skipWalletAddressCreation) {
         return
       }
 

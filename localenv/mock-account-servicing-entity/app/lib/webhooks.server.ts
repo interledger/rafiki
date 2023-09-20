@@ -55,7 +55,7 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
   const amtDebit = parseAmount(payment['debitAmount'])
@@ -83,7 +83,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
   const amt = parseAmount(payment['debitAmount'])
@@ -134,7 +134,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
   const amt = parseAmount(payment['receivedAmount'])
@@ -185,7 +185,7 @@ export async function handleWalletAddressNotFound(wh: WebHook) {
   const account = await mockAccounts.getByPath(accountPath)
 
   if (!account) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
   const walletAddress = await createWalletAddress(

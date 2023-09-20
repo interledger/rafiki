@@ -263,7 +263,7 @@ export type CreateWalletAddressInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Public name associated with the wallet address */
   publicName?: InputMaybe<Scalars['String']['input']>;
-  /** Payment Pointer URL */
+  /** Wallet Address URL */
   url: Scalars['String']['input'];
 };
 
@@ -1137,7 +1137,7 @@ export type WalletAddress = Model & {
   quotes?: Maybe<QuoteConnection>;
   /** Status of the wallet address */
   status: WalletAddressStatus;
-  /** Payment Pointer URL */
+  /** Wallet Address URL */
   url: Scalars['String']['output'];
 };
 

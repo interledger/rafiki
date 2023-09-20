@@ -43,7 +43,7 @@ export class WalletAddress
   public asset!: Asset
 
   // The cumulative received amount tracked by
-  // `payment_pointer.web_monetization` webhook events.
+  // `wallet_address.web_monetization` webhook events.
   // The value should be equivalent to the following query:
   // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `walletAddress.id`
   public totalEventsAmount!: bigint
