@@ -26,7 +26,7 @@ Peer Liquidity defines the line of credit, denominated in the asset of the peeri
 
 #### Example
 
-A configured peer _Cloud Nine Wallet_ within Rafiki has a peer liquidity of 100 USD. Rafiki can send packets up to 100 USD to payment pointers issued by _Cloud Nine Wallet_. Once that liquidity is used up, we should settle with _Cloud Nine Wallet_ and then reset their liquidity to 100 USD.
+A configured peer _Cloud Nine Wallet_ within Rafiki has a peer liquidity of 100 USD. Rafiki can send packets up to 100 USD to wallet addresss issued by _Cloud Nine Wallet_. Once that liquidity is used up, we should settle with _Cloud Nine Wallet_ and then reset their liquidity to 100 USD.
 
 ### Event Liquidity
 

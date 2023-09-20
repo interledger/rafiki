@@ -14,11 +14,11 @@ There is one liquidity account for each of the following resource:
 
 - Asset
 - Peer
-- Payment Pointer (for [SPSP](../../reference/glossary#spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
+- Wallet Address (for [SPSP](../../reference/glossary#spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
 
-Asset and Peer liquidity accounts are created when calling `createAsset` and `createPeer` [GraphQL Admin API mutations](../../apis/backend/mutations.md) respectively, while liquidity accounts for payment pointers, incoming and outgoing payments are created on-the-fly during payment processing or web monetization events.
+Asset and Peer liquidity accounts are created when calling `createAsset` and `createPeer` [GraphQL Admin API mutations](../../apis/backend/mutations.md) respectively, while liquidity accounts for wallet addresss, incoming and outgoing payments are created on-the-fly during payment processing or web monetization events.
 
 Any liquidity management is done by the [Account Servicing Entity](../../reference/glossary#account-servicing-entity) through the GraphQL Admin API. See [integration](../../integration/event-handlers.md) and [liquidity documentation](./liquidity.md) for more information.
 
@@ -223,18 +223,18 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
 </table>
 
-##### Withdrawing Payment Pointer Liquidity (example: 2 USD)
+##### Withdrawing Wallet Address Liquidity (example: 2 USD)
 
 | Debit Account   | Credit Account |
 | --------------- | -------------- |
-| Payment Pointer | Settlement     |
+| Wallet Address | Settlement     |
 
 - Example: withdrawing 2 USD
 
 <table class="accounting-table not-content">
   <tr class="header-row">
     <th>USD Settlement Acc. </th>
-    <th>Payment Pointer Liquidity Acc.</th>
+    <th>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -340,14 +340,14 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 | Debit Account    | Credit Account  |
 | ---------------- | --------------- |
-| Outgoing Payment | Payment Pointer |
+| Outgoing Payment | Wallet Address |
 
-- Example: Send a WM Payment of 2 USD over SPSP to a payment pointer. Sender and receiver have payment pointers at the same Rafiki.
+- Example: Send a WM Payment of 2 USD over SPSP to a wallet address. Sender and receiver have wallet addresss at the same Rafiki.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
     <th>Outgoing Payment Liquidity Acc.</th>
-    <th>Payment Pointer Liquidity Acc.</th>
+    <th>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -540,7 +540,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | Debit Account    | Credit Account  | Asset |
 | ---------------- | --------------- | ----- |
 | Outgoing Payment | Asset Liquidity | ABC   |
-| Asset Liquidity  | Payment Pointer | XYZ   |
+| Asset Liquidity  | Wallet Address | XYZ   |
 
 - Example: Outgoing payment for 2 USD, payemnt pointer receives 1 EUR.
 
@@ -573,7 +573,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
   </tr>
   <tr class="header-row">
     <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Payment Pointer Liquidity Acc.</th>
+    <th>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -601,7 +601,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 ### Interledger
 
-Sender and receiver do not have payment pointers at the same Rafiki instance.
+Sender and receiver do not have wallet addresss at the same Rafiki instance.
 
 #### Sending Connector
 
@@ -749,14 +749,14 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
 
 | Debit Account  | Credit Account  |
 | -------------- | --------------- |
-| Peer Liquidity | Payment Pointer |
+| Peer Liquidity | Wallet Address |
 
 - Example: A payemnt pointer receives 2 USD from an outgoing payment at a peer's Rafiki instance.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
     <th>Peer Liquidity Acc.</th>
-    <th>Payment Pointer Liquidity Acc.</th>
+    <th>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>
@@ -851,9 +851,9 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
 | Debit Account   | Credit Account  | Asset |
 | --------------- | --------------- | ----- |
 | Peer Liquidity  | Asset Liquidity | ABC   |
-| Asset Liquidity | Payment Pointer | XYZ   |
+| Asset Liquidity | Wallet Address | XYZ   |
 
-- Example: A Rafiki instance receives 10 USD from a peer (peering relationship in USD) to be deposited in a payment pointer liquidity account denominated in EUR. The payment is converted to EUR and deposited.
+- Example: A Rafiki instance receives 10 USD from a peer (peering relationship in USD) to be deposited in a wallet address liquidity account denominated in EUR. The payment is converted to EUR and deposited.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
@@ -884,7 +884,7 @@ Sender and receiver do not have payment pointers at the same Rafiki instance.
   </tr>
   <tr class="header-row">
     <th>EUR (Asset) Liquidity Acc.</th>
-    <th>Payment Pointer Liquidity Acc.</th>
+    <th>Wallet Address Liquidity Acc.</th>
   </tr>
   <tr>
     <td>

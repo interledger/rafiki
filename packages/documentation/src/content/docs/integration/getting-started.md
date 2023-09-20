@@ -13,7 +13,7 @@ Account Servicing Entities provide and maintain payment accounts. In order to ma
 - [webhook events listener](#webhook-events-listener)
 - [Identity Provider](#identity-provider)
 
-Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [payment pointer](#issuing-payment-pointers) in order to be serviced by Rafiki and send or receive Interledger payments.
+Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [wallet address](#issuing-payment-pointers) in order to be serviced by Rafiki and send or receive Interledger payments.
 
 ## Quotes and Fees
 
@@ -120,8 +120,8 @@ The endpoint accepts a `POST` request with
 | `outgoing_payment.created`         | Outgoing payment was created.                                               |
 | `outgoing_payment.completed`       | Outgoing payment is complete.                                               |
 | `outgoing_payment.failed`          | Outgoing payment failed.                                                    |
-| `payment_pointer.not_found`        | A requested payment pointer was not found                                   |
-| `payment_pointer.web_monetization` | Web Monetization payments received via STREAM.                              |
+| `wallet_address.not_found`        | A requested wallet address was not found                                   |
+| `wallet_address.web_monetization` | Web Monetization payments received via STREAM.                              |
 | `asset.liquidity_low`              | Asset liquidity has dropped below defined threshold.                        |
 | `peer.liquidity_low`               | Peer liquidity has dropped below defined threshold.                         |
 
@@ -135,9 +135,9 @@ The Rafiki `backend` exposes the [Open Payments](/reference/glossary#open-paymen
 
 The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
 
-## Issuing Payment Pointers
+## Issuing Wallet Addresses
 
-A [Payment Pointer](/reference/glossary#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](/integration/management). Note that at least one asset has to be created prior to creating the payment pointer since an `assetId` MUST be provided as input variable on payment pointer creation.
+A [Wallet Address](/reference/glossary#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](/integration/management). Note that at least one asset has to be created prior to creating the wallet address since an `assetId` MUST be provided as input variable on wallet address creation.
 
 ### Create Asset
 
@@ -188,17 +188,17 @@ Example Successful Response
 }
 ```
 
-### Create Payment Pointer
+### Create Wallet Address
 
 Query:
 
 ```
-mutation CreatePaymentPointer($input: CreatePaymentPointerInput!) {
-  createPaymentPointer(input: $input) {
+mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
+  createWalletAddress(input: $input) {
     code
     success
     message
-    paymentPointer {
+    walletAddress {
       id
       createdAt
       publicName
@@ -230,11 +230,11 @@ Example Successful Response
 ```
 {
   "data": {
-    "createPaymentPointer": {
+    "createWalletAddress": {
       "code": "200",
       "success": true,
-      "message": "Created payment pointer",
-      "paymentPointer": {
+      "message": "Created wallet address",
+      "walletAddress": {
         "id": "695e7546-1803-4b45-96b6-6a53f4082018",
         "createdAt": "2023-03-03T09:07:01.107Z",
         "publicName": "Sarah Marshall",
@@ -250,23 +250,23 @@ Example Successful Response
 }
 ```
 
-The Account Servicing Entity SHOULD store at least the `paymentPointer.id` in their internal database to be able to reference the account and payment pointer.
+The Account Servicing Entity SHOULD store at least the `walletAddress.id` in their internal database to be able to reference the account and wallet address.
 
-### Create Payment Pointer Key
+### Create Wallet Address Key
 
-In order to use the [Open Payments](/reference/glossary#open-payments) APIs, a payment pointer needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the payment pointer such that third-parties can verify said request signatures. It can be added using the [Admin API](/integration/management).
+In order to use the [Open Payments](/reference/glossary#open-payments) APIs, a wallet address needs to be associated with at least one private-public-keypair to be able to sign API request. One or multiple public keys are linked to the wallet address such that third-parties can verify said request signatures. It can be added using the [Admin API](/integration/management).
 
 Query:
 
 ```
-mutation CreatePaymentPointerKey($input: CreatePaymentPointerKeyInput!) {
-  createPaymentPointerKey(input: $input) {
+mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
+  createWalletAddressKey(input: $input) {
     code
     message
     success
-    paymentPointerKey {
+    walletAddressKey {
       id
-      paymentPointerId
+      walletAddressId
       revoked
       jwk {
         alg
@@ -293,7 +293,7 @@ Query Variables:
       "kty": "OKP",
       "crv": "Ed25519"
     },
-    "paymentPointerId": "695e7546-1803-4b45-96b6-6a53f4082018"
+    "walletAddressId": "695e7546-1803-4b45-96b6-6a53f4082018"
   }
 }
 ```
@@ -303,13 +303,13 @@ Example Successful Response
 ```
 {
   "data": {
-    "createPaymentPointerKey": {
+    "createWalletAddressKey": {
       "code": "200",
-      "message": "Added Key To Payment Pointer",
+      "message": "Added Key To Wallet Address",
       "success": true,
-      "paymentPointerKey": {
+      "walletAddressKey": {
         "id": "f2953571-f10c-44eb-ab41-4450a7ad6771",
-        "paymentPointerId": "695e7546-1803-4b45-96b6-6a53f4082018",
+        "walletAddressId": "695e7546-1803-4b45-96b6-6a53f4082018",
         "revoked": false,
         "jwk": {
           "alg": "EdDSA",

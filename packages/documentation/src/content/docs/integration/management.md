@@ -8,7 +8,7 @@ The `backend` Admin API allows Account Servicing Entities to manage:
 
 - [assets](/reference/glossary#asset)
 - [peers](/reference/glossary#peer)
-- [payment pointers](/reference/glossary#payment-pointer)
+- [wallet addresss](/reference/glossary#payment-pointer)
 - [Open Payments](/reference/glossary#open-payments) resources
 - several types of [liquidity](/concepts/accounting/liquidity) within Rafiki
 

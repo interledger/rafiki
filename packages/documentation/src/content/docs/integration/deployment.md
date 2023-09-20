@@ -74,7 +74,7 @@ Now, the Admin UI can be found on localhost:3010.
 | backend.logLevel                        | `LOG_LEVEL`                                       |
 | backend.serviceUrls.PUBLIC_HOST         | `PUBLIC_HOST`                                     |
 | backend.serviceUrls.OPEN_PAYMENTS_URL   | `OPEN_PAYMENTS_URL`                               |
-| backend.serviceUrls.PAYMENT_POINTER_URL | `PAYMENT_POINTER_URL`                             |
+| backend.serviceUrls.WALLET_ADDRESS_URL | `WALLET_ADDRESS_URL`                             |
 | backend.serviceUrls.WEBHOOK_URL         | `WEBHOOK_URL`                                     |
 | backend.serviceUrls.EXCHANGE_RATES_URL  | `EXCHANGE_RATES_URL`                              |
 | backend.redis.host                      | Redis host                                        |
@@ -102,7 +102,7 @@ Now, the Admin UI can be found on localhost:3010.
 | backend.lifetime.webhook                | `WEBHOOK_TIMEOUT`                                 |
 | backend.workers.incomingPayment         | `INCOMING_PAYMENT_WORKERS`                        |
 | backend.workers.outgoingPayment         | `OUTGOING_PAYMENT_WORKERS`                        |
-| backend.workers.paymentPointer          | `PAYMENT_POINTER_WORKERS`                         |
+| backend.workers.walletAddress          | `WALLET_ADDRESS_WORKERS`                         |
 | backend.workers.webhook                 | `WEBHOOK_WORKERS`                                 |
 | backend.workerIdle                      | worker idle time in milliseconds                  |
 | backend.idempotencyTTL                  | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
@@ -140,12 +140,12 @@ Now, the Admin UI can be found on localhost:3010.
 | `OPEN_PAYMENTS_URL`                                    | `http://127.0.0.1:3003`                                     | Open Payments APIs base URL                                                                                                                            |
 | `OUTGOING_PAYMENT_WORKERS`                             | `4`                                                         | number of workers processing outgoing payment requests                                                                                                 |
 | `OUTGOING_PAYMENT_WORKER_IDLE`                         | `200`                                                       | milliseconds                                                                                                                                           |
-| `PAYMENT_POINTER_URL`                                  | `http://127.0.0.1:3001/.well-known/pay`                     | Rafiki instance internal payment pointer                                                                                                               |
-| `PAYMENT_POINTER_WORKERS`                              | `1`                                                         | number of workers processing payment pointer requests                                                                                                  |
-| `PAYMENT_POINTER_WORKER_IDLE`                          | `200`                                                       | milliseconds                                                                                                                                           |
-| `PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS` | `86400000`                                                  | Milliseconds into the future to set expiration of open incoming payments when deactivating payment pointer. Default: 1 days                            |
-| `PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`                    | `1500`                                                      | milliseconds the ASE has to create a missing payment pointer until timeout                                                                             |
-| `PAYMENT_POINTER_POLLING_FREQUENCY_MS`                 | `100`                                                       | frequency of polling while waiting for ASE to create a missing payment pointer                                                                         |
+| `WALLET_ADDRESS_URL`                                   | `http://127.0.0.1:3001/.well-known/pay`                     | Rafiki instance internal wallet address                                                                                                                |
+| `WALLET_ADDRESS_WORKERS`                               | `1`                                                         | number of workers processing wallet address requests                                                                                                   |
+| `WALLET_ADDRESS_WORKER_IDLE`                           | `200`                                                       | milliseconds                                                                                                                                           |
+| `WALLET_ADDRESS_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS`  | `86400000`                                                  | Milliseconds into the future to set expiration of open incoming payments when deactivating wallet address. Default: 1 days                             |
+| `WALLET_ADDRESS_LOOKUP_TIMEOUT_MS`                     | `1500`                                                      | milliseconds the ASE has to create a missing wallet address until timeout                                                                              |
+| `WALLET_ADDRESS_POLLING_FREQUENCY_MS`                  | `100`                                                       | frequency of polling while waiting for ASE to create a missing wallet address                                                                          |
 | `PRIVATE_KEY_FILE`                                     | `undefined`                                                 | Rafiki instance client private key                                                                                                                     |
 | `PUBLIC_HOST`                                          | `http://127.0.0.1:3001`                                     | (testing) public Host for Open Payments APIs                                                                                                           |
 | `QUOTE_LIFESPAN`                                       | `5 * 60_000`                                                | milliseconds                                                                                                                                           |
@@ -165,6 +165,7 @@ Now, the Admin UI can be found on localhost:3010.
 | `WEBHOOK_WORKERS`                                      | `1`                                                         | number of workers processing webhook requests                                                                                                          |
 | `WEBHOOK_WORKER_IDLE`                                  | `200`                                                       | milliseconds                                                                                                                                           |
 | `WITHDRAWAL_THROTTLE_DELAY`                            | `undefined`                                                 | delay in withdrawal processing                                                                                                                         |
+
 
 #### Auth
 

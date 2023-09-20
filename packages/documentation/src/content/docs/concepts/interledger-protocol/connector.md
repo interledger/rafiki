@@ -33,9 +33,9 @@ An ILP packet may either terminate at the local Rafiki's STREAM server or contin
 
 ### Local STREAM Server
 
-The connector attempts to extract and decode the payment tag from a received ILP packet's destination address. If it is successfully able to match the tag with a locally managed [Open Payments](/reference/glossary#open-payments) [payment pointer](/reference/glossary#payment-pointer) or [incoming payment](https://docs.openpayments.guide/reference/create-incoming-payment), it will not forward the packet. The connector will credit the corresponding balance as well as track the total amount received for the STREAM connection in [Redis](/introduction/architecture) in order to support [STREAM receipts](https://interledger.org/rfcs/0039-stream-receipts/).
+The connector attempts to extract and decode the payment tag from a received ILP packet's destination address. If it is successfully able to match the tag with a locally managed [Open Payments](/reference/glossary#open-payments) [wallet address](/reference/glossary#payment-pointer) or [incoming payment](https://docs.openpayments.guide/reference/create-incoming-payment), it will not forward the packet. The connector will credit the corresponding balance as well as track the total amount received for the STREAM connection in [Redis](/introduction/architecture) in order to support [STREAM receipts](https://interledger.org/rfcs/0039-stream-receipts/).
 
-Packets addressed to a payment pointer happen via [SPSP](/reference/glossary#payment-pointer).
+Packets addressed to a wallet address happen via [SPSP](/reference/glossary#payment-pointer).
 
 ### Outgoing HTTP
 
