@@ -88,8 +88,8 @@ importers:
   localenv/mock-account-servicing-entity:
     dependencies:
       '@apollo/client':
-        specifier: ^3.8.3
-        version: 3.8.3(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.8.4
+        version: 3.8.4(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
         specifier: 1.0.4
         version: 1.0.4
@@ -213,8 +213,8 @@ importers:
         version: 9.0.1
     devDependencies:
       '@apollo/client':
-        specifier: ^3.8.3
-        version: 3.8.3(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.8.4
+        version: 3.8.4(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
         specifier: ^8.0.2
         version: 8.0.2
@@ -394,8 +394,8 @@ importers:
         version: 9.0.1
     devDependencies:
       '@apollo/client':
-        specifier: ^3.8.3
-        version: 3.8.3(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.8.4
+        version: 3.8.4(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@graphql-codegen/cli':
         specifier: 5.0.0
         version: 5.0.0(@babel/core@7.22.10)(@types/node@18.11.9)(graphql@16.8.1)
@@ -520,8 +520,8 @@ importers:
   packages/frontend:
     dependencies:
       '@apollo/client':
-        specifier: ^3.8.3
-        version: 3.8.3(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
+        specifier: ^3.8.4
+        version: 3.8.4(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@headlessui/react':
         specifier: ^1.7.17
         version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
@@ -671,8 +671,8 @@ packages:
       graphql: 16.8.1
     dev: false
 
-  /@apollo/client@3.8.3(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-mK86JM6hCpMEBGDgdO9U8ZYS8r9lPjXE1tVGpJMdSFUsIcXpmEfHUAbbFpPtYmxn8Qa7XsYy0dwDaDhpf4UUPw==}
+  /@apollo/client@3.8.4(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-QFXE4ylSHUa6LgYoOGsPysJCm4YJOOM1NwHyF6msZdZXIerqUVpLvxQOdQEXgS0RWvYiBMC1wGOWKzJKSWBdAg==}
     peerDependencies:
       graphql: ^14.0.0 || ^15.0.0 || ^16.0.0
       graphql-ws: ^5.5.5
