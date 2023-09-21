@@ -34,7 +34,7 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
     args,
     ctx
   ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing payment pointer id')
+    if (!parent.id) throw new Error('missing wallet address id')
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )

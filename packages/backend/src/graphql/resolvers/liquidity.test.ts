@@ -892,7 +892,7 @@ describe('Liquidity Resolvers', (): void => {
     )
   })
 
-  describe('Create payment pointer withdrawal', (): void => {
+  describe('Create wallet address withdrawal', (): void => {
     let walletAddress: WalletAddress
     const amount = BigInt(100)
 
@@ -910,7 +910,7 @@ describe('Liquidity Resolvers', (): void => {
       ).resolves.toBeUndefined()
     })
 
-    test('Can create withdrawal from payment pointer', async (): Promise<void> => {
+    test('Can create withdrawal from wallet address', async (): Promise<void> => {
       const id = uuid()
       const response = await appContainer.apolloClient
         .mutate({
@@ -961,7 +961,7 @@ describe('Liquidity Resolvers', (): void => {
       })
     })
 
-    test('Returns an error for unknown payment pointer', async (): Promise<void> => {
+    test('Returns an error for unknown wallet address', async (): Promise<void> => {
       const response = await appContainer.apolloClient
         .mutate({
           mutation: gql`
@@ -997,7 +997,7 @@ describe('Liquidity Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('404')
-      expect(response.message).toEqual('Unknown payment pointer')
+      expect(response.message).toEqual('Unknown wallet address')
       expect(response.error).toEqual(LiquidityError.UnknownWalletAddress)
       expect(response.withdrawal).toBeNull()
     })

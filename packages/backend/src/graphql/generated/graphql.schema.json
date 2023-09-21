@@ -1493,7 +1493,7 @@
           },
           {
             "name": "receiver",
-            "description": "Payment pointer URL of the receiver",
+            "description": "Wallet address URL of the receiver",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -1718,7 +1718,7 @@
           },
           {
             "name": "url",
-            "description": "Payment Pointer URL",
+            "description": "Wallet Address URL",
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -4425,7 +4425,7 @@
           },
           {
             "name": "receiver",
-            "description": "Payment pointer URL of the receiver",
+            "description": "Wallet address URL of the receiver",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6016,7 +6016,7 @@
           },
           {
             "name": "receiver",
-            "description": "Payment pointer URL of the receiver",
+            "description": "Wallet address URL of the receiver",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -6336,7 +6336,7 @@
           },
           {
             "name": "walletAddressUrl",
-            "description": "Payment pointer URL under which the incoming payment was created",
+            "description": "Wallet address URL under which the incoming payment was created",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7292,7 +7292,7 @@
           },
           {
             "name": "id",
-            "description": "Payment pointer id",
+            "description": "Wallet address id",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7519,7 +7519,7 @@
           },
           {
             "name": "url",
-            "description": "Payment Pointer URL",
+            "description": "Wallet Address URL",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -7747,7 +7747,7 @@
           },
           {
             "name": "walletAddress",
-            "description": "Payment pointer details",
+            "description": "Wallet address details",
             "args": [],
             "type": {
               "kind": "NON_NULL",

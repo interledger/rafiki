@@ -8,7 +8,7 @@ import { Config } from '../../config/app'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import {
   mockIncomingPaymentWithConnection,
-  mockPaymentPointer
+  mockWalletAddress
 } from '@interledger/open-payments'
 import { CreateReceiverResponse } from '../generated/graphql'
 import { ReceiverService } from '../../open_payments/receiver/service'
@@ -37,7 +37,7 @@ describe('Receiver Resolver', (): void => {
       assetCode: 'USD',
       assetScale: 2
     }
-    const walletAddress = mockPaymentPointer()
+    const walletAddress = mockWalletAddress()
 
     test.each`
       incomingAmount | expiresAt                        | metadata
@@ -49,7 +49,7 @@ describe('Receiver Resolver', (): void => {
         const receiver = Receiver.fromIncomingPayment(
           mockIncomingPaymentWithConnection({
             id: `${walletAddress.id}/incoming-payments/${uuid()}`,
-            paymentPointer: walletAddress.id,
+            walletAddress: walletAddress.id,
             metadata,
             expiresAt: expiresAt?.toISOString(),
             incomingAmount: incomingAmount
@@ -112,7 +112,7 @@ describe('Receiver Resolver', (): void => {
           receiver: {
             __typename: 'Receiver',
             id: receiver.incomingPayment?.id,
-            walletAddressUrl: receiver.incomingPayment?.paymentPointer,
+            walletAddressUrl: receiver.incomingPayment?.walletAddress,
             completed: false,
             expiresAt:
               receiver.incomingPayment?.expiresAt?.toISOString() || null,

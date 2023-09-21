@@ -93,13 +93,13 @@ export const amountSchema = z.coerce
   })
   .positive()
 
-export const createPaymentPointerSchema = z.object({
+export const createWalletAddressSchema = z.object({
   name: z.string().min(1),
   publicName: z.string().optional(),
   asset: z.string().uuid()
 })
 
-export const updatePaymentPointerSchema = z
+export const updateWalletAddressSchema = z
   .object({
     publicName: z.string().optional(),
     status: z.enum([WalletAddressStatus.Active, WalletAddressStatus.Inactive])

@@ -143,7 +143,7 @@ export const httpsigMiddleware = async (
   let jwks: JWKS | undefined
   try {
     const openPaymentsClient = await ctx.container.use('openPaymentsClient')
-    jwks = await openPaymentsClient.paymentPointer.getKeys({
+    jwks = await openPaymentsClient.walletAddress.getKeys({
       url: ctx.client
     })
   } catch (error) {

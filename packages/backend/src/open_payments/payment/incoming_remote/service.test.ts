@@ -13,7 +13,7 @@ import {
   AccessType,
   mockPendingGrant,
   mockGrant,
-  mockPaymentPointer,
+  mockWalletAddress,
   mockIncomingPaymentWithConnection
 } from '@interledger/open-payments'
 import { GrantService } from '../../grant/service'
@@ -55,7 +55,7 @@ describe('Remote Incoming Payment Service', (): void => {
       assetCode: 'USD',
       assetScale: 2
     }
-    const walletAddress = mockPaymentPointer()
+    const walletAddress = mockWalletAddress()
     const grantOptions = {
       accessType: AccessType.IncomingPayment,
       accessActions: [AccessAction.Create, AccessAction.ReadAll],
@@ -64,11 +64,11 @@ describe('Remote Incoming Payment Service', (): void => {
       managementUrl: `${walletAddress.authServer}/token/aq1sw2de3fr4`
     }
 
-    test('throws if payment pointer not found', async () => {
-      const clientGetPaymentPointerSpy = jest
-        .spyOn(openPaymentsClient.paymentPointer, 'get')
+    test('throws if wallet address not found', async () => {
+      const clientGetWalletAddressSpy = jest
+        .spyOn(openPaymentsClient.walletAddress, 'get')
         .mockImplementationOnce(() => {
-          throw new Error('No payment pointer')
+          throw new Error('No wallet address')
         })
 
       await expect(
@@ -76,7 +76,7 @@ describe('Remote Incoming Payment Service', (): void => {
           walletAddressUrl: walletAddress.id
         })
       ).resolves.toEqual(RemoteIncomingPaymentError.UnknownWalletAddress)
-      expect(clientGetPaymentPointerSpy).toHaveBeenCalledWith({
+      expect(clientGetWalletAddressSpy).toHaveBeenCalledWith({
         url: walletAddress.id
       })
     })
@@ -84,7 +84,7 @@ describe('Remote Incoming Payment Service', (): void => {
     describe('with existing grant', () => {
       beforeAll(() => {
         jest
-          .spyOn(openPaymentsClient.paymentPointer, 'get')
+          .spyOn(openPaymentsClient.walletAddress, 'get')
           .mockResolvedValue(walletAddress)
       })
 
@@ -261,7 +261,7 @@ describe('Remote Incoming Payment Service', (): void => {
     describe('with new grant', () => {
       beforeAll(() => {
         jest
-          .spyOn(openPaymentsClient.paymentPointer, 'get')
+          .spyOn(openPaymentsClient.walletAddress, 'get')
           .mockResolvedValue(walletAddress)
       })
 

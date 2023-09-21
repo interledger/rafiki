@@ -21,5 +21,5 @@ export const errorToMessage: {
 } = {
   [WalletAddressError.InvalidUrl]: 'invalid url',
   [WalletAddressError.UnknownAsset]: 'unknown asset',
-  [WalletAddressError.UnknownWalletAddress]: 'unknown payment pointer'
+  [WalletAddressError.UnknownWalletAddress]: 'unknown wallet address'
 }

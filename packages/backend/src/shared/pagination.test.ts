@@ -58,7 +58,7 @@ describe('Pagination', (): void => {
     )
   })
   describe('getPageInfo', (): void => {
-    describe('payment pointer resources', (): void => {
+    describe('wallet address resources', (): void => {
       let defaultWalletAddress: WalletAddress
       let secondaryWalletAddress: WalletAddress
       let debitAmount: Amount
@@ -242,7 +242,7 @@ describe('Pagination', (): void => {
         )
       })
     })
-    describe('non-payment pointer resources', (): void => {
+    describe('non-wallet address resources', (): void => {
       let assetService: AssetService
       let peerService: PeerService
       beforeEach(async (): Promise<void> => {

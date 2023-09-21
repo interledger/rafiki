@@ -174,7 +174,7 @@ export class Quote extends WalletAddressSubresource {
   public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
     return {
       id: this.getUrl(walletAddress),
-      paymentPointer: walletAddress.url,
+      walletAddress: walletAddress.url,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,

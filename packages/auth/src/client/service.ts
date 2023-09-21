@@ -51,16 +51,16 @@ async function getClient(
   client: string
 ): Promise<ClientDetails | undefined> {
   try {
-    const paymentPointer = await deps.openPaymentsClient.paymentPointer.get({
+    const walletAddress = await deps.openPaymentsClient.walletAddress.get({
       url: client
     })
     // TODO: https://github.com/interledger/rafiki/issues/734
-    if (!paymentPointer.publicName) {
-      deps.logger.debug('Payment pointer does not have a public name.')
+    if (!walletAddress.publicName) {
+      deps.logger.debug('Wallet address does not have a public name.')
       return
     }
     return {
-      name: paymentPointer.publicName,
+      name: walletAddress.publicName,
       uri: client
     }
   } catch (error) {
@@ -80,7 +80,7 @@ async function getClientKey(
   { client, keyId }: KeyOptions
 ): Promise<JWK | undefined> {
   try {
-    const { keys } = await deps.openPaymentsClient.paymentPointer.getKeys({
+    const { keys } = await deps.openPaymentsClient.walletAddress.getKeys({
       url: client
     })
 

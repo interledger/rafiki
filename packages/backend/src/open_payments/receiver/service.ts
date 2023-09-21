@@ -220,7 +220,7 @@ async function getIncomingPayment(
     if (!urlParseResult) {
       return undefined
     }
-    // Check if this is a local payment pointer
+    // Check if this is a local wallet address
     const walletAddress = await deps.walletAddressService.getByUrl(
       urlParseResult.walletAddressUrl
     )
@@ -284,7 +284,7 @@ async function getIncomingPaymentGrant(
   deps: ServiceDependencies,
   walletAddressUrl: string
 ): Promise<Grant | undefined> {
-  const walletAddress = await deps.openPaymentsClient.paymentPointer.get({
+  const walletAddress = await deps.openPaymentsClient.walletAddress.get({
     url: walletAddressUrl
   })
   if (!walletAddress) {

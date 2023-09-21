@@ -41,7 +41,7 @@ describe('Incoming Payment Model', (): void => {
 
       expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
         id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        paymentPointer: walletAddress.url,
+        walletAddress: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
@@ -67,7 +67,7 @@ describe('Incoming Payment Model', (): void => {
         incomingPayment.toOpenPaymentsType(walletAddress, connection)
       ).toEqual({
         id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        paymentPointer: walletAddress.url,
+        walletAddress: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount
@@ -101,7 +101,7 @@ describe('Incoming Payment Model', (): void => {
         incomingPayment.toOpenPaymentsType(walletAddress, connection)
       ).toEqual({
         id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        paymentPointer: walletAddress.url,
+        walletAddress: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
         incomingAmount: incomingPayment.incomingAmount

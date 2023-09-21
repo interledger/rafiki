@@ -237,7 +237,7 @@ export class IncomingPayment
     | OpenPaymentsIncomingPaymentWithConnectionUrl {
     const baseIncomingPayment: OpenPaymentsIncomingPayment = {
       id: this.getUrl(walletAddress),
-      paymentPointer: walletAddress.url,
+      walletAddress: walletAddress.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,

@@ -47,7 +47,7 @@ export const getWalletAddress: QueryResolvers<ApolloContext>['walletAddress'] =
     )
     const walletAddress = await walletAddressService.get(args.id)
     if (!walletAddress) {
-      throw new Error('No payment pointer')
+      throw new Error('No wallet address')
     }
     return walletAddressToGraphql(walletAddress)
   }
@@ -73,14 +73,14 @@ export const createWalletAddress: MutationResolvers<ApolloContext>['createWallet
           : {
               code: '200',
               success: true,
-              message: 'Created payment pointer',
+              message: 'Created wallet address',
               walletAddress: walletAddressToGraphql(walletAddressOrError)
             }
       )
       .catch(() => ({
         code: '500',
         success: false,
-        message: 'Error trying to create payment pointer'
+        message: 'Error trying to create wallet address'
       }))
   }
 export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWalletAddress'] =
@@ -104,14 +104,14 @@ export const updateWalletAddress: MutationResolvers<ApolloContext>['updateWallet
           : {
               code: '200',
               success: true,
-              message: 'Updated payment pointer',
+              message: 'Updated wallet address',
               walletAddress: walletAddressToGraphql(walletAddressOrError)
             }
       )
       .catch(() => ({
         code: '500',
         success: false,
-        message: 'Error trying to update payment pointer'
+        message: 'Error trying to update wallet address'
       }))
   }
 
@@ -129,7 +129,7 @@ export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['trigg
       return {
         code: '200',
         success: true,
-        message: 'Triggered Payment Pointer Events',
+        message: 'Triggered Wallet Address Events',
         count
       }
     } catch (error) {
@@ -138,11 +138,11 @@ export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['trigg
           options: args.input.limit,
           error
         },
-        'error triggering payment pointer events'
+        'error triggering wallet address events'
       )
       return {
         code: '500',
-        message: 'Error trying to trigger payment pointer events',
+        message: 'Error trying to trigger wallet address events',
         success: false
       }
     }

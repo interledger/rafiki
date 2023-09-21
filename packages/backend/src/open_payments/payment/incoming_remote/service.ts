@@ -3,7 +3,7 @@ import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   isPendingGrant,
   AccessAction,
-  PaymentPointer as OpenPaymentsPaymentPointer
+  WalletAddress as OpenPaymentsWalletAddress
 } from '@interledger/open-payments'
 import { Grant } from '../../grant/model'
 import { GrantService } from '../../grant/service'
@@ -66,7 +66,7 @@ async function create(
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        paymentPointer: walletAddressUrl,
+        walletAddress: walletAddressUrl,
         accessToken: grantOrError.accessToken
       },
       {
@@ -89,14 +89,14 @@ async function getGrant(
   walletAddressUrl: string,
   accessActions: AccessAction[]
 ): Promise<Grant | RemoteIncomingPaymentError> {
-  let walletAddress: OpenPaymentsPaymentPointer
+  let walletAddress: OpenPaymentsWalletAddress
 
   try {
-    walletAddress = await deps.openPaymentsClient.paymentPointer.get({
+    walletAddress = await deps.openPaymentsClient.walletAddress.get({
       url: walletAddressUrl
     })
   } catch (error) {
-    const errorMessage = 'Could not get payment pointer'
+    const errorMessage = 'Could not get wallet address'
     deps.logger.error({ walletAddressUrl, error }, errorMessage)
     return RemoteIncomingPaymentError.UnknownWalletAddress
   }

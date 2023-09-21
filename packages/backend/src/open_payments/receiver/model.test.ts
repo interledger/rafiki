@@ -54,7 +54,7 @@ describe('Receiver Model', (): void => {
         sharedSecret: expect.any(Buffer),
         incomingPayment: {
           id: incomingPayment.getUrl(walletAddress),
-          paymentPointer: walletAddress.url,
+          walletAddress: walletAddress.url,
           updatedAt: incomingPayment.updatedAt,
           createdAt: incomingPayment.createdAt,
           completed: incomingPayment.completed,

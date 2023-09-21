@@ -67,7 +67,7 @@
           },
           {
             "name": "identifier",
-            "description": "Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote)",
+            "description": "Wallet address of a sub-resource (incoming payment, outgoing payment, or quote)",
             "args": [],
             "type": {
               "kind": "SCALAR",
@@ -240,7 +240,7 @@
           },
           {
             "name": "client",
-            "description": "Payment pointer of the grantee's account",
+            "description": "Wallet address of the grantee's account",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -582,7 +582,7 @@
           },
           {
             "name": "receiver",
-            "description": "Payment pointer URL of the receiver",
+            "description": "Wallet address URL of the receiver",
             "args": [],
             "type": {
               "kind": "SCALAR",

@@ -26,7 +26,7 @@ export type Access = Model & {
   createdAt: Scalars['String']['output'];
   /** Access id */
   id: Scalars['ID']['output'];
-  /** Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote) */
+  /** Wallet address of a sub-resource (incoming payment, outgoing payment, or quote) */
   identifier?: Maybe<Scalars['String']['output']>;
   /** Payment limits */
   limits?: Maybe<LimitData>;
@@ -47,7 +47,7 @@ export type Grant = Model & {
   __typename?: 'Grant';
   /** Access details */
   access: Array<Access>;
-  /** Payment pointer of the grantee's account */
+  /** Wallet address of the grantee's account */
   client: Scalars['String']['output'];
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
@@ -104,7 +104,7 @@ export type LimitData = {
   interval?: Maybe<Scalars['String']['output']>;
   /** Amount to receive */
   receiveAmount?: Maybe<PaymentAmount>;
-  /** Payment pointer URL of the receiver */
+  /** Wallet address URL of the receiver */
   receiver?: Maybe<Scalars['String']['output']>;
 };
 

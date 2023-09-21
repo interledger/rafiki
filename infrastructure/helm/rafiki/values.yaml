@@ -41,7 +41,7 @@ rafiki-backend:
   workers:
     incomingPayment: 1
     outgoingPayment: 4
-    paymentPointer: 1
+    walletAddress: 1
     webhook: 1
   workerIdle: 200
   idempotency:

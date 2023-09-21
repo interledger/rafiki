@@ -512,11 +512,11 @@ type WalletAddressEdge {
 }
 
 type WalletAddress implements Model {
-  "Payment pointer id"
+  "Wallet address id"
   id: ID!
   "Asset of the wallet address"
   asset: Asset!
-  "Payment Pointer URL"
+  "Wallet Address URL"
   url: String!
   "Public name associated with the wallet address"
   publicName: String
@@ -605,7 +605,7 @@ type IncomingPayment implements BasePayment & Model {
 type Receiver {
   "Incoming payment URL"
   id: String!
-  "Payment pointer URL under which the incoming payment was created"
+  "Wallet address URL under which the incoming payment was created"
   walletAddressUrl: String!
   "Describes whether the incoming payment has completed receiving funds."
   completed: Boolean!
@@ -665,7 +665,7 @@ type OutgoingPayment implements BasePayment & Model {
   debitAmount: Amount!
   "Amount to receive (fixed receive)"
   receiveAmount: Amount!
-  "Payment pointer URL of the receiver"
+  "Wallet address URL of the receiver"
   receiver: String!
   "Additional metadata associated with the outgoing payment."
   metadata: JSONObject
@@ -738,7 +738,7 @@ type Quote {
   id: ID!
   "Id of the wallet address under which this quote was created"
   walletAddressId: ID!
-  "Payment pointer URL of the receiver"
+  "Wallet address URL of the receiver"
   receiver: String!
   "Amount to send (fixed send)"
   debitAmount: Amount!
@@ -773,7 +773,7 @@ input CreateQuoteInput {
   debitAmount: AmountInput
   "Amount to receive (fixed receive)"
   receiveAmount: AmountInput
-  "Payment pointer URL of the receiver"
+  "Wallet address URL of the receiver"
   receiver: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String
@@ -847,7 +847,7 @@ type CreateReceiverResponse {
 input CreateWalletAddressInput {
   "Asset of the wallet address"
   assetId: String!
-  "Payment Pointer URL"
+  "Wallet Address URL"
   url: String!
   "Public name associated with the wallet address"
   publicName: String
@@ -916,7 +916,7 @@ type WalletAddressWithdrawal {
   id: ID!
   "Amount to withdraw"
   amount: UInt64!
-  "Payment pointer details"
+  "Wallet address details"
   walletAddress: WalletAddress!
 }
 

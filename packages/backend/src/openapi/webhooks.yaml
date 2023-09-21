@@ -63,14 +63,14 @@ webhooks:
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
-  paymentPointerNotFound:
+  walletAddressNotFound:
     post:
       requestBody:
-        description: Notify account servicing entity to create a payment pointer if it can find a corresponding account in their system.
+        description: Notify account servicing entity to create a wallet address if it can find a corresponding account in their system.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/paymentPointerNotFound'
+              $ref: '#/components/schemas/walletAddressNotFound'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -129,7 +129,7 @@ components:
           type: object
           required:
             - id
-            - paymentPointerId
+            - walletAddressId
             - createdAt
             - updatedAt
             - expiresAt
@@ -139,7 +139,7 @@ components:
             id:
               type: string
               format: uuid
-            paymentPointerId:
+            walletAddressId:
               type: string
               format: uuid
             completed:
@@ -180,7 +180,7 @@ components:
           type: object
           required:
             - id
-            - paymentPointerId
+            - walletAddressId
             - createdAt
             - updatedAt
             - expiresAt
@@ -194,7 +194,7 @@ components:
             id:
               type: string
               format: uuid
-            paymentPointerId:
+            walletAddressId:
               type: string
               format: uuid
             state:
@@ -234,7 +234,7 @@ components:
               type: string
               format: uuid
       additionalProperties: false
-    paymentPointerNotFound:
+    walletAddressNotFound:
       required:
         - id
         - type
@@ -250,9 +250,9 @@ components:
         data:
           type: object
           required:
-            - paymentPointerUrl
+            - walletAddressUrl
           properties:
-            paymentPointerUrl:
+            walletAddressUrl:
               type: string
       additionalProperties: false
     webMonetizationEvent:
@@ -271,9 +271,9 @@ components:
         data:
           type: object
           required:
-            - paymentPointer
+            - walletAddress
           properties:
-            paymentPointer:
+            walletAddress:
               type: object
               required:
                 - id

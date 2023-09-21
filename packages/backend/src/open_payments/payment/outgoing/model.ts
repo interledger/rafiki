@@ -157,7 +157,7 @@ export class OutgoingPayment
   ): OpenPaymentsOutgoingPayment {
     return {
       id: this.getUrl(walletAddress),
-      paymentPointer: walletAddress.url,
+      walletAddress: walletAddress.url,
       quoteId: this.quote?.getUrl(walletAddress) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),

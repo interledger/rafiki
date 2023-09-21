@@ -57,7 +57,7 @@ export const createTestApp = async (
   const app = new App(container)
   await start(container, app)
 
-  // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
+  // Since wallet addresses MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
   nock(config.openPaymentsUrl)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)

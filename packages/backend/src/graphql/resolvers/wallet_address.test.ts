@@ -35,7 +35,7 @@ import {
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
 
-describe('Payment Pointer Resolvers', (): void => {
+describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let knex: Knex
@@ -57,7 +57,7 @@ describe('Payment Pointer Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Create Payment Pointer', (): void => {
+  describe('Create Wallet Address', (): void => {
     let asset: Asset
     let input: CreateWalletAddressInput
 
@@ -74,7 +74,7 @@ describe('Payment Pointer Resolvers', (): void => {
       ${'Alice'}
       ${undefined}
     `(
-      'Can create a payment pointer (publicName: $publicName)',
+      'Can create a wallet address (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         input.publicName = publicName
         const response = await appContainer.apolloClient
@@ -216,22 +216,22 @@ describe('Payment Pointer Resolvers', (): void => {
         })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
-      expect(response.message).toBe('Error trying to create payment pointer')
+      expect(response.message).toBe('Error trying to create wallet address')
     })
   })
 
-  describe('Update Payment Pointer', (): void => {
+  describe('Update Wallet Address', (): void => {
     let walletAddress: WalletAddressModel
 
     beforeEach(async (): Promise<void> => {
       walletAddress = await createWalletAddress(deps)
     })
 
-    test('Can update a payment pointer', async (): Promise<void> => {
+    test('Can update a wallet address', async (): Promise<void> => {
       const updateOptions = {
         id: walletAddress.id,
         status: WalletAddressStatus.Inactive,
-        publicName: 'Public Payment Pointer'
+        publicName: 'Public Wallet Address'
       }
       const response = await appContainer.apolloClient
         .mutate({
@@ -372,17 +372,17 @@ describe('Payment Pointer Resolvers', (): void => {
 
       expect(response.success).toBe(false)
       expect(response.code).toEqual('500')
-      expect(response.message).toEqual('Error trying to update payment pointer')
+      expect(response.message).toEqual('Error trying to update wallet address')
     })
   })
 
-  describe('Payment Pointer Queries', (): void => {
+  describe('Wallet Address Queries', (): void => {
     test.each`
       publicName
       ${'Alice'}
       ${undefined}
     `(
-      'Can get an payment pointer (publicName: $publicName)',
+      'Can get an wallet address (publicName: $publicName)',
       async ({ publicName }): Promise<void> => {
         const walletAddress = await createWalletAddress(deps, {
           publicName
@@ -428,7 +428,7 @@ describe('Payment Pointer Resolvers', (): void => {
       }
     )
 
-    test('Returns error for unknown payment pointer', async (): Promise<void> => {
+    test('Returns error for unknown wallet address', async (): Promise<void> => {
       const gqlQuery = appContainer.apolloClient
         .query({
           query: gql`
@@ -459,7 +459,7 @@ describe('Payment Pointer Resolvers', (): void => {
       pagedQuery: 'walletAddresses'
     })
 
-    test('Can get page of payment pointers', async (): Promise<void> => {
+    test('Can get page of wallet addresses', async (): Promise<void> => {
       const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
         walletAddresses.push(await createWalletAddress(deps))
@@ -512,13 +512,13 @@ describe('Payment Pointer Resolvers', (): void => {
     })
   })
 
-  describe('Trigger Payment Pointer Events', (): void => {
+  describe('Trigger Wallet Address Events', (): void => {
     test.each`
       limit | count
       ${1}  | ${1}
       ${5}  | ${2}
     `(
-      'Can trigger payment pointer events (limit: $limit)',
+      'Can trigger wallet address events (limit: $limit)',
       async ({ limit, count }): Promise<void> => {
         const accountingService = await deps.use('accountingService')
         const walletAddresses: WalletAddressModel[] = []
@@ -623,7 +623,7 @@ describe('Payment Pointer Resolvers', (): void => {
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
       expect(response.message).toBe(
-        'Error trying to trigger payment pointer events'
+        'Error trying to trigger wallet address events'
       )
       expect(response.count).toBeNull()
     })
