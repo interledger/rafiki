@@ -42,8 +42,6 @@ function contextToRequestLike(ctx: HttpSigContext): RequestLike {
   }
 }
 
-// TODO: unauthed requests are getting screwed up here.
-// unauthed requests work without this middleware, but with it im seeing an error: InternalServerError: response must be null.
 export function createTokenIntrospectionMiddleware({
   requestType,
   requestAction,
@@ -216,53 +214,3 @@ export const httpsigMiddleware = async (
   await throwIfSignatureInvalid(ctx)
   await next()
 }
-
-// export const httpsigMiddleware = async (
-//   ctx: HttpSigContext,
-//   next: () => Promise<unknown>
-// ): Promise<void> => {
-//   const keyId = getKeyId(ctx.request.headers['signature-input'])
-//   if (!keyId) {
-//     ctx.throw(401, 'Invalid signature input')
-//   }
-//   // TODO
-//   // cache client key(s)
-//   let jwks: JWKS | undefined
-//   try {
-//     const openPaymentsClient = await ctx.container.use('openPaymentsClient')
-//     jwks = await openPaymentsClient.paymentPointer.getKeys({
-//       url: ctx.client
-//     })
-//   } catch (error) {
-//     const logger = await ctx.container.use('logger')
-//     logger.debug(
-//       {
-//         error,
-//         client: ctx.client
-//       },
-//       'retrieving client key'
-//     )
-//   }
-//   const key = jwks?.keys.find((key) => key.kid === keyId)
-//   if (!key) {
-//     ctx.throw(401, 'Invalid signature input')
-//   }
-//   try {
-//     if (!(await validateSignature(key, contextToRequestLike(ctx)))) {
-//       ctx.throw(401, 'Invalid signature')
-//     }
-//   } catch (err) {
-//     if (err instanceof Koa.HttpError) {
-//       throw err
-//     }
-//     const logger = await ctx.container.use('logger')
-//     logger.warn(
-//       {
-//         err
-//       },
-//       'httpsig error'
-//     )
-//     ctx.throw(401, `Invalid signature`)
-//   }
-//   await next()
-// }
