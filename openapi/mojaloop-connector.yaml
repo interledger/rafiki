@@ -217,16 +217,23 @@ components:
           $ref: '#/components/schemas/mjl-party-personal-info'
     mjl-party:
       required:
+        - partyIdType
         - partyIdentifier
         - fspId
       type: object
       properties:
+        partyIdType:
+          type: string
+          example: 'MSISDN'
+          enum:
+            - MSISDN
         partyIdentifier:
           type: string
-          example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+          example: '456'
         fspId:
           type: string
           example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+          format: uuid
     mjl-transaction-type:
       required:
         - scenario
@@ -237,17 +244,22 @@ components:
           type: string
           description: The transaction type scenario
           enum:
-            - CONVERSION
+            - DEPOSIT
+            - WITHDRAWAL
+            - REFUND
         initiator:
           type: string
           description: The transaction type initiator
           enum:
-            - SENDER
+            - PAYER
+            - PAYEE
         initiatorType:
           type: string
           description: The transaction type initiator type
           enum:
             - CONSUMER
+            - AGENT
+            - BUSINESS
     mjl-party-personal-info:
       type: object
       properties:
