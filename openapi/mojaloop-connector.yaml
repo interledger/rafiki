@@ -94,6 +94,17 @@ paths:
       responses:
         '200':
           description: Successful operation
+          headers:
+            FSPIOP-Encryption:
+              description: FSPIOP api encryption.
+              schema:
+                type: string
+                format: uuid
+            FSPIOP-Signature:
+              description: FSPIOP signature from payee.
+              schema:
+                type: string
+                format: uuid
           content:
             application/json:
               schema:
@@ -172,37 +183,37 @@ components:
         transactionId:
           type: string
           example: '1067059f5c-e656-41ee-a746-631931d1ac12'
-        payer:
-          $ref: '#/components/schemas/mjl-party-info'
-        payee:
-          $ref: '#/components/schemas/mjl-party-info'
+        payerFsp:
+          type: string
+          example: 'bluebank'
+        payeeFsp:
+          type: string
+          example: 'greenbank'
         amount:
           $ref: '#/components/schemas/mjl-amount'
-    mjl-transfer-rsp:
-      required:
-        - transferAmount
-        - expiration
-      type: object
-      properties:
-        transferAmount:
-          $ref: '#/components/schemas/mjl-amount'
-        expiration:
-          type: string
-          example: '2022-12-06T09:47:12.783Z'
         ilpPacket:
           type: string
           example: 'AYICFwAAAAAAAABkFGcudW5kZWZpbmVkLm1zaXNkbi4xggH2ZXlKMGNtRnVjMkZqZEdsdmJrbGtJam9pTjJZMVpEazNPRFF0TTJFMU55MDFPRFkxTFRsaFlUQXROMlJrWlRjM09URTFORGhoSWl3aWNYVnZkR1ZKWkNJNklqSXlORE5tWkdKbExUVmtaV0V0TTJGaVpDMWhNakV3TFRNM09EQmxOMll5WmpGbU5DSXNJbkJoZVdWbElqcDdJbkJoY25SNVNXUkpibVp2SWpwN0luQmhjblI1U1dSVWVYQmxJam9pVFZOSlUwUk9JaXdpY0dGeWRIbEpaR1Z1ZEdsbWFXVnlJam9pTVNKOWZTd2ljR0Y1WlhJaU9uc2ljR0Z5ZEhsSlpFbHVabThpT25zaWNHRnlkSGxKWkZSNWNHVWlPaUpOVTBsVFJFNGlMQ0p3WVhKMGVVbGtaVzUwYVdacFpYSWlPaUl4SW4xOUxDSmhiVzkxYm5RaU9uc2lZM1Z5Y21WdVkza2lPaUpGVlZJaUxDSmhiVzkxYm5RaU9pSXhJbjBzSW5SeVlXNXpZV04wYVc5dVZIbHdaU0k2ZXlKelkyVnVZWEpwYnlJNklrUkZVRTlUU1ZRaUxDSnBibWwwYVdGMGIzSWlPaUpRUVZsRlVpSXNJbWx1YVhScFlYUnZjbFI1Y0dVaU9pSkNWVk5KVGtWVFV5SjlmUQA'
         condition:
           type: string
+          example: 'mytKqt5wHDswqXw58L6aHSBbUKh2QlOZlUBuHKkH6Co'
+        expiration:
+          type: string
+          example: '2023-09-22T11:47:07.366Z'
+    mjl-transfer-rsp:
+      type: object
+      properties:
+        completedTimestamp:
+          type: string
+          example: '2023-09-21T12:04:00.149Z'
+        transferState:
+          type: string
+          example: 'COMMITTED'
+          enum:
+            - COMMITTED
+        fulfilment:
+          type: string
           example: 'xmHnYE0iQnMvi1CshISk9iYCf7MG3_ZsMNN9I4HKnAo'
-        payeeFspCommission:
-          $ref: '#/components/schemas/mjl-amount'
-        geoCode:
-          $ref: '#/components/schemas/mjl-geo-code'
-        payeeReceiveAmount:
-          $ref: '#/components/schemas/mjl-amount'
-        payeeFspFee:
-          $ref: '#/components/schemas/mjl-amount'
     mjl-party-info:
       required:
         - partyIdInfo
