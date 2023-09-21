@@ -9,12 +9,17 @@ on:
       release-notes:
         required: true
         type: string
+      branch:
+        required: true
+        type: string
 
 jobs:
   postman-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{inputs.branch}}
       - name: Install Postman CLI
         run: |
           curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
