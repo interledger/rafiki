@@ -17,6 +17,8 @@ import { HttpTokenError } from '../httpToken/errors'
 import { Pagination } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { isValidHttpUrl } from '../shared/utils'
+import { v4 as uuid } from 'uuid'
+import { TransferError } from '../accounting/errors'
 
 export interface HttpOptions {
   incoming?: {
@@ -34,6 +36,7 @@ export type Options = {
   staticIlpAddress: string
   name?: string
   liquidityThreshold?: bigint
+  initialLiquidity?: bigint
 }
 
 export type CreateOptions = Options & {
@@ -42,6 +45,12 @@ export type CreateOptions = Options & {
 
 export type UpdateOptions = Partial<Options> & {
   id: string
+}
+
+interface AddPeerLiquidityArgs {
+  amount: bigint
+  transferId?: string
+  peerId: string
 }
 
 export interface PeerService {
@@ -54,6 +63,9 @@ export interface PeerService {
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
   getPage(pagination?: Pagination): Promise<Peer[]>
+  addLiquidity(
+    args: AddPeerLiquidityArgs
+  ): Promise<void | PeerError.UnknownPeer | TransferError>
   delete(id: string): Promise<Peer | undefined>
 }
 
@@ -89,6 +101,7 @@ export async function createPeerService({
       getPeerByDestinationAddress(deps, destinationAddress, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
     getPage: (pagination?) => getPeersPage(deps, pagination),
+    addLiquidity: (args) => addLiquidityById(deps, args),
     delete: (id) => deletePeer(deps, id)
   }
 }
@@ -142,8 +155,26 @@ async function createPeer(
           id: peer.id,
           asset: peer.asset
         },
-        LiquidityAccountType.PEER
+        LiquidityAccountType.PEER,
+        trx
       )
+
+      if (options.initialLiquidity) {
+        const transferError = await addLiquidity(
+          deps,
+          { peer, amount: options.initialLiquidity },
+          trx
+        )
+
+        if (transferError) {
+          deps.logger.error(
+            { transferError },
+            'error trying to add initial liquidity'
+          )
+
+          throw PeerError.InvalidInitialLiquidity
+        }
+      }
 
       return peer
     })
@@ -210,6 +241,37 @@ async function updatePeer(
     }
     throw err
   }
+}
+
+async function addLiquidityById(
+  deps: ServiceDependencies,
+  args: AddPeerLiquidityArgs
+): Promise<void | PeerError.UnknownPeer | TransferError> {
+  const { peerId, amount, transferId } = args
+
+  const peer = await getPeer(deps, peerId)
+  if (!peer) {
+    return PeerError.UnknownPeer
+  }
+
+  return addLiquidity(deps, { peer, amount, transferId })
+}
+
+async function addLiquidity(
+  deps: ServiceDependencies,
+  args: { peer: Peer; amount: bigint; transferId?: string },
+  trx?: TransactionOrKnex
+): Promise<void | TransferError> {
+  const { peer, amount, transferId } = args
+
+  return deps.accountingService.createDeposit(
+    {
+      id: transferId ?? uuid(),
+      account: peer,
+      amount
+    },
+    trx
+  )
 }
 
 async function addIncomingHttpTokens({

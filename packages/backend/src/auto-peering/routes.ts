@@ -54,7 +54,8 @@ async function acceptPeerRequest(
     ctx.body = {
       error: {
         code: errorCode,
-        message: errorToMessage[peeringDetailsOrError]
+        message: errorToMessage[peeringDetailsOrError],
+        type: peeringDetailsOrError
       }
     }
   } else {

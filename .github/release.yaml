@@ -1,11 +1,15 @@
 changelog:
   categories:
+    - title: Breaking Changes
+      labels:
+        - breaking
     - title: General Changes
       labels:
         - "*"
       exclude:
         labels:
           - dependencies
+          - breaking
     - title: Dependency Updates
       labels:
         - dependencies

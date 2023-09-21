@@ -28,7 +28,7 @@ dependencies:
     version: "18.0.4"
     repository: "https://charts.bitnami.com/bitnami"
   - name: postgresql
-    version: '12.11.2'
+    version: '12.12.4'
     repository: 'https://charts.bitnami.com/bitnami'
   - name: rafiki-auth
     version: '0.2.0'

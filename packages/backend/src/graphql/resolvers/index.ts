@@ -49,6 +49,7 @@ import { getWebhookEvents } from './webhooks'
 import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
 import { getCombinedPayments } from './combined_payments'
+import { createOrUpdatePeerByUrl } from './auto-peering'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
@@ -93,6 +94,7 @@ export const resolvers: Resolvers = {
     createIncomingPayment,
     createReceiver,
     createPeer: createPeer,
+    createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
     addAssetLiquidity: addAssetLiquidity,

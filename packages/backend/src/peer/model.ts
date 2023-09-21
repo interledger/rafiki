@@ -37,6 +37,7 @@ export class Peer
 
   public assetId!: string
   public asset!: Asset
+  public incomingTokens!: HttpToken[]
 
   public http!: {
     outgoing: {

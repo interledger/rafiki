@@ -23,7 +23,6 @@ import { HttpTokenService } from './httpToken/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './peer/service'
-import { connectionMiddleware } from './open_payments/connection/middleware'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
 import { PaymentPointerService } from './open_payments/payment_pointer/service'
@@ -35,7 +34,7 @@ import {
   authenticatedStatusMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import { spspMiddleware, SPSPConnectionContext } from './spsp/middleware'
+import { spspMiddleware } from './spsp/middleware'
 import { SPSPRoutes } from './spsp/routes'
 import {
   IncomingPaymentRoutes,
@@ -81,6 +80,7 @@ import { FeeService } from './fee/service'
 import { AutoPeeringService } from './auto-peering/service'
 import { AutoPeeringRoutes } from './auto-peering/routes'
 import { Rafiki as ConnectorApp } from './connector/core'
+import { AxiosInstance } from 'axios'
 
 export interface AppContextData {
   logger: Logger
@@ -199,6 +199,7 @@ const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
+  axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
@@ -363,23 +364,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const connectionRoutes = await this.container.use('connectionRoutes')
     const { resourceServerSpec } = await this.container.use('openApi')
-
-    // GET /connections/{id}
-    router.get<DefaultState, SPSPConnectionContext>(
-      PAYMENT_POINTER_PATH + '/connections/:id',
-      connectionMiddleware,
-      spspMiddleware,
-      createValidatorMiddleware<ContextType<SPSPConnectionContext>>(
-        resourceServerSpec,
-        {
-          path: '/connections/{id}',
-          method: HttpMethod.GET
-        }
-      ),
-      connectionRoutes.get
-    )
 
     // POST /incoming-payments
     // Create incoming payment

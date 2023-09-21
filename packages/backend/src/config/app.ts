@@ -1,7 +1,8 @@
+import { parseOrProvisionKey } from '@interledger/http-signature-utils'
 import * as crypto from 'crypto'
+import dotenv from 'dotenv'
 import * as fs from 'fs'
 import { ConnectionOptions } from 'tls'
-import { parseOrProvisionKey } from '@interledger/http-signature-utils'
 
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
@@ -24,6 +25,10 @@ function envBool(name: string, value: boolean): boolean {
 }
 
 export type IAppConfig = typeof Config
+
+dotenv.config({
+  path: process.env.ENV_FILE || '.env'
+})
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),

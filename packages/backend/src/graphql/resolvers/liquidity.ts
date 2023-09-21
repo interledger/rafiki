@@ -17,6 +17,7 @@ import {
   isPaymentEvent,
   PaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
+import { PeerError } from '../../peer/errors'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
@@ -51,19 +52,18 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
         return responses[LiquidityError.AmountZero]
       }
       const peerService = await ctx.container.use('peerService')
-      const peer = await peerService.get(args.input.peerId)
-      if (!peer) {
-        return responses[LiquidityError.UnknownPeer]
-      }
-      const accountingService = await ctx.container.use('accountingService')
-      const error = await accountingService.createDeposit({
-        id: args.input.id,
-        account: peer,
+      const peerOrError = await peerService.addLiquidity({
+        transferId: args.input.id,
+        peerId: args.input.peerId,
         amount: args.input.amount
       })
-      if (error) {
-        return errorToResponse(error)
+
+      if (peerOrError === PeerError.UnknownPeer) {
+        return responses[LiquidityError.UnknownPeer]
+      } else if (isLiquidityError(peerOrError)) {
+        return errorToResponse(peerOrError)
       }
+
       return {
         code: '200',
         success: true,

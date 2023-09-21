@@ -47,7 +47,8 @@ describe('Peer Resolvers', (): void => {
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
     name: faker.person.fullName(),
-    liquidityThreshold: BigInt(100)
+    liquidityThreshold: BigInt(100),
+    initialLiquidity: BigInt(100)
   })
 
   beforeAll(async (): Promise<void> => {
@@ -134,9 +135,9 @@ describe('Peer Resolvers', (): void => {
         },
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         staticIlpAddress: peer.staticIlpAddress,
-        liquidity: '0',
+        liquidity: peer.initialLiquidity?.toString(),
         name: peer.name,
-        liquidityThreshold: '100'
+        liquidityThreshold: peer.liquidityThreshold?.toString()
       })
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
@@ -155,6 +156,7 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownAsset}
       ${PeerError.DuplicatePeer}
+      ${PeerError.InvalidInitialLiquidity}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
       const peer = randomPeer()

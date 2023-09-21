@@ -38,7 +38,6 @@ import { createConnectorService } from './connector'
 import { createOpenAPI } from '@interledger/openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createConnectionService } from './open_payments/connection/service'
-import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createPaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
@@ -46,6 +45,7 @@ import { createCombinedPaymentService } from './open_payments/payment/combined/s
 import { createFeeService } from './fee/service'
 import { createAutoPeeringService } from './auto-peering/service'
 import { createAutoPeeringRoutes } from './auto-peering/routes'
+import axios from 'axios'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -59,6 +59,7 @@ export function initIocContainer(
 ): IocContract<AppServices> {
   const container: IocContract<AppServices> = new Ioc()
   container.singleton('config', async () => config)
+  container.singleton('axios', async () => axios.create())
   container.singleton('logger', async (deps: IocContract<AppServices>) => {
     const config = await deps.use('config')
     const logger = createLogger()
@@ -288,13 +289,6 @@ export function initIocContainer(
       streamServer: await deps.use('streamServer')
     })
   })
-  container.singleton('connectionRoutes', async (deps) => {
-    return createConnectionRoutes({
-      logger: await deps.use('logger'),
-      incomingPaymentService: await deps.use('incomingPaymentService'),
-      connectionService: await deps.use('connectionService')
-    })
-  })
   container.singleton('receiverService', async (deps) => {
     const config = await deps.use('config')
     return await createReceiverService({
@@ -413,6 +407,7 @@ export function initIocContainer(
 
   container.singleton('autoPeeringService', async (deps) => {
     return createAutoPeeringService({
+      axios: await deps.use('axios'),
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       assetService: await deps.use('assetService'),
