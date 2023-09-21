@@ -5,7 +5,9 @@ export function createPaymentPointerMiddleware() {
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    ctx.paymentPointerUrl = `https://${ctx.request.host}/${ctx.params.paymentPointerPath}`
+    // TODO: do this in a type-safe way
+    ctx.paymentPointerUrl = ctx.body.paymentPointer as string
+
     const config = await ctx.container.use('config')
     if (ctx.paymentPointerUrl !== config.paymentPointerUrl) {
       const paymentPointerService = await ctx.container.use(
