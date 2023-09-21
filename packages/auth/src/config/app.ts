@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+import dotenv from 'dotenv'
 
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
@@ -15,6 +16,10 @@ function envBool(name: string, value: boolean): boolean {
   return envValue == null ? value : envValue === 'true'
 }
 export type IAppConfig = typeof Config
+
+dotenv.config({
+  path: process.env.ENV_FILE || '.env'
+})
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
