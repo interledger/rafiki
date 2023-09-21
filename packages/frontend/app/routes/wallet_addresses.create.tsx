@@ -8,9 +8,9 @@ import {
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input, Select } from '~/components/ui'
 import { loadAssets } from '~/lib/api/asset.server'
-import { createPaymentPointer } from '~/lib/api/payment-pointer.server'
+import { createWalletAddress } from '~/lib/api/wallet-address.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { createPaymentPointerSchema } from '~/lib/validate.server'
+import { createWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { getOpenPaymentsUrl } from '~/shared/utils'
 
@@ -18,7 +18,7 @@ export async function loader() {
   return json({ assets: await loadAssets() })
 }
 
-export default function CreatePaymentPointerPage() {
+export default function CreateWalletAddressPage() {
   const { assets } = useLoaderData<typeof loader>()
   const response = useActionData<typeof action>()
   const { state } = useNavigation()
@@ -28,12 +28,12 @@ export default function CreatePaymentPointerPage() {
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader>
-          <h3 className='text-xl'>Create Payment Pointer</h3>
+          <h3 className='text-xl'>Create Wallet Address</h3>
           <Button
-            aria-label='go back to payment pointers page'
-            to='/payment-pointers'
+            aria-label='go back to wallet addresses page'
+            to='/wallet-addresses'
           >
-            Go back to payment pointers page
+            Go back to wallet addresses page
           </Button>
         </PageHeader>
         <Form method='post' replace>
@@ -51,7 +51,7 @@ export default function CreatePaymentPointerPage() {
                     required
                     addOn={getOpenPaymentsUrl()}
                     name='name'
-                    label='Payment pointer name'
+                    label='Wallet address name'
                     placeholder='jdoe'
                     error={response?.errors?.fieldErrors.name}
                   />
@@ -76,8 +76,8 @@ export default function CreatePaymentPointerPage() {
               </div>
             </div>
             <div className='flex justify-end py-3'>
-              <Button aria-label='create payment pointer' type='submit'>
-                {isSubmitting ? 'Creating payment pointer ...' : 'Create'}
+              <Button aria-label='create wallet address' type='submit'>
+                {isSubmitting ? 'Creating wallet address ...' : 'Create'}
               </Button>
             </div>
           </fieldset>
@@ -89,7 +89,7 @@ export default function CreatePaymentPointerPage() {
 
 export async function action({ request }: ActionArgs) {
   const errors: {
-    fieldErrors: ZodFieldErrors<typeof createPaymentPointerSchema>
+    fieldErrors: ZodFieldErrors<typeof createWalletAddressSchema>
     message: string[]
   } = {
     fieldErrors: {},
@@ -98,14 +98,14 @@ export async function action({ request }: ActionArgs) {
 
   const formData = Object.fromEntries(await request.formData())
 
-  const result = createPaymentPointerSchema.safeParse(formData)
+  const result = createWalletAddressSchema.safeParse(formData)
 
   if (!result.success) {
     errors.fieldErrors = result.error.flatten().fieldErrors
     return json({ errors }, { status: 400 })
   }
 
-  const response = await createPaymentPointer({
+  const response = await createWalletAddress({
     url: `${getOpenPaymentsUrl()}${result.data.name}`,
     publicName: result.data.publicName,
     assetId: result.data.asset
@@ -113,7 +113,7 @@ export async function action({ request }: ActionArgs) {
 
   if (!response?.success) {
     errors.message = [
-      response?.message ?? 'Could not create payment pointer. Please try again!'
+      response?.message ?? 'Could not create wallet address. Please try again!'
     ]
     return json({ errors }, { status: 400 })
   }
@@ -123,9 +123,9 @@ export async function action({ request }: ActionArgs) {
   return setMessageAndRedirect({
     session,
     message: {
-      content: 'Payment pointer was created.',
+      content: 'Wallet address was created.',
       type: 'success'
     },
-    location: `/payment-pointers/${response.paymentPointer?.id}`
+    location: `/wallet-addresses/${response.walletAddress?.id}`
   })
 }

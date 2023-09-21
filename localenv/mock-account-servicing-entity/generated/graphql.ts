@@ -229,7 +229,7 @@ export type CreateQuoteInput = {
   idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   /** Amount to receive (fixed receive) */
   receiveAmount?: InputMaybe<AmountInput>;
-  /** Payment pointer URL of the receiver */
+  /** Wallet address URL of the receiver */
   receiver: Scalars['String']['input'];
   /** Id of the wallet address under which the quote will be created */
   walletAddressId: Scalars['String']['input'];
@@ -701,7 +701,7 @@ export type OutgoingPayment = BasePayment & Model & {
   quote?: Maybe<Quote>;
   /** Amount to receive (fixed receive) */
   receiveAmount: Amount;
-  /** Payment pointer URL of the receiver */
+  /** Wallet address URL of the receiver */
   receiver: Scalars['String']['output'];
   /** Amount already sent */
   sentAmount: Amount;
@@ -952,7 +952,7 @@ export type Quote = {
   minExchangeRate: Scalars['Float']['output'];
   /** Amount to receive (fixed receive) */
   receiveAmount: Amount;
-  /** Payment pointer URL of the receiver */
+  /** Wallet address URL of the receiver */
   receiver: Scalars['String']['output'];
   /** Id of the wallet address under which this quote was created */
   walletAddressId: Scalars['ID']['output'];
@@ -996,7 +996,7 @@ export type Receiver = {
   receivedAmount: Amount;
   /** Date-time of last update */
   updatedAt: Scalars['String']['output'];
-  /** Payment pointer URL under which the incoming payment was created */
+  /** Wallet address URL under which the incoming payment was created */
   walletAddressUrl: Scalars['String']['output'];
 };
 
@@ -1125,7 +1125,7 @@ export type WalletAddress = Model & {
   asset: Asset;
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
-  /** Payment pointer id */
+  /** Wallet address id */
   id: Scalars['ID']['output'];
   /** List of incoming payments received by this wallet address */
   incomingPayments?: Maybe<IncomingPaymentConnection>;
@@ -1198,7 +1198,7 @@ export type WalletAddressWithdrawal = {
   amount: Scalars['UInt64']['output'];
   /** Withdrawal Id */
   id: Scalars['ID']['output'];
-  /** Payment pointer details */
+  /** Wallet address details */
   walletAddress: WalletAddress;
 };
 
