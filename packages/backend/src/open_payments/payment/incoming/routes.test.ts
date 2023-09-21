@@ -16,7 +16,11 @@ import {
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import { IncomingPayment } from './model'
-import { IncomingPaymentRoutes, CreateBody } from './routes'
+import {
+  IncomingPaymentRoutes,
+  CreateBody,
+  ReadContextWithAuthenticatedStatus
+} from './routes'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createPaymentPointer } from '../../../tests/paymentPointer'
@@ -85,7 +89,8 @@ describe('Incoming Payment Routes', (): void => {
           incomingAmount,
           metadata
         }),
-      get: (ctx) => incomingPaymentRoutes.get(ctx as any), // TODO: fix any
+      get: (ctx) =>
+        incomingPaymentRoutes.get(ctx as ReadContextWithAuthenticatedStatus),
       getBody: (incomingPayment, list) => {
         return {
           id: incomingPayment.getUrl(paymentPointer),
@@ -286,6 +291,39 @@ describe('Incoming Payment Routes', (): void => {
         },
         metadata,
         completed: true
+      })
+    })
+  })
+  describe('get unauthenticated incoming payment', (): void => {
+    test('Can get incoming payment with public fields', async (): Promise<void> => {
+      const incomingPayment = await createIncomingPayment(deps, {
+        paymentPointerId: paymentPointer.id,
+        expiresAt,
+        incomingAmount,
+        metadata
+      })
+
+      const ctx = setup<ReadContextWithAuthenticatedStatus>({
+        reqOpts: {
+          headers: { Accept: 'application/json' },
+          method: 'GET',
+          url: `/incoming-payments/${incomingPayment.id}`
+        },
+        params: {
+          id: incomingPayment.id
+        },
+        paymentPointer
+      })
+      ctx.authenticated = false
+
+      await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
+      expect(ctx.response).toSatisfyApiSpec()
+      expect(ctx.body).toEqual({
+        receivedAmount: {
+          value: '0',
+          assetCode: asset.code,
+          assetScale: asset.scale
+        }
       })
     })
   })

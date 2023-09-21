@@ -35,7 +35,7 @@ interface ServiceDependencies {
   connectionService: ConnectionService
 }
 
-type ReadContextWithAuthenticatedStatus = ReadContext &
+export type ReadContextWithAuthenticatedStatus = ReadContext &
   AuthenticatedStatusContext
 
 export interface IncomingPaymentRoutes {
