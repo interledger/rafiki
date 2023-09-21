@@ -24,7 +24,7 @@ Open Payments is an API standard that allows third-parties (with the account hol
 
 ## Wallet Address
 
-A Wallet Address is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem, a wallet address is used by an account holder to share the details of their account with a counter-party. For more details, see the [documentation](https://paymentpointers.org/).
+A Wallet Address is a standardized identifier for a payment account. In the same way that an email address provides an identifier for a mailbox in the email ecosystem, a wallet address is used by an account holder to share the details of their account with a counter-party.
 
 ## Peer
 

@@ -40,7 +40,7 @@ The `auth` service performs authorization and authentication of incoming request
 
 ## Frontend
 
-The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [wallet addresss](/reference/glossary#payment-pointer), [peering relationships](/reference/glossary#peer), and [assets](/reference/glossary#asset), among other settings.
+The `frontend` project is a web app through which Rafiki administrators can manage their Rafiki instance though a UI. `frontend` communicates with the `backend` Admin API to manage [wallet addresses](/reference/glossary#payment-pointer), [peering relationships](/reference/glossary#peer), and [assets](/reference/glossary#asset), among other settings.
 
 ## Additional packages
 
