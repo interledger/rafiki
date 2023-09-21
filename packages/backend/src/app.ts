@@ -359,7 +359,7 @@ export class App {
     // POST /incoming-payments
     // Create incoming payment
     router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
-      PAYMENT_POINTER_PATH + '/incoming-payments',
+      '/incoming-payments',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<IncomingCreateBody>>
@@ -378,7 +378,7 @@ export class App {
     // GET /incoming-payments
     // List incoming payments
     router.get<DefaultState, SignedCollectionContext>(
-      PAYMENT_POINTER_PATH + '/incoming-payments',
+      '/incoming-payments',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<ContextType<SignedCollectionContext>>(
         resourceServerSpec,
@@ -398,7 +398,7 @@ export class App {
     // POST /outgoing-payment
     // Create outgoing payment
     router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
-      PAYMENT_POINTER_PATH + '/outgoing-payments',
+      '/outgoing-payments',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<OutgoingCreateBody>>
@@ -417,7 +417,7 @@ export class App {
     // GET /outgoing-payment
     // List outgoing payments
     router.get<DefaultState, SignedCollectionContext>(
-      PAYMENT_POINTER_PATH + '/outgoing-payments',
+      '/outgoing-payments',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<ContextType<SignedCollectionContext>>(
         resourceServerSpec,
@@ -437,7 +437,7 @@ export class App {
     // POST /quotes
     // Create quote
     router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
-      PAYMENT_POINTER_PATH + '/quotes',
+      '/quotes',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<
         ContextType<SignedCollectionContext<QuoteCreateBody>>
@@ -456,7 +456,7 @@ export class App {
     // GET /incoming-payments/{id}
     // Read incoming payment
     router.get<DefaultState, SignedSubresourceContext>(
-      PAYMENT_POINTER_PATH + '/incoming-payments/:id',
+      '/incoming-payments/:id',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
@@ -476,7 +476,7 @@ export class App {
     // POST /incoming-payments/{id}/complete
     // Complete incoming payment
     router.post<DefaultState, SignedSubresourceContext>(
-      PAYMENT_POINTER_PATH + '/incoming-payments/:id/complete',
+      '/incoming-payments/:id/complete',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
@@ -496,7 +496,7 @@ export class App {
     // GET /outgoing-payments/{id}
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
-      PAYMENT_POINTER_PATH + '/outgoing-payments/:id',
+      '/outgoing-payments/:id',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
@@ -516,7 +516,7 @@ export class App {
     // GET /quotes/{id}
     // Read quote
     router.get<DefaultState, SignedSubresourceContext>(
-      PAYMENT_POINTER_PATH + '/quotes/:id',
+      '/quotes/:id',
       createPaymentPointerMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
