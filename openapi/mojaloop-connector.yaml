@@ -1,0 +1,281 @@
+openapi: 3.0.3
+info:
+  title: Rafiki Mojaloop Connector
+  description: |-
+    The Rafiki Mojaloop Connector is a REST API with 2 resource types: **quote** and **transfer**.
+
+    All resource and collection resource representations use JSON and the media-type `application/json`.
+
+    Access to resources and permission to execute the methods exposed by the API is determined by the grants given to the client represented by an access token used in API requests.
+
+  termsOfService: https://interledger.org/
+  contact:
+    email: tech@interledger.org
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: '1.0'
+externalDocs:
+  description: Find out more about Rafiki
+  url: https://rafiki.dev/
+servers:
+  - url: https://rafiki.connector.mojaloop/
+tags:
+  - name: quote
+    description: quote related operations
+  - name: transfer
+    description: transfer related operations
+paths:
+  /mjl-quote:
+    post:
+      tags:
+        - quote
+      summary: Request a new Mojaloop quote.
+      description: Request a new Mojaloop quote, which will be routed to the CNP (Cross Network Provider) Mojaloop Hub instance.
+      operationId: requestQuote
+      requestBody:
+        description: Create a new quote request.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/mjl-quote-req'
+        required: true
+      parameters:
+        - name: fspiop-source
+          in: header
+          description: 'The DFSP that requested the quote'
+          required: false
+          schema:
+            type: string
+        - name: fspiop-destination
+          in: header
+          description: 'The DFSP destination'
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mjl-quote-rsp'
+        '400':
+          description: Missing fields or malformed syntax
+        '500':
+          description: Server error
+  /mjl-transfer:
+    post:
+      tags:
+        - transfer
+      summary: Request a new Mojaloop transfer. Even though Mojaloop support 2-phase transfers, the Rafiki Mojaloop Connector will invoke a single request (SMS not DMS).
+      description: Request a new Mojaloop transfer, which will be routed to the CNP (Cross Network Provider) Mojaloop Hub instance.
+      operationId: requestTransfer
+      requestBody:
+        description: Create a new transfer request.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/mjl-transfer-req'
+        required: true
+      parameters:
+        - name: fspiop-source
+          in: header
+          description: 'The DFSP that requested the transfer'
+          required: false
+          schema:
+            type: string
+        - name: fspiop-destination
+          in: header
+          description: 'The DFSP destination'
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mjl-transfer-rsp'
+        '500':
+          description: Invalid input
+components:
+  schemas:
+    mjl-quote-req:
+      required:
+        - transactionId
+        - quoteId
+        - payer
+        - payee
+        - amountType
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+        quoteId:
+          type: string
+          example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+        extensionList:
+          type: array
+          items:
+            $ref: '#/components/schemas/mjl-party-info'
+          example: []
+        payer:
+          $ref: '#/components/schemas/mjl-party-info'
+        payee:
+          $ref: '#/components/schemas/mjl-party-info'
+        amountType:
+          type: string
+          description: The transaction type initiator type
+          enum:
+            - RECEIVE
+            - SEND
+        amount:
+          $ref: '#/components/schemas/mjl-amount'
+        transactionType:
+          $ref: '#/components/schemas/mjl-transaction-type'
+    mjl-quote-rsp:
+      required:
+        - transferAmount
+        - expiration
+      type: object
+      properties:
+        transferAmount:
+          $ref: '#/components/schemas/mjl-amount'
+        expiration:
+          type: string
+          example: '2022-12-06T09:47:12.783Z'
+        ilpPacket:
+          type: string
+          example: 'AYICFwAAAAAAAABkFGcudW5kZWZpbmVkLm1zaXNkbi4xggH2ZXlKMGNtRnVjMkZqZEdsdmJrbGtJam9pTjJZMVpEazNPRFF0TTJFMU55MDFPRFkxTFRsaFlUQXROMlJrWlRjM09URTFORGhoSWl3aWNYVnZkR1ZKWkNJNklqSXlORE5tWkdKbExUVmtaV0V0TTJGaVpDMWhNakV3TFRNM09EQmxOMll5WmpGbU5DSXNJbkJoZVdWbElqcDdJbkJoY25SNVNXUkpibVp2SWpwN0luQmhjblI1U1dSVWVYQmxJam9pVFZOSlUwUk9JaXdpY0dGeWRIbEpaR1Z1ZEdsbWFXVnlJam9pTVNKOWZTd2ljR0Y1WlhJaU9uc2ljR0Z5ZEhsSlpFbHVabThpT25zaWNHRnlkSGxKWkZSNWNHVWlPaUpOVTBsVFJFNGlMQ0p3WVhKMGVVbGtaVzUwYVdacFpYSWlPaUl4SW4xOUxDSmhiVzkxYm5RaU9uc2lZM1Z5Y21WdVkza2lPaUpGVlZJaUxDSmhiVzkxYm5RaU9pSXhJbjBzSW5SeVlXNXpZV04wYVc5dVZIbHdaU0k2ZXlKelkyVnVZWEpwYnlJNklrUkZVRTlUU1ZRaUxDSnBibWwwYVdGMGIzSWlPaUpRUVZsRlVpSXNJbWx1YVhScFlYUnZjbFI1Y0dVaU9pSkNWVk5KVGtWVFV5SjlmUQA'
+        condition:
+          type: string
+          example: 'xmHnYE0iQnMvi1CshISk9iYCf7MG3_ZsMNN9I4HKnAo'
+        payeeFspCommission:
+          $ref: '#/components/schemas/mjl-amount'
+        geoCode:
+          $ref: '#/components/schemas/mjl-geo-code'
+        payeeReceiveAmount:
+          $ref: '#/components/schemas/mjl-amount'
+        payeeFspFee:
+          $ref: '#/components/schemas/mjl-amount'
+    mjl-transfer-req:
+      required:
+        - transactionId
+        - payer
+        - payee
+        - amount
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+        payer:
+          $ref: '#/components/schemas/mjl-party-info'
+        payee:
+          $ref: '#/components/schemas/mjl-party-info'
+        amount:
+          $ref: '#/components/schemas/mjl-amount'
+    mjl-transfer-rsp:
+      required:
+        - transferAmount
+        - expiration
+      type: object
+      properties:
+        transferAmount:
+          $ref: '#/components/schemas/mjl-amount'
+        expiration:
+          type: string
+          example: '2022-12-06T09:47:12.783Z'
+        ilpPacket:
+          type: string
+          example: 'AYICFwAAAAAAAABkFGcudW5kZWZpbmVkLm1zaXNkbi4xggH2ZXlKMGNtRnVjMkZqZEdsdmJrbGtJam9pTjJZMVpEazNPRFF0TTJFMU55MDFPRFkxTFRsaFlUQXROMlJrWlRjM09URTFORGhoSWl3aWNYVnZkR1ZKWkNJNklqSXlORE5tWkdKbExUVmtaV0V0TTJGaVpDMWhNakV3TFRNM09EQmxOMll5WmpGbU5DSXNJbkJoZVdWbElqcDdJbkJoY25SNVNXUkpibVp2SWpwN0luQmhjblI1U1dSVWVYQmxJam9pVFZOSlUwUk9JaXdpY0dGeWRIbEpaR1Z1ZEdsbWFXVnlJam9pTVNKOWZTd2ljR0Y1WlhJaU9uc2ljR0Z5ZEhsSlpFbHVabThpT25zaWNHRnlkSGxKWkZSNWNHVWlPaUpOVTBsVFJFNGlMQ0p3WVhKMGVVbGtaVzUwYVdacFpYSWlPaUl4SW4xOUxDSmhiVzkxYm5RaU9uc2lZM1Z5Y21WdVkza2lPaUpGVlZJaUxDSmhiVzkxYm5RaU9pSXhJbjBzSW5SeVlXNXpZV04wYVc5dVZIbHdaU0k2ZXlKelkyVnVZWEpwYnlJNklrUkZVRTlUU1ZRaUxDSnBibWwwYVdGMGIzSWlPaUpRUVZsRlVpSXNJbWx1YVhScFlYUnZjbFI1Y0dVaU9pSkNWVk5KVGtWVFV5SjlmUQA'
+        condition:
+          type: string
+          example: 'xmHnYE0iQnMvi1CshISk9iYCf7MG3_ZsMNN9I4HKnAo'
+        payeeFspCommission:
+          $ref: '#/components/schemas/mjl-amount'
+        geoCode:
+          $ref: '#/components/schemas/mjl-geo-code'
+        payeeReceiveAmount:
+          $ref: '#/components/schemas/mjl-amount'
+        payeeFspFee:
+          $ref: '#/components/schemas/mjl-amount'
+    mjl-party-info:
+      required:
+        - partyIdInfo
+      type: object
+      properties:
+        partyIdInfo:
+          $ref: '#/components/schemas/mjl-party'
+        name:
+          type: string
+          example: 'Carmen Boullosa'
+        partyPersonalInfo:
+          $ref: '#/components/schemas/mjl-party-personal-info'
+    mjl-party:
+      required:
+        - partyIdentifier
+        - fspId
+      type: object
+      properties:
+        partyIdentifier:
+          type: string
+          example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+        fspId:
+          type: string
+          example: '1067059f5c-e656-41ee-a746-631931d1ac12'
+    mjl-transaction-type:
+      required:
+        - scenario
+        - fspId
+      type: object
+      properties:
+        scenario:
+          type: string
+          description: The transaction type scenario
+          enum:
+            - CONVERSION
+        initiator:
+          type: string
+          description: The transaction type initiator
+          enum:
+            - SENDER
+        initiatorType:
+          type: string
+          description: The transaction type initiator type
+          enum:
+            - CONSUMER
+    mjl-party-personal-info:
+      type: object
+      properties:
+        dateOfBirth:
+          type: string
+          example: '1954-09-04'
+    mjl-amount:
+      type: object
+      properties:
+        currency:
+          type: string
+          example: 'USD'
+        amount:
+          type: string
+          example: '1.5'
+    mjl-geo-code:
+      type: object
+      properties:
+        latitude:
+          type: string
+          example: '+90.000000'
+        longitude:
+          type: string
+          example: '-7.882352'
+  requestBodies:
+    mjl-quote-req:
+      description: Request for a Mojaloop quote.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/mjl-quote-req'
