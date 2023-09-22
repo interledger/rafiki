@@ -286,6 +286,48 @@
 					"response": []
 				},
 				{
+					"name": "Create Or Update Peer By Url",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "69d9415d-bcec-4a61-9592-9141c8a9c7e7",
+								"exec": [
+									"const body = pm.response.json();",
+									"",
+									"pm.collectionVariables.set(\"peerId\", body.data.createOrUpdatePeerByUrl.peer.id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"id": "dc9a1002-453d-4037-bd38-deb18681d78a",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation CreateOrUpdatePeerByUrl ($input: CreateOrUpdatePeerByUrlInput!) {\n    createOrUpdatePeerByUrl (input: $input) {\n        code\n        message\n        success\n        peer {\n            id\n            name\n            asset {\n                id\n                scale\n                code\n                withdrawalThreshold\n            }\n        }\n    }\n}",
+								"variables": "{\n  \"input\": {\n    \"peerUrl\": \"http://happy-life-bank-backend:3005\",\n    \"assetId\": \"{{assetId}}\",\n    \"addedLiquidity\": 100000\n  }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update Peer",
 					"id": "206fa427-cf5e-4aa8-9c59-5ddb1b021720",
 					"protocolProfileBehavior": {
