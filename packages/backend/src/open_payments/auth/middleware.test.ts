@@ -98,13 +98,9 @@ describe('Auth Middleware', (): void => {
       })
       ctx.request.headers.authorization = ''
       const error = new Error('Unknown')
-      ctx.throw = jest
-        .fn()
-        .mockImplementation(
-          (message: string, code?: number, properties?: {}) => {
-            throw error
-          }
-        ) as never
+      ctx.throw = jest.fn().mockImplementation(() => {
+        throw error
+      }) as never
 
       await expect(middleware(ctx, next)).rejects.toBe(error)
       expect(next).not.toHaveBeenCalled()
