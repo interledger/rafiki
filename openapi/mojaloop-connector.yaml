@@ -139,7 +139,7 @@ components:
           $ref: '#/components/schemas/mjl-party-info'
         amountType:
           type: string
-          description: The transaction type initiator type
+          description: The transaction amount type. SEND[Amount the Payer would like to send], RECEIVE[Amount the Payer would like the Payee to receive]
           enum:
             - RECEIVE
             - SEND
@@ -210,7 +210,11 @@ components:
           type: string
           example: 'COMMITTED'
           enum:
+            - RECEIVED
+            - RESERVED
             - COMMITTED
+            - ABORTED
+            - SETTLED
         fulfilment:
           type: string
           example: 'xmHnYE0iQnMvi1CshISk9iYCf7MG3_ZsMNN9I4HKnAo'
@@ -238,6 +242,13 @@ components:
           example: 'MSISDN'
           enum:
             - MSISDN
+            - EMAIL
+            - PERSONAL_ID
+            - BUSINESS
+            - DEVICE
+            - ACCOUNT_ID
+            - IBAN
+            - ALIAS
         partyIdentifier:
           type: string
           example: '456'
@@ -255,8 +266,10 @@ components:
           type: string
           description: The transaction type scenario
           enum:
+            - TRANSFER
             - DEPOSIT
             - WITHDRAWAL
+            - PAYMENT
             - REFUND
         initiator:
           type: string
@@ -271,6 +284,7 @@ components:
             - CONSUMER
             - AGENT
             - BUSINESS
+            - DEVICE
     mjl-party-personal-info:
       type: object
       properties:
