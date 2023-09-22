@@ -7,7 +7,7 @@ import Koa, { HttpError } from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
 import {
   HttpSigContext,
-  HttpSigWithAuthenticatedStausContext,
+  HttpSigWithAuthenticatedStatusContext,
   PaymentPointerContext
 } from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
@@ -142,7 +142,7 @@ export function createTokenIntrospectionMiddleware({
 }
 
 export const authenticatedStatusMiddleware = async (
-  ctx: HttpSigWithAuthenticatedStausContext,
+  ctx: HttpSigWithAuthenticatedStatusContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
   ctx.authenticated = false

@@ -20,7 +20,7 @@ import { initIocContainer } from '../../'
 import {
   AppServices,
   HttpSigContext,
-  HttpSigWithAuthenticatedStausContext,
+  HttpSigWithAuthenticatedStatusContext,
   PaymentPointerContext
 } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -404,7 +404,7 @@ describe('authenticatedStatusMiddleware', (): void => {
   })
 
   test('sets ctx.authenticated to false if http signature is invalid', async (): Promise<void> => {
-    const ctx = createContext<HttpSigWithAuthenticatedStausContext>({
+    const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
       headers: { 'signature-input': '' }
     })
 
@@ -426,7 +426,7 @@ describe('authenticatedStatusMiddleware', (): void => {
         Authorization: `GNAP ${token}`
       }
     }
-    const ctx = createContext<HttpSigWithAuthenticatedStausContext>({
+    const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
       headers: {
         Accept: 'application/json',
         Authorization: `GNAP ${token}`,

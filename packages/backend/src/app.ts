@@ -130,7 +130,7 @@ export type HttpSigContext = AppContext & {
   client: string
 }
 
-export type HttpSigWithAuthenticatedStausContext = HttpSigContext &
+export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
   AuthenticatedStatusContext
 
 // Payment pointer subresources
