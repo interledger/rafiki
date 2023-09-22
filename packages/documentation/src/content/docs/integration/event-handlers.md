@@ -9,6 +9,7 @@ Rafiki communicates with the Account Servicing Entity over webhook events, as me
 The `incoming_payment.created` event indicates that an incoming payment has been created. It has not yet received any funds so no action is required. The webhook event is informational and allows the Account Servicing Entity to display upcoming incoming payments to their users.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -25,6 +26,7 @@ The `incoming_payment.completed` event indicates that an incoming payment has be
 Example: An incoming payment was completed and received $10.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -42,6 +44,7 @@ The `incoming_payment.expired` event indicates that an incoming payment has expi
 Example: An incoming payment has expired and received $2.55.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -59,6 +62,7 @@ The `outgoing_payment.created` event indicates that an outgoing payment has been
 Example: An outgoing payment for $12 has been created.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -76,6 +80,7 @@ The `outgoing_payment.completed` event indicates that an outgoing payment has su
 Example: An outgoing payment for $12 has been completed. $11.50 were sent. The Account Servicing Entity keeps $0.50 as fees.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -93,6 +98,7 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 Example: An outgoing payment for $12 has failed. $8 were sent.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -110,6 +116,7 @@ The `payment_pointer.web_monetization` event indicates that a payment pointer ha
 Example: A payment pointer received $0.33
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -127,6 +134,7 @@ The `payment_pointer.not_found` event indicates that a [payment pointer](/refere
 Example: The payment pointer `https://example-wallet.com/carla_garcia` was requested but does not yet exist
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -143,6 +151,7 @@ The `asset.liquidity_low` event indicates that the liquidity of an [asset](../re
 Example: The asset liquidity for USD (scale: 2) drops below 100.00 USD.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
@@ -159,6 +168,7 @@ The `peer.liquidity_low` event indicates that the liquidity of a [peer](../refer
 Example: The peer liquidity for Happy Life Bank drops below 100.00 USD.
 
 ```mermaid
+
 sequenceDiagram
 
 participant ASE as Account Servicing Entity
