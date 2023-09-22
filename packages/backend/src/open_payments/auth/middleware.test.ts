@@ -75,6 +75,42 @@ describe('Auth Middleware', (): void => {
     await appContainer.shutdown()
   })
 
+  describe('bypassError option', (): void => {
+    test('calls next for HTTP errors', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        bypassError: true
+      })
+      ctx.request.headers.authorization = ''
+
+      const throwSpy = jest.spyOn(ctx, 'throw')
+      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+      expect(throwSpy).toHaveBeenCalledWith(401, 'Unauthorized')
+      expect(next).toHaveBeenCalled()
+    })
+
+    test('throws error for unkonwn errors', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        bypassError: true
+      })
+      ctx.request.headers.authorization = ''
+      const error = new Error('Unknown')
+      ctx.throw = jest
+        .fn()
+        .mockImplementation(
+          (message: string, code?: number, properties?: {}) => {
+            throw error
+          }
+        ) as never
+
+      await expect(middleware(ctx, next)).rejects.toBe(error)
+      expect(next).not.toHaveBeenCalled()
+    })
+  })
+
   test.each`
     authorization             | description
     ${undefined}              | ${'missing'}

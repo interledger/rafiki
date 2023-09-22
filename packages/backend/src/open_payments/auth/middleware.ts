@@ -126,11 +126,7 @@ export function createTokenIntrospectionMiddleware({
       }
       await next()
     } catch (err) {
-      if (
-        bypassError &&
-        err instanceof HttpError &&
-        [401, 403].includes(err.status)
-      ) {
+      if (bypassError && err instanceof HttpError) {
         return await next()
       }
 
