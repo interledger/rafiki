@@ -4,7 +4,8 @@ import {
   ReadContext,
   CreateContext,
   CompleteContext,
-  ListContext
+  ListContext,
+  AuthenticatedStatusContext
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
@@ -34,8 +35,11 @@ interface ServiceDependencies {
   connectionService: ConnectionService
 }
 
+export type ReadContextWithAuthenticatedStatus = ReadContext &
+  AuthenticatedStatusContext
+
 export interface IncomingPaymentRoutes {
-  get(ctx: ReadContext): Promise<void>
+  get(ctx: ReadContextWithAuthenticatedStatus): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
   complete(ctx: CompleteContext): Promise<void>
   list(ctx: ListContext): Promise<void>
@@ -49,7 +53,8 @@ export function createIncomingPaymentRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    get: (ctx: ReadContext) => getIncomingPayment(deps, ctx),
+    get: (ctx: ReadContextWithAuthenticatedStatus) =>
+      getIncomingPayment(deps, ctx),
     create: (ctx: CreateContext<CreateBody>) =>
       createIncomingPayment(deps, ctx),
     complete: (ctx: CompleteContext) => completeIncomingPayment(deps, ctx),
@@ -59,7 +64,36 @@ export function createIncomingPaymentRoutes(
 
 async function getIncomingPayment(
   deps: ServiceDependencies,
-  ctx: ReadContext
+  ctx: ReadContextWithAuthenticatedStatus
+) {
+  if (ctx.authenticated) {
+    await getIncomingPaymentPrivate(deps, ctx)
+  } else {
+    await getIncomingPaymentPublic(deps, ctx)
+  }
+}
+
+async function getIncomingPaymentPublic(
+  deps: ServiceDependencies,
+  ctx: ReadContextWithAuthenticatedStatus
+) {
+  try {
+    const incomingPayment = await deps.incomingPaymentService.get({
+      id: ctx.params.id,
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
+      paymentPointerId: ctx.paymentPointer.id
+    })
+    ctx.body = incomingPayment?.toPublicOpenPaymentsType()
+  } catch (err) {
+    const msg = 'Error trying to get incoming payment'
+    deps.logger.error({ err }, msg)
+    ctx.throw(500, msg)
+  }
+}
+
+async function getIncomingPaymentPrivate(
+  deps: ServiceDependencies,
+  ctx: ReadContextWithAuthenticatedStatus
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
   try {

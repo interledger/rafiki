@@ -14,7 +14,8 @@ import {
   WalletAddressContext,
   ReadContext,
   ListContext,
-  AppServices
+  AppServices,
+  AuthenticatedStatusContext
 } from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
 import { createContext } from '../../tests/context'
@@ -25,6 +26,7 @@ import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import assert from 'assert'
+import { ReadContextWithAuthenticatedStatus } from '../payment/incoming/routes'
 
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
@@ -35,7 +37,9 @@ export interface SetupOptions {
   accessAction?: AccessAction
 }
 
-export const setup = <T extends WalletAddressContext>(
+export const setup = <
+  T extends WalletAddressContext & Partial<AuthenticatedStatusContext>
+>(
   options: SetupOptions
 ): T => {
   const ctx = createContext<T>(
@@ -52,6 +56,7 @@ export const setup = <T extends WalletAddressContext>(
   ctx.grant = options.grant
   ctx.client = options.client
   ctx.accessAction = options.accessAction
+  ctx.authenticated = true
   return ctx
 }
 
@@ -205,7 +210,7 @@ type RouteTestsOptions<M> = Omit<
   'testGet' | 'testList'
 > & {
   getWalletAddress: () => Promise<WalletAddress>
-  get: (ctx: ReadContext) => Promise<void>
+  get: (ctx: ReadContext | ReadContextWithAuthenticatedStatus) => Promise<void>
   getBody: (model: M, list?: boolean) => Record<string, unknown>
   list?: (ctx: ListContext) => Promise<void>
   urlPath: string
