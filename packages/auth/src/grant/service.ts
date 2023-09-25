@@ -258,9 +258,10 @@ async function getByContinue(
     .withGraphFetched('interaction')
 
   if (!includeRevoked) {
-    queryBuilder
-      .whereNull('finalizationReason')
-      .orWhereNot('finalizationReason', GrantFinalization.Revoked)
+    queryBuilder.andWhere((queryBuilder) => {
+      queryBuilder.whereNull('finalizationReason')
+      queryBuilder.orWhereNot('finalizationReason', GrantFinalization.Revoked)
+    })
   }
 
   const grant = await queryBuilder

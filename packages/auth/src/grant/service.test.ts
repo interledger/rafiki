@@ -229,6 +229,54 @@ describe('Grant Service', (): void => {
       expect(fetchedGrant?.continueId).toEqual(continueId)
       expect(fetchedGrant?.continueToken).toEqual(continueToken)
     })
+
+    test('properly fetches grant by continuation information with multiple existing grants', async (): Promise<void> => {
+      const grantRequest: GrantRequest = {
+        ...BASE_GRANT_REQUEST,
+        access_token: {
+          access: [
+            {
+              ...BASE_GRANT_ACCESS,
+              type: AccessType.IncomingPayment
+            }
+          ]
+        },
+        interact: undefined
+      }
+
+      const grant1 = await grantService.create(grantRequest)
+      await grant1
+        .$query()
+        .patch({ finalizationReason: GrantFinalization.Issued })
+
+      const grant2 = await grantService.create(grantRequest)
+      const grant3 = await grantService.create(grantRequest)
+      await grant3
+        .$query()
+        .patch({ finalizationReason: GrantFinalization.Revoked })
+
+      const fetchedGrant1 = await grantService.getByContinue(
+        grant1.continueId,
+        grant1.continueToken
+      )
+
+      expect(fetchedGrant1?.id).toEqual(grant1.id)
+      expect(fetchedGrant1?.continueId).toEqual(grant1.continueId)
+      expect(fetchedGrant1?.continueToken).toEqual(grant1.continueToken)
+
+      const fetchedGrant2 = await grantService.getByContinue(
+        grant2.continueId,
+        grant2.continueToken
+      )
+
+      expect(fetchedGrant2?.id).toEqual(grant2.id)
+      expect(fetchedGrant2?.continueId).toEqual(grant2.continueId)
+      expect(fetchedGrant2?.continueToken).toEqual(grant2.continueToken)
+
+      await expect(
+        grantService.getByContinue(grant3.continueId, grant3.continueToken)
+      ).resolves.toBeUndefined()
+    })
   })
 
   describe('getByIdWithAccess', (): void => {
