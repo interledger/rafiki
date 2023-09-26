@@ -6,6 +6,7 @@ import json from 'koa-json'
 import bodyParser from 'koa-bodyparser'
 
 import {
+  loadBase64Key,
   parseOrProvisionKey,
   createHeaders,
   Headers,
@@ -27,6 +28,7 @@ const privateKey = parseOrProvisionKey(process.env.KEY_FILE)
 type GenerateSignatureRequestBody = {
   request: RequestLike
   keyId: string
+  base64Key?: string
 }
 
 router.post('/', async (ctx: AppContext<Headers>): Promise<void> => {
@@ -44,9 +46,14 @@ router.post('/', async (ctx: AppContext<Headers>): Promise<void> => {
     return
   }
 
-  const { keyId, request } = ctx.request.body
+  const { base64Key, keyId, request } = ctx.request.body
+  const userKey = base64Key ? loadBase64Key(base64Key) : undefined
 
-  const headers = await createHeaders({ request, privateKey, keyId })
+  const headers = await createHeaders({
+    request,
+    privateKey: userKey || privateKey,
+    keyId
+  })
   delete headers['Content-Length']
   delete headers['Content-Type']
 
