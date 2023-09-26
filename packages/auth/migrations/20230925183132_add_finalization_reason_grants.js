@@ -3,9 +3,15 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.alterTable('grants', (table) => {
-    table.enum('finalizationReason', ['ISSUED', 'REVOKED', 'REJECTED'])
-  })
+  return knex.schema
+    .hasColumn('grants', 'finalizationReason')
+    .then((exists) => {
+      if (!exists) {
+        return knex.schema.alterTable('grants', (table) => {
+          table.enum('finalizationReason', ['ISSUED', 'REVOKED', 'REJECTED'])
+        })
+      }
+    })
 }
 
 /**
@@ -13,7 +19,13 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.schema.alterTable('grants', (table) => {
-    table.dropColumn('finalizationReason')
-  })
+  return knex.schema
+    .hasColumn('grants', 'finalizationReason')
+    .then((exists) => {
+      if (exists) {
+        return knex.schema.alterTable('grants', (table) => {
+          table.dropColumn('finalizationReason')
+        })
+      }
+    })
 }
