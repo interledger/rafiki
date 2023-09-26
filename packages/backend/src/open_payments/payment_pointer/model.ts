@@ -1,7 +1,7 @@
 import { Model, Page } from 'objection'
 import { PaymentPointer as OpenPaymentsPaymentPointer } from '@interledger/open-payments'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
-import { ConnectorAccount } from '../../connector/core/rafiki'
+import { ConnectorAccount } from '../../payment-method/ilp/connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel, Pagination } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
