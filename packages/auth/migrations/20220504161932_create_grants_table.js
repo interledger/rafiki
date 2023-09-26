@@ -3,7 +3,6 @@ exports.up = function (knex) {
     table.uuid('id').notNullable().primary()
 
     table.string('state')
-    table.string('finalizationReason')
     table.specificType('startMethod', 'text[]')
 
     table.string('continueToken').notNullable().unique()
