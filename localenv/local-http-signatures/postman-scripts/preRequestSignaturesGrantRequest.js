@@ -5,9 +5,9 @@ const client = url.parse(body.client)
 const jwkUrl = `http://localhost:${
   client.host === 'cloud-nine-wallet-backend' ? '3' : '4'
 }000${client.path}/jwks.json`
-pm.collectionVariables.set(
+pm.environment.set(
   'signatureUrl',
-  pm.collectionVariables.get(
+  pm.environment.get(
     client.host === 'cloud-nine-wallet-backend'
       ? 'SignatureHost'
       : 'PeerSignatureHost'
@@ -15,14 +15,14 @@ pm.collectionVariables.set(
 )
 
 const requestUrl = request.url.replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-  pm.collectionVariables.get(key)
+  pm.environment.get(key)
 )
 const requestBody = request.data.replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-  pm.collectionVariables.get(key)
+  pm.environment.get(key)
 )
 const requestHeaders = JSON.parse(
   JSON.stringify(request.headers).replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-    pm.collectionVariables.get(key)
+    pm.environment.get(key)
   )
 )
 
@@ -37,12 +37,12 @@ pm.sendRequest(
   },
   (err, res) => {
     const keys = res.json()
-    pm.collectionVariables.set('keyId', keys.keys[0].kid)
+    pm.environment.set('keyId', keys.keys[0].kid)
 
     // Request Signature Headers
     pm.sendRequest(
       {
-        url: pm.collectionVariables.get('signatureUrl'),
+        url: pm.environment.get('signatureUrl'),
         method: 'POST',
         header: {
           'content-type': 'application/json'
@@ -50,7 +50,7 @@ pm.sendRequest(
         body: {
           mode: 'raw',
           raw: JSON.stringify({
-            keyId: pm.collectionVariables.get('keyId'),
+            keyId: pm.environment.get('keyId'),
             request: {
               url: requestUrl,
               method: request.method,
