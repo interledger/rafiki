@@ -225,8 +225,8 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 ##### Withdrawing Wallet Address Liquidity (example: 2 USD)
 
-| Debit Account   | Credit Account |
-| --------------- | -------------- |
+| Debit Account  | Credit Account |
+| -------------- | -------------- |
 | Wallet Address | Settlement     |
 
 - Example: withdrawing 2 USD
@@ -338,8 +338,8 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 
 ##### SPSP / Web Monetization
 
-| Debit Account    | Credit Account  |
-| ---------------- | --------------- |
+| Debit Account    | Credit Account |
+| ---------------- | -------------- |
 | Outgoing Payment | Wallet Address |
 
 - Example: Send a WM Payment of 2 USD over SPSP to a wallet address. Sender and receiver have wallet addresses at the same Rafiki.
@@ -540,7 +540,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | Debit Account    | Credit Account  | Asset |
 | ---------------- | --------------- | ----- |
 | Outgoing Payment | Asset Liquidity | ABC   |
-| Asset Liquidity  | Wallet Address | XYZ   |
+| Asset Liquidity  | Wallet Address  | XYZ   |
 
 - Example: Outgoing payment for 2 USD, payemnt pointer receives 1 EUR.
 
@@ -747,8 +747,8 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 
 ###### SPSP / Web Monetization
 
-| Debit Account  | Credit Account  |
-| -------------- | --------------- |
+| Debit Account  | Credit Account |
+| -------------- | -------------- |
 | Peer Liquidity | Wallet Address |
 
 - Example: A payemnt pointer receives 2 USD from an outgoing payment at a peer's Rafiki instance.
@@ -851,7 +851,7 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | Debit Account   | Credit Account  | Asset |
 | --------------- | --------------- | ----- |
 | Peer Liquidity  | Asset Liquidity | ABC   |
-| Asset Liquidity | Wallet Address | XYZ   |
+| Asset Liquidity | Wallet Address  | XYZ   |
 
 - Example: A Rafiki instance receives 10 USD from a peer (peering relationship in USD) to be deposited in a wallet address liquidity account denominated in EUR. The payment is converted to EUR and deposited.
 

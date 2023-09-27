@@ -112,18 +112,18 @@ The endpoint accepts a `POST` request with
 
 #### EventType
 
-| Value                              | Description                                                                 |
-| ---------------------------------- | --------------------------------------------------------------------------- |
-| `incoming_payment.created`         | Incoming payment has been created.                                          |
-| `incoming_payment.completed`       | Incoming payment is complete and doesn't accept any incoming funds anymore. |
-| `incoming_payment.expired`         | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
-| `outgoing_payment.created`         | Outgoing payment was created.                                               |
-| `outgoing_payment.completed`       | Outgoing payment is complete.                                               |
-| `outgoing_payment.failed`          | Outgoing payment failed.                                                    |
-| `wallet_address.not_found`        | A requested wallet address was not found                                   |
+| Value                             | Description                                                                 |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `incoming_payment.created`        | Incoming payment has been created.                                          |
+| `incoming_payment.completed`      | Incoming payment is complete and doesn't accept any incoming funds anymore. |
+| `incoming_payment.expired`        | Incoming payment is expired and doesn't accept any incoming funds anymore.  |
+| `outgoing_payment.created`        | Outgoing payment was created.                                               |
+| `outgoing_payment.completed`      | Outgoing payment is complete.                                               |
+| `outgoing_payment.failed`         | Outgoing payment failed.                                                    |
+| `wallet_address.not_found`        | A requested wallet address was not found                                    |
 | `wallet_address.web_monetization` | Web Monetization payments received via STREAM.                              |
-| `asset.liquidity_low`              | Asset liquidity has dropped below defined threshold.                        |
-| `peer.liquidity_low`               | Peer liquidity has dropped below defined threshold.                         |
+| `asset.liquidity_low`             | Asset liquidity has dropped below defined threshold.                        |
+| `peer.liquidity_low`              | Peer liquidity has dropped below defined threshold.                         |
 
 The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](/integration/event-handlers) documentation.
 

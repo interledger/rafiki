@@ -50,65 +50,65 @@ Now, the Admin UI can be found on localhost:3010.
 
 #### values.yaml Parameters
 
-| Name                                    | Corresponding Environment Variable or Description |
-| --------------------------------------- | ------------------------------------------------- |
-| auth.postgresql.host                    | Postgres host                                     |
-| auth.postgresql.port                    | Postgres port                                     |
-| auth.postgresql.username                | Postgres user name                                |
-| auth.postgresql.database                | Postgres database name                            |
-| auth.postgresql.password                | Postgres user password                            |
-| auth.port.admin                         | `ADMIN_PORT`                                      |
-| auth.port.auth                          | `AUTH_PORT`                                       |
-| auth.port.introspection                 | `INTROSPECTION_PORT`                              |
-| auth.identityServer.domain              | `IDENTITY_SERVER_DOMAIN`                          |
-| auth.identityServer.secret              | `IDENTITY_SERVER_SECRET`                          |
-| auth.interaction.incomingPayment        | `INCOMING_PAYMENT_INTERACTION`                    |
-| auth.interaction.quote                  | `QUOTE_INTERACTION`                               |
-| auth.grant.waitSeconds                  | `WAIT_SECONDS`                                    |
-| auth.accessToken.deletionDays           | `ACCESS_TOKEN_DELETION_DAYS`                      |
-| auth.accessToken.expirySeconds          | `ACCESS_TOKEN_EXPIRY_SECONDS`                     |
-| auth.cookieKey                          | `COOKIE_KEY`                                      |
-| auth.interactionExpirySeconds           | `INTERACTION_EXPIRY_SECONDS`                      |
-| auth.workers.cleanup                    | `DATABASE_CLEANUP_WORKERS`                        |
-| backend.nodeEnv                         | `NODE_ENV`                                        |
-| backend.logLevel                        | `LOG_LEVEL`                                       |
-| backend.serviceUrls.PUBLIC_HOST         | `PUBLIC_HOST`                                     |
-| backend.serviceUrls.OPEN_PAYMENTS_URL   | `OPEN_PAYMENTS_URL`                               |
-| backend.serviceUrls.WALLET_ADDRESS_URL | `WALLET_ADDRESS_URL`                             |
-| backend.serviceUrls.WEBHOOK_URL         | `WEBHOOK_URL`                                     |
-| backend.serviceUrls.EXCHANGE_RATES_URL  | `EXCHANGE_RATES_URL`                              |
-| backend.redis.host                      | Redis host                                        |
-| backend.redis.port                      | Redis port                                        |
-| backend.redis.tlsCaFile                 | `REDIS_TLS_CA_FILE_PATH`                          |
-| backend.redis.tlsCertFile               | `REDIS_TLS_CERT_FILE_PATH`                        |
-| backend.redis.tlsKeyFile                | `REDIS_TLS_KEY_FILE_PATH`                         |
-| backend.postgresql.host                 | Postgres host                                     |
-| backend.postgresql.port                 | Postgres port                                     |
-| backend.postgresql.username             | Postgres user name                                |
-| backend.postgresql.database             | Postgres database name                            |
-| backend.postgresql.password             | Postgres user password                            |
-| backend.port.admin                      | `ADMIN_PORT`                                      |
-| backend.port.connector                  | `CONNECTOR_PORT`                                  |
-| backend.port.openPayments               | `OPEN_PAYMENTS_PORT`                              |
-| backend.ilp.address                     | `ILP_ADDRESS`                                     |
-| backend.ilp.streamSecret                | `STREAM_SECRET`                                   |
-| backend.ilp.slippage                    | `SLIPPAGE`                                        |
-| backend.key.id                          | `KEY_ID`                                          |
-| backend.key.file                        | `PRIVATE_KEY_FILE`                                |
-| backend.quoteSignatureSecret            | `SIGNATURE_SECRET`                                |
-| backend.withdrawalThrottleDelay         | `WITHDRAWAL_THROTTLE_DELAY`                       |
-| backend.lifetime.exchangeRate           | `EXCHANGE_RATES_LIFETIME`                         |
-| backend.lifetime.quote                  | `QUOTE_LIFESPAN`                                  |
-| backend.lifetime.webhook                | `WEBHOOK_TIMEOUT`                                 |
-| backend.workers.incomingPayment         | `INCOMING_PAYMENT_WORKERS`                        |
-| backend.workers.outgoingPayment         | `OUTGOING_PAYMENT_WORKERS`                        |
-| backend.workers.walletAddress          | `WALLET_ADDRESS_WORKERS`                         |
-| backend.workers.webhook                 | `WEBHOOK_WORKERS`                                 |
-| backend.workerIdle                      | worker idle time in milliseconds                  |
-| backend.idempotencyTTL                  | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
-| frontend.port                           | `PORT`                                            |
-| frontend.serviceUrls.GRAPHQL_URL        | `GRAPHQL_URL`                                     |
-| frontend.serviceUrls.OPEN_PAYMENTS_URL  | `OPEN_PAYMENTS_URL`                               |
+| Name                                   | Corresponding Environment Variable or Description |
+| -------------------------------------- | ------------------------------------------------- |
+| auth.postgresql.host                   | Postgres host                                     |
+| auth.postgresql.port                   | Postgres port                                     |
+| auth.postgresql.username               | Postgres user name                                |
+| auth.postgresql.database               | Postgres database name                            |
+| auth.postgresql.password               | Postgres user password                            |
+| auth.port.admin                        | `ADMIN_PORT`                                      |
+| auth.port.auth                         | `AUTH_PORT`                                       |
+| auth.port.introspection                | `INTROSPECTION_PORT`                              |
+| auth.identityServer.domain             | `IDENTITY_SERVER_DOMAIN`                          |
+| auth.identityServer.secret             | `IDENTITY_SERVER_SECRET`                          |
+| auth.interaction.incomingPayment       | `INCOMING_PAYMENT_INTERACTION`                    |
+| auth.interaction.quote                 | `QUOTE_INTERACTION`                               |
+| auth.grant.waitSeconds                 | `WAIT_SECONDS`                                    |
+| auth.accessToken.deletionDays          | `ACCESS_TOKEN_DELETION_DAYS`                      |
+| auth.accessToken.expirySeconds         | `ACCESS_TOKEN_EXPIRY_SECONDS`                     |
+| auth.cookieKey                         | `COOKIE_KEY`                                      |
+| auth.interactionExpirySeconds          | `INTERACTION_EXPIRY_SECONDS`                      |
+| auth.workers.cleanup                   | `DATABASE_CLEANUP_WORKERS`                        |
+| backend.nodeEnv                        | `NODE_ENV`                                        |
+| backend.logLevel                       | `LOG_LEVEL`                                       |
+| backend.serviceUrls.PUBLIC_HOST        | `PUBLIC_HOST`                                     |
+| backend.serviceUrls.OPEN_PAYMENTS_URL  | `OPEN_PAYMENTS_URL`                               |
+| backend.serviceUrls.WALLET_ADDRESS_URL | `WALLET_ADDRESS_URL`                              |
+| backend.serviceUrls.WEBHOOK_URL        | `WEBHOOK_URL`                                     |
+| backend.serviceUrls.EXCHANGE_RATES_URL | `EXCHANGE_RATES_URL`                              |
+| backend.redis.host                     | Redis host                                        |
+| backend.redis.port                     | Redis port                                        |
+| backend.redis.tlsCaFile                | `REDIS_TLS_CA_FILE_PATH`                          |
+| backend.redis.tlsCertFile              | `REDIS_TLS_CERT_FILE_PATH`                        |
+| backend.redis.tlsKeyFile               | `REDIS_TLS_KEY_FILE_PATH`                         |
+| backend.postgresql.host                | Postgres host                                     |
+| backend.postgresql.port                | Postgres port                                     |
+| backend.postgresql.username            | Postgres user name                                |
+| backend.postgresql.database            | Postgres database name                            |
+| backend.postgresql.password            | Postgres user password                            |
+| backend.port.admin                     | `ADMIN_PORT`                                      |
+| backend.port.connector                 | `CONNECTOR_PORT`                                  |
+| backend.port.openPayments              | `OPEN_PAYMENTS_PORT`                              |
+| backend.ilp.address                    | `ILP_ADDRESS`                                     |
+| backend.ilp.streamSecret               | `STREAM_SECRET`                                   |
+| backend.ilp.slippage                   | `SLIPPAGE`                                        |
+| backend.key.id                         | `KEY_ID`                                          |
+| backend.key.file                       | `PRIVATE_KEY_FILE`                                |
+| backend.quoteSignatureSecret           | `SIGNATURE_SECRET`                                |
+| backend.withdrawalThrottleDelay        | `WITHDRAWAL_THROTTLE_DELAY`                       |
+| backend.lifetime.exchangeRate          | `EXCHANGE_RATES_LIFETIME`                         |
+| backend.lifetime.quote                 | `QUOTE_LIFESPAN`                                  |
+| backend.lifetime.webhook               | `WEBHOOK_TIMEOUT`                                 |
+| backend.workers.incomingPayment        | `INCOMING_PAYMENT_WORKERS`                        |
+| backend.workers.outgoingPayment        | `OUTGOING_PAYMENT_WORKERS`                        |
+| backend.workers.walletAddress          | `WALLET_ADDRESS_WORKERS`                          |
+| backend.workers.webhook                | `WEBHOOK_WORKERS`                                 |
+| backend.workerIdle                     | worker idle time in milliseconds                  |
+| backend.idempotencyTTL                 | `GRAPHQL_IDEMPOTENCY_KEY_TTL_MS`                  |
+| frontend.port                          | `PORT`                                            |
+| frontend.serviceUrls.GRAPHQL_URL       | `GRAPHQL_URL`                                     |
+| frontend.serviceUrls.OPEN_PAYMENTS_URL | `OPEN_PAYMENTS_URL`                               |
 
 ### Environment Variables
 
@@ -165,7 +165,6 @@ Now, the Admin UI can be found on localhost:3010.
 | `WEBHOOK_WORKERS`                                      | `1`                                                         | number of workers processing webhook requests                                                                                                          |
 | `WEBHOOK_WORKER_IDLE`                                  | `200`                                                       | milliseconds                                                                                                                                           |
 | `WITHDRAWAL_THROTTLE_DELAY`                            | `undefined`                                                 | delay in withdrawal processing                                                                                                                         |
-
 
 #### Auth
 
