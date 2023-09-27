@@ -129,7 +129,7 @@ ASE->>ASE: credit receiver's account with $0.33
 
 ## `wallet_address.not_found`
 
-The `wallet_address.not_found` event indicates that a [wallet address](/reference/glossary#payment-pointer) was requested (via the [Open Payments API](/reference/glossary#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and [create](./getting-started#issuing-payment-pointers) a wallet address. The initial request for the wallet address will succeed if the Account Servicing Entity creates it within the configurable [`WALLET_ADDRESS_LOOKUP_TIMEOUT_MS`](/integration/deployment#environment-variables) timeframe.
+The `wallet_address.not_found` event indicates that a [wallet address](/reference/glossary#wallet-address) was requested (via the [Open Payments API](/reference/glossary#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and [create](./getting-started#issuing-wallet-addresses) a wallet address. The initial request for the wallet address will succeed if the Account Servicing Entity creates it within the configurable [`WALLET_ADDRESS_LOOKUP_TIMEOUT_MS`](/integration/deployment#environment-variables) timeframe.
 
 Example: The wallet address `https://example-wallet.com/carla_garcia` was requested but does not yet exist
 

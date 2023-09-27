@@ -13,7 +13,7 @@ Account Servicing Entities provide and maintain payment accounts. In order to ma
 - [webhook events listener](#webhook-events-listener)
 - [Identity Provider](#identity-provider)
 
-Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [wallet address](#issuing-payment-pointers) in order to be serviced by Rafiki and send or receive Interledger payments.
+Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [wallet address](#issuing-wallet-addresses) in order to be serviced by Rafiki and send or receive Interledger payments.
 
 ## Quotes and Fees
 
@@ -135,9 +135,9 @@ The Rafiki `backend` exposes the [Open Payments](/reference/glossary#open-paymen
 
 The Open Payments Auth Server requires integration with an Identity Provider to handle user authentication and consent. For more information on how to integrate an Identity Provider with the reference implementation of the Open Payments Auth Server, see the docs in the `auth` package.
 
-## Issuing Wallet Addresses
+## Issuing s
 
-A [Wallet Address](/reference/glossary#payment-pointer) is a standardized identifier for a payment account. It can be created using the [Admin API](/integration/management). Note that at least one asset has to be created prior to creating the wallet address since an `assetId` MUST be provided as input variable on wallet address creation.
+A [Wallet Address](/reference/glossary#wallet-address) is a standardized identifier for a payment account. It can be created using the [Admin API](/integration/management). Note that at least one asset has to be created prior to creating the wallet address since an `assetId` MUST be provided as input variable on wallet address creation.
 
 ### Create Asset
 

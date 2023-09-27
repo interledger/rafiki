@@ -17,7 +17,7 @@ Rafiki is intended to be run by [Account Servicing Entities](/reference/glossary
 
 Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](/reference/glossary#tigerbeetle), and several APIs:
 
-- the [Admin API](/integration/management) to create [peering relationships](/reference/glossary#peer), add supported [assets](/reference/glossary#asset), and issue [wallet addresses](/reference/glossary#payment-pointer)
+- the [Admin API](/integration/management) to create [peering relationships](/reference/glossary#peer), add supported [assets](/reference/glossary#asset), and issue [wallet addresses](/reference/glossary#wallet-address)
 - the [Open Payments](/reference/glossary#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
 - the [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
 

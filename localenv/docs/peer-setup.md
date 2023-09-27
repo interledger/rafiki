@@ -352,8 +352,8 @@ subsequent steps to send payments between the Rafiki instances.
 
 #### On the Primary Instance
 
-On the [primary instance](http://localhost:3001) execute the following command to create a payment
-pointer ID:
+On the [primary instance](http://localhost:3001) execute the following command to create a wallet
+address ID:
 
 Query
 
