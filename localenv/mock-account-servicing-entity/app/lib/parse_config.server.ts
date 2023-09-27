@@ -54,6 +54,8 @@ export interface SeedInstance {
 export interface Config {
   seed: SeedInstance
   key: crypto.KeyObject
+  publicHost: string
+  testnetAutoPeerUrl: string
 }
 
 export const CONFIG: Config = {
@@ -62,5 +64,7 @@ export const CONFIG: Config = {
       process.env.SEED_FILE_LOCATION || `./seed.example.yml`
     ).toString('utf8')
   ),
-  key: parseOrProvisionKey(process.env.KEY_FILE)
+  key: parseOrProvisionKey(process.env.KEY_FILE),
+  publicHost: process.env.PUBLIC_HOST ?? '',
+  testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? ''
 }

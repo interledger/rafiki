@@ -50,3 +50,6 @@ build
 # Docusaurus
 .docusaurus
 .cache-loader
+
+# Env variables
+.env

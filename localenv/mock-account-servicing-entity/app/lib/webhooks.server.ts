@@ -9,7 +9,7 @@ import {
   addPeerLiquidity,
   createPaymentPointer
 } from './requesters'
-import { CONFIG } from './parse_config.server'
+import { CONFIG } from '~/lib/parse_config.server'
 
 export enum EventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -179,7 +179,7 @@ export async function handlePaymentPointerNotFound(wh: WebHook) {
   }
 
   const accountPath = paymentPointerUrl.split(
-    `https://${CONFIG.seed.self.hostname}/`
+    `https://${CONFIG.publicHost}/`
   )[1]
 
   const account = await mockAccounts.getByPath(accountPath)

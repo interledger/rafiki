@@ -23,7 +23,8 @@
     "localenv:compose:psql": "docker compose -f ./localenv/cloud-nine-wallet/docker-compose.yml -f ./localenv/happy-life-bank/docker-compose.yml ${BEFORE_MERGED:-} -f ./localenv/merged/docker-compose.yml",
     "localenv:compose": "BEFORE_MERGED='-f ./localenv/tigerbeetle/docker-compose.yml' pnpm localenv:compose:psql",
     "localenv:seed:auth": "pnpm -C ./packages/auth knex seed:run --env=development && pnpm -C ./packages/auth knex seed:run --env=peerdevelopment",
-    "sanity": "pnpm -r build && pnpm -r test"
+    "sanity": "pnpm -r build && pnpm -r test",
+    "tunnel": "node ./scripts/localenv-tunnel-setup.js"
   },
   "devDependencies": {
     "@jest/types": "^29.6.3",
@@ -36,6 +37,7 @@
     "jest": "^29.7.0",
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
+    "tunnelmole": "^2.2.0",
     "typescript": "^4.9.5"
   },
   "dependenciesMeta": {

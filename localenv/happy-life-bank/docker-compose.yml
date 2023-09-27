@@ -15,6 +15,7 @@ services:
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
+      PUBLIC_HOST: ${HAPPY_LIFE_BANK_PUBLIC_HOST:-'https://happy-life-bank-backend'}
     volumes:
       - ../happy-life-bank/seed.yml:/workspace/seed.yml
       - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
@@ -42,16 +43,16 @@ services:
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
-      AUTH_SERVER_GRANT_URL: http://happy-life-bank-auth:3006
+      AUTH_SERVER_GRANT_URL: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-'http://happy-life-bank-auth:4006'}
       AUTH_SERVER_INTROSPECTION_URL: http://happy-life-bank-auth:3007
       ILP_ADDRESS: test.happy-life-bank
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      PUBLIC_HOST: http://happy-life-bank-backend
+      PUBLIC_HOST: ${HAPPY_LIFE_BANK_PUBLIC_HOST:-'http://happy-life-bank-backend'}
       WEBHOOK_URL: http://happy-life-bank/webhooks
-      OPEN_PAYMENTS_URL: http://happy-life-bank-backend
+      OPEN_PAYMENTS_URL: ${HAPPY_LIFE_BANK_OPEN_PAYMENTS_URL:-'http://happy-life-bank-backend'}
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
       REDIS_URL: redis://shared-redis:6379/1
-      PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
+      PAYMENT_POINTER_URL: ${HAPPY_LIFE_BANK_PAYMENT_POINTER_URL:-'https://happy-life-bank-backend/.well-known/pay'}
     depends_on:
       - cloud-nine-backend
   happy-life-auth:
@@ -67,7 +68,7 @@ services:
     environment:
       NODE_ENV: development
       AUTH_DATABASE_URL: postgresql://happy_life_bank_auth:happy_life_bank_auth@shared-database/happy_life_bank_auth
-      AUTH_SERVER_DOMAIN: "http://localhost:4006"
+      AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-'http://localhost:4006'}
     depends_on:
       - cloud-nine-auth
   happy-life-signatures:
