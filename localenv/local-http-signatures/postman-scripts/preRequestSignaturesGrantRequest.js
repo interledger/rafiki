@@ -5,14 +5,6 @@ const client = url.parse(body.client)
 const jwkUrl = `http://localhost:${
   client.host === 'cloud-nine-wallet-backend' ? '3' : '4'
 }000${client.path}/jwks.json`
-pm.environment.set(
-  'signatureUrl',
-  pm.environment.get(
-    client.host === 'cloud-nine-wallet-backend'
-      ? 'SignatureHost'
-      : 'PeerSignatureHost'
-  )
-)
 
 const requestUrl = request.url.replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
   pm.environment.get(key)
@@ -51,6 +43,7 @@ pm.sendRequest(
           mode: 'raw',
           raw: JSON.stringify({
             keyId: pm.environment.get('keyId'),
+            base64Key: pm.environment.get('pfryPrivateKey'),
             request: {
               url: requestUrl,
               method: request.method,
