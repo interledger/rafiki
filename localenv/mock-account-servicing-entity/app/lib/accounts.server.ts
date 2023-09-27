@@ -32,9 +32,7 @@ export interface AccountsServer {
   get(id: string): Promise<Account | undefined>
   getByWalletAddressId(walletAddressId: string): Promise<Account | undefined>
   getByPath(path: string): Promise<Account | undefined>
-  getByWalletAddressUrl(
-    walletAddressUrl: string
-  ): Promise<Account | undefined>
+  getByWalletAddressUrl(walletAddressUrl: string): Promise<Account | undefined>
   voidPendingDebit(id: string, amount: bigint): Promise<void>
   voidPendingCredit(id: string, amount: bigint): Promise<void>
   pendingDebit(id: string, amount: bigint): Promise<void>

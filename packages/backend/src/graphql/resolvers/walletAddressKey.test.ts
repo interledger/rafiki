@@ -153,9 +153,7 @@ describe('Wallet Address Key Resolvers', (): void => {
         })
       expect(response.code).toBe('500')
       expect(response.success).toBe(false)
-      expect(response.message).toBe(
-        'Error trying to create wallet address key'
-      )
+      expect(response.message).toBe('Error trying to create wallet address key')
     })
   })
 

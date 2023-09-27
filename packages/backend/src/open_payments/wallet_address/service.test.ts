@@ -8,11 +8,7 @@ import {
   WalletAddressEvent,
   WalletAddressEventType
 } from './model'
-import {
-  CreateOptions,
-  FORBIDDEN_PATHS,
-  WalletAddressService
-} from './service'
+import { CreateOptions, FORBIDDEN_PATHS, WalletAddressService } from './service'
 import { AccountingService } from '../../accounting/service'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createAsset } from '../../tests/asset'
@@ -183,9 +179,9 @@ describe('Open Payments Wallet Address Service', (): void => {
       assert.ok(!isWalletAddressError(updatedWalletAddress))
       expect(updatedWalletAddress.deactivatedAt).toEqual(null)
       expect(updatedWalletAddress.publicName).toEqual(newName)
-      await expect(
-        walletAddressService.get(walletAddress.id)
-      ).resolves.toEqual(updatedWalletAddress)
+      await expect(walletAddressService.get(walletAddress.id)).resolves.toEqual(
+        updatedWalletAddress
+      )
     })
 
     describe('Deactivating wallet address', (): void => {
@@ -337,10 +333,11 @@ describe('Open Payments Wallet Address Service', (): void => {
               walletAddressService.getOrPollByUrl(walletAddressUrl)
             ).resolves.toBeUndefined()
 
-            const walletAddressNotFoundEvents =
-              await WalletAddressEvent.query(knex).where({
-                type: WalletAddressEventType.WalletAddressNotFound
-              })
+            const walletAddressNotFoundEvents = await WalletAddressEvent.query(
+              knex
+            ).where({
+              type: WalletAddressEventType.WalletAddressNotFound
+            })
 
             expect(walletAddressNotFoundEvents[0]).toMatchObject({
               data: { walletAddressUrl }
@@ -654,9 +651,7 @@ describe('Open Payments Wallet Address Service', (): void => {
         for (let i = 1; i < walletAddresses.length; i++) {
           await walletAddresses[i].$query(knex).patch({ processAt })
         }
-        await expect(walletAddressService.triggerEvents(10)).resolves.toEqual(
-          0
-        )
+        await expect(walletAddressService.triggerEvents(10)).resolves.toEqual(0)
       }
     )
 

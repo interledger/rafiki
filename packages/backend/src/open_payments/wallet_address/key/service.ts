@@ -7,9 +7,7 @@ import { JWK } from '@interledger/http-signature-utils'
 export interface WalletAddressKeyService {
   create(options: CreateOptions): Promise<WalletAddressKey>
   revoke(id: string): Promise<WalletAddressKey | undefined>
-  getKeysByWalletAddressId(
-    walletAddressId: string
-  ): Promise<WalletAddressKey[]>
+  getKeysByWalletAddressId(walletAddressId: string): Promise<WalletAddressKey[]>
 }
 
 interface ServiceDependencies extends BaseService {

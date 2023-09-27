@@ -352,9 +352,7 @@ export class App {
     const walletAddressKeyRoutes = await this.container.use(
       'walletAddressKeyRoutes'
     )
-    const walletAddressRoutes = await this.container.use(
-      'walletAddressRoutes'
-    )
+    const walletAddressRoutes = await this.container.use('walletAddressRoutes')
     const incomingPaymentRoutes = await this.container.use(
       'incomingPaymentRoutes'
     )

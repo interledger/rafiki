@@ -70,12 +70,10 @@ export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloCont
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const outgoingPayments = await outgoingPaymentService.getWalletAddressPage(
-      {
-        walletAddressId: parent.id,
-        pagination: args
-      }
-    )
+    const outgoingPayments = await outgoingPaymentService.getWalletAddressPage({
+      walletAddressId: parent.id,
+      pagination: args
+    })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
         outgoingPaymentService.getWalletAddressPage({

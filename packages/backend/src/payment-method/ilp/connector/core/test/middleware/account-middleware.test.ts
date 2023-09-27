@@ -197,7 +197,7 @@ describe('Account Middleware', () => {
   })
 
   test.each`
-    name                                                     | createThrows                         | error
+    name                                                    | createThrows                         | error
     ${'create TB account for wallet address success'}       | ${undefined}                         | ${''}
     ${'create TB account for wallet address throws exists'} | ${new AccountAlreadyExistsError('')} | ${''}
     ${'create TB account for wallet address throws error'}  | ${new Error('other error')}          | ${'other error'}

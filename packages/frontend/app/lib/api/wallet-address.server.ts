@@ -86,9 +86,7 @@ export const listWalletAddresss = async (args: QueryWalletAddressesArgs) => {
 export const updateWalletAddress = async (args: UpdateWalletAddressInput) => {
   const response = await apolloClient.mutate({
     mutation: gql`
-      mutation UpdateWalletAddressMutation(
-        $input: UpdateWalletAddressInput!
-      ) {
+      mutation UpdateWalletAddressMutation($input: UpdateWalletAddressInput!) {
         updateWalletAddress(input: $input) {
           code
           message
@@ -110,9 +108,7 @@ export const createWalletAddress = async (args: CreateWalletAddressInput) => {
     CreateWalletAddressMutationVariables
   >({
     mutation: gql`
-      mutation CreateWalletAddressMutation(
-        $input: CreateWalletAddressInput!
-      ) {
+      mutation CreateWalletAddressMutation($input: CreateWalletAddressInput!) {
         createWalletAddress(input: $input) {
           code
           success
