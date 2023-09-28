@@ -141,10 +141,13 @@ export async function createAutoPeer(
       }
     }
   `
+
+  const addedLiquidity = '10000' as unknown as bigint
   const createPeerInput: { input: CreateOrUpdatePeerByUrlInput } = {
     input: {
       peerUrl,
-      assetId
+      assetId,
+      addedLiquidity
     }
   }
   return apolloClient

@@ -35,6 +35,7 @@ services:
     ports:
       - '3000:80'
       - '3001:3001'
+      - '3002:3002'
     networks:
       - rafiki
     environment:
