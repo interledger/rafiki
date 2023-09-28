@@ -18,7 +18,7 @@ services:
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
       PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-'https://cloud-nine-wallet-backend'}
-      TESTNET_AUTOPEER_URL: 'http://35.196.11.156:3005'
+      TESTNET_AUTOPEER_URL: 'https://autopeer.rafiki.money'
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
