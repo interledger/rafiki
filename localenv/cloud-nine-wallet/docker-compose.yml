@@ -12,7 +12,7 @@ services:
     ports:
       - '3030:80'
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
@@ -39,7 +39,8 @@ services:
     networks:
       - rafiki
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
@@ -75,7 +76,8 @@ services:
       - '3003:3003'
       - '3006:3006'
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: ${TRUST_PROXY}
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
       AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-'http://localhost:3006'}
     depends_on:

@@ -689,7 +689,7 @@ export class App {
   }
 
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
-    const koa = new Koa<DefaultState, AppContext>()
+    const koa = new Koa<DefaultState, AppContext>({ proxy: this.config.trustProxy })
 
     koa.context.container = this.container
     koa.context.logger = await this.container.use('logger')
