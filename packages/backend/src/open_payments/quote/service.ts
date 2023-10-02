@@ -17,8 +17,11 @@ import {
   PaymentPointerSubresourceService
 } from '../payment_pointer/service'
 import { RatesService } from '../../rates/service'
-import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
-import { convertRatesToIlpPrices } from '../../rates/util'
+import { convertRatesToIlpPrices } from '../../payment-method/ilp/rates'
+import {
+  IlpPlugin,
+  IlpPluginOptions
+} from '../../payment-method/ilp/ilp_plugin'
 import { FeeService } from '../../fee/service'
 import { FeeType } from '../../fee/model'
 import { IAppConfig } from '../../config/app'

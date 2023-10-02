@@ -12,9 +12,13 @@ import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { errorToCode, errorToMessage, PeerError } from '../../peer/errors'
-import { Peer as PeerModel } from '../../peer/model'
-import { PeerService } from '../../peer/service'
+import {
+  errorToCode,
+  errorToMessage,
+  PeerError
+} from '../../payment-method/ilp/peer/errors'
+import { Peer as PeerModel } from '../../payment-method/ilp/peer/model'
+import { PeerService } from '../../payment-method/ilp/peer/service'
 import { createAsset } from '../../tests/asset'
 import { createPeer } from '../../tests/peer'
 import {

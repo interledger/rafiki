@@ -17,7 +17,7 @@ import {
   isPaymentEvent,
   PaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
-import { PeerError } from '../../peer/errors'
+import { PeerError } from '../../payment-method/ilp/peer/errors'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {

@@ -19,10 +19,10 @@ import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadSchemaSync } from '@graphql-tools/load'
 
 import { resolvers } from './graphql/resolvers'
-import { HttpTokenService } from './httpToken/service'
+import { HttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
-import { PeerService } from './peer/service'
+import { PeerService } from './payment-method/ilp/peer/service'
 import { connectionMiddleware } from './open_payments/connection/middleware'
 import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
 import { PaymentPointer } from './open_payments/payment_pointer/model'
@@ -34,8 +34,11 @@ import {
   RequestAction
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import { spspMiddleware, SPSPConnectionContext } from './spsp/middleware'
-import { SPSPRoutes } from './spsp/routes'
+import {
+  spspMiddleware,
+  SPSPConnectionContext
+} from './payment-method/ilp/spsp/middleware'
+import { SPSPRoutes } from './payment-method/ilp/spsp/routes'
 import {
   IncomingPaymentRoutes,
   CreateBody as IncomingCreateBody
@@ -55,7 +58,7 @@ import {
   CreateBody as OutgoingCreateBody
 } from './open_payments/payment/outgoing/routes'
 import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
-import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
+import { IlpPlugin, IlpPluginOptions } from './payment-method/ilp/ilp_plugin'
 import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
 import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import {
@@ -77,9 +80,9 @@ import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
 import { CombinedPaymentService } from './open_payments/payment/combined/service'
 import { FeeService } from './fee/service'
-import { AutoPeeringService } from './auto-peering/service'
-import { AutoPeeringRoutes } from './auto-peering/routes'
-import { Rafiki as ConnectorApp } from './connector/core'
+import { AutoPeeringService } from './payment-method/ilp/auto-peering/service'
+import { AutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
+import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
 import { AxiosInstance } from 'axios'
 
 export interface AppContextData {
