@@ -10,7 +10,7 @@ import { createAsset } from '../../tests/asset'
 import { createPaymentPointer } from '../../tests/paymentPointer'
 import { Asset } from '../../asset/model'
 import { withConfigOverride } from '../../tests/helpers'
-import { StartQuoteOptions } from '../service'
+import { StartQuoteOptions } from '../handler/service'
 import { PaymentPointer } from '../../open_payments/payment_pointer/model'
 import * as Pay from '@interledger/pay'
 
