@@ -1,6 +1,5 @@
 import assert from 'assert'
 import { faker } from '@faker-js/faker'
-import nock from 'nock'
 import { Knex } from 'knex'
 import { v4 as uuid } from 'uuid'
 
@@ -17,7 +16,7 @@ import {
   createPaymentPointer,
   MockPaymentPointer
 } from '../../tests/paymentPointer'
-import { createQuote } from '../../tests/quote'
+import { createQuote, mockQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
 import { AssetOptions } from '../../asset/service'
 import {
@@ -28,12 +27,16 @@ import { getTests } from '../payment_pointer/model.test'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Fee, FeeType } from '../../fee/model'
 import { Asset } from '../../asset/model'
-import { withConfigOverride } from '../../tests/helpers'
+import { PaymentMethodManagerService } from '../../payment-method/service'
+import { ReceiverService } from '../receiver/service'
+import { createReceiver } from '../../tests/receiver'
 
 describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
+  let paymentMethodManagerService: PaymentMethodManagerService
+  let receiverService: ReceiverService
   let knex: Knex
   let sendingPaymentPointer: MockPaymentPointer
   let receivingPaymentPointer: MockPaymentPointer
@@ -62,26 +65,17 @@ describe('QuoteService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    Config.exchangeRatesUrl = 'https://test.rates'
-    nock(Config.exchangeRatesUrl)
-      .get('/')
-      .query(true)
-      .reply(200, () => ({
-        base: 'USD',
-        rates: {
-          XRP: 0.5
-        }
-      }))
-      .persist()
-    deps = await initIocContainer(Config)
+    deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
     knex = appContainer.knex
     config = await deps.use('config')
+    quoteService = await deps.use('quoteService')
+    paymentMethodManagerService = await deps.use('paymentMethodManagerService')
+    receiverService = await deps.use('receiverService')
   })
 
   beforeEach(async (): Promise<void> => {
-    quoteService = await deps.use('quoteService')
     const { id: sendAssetId } = await createAsset(deps, {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
@@ -94,19 +88,10 @@ describe('QuoteService', (): void => {
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
-    const accountingService = await deps.use('accountingService')
-    await expect(
-      accountingService.createDeposit({
-        id: uuid(),
-        account: receivingPaymentPointer.asset,
-        amount: BigInt(123)
-      })
-    ).resolves.toBeUndefined()
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    receivingPaymentPointer.scope?.persist(false)
     await truncateTables(knex)
   })
 
@@ -175,20 +160,39 @@ describe('QuoteService', (): void => {
         })
 
         if (!debitAmount && !receiveAmount && !incomingAmount) {
-          it('fails without receiver.incomingAmount', async (): Promise<void> => {
+          test('fails without receiver.incomingAmount', async (): Promise<void> => {
             await expect(quoteService.create(options)).resolves.toEqual(
               QuoteError.InvalidReceiver
             )
           })
         } else {
           if (debitAmount || receiveAmount) {
-            it.each`
+            test.each`
               client       | description
               ${client}    | ${'with a client'}
               ${undefined} | ${'without a client'}
             `(
               'creates a Quote $description',
               async ({ client }): Promise<void> => {
+                const mockedQuote = mockQuote({
+                  receiver: (await receiverService.get(
+                    incomingPayment.getUrl(receivingPaymentPointer)
+                  ))!,
+                  paymentPointer: sendingPaymentPointer,
+                  exchangeRate: 0.5,
+                  ...(debitAmount
+                    ? { debitAmountValue: debitAmount.value }
+                    : {
+                        receiveAmountValue: receiveAmount
+                          ? receiveAmount.value
+                          : incomingAmount.value
+                      })
+                })
+
+                jest
+                  .spyOn(paymentMethodManagerService, 'getQuote')
+                  .mockResolvedValueOnce(mockedQuote)
+
                 const quote = await quoteService.create({
                   ...options,
                   client
@@ -198,26 +202,8 @@ describe('QuoteService', (): void => {
                 expect(quote).toMatchObject({
                   paymentPointerId: sendingPaymentPointer.id,
                   receiver: options.receiver,
-                  debitAmount: debitAmount || {
-                    value: BigInt(
-                      Math.ceil(
-                        Number(receiveAmount.value) /
-                          quote.minExchangeRate.valueOf()
-                      )
-                    ),
-                    assetCode: asset.code,
-                    assetScale: asset.scale
-                  },
-                  receiveAmount: receiveAmount || {
-                    value: BigInt(
-                      Math.ceil(
-                        Number(debitAmount.value) *
-                          quote.minExchangeRate.valueOf()
-                      )
-                    ),
-                    assetCode: destinationAsset.code,
-                    assetScale: destinationAsset.scale
-                  },
+                  debitAmount: debitAmount || mockedQuote.debitAmount,
+                  receiveAmount: receiveAmount || mockedQuote.receiveAmount,
                   maxPacketAmount: BigInt('9223372036854775807'),
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
@@ -226,13 +212,6 @@ describe('QuoteService', (): void => {
                   ),
                   client: client || null
                 })
-                expect(quote.minExchangeRate.valueOf()).toBe(
-                  0.5 * (1 - config.slippage)
-                )
-                expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
-                expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
-                  0.500000000001
-                )
 
                 await expect(
                   quoteService.get({
@@ -243,7 +222,26 @@ describe('QuoteService', (): void => {
             )
 
             if (incomingAmount) {
-              it('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
+              test('fails if receiveAmount exceeds receiver.incomingAmount', async (): Promise<void> => {
+                const mockedQuote = mockQuote({
+                  receiver: (await receiverService.get(
+                    incomingPayment.getUrl(receivingPaymentPointer)
+                  ))!,
+                  paymentPointer: sendingPaymentPointer,
+                  exchangeRate: 0.5,
+                  ...(debitAmount
+                    ? { debitAmountValue: debitAmount.value }
+                    : {
+                        receiveAmountValue: receiveAmount
+                          ? receiveAmount.value
+                          : incomingAmount.value
+                      })
+                })
+
+                jest
+                  .spyOn(paymentMethodManagerService, 'getQuote')
+                  .mockResolvedValueOnce(mockedQuote)
+
                 await incomingPayment.$query(knex).patch({
                   incomingAmount: {
                     value: BigInt(1),
@@ -257,31 +255,42 @@ describe('QuoteService', (): void => {
               })
             }
           } else if (incomingAmount) {
-            it.each`
+            test.each`
               client       | description
               ${client}    | ${'with a client'}
               ${undefined} | ${'without a client'}
             `(
               'creates a Quote $description',
               async ({ client }): Promise<void> => {
+                const mockedQuote = mockQuote({
+                  receiver: (await receiverService.get(
+                    incomingPayment.getUrl(receivingPaymentPointer)
+                  ))!,
+                  paymentPointer: sendingPaymentPointer,
+                  exchangeRate: 0.5,
+                  ...(debitAmount
+                    ? { debitAmountValue: debitAmount.value }
+                    : {
+                        receiveAmountValue: receiveAmount
+                          ? receiveAmount.value
+                          : incomingAmount.value
+                      })
+                })
+
+                jest
+                  .spyOn(paymentMethodManagerService, 'getQuote')
+                  .mockResolvedValueOnce(mockedQuote)
+
                 const quote = await quoteService.create({
                   ...options,
                   client
                 })
                 assert.ok(!isQuoteError(quote))
+
                 expect(quote).toMatchObject({
                   ...options,
                   maxPacketAmount: BigInt('9223372036854775807'),
-                  debitAmount: {
-                    value: BigInt(
-                      Math.ceil(
-                        Number(incomingAmount.value) /
-                          quote.minExchangeRate.valueOf()
-                      )
-                    ),
-                    assetCode: asset.code,
-                    assetScale: asset.scale
-                  },
+                  debitAmount: mockedQuote.debitAmount,
                   receiveAmount: incomingAmount,
                   createdAt: expect.any(Date),
                   updatedAt: expect.any(Date),
@@ -290,13 +299,7 @@ describe('QuoteService', (): void => {
                   ),
                   client: client || null
                 })
-                expect(quote.minExchangeRate.valueOf()).toBe(
-                  0.5 * (1 - config.slippage)
-                )
-                expect(quote.lowEstimatedExchangeRate.valueOf()).toBe(0.5)
-                expect(quote.highEstimatedExchangeRate.valueOf()).toBe(
-                  0.500000000001
-                )
+
                 await expect(
                   quoteService.get({
                     id: quote.id
@@ -331,7 +334,7 @@ describe('QuoteService', (): void => {
       })
     })
 
-    it.each`
+    test.each`
       expiryDate                                                            | description
       ${new Date(new Date().getTime() + Config.quoteLifespan - 2 * 60_000)} | ${"the incoming payment's expirataion date"}
       ${new Date(new Date().getTime() + Config.quoteLifespan + 2 * 60_000)} | ${"the quotation's creation date plus its lifespan"}
@@ -349,6 +352,19 @@ describe('QuoteService', (): void => {
           receiveAmount
         }
 
+        const mockedQuote = mockQuote({
+          receiver: (await receiverService.get(
+            incomingPayment.getUrl(receivingPaymentPointer)
+          ))!,
+          paymentPointer: sendingPaymentPointer,
+          receiveAmountValue: receiveAmount.value,
+          exchangeRate: 0.5
+        })
+
+        jest
+          .spyOn(paymentMethodManagerService, 'getQuote')
+          .mockResolvedValueOnce(mockedQuote)
+
         const quote = await quoteService.create(options)
         assert.ok(!isQuoteError(quote))
         const maxExpiration = new Date(
@@ -357,17 +373,8 @@ describe('QuoteService', (): void => {
         expect(quote).toMatchObject({
           paymentPointerId: sendingPaymentPointer.id,
           receiver: options.receiver,
-          debitAmount: {
-            value: BigInt(
-              Math.ceil(
-                Number(receiveAmount.value) / quote.minExchangeRate.valueOf()
-              )
-            ),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          },
+          debitAmount: mockedQuote.debitAmount,
           receiveAmount: receiveAmount,
-          maxPacketAmount: BigInt('9223372036854775807'),
           createdAt: expect.any(Date),
           updatedAt: expect.any(Date),
           expiresAt:
@@ -378,7 +385,7 @@ describe('QuoteService', (): void => {
       }
     )
 
-    it('fails on unknown payment pointer', async (): Promise<void> => {
+    test('fails on unknown payment pointer', async (): Promise<void> => {
       await expect(
         quoteService.create({
           paymentPointerId: uuid(),
@@ -390,7 +397,7 @@ describe('QuoteService', (): void => {
       ).resolves.toEqual(QuoteError.UnknownPaymentPointer)
     })
 
-    it('fails on inactive payment pointer', async () => {
+    test('fails on inactive payment pointer', async () => {
       const paymentPointer = await createPaymentPointer(deps)
       const paymentPointerUpdated = await PaymentPointer.query(
         knex
@@ -407,7 +414,7 @@ describe('QuoteService', (): void => {
       ).resolves.toEqual(QuoteError.InactivePaymentPointer)
     })
 
-    it('fails on invalid receiver', async (): Promise<void> => {
+    test('fails on invalid receiver', async (): Promise<void> => {
       await expect(
         quoteService.create({
           paymentPointerId: sendingPaymentPointer.id,
@@ -446,46 +453,6 @@ describe('QuoteService', (): void => {
       }
     )
 
-    it('calls rates service with correct base asset', async (): Promise<void> => {
-      const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: receivingPaymentPointer.id,
-        incomingAmount
-      })
-      const options: CreateQuoteOptions = {
-        paymentPointerId: sendingPaymentPointer.id,
-        receiver: incomingPayment.getUrl(receivingPaymentPointer),
-        receiveAmount
-      }
-
-      const ratesService = await deps.use('ratesService')
-      const ratesServiceSpy = jest.spyOn(ratesService, 'rates')
-
-      const quote = await quoteService.create(options)
-      assert.ok(!isQuoteError(quote))
-
-      expect(ratesServiceSpy).toHaveBeenCalledWith(
-        sendingPaymentPointer.asset.code
-      )
-    })
-
-    it('fails on rate service error', async (): Promise<void> => {
-      const ratesService = await deps.use('ratesService')
-      jest
-        .spyOn(ratesService, 'rates')
-        .mockImplementation(() => Promise.reject(new Error('fail')))
-      const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: receivingPaymentPointer.id
-      })
-
-      await expect(
-        quoteService.create({
-          paymentPointerId: sendingPaymentPointer.id,
-          receiver: incomingPayment.getUrl(receivingPaymentPointer),
-          debitAmount
-        })
-      ).rejects.toThrow('missing rates')
-    })
-
     describe('fees - fixed delivery', (): void => {
       let asset: Asset
       let sendingPaymentPointer: PaymentPointer
@@ -506,49 +473,55 @@ describe('QuoteService', (): void => {
 
       test.each`
         incomingAmountValue | fixedFee | basisPointFee | expectedQuoteDebitAmountValue | description
-        ${3364n}            | ${0}     | ${0}          | ${3365n}                      | ${'no fees'}
-        ${3364n}            | ${150}   | ${0}          | ${3515n}                      | ${'fixed fee'}
-        ${3364n}            | ${0}     | ${200}        | ${3432n}                      | ${'basis point fee'}
-        ${3364n}            | ${150}   | ${200}        | ${3582n}                      | ${'fixed and basis point fee'}
+        ${1000}             | ${0}     | ${0}          | ${1000n}                      | ${'no fees'}
+        ${1000n}            | ${150}   | ${0}          | ${1150n}                      | ${'fixed fee'}
+        ${1000n}            | ${0}     | ${200}        | ${1020n}                      | ${'basis point fee'}
+        ${1000n}            | ${150}   | ${200}        | ${1170n}                      | ${'fixed and basis point fee'}
       `(
         '$description',
-        withConfigOverride(
-          () => config,
-          { slippage: 0 },
-          async ({
-            incomingAmountValue,
-            fixedFee,
-            basisPointFee,
-            expectedQuoteDebitAmountValue
-          }): Promise<void> => {
-            const incomingPayment = await createIncomingPayment(deps, {
-              paymentPointerId: receivingPaymentPointer.id,
-              incomingAmount: {
-                assetCode: asset.code,
-                assetScale: asset.scale,
-                value: incomingAmountValue
-              }
-            })
-            await Fee.query().insertAndFetch({
-              assetId: asset.id,
-              type: FeeType.Sending,
-              fixedFee,
-              basisPointFee
-            })
-
-            const quote = await quoteService.create({
-              paymentPointerId: sendingPaymentPointer.id,
-              receiver: incomingPayment.getUrl(receivingPaymentPointer)
-            })
-            assert.ok(!isQuoteError(quote))
-
-            expect(quote.debitAmount).toEqual({
+        async ({
+          incomingAmountValue,
+          fixedFee,
+          basisPointFee,
+          expectedQuoteDebitAmountValue
+        }): Promise<void> => {
+          const receiver = await createReceiver(deps, receivingPaymentPointer, {
+            incomingAmount: {
               assetCode: asset.code,
               assetScale: asset.scale,
-              value: expectedQuoteDebitAmountValue
-            })
-          }
-        )
+              value: incomingAmountValue
+            }
+          })
+
+          await Fee.query().insertAndFetch({
+            assetId: asset.id,
+            type: FeeType.Sending,
+            fixedFee,
+            basisPointFee
+          })
+
+          const mockedQuote = mockQuote({
+            receiver: receiver!,
+            paymentPointer: sendingPaymentPointer,
+            receiveAmountValue: incomingAmountValue
+          })
+
+          jest
+            .spyOn(paymentMethodManagerService, 'getQuote')
+            .mockResolvedValueOnce(mockedQuote)
+
+          const quote = await quoteService.create({
+            paymentPointerId: sendingPaymentPointer.id,
+            receiver: receiver.incomingPayment!.id
+          })
+          assert.ok(!isQuoteError(quote))
+
+          expect(quote.debitAmount).toEqual({
+            assetCode: asset.code,
+            assetScale: asset.scale,
+            value: expectedQuoteDebitAmountValue
+          })
+        }
       )
     })
 
@@ -583,48 +556,49 @@ describe('QuoteService', (): void => {
         ${200n}          | ${20}    | ${200}        | ${89n}                     | ${'fixed and basis point fee'}
       `(
         '$description',
-        withConfigOverride(
-          () => config,
-          { slippage: 0 },
-          async ({
-            debitAmountValue,
+        async ({
+          debitAmountValue,
+          fixedFee,
+          basisPointFee,
+          expectedReceiveAmountValue
+        }): Promise<void> => {
+          const receiver = await createReceiver(deps, receivingPaymentPointer)
+
+          await Fee.query().insertAndFetch({
+            assetId: sendAsset.id,
+            type: FeeType.Sending,
             fixedFee,
-            basisPointFee,
-            expectedReceiveAmountValue
-          }): Promise<void> => {
-            const incomingPayment = await createIncomingPayment(deps, {
-              paymentPointerId: receivingPaymentPointer.id,
-              incomingAmount: {
-                assetCode: receiveAsset.code,
-                assetScale: receiveAsset.scale,
-                value: debitAmountValue
-              }
-            })
-            await Fee.query().insertAndFetch({
-              assetId: sendAsset.id,
-              type: FeeType.Sending,
-              fixedFee,
-              basisPointFee
-            })
+            basisPointFee
+          })
 
-            const quote = await quoteService.create({
-              paymentPointerId: sendingPaymentPointer.id,
-              receiver: incomingPayment.getUrl(receivingPaymentPointer),
-              debitAmount: {
-                value: debitAmountValue,
-                assetCode: sendAsset.code,
-                assetScale: sendAsset.scale
-              }
-            })
-            assert.ok(!isQuoteError(quote))
+          const mockedQuote = mockQuote({
+            receiver,
+            paymentPointer: sendingPaymentPointer,
+            debitAmountValue,
+            exchangeRate: 0.5
+          })
 
-            expect(quote.receiveAmount).toEqual({
-              assetCode: receiveAsset.code,
-              assetScale: receiveAsset.scale,
-              value: expectedReceiveAmountValue
-            })
-          }
-        )
+          jest
+            .spyOn(paymentMethodManagerService, 'getQuote')
+            .mockResolvedValueOnce(mockedQuote)
+
+          const quote = await quoteService.create({
+            paymentPointerId: sendingPaymentPointer.id,
+            receiver: receiver.incomingPayment!.id,
+            debitAmount: {
+              value: debitAmountValue,
+              assetCode: sendAsset.code,
+              assetScale: sendAsset.scale
+            }
+          })
+          assert.ok(!isQuoteError(quote))
+
+          expect(quote.receiveAmount).toEqual({
+            assetCode: receiveAsset.code,
+            assetScale: receiveAsset.scale,
+            value: expectedReceiveAmountValue
+          })
+        }
       )
     })
   })
