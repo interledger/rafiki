@@ -245,7 +245,7 @@ describe('IlpPaymentService', (): void => {
       ratesScope.done()
     })
 
-    describe('gets ilp quote', (): void => {
+    describe('successfully gets ilp quote', (): void => {
       describe('with incomingAmount', () => {
         test.each`
           incomingAssetCode | incomingAmountValue | debitAssetCode | expectedDebitAmount | exchangeRate | slippage | description

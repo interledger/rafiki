@@ -356,7 +356,6 @@ export function initIocContainer(
       feeService: await deps.use('feeService')
     })
   })
-
   container.singleton('quoteRoutes', async (deps) => {
     return createQuoteRoutes({
       config: await deps.use('config'),
