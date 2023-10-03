@@ -3,7 +3,7 @@ import {
   PaymentQuote,
   PaymentProcessorService,
   StartQuoteOptions
-} from '../service'
+} from '../handler/service'
 import { RatesService } from '../../rates/service'
 import { IlpPlugin, IlpPluginOptions } from './ilp_plugin'
 import * as Pay from '@interledger/pay'

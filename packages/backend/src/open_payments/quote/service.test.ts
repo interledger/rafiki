@@ -27,7 +27,7 @@ import { getTests } from '../payment_pointer/model.test'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Fee, FeeType } from '../../fee/model'
 import { Asset } from '../../asset/model'
-import { PaymentMethodManagerService } from '../../payment-method/service'
+import { PaymentMethodManagerService } from '../../payment-method/handler/service'
 import { ReceiverService } from '../receiver/service'
 import { createReceiver } from '../../tests/receiver'
 

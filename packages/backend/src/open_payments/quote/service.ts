@@ -12,7 +12,7 @@ import {
   PaymentPointerService,
   PaymentPointerSubresourceService
 } from '../payment_pointer/service'
-import { PaymentMethodManagerService } from '../../payment-method/service'
+import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
 import { FeeType } from '../../fee/model'
@@ -29,7 +29,7 @@ export interface ServiceDependencies extends BaseService {
   receiverService: ReceiverService
   paymentPointerService: PaymentPointerService
   feeService: FeeService
-  paymentMethodManagerService: PaymentMethodManagerService
+  paymentMethodHandlerService: PaymentMethodHandlerService
 }
 
 export async function createQuoteService(
@@ -106,7 +106,7 @@ async function createQuote(
 
   try {
     const receiver = await resolveReceiver(deps, options)
-    const quote = await deps.paymentMethodManagerService.getQuote('ILP', {
+    const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
       paymentPointer,
       receiver,
       receiveAmount: options.receiveAmount,

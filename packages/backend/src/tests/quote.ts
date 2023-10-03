@@ -6,7 +6,7 @@ import { AppServices } from '../app'
 import { AssetOptions } from '../asset/service'
 import { Quote } from '../open_payments/quote/model'
 import { CreateQuoteOptions } from '../open_payments/quote/service'
-import { PaymentQuote } from '../payment-method/service'
+import { PaymentQuote } from '../payment-method/handler/service'
 import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { Receiver } from '../open_payments/receiver/model'
 

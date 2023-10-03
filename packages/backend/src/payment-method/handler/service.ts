@@ -1,8 +1,8 @@
-import { Amount } from '../open_payments/amount'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
-import { Receiver } from '../open_payments/receiver/model'
-import { BaseService } from '../shared/baseService'
-import { IlpPaymentService } from './ilp/service'
+import { Amount } from '../../open_payments/amount'
+import { PaymentPointer } from '../../open_payments/payment_pointer/model'
+import { Receiver } from '../../open_payments/receiver/model'
+import { BaseService } from '../../shared/baseService'
+import { IlpPaymentService } from '../ilp/service'
 
 export interface StartQuoteOptions {
   paymentPointer: PaymentPointer
@@ -25,7 +25,7 @@ export interface PaymentProcessorService {
   getQuote(quoteOptions: StartQuoteOptions): Promise<PaymentQuote>
 }
 
-export interface PaymentMethodManagerService {
+export interface PaymentMethodHandlerService {
   getQuote(
     method: PaymentMethod,
     quoteOptions: StartQuoteOptions
@@ -36,13 +36,13 @@ interface ServiceDependencies extends BaseService {
   ilpPaymentService: IlpPaymentService
 }
 
-export async function createPaymentMethodManagerService({
+export async function createPaymentMethodHandlerService({
   logger,
   knex,
   ilpPaymentService
-}: ServiceDependencies): Promise<PaymentMethodManagerService> {
+}: ServiceDependencies): Promise<PaymentMethodHandlerService> {
   const log = logger.child({
-    service: 'PaymentMethodManagerService'
+    service: 'PaymentMethodHandlerService'
   })
   const deps: ServiceDependencies = {
     logger: log,

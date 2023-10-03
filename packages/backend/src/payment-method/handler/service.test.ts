@@ -1,31 +1,31 @@
 import {
   PaymentMethod,
-  PaymentMethodManagerService,
+  PaymentMethodHandlerService,
   StartQuoteOptions
 } from './service'
-import { initIocContainer } from '../'
-import { createTestApp, TestContainer } from '../tests/app'
-import { Config } from '../config/app'
+import { initIocContainer } from '../../'
+import { createTestApp, TestContainer } from '../../tests/app'
+import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { AppServices } from '../app'
-import { createAsset } from '../tests/asset'
-import { createPaymentPointer } from '../tests/paymentPointer'
+import { AppServices } from '../../app'
+import { createAsset } from '../../tests/asset'
+import { createPaymentPointer } from '../../tests/paymentPointer'
 
-import { createReceiver } from '../tests/receiver'
-import { IlpPaymentService } from './ilp/service'
-import { truncateTables } from '../tests/tableManager'
+import { createReceiver } from '../../tests/receiver'
+import { IlpPaymentService } from '../ilp/service'
+import { truncateTables } from '../../tests/tableManager'
 
-describe('PaymentMethodManagerService', (): void => {
+describe('PaymentMethodHandlerService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let paymentMethodManagerService: PaymentMethodManagerService
+  let paymentMethodHandlerService: PaymentMethodHandlerService
   let ilpPaymentService: IlpPaymentService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
 
-    paymentMethodManagerService = await deps.use('paymentMethodManagerService')
+    paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     ilpPaymentService = await deps.use('ilpPaymentService')
   })
 
@@ -60,7 +60,7 @@ describe('PaymentMethodManagerService', (): void => {
         'getQuote'
       )
 
-      await paymentMethodManagerService.getQuote('ILP', options)
+      await paymentMethodHandlerService.getQuote('ILP', options)
 
       expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
     })
@@ -86,7 +86,7 @@ describe('PaymentMethodManagerService', (): void => {
       }
 
       expect(() =>
-        paymentMethodManagerService.getQuote('' as PaymentMethod, options)
+        paymentMethodHandlerService.getQuote('' as PaymentMethod, options)
       ).toThrow('Payment method not supported')
     })
   })
