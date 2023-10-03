@@ -41,7 +41,7 @@ export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
   return response.data.walletAddress
 }
 
-export const listWalletAddresss = async (args: QueryWalletAddressesArgs) => {
+export const listWalletAddresses = async (args: QueryWalletAddressesArgs) => {
   const response = await apolloClient.query<
     ListWalletAddresssQuery,
     ListWalletAddresssQueryVariables
