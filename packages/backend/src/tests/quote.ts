@@ -6,10 +6,54 @@ import { AppServices } from '../app'
 import { AssetOptions } from '../asset/service'
 import { Quote } from '../open_payments/quote/model'
 import { CreateQuoteOptions } from '../open_payments/quote/service'
+import { PaymentQuote } from '../payment-method/service'
+import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { Receiver } from '../open_payments/receiver/model'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
   validDestination?: boolean
   withFee?: boolean
+}
+
+type MockQuoteArgs = {
+  receiver: Receiver
+  paymentPointer: PaymentPointer
+  exchangeRate?: number
+} & ({ debitAmountValue: bigint } | { receiveAmountValue: bigint })
+
+export function mockQuote(
+  args: MockQuoteArgs,
+  overrides?: Partial<PaymentQuote>
+): PaymentQuote {
+  const { paymentPointer, receiver, exchangeRate = 1 } = args
+
+  return {
+    receiver,
+    paymentPointer,
+    debitAmount: {
+      assetCode: paymentPointer.asset.code,
+      assetScale: paymentPointer.asset.scale,
+      value:
+        'debitAmountValue' in args
+          ? args.debitAmountValue
+          : BigInt(Math.ceil(Number(args.receiveAmountValue) * exchangeRate))
+    },
+    receiveAmount: {
+      assetCode: receiver.assetCode,
+      assetScale: receiver.assetScale,
+      value:
+        'receiveAmountValue' in args
+          ? args.receiveAmountValue
+          : BigInt(Math.ceil(Number(args.debitAmountValue) * exchangeRate))
+    },
+    additionalFields: {
+      maxPacketAmount: BigInt(Pay.Int.MAX_U64.toString()),
+      lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
+      highEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
+      minExchangeRate: Pay.Ratio.from(exchangeRate ?? 1)
+    },
+    ...overrides
+  }
 }
 
 export async function createQuote(
