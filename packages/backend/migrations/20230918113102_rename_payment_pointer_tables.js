@@ -29,10 +29,32 @@ exports.up = function (knex) {
       .update({
         // renames paymentPointer keys (if any) to walletAddress in data json column
         data: knex.raw(
-          "data - 'paymentPointer' || json_build_object('walletAddress', data->'paymentPointer')"
+          "data::jsonb - 'paymentPointer' || jsonb_build_object('walletAddress', data::jsonb->'paymentPointer')"
         )
       })
-      .whereRaw("data \\? 'paymentPonter'")
+      .whereRaw("data->'paymentPointer' is not null"),
+    knex('webhookEvents')
+      .update({
+        // renames paymentPointerId keys (if any) to walletAddressId in data json column
+        data: knex.raw(
+          "data::jsonb - 'paymentPointerId' || jsonb_build_object('walletAddressId', data::jsonb->'paymentPointerId')"
+        )
+      })
+      .whereRaw("data->'paymentPointerId' is not null"),
+    knex('webhookEvents')
+      .update({
+        // renames paymentPointerUrl keys (if any) to walletAddressUrl in data json column
+        data: knex.raw(
+          "data::jsonb - 'paymentPointerUrl' || jsonb_build_object('walletAddressUrl', data::jsonb->'paymentPointerUrl')"
+        )
+      })
+      .whereRaw("data->'paymentPointerUrl' is not null"),
+    knex('webhookEvents')
+      .update({
+        // renames payment_pointer.not_found values (if any) to wallet_address.not_found for type key in data json column
+        type: knex.raw("REPLACE(type, 'payment_pointer.', 'wallet_address.')")
+      })
+      .whereLike('type', 'payment_pointer%')
   ])
 }
 
@@ -66,9 +88,28 @@ exports.down = function (knex) {
     knex('webhookEvents')
       .update({
         data: knex.raw(
-          "data - 'walletAddress' || json_build_object('paymentPointer', data->'walletAddress')"
+          "data::jsonb - 'walletAddress' || jsonb_build_object('paymentPointer', data::jsonb->'walletAddress')"
         )
       })
-      .whereRaw("data \\? 'walletAddress'")
+      .whereRaw("data->'walletAddress' is not null"),
+    knex('webhookEvents')
+      .update({
+        data: knex.raw(
+          "data::jsonb - 'walletAddressId' || jsonb_build_object('paymentPointerId', data::jsonb->'walletAddressId')"
+        )
+      })
+      .whereRaw("data->'walletAddressId' is not null"),
+    knex('webhookEvents')
+      .update({
+        data: knex.raw(
+          "data::jsonb - 'walletAddressUrl' || jsonb_build_object('paymentPointerUrl', data::jsonb->'walletAddressUrl')"
+        )
+      })
+      .whereRaw("data->'walletAddressUrl' is not null"),
+    knex('webhookEvents')
+      .update({
+        type: knex.raw("REPLACE(type, 'wallet_address.', 'payment_pointer.')")
+      })
+      .whereLike('type', 'wallet_address%')
   ])
 }
