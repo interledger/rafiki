@@ -1,12 +1,6 @@
-import {
-  loadBase64Key,
-  createHeaders
-} from '@interledger/http-signature-utils'
+import { loadBase64Key, createHeaders } from '@interledger/http-signature-utils'
 
-
-const validateBody = (
-  requestBody
-) =>
+const validateBody = (requestBody) =>
   !!requestBody.keyId &&
   !!requestBody.base64Key &&
   !!requestBody.request.headers &&
@@ -20,21 +14,21 @@ export const handler = async function (event, context) {
   if (!validateBody(requestBody)) {
     response = {
       statusCode: '400',
-      body: 'Unsufficient data in request body',
+      body: 'Unsufficient data in request body'
     }
     context.succeed(response)
   }
 
   const { base64Key, keyId, request } = requestBody
 
-  let privateKey 
-  
+  let privateKey
+
   try {
-    privateKey= loadBase64Key(base64Key)
+    privateKey = loadBase64Key(base64Key)
   } catch {
     response = {
       statusCode: '400',
-      body: 'Not a valid private key',
+      body: 'Not a valid private key'
     }
     context.succeed(response)
   }
@@ -42,7 +36,7 @@ export const handler = async function (event, context) {
   if (privateKey === undefined) {
     response = {
       statusCode: '400',
-      body: 'Not an Ed25519 private key',
+      body: 'Not an Ed25519 private key'
     }
     context.succeed(response)
   }
@@ -59,7 +53,7 @@ export const handler = async function (event, context) {
     statusCode: '200',
     body: JSON.stringify(headers),
     headers: {
-        'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     }
   }
   context.succeed(response)
