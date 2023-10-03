@@ -11,8 +11,6 @@ export interface StartQuoteOptions {
   receiver: Receiver
 }
 
-export type PaymentMethod = 'ILP'
-
 export interface PaymentQuote {
   paymentPointer: PaymentPointer
   receiver: Receiver
@@ -21,9 +19,11 @@ export interface PaymentQuote {
   additionalFields: Record<string, unknown>
 }
 
-export interface PaymentProcessorService {
+export interface PaymentMethodService {
   getQuote(quoteOptions: StartQuoteOptions): Promise<PaymentQuote>
 }
+
+export type PaymentMethod = 'ILP'
 
 export interface PaymentMethodHandlerService {
   getQuote(
@@ -59,7 +59,7 @@ export async function createPaymentMethodHandlerService({
 function getPaymentMethodService(
   deps: ServiceDependencies,
   method: PaymentMethod
-): PaymentProcessorService {
+): PaymentMethodService {
   if (method === 'ILP') {
     return deps.ilpPaymentService
   }
