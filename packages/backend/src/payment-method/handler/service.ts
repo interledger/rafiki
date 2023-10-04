@@ -50,19 +50,12 @@ export async function createPaymentMethodHandlerService({
     ilpPaymentService
   }
 
+  const paymentMethods: { [key in PaymentMethod]: PaymentMethodService } = {
+    ILP: deps.ilpPaymentService
+  }
+
   return {
     getQuote: (method, quoteOptions) =>
-      getPaymentMethodService(deps, method).getQuote(quoteOptions)
+      paymentMethods[method].getQuote(quoteOptions)
   }
-}
-
-function getPaymentMethodService(
-  deps: ServiceDependencies,
-  method: PaymentMethod
-): PaymentMethodService {
-  if (method === 'ILP') {
-    return deps.ilpPaymentService
-  }
-
-  throw new Error('Payment method not supported')
 }
