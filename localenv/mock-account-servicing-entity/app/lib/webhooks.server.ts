@@ -50,7 +50,7 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   ) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
-  const payment = wh.data['payment']
+  const payment = wh.data
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointerId(pp)
 
@@ -58,8 +58,8 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amtDebit = parseAmount(payment['debitAmount'])
-  const amtSent = parseAmount(payment['sentAmount'])
+  const amtDebit = parseAmount(payment['debitAmount'] as AmountJSON)
+  const amtSent = parseAmount(payment['sentAmount'] as AmountJSON)
 
   const toVoid = amtDebit.value - amtSent.value
 
@@ -78,7 +78,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
 
-  const payment = wh.data['payment']
+  const payment = wh.data
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointerId(pp)
 
@@ -86,7 +86,7 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amt = parseAmount(payment['debitAmount'])
+  const amt = parseAmount(payment['debitAmount'] as AmountJSON)
 
   await mockAccounts.pendingDebit(acc.id, amt.value)
 
@@ -129,7 +129,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     throw new Error('Invalid event type when handling incoming payment webhook')
   }
 
-  const payment = wh.data['incomingPayment']
+  const payment = wh.data
   const pp = payment['paymentPointerId'] as string
   const acc = await mockAccounts.getByPaymentPointerId(pp)
 
@@ -137,7 +137,7 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     throw new Error('No account found for payment pointer')
   }
 
-  const amt = parseAmount(payment['receivedAmount'])
+  const amt = parseAmount(payment['receivedAmount'] as AmountJSON)
 
   await mockAccounts.credit(acc.id, amt.value, false)
 
