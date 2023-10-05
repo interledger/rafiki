@@ -115,7 +115,7 @@ describe('Grant Service', (): void => {
       const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
-        state: GrantState.Pending,
+        state: GrantState.Approved,
         continueId: expect.any(String),
         continueToken: expect.any(String),
         finishMethod: FinishMethod.Redirect,
