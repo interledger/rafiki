@@ -21,6 +21,8 @@ Rafiki is made up of several components including an Interledger connector, a hi
 
 Additionally, this package also includes a reference implementation of a [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API. For more information on the architecture, check out the [Architecture documentation](https://rafiki.dev/introduction/architecture/).
 
+**❗ Telemetry is enabled by default.**
+
 ### New to Interledger?
 
 Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
