@@ -15,9 +15,9 @@ Account Servicing Entities provide and maintain payment accounts. In order to ma
 
 Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [payment pointer](#issuing-payment-pointers) in order to be serviced by Rafiki and send or receive Interledger payments.
 
-## Quotes / Rates and Fees
+## Quotes and Fees
 
-Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may set fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity.
+Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may set fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity. The fees are entirely set by the asset
 
 ### Exchange Rates
 
