@@ -1,4 +1,4 @@
-import { RatesService, ConvertError, Rates } from './service'
+import { RatesService, ConvertError } from './service'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Config } from '../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -6,6 +6,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { CacheDataStore } from '../middleware/cache/data-stores'
 import nock from 'nock'
+import { mockRatesApi } from '../tests/rates'
 
 describe('Rates service', function () {
   let deps: IocContract<AppServices>
@@ -28,23 +29,6 @@ describe('Rates service', function () {
       USD: 0.61,
       EUR: 0.5
     }
-  }
-
-  const mockRatesApi = (fn: (baseAssetCode: unknown) => Rates['rates']) => {
-    nock(exchangeRatesUrl)
-      .get('/')
-      .query(true)
-      .reply(200, (url) => {
-        apiRequestCount++
-
-        const base = url.split('=')[1]
-
-        return {
-          base,
-          rates: fn(base)
-        }
-      })
-      .persist()
   }
 
   beforeAll(async (): Promise<void> => {
@@ -72,11 +56,15 @@ describe('Rates service', function () {
 
   describe('convert', () => {
     beforeAll(() => {
-      mockRatesApi((base) => ({
-        ...exampleRates[base as keyof typeof exampleRates],
-        NEGATIVE: -0.5,
-        ZERO: 0.0
-      }))
+      mockRatesApi(exchangeRatesUrl, (base) => {
+        apiRequestCount++
+
+        return {
+          ...exampleRates[base as keyof typeof exampleRates],
+          NEGATIVE: -0.5,
+          ZERO: 0.0
+        }
+      })
     })
 
     afterAll(() => {
@@ -157,7 +145,10 @@ describe('Rates service', function () {
 
   describe('rates', function () {
     beforeAll(() => {
-      mockRatesApi((base) => exampleRates[base as keyof typeof exampleRates])
+      mockRatesApi(exchangeRatesUrl, (base) => {
+        apiRequestCount++
+        return exampleRates[base as keyof typeof exampleRates]
+      })
     })
 
     afterAll(() => {
