@@ -1,6 +1,6 @@
 self:
-  graphqlUrl: http://cloud-nine-wallet-backend:3001/graphql
-  hostname: 'cloud-nine-wallet-backend'
+  graphqlUrl: http://localhost:3001/graphql
+  hostname: 'localhost'
   mapHostname: 'primary-mase'
   openPaymentPublishedPort: 3000
 assets:
