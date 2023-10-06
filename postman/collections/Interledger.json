@@ -3351,11 +3351,6 @@
 										"type": "text"
 									},
 									{
-										"key": "Host",
-										"value": "backend",
-										"type": "text"
-									},
-									{
 										"key": "Signature-Input",
 										"value": "TODO",
 										"type": "text"
