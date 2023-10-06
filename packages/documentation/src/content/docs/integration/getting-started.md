@@ -17,7 +17,7 @@ Furthermore, each payment account managed by the Account Servicing Entity needs 
 
 ## Quotes and Fees
 
-Every Interledger payment is preceded with a quote that estimates the costs for transfering value from A to B. The Account Servicing Entity may set fees on top of that for facilitating that transfer. How they structure those fees is completely up to the Account Servicing Entity. The fees are entirely set by the asset
+Every Interledger payment is preceded with a quote that estimates the costs for transferring value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. They can specify fixed and variable fees per asset using the Admin API. How they structure those fees is completely up to the Account Servicing Entity.
 
 ### Exchange Rates
 
