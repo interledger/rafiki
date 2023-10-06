@@ -27,7 +27,7 @@ import { getTests } from '../payment_pointer/model.test'
 import { PaymentPointer } from '../payment_pointer/model'
 import { Fee, FeeType } from '../../fee/model'
 import { Asset } from '../../asset/model'
-import { PaymentMethodManagerService } from '../../payment-method/handler/service'
+import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { ReceiverService } from '../receiver/service'
 import { createReceiver } from '../../tests/receiver'
 
@@ -35,7 +35,7 @@ describe('QuoteService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let quoteService: QuoteService
-  let paymentMethodManagerService: PaymentMethodManagerService
+  let paymentMethodHandlerService: PaymentMethodHandlerService
   let receiverService: ReceiverService
   let knex: Knex
   let sendingPaymentPointer: MockPaymentPointer
@@ -71,7 +71,7 @@ describe('QuoteService', (): void => {
     knex = appContainer.knex
     config = await deps.use('config')
     quoteService = await deps.use('quoteService')
-    paymentMethodManagerService = await deps.use('paymentMethodManagerService')
+    paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     receiverService = await deps.use('receiverService')
   })
 
@@ -190,7 +190,7 @@ describe('QuoteService', (): void => {
                 })
 
                 jest
-                  .spyOn(paymentMethodManagerService, 'getQuote')
+                  .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
                 const quote = await quoteService.create({
@@ -239,7 +239,7 @@ describe('QuoteService', (): void => {
                 })
 
                 jest
-                  .spyOn(paymentMethodManagerService, 'getQuote')
+                  .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
                 await incomingPayment.$query(knex).patch({
@@ -278,7 +278,7 @@ describe('QuoteService', (): void => {
                 })
 
                 jest
-                  .spyOn(paymentMethodManagerService, 'getQuote')
+                  .spyOn(paymentMethodHandlerService, 'getQuote')
                   .mockResolvedValueOnce(mockedQuote)
 
                 const quote = await quoteService.create({
@@ -362,7 +362,7 @@ describe('QuoteService', (): void => {
         })
 
         jest
-          .spyOn(paymentMethodManagerService, 'getQuote')
+          .spyOn(paymentMethodHandlerService, 'getQuote')
           .mockResolvedValueOnce(mockedQuote)
 
         const quote = await quoteService.create(options)
@@ -507,7 +507,7 @@ describe('QuoteService', (): void => {
           })
 
           jest
-            .spyOn(paymentMethodManagerService, 'getQuote')
+            .spyOn(paymentMethodHandlerService, 'getQuote')
             .mockResolvedValueOnce(mockedQuote)
 
           const quote = await quoteService.create({
@@ -579,7 +579,7 @@ describe('QuoteService', (): void => {
           })
 
           jest
-            .spyOn(paymentMethodManagerService, 'getQuote')
+            .spyOn(paymentMethodHandlerService, 'getQuote')
             .mockResolvedValueOnce(mockedQuote)
 
           const quote = await quoteService.create({
