@@ -1,7 +1,6 @@
 name: hl
 services:
   happy-life-mock-ase:
-    hostname: happy-life-bank
     image: rafiki-mock-ase
     pull_policy: never
     restart: always
@@ -22,7 +21,6 @@ services:
       - cloud-nine-mock-ase
       - happy-life-backend
   happy-life-backend:
-    hostname: happy-life-bank-backend
     image: rafiki-backend
     pull_policy: never
     restart: always
@@ -55,7 +53,6 @@ services:
     depends_on:
       - cloud-nine-backend
   happy-life-auth:
-    hostname: happy-life-bank-auth
     image: rafiki-auth
     pull_policy: never
     restart: always
@@ -71,7 +68,6 @@ services:
     depends_on:
       - cloud-nine-auth
   happy-life-signatures:
-    hostname: happy-life-bank-signatures
     image: rafiki-postman-signatures
     pull_policy: never
     restart: always
@@ -84,7 +80,6 @@ services:
     depends_on:
       - cloud-nine-signatures
   happy-life-admin:
-    hostname: happy-life-bank-admin
     image: rafiki-frontend
     pull_policy: never
     restart: always
