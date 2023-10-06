@@ -432,14 +432,6 @@ export function initIocContainer(
     })
   })
 
-  container.singleton('quoteRoutes', async (deps) => {
-    return createQuoteRoutes({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      quoteService: await deps.use('quoteService')
-    })
-  })
-
   container.singleton('quoteService', async (deps) => {
     return await createQuoteService({
       config: await deps.use('config'),
@@ -449,6 +441,14 @@ export function initIocContainer(
       feeService: await deps.use('feeService'),
       paymentPointerService: await deps.use('paymentPointerService'),
       paymentMethodHandlerService: await deps.use('paymentMethodHandlerService')
+    })
+  })
+
+  container.singleton('quoteRoutes', async (deps) => {
+    return createQuoteRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      quoteService: await deps.use('quoteService')
     })
   })
 
