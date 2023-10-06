@@ -63,7 +63,7 @@
     "nock": "^13.3.3",
     "node-mocks-http": "^1.13.0",
     "openapi-types": "^12.1.3",
-    "pino-pretty": "^10.2.0",
+    "pino-pretty": "^10.2.3",
     "testcontainers": "^10.2.1",
     "typescript": "^4.9.5"
   }
