@@ -542,7 +542,7 @@ Rafiki transfers perform double-entry accounting. Every transfer increases both 
 | Outgoing Payment | Asset Liquidity | ABC   |
 | Asset Liquidity  | Wallet Address  | XYZ   |
 
-- Example: Outgoing payment for 2 USD, payemnt pointer receives 1 EUR.
+- Example: Outgoing payment for 2 USD, wallet address receives 1 EUR.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
@@ -751,7 +751,7 @@ Sender and receiver do not have wallet addresses at the same Rafiki instance.
 | -------------- | -------------- |
 | Peer Liquidity | Wallet Address |
 
-- Example: A payemnt pointer receives 2 USD from an outgoing payment at a peer's Rafiki instance.
+- Example: A wallet address receives 2 USD from an outgoing payment at a peer's Rafiki instance.
 
 <table class="accounting-table not-content">
   <tr class="header-row">
