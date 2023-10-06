@@ -1832,10 +1832,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -1894,10 +1890,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -1948,10 +1940,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -2300,10 +2288,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
 									}
 								],
 								"body": {
@@ -2423,10 +2407,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -2602,10 +2582,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -2664,10 +2640,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -3198,11 +3170,7 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "peer-backend"
-									},
+									}
 									{
 										"key": "Signature-Input",
 										"value": "TODO",
@@ -3460,11 +3428,6 @@
 										"type": "text"
 									},
 									{
-										"key": "Host",
-										"value": "backend",
-										"type": "text"
-									},
-									{
 										"key": "Signature-Input",
 										"value": "TODO",
 										"type": "text"
@@ -3522,11 +3485,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Host",
-										"value": "backend",
 										"type": "text"
 									},
 									{
