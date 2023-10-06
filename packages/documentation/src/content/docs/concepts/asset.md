@@ -16,12 +16,7 @@ The `Asset` type in Rafiki is comprised of a value, an asset code, and an asset 
 
 The asset code SHOULD be an [ISO 4217 currency code](https://en.wikipedia.org/wiki/ISO_4217), if it is available for the asset. The asset scale is the difference in orders of magnitude between the standard unit and a corresponding fractional unit. To convert from `Asset` to a currency amount that is more common to humans, apply the following formula:
 
-$$
-
-currencyAmount = \frac{value}{10^{assetScale}}
-
-
-$$
+$currencyAmount = \frac{value}{10^{assetScale}}$
 
 Hence, the above example represents $\frac{10000}{10^2} =100.00$ USD.
 
