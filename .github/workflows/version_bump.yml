@@ -1,12 +1,11 @@
 name: Version Bump
 
 on:
-  push:
-    branches:
-      - main
+  create: # It will trigger whenever a new tag or branch is created
 
 jobs:
   version-bump:
+    if: startsWith(github.ref, 'refs/tags/') # true if new tag is created
     runs-on: ubuntu-22.04
     timeout-minutes: 3
     steps:
@@ -25,7 +24,8 @@ jobs:
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
-          pnpm version prerelease
+          pnpm version ${GITHUB_REF#refs/tags/v} --no-git-tag-version 
+          git commit -am "Bump version"
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
