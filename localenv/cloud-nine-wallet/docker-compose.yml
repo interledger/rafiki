@@ -1,7 +1,6 @@
 name: c9
 services:
   cloud-nine-mock-ase:
-    hostname: cloud-nine-wallet
     image: rafiki-mock-ase
     build:
       context: ../..
@@ -23,7 +22,6 @@ services:
     depends_on:
       - cloud-nine-backend
   cloud-nine-backend:
-    hostname: cloud-nine-wallet-backend
     image: rafiki-backend
     build:
       context: ../..
@@ -59,7 +57,6 @@ services:
       - shared-database
       - shared-redis
   cloud-nine-auth:
-    hostname: cloud-nine-wallet-auth
     image: rafiki-auth
     build:
       context: ../..
@@ -76,7 +73,6 @@ services:
     depends_on:
       - shared-database
   cloud-nine-signatures:
-    hostname: cloud-nine-wallet-signatures
     image: rafiki-postman-signatures
     build:
       context: ../..
@@ -109,7 +105,6 @@ services:
     networks:
       - rafiki
   cloud-nine-admin:
-    hostname: cloud-nine-wallet-admin
     image: rafiki-frontend
     build:
       context: ../..
