@@ -11,8 +11,6 @@ export interface StartQuoteOptions {
   receiver: Receiver
 }
 
-export type PaymentMethod = 'ILP'
-
 export interface PaymentQuote {
   paymentPointer: PaymentPointer
   receiver: Receiver
@@ -21,9 +19,11 @@ export interface PaymentQuote {
   additionalFields: Record<string, unknown>
 }
 
-export interface PaymentProcessorService {
+export interface PaymentMethodService {
   getQuote(quoteOptions: StartQuoteOptions): Promise<PaymentQuote>
 }
+
+export type PaymentMethod = 'ILP'
 
 export interface PaymentMethodHandlerService {
   getQuote(
@@ -50,19 +50,12 @@ export async function createPaymentMethodHandlerService({
     ilpPaymentService
   }
 
+  const paymentMethods: { [key in PaymentMethod]: PaymentMethodService } = {
+    ILP: deps.ilpPaymentService
+  }
+
   return {
     getQuote: (method, quoteOptions) =>
-      getPaymentMethodService(deps, method).getQuote(quoteOptions)
+      paymentMethods[method].getQuote(quoteOptions)
   }
-}
-
-function getPaymentMethodService(
-  deps: ServiceDependencies,
-  method: PaymentMethod
-): PaymentProcessorService {
-  if (method === 'ILP') {
-    return deps.ilpPaymentService
-  }
-
-  throw new Error('Payment method not supported')
 }

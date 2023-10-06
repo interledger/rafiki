@@ -1,7 +1,7 @@
 import { BaseService } from '../../shared/baseService'
 import {
   PaymentQuote,
-  PaymentProcessorService,
+  PaymentMethodService,
   StartQuoteOptions
 } from '../handler/service'
 import { RatesService } from '../../rates/service'
@@ -10,7 +10,7 @@ import * as Pay from '@interledger/pay'
 import { convertRatesToIlpPrices } from './rates'
 import { IAppConfig } from '../../config/app'
 
-export interface IlpPaymentService extends PaymentProcessorService {}
+export interface IlpPaymentService extends PaymentMethodService {}
 
 interface ServiceDependencies extends BaseService {
   config: IAppConfig

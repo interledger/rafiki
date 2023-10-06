@@ -1,8 +1,4 @@
-import {
-  PaymentMethod,
-  PaymentMethodHandlerService,
-  StartQuoteOptions
-} from './service'
+import { PaymentMethodHandlerService, StartQuoteOptions } from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
@@ -63,31 +59,6 @@ describe('PaymentMethodHandlerService', (): void => {
       await paymentMethodHandlerService.getQuote('ILP', options)
 
       expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
-    })
-
-    test('throws if invalid payment method', async (): Promise<void> => {
-      const asset = await createAsset(deps, {
-        code: 'USD',
-        scale: 2
-      })
-
-      const paymentPointer = await createPaymentPointer(deps, {
-        assetId: asset.id
-      })
-
-      const options: StartQuoteOptions = {
-        paymentPointer,
-        receiver: await createReceiver(deps, paymentPointer),
-        debitAmount: {
-          assetCode: 'USD',
-          assetScale: 2,
-          value: 100n
-        }
-      }
-
-      expect(() =>
-        paymentMethodHandlerService.getQuote('' as PaymentMethod, options)
-      ).toThrow('Payment method not supported')
     })
   })
 })
