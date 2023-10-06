@@ -131,11 +131,11 @@ importers:
         specifier: ^1.19.3
         version: 1.19.3(@remix-run/serve@1.19.3)(@types/node@18.11.9)
       '@types/react':
-        specifier: ^18.2.22
-        version: 18.2.22
+        specifier: ^18.2.25
+        version: 18.2.25
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^18.2.10
+        version: 18.2.10
 
   packages/auth:
     dependencies:
@@ -578,11 +578,11 @@ importers:
         specifier: ^0.5.6
         version: 0.5.6(tailwindcss@3.3.3)
       '@types/react':
-        specifier: ^18.2.22
-        version: 18.2.22
+        specifier: ^18.2.25
+        version: 18.2.25
       '@types/react-dom':
-        specifier: ^18.2.7
-        version: 18.2.7
+        specifier: ^18.2.10
+        version: 18.2.10
       '@types/uuid':
         specifier: ^9.0.4
         version: 9.0.4
@@ -5740,21 +5740,6 @@ packages:
     resolution: {integrity: sha512-5VEC5RgXIk1HHdyN1pHlg0cOqnxHzvPGpMMyGAP5qSaDRmyZNDaQ0kkVAkK6NYlDhP6YBID3llaXlmAS/mdgCA==}
     dependencies:
       '@types/react': 18.2.25
-    dev: false
-
-  /@types/react-dom@18.2.7:
-    resolution: {integrity: sha512-GRaAEriuT4zp9N4p1i8BDBYmEyfo+xQ3yHjJU4eiK5NDa1RmUZG+unZABUTK4/Ox/M+GaHwb6Ow8rUITrtjszA==}
-    dependencies:
-      '@types/react': 18.2.25
-    dev: true
-
-  /@types/react@18.2.22:
-    resolution: {integrity: sha512-60fLTOLqzarLED2O3UQImc/lsNRgG0jE/a1mPW9KjMemY0LMITWEsbS4VvZ4p6rorEHd5YKxxmMKSDK505GHpA==}
-    dependencies:
-      '@types/prop-types': 15.7.5
-      '@types/scheduler': 0.16.2
-      csstype: 3.1.0
-    dev: true
 
   /@types/react@18.2.25:
     resolution: {integrity: sha512-24xqse6+VByVLIr+xWaQ9muX1B4bXJKXBbjszbld/UEDslGLY53+ZucF44HCmLbMPejTzGG9XgR+3m2/Wqu1kw==}
