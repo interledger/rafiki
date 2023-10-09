@@ -106,8 +106,8 @@ importers:
         specifier: ^18.7.12
         version: 18.11.9
       '@types/uuid':
-        specifier: ^9.0.4
-        version: 9.0.4
+        specifier: ^9.0.5
+        version: 9.0.5
       axios:
         specifier: ^1.5.1
         version: 1.5.1
@@ -249,8 +249,8 @@ importers:
         specifier: ^12.0.1
         version: 12.0.1
       '@types/uuid':
-        specifier: ^9.0.4
-        version: 9.0.4
+        specifier: ^9.0.5
+        version: 9.0.5
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -439,8 +439,8 @@ importers:
         specifier: ^0.2.4
         version: 0.2.4
       '@types/uuid':
-        specifier: ^9.0.4
-        version: 9.0.4
+        specifier: ^9.0.5
+        version: 9.0.5
       cross-fetch:
         specifier: ^4.0.0
         version: 4.0.0
@@ -584,8 +584,8 @@ importers:
         specifier: ^18.2.11
         version: 18.2.11
       '@types/uuid':
-        specifier: ^9.0.4
-        version: 9.0.4
+        specifier: ^9.0.5
+        version: 9.0.5
       autoprefixer:
         specifier: ^10.4.16
         version: 10.4.16(postcss@8.4.30)
@@ -5829,8 +5829,8 @@ packages:
     resolution: {integrity: sha512-MFETx3tbTjE7Uk6vvnWINA/1iJ7LuMdO4fcq8UfF0pRbj01aGLduVvQcRyswuACJdpnHgg8E3rQLhaRdNEJS0w==}
     dev: false
 
-  /@types/uuid@9.0.4:
-    resolution: {integrity: sha512-zAuJWQflfx6dYJM62vna+Sn5aeSWhh3OB+wfUEACNcqUSc0AGc5JKl+ycL1vrH7frGTXhJchYjE1Hak8L819dA==}
+  /@types/uuid@9.0.5:
+    resolution: {integrity: sha512-xfHdwa1FMJ082prjSJpoEI57GZITiQz10r3vEJCHa2khEFQjKy91aWKz6+zybzssCvXUwE1LQWgWVwZ4nYUvHQ==}
 
   /@types/ws@8.5.3:
     resolution: {integrity: sha512-6YOoWjruKj1uLf3INHH7D3qTXwFfEsg1kf3c0uDdSBJwfa/llkwIjrAGV7j7mVgGNbzTQ3HiHKKDXl6bJPD97w==}
