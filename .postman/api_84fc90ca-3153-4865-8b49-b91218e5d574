@@ -9,7 +9,7 @@ id = 84fc90ca-3153-4865-8b49-b91218e5d574
 
 [config.relations.collections]
 rootDirectory = postman/collections
-files[] = {"id":"23065173-684e49e7-a548-4674-a7b9-7e28c37678d9","path":"Interledger.json","metaData":{}}
+files[] = {"id":"23674746-92761441-6d0c-4fc6-aa04-73eccf6afd4c","path":"Interledger.json","metaData":{}}
 
 [config.relations.collections.metaData]
 
@@ -17,4 +17,3 @@ files[] = {"id":"23065173-684e49e7-a548-4674-a7b9-7e28c37678d9","path":"Interled
 rootDirectory = postman/schemas
 
 [config.relations.apiDefinition.metaData]
-type = openapi:3
