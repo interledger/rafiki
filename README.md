@@ -9,7 +9,7 @@ Rafiki is open source software that allows an [Account Servicing Entity](https:/
 This includes
 
 - sending and receiving payments (via [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) and [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
-- allowing third-party access to initiate payments and view transation data (via [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
+- allowing third-party access to initiate payments and view transaction data (via [Open Payments](https://rafiki.dev/concepts/open-payments/overview/))
 
 **❗ Rafiki is intended to be run by [Account Servicing Entities](https://rafiki.dev/reference/glossary/#account-servicing-entity) only and should not be used in production by non-regulated entities.**
 

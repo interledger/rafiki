@@ -18,23 +18,23 @@ import {
   createIlpPlugin,
   IlpPlugin,
   IlpPluginOptions
-} from './shared/ilp_plugin'
-import { createHttpTokenService } from './httpToken/service'
+} from './payment-method/ilp/ilp_plugin'
+import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { createAssetService } from './asset/service'
 import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
-import { createPeerService } from './peer/service'
+import { createPeerService } from './payment-method/ilp/peer/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
 import { createPaymentPointerService } from './open_payments/payment_pointer/service'
-import { createSPSPRoutes } from './spsp/routes'
+import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
 import { createPaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
 import { createPaymentPointerRoutes } from './open_payments/payment_pointer/routes'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { createWebhookService } from './webhook/service'
-import { createConnectorService } from './connector'
+import { createConnectorService } from './payment-method/ilp/connector'
 import { createOpenAPI } from '@interledger/openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createConnectionService } from './open_payments/connection/service'
@@ -44,9 +44,11 @@ import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
 import { createCombinedPaymentService } from './open_payments/payment/combined/service'
 import { createFeeService } from './fee/service'
-import { createAutoPeeringService } from './auto-peering/service'
-import { createAutoPeeringRoutes } from './auto-peering/routes'
+import { createAutoPeeringService } from './payment-method/ilp/auto-peering/service'
+import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
 import axios from 'axios'
+import { createIlpPaymentService } from './payment-method/ilp/service'
+import { createPaymentMethodHandlerService } from './payment-method/handler/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -429,6 +431,24 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       autoPeeringService: await deps.use('autoPeeringService')
+    })
+  })
+
+  container.singleton('ilpPaymentService', async (deps) => {
+    return createIlpPaymentService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      makeIlpPlugin: await deps.use('makeIlpPlugin'),
+      ratesService: await deps.use('ratesService')
+    })
+  })
+
+  container.singleton('paymentMethodHandlerService', async (deps) => {
+    return createPaymentMethodHandlerService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      ilpPaymentService: await deps.use('ilpPaymentService')
     })
   })
 

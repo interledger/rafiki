@@ -14,10 +14,10 @@ import {
   errorToCode,
   errorToMessage,
   AutoPeeringError
-} from '../../auto-peering/errors'
+} from '../../payment-method/ilp/auto-peering/errors'
 import { createAsset } from '../../tests/asset'
 import { CreateOrUpdatePeerByUrlInput } from '../generated/graphql'
-import { AutoPeeringService } from '../../auto-peering/service'
+import { AutoPeeringService } from '../../payment-method/ilp/auto-peering/service'
 import { v4 as uuid } from 'uuid'
 
 describe('Auto Peering Resolvers', (): void => {
