@@ -1,12 +1,12 @@
 import { ResolversTypes, MutationResolvers } from '../generated/graphql'
-import { Peer } from '../../peer/model'
+import { Peer } from '../../payment-method/ilp/peer/model'
 import { ApolloContext } from '../../app'
 import {
   AutoPeeringError,
   errorToCode,
   errorToMessage,
   isAutoPeeringError
-} from '../../auto-peering/errors'
+} from '../../payment-method/ilp/auto-peering/errors'
 import { peerToGraphql } from './peer'
 
 export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOrUpdatePeerByUrl'] =

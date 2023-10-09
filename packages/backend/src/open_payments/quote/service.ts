@@ -7,21 +7,15 @@ import { Quote } from './model'
 import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
 import { Receiver } from '../receiver/model'
-import {
-  PaymentPointer,
-  GetOptions,
-  ListOptions
-} from '../payment_pointer/model'
+import { GetOptions, ListOptions } from '../payment_pointer/model'
 import {
   PaymentPointerService,
   PaymentPointerSubresourceService
 } from '../payment_pointer/service'
-import { RatesService } from '../../rates/service'
-import { IlpPlugin, IlpPluginOptions } from '../../shared/ilp_plugin'
-import { convertRatesToIlpPrices } from '../../rates/util'
+import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
+import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
 import { FeeType } from '../../fee/model'
-import { IAppConfig } from '../../config/app'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
@@ -34,9 +28,8 @@ export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   receiverService: ReceiverService
   paymentPointerService: PaymentPointerService
-  ratesService: RatesService
-  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
   feeService: FeeService
+  paymentMethodHandlerService: PaymentMethodHandlerService
 }
 
 export async function createQuoteService(
@@ -113,11 +106,14 @@ async function createQuote(
 
   try {
     const receiver = await resolveReceiver(deps, options)
-    const ilpQuote = await startQuote(deps, {
-      ...options,
+    const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
       paymentPointer,
-      receiver
+      receiver,
+      receiveAmount: options.receiveAmount,
+      debitAmount: options.debitAmount
     })
+
+    const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
 
     const sendingFee = await deps.feeService.getLatestFee(
       paymentPointer.assetId,
@@ -125,57 +121,38 @@ async function createQuote(
     )
 
     return await Quote.transaction(deps.knex, async (trx) => {
-      const quote = await Quote.query(trx)
+      const createdQuote = await Quote.query(trx)
         .insertAndFetch({
           paymentPointerId: options.paymentPointerId,
           assetId: paymentPointer.assetId,
           receiver: options.receiver,
-          debitAmount: {
-            value: ilpQuote.maxSourceAmount,
-            assetCode: paymentPointer.asset.code,
-            assetScale: paymentPointer.asset.scale
-          },
-          receiveAmount: {
-            value: ilpQuote.minDeliveryAmount,
-            assetCode: receiver.assetCode,
-            assetScale: receiver.assetScale
-          },
+          debitAmount: quote.debitAmount,
+          receiveAmount: quote.receiveAmount,
           // Cap at MAX_INT64 because of postgres type limits.
           maxPacketAmount:
-            MAX_INT64 < ilpQuote.maxPacketAmount
-              ? MAX_INT64
-              : ilpQuote.maxPacketAmount,
-          minExchangeRate: ilpQuote.minExchangeRate,
-          lowEstimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate,
-          highEstimatedExchangeRate: ilpQuote.highEstimatedExchangeRate,
+            MAX_INT64 < maxPacketAmount ? MAX_INT64 : maxPacketAmount,
+          minExchangeRate: quote.additionalFields.minExchangeRate as Pay.Ratio,
+          lowEstimatedExchangeRate: quote.additionalFields
+            .lowEstimatedExchangeRate as Pay.Ratio,
+          highEstimatedExchangeRate: quote.additionalFields
+            .highEstimatedExchangeRate as Pay.PositiveRatio,
           // Patch using createdAt below
           expiresAt: new Date(0),
           client: options.client,
-          feeId: sendingFee?.id
+          feeId: sendingFee?.id,
+          estimatedExchangeRate: quote.estimatedExchangeRate,
+          additionalFields: quote.additionalFields
         })
         .withGraphFetched('[asset, fee]')
-
-      let maxReceiveAmountValue: bigint | undefined
-      if (options.debitAmount) {
-        const receivingPaymentValue =
-          receiver.incomingAmount && receiver.receivedAmount
-            ? receiver.incomingAmount.value - receiver.receivedAmount.value
-            : undefined
-        maxReceiveAmountValue =
-          receivingPaymentValue &&
-          receivingPaymentValue < quote.receiveAmount.value
-            ? receivingPaymentValue
-            : quote.receiveAmount.value
-      }
 
       return await finalizeQuote(
         {
           ...deps,
           knex: trx
         },
-        quote,
-        receiver,
-        maxReceiveAmountValue
+        options,
+        createdQuote,
+        receiver
       )
     })
   } catch (err) {
@@ -215,89 +192,16 @@ export async function resolveReceiver(
   return receiver
 }
 
-export interface StartQuoteOptions {
-  paymentPointer: PaymentPointer
-  debitAmount?: Amount
-  receiveAmount?: Amount
-  receiver: Receiver
+interface CalculateQuoteAmountsAfterFeesResult {
+  receiveAmountValue: bigint
+  debitAmountValue: bigint
 }
 
-export async function startQuote(
-  deps: ServiceDependencies,
-  options: StartQuoteOptions
-): Promise<Pay.Quote> {
-  const rates = await deps.ratesService
-    .rates(options.paymentPointer.asset.code)
-    .catch((_err: Error) => {
-      throw new Error('missing rates')
-    })
-
-  const plugin = deps.makeIlpPlugin({
-    sourceAccount: options.paymentPointer,
-    unfulfillable: true
-  })
-
-  try {
-    await plugin.connect()
-    const quoteOptions: Pay.QuoteOptions = {
-      plugin,
-      destination: options.receiver.toResolvedPayment(),
-      sourceAsset: {
-        scale: options.paymentPointer.asset.scale,
-        code: options.paymentPointer.asset.code
-      }
-    }
-    if (options.debitAmount) {
-      quoteOptions.amountToSend = options.debitAmount.value
-    } else {
-      quoteOptions.amountToDeliver =
-        options.receiveAmount?.value || options.receiver.incomingAmount?.value
-    }
-    const quote = await Pay.startQuote({
-      ...quoteOptions,
-      slippage: deps.config.slippage,
-      prices: convertRatesToIlpPrices(rates)
-    }).finally(() => {
-      return Pay.closeConnection(
-        quoteOptions.plugin,
-        quoteOptions.destination
-      ).catch((err) => {
-        deps.logger.warn(
-          {
-            destination: quoteOptions.destination.destinationAddress,
-            error: err.message
-          },
-          'close quote connection failed'
-        )
-      })
-    })
-
-    // Pay.startQuote should return PaymentError.InvalidSourceAmount or
-    // PaymentError.InvalidDestinationAmount for non-positive amounts.
-    // Outgoing payments' debitAmount or receiveAmount should never be
-    // zero or negative.
-    if (quote.maxSourceAmount <= BigInt(0)) {
-      throw new Error()
-    }
-
-    if (quote.minDeliveryAmount <= BigInt(0)) {
-      throw new Error()
-    }
-
-    return quote
-  } finally {
-    plugin.disconnect().catch((err: Error) => {
-      deps.logger.warn({ error: err.message }, 'error disconnecting plugin')
-    })
-  }
-}
-
-async function finalizeQuote(
+function calculateQuoteAmountsAfterFees(
   deps: ServiceDependencies,
   quote: Quote,
-  receiver: Receiver,
   maxReceiveAmountValue?: bigint
-): Promise<Quote> {
+): CalculateQuoteAmountsAfterFeesResult {
   let debitAmountValue = quote.debitAmount.value
   let receiveAmountValue = quote.receiveAmount.value
 
@@ -315,7 +219,7 @@ async function finalizeQuote(
     // FixedSend
     const fees = quote.fee?.calculate(receiveAmountValue) ?? 0n
     const exchangeAdjustedFees = BigInt(
-      Number(fees) * quote.lowEstimatedExchangeRate.valueOf()
+      Number(fees) * quote.estimatedExchangeRate.valueOf()
     )
     receiveAmountValue = BigInt(receiveAmountValue) - exchangeAdjustedFees
 
@@ -331,18 +235,56 @@ async function finalizeQuote(
     }
   }
 
+  return {
+    receiveAmountValue,
+    debitAmountValue
+  }
+}
+
+function calculateExpiry(
+  deps: ServiceDependencies,
+  quote: Quote,
+  receiver: Receiver
+): Date {
+  const quoteExpiry = new Date(
+    quote.createdAt.getTime() + deps.config.quoteLifespan
+  )
+
+  const incomingPaymentExpiresEarlier =
+    receiver.incomingPayment?.expiresAt &&
+    receiver.incomingPayment.expiresAt.getTime() < quoteExpiry.getTime()
+
+  return incomingPaymentExpiresEarlier
+    ? receiver.incomingPayment!.expiresAt!
+    : quoteExpiry
+}
+
+export async function finalizeQuote(
+  deps: ServiceDependencies,
+  options: CreateQuoteOptions,
+  quote: Quote,
+  receiver: Receiver
+): Promise<Quote> {
+  let maxReceiveAmountValue: bigint | undefined
+
+  if (options.debitAmount) {
+    const receivingPaymentValue =
+      receiver.incomingAmount && receiver.receivedAmount
+        ? receiver.incomingAmount.value - receiver.receivedAmount.value
+        : undefined
+    maxReceiveAmountValue =
+      receivingPaymentValue && receivingPaymentValue < quote.receiveAmount.value
+        ? receivingPaymentValue
+        : quote.receiveAmount.value
+  }
+
+  const { debitAmountValue, receiveAmountValue } =
+    calculateQuoteAmountsAfterFees(deps, quote, maxReceiveAmountValue)
+
   const patchOptions = {
     debitAmountValue,
     receiveAmountValue,
-    expiresAt: new Date(quote.createdAt.getTime() + deps.config.quoteLifespan)
-  }
-  // Ensure a quotation's expiry date is not set past the expiry date of the receiver when the receiver is an incoming payment
-  if (
-    receiver.incomingPayment?.expiresAt &&
-    receiver.incomingPayment?.expiresAt.getTime() <
-      patchOptions.expiresAt.getTime()
-  ) {
-    patchOptions.expiresAt = receiver.incomingPayment.expiresAt
+    expiresAt: calculateExpiry(deps, quote, receiver)
   }
 
   await quote.$query(deps.knex).patch(patchOptions)
