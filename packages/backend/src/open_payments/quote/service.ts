@@ -140,6 +140,7 @@ async function createQuote(
           expiresAt: new Date(0),
           client: options.client,
           feeId: sendingFee?.id,
+          estimatedExchangeRate: quote.estimatedExchangeRate,
           additionalFields: quote.additionalFields
         })
         .withGraphFetched('[asset, fee]')
@@ -218,7 +219,7 @@ function calculateQuoteAmountsAfterFees(
     // FixedSend
     const fees = quote.fee?.calculate(receiveAmountValue) ?? 0n
     const exchangeAdjustedFees = BigInt(
-      Number(fees) * quote.lowEstimatedExchangeRate.valueOf()
+      Number(fees) * quote.estimatedExchangeRate.valueOf()
     )
     receiveAmountValue = BigInt(receiveAmountValue) - exchangeAdjustedFees
 

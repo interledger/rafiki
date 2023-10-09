@@ -5,6 +5,7 @@
 exports.up = function (knex) {
   return knex.schema.alterTable('quotes', (table) => {
     table.json('additionalFields').nullable()
+    table.decimal('estimatedExchangeRate', 20, 10).notNullable()
   })
 }
 
@@ -15,5 +16,6 @@ exports.up = function (knex) {
 exports.down = function (knex) {
   return knex.schema.alterTable('quotes', (table) => {
     table.dropColumn('additionalFields')
+    table.dropColumn('estimatedExchangeRate')
   })
 }
