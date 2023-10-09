@@ -46,6 +46,7 @@ export function mockQuote(
           ? args.receiveAmountValue
           : BigInt(Math.ceil(Number(args.debitAmountValue) * exchangeRate))
     },
+    estimatedExchangeRate: exchangeRate,
     additionalFields: {
       maxPacketAmount: BigInt(Pay.Int.MAX_U64.toString()),
       lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate ?? 1),
@@ -160,6 +161,10 @@ export async function createQuote(
       debitAmount,
       receiveAmount,
       maxPacketAmount: BigInt('9223372036854775807'),
+      estimatedExchangeRate: Pay.Ratio.of(
+        Pay.Int.from(500000000000n) as Pay.PositiveInt,
+        Pay.Int.from(1000000000000n) as Pay.PositiveInt
+      ).valueOf(),
       lowEstimatedExchangeRate: Pay.Ratio.of(
         Pay.Int.from(500000000000n) as Pay.PositiveInt,
         Pay.Int.from(1000000000000n) as Pay.PositiveInt
