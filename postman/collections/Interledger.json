@@ -1319,6 +1319,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "6ab5eb8b-0600-438b-85f7-a551e1e3bced",
 										"exec": [
 											"pm.test(\"Status code is 200\", function () {",
 											"    pm.response.to.have.status(200);",
@@ -1346,62 +1347,9 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:4000/accounts/paaaa",
-									"protocol": "http",
+									"raw": "{{pfryPaymentPointer}}",
 									"host": [
-										"localhost"
-									],
-									"port": "4000",
-									"path": [
-										"accounts",
-										"paaaa"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get a Payment Pointer Copy",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"id": "744910ef-141d-4dd0-8104-2765459ebbbe",
-							"protocolProfileBehavior": {
-								"disableBodyPruning": true
-							},
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									},
-									{
-										"key": "Accept",
-										"value": "application/json"
-									}
-								],
-								"url": {
-									"raw": "http://localhost:4000/accounts/paaaa",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "4000",
-									"path": [
-										"accounts",
-										"paaaa"
+										"{{pfryPaymentPointer}}"
 									]
 								}
 							},
