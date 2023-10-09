@@ -185,8 +185,8 @@ importers:
         specifier: ^16.8.1
         version: 16.8.1
       knex:
-        specifier: ^2.5.1
-        version: 2.5.1(pg@8.11.3)
+        specifier: ^3.0.1
+        version: 3.0.1(pg@8.11.3)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -198,7 +198,7 @@ importers:
         version: 6.4.0
       objection:
         specifier: ^3.1.2
-        version: 3.1.2(knex@2.5.1)
+        version: 3.1.2(knex@3.0.1)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.1.2)
@@ -357,8 +357,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       knex:
-        specifier: ^2.5.1
-        version: 2.5.1(pg@8.11.3)
+        specifier: ^3.0.1
+        version: 3.0.1(pg@8.11.3)
       koa:
         specifier: ^2.14.2
         version: 2.14.2
@@ -373,7 +373,7 @@ importers:
         version: 3.4.3
       objection:
         specifier: ^3.1.2
-        version: 3.1.2(knex@2.5.1)
+        version: 3.1.2(knex@3.0.1)
       objection-db-errors:
         specifier: ^1.1.2
         version: 1.1.2(objection@3.1.2)
@@ -1266,7 +1266,7 @@ packages:
       '@babel/helper-plugin-utils': 7.22.5
       debug: 4.3.4(supports-color@9.4.0)
       lodash.debounce: 4.0.8
-      resolve: 1.22.2
+      resolve: 1.22.6
       semver: 6.3.1
     transitivePeerDependencies:
       - supports-color
@@ -8898,8 +8898,8 @@ packages:
     resolution: {integrity: sha512-gozW2blMLJCeFpBwugLTGyvVjNoeo1knonXAcatC6bjPBZitotxdWf7Gimr25N4c0AAOo4eOUfaG82IJPDpqCA==}
     dependencies:
       debug: 3.2.7
-      is-core-module: 2.11.0
-      resolve: 1.22.2
+      is-core-module: 2.13.0
+      resolve: 1.22.6
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -8918,7 +8918,7 @@ packages:
       eslint-plugin-import: 2.27.5(@typescript-eslint/parser@5.60.1)(eslint-import-resolver-typescript@3.5.5)(eslint@8.49.0)
       get-tsconfig: 4.5.0
       globby: 13.1.3
-      is-core-module: 2.11.0
+      is-core-module: 2.13.0
       is-glob: 4.0.3
       synckit: 0.8.5
     transitivePeerDependencies:
@@ -8989,11 +8989,11 @@ packages:
       eslint-import-resolver-node: 0.3.7
       eslint-module-utils: 2.7.4(@typescript-eslint/parser@5.60.1)(eslint-import-resolver-node@0.3.7)(eslint-import-resolver-typescript@3.5.5)(eslint@8.49.0)
       has: 1.0.3
-      is-core-module: 2.11.0
+      is-core-module: 2.13.0
       is-glob: 4.0.3
       minimatch: 3.1.2
       object.values: 1.1.6
-      resolve: 1.22.2
+      resolve: 1.22.6
       semver: 6.3.1
       tsconfig-paths: 3.14.1
     transitivePeerDependencies:
@@ -9072,7 +9072,7 @@ packages:
       eslint-utils: 2.1.0
       ignore: 5.2.4
       minimatch: 3.1.2
-      resolve: 1.22.2
+      resolve: 1.22.6
       semver: 6.3.1
     dev: true
 
@@ -10843,16 +10843,10 @@ packages:
     resolution: {integrity: sha512-0n+pzCC6ICtVr/WXnN2f03TK/3BfXY7me4cjCAqT8TYXEl0+JBRoqBo94JJHXcyDSLUeWbNX8Fvy5g5RJdAstQ==}
     dev: false
 
-  /is-core-module@2.11.0:
-    resolution: {integrity: sha512-RRjxlvLDkD1YJwDbroBHMb+cukurkDWNyHx7D3oNB5x9rb5ogcksMC5wHCadcXoo67gVr/+3GFySh3134zi6rw==}
-    dependencies:
-      has: 1.0.3
-
   /is-core-module@2.13.0:
     resolution: {integrity: sha512-Z7dk6Qo8pOCp3l4tsX2C5ZVas4V+UxwQodwZhLopL91TX8UyyHEXafPcyoeeWuLrwzHcr3igO78wNLwHJHsMCQ==}
     dependencies:
       has: 1.0.3
-    dev: false
 
   /is-date-object@1.0.5:
     resolution: {integrity: sha512-9YQaSxsAiSwcvS33MBk3wTCVnWK+HhF8VZR2jRxehM16QcVOdHqPn4VPHmRK4lSr38n9JriurInLcP90xsYNfQ==}
@@ -11496,7 +11490,7 @@ packages:
       jest-pnp-resolver: 1.2.3(jest-resolve@29.7.0)
       jest-util: 29.7.0
       jest-validate: 29.7.0
-      resolve: 1.22.2
+      resolve: 1.22.6
       resolve.exports: 2.0.2
       slash: 3.0.0
     dev: true
@@ -11870,9 +11864,9 @@ packages:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
 
-  /knex@2.5.1(pg@8.11.3):
-    resolution: {integrity: sha512-z78DgGKUr4SE/6cm7ku+jHvFT0X97aERh/f0MUKAKgFnwCYBEW4TFBqtHWFYiJFid7fMrtpZ/gxJthvz5mEByA==}
-    engines: {node: '>=12'}
+  /knex@3.0.1(pg@8.11.3):
+    resolution: {integrity: sha512-ruASxC6xPyDklRdrcDy6a9iqK+R9cGK214aiQa+D9gX2ZnHZKv6o6JC9ZfgxILxVAul4bZ13c3tgOAHSuQ7/9g==}
+    engines: {node: '>=16'}
     hasBin: true
     peerDependencies:
       better-sqlite3: '*'
@@ -13646,10 +13640,10 @@ packages:
       objection: '>= 0.9.1'
     dependencies:
       db-errors: 0.2.3
-      objection: 3.1.2(knex@2.5.1)
+      objection: 3.1.2(knex@3.0.1)
     dev: false
 
-  /objection@3.1.2(knex@2.5.1):
+  /objection@3.1.2(knex@3.0.1):
     resolution: {integrity: sha512-V8YwRWz+DFbB9JS/m7TBLhRPVAFK/VX7yV3ZDAMkfUG9qYHLRyG/K4ZS0acKtGPWtRdVrCuN4qM1VkH3PuJ5Lg==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
@@ -13658,7 +13652,7 @@ packages:
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
       db-errors: 0.2.3
-      knex: 2.5.1(pg@8.11.3)
+      knex: 3.0.1(pg@8.11.3)
     dev: false
 
   /oer-utils@5.1.2:
@@ -14313,7 +14307,7 @@ packages:
       postcss: 8.4.30
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
-      resolve: 1.22.2
+      resolve: 1.22.6
     dev: true
 
   /postcss-js@4.0.1(postcss@8.4.30):
@@ -14948,7 +14942,7 @@ packages:
     resolution: {integrity: sha512-/vxpCXddiX8NGfGO/mTafwjq4aFa/71pvamip0++IQk3zG8cbCj0fifNPrjjF1XMXUne91jL9OoxmdykoEtifQ==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      resolve: 1.22.2
+      resolve: 1.22.6
     dev: false
 
   /redis-errors@1.2.0:
@@ -15281,9 +15275,10 @@ packages:
     resolution: {integrity: sha512-Sb+mjNHOULsBv818T40qSPeRiuWLyaGMa5ewydRLFimneixmVy2zdivRl+AF6jaYPC8ERxGDmFSiqui6SfPd+g==}
     hasBin: true
     dependencies:
-      is-core-module: 2.11.0
+      is-core-module: 2.13.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
+    dev: true
 
   /resolve@1.22.6:
     resolution: {integrity: sha512-njhxM7mV12JfufShqGy3Rz8j11RPdLy4xi15UurGJeoHLfJpVXKdh3ueuOqbYUcDZnffr6X739JBo5LzyahEsw==}
@@ -15292,13 +15287,12 @@ packages:
       is-core-module: 2.13.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
-    dev: false
 
   /resolve@2.0.0-next.4:
     resolution: {integrity: sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==}
     hasBin: true
     dependencies:
-      is-core-module: 2.11.0
+      is-core-module: 2.13.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
     dev: true
