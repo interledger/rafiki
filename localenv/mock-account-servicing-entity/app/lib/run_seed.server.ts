@@ -66,9 +66,8 @@ export async function setupFromSeed(config: Config): Promise<void> {
 
     console.log(JSON.stringify(peerResponses, null, 2))
 
-    console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
-    console.log('hostname url: ', CONFIG.publicHost)
     if (CONFIG.testnetAutoPeerUrl) {
+      console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
       const autoPeerResponse = await createAutoPeer(
         CONFIG.testnetAutoPeerUrl,
         asset.id
@@ -106,7 +105,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
         return
       }
 
-      console.log('hostname: ', CONFIG.seed.self.hostname)
+      console.log('hostname: ', CONFIG.publicHost)
       const paymentPointer = await createPaymentPointer(
         account.name,
         `${CONFIG.publicHost}/${account.path}`,

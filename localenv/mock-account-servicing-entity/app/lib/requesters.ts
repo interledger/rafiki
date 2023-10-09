@@ -157,7 +157,8 @@ export async function createAutoPeer(
     })
     .then(({ data }): CreateOrUpdatePeerByUrlMutationResponse => {
       if (!data.createOrUpdatePeerByUrl.success) {
-        throw new Error('Data was empty')
+        console.log(data.createOrUpdatePeerByUrl)
+        throw new Error(`Data was empty for assetId: ${assetId}`)
       }
       return data.createOrUpdatePeerByUrl
     })

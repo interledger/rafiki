@@ -101,6 +101,15 @@ pnpm localenv:compose:psql up
 pnpm localenv:compose:psql down --volumes
 ```
 
+If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
+
+```
+pnpm localenv:autopeer:start
+
+// OR to start with Postgres db
+pnpm localenv:autopeer:start:psql
+```
+
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
 its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
 The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
