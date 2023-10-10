@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@astrojs/react": "^3.0.3",
-    "@astrojs/starlight": "^0.10.4",
-    "@interledger/docs-design-system": "^0.0.13",
+    "@astrojs/starlight": "^0.11.0",
+    "@interledger/docs-design-system": "^0.0.14",
     "@types/react": "^18.2.25",
     "@types/react-dom": "^18.2.11",
     "astro": "3.2.3",
