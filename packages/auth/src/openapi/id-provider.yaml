@@ -116,6 +116,8 @@ paths:
                 properties:
                   access:
                     $ref: ./auth-server.yaml#/components/schemas/access
+                  state:
+                    $ref: ./auth-server.yaml#/components/schemas/interact-state
         '401':
           description: Unauthorized
         '404':
