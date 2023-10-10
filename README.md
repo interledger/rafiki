@@ -13,17 +13,17 @@ This includes
 
 **❗ Rafiki is intended to be run by [Account Servicing Entities](https://rafiki.dev/reference/glossary/#account-servicing-entity) only and should not be used in production by non-regulated entities.**
 
-Rafiki is made up of several components including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/concepts/accounting/tigerbeetle/), and several APIs:
+Rafiki is made up of several components, including an Interledger connector, a high-throughput accounting database called [TigerBeetle](https://rafiki.dev/concepts/accounting/tigerbeetle/), and several APIs:
 
 - the [Admin API](https://rafiki.dev/apis/backend/schema/) to create [peering relationships](https://rafiki.dev/concepts/interledger-protocol/peering/), add supported [assets](https://rafiki.dev/concepts/asset/), and issue [payment pointers](https://rafiki.dev/reference/glossary/#payment-pointer)
-- the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
+- the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API to allow third parties (with the account holder's consent) to initiate payments and to view the transaction history
 - the [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
 
-Additionally, this package also includes a reference implementation of a [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API. For more information on the architecture, check out the [Architecture documentation](https://rafiki.dev/introduction/architecture/).
+Additionally, this package also includes a reference implementation of a [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) authorization server, which handles the access control for the [Open Payments](https://rafiki.dev/reference/glossary/#open-payments) API. For more information on the architecture, check out the [Architecture documentation](https://rafiki.dev/introduction/architecture/).
 
 ### New to Interledger?
 
-Never heard of Interledger before, or you would like to learn more? Here are some good places to start:
+Never heard of Interledger before? Or would you like to learn more? Here are some excellent places to start:
 
 - [Interledger Website](https://interledger.org/)
 - [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
@@ -52,7 +52,7 @@ More phone numbers: https://tel.meet/sms-fwny-ezc?pin=5321780226087
 
 ## Local Development Environment
 
-### Prequisites
+### Prerequisites
 
 - [Docker](https://docs.docker.com/get-docker/)
 - [NVM](https://github.com/nvm-sh/nvm)
