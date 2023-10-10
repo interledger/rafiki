@@ -1337,10 +1337,6 @@
 								"method": "GET",
 								"header": [
 									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									},
-									{
 										"key": "Accept",
 										"value": "application/json"
 									}
@@ -1384,10 +1380,6 @@
 								"method": "GET",
 								"header": [
 									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									},
-									{
 										"key": "Accept",
 										"value": "application/json"
 									}
@@ -1416,10 +1408,6 @@
 							"request": {
 								"method": "GET",
 								"header": [
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									}
 								],
 								"url": {
 									"raw": "{{pfryPaymentPointer}}/jwks.json",
@@ -1448,10 +1436,6 @@
 							"request": {
 								"method": "GET",
 								"header": [
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									}
 								],
 								"url": {
 									"raw": "{{PeerOpenPaymentsHost}}/connections/{{connectionId}}",
@@ -1513,10 +1497,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
 									}
 								],
 								"body": {
@@ -1575,10 +1555,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
 									}
 								],
 								"url": {
@@ -1629,10 +1605,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
 									}
 								],
 								"url": {
@@ -1681,10 +1653,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
 									}
 								],
 								"url": {
@@ -1747,10 +1715,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -1809,10 +1773,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -1872,10 +1832,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -1934,10 +1890,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -1988,10 +1940,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -2340,10 +2288,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
 									}
 								],
 								"body": {
@@ -2463,10 +2407,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -2642,10 +2582,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"body": {
@@ -2704,10 +2640,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									},
-									{
-										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
 									}
 								],
 								"url": {
@@ -3240,10 +3172,6 @@
 										"value": "GNAP {{accessToken}}"
 									},
 									{
-										"key": "Host",
-										"value": "peer-backend"
-									},
-									{
 										"key": "Signature-Input",
 										"value": "TODO",
 										"type": "text"
@@ -3423,11 +3351,6 @@
 										"type": "text"
 									},
 									{
-										"key": "Host",
-										"value": "backend",
-										"type": "text"
-									},
-									{
 										"key": "Signature-Input",
 										"value": "TODO",
 										"type": "text"
@@ -3500,11 +3423,6 @@
 										"type": "text"
 									},
 									{
-										"key": "Host",
-										"value": "backend",
-										"type": "text"
-									},
-									{
 										"key": "Signature-Input",
 										"value": "TODO",
 										"type": "text"
@@ -3562,11 +3480,6 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}",
-										"type": "text"
-									},
-									{
-										"key": "Host",
-										"value": "backend",
 										"type": "text"
 									},
 									{
