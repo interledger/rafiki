@@ -3170,7 +3170,7 @@
 									{
 										"key": "Authorization",
 										"value": "GNAP {{accessToken}}"
-									}
+									},
 									{
 										"key": "Signature-Input",
 										"value": "TODO",
