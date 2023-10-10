@@ -23,7 +23,7 @@ Additionally, this package also includes a reference implementation of a [GNAP](
 
 ### New to Interledger?
 
-Never heard of Interledger before, or would you like to learn more? Here are some excellent places to start:
+Never heard of Interledger before? Or would you like to learn more? Here are some excellent places to start:
 
 - [Interledger Website](https://interledger.org/)
 - [Interledger Specs](https://interledger.org/rfcs/0027-interledger-protocol-4/)
