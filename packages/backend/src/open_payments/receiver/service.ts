@@ -1,7 +1,6 @@
 import {
   AuthenticatedClient,
   IncomingPayment as OpenPaymentsIncomingPayment,
-  ILPStreamConnection as OpenPaymentsConnection,
   isPendingGrant,
   AccessType,
   AccessAction
@@ -46,7 +45,6 @@ interface ServiceDependencies extends BaseService {
   remoteIncomingPaymentService: RemoteIncomingPaymentService
 }
 
-const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
 const INCOMING_PAYMENT_URL_REGEX =
   /(?<walletAddressUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
 
@@ -141,59 +139,9 @@ async function getReceiver(
   deps: ServiceDependencies,
   url: string
 ): Promise<Receiver | undefined> {
-  if (url.match(CONNECTION_URL_REGEX)) {
-    const connection = await getConnection(deps, url)
-    if (connection) {
-      return Receiver.fromConnection(connection)
-    }
-  } else {
-    const incomingPayment = await getIncomingPayment(deps, url)
-    if (incomingPayment) {
-      return Receiver.fromIncomingPayment(incomingPayment)
-    }
-  }
-}
-
-async function getLocalConnection(
-  deps: ServiceDependencies,
-  url: string
-): Promise<OpenPaymentsConnection | undefined> {
-  const incomingPayment = await deps.incomingPaymentService.getByConnection(
-    url.slice(-36)
-  )
-
-  if (!incomingPayment) {
-    return
-  }
-
-  const connection = deps.connectionService.get(incomingPayment)
-
-  if (!connection) {
-    return
-  }
-
-  return connection.toOpenPaymentsType()
-}
-
-async function getConnection(
-  deps: ServiceDependencies,
-  url: string
-): Promise<OpenPaymentsConnection | undefined> {
-  try {
-    if (url.startsWith(`${deps.openPaymentsUrl}/connections/`)) {
-      return await getLocalConnection(deps, url)
-    }
-
-    return await deps.openPaymentsClient.ilpStreamConnection.get({
-      url
-    })
-  } catch (error) {
-    deps.logger.error(
-      { errorMessage: error instanceof Error && error.message },
-      'Could not get connection'
-    )
-
-    return undefined
+  const incomingPayment = await getIncomingPayment(deps, url)
+  if (incomingPayment) {
+    return Receiver.fromIncomingPayment(incomingPayment)
   }
 }
 

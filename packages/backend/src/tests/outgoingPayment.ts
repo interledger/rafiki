@@ -28,6 +28,7 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const receiverService = await deps.use('receiverService')
   if (options.validDestination === false) {
+    // TODO: mock differently? receiver.get not longer calls receiver.fromConnection. this is the only remaining caller of fromConnection
     const streamServer = await deps.use('streamServer')
     const { ilpAddress, sharedSecret } = streamServer.generateCredentials()
     jest.spyOn(receiverService, 'get').mockResolvedValueOnce(

@@ -34,6 +34,7 @@ type ReceiverIncomingPayment = Readonly<
 >
 
 export class Receiver extends ConnectionBase {
+  // TODO: remove? still called 1 place
   static fromConnection(
     connection: OpenPaymentsConnection
   ): Receiver | undefined {
