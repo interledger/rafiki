@@ -500,18 +500,6 @@ components:
       required:
         - redirect
         - finish
-    interact-state:
-      title: interact-state
-      description: |-
-        Interaction state:
-         * `PENDING` - Awaiting interaction from resource owner (RO)
-         * `APPROVED` - RO approved interaction
-         * `DENIED` - RO Rejected interaction
-      type: string
-      enum:
-        - PENDING
-        - APPROVED
-        - DENIED
     interval:
       title: Interval
       type: string
