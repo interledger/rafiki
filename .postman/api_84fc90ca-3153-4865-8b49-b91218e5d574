@@ -17,3 +17,4 @@ files[] = {"id":"23674746-92761441-6d0c-4fc6-aa04-73eccf6afd4c","path":"Interled
 rootDirectory = postman/schemas
 
 [config.relations.apiDefinition.metaData]
+type = openapi:3

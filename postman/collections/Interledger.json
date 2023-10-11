@@ -1999,7 +1999,7 @@
 									"script": {
 										"id": "00122ab8-e9b8-4ba7-84d9-26002667994f",
 										"exec": [
-											"eval(pm.environment.get('preRequestSignaturesGrantRequest'))"
+											"eval(pm.environment.get('preRequestSignatures'))"
 										],
 										"type": "text/javascript"
 									}
@@ -2199,6 +2199,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "5df59811-f461-4288-856d-cea86377317d",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
@@ -2212,9 +2213,9 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "bd902901-7842-42e2-876b-4ee0df449544",
 										"exec": [
-											"eval(pm.environment.get('preRequestSignaturesGrantRequest'))",
-											""
+											"eval(pm.environment.get('preRequestSignatures'))"
 										],
 										"type": "text/javascript"
 									}
@@ -2321,6 +2322,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "382597ac-6d72-4318-830a-d6c22795da2c",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
@@ -2334,8 +2336,9 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "0244823d-e3eb-4775-a60a-b0e20404b907",
 										"exec": [
-											"eval(pm.environment.get('preRequestSignaturesGrantRequest'))"
+											"eval(pm.environment.get('preRequestSignatures'))"
 										],
 										"type": "text/javascript"
 									}
@@ -2460,7 +2463,7 @@
 									"script": {
 										"id": "44827563-e7dc-4ab9-a1e4-a741fba7ba82",
 										"exec": [
-											"eval(pm.environment.get('preRequestSignaturesGrantRequest'))"
+											"eval(pm.environment.get('preRequestSignatures'))"
 										],
 										"type": "text/javascript"
 									}
