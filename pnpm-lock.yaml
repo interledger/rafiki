@@ -258,8 +258,8 @@ importers:
         specifier: ^0.14.2
         version: 0.14.2
       nock:
-        specifier: ^13.3.3
-        version: 13.3.3
+        specifier: ^13.3.4
+        version: 13.3.4
       node-mocks-http:
         specifier: ^1.13.0
         version: 1.13.0
@@ -451,8 +451,8 @@ importers:
         specifier: ^0.14.2
         version: 0.14.2
       nock:
-        specifier: ^13.3.3
-        version: 13.3.3
+        specifier: ^13.3.4
+        version: 13.3.4
       node-mocks-http:
         specifier: ^1.13.0
         version: 1.13.0
@@ -627,8 +627,8 @@ importers:
         specifier: ^18.7.12
         version: 18.11.9
       nock:
-        specifier: ^13.3.3
-        version: 13.3.3
+        specifier: ^13.3.4
+        version: 13.3.4
       openapi-typescript:
         specifier: ^6.6.1
         version: 6.6.1
@@ -13436,8 +13436,8 @@ packages:
       lower-case: 2.0.2
       tslib: 2.5.0
 
-  /nock@13.3.3:
-    resolution: {integrity: sha512-z+KUlILy9SK/RjpeXDiDUEAq4T94ADPHE3qaRkf66mpEhzc/ytOMm3Bwdrbq6k1tMWkbdujiKim3G2tfQARuJw==}
+  /nock@13.3.4:
+    resolution: {integrity: sha512-DDpmn5oLEdCTclEqweOT4U7bEpuoifBMFUXem9sA4turDAZ5tlbrEoWqCorwXey8CaAw44mst5JOQeVNiwtkhw==}
     engines: {node: '>= 10.13'}
     dependencies:
       debug: 4.3.4(supports-color@9.4.0)
