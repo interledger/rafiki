@@ -26,7 +26,7 @@ pm.sendRequest(
     body: {
       mode: 'raw',
       raw: JSON.stringify({
-        keyId: pm.environment.get('keyId'),
+        keyId: pm.environment.get('pfryKeyId'),
         base64Key: pm.environment.get('pfryPrivateKey'),
         request: {
           url: requestUrl,
