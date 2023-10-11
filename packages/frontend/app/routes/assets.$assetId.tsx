@@ -119,7 +119,73 @@ export default function ViewAssetPage() {
             </div>
           </div>
         </div>
-        {/* Peer Liquidity Info - END */}
+        {/* Asset Liquidity Info - END */}
+        {/* Asset Fee Info */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Asset Fees</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <Form method='post' replace preventScrollReset>
+              <fieldset disabled={currentPageAction}>
+                <div className='w-full p-4 space-y-3'>
+                  <p className='font-medium'>Receiving Fee</p>
+                  <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-2'>
+                    <div>
+                      <Input
+                        type='number'
+                        name='receivingFee'
+                        label='Fixed Fee'
+                        defaultValue={asset.receivingFee?.fixed ?? undefined}
+                        //error={response?.errors.fieldErrors.receivingFee.fixed}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type='number'
+                        name='receivingFee'
+                        label='Percentage Fee'
+                        defaultValue={
+                          asset.receivingFee?.basisPoints ?? undefined
+                        }
+                        //error={response?.errors.fieldErrors.receivingFee.basisPoints}
+                      />
+                    </div>
+                  </div>
+                  <p className='font-medium'>Sending Fee</p>
+                  <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-2'>
+                    <div>
+                      <Input
+                        type='number'
+                        name='sendingFee'
+                        label='Fixed Fee'
+                        defaultValue={asset.sendingFee?.fixed ?? undefined}
+                        //error={response?.errors.fieldErrors.sendingFee.fixed}
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        type='number'
+                        name='sendingFee'
+                        label='Percentage Fee'
+                        defaultValue={
+                          asset.sendingFee?.basisPoints ?? undefined
+                        }
+                        //error={response?.errors.fieldErrors.sendingFee.basisPoints}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className='flex justify-end p-4'>
+                  <Button aria-label='save asset information' type='submit'>
+                    {currentPageAction ? 'Saving ...' : 'Save'}
+                  </Button>
+                </div>
+              </fieldset>
+            </Form>
+          </div>
+        </div>
+        {/* Asset Fee Info - END */}
       </div>
       <Outlet />
     </div>

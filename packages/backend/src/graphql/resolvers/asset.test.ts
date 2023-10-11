@@ -504,7 +504,7 @@ describe('Asset Resolvers', (): void => {
             type: fee.type,
             assetId: assetId,
             basisPoints: fee.basisPointFee,
-            fixed: fee.fixedFee.toString(),
+            fixed: fee.fixedFee.toString()
           })
         })
       })

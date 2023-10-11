@@ -32,8 +32,16 @@ export const getAsset = async (args: QueryAssetArgs) => {
           id
           code
           scale
-          liquidity
           withdrawalThreshold
+          liquidity
+          receivingFee {
+            basisPoints
+            fixed
+          }
+          sendingFee {
+            basisPoints
+            fixed
+          }
           createdAt
         }
       }
