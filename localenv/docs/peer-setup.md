@@ -412,8 +412,8 @@ Example successful response
 
 #### On the Secondary Instance
 
-On the [secondary instance](http://localhost:4001) execute the following command to create a payment
-pointer ID:
+On the [secondary instance](http://localhost:4001) execute the following command to create a wallet
+address ID:
 
 Query
 
