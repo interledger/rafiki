@@ -5,25 +5,62 @@
 exports.up = function (knex) {
   return Promise.all([
     knex.schema.renameTable('paymentPointers', 'walletAddresses'),
+    knex.schema.alterTable('walletAddresses', function (table) {
+      table.foreign(['assetId']).references('assets.id')
+      table.unique('url')
+    }),
+    knex.raw(
+      'ALTER INDEX "paymentPointers_pkey" RENAME TO "walletAddresses_pkey"'
+    ),
+    knex.raw(
+      'ALTER INDEX "paymentpointers_url_index" RENAME TO "walletAddresses_url_index"'
+    ),
+    knex.raw(
+      'ALTER INDEX "paymentpointers_processat_index" RENAME TO "walletAddresses_processat_index"'
+    ),
+    knex.raw(
+      'ALTER TABLE "walletAddresses" DROP CONSTRAINT "paymentpointers_url_unique"'
+    ),
+    knex.raw(
+      'ALTER TABLE "walletAddresses" DROP CONSTRAINT "paymentpointers_assetid_foreign"'
+    ),
     knex.schema.renameTable('paymentPointerKeys', 'walletAddressKeys'),
     knex.schema.alterTable('walletAddressKeys', function (table) {
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
     }),
+    knex.raw(
+      'ALTER INDEX "paymentPointerKeys_pkey" RENAME TO "walletAddressKeys_pkey"'
+    ),
+    knex.raw(
+      'ALTER TABLE "walletAddressKeys" DROP CONSTRAINT "paymentpointerkeys_paymentpointerid_foreign"'
+    ),
     knex.schema.alterTable('quotes', function (table) {
+      table.dropForeign(['paymentPointerId'])
+      table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId', 'createdAt', 'id'])
+      table.index(['walletAddressId'])
+      table.index(['createdAt'])
+      table.index(['id'])
     }),
     knex.schema.alterTable('incomingPayments', function (table) {
+      table.dropForeign(['paymentPointerId'])
+      table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId', 'createdAt', 'id'])
+      table.index(['walletAddressId'])
+      table.index(['createdAt'])
+      table.index(['id'])
     }),
     knex.schema.alterTable('outgoingPayments', function (table) {
+      table.dropForeign(['paymentPointerId'])
+      table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId', 'createdAt', 'id'])
+      table.index(['walletAddressId'])
+      table.index(['createdAt'])
+      table.index(['id'])
     }),
     knex('webhookEvents')
       .update({
@@ -67,20 +104,27 @@ exports.down = function (knex) {
     knex.schema.renameTable('walletAddresses', 'paymentPointers'),
     knex.schema.renameTable('walletAddressKeys', 'paymentPointerKeys'),
     knex.schema.alterTable('paymentPointerKeys', function (table) {
+      table.dropForeign(['walletAddressId'])
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
     }),
     knex.schema.alterTable('quotes', function (table) {
+      table.dropForeign(['walletAddressId'])
+      table.dropIndex(['walletAddressId', 'createdAt', 'id'])
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
       table.index(['paymentPointerId', 'createdAt', 'id'])
     }),
     knex.schema.alterTable('incomingPayments', function (table) {
+      table.dropForeign(['walletAddressId'])
+      table.dropIndex(['walletAddressId', 'createdAt', 'id'])
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
       table.index(['paymentPointerId', 'createdAt', 'id'])
     }),
     knex.schema.alterTable('outgoingPayments', function (table) {
+      table.dropForeign(['walletAddressId'])
+      table.dropIndex(['walletAddressId', 'createdAt', 'id'])
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
       table.index(['paymentPointerId', 'createdAt', 'id'])
