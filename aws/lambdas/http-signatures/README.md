@@ -29,3 +29,11 @@ $ curl -v 'https://<ID>.lambda-url.<REGION>.on.aws/' \
 -H 'content-type: application/json' \
 -d '{ "keyId": "<KEY_ID>", "base64Key": "<BASE64_ENCODED_Ed25519_PRIVATE_KEY>", "request":{"headers":{"host": "happy-life-bank-backend"}, "method": "GET", "url":"https://example.com"} }'
 ```
+
+or
+
+```sh
+curl -v 'https://<ID>.lambda-url.<REGION>.on.aws/' \
+-H 'content-type: application/json' \
+-d '{ "keyId": "<KEY_ID>", "base64Key": "<BASE64_ENCODED_Ed25519_PRIVATE_KEY>", "request":{"headers":{"host": "happy-life-bank-backend"}, "method": "POST", "url":"https://example.com", "body": "{\"hello\": \"world\"}"}}'
+```
