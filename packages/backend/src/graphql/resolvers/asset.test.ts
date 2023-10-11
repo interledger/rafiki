@@ -24,6 +24,8 @@ import { AccountingService } from '../../accounting/service'
 import { FeeService } from '../../fee/service'
 import { Fee, FeeType } from '../../fee/model'
 import { isFeeError } from '../../fee/errors'
+import { createFee } from '../../tests/fee'
+import { createAsset } from '../../tests/asset'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -435,6 +437,26 @@ describe('Asset Resolvers', (): void => {
         })
       })
     })
+
+    describe('fees query', () => {
+      let assetId: string
+      beforeEach(async (): Promise<void> => {
+        assetId = (await createAsset(deps)).id
+      })
+
+      getPageTests({
+        getClient: () => appContainer.apolloClient,
+        createModel: () => createFee(deps, assetId),
+        pagedQuery: `fees`,
+        parent: {
+          query: 'asset',
+          getId: () => assetId
+        }
+      })
+    })
+
+    // TODO
+    // test('Can get fees', async (): Promise<void> => {}
   })
 
   describe('updateAsset', (): void => {
