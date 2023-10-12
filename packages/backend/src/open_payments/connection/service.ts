@@ -2,7 +2,11 @@ import { StreamServer } from '@interledger/stream-receiver'
 
 import { BaseService } from '../../shared/baseService'
 import { IncomingPayment } from '../payment/incoming/model'
-import { Connection } from './model'
+import { IlpAddress } from 'ilp-packet'
+export interface Connection {
+  ilpAddress: IlpAddress
+  sharedSecret: Buffer
+}
 
 export interface ConnectionService {
   get(payment: IncomingPayment): Connection | undefined
@@ -44,11 +48,10 @@ function getConnection(
       scale: payment.asset.scale
     }
   })
-  return Connection.fromPayment({
-    payment,
-    credentials,
-    openPaymentsUrl: deps.openPaymentsUrl
-  })
+  return {
+    ilpAddress: credentials.ilpAddress,
+    sharedSecret: credentials.sharedSecret
+  }
 }
 
 function getConnectionUrl(

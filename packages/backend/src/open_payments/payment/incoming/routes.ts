@@ -18,13 +18,12 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
-import { Connection } from '../../connection/model'
+import { Connection } from '../../connection/service'
 import { ConnectionService } from '../../connection/service'
 import {
   AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,
-  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+  IncomingPaymentWithPaymentMethods
 } from '@interledger/open-payments'
 import { WalletAddress } from '../../wallet_address/model'
 
@@ -81,7 +80,7 @@ async function getIncomingPaymentPublic(
     const incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
       client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      paymentPointerId: ctx.paymentPointer.id
+      walletAddressId: ctx.walletAddress.id
     })
     ctx.body = incomingPayment?.toPublicOpenPaymentsType()
   } catch (err) {
@@ -185,12 +184,7 @@ async function listIncomingPayments(
     await listSubresource({
       ctx,
       getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
-      toBody: (payment) =>
-        incomingPaymentToBody(
-          ctx.walletAddress,
-          payment,
-          deps.connectionService.getUrl(payment)
-        )
+      toBody: (payment) => incomingPaymentToBody(ctx.walletAddress, payment)
     })
   } catch (err) {
     if (err instanceof Koa.HttpError) {
@@ -202,10 +196,7 @@ async function listIncomingPayments(
 function incomingPaymentToBody(
   walletAddress: WalletAddress,
   incomingPayment: IncomingPayment,
-  ilpStreamConnection?: Connection | string
-):
-  | OpenPaymentsIncomingPayment
-  | OpenPaymentsIncomingPaymentWithConnection
-  | OpenPaymentsIncomingPaymentWithConnectionUrl {
+  ilpStreamConnection?: Connection
+): OpenPaymentsIncomingPayment | IncomingPaymentWithPaymentMethods {
   return incomingPayment.toOpenPaymentsType(walletAddress, ilpStreamConnection)
 }

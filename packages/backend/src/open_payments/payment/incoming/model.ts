@@ -2,7 +2,8 @@ import { Model, ModelOptions, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { Connection } from '../../connection/model'
+// import { Connection } from '../../connection/model'
+import { Connection } from '../../connection/service'
 import {
   WalletAddress,
   WalletAddressSubresource
@@ -13,9 +14,11 @@ import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/raf
 import { WebhookEvent } from '../../../webhook/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
-  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
+  // IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
+  // IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
 } from '@interledger/open-payments'
+import base64url from 'base64url'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -216,25 +219,18 @@ export class IncomingPayment
   public toOpenPaymentsType(
     walletAddress: WalletAddress,
     ilpStreamConnection: Connection
-  ): OpenPaymentsIncomingPaymentWithConnection
+  ): OpenPaymentsIncomingPaymentWithPaymentMethod
   public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamConnection: string
-  ): OpenPaymentsIncomingPaymentWithConnectionUrl
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamConnection?: Connection | string
-  ):
-    | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl
+    paymentPointer: WalletAddress,
+    ilpStreamConnection?: Connection
+  ): OpenPaymentsIncomingPayment | OpenPaymentsIncomingPaymentWithPaymentMethod
 
   public toOpenPaymentsType(
     walletAddress: WalletAddress,
-    ilpStreamConnection?: Connection | string
+    ilpStreamConnection?: Connection
   ):
     | OpenPaymentsIncomingPayment
-    | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl {
+    | OpenPaymentsIncomingPaymentWithPaymentMethod {
     const baseIncomingPayment: OpenPaymentsIncomingPayment = {
       id: this.getUrl(walletAddress),
       walletAddress: walletAddress.url,
@@ -249,21 +245,20 @@ export class IncomingPayment
       expiresAt: this.expiresAt.toISOString()
     }
 
-    if (!ilpStreamConnection) {
-      return baseIncomingPayment
-    }
-
-    if (typeof ilpStreamConnection === 'string') {
+    if (ilpStreamConnection) {
       return {
         ...baseIncomingPayment,
-        ilpStreamConnection
+        methods: [
+          {
+            type: 'ilp',
+            ilpAddress: ilpStreamConnection.ilpAddress,
+            sharedSecret: base64url(ilpStreamConnection.sharedSecret)
+          }
+        ]
       }
     }
 
-    return {
-      ...baseIncomingPayment,
-      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
-    }
+    return baseIncomingPayment
   }
 
   public toPublicOpenPaymentsType(): Pick<

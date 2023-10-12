@@ -27,6 +27,7 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
+import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -92,30 +93,33 @@ describe('Incoming Payment Routes', (): void => {
       get: (ctx) =>
         incomingPaymentRoutes.get(ctx as ReadContextWithAuthenticatedStatus),
       getBody: (incomingPayment, list) => {
-        return {
-          id: incomingPayment.getUrl(walletAddress),
-          walletAddress: walletAddress.url,
-          completed: false,
-          incomingAmount:
-            incomingPayment.incomingAmount &&
-            serializeAmount(incomingPayment.incomingAmount),
-          expiresAt: incomingPayment.expiresAt.toISOString(),
-          createdAt: incomingPayment.createdAt.toISOString(),
-          updatedAt: incomingPayment.updatedAt.toISOString(),
-          receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-          metadata: incomingPayment.metadata,
-          ilpStreamConnection: list
-            ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
-            : {
-                id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
-                ilpAddress: expect.stringMatching(
-                  /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-                ),
-                sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
-                assetCode: incomingPayment.receivedAmount.assetCode,
-                assetScale: incomingPayment.receivedAmount.assetScale
-              }
+        const response: Partial<OpenPaymentsIncomingPaymentWithPaymentMethods> =
+          {
+            id: incomingPayment.getUrl(walletAddress),
+            walletAddress: walletAddress.url,
+            completed: false,
+            incomingAmount:
+              incomingPayment.incomingAmount &&
+              serializeAmount(incomingPayment.incomingAmount),
+            expiresAt: incomingPayment.expiresAt.toISOString(),
+            createdAt: incomingPayment.createdAt.toISOString(),
+            updatedAt: incomingPayment.updatedAt.toISOString(),
+            receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+            metadata: incomingPayment.metadata
+          }
+
+        if (!list) {
+          response.methods = [
+            {
+              type: 'ilp',
+              ilpAddress: expect.stringMatching(
+                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+              ),
+              sharedSecret: expect.any(String)
+            }
+          ]
         }
+        return response
       },
       list: (ctx) => incomingPaymentRoutes.list(ctx),
       urlPath: IncomingPayment.urlPath
@@ -205,21 +209,18 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client
         })
+        // TODO: this fails because the response has 'methods' (which is correct) and the spec has
+        // '#/components/schemas/incoming-payment' with additionalProperties = false.
+        // We are trying to include payment method via an allOf but this doesn't supercede the
+        // additionalProperties = false. Appears we need to tweak the spec. Should we also add
+        // jestOpenAPI to open-payments lib use .toSatisfyApiSpec() to verfiy in client tests?
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
           (ctx.response.body as Record<string, unknown>)['id'] as string
         )
           .split('/')
           .pop()
-        const connectionId = (
-          (
-            (ctx.response.body as Record<string, unknown>)[
-              'ilpStreamConnection'
-            ] as Record<string, unknown>
-          )['id'] as string
-        )
-          .split('/')
-          .pop()
+
         expect(ctx.response.body).toEqual({
           id: `${walletAddress.url}/incoming-payments/${incomingPaymentId}`,
           walletAddress: walletAddress.url,
@@ -234,15 +235,15 @@ describe('Incoming Payment Routes', (): void => {
           },
           metadata,
           completed: false,
-          ilpStreamConnection: {
-            id: `${config.openPaymentsUrl}/connections/${connectionId}`,
-            ilpAddress: expect.stringMatching(
-              /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-            ),
-            sharedSecret: expect.any(String),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          }
+          methods: [
+            {
+              type: 'ilp',
+              ilpAddress: expect.stringMatching(
+                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+              ),
+              sharedSecret: expect.any(String)
+            }
+          ]
         })
       }
     )
@@ -297,7 +298,7 @@ describe('Incoming Payment Routes', (): void => {
   describe('get unauthenticated incoming payment', (): void => {
     test('Can get incoming payment with public fields', async (): Promise<void> => {
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         expiresAt,
         incomingAmount,
         metadata
@@ -312,7 +313,7 @@ describe('Incoming Payment Routes', (): void => {
         params: {
           id: incomingPayment.id
         },
-        paymentPointer
+        walletAddress
       })
       ctx.authenticated = false
 
