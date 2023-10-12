@@ -2,9 +2,9 @@ import { Knex } from 'knex'
 
 import { ServiceDependencies } from './service'
 import { OutgoingPayment, OutgoingPaymentState } from './model'
-import { canRetryError, PaymentError } from './errors'
+import { LifecycleError, PaymentError } from './errors'
 import * as lifecycle from './lifecycle'
-import { IlpPlugin } from '../../../payment-method/ilp/ilp_plugin'
+import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 
 // First retry waits 10 seconds, second retry waits 20 (more) seconds, etc.
 export const RETRY_BACKOFF_SECONDS = 10
@@ -35,8 +35,7 @@ export async function processPendingPayment(
 }
 
 // Fetch (and lock) a payment for work.
-// Exported for testing.
-export async function getPendingPayment(
+async function getPendingPayment(
   trx: Knex.Transaction
 ): Promise<OutgoingPayment | undefined> {
   const now = new Date(Date.now()).toISOString()
@@ -60,52 +59,58 @@ export async function getPendingPayment(
   return payments[0]
 }
 
-// Exported for testing.
-export async function handlePaymentLifecycle(
+async function handlePaymentLifecycle(
   deps: ServiceDependencies,
   payment: OutgoingPayment
 ): Promise<void> {
-  const onError = async (err: Error | PaymentError): Promise<void> => {
-    const error = typeof err === 'string' ? err : err.message
-    const stateAttempts = payment.stateAttempts + 1
-
-    if (stateAttempts < MAX_STATE_ATTEMPTS && canRetryError(err)) {
-      deps.logger.warn(
-        { state: payment.state, error, stateAttempts },
-        'payment lifecycle failed; retrying'
-      )
-      await payment.$query(deps.knex).patch({ stateAttempts })
-    } else {
-      // Too many attempts or non-retryable error; fail payment.
-      deps.logger.warn(
-        { state: payment.state, error, stateAttempts },
-        'payment lifecycle failed'
-      )
-      await lifecycle.handleFailed(deps, payment, error)
-    }
+  if (payment.state !== OutgoingPaymentState.Sending) {
+    deps.logger.warn('unexpected payment in lifecycle')
+    return
   }
 
-  // Plugins are cleaned up in `finally` to avoid leaking http2 connections.
-  let plugin: IlpPlugin
-  switch (payment.state) {
-    case OutgoingPaymentState.Sending:
-      plugin = deps.makeIlpPlugin({
-        sourceAccount: payment
-      })
-      return plugin
-        .connect()
-        .then(() => lifecycle.handleSending(deps, payment, plugin))
-        .catch(onError)
-        .finally(() => {
-          return plugin.disconnect().catch((err: Error) => {
-            deps.logger.warn(
-              { error: err.message },
-              'error disconnecting plugin'
-            )
-          })
-        })
-    default:
-      deps.logger.warn('unexpected payment in lifecycle')
-      break
+  try {
+    await lifecycle.handleSending(deps, payment)
+  } catch (error) {
+    await onLifecycleError(deps, payment, error as Error | PaymentError)
   }
+}
+
+async function onLifecycleError(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  err: Error | PaymentError
+): Promise<void> {
+  const error = typeof err === 'string' ? err : err.message
+  const stateAttempts = payment.stateAttempts + 1
+
+  if (stateAttempts < MAX_STATE_ATTEMPTS && isRetryableError(err)) {
+    deps.logger.warn(
+      { state: payment.state, error, stateAttempts },
+      'payment lifecycle failed; retrying'
+    )
+    await payment.$query(deps.knex).patch({ stateAttempts })
+  } else {
+    // Too many attempts or non-retryable error; fail payment.
+    deps.logger.warn(
+      { state: payment.state, error, stateAttempts },
+      'payment lifecycle failed'
+    )
+    await lifecycle.handleFailed(deps, payment, error)
+  }
+}
+
+function isRetryableError(error: Error | PaymentError): boolean {
+  if (error instanceof PaymentMethodHandlerError) {
+    return !!error.retryable
+  }
+
+  if (error instanceof Error) {
+    return true
+  }
+
+  if (error === LifecycleError.RatesUnavailable) {
+    return true
+  }
+
+  return false
 }

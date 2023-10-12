@@ -29,15 +29,12 @@ import {
   PaymentPointerService,
   PaymentPointerSubresourceService
 } from '../../payment_pointer/service'
-import {
-  IlpPlugin,
-  IlpPluginOptions
-} from '../../../payment-method/ilp/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
+import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -55,7 +52,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
-  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  paymentMethodHandlerService: PaymentMethodHandlerService
   paymentPointerService: PaymentPointerService
 }
 
