@@ -490,8 +490,8 @@ importers:
         specifier: ^0.11.0
         version: 0.11.0(astro@3.2.3)
       '@interledger/docs-design-system':
-        specifier: ^0.0.14
-        version: 0.0.14
+        specifier: ^0.1.0
+        version: 0.1.0
       '@types/react':
         specifier: ^18.2.28
         version: 18.2.28
@@ -4212,10 +4212,8 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@interledger/docs-design-system@0.0.14:
-    resolution: {integrity: sha512-g1TrfAbK7Lt5tFQAl1OuIXl6LTYFOmsUjvd8TpOxL6Y5OS3RpiTxJyMTsFGPDPLj9TBRruvnzeLCEAkHr83YmQ==}
-    dependencies:
-      react: 18.2.0
+  /@interledger/docs-design-system@0.1.0:
+    resolution: {integrity: sha512-kKTSGC03TDfeaj8ah0yT42gGbiq3NAiWi9qqNKlV5mooPg5FAGnvuhbOaSa7+TqiXpzl1rgWXcZUJfMXea3t7w==}
     dev: false
 
   /@interledger/http-signature-utils@1.0.4:
