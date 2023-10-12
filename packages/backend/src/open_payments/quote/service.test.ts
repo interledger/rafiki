@@ -177,7 +177,7 @@ describe('QuoteService', (): void => {
                   receiver: (await receiverService.get(
                     incomingPayment.getUrl(receivingWalletAddress)
                   ))!,
-                  paymentPointer: sendingWalletAddress,
+                  walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
                   ...(debitAmount
                     ? { debitAmountValue: debitAmount.value }
@@ -226,7 +226,7 @@ describe('QuoteService', (): void => {
                   receiver: (await receiverService.get(
                     incomingPayment.getUrl(receivingWalletAddress)
                   ))!,
-                  paymentPointer: sendingWalletAddress,
+                  walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
                   ...(debitAmount
                     ? { debitAmountValue: debitAmount.value }
@@ -265,7 +265,7 @@ describe('QuoteService', (): void => {
                   receiver: (await receiverService.get(
                     incomingPayment.getUrl(receivingWalletAddress)
                   ))!,
-                  paymentPointer: sendingWalletAddress,
+                  walletAddress: sendingWalletAddress,
                   exchangeRate: 0.5,
                   ...(debitAmount
                     ? { debitAmountValue: debitAmount.value }

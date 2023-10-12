@@ -7,7 +7,7 @@ import { AssetOptions } from '../asset/service'
 import { Quote } from '../open_payments/quote/model'
 import { CreateQuoteOptions } from '../open_payments/quote/service'
 import { PaymentQuote } from '../payment-method/handler/service'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Receiver } from '../open_payments/receiver/model'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
@@ -17,7 +17,7 @@ export type CreateTestQuoteOptions = CreateQuoteOptions & {
 
 type MockQuoteArgs = {
   receiver: Receiver
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
   exchangeRate?: number
 } & ({ debitAmountValue: bigint } | { receiveAmountValue: bigint })
 
@@ -25,14 +25,14 @@ export function mockQuote(
   args: MockQuoteArgs,
   overrides?: Partial<PaymentQuote>
 ): PaymentQuote {
-  const { paymentPointer, receiver, exchangeRate = 1 } = args
+  const { walletAddress, receiver, exchangeRate = 1 } = args
 
   return {
     receiver,
-    paymentPointer,
+    walletAddress,
     debitAmount: {
-      assetCode: paymentPointer.asset.code,
-      assetScale: paymentPointer.asset.scale,
+      assetCode: walletAddress.asset.code,
+      assetScale: walletAddress.asset.scale,
       value:
         'debitAmountValue' in args
           ? args.debitAmountValue

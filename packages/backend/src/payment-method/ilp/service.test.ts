@@ -7,11 +7,11 @@ import { IAppConfig, Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../../app'
 import { createAsset } from '../../tests/asset'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { Asset } from '../../asset/model'
 import { withConfigOverride } from '../../tests/helpers'
 import { StartQuoteOptions } from '../handler/service'
-import { PaymentPointer } from '../../open_payments/payment_pointer/model'
+import { WalletAddress } from '../../open_payments/payment_pointer/model'
 import * as Pay from '@interledger/pay'
 
 import { createReceiver } from '../../tests/receiver'
@@ -26,7 +26,7 @@ describe('IlpPaymentService', (): void => {
   const exchangeRatesUrl = 'https://example-rates.com'
 
   const assetMap: Record<string, Asset> = {}
-  const paymentPointerMap: Record<string, PaymentPointer> = {}
+  const walletAddressMap: Record<string, WalletAddress> = {}
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer({
@@ -49,11 +49,11 @@ describe('IlpPaymentService', (): void => {
       scale: 2
     })
 
-    paymentPointerMap['USD'] = await createPaymentPointer(deps, {
+    walletAddressMap['USD'] = await createWalletAddress(deps, {
       assetId: assetMap['USD'].id
     })
 
-    paymentPointerMap['EUR'] = await createPaymentPointer(deps, {
+    walletAddressMap['EUR'] = await createWalletAddress(deps, {
       assetId: assetMap['EUR'].id
     })
   })
@@ -72,8 +72,8 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
-        paymentPointer: paymentPointerMap['USD'],
-        receiver: await createReceiver(deps, paymentPointerMap['USD']),
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -98,8 +98,8 @@ describe('IlpPaymentService', (): void => {
 
       await expect(
         ilpPaymentService.getQuote({
-          paymentPointer: paymentPointerMap['USD'],
-          receiver: await createReceiver(deps, paymentPointerMap['USD']),
+          walletAddress: walletAddressMap['USD'],
+          receiver: await createReceiver(deps, walletAddressMap['USD']),
           debitAmount: {
             assetCode: 'USD',
             assetScale: 2,
@@ -113,8 +113,8 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
-        paymentPointer: paymentPointerMap['USD'],
-        receiver: await createReceiver(deps, paymentPointerMap['USD']),
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD']),
         debitAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -124,7 +124,7 @@ describe('IlpPaymentService', (): void => {
 
       await expect(ilpPaymentService.getQuote(options)).resolves.toEqual({
         receiver: options.receiver,
-        paymentPointer: options.paymentPointer,
+        walletAddress: options.walletAddress,
         debitAmount: {
           assetCode: 'USD',
           assetScale: 2,
@@ -156,8 +156,8 @@ describe('IlpPaymentService', (): void => {
       }
 
       const options: StartQuoteOptions = {
-        paymentPointer: paymentPointerMap['USD'],
-        receiver: await createReceiver(deps, paymentPointerMap['USD'], {
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount
         })
       }
@@ -189,8 +189,8 @@ describe('IlpPaymentService', (): void => {
 
           await expect(
             ilpPaymentService.getQuote({
-              paymentPointer: paymentPointerMap['USD'],
-              receiver: await createReceiver(deps, paymentPointerMap['USD']),
+              walletAddress: walletAddressMap['USD'],
+              receiver: await createReceiver(deps, walletAddressMap['USD']),
               debitAmount: {
                 assetCode: 'USD',
                 assetScale: 2,
@@ -205,8 +205,8 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
-        paymentPointer: paymentPointerMap['USD'],
-        receiver: await createReceiver(deps, paymentPointerMap['USD'])
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD'])
       }
 
       jest.spyOn(Pay, 'startQuote').mockResolvedValueOnce({
@@ -224,8 +224,8 @@ describe('IlpPaymentService', (): void => {
       const ratesScope = mockRatesApi(exchangeRatesUrl, () => ({}))
 
       const options: StartQuoteOptions = {
-        paymentPointer: paymentPointerMap['USD'],
-        receiver: await createReceiver(deps, paymentPointerMap['USD'], {
+        walletAddress: walletAddressMap['USD'],
+        receiver: await createReceiver(deps, walletAddressMap['USD'], {
           incomingAmount: {
             assetCode: 'USD',
             assetScale: 2,
@@ -272,16 +272,16 @@ describe('IlpPaymentService', (): void => {
                   [incomingAssetCode]: exchangeRate
                 }))
 
-                const receivingPaymentPointer =
-                  paymentPointerMap[incomingAssetCode]
-                const sendingPaymentPointer = paymentPointerMap[debitAssetCode]
+                const receivingWalletAddress =
+                  walletAddressMap[incomingAssetCode]
+                const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
                 const options: StartQuoteOptions = {
-                  paymentPointer: sendingPaymentPointer,
-                  receiver: await createReceiver(deps, receivingPaymentPointer),
+                  walletAddress: sendingWalletAddress,
+                  receiver: await createReceiver(deps, receivingWalletAddress),
                   receiveAmount: {
-                    assetCode: receivingPaymentPointer.asset.code,
-                    assetScale: receivingPaymentPointer.asset.scale,
+                    assetCode: receivingWalletAddress.asset.code,
+                    assetScale: receivingWalletAddress.asset.scale,
                     value: incomingAmountValue
                   }
                 }
@@ -290,13 +290,13 @@ describe('IlpPaymentService', (): void => {
 
                 expect(quote).toMatchObject({
                   debitAmount: {
-                    assetCode: sendingPaymentPointer.asset.code,
-                    assetScale: sendingPaymentPointer.asset.scale,
+                    assetCode: sendingWalletAddress.asset.code,
+                    assetScale: sendingWalletAddress.asset.scale,
                     value: expectedDebitAmount
                   },
                   receiveAmount: {
-                    assetCode: receivingPaymentPointer.asset.code,
-                    assetScale: receivingPaymentPointer.asset.scale,
+                    assetCode: receivingWalletAddress.asset.code,
+                    assetScale: receivingWalletAddress.asset.scale,
                     value: incomingAmountValue
                   }
                 })
@@ -332,16 +332,16 @@ describe('IlpPaymentService', (): void => {
                 [incomingAssetCode]: exchangeRate
               }))
 
-              const receivingPaymentPointer =
-                paymentPointerMap[incomingAssetCode]
-              const sendingPaymentPointer = paymentPointerMap[debitAssetCode]
+              const receivingWalletAddress =
+                walletAddressMap[incomingAssetCode]
+              const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
               const options: StartQuoteOptions = {
-                paymentPointer: sendingPaymentPointer,
-                receiver: await createReceiver(deps, receivingPaymentPointer),
+                walletAddress: sendingWalletAddress,
+                receiver: await createReceiver(deps, receivingWalletAddress),
                 debitAmount: {
-                  assetCode: sendingPaymentPointer.asset.code,
-                  assetScale: sendingPaymentPointer.asset.scale,
+                  assetCode: sendingWalletAddress.asset.code,
+                  assetScale: sendingWalletAddress.asset.scale,
                   value: debitAmountValue
                 }
               }
@@ -350,13 +350,13 @@ describe('IlpPaymentService', (): void => {
 
               expect(quote).toMatchObject({
                 debitAmount: {
-                  assetCode: sendingPaymentPointer.asset.code,
-                  assetScale: sendingPaymentPointer.asset.scale,
+                  assetCode: sendingWalletAddress.asset.code,
+                  assetScale: sendingWalletAddress.asset.scale,
                   value: debitAmountValue
                 },
                 receiveAmount: {
-                  assetCode: receivingPaymentPointer.asset.code,
-                  assetScale: receivingPaymentPointer.asset.scale,
+                  assetCode: receivingWalletAddress.asset.code,
+                  assetScale: receivingWalletAddress.asset.scale,
                   value: expectedReceiveAmount
                 }
               })
