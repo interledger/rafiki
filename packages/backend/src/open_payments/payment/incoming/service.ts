@@ -40,7 +40,6 @@ export interface IncomingPaymentService
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
-  getByConnection(connectionId: string): Promise<IncomingPayment | undefined>
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -65,9 +64,7 @@ export async function createIncomingPaymentService(
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
     getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
-    processNext: () => processNextIncomingPayment(deps),
-    getByConnection: (connectionId) =>
-      getIncomingPaymentByConnection(deps, connectionId)
+    processNext: () => processNextIncomingPayment(deps)
   }
 }
 
@@ -77,17 +74,6 @@ async function getIncomingPayment(
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, walletAddress]')
-  if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
-  else return
-}
-
-async function getIncomingPaymentByConnection(
-  deps: ServiceDependencies,
-  connectionId: string
-): Promise<IncomingPayment | undefined> {
-  const incomingPayment = await IncomingPayment.query(deps.knex)
-    .findOne({ connectionId })
     .withGraphFetched('[asset, walletAddress]')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
