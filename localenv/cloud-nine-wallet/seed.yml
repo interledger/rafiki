@@ -1,6 +1,6 @@
 self:
-  graphqlUrl: http://cloud-nine-wallet-backend:3001/graphql
-  hostname: 'cloud-nine-wallet-backend'
+  graphqlUrl: http://host.docker.internal:3001/graphql
+  hostname: 'host.docker.internal:3999'
   mapHostname: 'primary-mase'
   openPaymentPublishedPort: 3000
 assets:
@@ -22,7 +22,7 @@ assets:
     liquidityThreshold: 1000
 peers:
   - initialLiquidity: '100000'
-    peerUrl: http://happy-life-bank-backend:3002
+    peerUrl: http://host.docker.internal:4002
     peerIlpAddress: test.happy-life-bank
     liquidityThreshold: 10000
 accounts:

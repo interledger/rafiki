@@ -7,14 +7,12 @@ services:
       context: ../..
       dockerfile: ./localenv/mock-account-servicing-entity/Dockerfile
     restart: always
-    networks:
-      - rafiki
     ports:
-      - '3030:80'
+      - '3030:3030'
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
-      PORT: 80
+      PORT: 3030
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
     volumes:
@@ -31,48 +29,44 @@ services:
     restart: always
     privileged: true
     ports:
-      - '3000:80'
+      - '3999:3999'
       - '3001:3001'
-    networks:
-      - rafiki
+      - '3002:3002'
     environment:
       NODE_ENV: development
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
-      OPEN_PAYMENTS_PORT: 80
-      DATABASE_URL: postgresql://cloud_nine_wallet_backend:cloud_nine_wallet_backend@shared-database/cloud_nine_wallet_backend
+      OPEN_PAYMENTS_PORT: 3999
+      DATABASE_URL: postgresql://cloud_nine_wallet_backend:cloud_nine_wallet_backend@host.docker.internal:5432/cloud_nine_wallet_backend
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
-      AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-auth:3006
-      AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
+      AUTH_SERVER_GRANT_URL: http://host.docker.internal:3006
+      AUTH_SERVER_INTROSPECTION_URL: http://host.docker.internal:3007
       ILP_ADDRESS: test.cloud-nine-wallet
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      PUBLIC_HOST: http://cloud-nine-wallet-backend
-      OPEN_PAYMENTS_URL: http://cloud-nine-wallet-backend
-      WEBHOOK_URL: http://cloud-nine-wallet/webhooks
-      EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
-      REDIS_URL: redis://shared-redis:6379/0
-      PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
+      PUBLIC_HOST: http://host.docker.internal:3999
+      OPEN_PAYMENTS_URL: http://host.docker.internal:3999
+      WEBHOOK_URL: http://host.docker.internal:3030/webhooks
+      EXCHANGE_RATES_URL: http://host.docker.internal:3030/rates
+      REDIS_URL: redis://host.docker.internal:6379/0
+      PAYMENT_POINTER_URL: https://host.docker.internal:3999/.well-known/pay
     depends_on:
       - shared-database
       - shared-redis
   cloud-nine-auth:
-    hostname: cloud-nine-wallet-auth
     image: rafiki-auth
     build:
       context: ../..
       dockerfile: ./packages/auth/Dockerfile
     restart: always
-    networks:
-      - rafiki
     ports:
       - '3003:3003'
       - '3006:3006'
     environment:
       NODE_ENV: development
-      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
+      AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@host.docker.internal:5432/cloud_nine_wallet_auth
     depends_on:
       - shared-database
   cloud-nine-signatures:
@@ -88,13 +82,9 @@ services:
       KEY_FILE: /workspace/private-key.pem
     volumes:
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
-    networks:
-      - rafiki
   shared-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped
-    networks:
-      - rafiki
     volumes:
       - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
       - ../cloud-nine-wallet/dbinit.sql:/docker-entrypoint-initdb.d/init.sql
@@ -105,9 +95,11 @@ services:
       POSTGRES_USER: postgres
   shared-redis:
     image: 'redis:7'
+    ports:
+      - '6379:6379'
+    expose:
+      - '6379'
     restart: unless-stopped
-    networks:
-      - rafiki
   cloud-nine-admin:
     hostname: cloud-nine-wallet-admin
     image: rafiki-frontend
@@ -115,20 +107,14 @@ services:
       context: ../..
       dockerfile: ./packages/frontend/Dockerfile
     restart: always
-    networks:
-      - rafiki
     ports:
       - '3010:3010'
     environment:
       PORT: 3010
-      GRAPHQL_URL: http://cloud-nine-wallet-backend:3001/graphql
-      OPEN_PAYMENTS_URL: https://cloud-nine-wallet-backend/
+      GRAPHQL_URL: http://host.docker.internal:3001/graphql
+      OPEN_PAYMENTS_URL: https://host.docker.internal:3999/
     depends_on:
       - cloud-nine-backend
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose
-
-networks:
-  rafiki:
-    external: true
