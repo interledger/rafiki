@@ -123,7 +123,7 @@ async function createQuote(
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
-          paymentPointerId: options.paymentPointerId,
+          walletAddressId: options.paymentPointerId,
           assetId: paymentPointer.assetId,
           receiver: options.receiver,
           debitAmount: quote.debitAmount,

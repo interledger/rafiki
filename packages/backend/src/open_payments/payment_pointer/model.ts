@@ -13,7 +13,7 @@ export class PaymentPointer
   implements ConnectorAccount, LiquidityAccount
 {
   public static get tableName(): string {
-    return 'paymentPointers'
+    return 'walletAddresses'
   }
 
   static relationMappings = () => ({
@@ -21,7 +21,7 @@ export class PaymentPointer
       relation: Model.HasOneRelation,
       modelClass: Asset,
       join: {
-        from: 'paymentPointers.assetId',
+        from: 'walletAddresses.assetId',
         to: 'assets.id'
       }
     },
@@ -29,8 +29,8 @@ export class PaymentPointer
       relation: Model.HasManyRelation,
       modelClass: PaymentPointerKey,
       join: {
-        from: 'paymentPointers.id',
-        to: 'paymentPointerKeys.paymentPointerId'
+        from: 'walletAddresses.id',
+        to: 'walletAddressKeys.paymentPointerId'
       }
     }
   })
@@ -180,7 +180,7 @@ class SubresourceQueryBuilder<
 export abstract class PaymentPointerSubresource extends BaseModel {
   public static readonly urlPath: string
 
-  public readonly paymentPointerId!: string
+  public readonly walletAddressId!: string
   public paymentPointer?: PaymentPointer
 
   public abstract readonly assetId: string
@@ -195,7 +195,7 @@ export abstract class PaymentPointerSubresource extends BaseModel {
         modelClass: PaymentPointer,
         join: {
           from: `${this.tableName}.paymentPointerId`,
-          to: 'paymentPointers.id'
+          to: 'walletAddresses.id'
         }
       }
     }

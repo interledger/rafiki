@@ -166,7 +166,7 @@ export class IncomingPayment
   public toData(amountReceived: bigint): IncomingPaymentData {
     const data: IncomingPaymentData = {
       id: this.id,
-      paymentPointerId: this.paymentPointerId,
+      paymentPointerId: this.walletAddressId,
       createdAt: new Date(+this.createdAt).toISOString(),
       expiresAt: this.expiresAt.toISOString(),
       receivedAmount: {

@@ -156,7 +156,7 @@ export class Quote extends PaymentPointerSubresource {
     json = super.$formatJson(json)
     return {
       id: json.id,
-      paymentPointerId: json.paymentPointerId,
+      paymentPointerId: json.walletAddressId,
       receiver: json.receiver,
       debitAmount: {
         ...json.debitAmount,

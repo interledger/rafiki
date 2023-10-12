@@ -118,7 +118,7 @@ export class OutgoingPayment
   }): PaymentData {
     const data: PaymentData = {
       id: this.id,
-      paymentPointerId: this.paymentPointerId,
+      paymentPointerId: this.walletAddressId,
       state: this.state,
       receiver: this.receiver,
       debitAmount: {
