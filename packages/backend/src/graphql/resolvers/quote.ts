@@ -90,7 +90,7 @@ export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['qu
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
-    paymentPointerId: quote.paymentPointerId,
+    paymentPointerId: quote.walletAddressId,
     receiver: quote.receiver,
     debitAmount: quote.debitAmount,
     receiveAmount: quote.receiveAmount,

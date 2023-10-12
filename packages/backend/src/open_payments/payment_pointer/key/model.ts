@@ -5,7 +5,7 @@ import { Pojo } from 'objection'
 
 export class PaymentPointerKey extends BaseModel {
   public static get tableName(): string {
-    return 'paymentPointerKeys'
+    return 'walletAddressKeys'
   }
 
   public id!: string

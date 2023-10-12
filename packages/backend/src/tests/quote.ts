@@ -155,7 +155,7 @@ export async function createQuote(
 
   return await Quote.query()
     .insertAndFetch({
-      paymentPointerId,
+      walletAddressId: paymentPointerId,
       assetId: paymentPointer.assetId,
       receiver: receiverUrl,
       debitAmount,

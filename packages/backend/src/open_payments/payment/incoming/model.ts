@@ -168,7 +168,7 @@ export class IncomingPayment
     const data: IncomingPaymentData = {
       incomingPayment: {
         id: this.id,
-        paymentPointerId: this.paymentPointerId,
+        paymentPointerId: this.walletAddressId,
         createdAt: new Date(+this.createdAt).toISOString(),
         expiresAt: this.expiresAt.toISOString(),
         receivedAmount: {

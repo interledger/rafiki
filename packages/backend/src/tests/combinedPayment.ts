@@ -20,7 +20,7 @@ export function toCombinedPayment(
   return CombinedPayment.fromJson({
     type,
     id: payment.id,
-    paymentPointerId: payment.paymentPointerId,
+    paymentPointerId: payment.walletAddressId,
     state: payment.state,
     metadata: payment.metadata,
     client: payment.client,
