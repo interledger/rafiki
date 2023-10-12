@@ -1,4 +1,5 @@
 import { Amount } from '../../open_payments/amount'
+import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { PaymentPointer } from '../../open_payments/payment_pointer/model'
 import { Receiver } from '../../open_payments/receiver/model'
 import { BaseService } from '../../shared/baseService'
@@ -20,8 +21,16 @@ export interface PaymentQuote {
   additionalFields: Record<string, unknown>
 }
 
+export interface PayOptions {
+  receiver: Receiver
+  outgoingPayment: OutgoingPayment
+  finalDebitAmount: bigint
+  finalReceiveAmount: bigint
+}
+
 export interface PaymentMethodService {
   getQuote(quoteOptions: StartQuoteOptions): Promise<PaymentQuote>
+  pay(payOptions: PayOptions): Promise<void>
 }
 
 export type PaymentMethod = 'ILP'
@@ -31,6 +40,7 @@ export interface PaymentMethodHandlerService {
     method: PaymentMethod,
     quoteOptions: StartQuoteOptions
   ): Promise<PaymentQuote>
+  pay(method: PaymentMethod, payOptions: PayOptions): Promise<void>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -57,6 +67,7 @@ export async function createPaymentMethodHandlerService({
 
   return {
     getQuote: (method, quoteOptions) =>
-      paymentMethods[method].getQuote(quoteOptions)
+      paymentMethods[method].getQuote(quoteOptions),
+    pay: (method, payOptions) => paymentMethods[method].pay(payOptions)
   }
 }
