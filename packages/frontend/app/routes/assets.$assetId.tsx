@@ -149,10 +149,13 @@ export default function ViewAssetPage() {
                   <Input
                     type='number'
                     name='basisPoints'
-                    label='Percentage Fee'
+                    label='Basis Points'
                     defaultValue={asset.sendingFee?.basisPoints ?? undefined}
                     error={response?.errors.sendingFee.fieldErrors.basisPoints}
                   />
+                  <p className='text-gray-500 text-sm mt-2'>
+                    A single basis point is equal to 0.01% of the total fee.
+                  </p>
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
@@ -190,12 +193,15 @@ export default function ViewAssetPage() {
                   <Input
                     type='number'
                     name='basisPoints'
-                    label='Percentage Fee'
+                    label='Basis Points'
                     defaultValue={asset.receivingFee?.basisPoints ?? undefined}
                     error={
                       response?.errors.receivingFee.fieldErrors.basisPoints
                     }
                   />
+                  <p className='text-gray-500 text-sm mt-2'>
+                    A single basis point is equal to 0.01% of the total fee.
+                  </p>
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
