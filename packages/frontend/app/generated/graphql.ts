@@ -2163,6 +2163,13 @@ export type UpdateAssetMutationVariables = Exact<{
 
 export type UpdateAssetMutation = { __typename?: 'Mutation', updateAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
 
+export type SetFeeVariables = Exact<{
+  input: SetFeeInput;
+}>;
+
+
+export type SetFee = { __typename?: 'Mutation', setFee: { __typename?: 'SetFeeResponse', code: string, message: string, success: boolean, fee?: { __typename?: 'Fee', assetId: string, basisPoints: number, createdAt: string, fixed: bigint, id: string, type: FeeType } | null } };
+
 export type AddAssetLiquidityMutationVariables = Exact<{
   input: AddAssetLiquidityInput;
 }>;

@@ -13,6 +13,9 @@ import type {
   ListAssetsQueryVariables,
   QueryAssetArgs,
   QueryAssetsArgs,
+  SetFee,
+  SetFeeInput,
+  SetFeeVariables,
   UpdateAssetInput,
   UpdateAssetMutation,
   UpdateAssetMutationVariables,
@@ -133,6 +136,33 @@ export const updateAsset = async (args: UpdateAssetInput) => {
   })
 
   return response.data?.updateAsset
+}
+
+export const setFee = async (args: SetFeeInput) => {
+  const response = await apolloClient.mutate<SetFee, SetFeeVariables>({
+    mutation: gql`
+      mutation setFee($input: SetFeeInput!) {
+        setFee(input: $input) {
+          code
+          fee {
+            assetId
+            basisPoints
+            createdAt
+            fixed
+            id
+            type
+          }
+          message
+          success
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.setFee
 }
 
 export const addAssetLiquidity = async (args: AddAssetLiquidityInput) => {

@@ -10,9 +10,10 @@ import {
 import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
-import { getAsset, updateAsset } from '~/lib/api/asset.server'
+import { FeeType } from '~/generated/graphql'
+import { getAsset, updateAsset, setFee } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { updateAssetSchema } from '~/lib/validate.server'
+import { updateAssetSchema, setAssetFeeSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
 import { formatAmount } from '~/shared/utils'
 
@@ -59,7 +60,7 @@ export default function ViewAssetPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>Created at {asset.createdAt}</p>
-            <ErrorPanel errors={response?.errors.message} />
+            <ErrorPanel errors={response?.errors.general.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
@@ -74,11 +75,18 @@ export default function ViewAssetPage() {
                     name='withdrawalThreshold'
                     label='Withdrawal Threshold'
                     defaultValue={asset.withdrawalThreshold ?? undefined}
-                    error={response?.errors.fieldErrors.withdrawalThreshold}
+                    error={
+                      response?.errors.general.fieldErrors.withdrawalThreshold
+                    }
                   />
                 </div>
                 <div className='flex justify-end p-4'>
-                  <Button aria-label='save asset information' type='submit'>
+                  <Button
+                    aria-label='save asset information'
+                    type='submit'
+                    name='intent'
+                    value='general'
+                  >
                     {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
@@ -120,64 +128,39 @@ export default function ViewAssetPage() {
           </div>
         </div>
         {/* Asset Liquidity Info - END */}
-        {/* Asset Fee Info */}
+        {/* Asset Sending Fee Info */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Asset Fees</h3>
+            <h3 className='text-lg font-medium'>Sending Fees</h3>
+            <ErrorPanel errors={response?.errors.sendingFee.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <Form method='post' replace preventScrollReset>
               <fieldset disabled={currentPageAction}>
                 <div className='w-full p-4 space-y-3'>
-                  <p className='font-medium'>Receiving Fee</p>
-                  <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-2'>
-                    <div>
-                      <Input
-                        type='number'
-                        name='receivingFee'
-                        label='Fixed Fee'
-                        defaultValue={asset.receivingFee?.fixed ?? undefined}
-                        //error={response?.errors.fieldErrors.receivingFee.fixed}
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        type='number'
-                        name='receivingFee'
-                        label='Percentage Fee'
-                        defaultValue={
-                          asset.receivingFee?.basisPoints ?? undefined
-                        }
-                        //error={response?.errors.fieldErrors.receivingFee.basisPoints}
-                      />
-                    </div>
-                  </div>
-                  <p className='font-medium'>Sending Fee</p>
-                  <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-2'>
-                    <div>
-                      <Input
-                        type='number'
-                        name='sendingFee'
-                        label='Fixed Fee'
-                        defaultValue={asset.sendingFee?.fixed ?? undefined}
-                        //error={response?.errors.fieldErrors.sendingFee.fixed}
-                      />
-                    </div>
-                    <div>
-                      <Input
-                        type='number'
-                        name='sendingFee'
-                        label='Percentage Fee'
-                        defaultValue={
-                          asset.sendingFee?.basisPoints ?? undefined
-                        }
-                        //error={response?.errors.fieldErrors.sendingFee.basisPoints}
-                      />
-                    </div>
-                  </div>
+                  <Input type='hidden' name='assetId' value={asset.id} />
+                  <Input
+                    type='number'
+                    name='fixed'
+                    label='Fixed Fee'
+                    defaultValue={asset.sendingFee?.fixed ?? undefined}
+                    error={response?.errors.sendingFee.fieldErrors.fixed}
+                  />
+                  <Input
+                    type='number'
+                    name='basisPoints'
+                    label='Percentage Fee'
+                    defaultValue={asset.sendingFee?.basisPoints ?? undefined}
+                    error={response?.errors.sendingFee.fieldErrors.basisPoints}
+                  />
                 </div>
                 <div className='flex justify-end p-4'>
-                  <Button aria-label='save asset information' type='submit'>
+                  <Button
+                    aria-label='save asset information'
+                    type='submit'
+                    name='intent'
+                    value='sending-fees'
+                  >
                     {currentPageAction ? 'Saving ...' : 'Save'}
                   </Button>
                 </div>
@@ -185,7 +168,50 @@ export default function ViewAssetPage() {
             </Form>
           </div>
         </div>
-        {/* Asset Fee Info - END */}
+        {/* Asset Sending Fee Info - END */}
+        {/* Asset Receiving Fee Info */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Receiving Fees</h3>
+            <ErrorPanel errors={response?.errors.receivingFee.message} />
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <Form method='post' replace preventScrollReset>
+              <fieldset disabled={currentPageAction}>
+                <div className='w-full p-4 space-y-3'>
+                  <Input type='hidden' name='assetId' value={asset.id} />
+                  <Input
+                    type='number'
+                    name='fixed'
+                    label='Fixed Fee'
+                    defaultValue={asset.receivingFee?.fixed ?? undefined}
+                    error={response?.errors.receivingFee.fieldErrors.fixed}
+                  />
+                  <Input
+                    type='number'
+                    name='basisPoints'
+                    label='Percentage Fee'
+                    defaultValue={asset.receivingFee?.basisPoints ?? undefined}
+                    error={
+                      response?.errors.receivingFee.fieldErrors.basisPoints
+                    }
+                  />
+                </div>
+                <div className='flex justify-end p-4'>
+                  <Button
+                    aria-label='save asset information'
+                    type='submit'
+                    name='intent'
+                    value='receiving-fees'
+                  >
+                    {currentPageAction ? 'Saving ...' : 'Save'}
+                  </Button>
+                </div>
+              </fieldset>
+            </Form>
+          </div>
+        </div>
+        {/* Asset Receiving Fee Info - END */}
       </div>
       <Outlet />
     </div>
@@ -195,37 +221,121 @@ export default function ViewAssetPage() {
 export async function action({ request }: ActionArgs) {
   const actionResponse: {
     errors: {
-      fieldErrors: ZodFieldErrors<typeof updateAssetSchema>
-      message: string[]
+      general: {
+        fieldErrors: ZodFieldErrors<typeof updateAssetSchema>
+        message: string[]
+      }
+      sendingFee: {
+        fieldErrors: ZodFieldErrors<typeof setAssetFeeSchema>
+        message: string[]
+      }
+      receivingFee: {
+        fieldErrors: ZodFieldErrors<typeof setAssetFeeSchema>
+        message: string[]
+      }
     }
   } = {
     errors: {
-      fieldErrors: {},
-      message: []
+      general: {
+        fieldErrors: {},
+        message: []
+      },
+      sendingFee: {
+        fieldErrors: {},
+        message: []
+      },
+      receivingFee: {
+        fieldErrors: {},
+        message: []
+      }
     }
   }
 
-  const formData = Object.fromEntries(await request.formData())
+  const formData = await request.formData()
+  const intent = formData.get('intent')
+  formData.delete('intent')
 
-  const result = updateAssetSchema.safeParse(formData)
+  switch (intent) {
+    case 'general': {
+      const result = updateAssetSchema.safeParse(Object.fromEntries(formData))
+      if (!result.success) {
+        actionResponse.errors.general.fieldErrors =
+          result.error.flatten().fieldErrors
+        return json({ ...actionResponse }, { status: 400 })
+      }
 
-  if (!result.success) {
-    actionResponse.errors.fieldErrors = result.error.flatten().fieldErrors
-    return json({ ...actionResponse }, { status: 400 })
-  }
+      const response = await updateAsset({
+        ...result.data,
+        ...(result.data.withdrawalThreshold
+          ? { withdrawalThreshold: result.data.withdrawalThreshold }
+          : { withdrawalThreshold: undefined })
+      })
 
-  const response = await updateAsset({
-    ...result.data,
-    ...(result.data.withdrawalThreshold
-      ? { withdrawalThreshold: result.data.withdrawalThreshold }
-      : { withdrawalThreshold: undefined })
-  })
+      if (!response?.success) {
+        actionResponse.errors.general.message = [
+          response?.message ?? 'Could not update asset. Please try again!'
+        ]
+        return json({ ...actionResponse }, { status: 400 })
+      }
 
-  if (!response?.success) {
-    actionResponse.errors.message = [
-      response?.message ?? 'Could not update asset. Please try again!'
-    ]
-    return json({ ...actionResponse }, { status: 400 })
+      break
+    }
+    case 'sending-fees': {
+      const result = setAssetFeeSchema.safeParse(Object.fromEntries(formData))
+      if (!result.success) {
+        actionResponse.errors.sendingFee.fieldErrors =
+          result.error.flatten().fieldErrors
+        return json({ ...actionResponse }, { status: 400 })
+      }
+
+      const response = await setFee({
+        assetId: result.data.assetId,
+        type: FeeType.Sending,
+        fee: {
+          fixed: result.data.fixed,
+          basisPoints: result.data.basisPoints
+        }
+      })
+
+      if (!response?.success) {
+        actionResponse.errors.sendingFee.message = [
+          response?.message ??
+            'Could not update asset sending fee. Please try again!'
+        ]
+        return json({ ...actionResponse }, { status: 400 })
+      }
+
+      break
+    }
+    case 'receiving-fees': {
+      const result = setAssetFeeSchema.safeParse(Object.fromEntries(formData))
+      if (!result.success) {
+        actionResponse.errors.receivingFee.fieldErrors =
+          result.error.flatten().fieldErrors
+        return json({ ...actionResponse }, { status: 400 })
+      }
+
+      const response = await setFee({
+        assetId: result.data.assetId,
+        type: FeeType.Receiving,
+        fee: {
+          fixed: result.data.fixed,
+          basisPoints: result.data.basisPoints
+        }
+      })
+
+      if (!response?.success) {
+        actionResponse.errors.receivingFee.message = [
+          response?.message ??
+            'Could not update asset receiving fee. Please try again!'
+        ]
+        return json({ ...actionResponse }, { status: 400 })
+      }
+
+      break
+    }
+    default:
+      throw json(null, { status: 400, statusText: 'Invalid intent.' })
   }
 
   const session = await messageStorage.getSession(request.headers.get('cookie'))
