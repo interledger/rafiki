@@ -62,7 +62,13 @@ export const getAssetWithFees = async (args: QueryAssetArgs) => {
     GetAssetWithFeesQueryVariables
   >({
     query: gql`
-      query GetAssetWithFeesQuery($id: String!, $after: String, $before: String, $first: Int, $last: Int) {
+      query GetAssetWithFeesQuery(
+        $id: String!
+        $after: String
+        $before: String
+        $first: Int
+        $last: Int
+      ) {
         asset(id: $id) {
           code
           scale
@@ -178,7 +184,10 @@ export const updateAsset = async (args: UpdateAssetInput) => {
 }
 
 export const setFee = async (args: SetFeeInput) => {
-  const response = await apolloClient.mutate<SetFeeMutation, SetFeeMutationVariables>({
+  const response = await apolloClient.mutate<
+    SetFeeMutation,
+    SetFeeMutationVariables
+  >({
     mutation: gql`
       mutation SetFeeMutation($input: SetFeeInput!) {
         setFee(input: $input) {

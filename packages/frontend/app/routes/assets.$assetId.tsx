@@ -228,8 +228,10 @@ export default function ViewAssetPage() {
               <Button
                 aria-label='view asset fees page'
                 type='button'
-                to={`/assets/${asset.id}/view-fees`}
-              >View all historic fees</Button>
+                to={`/assets/view-fees/${asset.id}`}
+              >
+                View all historic fees
+              </Button>
             </div>
           </div>
         </div>
