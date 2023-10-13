@@ -135,6 +135,7 @@ describe('IlpPaymentService', (): void => {
           assetScale: 2,
           value: 99n
         },
+        estimatedExchangeRate: expect.any(Number),
         additionalFields: {
           minExchangeRate: expect.any(Pay.Ratio),
           highEstimatedExchangeRate: expect.any(Pay.Ratio),

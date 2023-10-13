@@ -19,8 +19,8 @@ export enum EventType {
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed',
   PaymentPointerNotFound = 'payment_pointer.not_found',
-  LiquidityAsset = 'asset.liquidity_low',
-  LiquidityPeer = 'peer.liquidity_low'
+  AssetLiquidityLow = 'asset.liquidity_low',
+  PeerLiquidityLow = 'peer.liquidity_low'
 }
 
 export interface WebHook {

@@ -100,6 +100,7 @@ async function getQuote(
     return {
       receiver: options.receiver,
       paymentPointer: options.paymentPointer,
+      estimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate.valueOf(),
       debitAmount: {
         value: ilpQuote.maxSourceAmount,
         assetCode: options.paymentPointer.asset.code,

@@ -16,6 +16,7 @@ export interface PaymentQuote {
   receiver: Receiver
   debitAmount: Amount
   receiveAmount: Amount
+  estimatedExchangeRate: number
   additionalFields: Record<string, unknown>
 }
 

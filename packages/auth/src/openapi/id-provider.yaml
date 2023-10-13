@@ -116,6 +116,17 @@ paths:
                 properties:
                   access:
                     $ref: ./auth-server.yaml#/components/schemas/access
+                  state:
+                    description: |-
+                      Interaction state:
+                      * `PENDING` - Awaiting interaction from resource owner (RO)
+                      * `APPROVED` - RO approved interaction
+                      * `DENIED` - RO Rejected interaction
+                    type: string
+                    enum:
+                      - PENDING
+                      - APPROVED
+                      - DENIED
         '401':
           description: Unauthorized
         '404':

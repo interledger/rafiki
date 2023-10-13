@@ -1,21 +1,18 @@
 ---
+import type { Props } from '@astrojs/starlight/props';
 import Search from "@astrojs/starlight/components/Search.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
-// import LanguageSelect from "@astrojs/starlight/components/LanguageSelect.astro";
-
-const { locale } = Astro.props;
 ---
 <div class="header sl-flex">
   <a href="/" class="site-logo">
     <img src="/img/logo.svg" alt="Rafiki logo">
   </a>
   <div class="secondary-wrap">
-    <Search {locale} />
-    <SocialIcons />
-    <div class="sl-hidden selects md:sl-flex">
-      <ThemeSelect {locale} />
-      <!-- <LanguageSelect {locale} /> -->
+    <Search {...Astro.props} />
+    <SocialIcons {...Astro.props} />
+    <div class="sl-hidden md:sl-flex">
+      <ThemeSelect {...Astro.props} />
     </div>
   </div>
 </div>
@@ -36,10 +33,6 @@ const { locale } = Astro.props;
     margin-left: auto;
     display: flex;
     align-items: center;
-    gap: var(--sl-nav-gap);
-  }
-
-  .selects {
     gap: var(--sl-nav-gap);
   }
 
