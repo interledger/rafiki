@@ -347,15 +347,15 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
       if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
         return responses[LiquidityError.InvalidId]
       }
-      if (!event.data.payment?.debitAmount) {
+      if (!event.data.debitAmount) {
         throw new Error()
       }
       const outgoingPaymentService = await ctx.container.use(
         'outgoingPaymentService'
       )
       const paymentOrErr = await outgoingPaymentService.fund({
-        id: event.data.payment.id,
-        amount: BigInt(event.data.payment.debitAmount.value),
+        id: event.data.id,
+        amount: BigInt(event.data.debitAmount.value),
         transferId: event.id
       })
       if (isFundingError(paymentOrErr)) {
