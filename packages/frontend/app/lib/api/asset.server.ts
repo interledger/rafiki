@@ -42,10 +42,12 @@ export const getAssetInfo = async (args: QueryAssetArgs) => {
           receivingFee {
             basisPoints
             fixed
+            createdAt
           }
           sendingFee {
             basisPoints
             fixed
+            createdAt
           }
           createdAt
         }
@@ -70,8 +72,6 @@ export const getAssetWithFees = async (args: QueryAssetArgs) => {
         $last: Int
       ) {
         asset(id: $id) {
-          code
-          scale
           fees(after: $after, before: $before, first: $first, last: $last) {
             edges {
               cursor

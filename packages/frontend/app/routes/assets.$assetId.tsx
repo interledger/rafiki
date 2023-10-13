@@ -33,8 +33,28 @@ export async function loader({ params }: LoaderArgs) {
 
   return json({
     asset: {
-      ...asset,
-      createdAt: new Date(asset.createdAt).toLocaleString()
+      code: asset.code,
+      scale: asset.scale,
+      createdAt: new Date(asset.createdAt).toLocaleString(),
+      id: asset.id,
+      liquidity: asset.liquidity,
+      withdrawalThreshold: asset.withdrawalThreshold,
+      ...(asset.receivingFee
+        ? {
+            receivingFee: {
+              ...asset.receivingFee,
+              createdAt: new Date(asset.receivingFee.createdAt).toLocaleString()
+            }
+          }
+        : {}),
+      ...(asset.sendingFee
+        ? {
+            sendingFee: {
+              ...asset.sendingFee,
+              createdAt: new Date(asset.sendingFee.createdAt).toLocaleString()
+            }
+          }
+        : {})
     }
   })
 }
@@ -132,6 +152,9 @@ export default function ViewAssetPage() {
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>Sending Fees</h3>
+            {asset.sendingFee ? (
+              <p className='text-sm'>Created at {asset.sendingFee.createdAt}</p>
+            ) : null}
             <ErrorPanel errors={response?.errors.sendingFee.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
@@ -176,6 +199,11 @@ export default function ViewAssetPage() {
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>Receiving Fees</h3>
+            {asset.receivingFee ? (
+              <p className='text-sm'>
+                Created at {asset.receivingFee.createdAt}
+              </p>
+            ) : null}
             <ErrorPanel errors={response?.errors.receivingFee.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>

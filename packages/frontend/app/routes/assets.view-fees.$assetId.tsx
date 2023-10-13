@@ -28,12 +28,6 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
   }
 
-  const assetOverview = {
-    id: assetId,
-    code: asset.code,
-    scale: asset.scale
-  }
-
   const fees = asset.fees
     ? {
         pageInfo: asset.fees.pageInfo,
@@ -58,11 +52,11 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     nextPageUrl = `/assets/view-fees/${assetId}?after=${fees.pageInfo.endCursor}`
   }
 
-  return json({ assetOverview, fees, previousPageUrl, nextPageUrl })
+  return json({ assetId, fees, previousPageUrl, nextPageUrl })
 }
 
 export default function AssetFeesPage() {
-  const { assetOverview, fees, previousPageUrl, nextPageUrl } =
+  const { assetId, fees, previousPageUrl, nextPageUrl } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
@@ -77,7 +71,7 @@ export default function AssetFeesPage() {
             <Button
               aria-label='back to asset overview'
               onClick={() => {
-                navigate(`/assets/${assetOverview.id}`)
+                navigate(`/assets/${assetId}`)
               }}
             >
               Back to asset
