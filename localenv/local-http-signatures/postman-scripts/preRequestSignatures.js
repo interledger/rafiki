@@ -1,7 +1,7 @@
 let requestUrl = request.url
   .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.environment.get(key))
   .replace(/localhost:([3,4])000/g, (_, key) =>
-    key === '3' 
+    key === '3'
       ? pm.environment.get('host3000')
       : pm.environment.get('host4000')
   )
@@ -11,9 +11,9 @@ const requestBody =
     ? request.data
         .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.environment.get(key))
         .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
-            key === '3' 
-                ? 'https://' + pm.environment.get('host3000')
-                : 'https://' + pm.environment.get('host4000')
+          key === '3'
+            ? 'https://' + pm.environment.get('host3000')
+            : 'https://' + pm.environment.get('host4000')
         )
     : undefined
 pm.request.body.raw = requestBody
