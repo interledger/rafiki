@@ -11,7 +11,7 @@ import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
 import { FeeType } from '~/generated/graphql'
-import { getAsset, updateAsset, setFee } from '~/lib/api/asset.server'
+import { getAssetInfo, updateAsset, setFee } from '~/lib/api/asset.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateAssetSchema, setAssetFeeSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
@@ -25,7 +25,7 @@ export async function loader({ params }: LoaderArgs) {
     throw json(null, { status: 400, statusText: 'Invalid asset ID.' })
   }
 
-  const asset = await getAsset({ id: result.data })
+  const asset = await getAssetInfo({ id: result.data })
 
   if (!asset) {
     throw json(null, { status: 404, statusText: 'Asset not found.' })
@@ -82,7 +82,7 @@ export default function ViewAssetPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
-                    aria-label='save asset information'
+                    aria-label='save general information'
                     type='submit'
                     name='intent'
                     value='general'
@@ -159,7 +159,7 @@ export default function ViewAssetPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
-                    aria-label='save asset information'
+                    aria-label='save sending fee information'
                     type='submit'
                     name='intent'
                     value='sending-fees'
@@ -205,7 +205,7 @@ export default function ViewAssetPage() {
                 </div>
                 <div className='flex justify-end p-4'>
                   <Button
-                    aria-label='save asset information'
+                    aria-label='save receiving fee information'
                     type='submit'
                     name='intent'
                     value='receiving-fees'
@@ -218,6 +218,22 @@ export default function ViewAssetPage() {
           </div>
         </div>
         {/* Asset Receiving Fee Info - END */}
+        {/* Historic Asset Fees */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Historic Fees</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='flex justify-end p-4'>
+              <Button
+                aria-label='view asset fees page'
+                type='button'
+                to={`/assets/${asset.id}/view-fees`}
+              >View all historic fees</Button>
+            </div>
+          </div>
+        </div>
+        {/* Historic Asset Fees - END */}
       </div>
       <Outlet />
     </div>
