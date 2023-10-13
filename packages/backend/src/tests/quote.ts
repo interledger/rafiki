@@ -66,9 +66,9 @@ export async function createQuote(
     debitAmount,
     receiveAmount,
     client,
-    exchangeRate = 0.5,
     validDestination = true,
-    withFee = false
+    withFee = false,
+    exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
   const paymentPointerService = await deps.use('paymentPointerService')
@@ -132,7 +132,8 @@ export async function createQuote(
     receiveAmount = {
       value: BigInt(
         Math.ceil(
-          Number(debitAmount.value) * (exchangeRate * (1 + config.slippage))
+          Number(debitAmount.value) /
+            ((1 / exchangeRate) * (1 + config.slippage))
         )
       ),
       assetCode: receiveAsset.code,
@@ -145,7 +146,9 @@ export async function createQuote(
     debitAmount = {
       value: BigInt(
         Math.ceil(
-          (Number(receiveAmount.value) / exchangeRate) * (1 + config.slippage)
+          Number(receiveAmount.value) *
+            (1 / exchangeRate) *
+            (1 + config.slippage)
         )
       ),
       assetCode: paymentPointer.asset.code,
@@ -162,9 +165,9 @@ export async function createQuote(
   const ilpData = {
     lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate) as Pay.PositiveRatio,
     highEstimatedExchangeRate: Pay.Ratio.from(
-      exchangeRate
+      exchangeRate + 0.000000000001
     ) as Pay.PositiveRatio,
-    minExchangeRate: Pay.Ratio.from(exchangeRate) as Pay.PositiveRatio,
+    minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99) as Pay.PositiveRatio,
     maxPacketAmount: BigInt('9223372036854775807')
   }
 
@@ -175,7 +178,7 @@ export async function createQuote(
       receiver: receiverUrl,
       debitAmount,
       receiveAmount,
-      estimatedExchangeRate: exchangeRate.valueOf(),
+      estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),
       client,
       additionalFields: ilpData,
