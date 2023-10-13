@@ -29,15 +29,12 @@ import {
   PaymentPointerService,
   PaymentPointerSubresourceService
 } from '../../payment_pointer/service'
-import {
-  IlpPlugin,
-  IlpPluginOptions
-} from '../../../payment-method/ilp/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
+import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 
 export interface OutgoingPaymentService
   extends PaymentPointerSubresourceService<OutgoingPayment> {
@@ -55,7 +52,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
-  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  paymentMethodHandlerService: PaymentMethodHandlerService
   paymentPointerService: PaymentPointerService
 }
 
@@ -94,6 +91,7 @@ export interface CreateOutgoingPaymentOptions {
   grant?: Grant
   metadata?: Record<string, unknown>
   callback?: (f: unknown) => NodeJS.Timeout
+  grantLockTimeoutMs?: number
 }
 
 async function createOutgoingPayment(
@@ -148,7 +146,8 @@ async function createOutgoingPayment(
             },
             payment,
             options.grant,
-            options.callback
+            options.callback,
+            options.grantLockTimeoutMs
           ))
         ) {
           throw OutgoingPaymentError.InsufficientGrant
@@ -257,7 +256,8 @@ async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   grant: Grant,
-  callback?: (f: unknown) => NodeJS.Timeout
+  callback?: (f: unknown) => NodeJS.Timeout,
+  grantLockTimeoutMs: number = 5000
 ): Promise<boolean> {
   if (!grant.limits) {
     return true
@@ -284,7 +284,7 @@ async function validateGrant(
     .select()
     .where('id', grant.id)
     .forNoKeyUpdate()
-    .timeout(5000)
+    .timeout(grantLockTimeoutMs)
 
   if (callback) await new Promise(callback)
 
