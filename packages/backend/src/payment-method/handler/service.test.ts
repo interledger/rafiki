@@ -1,4 +1,8 @@
-import { PaymentMethodHandlerService, StartQuoteOptions } from './service'
+import {
+  PaymentMethodHandlerService,
+  PayOptions,
+  StartQuoteOptions
+} from './service'
 import { initIocContainer } from '../../'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { Config } from '../../config/app'
@@ -10,6 +14,7 @@ import { createPaymentPointer } from '../../tests/paymentPointer'
 import { createReceiver } from '../../tests/receiver'
 import { IlpPaymentService } from '../ilp/service'
 import { truncateTables } from '../../tests/tableManager'
+import { createOutgoingPaymentWithReceiver } from '../../tests/outgoingPayment'
 
 describe('PaymentMethodHandlerService', (): void => {
   let deps: IocContract<AppServices>
@@ -51,14 +56,49 @@ describe('PaymentMethodHandlerService', (): void => {
         }
       }
 
-      const ilpPaymentServiceGetQuoteSpy = jest.spyOn(
-        ilpPaymentService,
-        'getQuote'
-      )
+      const ilpPaymentServiceGetQuoteSpy = jest
+        .spyOn(ilpPaymentService, 'getQuote')
+        .mockImplementationOnce(jest.fn())
 
       await paymentMethodHandlerService.getQuote('ILP', options)
 
       expect(ilpPaymentServiceGetQuoteSpy).toHaveBeenCalledWith(options)
+    })
+  })
+
+  describe('pay', (): void => {
+    test('calls ilpPaymentService for ILP payment type', async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      const paymentPointer = await createPaymentPointer(deps, {
+        assetId: asset.id
+      })
+      const { receiver, outgoingPayment } =
+        await createOutgoingPaymentWithReceiver(deps, {
+          sendingPaymentPointer: paymentPointer,
+          receivingPaymentPointer: paymentPointer,
+          quoteOptions: {
+            debitAmount: {
+              assetCode: paymentPointer.asset.code,
+              assetScale: paymentPointer.asset.scale,
+              value: 100n
+            }
+          }
+        })
+
+      const options: PayOptions = {
+        receiver,
+        outgoingPayment,
+        finalDebitAmount: outgoingPayment.debitAmount.value,
+        finalReceiveAmount: outgoingPayment.receiveAmount.value
+      }
+
+      const ilpPaymentServicePaySpy = jest
+        .spyOn(ilpPaymentService, 'pay')
+        .mockImplementationOnce(jest.fn())
+
+      await paymentMethodHandlerService.pay('ILP', options)
+
+      expect(ilpPaymentServicePaySpy).toHaveBeenCalledWith(options)
     })
   })
 })
