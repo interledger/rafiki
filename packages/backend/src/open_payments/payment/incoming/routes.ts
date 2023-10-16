@@ -115,6 +115,7 @@ async function getIncomingPaymentPrivate(
 }
 
 export type CreateBody = {
+  walletAddress: string
   expiresAt?: string
   incomingAmount?: AmountJSON
   metadata?: Record<string, unknown>

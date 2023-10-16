@@ -58,6 +58,7 @@ async function getOutgoingPayment(
 }
 
 export type CreateBody = {
+  walletAddress: string
   quoteId: string
   metadata?: Record<string, unknown>
 }

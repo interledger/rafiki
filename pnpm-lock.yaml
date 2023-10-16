@@ -303,8 +303,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 5.0.0
-        version: 5.0.0
+        specifier: 5.2.0
+        version: 5.2.0
       '@interledger/openapi':
         specifier: 1.0.3
         version: 1.0.3
@@ -4402,6 +4402,21 @@ packages:
 
   /@interledger/open-payments@5.0.0:
     resolution: {integrity: sha512-AgZf9Oj1hf+tljWmX8KxdV8UkY/dYRipiuuS71dgdcC6MakMgFqG54g2OwgudWkMVPvUbOlYu4lVqSlEBcNICw==}
+    dependencies:
+      '@interledger/http-signature-utils': 1.1.0
+      '@interledger/openapi': 1.2.0
+      axios: 1.5.1
+      base64url: 3.0.1
+      http-message-signatures: 0.1.2
+      pino: 8.16.0
+      uuid: 9.0.1
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+    dev: false
+
+  /@interledger/open-payments@5.2.0:
+    resolution: {integrity: sha512-Rt1ypzDkEimLky2QoJ1cTPkjr0esxGwzoj7rTLwNiT9B5SY30O+dVXhw3AYa3dK4FDwGgDQOQHJlPEHwzrXZng==}
     dependencies:
       '@interledger/http-signature-utils': 1.1.0
       '@interledger/openapi': 1.2.0
