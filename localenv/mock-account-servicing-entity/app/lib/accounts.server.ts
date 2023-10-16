@@ -17,7 +17,7 @@ export interface AccountsServer {
   clearAccounts(): Promise<void>
   setWalletAddress(
     id: string,
-    pointerID: string,
+    walletID: string,
     walletAddress: string
   ): Promise<void>
   create(
@@ -50,7 +50,7 @@ export class AccountProvider implements AccountsServer {
 
   async setWalletAddress(
     id: string,
-    pointerID: string,
+    walletID: string,
     walletAddress: string
   ): Promise<void> {
     if (!this.accounts.has(id)) {
@@ -64,7 +64,7 @@ export class AccountProvider implements AccountsServer {
     }
 
     acc.walletAddress = walletAddress
-    acc.walletAddressID = pointerID
+    acc.walletAddressID = walletID
   }
 
   async create(
