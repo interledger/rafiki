@@ -1,24 +1,33 @@
-const requestUrl = request.url
-  .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.collectionVariables.get(key))
+let requestUrl = request.url
+  .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.environment.get(key))
   .replace(/localhost:([3,4])000/g, (_, key) =>
-    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'
+    key === '3'
+      ? pm.environment.get('host3000')
+      : pm.environment.get('host4000')
   )
+
 const requestBody =
   request.method === 'POST' && Object.keys(request.data).length !== 0
-    ? request.data.replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-        pm.collectionVariables.get(key)
-      )
+    ? request.data
+        .replace(/{{([A-Za-z]\w+)}}/g, (_, key) => pm.environment.get(key))
+        .replace(/http:\/\/localhost:([3,4])000/g, (_, key) =>
+          key === '3'
+            ? 'https://' + pm.environment.get('host3000')
+            : 'https://' + pm.environment.get('host4000')
+        )
     : undefined
+pm.request.body.raw = requestBody
+
 const requestHeaders = JSON.parse(
   JSON.stringify(request.headers).replace(/{{([A-Za-z]\w+)}}/g, (_, key) =>
-    pm.collectionVariables.get(key)
+    pm.environment.get(key)
   )
 )
 
 // Request Signature Headers
 pm.sendRequest(
   {
-    url: pm.collectionVariables.get('signatureUrl'),
+    url: pm.environment.get('signatureUrl'),
     method: 'POST',
     header: {
       'content-type': 'application/json'
@@ -26,7 +35,8 @@ pm.sendRequest(
     body: {
       mode: 'raw',
       raw: JSON.stringify({
-        keyId: pm.collectionVariables.get('keyId'),
+        keyId: pm.environment.get('clientKeyId'),
+        base64Key: pm.environment.get('clientPrivateKey'),
         request: {
           url: requestUrl,
           method: request.method,

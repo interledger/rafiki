@@ -85,15 +85,6 @@ jobs:
       - uses: ./.github/workflows/rafiki/env-setup
       - run: pnpm --filter mock-account-servicing-entity build
 
-  local-http-signatures:
-    runs-on: ubuntu-22.04
-    needs: checkout
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/workflows/rafiki/env-setup
-      - run: pnpm --filter local-http-signatures build
-
   token-introspection:
     runs-on: ubuntu-22.04
     needs: checkout
@@ -117,7 +108,6 @@ jobs:
       - frontend
       - auth
       - mock-account-servicing-entity
-      - local-http-signatures
       - token-introspection
     steps:
       - uses: actions/checkout@v4

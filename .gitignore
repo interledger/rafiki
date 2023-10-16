@@ -50,3 +50,6 @@ build
 # Docusaurus
 .docusaurus
 .cache-loader
+
+# AWS Lambda
+*.zip

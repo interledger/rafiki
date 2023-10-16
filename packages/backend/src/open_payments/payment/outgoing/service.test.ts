@@ -383,7 +383,7 @@ describe('OutgoingPaymentService', (): void => {
               })
             ).resolves.toEqual(payment)
 
-            const expectedPaymentData: Partial<PaymentData['payment']> = {
+            const expectedPaymentData: Partial<PaymentData> = {
               id: payment.id
             }
             if (outgoingPeer) {
@@ -395,9 +395,7 @@ describe('OutgoingPaymentService', (): void => {
               })
             ).resolves.toMatchObject([
               {
-                data: {
-                  payment: expectedPaymentData
-                }
+                data: expectedPaymentData
               }
             ])
           }

@@ -117,37 +117,35 @@ export class OutgoingPayment
     balance: bigint
   }): PaymentData {
     const data: PaymentData = {
-      payment: {
-        id: this.id,
-        paymentPointerId: this.paymentPointerId,
-        state: this.state,
-        receiver: this.receiver,
-        debitAmount: {
-          ...this.debitAmount,
-          value: this.debitAmount.value.toString()
-        },
-        receiveAmount: {
-          ...this.receiveAmount,
-          value: this.receiveAmount.value.toString()
-        },
-        sentAmount: {
-          ...this.debitAmount,
-          value: amountSent.toString()
-        },
-        stateAttempts: this.stateAttempts,
-        createdAt: new Date(+this.createdAt).toISOString(),
-        updatedAt: new Date(+this.updatedAt).toISOString(),
-        balance: balance.toString()
-      }
+      id: this.id,
+      paymentPointerId: this.paymentPointerId,
+      state: this.state,
+      receiver: this.receiver,
+      debitAmount: {
+        ...this.debitAmount,
+        value: this.debitAmount.value.toString()
+      },
+      receiveAmount: {
+        ...this.receiveAmount,
+        value: this.receiveAmount.value.toString()
+      },
+      sentAmount: {
+        ...this.debitAmount,
+        value: amountSent.toString()
+      },
+      stateAttempts: this.stateAttempts,
+      createdAt: new Date(+this.createdAt).toISOString(),
+      updatedAt: new Date(+this.updatedAt).toISOString(),
+      balance: balance.toString()
     }
     if (this.metadata) {
-      data.payment.metadata = this.metadata
+      data.metadata = this.metadata
     }
     if (this.error) {
-      data.payment.error = this.error
+      data.error = this.error
     }
     if (this.peerId) {
-      data.payment.peerId = this.peerId
+      data.peerId = this.peerId
     }
     return data
   }
@@ -214,14 +212,12 @@ export interface OutgoingPaymentResponse {
   sentAmount: AmountJSON
 }
 
-export type PaymentData = {
-  payment: Omit<OutgoingPaymentResponse, 'failed'> & {
-    error?: string
-    state: OutgoingPaymentState
-    stateAttempts: number
-    balance: string
-    peerId?: string
-  }
+export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
+  error?: string
+  state: OutgoingPaymentState
+  stateAttempts: number
+  balance: string
+  peerId?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
