@@ -85,7 +85,10 @@ exports.up = function (knex) {
         // renames payment_pointer.not_found values (if any) to wallet_address.not_found for type key in data json column
         type: knex.raw("REPLACE(type, 'payment_pointer.', 'wallet_address.')")
       })
-      .whereLike('type', 'payment_pointer%')
+      .whereLike('type', 'payment_pointer%'),
+    knex.schema.alterView('combinedPaymentsView', function (view) {
+      view.column('paymentPointerId').rename('walletAddressId')
+    })
   ])
 }
 
@@ -172,6 +175,9 @@ exports.down = function (knex) {
       .update({
         type: knex.raw("REPLACE(type, 'wallet_address.', 'payment_pointer.')")
       })
-      .whereLike('type', 'wallet_address%')
+      .whereLike('type', 'wallet_address%'),
+    knex.schema.alterView('combinedPaymentsView', function (view) {
+      view.column('walletAddressId').rename('paymentPointerId')
+    })
   ])
 }
