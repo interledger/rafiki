@@ -8,7 +8,6 @@ These packages include:
 - `auth` (GNAP auth server)
 - `mock-account-servicing-entity` (mocks an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/)
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
-- `local-http-signatures` (request signature generation for Postman)
 
 These packages depend on the following databases:
 
