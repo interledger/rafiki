@@ -332,8 +332,7 @@ describe('IlpPaymentService', (): void => {
                 [incomingAssetCode]: exchangeRate
               }))
 
-              const receivingWalletAddress =
-                walletAddressMap[incomingAssetCode]
+              const receivingWalletAddress = walletAddressMap[incomingAssetCode]
               const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
               const options: StartQuoteOptions = {
