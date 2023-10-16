@@ -218,9 +218,10 @@ function calculateQuoteAmountsAfterFees(
   } else {
     // FixedSend
     const fees = quote.fee?.calculate(receiveAmountValue) ?? 0n
-    const exchangeAdjustedFees = BigInt(
-      Number(fees) * quote.estimatedExchangeRate.valueOf()
-    )
+    const estimatedExchangeRate =
+      quote.estimatedExchangeRate || quote.lowEstimatedExchangeRate.valueOf()
+
+    const exchangeAdjustedFees = BigInt(Number(fees) * estimatedExchangeRate)
     receiveAmountValue = BigInt(receiveAmountValue) - exchangeAdjustedFees
 
     if (receiveAmountValue <= exchangeAdjustedFees) {
