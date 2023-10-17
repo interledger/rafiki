@@ -66,10 +66,11 @@ async function create(
   try {
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        walletAddress: walletAddressUrl,
+        url: walletAddressUrl,
         accessToken: grantOrError.accessToken
       },
       {
+        walletAddress: walletAddressUrl,
         incomingAmount: args.incomingAmount
           ? serializeAmount(args.incomingAmount)
           : undefined,

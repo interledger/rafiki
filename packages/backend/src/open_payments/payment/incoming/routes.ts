@@ -105,10 +105,10 @@ async function getIncomingPaymentPrivate(
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
   }
-  if (!incomingPayment) return ctx.throw(404)
+  if (!incomingPayment || !incomingPayment.walletAddress) return ctx.throw(404)
   const connection = deps.connectionService.get(incomingPayment)
   ctx.body = incomingPaymentToBody(
-    ctx.walletAddress,
+    incomingPayment.walletAddress,
     incomingPayment,
     connection
   )

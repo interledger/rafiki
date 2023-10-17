@@ -9,11 +9,14 @@ export function createWalletAddressMiddleware() {
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    if (ctx.path === '/incoming-payments' || ctx.path === '/outgoing-payments') {
+    if (
+      ctx.path === '/incoming-payments' ||
+      ctx.path === '/outgoing-payments'
+    ) {
       if (ctx.method === 'GET') {
         ctx.walletAddressUrl = ctx.query['wallet-address'] as string
       } else if (ctx.method === 'POST') {
-        ctx.walletAddressUrl = (ctx.request.body as CreateBody).walletAddress  
+        ctx.walletAddressUrl = (ctx.request.body as CreateBody).walletAddress
       } else {
         ctx.throw(401)
       }

@@ -393,16 +393,18 @@ export class App {
 
     // GET /incoming-payments
     // List incoming payments
-    router.get<DefaultState, SignedCollectionContext<never, GetCollectionQuery>>(
+    router.get<
+      DefaultState,
+      SignedCollectionContext<never, GetCollectionQuery>
+    >(
       '/incoming-payments',
       createWalletAddressMiddleware(),
-      createValidatorMiddleware<ContextType<SignedCollectionContext<never, GetCollectionQuery>>>(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<never, GetCollectionQuery>>
+      >(resourceServerSpec, {
+        path: '/incoming-payments',
+        method: HttpMethod.GET
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
         requestAction: RequestAction.List
@@ -432,16 +434,18 @@ export class App {
 
     // GET /outgoing-payment
     // List outgoing payments
-    router.get<DefaultState, SignedCollectionContext<never, GetCollectionQuery>>(
+    router.get<
+      DefaultState,
+      SignedCollectionContext<never, GetCollectionQuery>
+    >(
       '/outgoing-payments',
       createWalletAddressMiddleware(),
-      createValidatorMiddleware<ContextType<SignedCollectionContext<never, GetCollectionQuery>>>(
-        resourceServerSpec,
-        {
-          path: '/outgoing-payments',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<never, GetCollectionQuery>>
+      >(resourceServerSpec, {
+        path: '/outgoing-payments',
+        method: HttpMethod.GET
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.OutgoingPayment,
         requestAction: RequestAction.List
@@ -473,7 +477,6 @@ export class App {
     // Read incoming payment
     router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
       '/incoming-payments/:id',
-      createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SubresourceContextWithAuthenticatedStatus>
       >(resourceServerSpec, {
@@ -513,7 +516,6 @@ export class App {
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
       '/outgoing-payments/:id',
-      createWalletAddressMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {

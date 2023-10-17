@@ -47,14 +47,16 @@ async function getOutgoingPayment(
   try {
     outgoingPayment = await deps.outgoingPaymentService.get({
       id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      walletAddressId: ctx.walletAddress.id
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
-  if (!outgoingPayment) return ctx.throw(404)
-  ctx.body = outgoingPaymentToBody(ctx.walletAddress, outgoingPayment)
+  if (!outgoingPayment || !outgoingPayment.walletAddress) return ctx.throw(404)
+  ctx.body = outgoingPaymentToBody(
+    outgoingPayment.walletAddress,
+    outgoingPayment
+  )
 }
 
 export type CreateBody = {
