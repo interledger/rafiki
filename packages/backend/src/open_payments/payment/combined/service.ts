@@ -7,7 +7,7 @@ import { OutgoingPaymentService } from '../outgoing/service'
 import { IncomingPaymentService } from '../incoming/service'
 
 interface CombinedPaymentFilter {
-  paymentPointerId?: FilterString
+  walletAddressId?: FilterString
   type?: FilterString
 }
 interface GetPageOptions {
@@ -46,8 +46,8 @@ async function getCombinedPaymentsPage(
 
   const query = CombinedPayment.query(deps.knex)
 
-  if (filter?.paymentPointerId?.in && filter.paymentPointerId.in.length) {
-    query.whereIn('paymentPointerId', filter.paymentPointerId.in)
+  if (filter?.walletAddressId?.in && filter.walletAddressId.in.length) {
+    query.whereIn('walletAddressId', filter.walletAddressId.in)
   }
 
   if (filter?.type?.in && filter.type.in.length) {

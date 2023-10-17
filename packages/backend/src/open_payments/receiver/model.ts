@@ -86,7 +86,7 @@ export class Receiver extends ConnectionBase {
       {
         id: incomingPayment.id,
         completed: incomingPayment.completed,
-        paymentPointer: incomingPayment.paymentPointer,
+        walletAddress: incomingPayment.walletAddress,
         expiresAt,
         receivedAmount,
         incomingAmount,

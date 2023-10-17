@@ -13,13 +13,13 @@ import { QuoteService } from './service'
 import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount, serializeAmount } from '../amount'
-import { PaymentPointer } from '../payment_pointer/model'
+import { WalletAddress } from '../wallet_address/model'
 import {
   getRouteTests,
   setup as setupContext
-} from '../payment_pointer/model.test'
+} from '../wallet_address/model.test'
 import { createAsset, randomAsset } from '../../tests/asset'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
 
 describe('Quote Routes', (): void => {
@@ -28,7 +28,7 @@ describe('Quote Routes', (): void => {
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
-  let paymentPointer: PaymentPointer
+  let walletAddress: WalletAddress
 
   const receiver = `https://wallet2.example/bob/incoming-payments/${uuid()}`
   const asset = randomAsset()
@@ -38,15 +38,15 @@ describe('Quote Routes', (): void => {
     assetScale: asset.scale
   }
 
-  const createPaymentPointerQuote = async ({
-    paymentPointerId,
+  const createWalletAddressQuote = async ({
+    walletAddressId,
     client
   }: {
-    paymentPointerId: string
+    walletAddressId: string
     client?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
-      paymentPointerId,
+      walletAddressId,
       receiver,
       debitAmount: {
         value: BigInt(56),
@@ -74,7 +74,7 @@ describe('Quote Routes', (): void => {
       code: debitAmount.assetCode,
       scale: debitAmount.assetScale
     })
-    paymentPointer = await createPaymentPointer(deps, {
+    walletAddress = await createWalletAddress(deps, {
       assetId
     })
   })
@@ -89,17 +89,17 @@ describe('Quote Routes', (): void => {
 
   describe('get', (): void => {
     getRouteTests({
-      getPaymentPointer: async () => paymentPointer,
+      getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) =>
-        createPaymentPointerQuote({
-          paymentPointerId: paymentPointer.id,
+        createWalletAddressQuote({
+          walletAddressId: walletAddress.id,
           client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
       getBody: (quote) => {
         return {
-          id: `${paymentPointer.url}/quotes/${quote.id}`,
-          paymentPointer: paymentPointer.url,
+          id: `${walletAddress.url}/quotes/${quote.id}`,
+          walletAddress: walletAddress.url,
           receiver: quote.receiver,
           debitAmount: serializeAmount(quote.debitAmount),
           receiveAmount: serializeAmount(quote.receiveAmount),
@@ -125,7 +125,7 @@ describe('Quote Routes', (): void => {
           method: 'POST',
           url: `/quotes`
         },
-        paymentPointer,
+        walletAddress,
         client
       })
 
@@ -197,7 +197,7 @@ describe('Quote Routes', (): void => {
             })
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
-            paymentPointerId: paymentPointer.id,
+            walletAddressId: walletAddress.id,
             receiver,
             debitAmount: options.debitAmount && {
               ...options.debitAmount,
@@ -217,8 +217,8 @@ describe('Quote Routes', (): void => {
             .pop()
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
-            id: `${paymentPointer.url}/quotes/${quoteId}`,
-            paymentPointer: paymentPointer.url,
+            id: `${walletAddress.url}/quotes/${quoteId}`,
+            walletAddress: walletAddress.url,
             receiver: quote.receiver,
             debitAmount: {
               ...quote.debitAmount,
@@ -252,7 +252,7 @@ describe('Quote Routes', (): void => {
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
-          paymentPointerId: paymentPointer.id,
+          walletAddressId: walletAddress.id,
           receiver,
           client
         })
@@ -264,8 +264,8 @@ describe('Quote Routes', (): void => {
           .pop()
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
-          id: `${paymentPointer.url}/quotes/${quoteId}`,
-          paymentPointer: paymentPointer.url,
+          id: `${walletAddress.url}/quotes/${quoteId}`,
+          walletAddress: walletAddress.url,
           receiver: options.receiver,
           debitAmount: {
             ...quote.debitAmount,

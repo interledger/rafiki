@@ -51,7 +51,7 @@ services:
       OPEN_PAYMENTS_URL: http://happy-life-bank-backend
       EXCHANGE_RATES_URL: http://happy-life-bank/rates
       REDIS_URL: redis://shared-redis:6379/1
-      PAYMENT_POINTER_URL: https://happy-life-bank-backend/.well-known/pay
+      WALLET_ADDRESS_URL: https://happy-life-bank-backend/.well-known/pay
     depends_on:
       - cloud-nine-backend
   happy-life-auth:

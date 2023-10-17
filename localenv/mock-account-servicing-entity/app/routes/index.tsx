@@ -22,7 +22,7 @@ export default function Accounts() {
         <tr>
           <th>#</th>
           <th>Account Name</th>
-          <th>Payment Pointer</th>
+          <th>Wallet Address</th>
           <th>Balance</th>
         </tr>
         {accountsWithBalance.map((acc, i) => (
@@ -31,7 +31,7 @@ export default function Accounts() {
             <td>
               <Link to={`/accounts/${acc.id}`}>{acc.name}</Link>
             </td>
-            <td>{acc.paymentPointer}</td>
+            <td>{acc.walletAddress}</td>
             <td>
               {(Number(acc.balance) / 100).toFixed(acc.assetScale)}{' '}
               {acc.assetCode}

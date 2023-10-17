@@ -3,13 +3,13 @@ import { BaseModel } from '../../../shared/baseModel'
 import { JWK } from '@interledger/http-signature-utils'
 import { Pojo } from 'objection'
 
-export class PaymentPointerKey extends BaseModel {
+export class WalletAddressKey extends BaseModel {
   public static get tableName(): string {
     return 'walletAddressKeys'
   }
 
   public id!: string
-  public paymentPointerId!: string
+  public walletAddressId!: string
 
   public jwk!: JWK
   public revoked!: boolean

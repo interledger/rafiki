@@ -7,7 +7,7 @@ import { AssetOptions } from '../asset/service'
 import { Quote } from '../open_payments/quote/model'
 import { CreateQuoteOptions } from '../open_payments/quote/service'
 import { PaymentQuote } from '../payment-method/handler/service'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { WalletAddress } from '../open_payments/wallet_address/model'
 import { Receiver } from '../open_payments/receiver/model'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
@@ -18,7 +18,7 @@ export type CreateTestQuoteOptions = CreateQuoteOptions & {
 
 type MockQuoteArgs = {
   receiver: Receiver
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
   exchangeRate?: number
 } & ({ debitAmountValue: bigint } | { receiveAmountValue: bigint })
 
@@ -26,14 +26,14 @@ export function mockQuote(
   args: MockQuoteArgs,
   overrides?: Partial<PaymentQuote>
 ): PaymentQuote {
-  const { paymentPointer, receiver, exchangeRate = 1 } = args
+  const { walletAddress, receiver, exchangeRate = 1 } = args
 
   return {
     receiver,
-    paymentPointer,
+    walletAddress,
     debitAmount: {
-      assetCode: paymentPointer.asset.code,
-      assetScale: paymentPointer.asset.scale,
+      assetCode: walletAddress.asset.code,
+      assetScale: walletAddress.asset.scale,
       value:
         'debitAmountValue' in args
           ? args.debitAmountValue
@@ -61,7 +61,7 @@ export function mockQuote(
 export async function createQuote(
   deps: IocContract<AppServices>,
   {
-    paymentPointerId,
+    walletAddressId,
     receiver: receiverUrl,
     debitAmount,
     receiveAmount,
@@ -71,15 +71,15 @@ export async function createQuote(
     exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
-  const paymentPointerService = await deps.use('paymentPointerService')
-  const paymentPointer = await paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
+  const walletAddressService = await deps.use('walletAddressService')
+  const walletAddress = await walletAddressService.get(walletAddressId)
+  if (!walletAddress) {
     throw new Error()
   }
   if (
     debitAmount &&
-    (paymentPointer.asset.code !== debitAmount.assetCode ||
-      paymentPointer.asset.scale !== debitAmount.assetScale)
+    (walletAddress.asset.code !== debitAmount.assetCode ||
+      walletAddress.asset.scale !== debitAmount.assetScale)
   ) {
     throw new Error()
   }
@@ -151,8 +151,8 @@ export async function createQuote(
             (1 + config.slippage)
         )
       ),
-      assetCode: paymentPointer.asset.code,
-      assetScale: paymentPointer.asset.scale
+      assetCode: walletAddress.asset.code,
+      assetScale: walletAddress.asset.scale
     }
   }
 
@@ -173,8 +173,8 @@ export async function createQuote(
 
   return await Quote.query()
     .insertAndFetch({
-      walletAddressId: paymentPointerId,
-      assetId: paymentPointer.assetId,
+      walletAddressId,
+      assetId: walletAddress.assetId,
       receiver: receiverUrl,
       debitAmount,
       receiveAmount,

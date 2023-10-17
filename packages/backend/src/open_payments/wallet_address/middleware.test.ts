@@ -1,12 +1,12 @@
 import { URL } from 'url'
-import { createPaymentPointerMiddleware } from './middleware'
+import { createWalletAddressMiddleware } from './middleware'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
 import { AppContext, AppServices } from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 
 type AppMiddleware = (
@@ -14,7 +14,7 @@ type AppMiddleware = (
   next: () => Promise<void>
 ) => Promise<void>
 
-describe('Payment Pointer Middleware', (): void => {
+describe('Wallet Address Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let middleware: AppMiddleware
@@ -24,7 +24,7 @@ describe('Payment Pointer Middleware', (): void => {
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    middleware = createPaymentPointerMiddleware()
+    middleware = createWalletAddressMiddleware()
   })
 
   beforeEach((): void => {
@@ -48,7 +48,7 @@ describe('Payment Pointer Middleware', (): void => {
     await appContainer.shutdown()
   })
 
-  test('returns 404 for unknown payment pointer url', async (): Promise<void> => {
+  test('returns 404 for unknown wallet address url', async (): Promise<void> => {
     await expect(middleware(ctx, next)).rejects.toMatchObject({
       status: 404,
       message: 'Not Found'
@@ -56,7 +56,7 @@ describe('Payment Pointer Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('returns 404 for payment pointer url not matching', async (): Promise<void> => {
+  test('returns 404 for wallet address url not matching', async (): Promise<void> => {
     await expect(middleware(ctx, next)).rejects.toMatchObject({
       status: 404,
       message: 'Not Found'
@@ -64,44 +64,44 @@ describe('Payment Pointer Middleware', (): void => {
     expect(next).not.toHaveBeenCalled()
   })
 
-  test('sets the context paymentPointer and calls next', async (): Promise<void> => {
-    const paymentPointer = await createPaymentPointer(deps)
-    const paymentPointerUrl = new URL(paymentPointer.url)
-    ctx.request.headers.host = paymentPointerUrl.host
-    ctx.request.url = `${paymentPointerUrl.pathname}/endpoint`
+  test('sets the context walletAddress and calls next', async (): Promise<void> => {
+    const walletAddress = await createWalletAddress(deps)
+    const walletAddressUrl = new URL(walletAddress.url)
+    ctx.request.headers.host = walletAddressUrl.host
+    ctx.request.url = `${walletAddressUrl.pathname}/endpoint`
     // Strip preceding forward slash
-    ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+    ctx.params.walletAddressPath = walletAddressUrl.pathname.substring(1)
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(next).toHaveBeenCalled()
-    expect(ctx.paymentPointer).toEqual(paymentPointer)
+    expect(ctx.walletAddress).toEqual(walletAddress)
   })
 
-  test('calls next for paymentPointerUrl', async (): Promise<void> => {
+  test('calls next for walletAddressUrl', async (): Promise<void> => {
     const config = await deps.use('config')
-    const paymentPointerUrl = new URL(config.paymentPointerUrl)
-    ctx.request.headers.host = paymentPointerUrl.host
-    ctx.request.url = paymentPointerUrl.pathname
+    const walletAddressUrl = new URL(config.walletAddressUrl)
+    ctx.request.headers.host = walletAddressUrl.host
+    ctx.request.url = walletAddressUrl.pathname
     // Strip preceding forward slash
-    ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+    ctx.params.walletAddressPath = walletAddressUrl.pathname.substring(1)
     await expect(middleware(ctx, next)).resolves.toBeUndefined()
     expect(next).toHaveBeenCalled()
-    expect(ctx.paymentPointer).toBeUndefined()
+    expect(ctx.walletAddress).toBeUndefined()
   })
 
-  test('returns 404 for deactivated payment pointer', async (): Promise<void> => {
-    const paymentPointer = await createPaymentPointer(deps)
+  test('returns 404 for deactivated wallet address', async (): Promise<void> => {
+    const walletAddress = await createWalletAddress(deps)
 
     const deactivatedAt = new Date()
     deactivatedAt.setDate(deactivatedAt.getDate() - 1)
-    await paymentPointer
+    await walletAddress
       .$query(appContainer.knex)
       .patch({ deactivatedAt: new Date() })
 
-    const paymentPointerUrl = new URL(paymentPointer.url)
-    ctx.request.headers.host = paymentPointerUrl.host
-    ctx.request.url = `${paymentPointerUrl.pathname}/endpoint`
+    const walletAddressUrl = new URL(walletAddress.url)
+    ctx.request.headers.host = walletAddressUrl.host
+    ctx.request.url = `${walletAddressUrl.pathname}/endpoint`
     // Strip preceding forward slash
-    ctx.params.paymentPointerPath = paymentPointerUrl.pathname.substring(1)
+    ctx.params.walletAddressPath = walletAddressUrl.pathname.substring(1)
 
     await expect(middleware(ctx, next)).rejects.toMatchObject({
       status: 404,

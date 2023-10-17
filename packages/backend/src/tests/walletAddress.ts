@@ -7,9 +7,9 @@ import { URL } from 'url'
 import { testAccessToken } from './app'
 import { createAsset } from './asset'
 import { AppServices } from '../app'
-import { isPaymentPointerError } from '../open_payments/payment_pointer/errors'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
-import { CreateOptions as BaseCreateOptions } from '../open_payments/payment_pointer/service'
+import { isWalletAddressError } from '../open_payments/wallet_address/errors'
+import { WalletAddress } from '../open_payments/wallet_address/model'
+import { CreateOptions as BaseCreateOptions } from '../open_payments/wallet_address/service'
 import { LiquidityAccountType } from '../accounting/service'
 
 interface CreateOptions extends Partial<BaseCreateOptions> {
@@ -18,36 +18,36 @@ interface CreateOptions extends Partial<BaseCreateOptions> {
   deactivatedAt?: Date
 }
 
-export type MockPaymentPointer = PaymentPointer & {
+export type MockWalletAddress = WalletAddress & {
   scope?: nock.Scope
 }
 
-export async function createPaymentPointer(
+export async function createWalletAddress(
   deps: IocContract<AppServices>,
   options: Partial<CreateOptions> = {}
-): Promise<MockPaymentPointer> {
-  const paymentPointerService = await deps.use('paymentPointerService')
-  const paymentPointerOrError = (await paymentPointerService.create({
+): Promise<MockWalletAddress> {
+  const walletAddressService = await deps.use('walletAddressService')
+  const walletAddressOrError = (await walletAddressService.create({
     ...options,
     assetId: options.assetId || (await createAsset(deps)).id,
     url: options.url || `https://${faker.internet.domainName()}/.well-known/pay`
-  })) as MockPaymentPointer
-  if (isPaymentPointerError(paymentPointerOrError)) {
-    throw new Error(paymentPointerOrError)
+  })) as MockWalletAddress
+  if (isWalletAddressError(walletAddressOrError)) {
+    throw new Error(walletAddressOrError)
   }
   if (options.createLiquidityAccount) {
     const accountingService = await deps.use('accountingService')
     await accountingService.createLiquidityAccount(
       {
-        id: paymentPointerOrError.id,
-        asset: paymentPointerOrError.asset
+        id: walletAddressOrError.id,
+        asset: walletAddressOrError.asset
       },
       LiquidityAccountType.WEB_MONETIZATION
     )
   }
   if (options.mockServerPort) {
-    const url = new URL(paymentPointerOrError.url)
-    paymentPointerOrError.scope = nock(url.origin)
+    const url = new URL(walletAddressOrError.url)
+    walletAddressOrError.scope = nock(url.origin)
       .get((uri) => uri.startsWith(url.pathname))
       .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)
       .reply(200, function (path) {
@@ -63,5 +63,5 @@ export async function createPaymentPointer(
       })
       .persist()
   }
-  return paymentPointerOrError
+  return walletAddressOrError
 }

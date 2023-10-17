@@ -9,7 +9,7 @@ import { isOutgoingPaymentError } from '../open_payments/payment/outgoing/errors
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/service'
 import { LiquidityAccountType } from '../accounting/service'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/service'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
@@ -24,7 +24,7 @@ export async function createOutgoingPayment(
   options: CreateTestQuoteAndOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
-    paymentPointerId: options.paymentPointerId,
+    walletAddressId: options.walletAddressId,
     client: options.client,
     receiver: options.receiver,
     validDestination: options.validDestination,
@@ -66,7 +66,7 @@ export async function createOutgoingPayment(
 }
 
 interface CreateOutgoingPaymentWithReceiverArgs {
-  receivingPaymentPointer: PaymentPointer
+  receivingWalletAddres: WalletAddress
   incomingPaymentOptions?: Partial<CreateIncomingPaymentOptions>
   quoteOptions?: Partial<
     Pick<
@@ -74,7 +74,7 @@ interface CreateOutgoingPaymentWithReceiverArgs {
       'debitAmount' | 'receiveAmount' | 'exchangeRate'
     >
   >
-  sendingPaymentPointer: PaymentPointer
+  sendingWalletAddress: WalletAddress
   fundOutgoingPayment?: boolean
 }
 
@@ -101,19 +101,19 @@ export async function createOutgoingPaymentWithReceiver(
 
   const incomingPayment = await createIncomingPayment(deps, {
     ...args.incomingPaymentOptions,
-    paymentPointerId: args.receivingPaymentPointer.id
+    walletAddressId: args.receivingWalletAddres.id
   })
 
   const connectionService = await deps.use('connectionService')
   const receiver = Receiver.fromIncomingPayment(
     incomingPayment.toOpenPaymentsType(
-      args.receivingPaymentPointer,
+      args.receivingWalletAddres,
       connectionService.get(incomingPayment)!
     )
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
-    paymentPointerId: args.sendingPaymentPointer.id,
+    walletAddressId: args.sendingWalletAddress.id,
     receiver: receiver.incomingPayment!.id!,
     ...args.quoteOptions
   })

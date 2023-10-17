@@ -47,8 +47,8 @@ export const Config = {
           'DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/development'
         ),
-  paymentPointerUrl: envString(
-    'PAYMENT_POINTER_URL',
+  walletAddressUrl: envString(
+    'WALLET_ADDRESS_URL',
     'http://127.0.0.1:3001/.well-known/pay'
   ),
   env: envString('NODE_ENV', 'development'),
@@ -80,8 +80,8 @@ export const Config = {
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
-  paymentPointerWorkers: envInt('PAYMENT_POINTER_WORKERS', 1),
-  paymentPointerWorkerIdle: envInt('PAYMENT_POINTER_WORKER_IDLE', 200), // milliseconds
+  walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
+  walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
 
   authServerGrantUrl: envString(
     'AUTH_SERVER_GRANT_URL',
@@ -119,16 +119,16 @@ export const Config = {
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
   ),
-  paymentPointerLookupTimeoutMs: envInt(
-    'PAYMENT_POINTER_LOOKUP_TIMEOUT_MS',
+  walletAddressLookupTimeoutMs: envInt(
+    'WALLET_ADDRESS_LOOKUP_TIMEOUT_MS',
     1500
   ),
-  paymentPointerPollingFrequencyMs: envInt(
-    'PAYMENT_POINTER_POLLING_FREQUENCY_MS',
+  walletAddressPollingFrequencyMs: envInt(
+    'WALLET_ADDRESS_POLLING_FREQUENCY_MS',
     100
   ),
-  paymentPointerDeactivationPaymentGracePeriodMs: envInt(
-    'PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS',
+  walletAddressDeactivationPaymentGracePeriodMs: envInt(
+    'WALLET_ADDRESS_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS',
     86400000
   ),
   incomingPaymentExpiryMaxMs: envInt(

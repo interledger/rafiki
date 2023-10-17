@@ -2,8 +2,8 @@ import { faker } from '@faker-js/faker'
 import jestOpenAPI from 'jest-openapi'
 
 import { Amount, AmountJSON, parseAmount, serializeAmount } from '../../amount'
-import { PaymentPointer } from '../../payment_pointer/model'
-import { getRouteTests, setup } from '../../payment_pointer/model.test'
+import { WalletAddress } from '../../wallet_address/model'
+import { getRouteTests, setup } from '../../wallet_address/model.test'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { Config, IAppConfig } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
@@ -19,7 +19,7 @@ import { IncomingPayment } from './model'
 import { IncomingPaymentRoutes, CreateBody } from './routes'
 import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
-import { createPaymentPointer } from '../../../tests/paymentPointer'
+import { createWalletAddress } from '../../../tests/walletAddress'
 import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
@@ -40,7 +40,7 @@ describe('Incoming Payment Routes', (): void => {
   })
 
   let asset: Asset
-  let paymentPointer: PaymentPointer
+  let walletAddress: WalletAddress
   let expiresAt: Date
   let incomingAmount: Amount
   let metadata: Record<string, unknown>
@@ -52,7 +52,7 @@ describe('Incoming Payment Routes', (): void => {
 
     expiresAt = new Date(Date.now() + 30_000)
     asset = await createAsset(deps)
-    paymentPointer = await createPaymentPointer(deps, {
+    walletAddress = await createWalletAddress(deps, {
       assetId: asset.id
     })
     incomingAmount = {
@@ -76,10 +76,10 @@ describe('Incoming Payment Routes', (): void => {
 
   describe('get/list', (): void => {
     getRouteTests({
-      getPaymentPointer: async () => paymentPointer,
+      getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) =>
         createIncomingPayment(deps, {
-          paymentPointerId: paymentPointer.id,
+          walletAddressId: walletAddress.id,
           client,
           expiresAt,
           incomingAmount,
@@ -88,8 +88,8 @@ describe('Incoming Payment Routes', (): void => {
       get: (ctx) => incomingPaymentRoutes.get(ctx),
       getBody: (incomingPayment, list) => {
         return {
-          id: incomingPayment.getUrl(paymentPointer),
-          paymentPointer: paymentPointer.url,
+          id: incomingPayment.getUrl(walletAddress),
+          walletAddress: walletAddress.url,
           completed: false,
           incomingAmount:
             incomingPayment.incomingAmount &&
@@ -119,13 +119,13 @@ describe('Incoming Payment Routes', (): void => {
     test('returns 500 for unexpected error', async (): Promise<void> => {
       const incomingPaymentService = await deps.use('incomingPaymentService')
       jest
-        .spyOn(incomingPaymentService, 'getPaymentPointerPage')
+        .spyOn(incomingPaymentService, 'getWalletAddressPage')
         .mockRejectedValueOnce(new Error('unexpected'))
       const ctx = setup<ListContext>({
         reqOpts: {
           headers: { Accept: 'application/json' }
         },
-        paymentPointer
+        walletAddress
       })
       await expect(incomingPaymentRoutes.list(ctx)).rejects.toMatchObject({
         status: 500,
@@ -150,7 +150,7 @@ describe('Incoming Payment Routes', (): void => {
       async (error): Promise<void> => {
         const ctx = setup<CreateContext<CreateBody>>({
           reqOpts: { body: {} },
-          paymentPointer
+          walletAddress
         })
         const createSpy = jest
           .spyOn(incomingPaymentService, 'create')
@@ -160,7 +160,7 @@ describe('Incoming Payment Routes', (): void => {
           status: errorToCode[error]
         })
         expect(createSpy).toHaveBeenCalledWith({
-          paymentPointerId: paymentPointer.id
+          walletAddressId: walletAddress.id
         })
       }
     )
@@ -187,14 +187,14 @@ describe('Incoming Payment Routes', (): void => {
             method: 'POST',
             url: `/incoming-payments`
           },
-          paymentPointer,
+          walletAddress,
           client
         })
         const incomingPaymentService = await deps.use('incomingPaymentService')
         const createSpy = jest.spyOn(incomingPaymentService, 'create')
         await expect(incomingPaymentRoutes.create(ctx)).resolves.toBeUndefined()
         expect(createSpy).toHaveBeenCalledWith({
-          paymentPointerId: paymentPointer.id,
+          walletAddressId: walletAddress.id,
           incomingAmount: incomingAmount ? parseAmount(amount) : undefined,
           metadata,
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
@@ -216,8 +216,8 @@ describe('Incoming Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${paymentPointer.url}/incoming-payments/${incomingPaymentId}`,
-          paymentPointer: paymentPointer.url,
+          id: `${walletAddress.url}/incoming-payments/${incomingPaymentId}`,
+          walletAddress: walletAddress.url,
           incomingAmount: incomingAmount ? amount : undefined,
           expiresAt: expiresAt || expect.any(String),
           createdAt: expect.any(String),
@@ -247,7 +247,7 @@ describe('Incoming Payment Routes', (): void => {
     let incomingPayment: IncomingPayment
     beforeEach(async (): Promise<void> => {
       incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         expiresAt,
         incomingAmount,
         metadata
@@ -263,14 +263,14 @@ describe('Incoming Payment Routes', (): void => {
         params: {
           id: incomingPayment.id
         },
-        paymentPointer
+        walletAddress
       })
-      ctx.paymentPointer = paymentPointer
+      ctx.walletAddress = walletAddress
       await expect(incomingPaymentRoutes.complete(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
-        id: incomingPayment.getUrl(paymentPointer),
-        paymentPointer: paymentPointer.url,
+        id: incomingPayment.getUrl(walletAddress),
+        walletAddress: walletAddress.url,
         incomingAmount: {
           value: '123',
           assetCode: asset.code,

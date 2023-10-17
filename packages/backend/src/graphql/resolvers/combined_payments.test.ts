@@ -6,7 +6,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { PaymentConnection } from '../generated/graphql'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../tests/outgoingPayment'
 import { createAsset } from '../../tests/asset'
@@ -49,12 +49,12 @@ describe('Payment', (): void => {
   })
 
   test('Can get payments', async (): Promise<void> => {
-    const { id: outPaymentPointerId } = await createPaymentPointer(deps, {
+    const { id: outWalletAddressId } = await createWalletAddress(deps, {
       assetId: asset.id
     })
 
     const outgoingPayment = await createOutgoingPayment(deps, {
-      paymentPointerId: outPaymentPointerId,
+      walletAddressId: outWalletAddressId,
       receiver: `${Config.publicHost}/${uuid()}`,
       debitAmount: {
         value: BigInt(56),
@@ -64,11 +64,11 @@ describe('Payment', (): void => {
       validDestination: false
     })
 
-    const { id: inPaymentPointerId } = await createPaymentPointer(deps, {
+    const { id: inWalletAddressId } = await createWalletAddress(deps, {
       assetId: asset.id
     })
     const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: inPaymentPointerId
+      walletAddressId: inWalletAddressId
     })
 
     const query = await appContainer.apolloClient
@@ -80,7 +80,7 @@ describe('Payment', (): void => {
                 node {
                   id
                   type
-                  paymentPointerId
+                  walletAddressId
                   state
                   metadata
                   createdAt
@@ -115,7 +115,7 @@ describe('Payment', (): void => {
       id: combinedOutgoingPayment.id,
       type: combinedOutgoingPayment.type,
       metadata: combinedOutgoingPayment.metadata,
-      paymentPointerId: combinedOutgoingPayment.walletAddressId,
+      walletAddressId: combinedOutgoingPayment.walletAddressId,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString()
     })
@@ -128,14 +128,14 @@ describe('Payment', (): void => {
       id: combinedIncomingPayment.id,
       type: combinedIncomingPayment.type,
       metadata: combinedIncomingPayment.metadata,
-      paymentPointerId: combinedIncomingPayment.paymentPointerId,
+      walletAddressId: combinedIncomingPayment.walletAddressId,
       state: combinedIncomingPayment.state,
       createdAt: combinedIncomingPayment.createdAt.toISOString()
     })
   })
 
-  test('Can filter payments by type and payment pointer', async (): Promise<void> => {
-    const { id: outPaymentPointerId } = await createPaymentPointer(deps, {
+  test('Can filter payments by type and wallet address', async (): Promise<void> => {
+    const { id: outWalletAddressId } = await createWalletAddress(deps, {
       assetId: asset.id
     })
 
@@ -150,15 +150,15 @@ describe('Payment', (): void => {
     }
 
     const outgoingPayment = await createOutgoingPayment(deps, {
-      paymentPointerId: outPaymentPointerId,
+      walletAddressId: outWalletAddressId,
       ...baseOutgoingPayment
     })
 
-    const { id: outPaymentPointerId2 } = await createPaymentPointer(deps, {
+    const { id: outWalletAddressId2 } = await createWalletAddress(deps, {
       assetId: asset.id
     })
     await createOutgoingPayment(deps, {
-      paymentPointerId: outPaymentPointerId2,
+      walletAddressId: outWalletAddressId2,
       ...baseOutgoingPayment
     })
 
@@ -171,7 +171,7 @@ describe('Payment', (): void => {
                 node {
                   id
                   type
-                  paymentPointerId
+                  walletAddressId
                   state
                   metadata
                   createdAt
@@ -186,8 +186,8 @@ describe('Payment', (): void => {
             type: {
               in: ['OUTGOING']
             },
-            paymentPointerId: {
-              in: [outPaymentPointerId]
+            walletAddressId: {
+              in: [outWalletAddressId]
             }
           }
         }
@@ -210,7 +210,7 @@ describe('Payment', (): void => {
       id: combinedOutgoingPayment.id,
       type: combinedOutgoingPayment.type,
       metadata: combinedOutgoingPayment.metadata,
-      paymentPointerId: combinedOutgoingPayment.paymentPointerId,
+      walletAddressId: combinedOutgoingPayment.walletAddressId,
       state: combinedOutgoingPayment.state,
       createdAt: combinedOutgoingPayment.createdAt.toISOString()
     })

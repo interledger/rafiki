@@ -4,21 +4,21 @@ import { AccessAction } from '@interledger/open-payments'
 import { v4 as uuid } from 'uuid'
 
 import {
-  PaymentPointer,
-  PaymentPointerSubresource,
+  WalletAddress,
+  WalletAddressSubresource,
   GetOptions,
   ListOptions
 } from './model'
 import { Grant } from '../auth/middleware'
 import {
-  PaymentPointerContext,
+  WalletAddressContext,
   ReadContext,
   ListContext,
   AppServices
 } from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
 import { createContext } from '../../tests/context'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { initIocContainer } from '../..'
 import { createTestApp, TestContainer } from '../../tests/app'
@@ -29,13 +29,13 @@ import assert from 'assert'
 export interface SetupOptions {
   reqOpts: httpMocks.RequestOptions
   params?: Record<string, string>
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
   grant?: Grant
   client?: string
   accessAction?: AccessAction
 }
 
-export const setup = <T extends PaymentPointerContext>(
+export const setup = <T extends WalletAddressContext>(
   options: SetupOptions
 ): T => {
   const ctx = createContext<T>(
@@ -48,7 +48,7 @@ export const setup = <T extends PaymentPointerContext>(
     },
     options.params
   )
-  ctx.paymentPointer = options.paymentPointer
+  ctx.walletAddress = options.walletAddress
   ctx.grant = options.grant
   ctx.client = options.client
   ctx.accessAction = options.accessAction
@@ -56,7 +56,7 @@ export const setup = <T extends PaymentPointerContext>(
 }
 
 interface TestGetOptions extends GetOptions {
-  paymentPointerId: NonNullable<GetOptions['paymentPointerId']>
+  walletAddressId: NonNullable<GetOptions['walletAddressId']>
 }
 
 interface BaseTestsOptions<M> {
@@ -65,7 +65,7 @@ interface BaseTestsOptions<M> {
   testList?: (options: ListOptions, expectedMatch?: M) => void
 }
 
-const baseGetTests = <M extends PaymentPointerSubresource>({
+const baseGetTests = <M extends WalletAddressSubresource>({
   createModel,
   testGet,
   testList
@@ -81,7 +81,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
     ${true}    | ${'with client'}
     ${false}   | ${'without client'}
   `(
-    'Common PaymentPointerSubresource get/getPaymentPointerPage ($description)',
+    'Common WalletAddressSubresource get/getWalletAddressPage ($description)',
     ({ withClient }): void => {
       const resourceClient = faker.internet.url({ appendSlash: false })
 
@@ -107,18 +107,18 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
             ${match} | ${GetOption.Matching}
             ${false} | ${GetOption.Conflicting}
             ${match} | ${GetOption.Unspecified}
-          `('$description paymentPointerId', ({ match, description }): void => {
-            let paymentPointerId: string
+          `('$description walletAddressId', ({ match, description }): void => {
+            let walletAddressId: string
             beforeEach((): void => {
               switch (description) {
                 case GetOption.Matching:
-                  paymentPointerId = model.paymentPointerId
+                  walletAddressId = model.walletAddressId
                   break
                 case GetOption.Conflicting:
-                  paymentPointerId = uuid()
+                  walletAddressId = uuid()
                   break
                 case GetOption.Unspecified:
-                  paymentPointerId = ''
+                  walletAddressId = ''
                   break
               }
             })
@@ -139,7 +139,7 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
                   {
                     id,
                     client,
-                    paymentPointerId
+                    walletAddressId
                   },
                   match ? model : undefined
                 )
@@ -148,10 +148,10 @@ const baseGetTests = <M extends PaymentPointerSubresource>({
             test(`${
               match ? '' : 'cannot '
             }list model`, async (): Promise<void> => {
-              if (testList && paymentPointerId) {
+              if (testList && walletAddressId) {
                 await testList(
                   {
-                    paymentPointerId,
+                    walletAddressId,
                     client
                   },
                   match ? model : undefined
@@ -170,7 +170,7 @@ type TestsOptions<M> = Omit<BaseTestsOptions<M>, 'testGet' | 'testList'> & {
   list: (options: ListOptions) => Promise<M[]>
 }
 
-export const getTests = <M extends PaymentPointerSubresource>({
+export const getTests = <M extends WalletAddressSubresource>({
   createModel,
   get,
   list
@@ -179,22 +179,22 @@ export const getTests = <M extends PaymentPointerSubresource>({
     createModel,
     testGet: (options, expectedMatch) =>
       expect(get(options)).resolves.toEqual(expectedMatch),
-    // tests paymentPointerId / client filtering
+    // tests walletAddressId / client filtering
     testList: (options, expectedMatch) =>
       expect(list(options)).resolves.toEqual([expectedMatch])
   })
 
   // tests pagination
-  let paymentPointerId: string
+  let walletAddressId: string
   getPageTests({
     createModel: async () => {
       const model = await createModel({})
-      paymentPointerId = model.paymentPointerId
+      walletAddressId = model.walletAddressId
       return model
     },
     getPage: (pagination) =>
       list({
-        paymentPointerId,
+        walletAddressId,
         pagination
       })
   })
@@ -204,15 +204,15 @@ type RouteTestsOptions<M> = Omit<
   BaseTestsOptions<M>,
   'testGet' | 'testList'
 > & {
-  getPaymentPointer: () => Promise<PaymentPointer>
+  getWalletAddress: () => Promise<WalletAddress>
   get: (ctx: ReadContext) => Promise<void>
   getBody: (model: M, list?: boolean) => Record<string, unknown>
   list?: (ctx: ListContext) => Promise<void>
   urlPath: string
 }
 
-export const getRouteTests = <M extends PaymentPointerSubresource>({
-  getPaymentPointer,
+export const getRouteTests = <M extends WalletAddressSubresource>({
+  getWalletAddress,
   createModel,
   get,
   getBody,
@@ -220,18 +220,18 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   urlPath
 }: RouteTestsOptions<M>): void => {
   const testList = async (
-    { paymentPointerId, client }: ListOptions,
+    { walletAddressId, client }: ListOptions,
     expectedMatch?: M
   ) => {
-    const paymentPointer = await getPaymentPointer()
-    paymentPointer.id = paymentPointerId
+    const walletAddress = await getWalletAddress()
+    walletAddress.id = walletAddressId
     const ctx = setup<ListContext>({
       reqOpts: {
         headers: { Accept: 'application/json' },
         method: 'GET',
         url: urlPath
       },
-      paymentPointer,
+      walletAddress,
       client,
       accessAction: client ? AccessAction.List : AccessAction.ListAll
     })
@@ -254,9 +254,9 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
 
   baseGetTests({
     createModel,
-    testGet: async ({ id, paymentPointerId, client }, expectedMatch) => {
-      const paymentPointer = await getPaymentPointer()
-      paymentPointer.id = paymentPointerId
+    testGet: async ({ id, walletAddressId, client }, expectedMatch) => {
+      const walletAddress = await getWalletAddress()
+      walletAddress.id = walletAddressId
       const ctx = setup<ReadContext>({
         reqOpts: {
           headers: { Accept: 'application/json' },
@@ -266,7 +266,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
         params: {
           id
         },
-        paymentPointer,
+        walletAddress,
         client,
         accessAction: client ? AccessAction.Read : AccessAction.ReadAll
       })
@@ -281,7 +281,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
         })
       }
     },
-    // tests paymentPointerId / client filtering
+    // tests walletAddressId / client filtering
     testList: list && testList
   })
 
@@ -324,7 +324,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
               query,
               url: urlPath
             },
-            paymentPointer: await getPaymentPointer(),
+            walletAddress: await getWalletAddress(),
             accessAction: AccessAction.ListAll
           })
           await expect(list(ctx)).resolves.toBeUndefined()
@@ -352,7 +352,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
               query,
               url: urlPath
             },
-            paymentPointer: await getPaymentPointer(),
+            walletAddress: await getWalletAddress(),
             accessAction: AccessAction.ListAll
           })
           await expect(list(ctx)).rejects.toMatchObject({
@@ -365,7 +365,7 @@ export const getRouteTests = <M extends PaymentPointerSubresource>({
   }
 }
 
-describe('Payment Pointer Model', (): void => {
+describe('Wallet Address Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
 
@@ -410,14 +410,14 @@ describe('Payment Pointer Model', (): void => {
     test.each(deactivatedAtCases)(
       '$description',
       async ({ value, expectedIsActive }) => {
-        const paymentPointer = await createPaymentPointer(deps)
+        const walletAddress = await createWalletAddress(deps)
         if (value) {
-          await paymentPointer
+          await walletAddress
             .$query(appContainer.knex)
             .patch({ deactivatedAt: value })
-          assert.ok(paymentPointer.deactivatedAt === value)
+          assert.ok(walletAddress.deactivatedAt === value)
         }
-        expect(paymentPointer.isActive).toEqual(expectedIsActive)
+        expect(walletAddress.isActive).toEqual(expectedIsActive)
       }
     )
   })

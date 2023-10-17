@@ -117,6 +117,7 @@ exports.down = function (knex) {
     ),
     knex.schema.renameTable('walletAddressKeys', 'paymentPointerKeys'),
     knex.schema.alterTable('paymentPointerKeys', function (table) {
+      table.dropForeign(['walletAddressId'])
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
     }),

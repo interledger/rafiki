@@ -30,19 +30,19 @@ accounts:
     path: accounts/gfranklin
     id: 742ab7cd-1624-4d2e-af6e-e15a71638669
     initialBalance: 4000
-    postmanEnvVar: gfranklinPaymentPointer
+    postmanEnvVar: gfranklinWalletAddress
     assetCode: USD
   - name: 'Bert Hamchest'
     id: a9adbe1a-df31-4766-87c9-d2cb2e636a9b
     initialBalance: 4000
     path: accounts/bhamchest
-    postmanEnvVar: bhamchestPaymentPointer
+    postmanEnvVar: bhamchestWalletAddress
     assetCode: USD
   - name: "World's Best Donut Co"
     id: 5726eefe-8737-459d-a36b-0acce152cb90
     initialBalance: 2000
     path: accounts/wbdc
-    postmanEnvVar: wbdcPaymentPointer
+    postmanEnvVar: wbdcWalletAddress
     assetCode: USD
 rates:
   EUR:
