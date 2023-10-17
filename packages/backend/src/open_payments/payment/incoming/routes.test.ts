@@ -209,11 +209,6 @@ describe('Incoming Payment Routes', (): void => {
           expiresAt: expiresAt ? new Date(expiresAt) : undefined,
           client
         })
-        // TODO: this fails because the response has 'methods' (which is correct) and the spec has
-        // '#/components/schemas/incoming-payment' with additionalProperties = false.
-        // We are trying to include payment method via an allOf but this doesn't supercede the
-        // additionalProperties = false. Appears we need to tweak the spec. Should we also add
-        // jestOpenAPI to open-payments lib use .toSatisfyApiSpec() to verfiy in client tests?
         expect(ctx.response).toSatisfyApiSpec()
         const incomingPaymentId = (
           (ctx.response.body as Record<string, unknown>)['id'] as string
