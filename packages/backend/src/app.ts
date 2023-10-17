@@ -86,6 +86,7 @@ import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
 import { AxiosInstance } from 'axios'
 import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
+import { IlpPeerService } from './payment-method/ilp/ilp-peer/service'
 
 export interface AppContextData {
   logger: Logger
@@ -229,6 +230,7 @@ export interface AppServices {
   tigerbeetle: Promise<TigerbeetleClient>
   paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
   ilpPaymentService: Promise<IlpPaymentService>
+  ilpPeerService: Promise<IlpPeerService>
 }
 
 export type AppContainer = IocContract<AppServices>

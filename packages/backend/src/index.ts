@@ -49,6 +49,7 @@ import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/route
 import axios from 'axios'
 import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createPaymentMethodHandlerService } from './payment-method/handler/service'
+import { createIlpPeerService } from './payment-method/ilp/ilp-peer/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -449,6 +450,13 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       quoteService: await deps.use('quoteService')
+    })
+  })
+
+  container.singleton('ilpPeerService', async (deps) => {
+    return createIlpPeerService({
+      knex: await deps.use('knex'),
+      logger: await deps.use('logger')
     })
   })
 
