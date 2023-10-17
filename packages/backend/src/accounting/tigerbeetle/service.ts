@@ -66,7 +66,7 @@ export function createAccountingService(
     // The TigerBeetle account id will be the model id.
     // Such models include:
     //   ../asset/model
-    //   ../open_payments/payment_pointer/model
+    //   ../open_payments/wallet_address/model
     //   ../open_payments/payment/incoming/model
     //   ../open_payments/payment/outgoing/model
     //   ../peer/model

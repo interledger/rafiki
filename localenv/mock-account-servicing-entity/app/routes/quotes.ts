@@ -17,7 +17,7 @@ enum PaymentType {
 export type Quote = {
   id: string
   paymentType: PaymentType
-  paymentPointerId: string
+  walletAddressId: string
   receiver: string
   debitAmount: Amount
   receiveAmount: Amount

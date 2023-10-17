@@ -1,5 +1,5 @@
 export enum RemoteIncomingPaymentError {
-  UnknownPaymentPointer = 'UnknownPaymentPointer',
+  UnknownWalletAddress = 'UnknownWalletAddress',
   InvalidRequest = 'InvalidRequest',
   InvalidGrant = 'InvalidGrant'
 }
@@ -13,7 +13,7 @@ export const isRemoteIncomingPaymentError = (
 export const errorToCode: {
   [key in RemoteIncomingPaymentError]: number
 } = {
-  [RemoteIncomingPaymentError.UnknownPaymentPointer]: 404,
+  [RemoteIncomingPaymentError.UnknownWalletAddress]: 404,
   [RemoteIncomingPaymentError.InvalidRequest]: 500,
   [RemoteIncomingPaymentError.InvalidGrant]: 500
 }
@@ -21,7 +21,7 @@ export const errorToCode: {
 export const errorToMessage: {
   [key in RemoteIncomingPaymentError]: string
 } = {
-  [RemoteIncomingPaymentError.UnknownPaymentPointer]: 'unknown payment pointer',
+  [RemoteIncomingPaymentError.UnknownWalletAddress]: 'unknown wallet address',
   [RemoteIncomingPaymentError.InvalidRequest]:
     'invalid remote incoming payment request',
   [RemoteIncomingPaymentError.InvalidGrant]:

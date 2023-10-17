@@ -11,7 +11,7 @@ import { createOutgoingPayment } from './outgoingPayment'
 import { Config } from '../config/app'
 import { v4 as uuid } from 'uuid'
 import { createAsset } from './asset'
-import { createPaymentPointer } from './paymentPointer'
+import { createWalletAddress } from './walletAddress'
 
 export function toCombinedPayment(
   type: PaymentType,
@@ -20,7 +20,7 @@ export function toCombinedPayment(
   return CombinedPayment.fromJson({
     type,
     id: payment.id,
-    paymentPointerId: payment.walletAddressId,
+    walletAddressId: payment.walletAddressId,
     state: payment.state,
     metadata: payment.metadata,
     client: payment.client,
@@ -39,10 +39,10 @@ export async function createCombinedPayment(
 ): Promise<CombinedPayment> {
   const sendAsset = await createAsset(deps)
   const receiveAsset = await createAsset(deps)
-  const sendPaymentPointerId = (
-    await createPaymentPointer(deps, { assetId: sendAsset.id })
+  const sendWalletAddressId = (
+    await createWalletAddress(deps, { assetId: sendAsset.id })
   ).id
-  const receivePaymentPointer = await createPaymentPointer(deps, {
+  const receiveWalletAddress = await createWalletAddress(deps, {
     assetId: receiveAsset.id
   })
 
@@ -50,10 +50,10 @@ export async function createCombinedPayment(
   const payment =
     type === PaymentType.Incoming
       ? await createIncomingPayment(deps, {
-          paymentPointerId: receivePaymentPointer.id
+          walletAddressId: receiveWalletAddress.id
         })
       : await createOutgoingPayment(deps, {
-          paymentPointerId: sendPaymentPointerId,
+          walletAddressId: sendWalletAddressId,
           receiver: `${Config.publicHost}/${uuid()}`,
           validDestination: false
         })

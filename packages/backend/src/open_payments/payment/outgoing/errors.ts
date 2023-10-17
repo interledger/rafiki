@@ -3,13 +3,13 @@ import * as Pay from '@interledger/pay'
 import { TransferError } from '../../../accounting/errors'
 
 export enum OutgoingPaymentError {
-  UnknownPaymentPointer = 'UnknownPaymentPointer',
+  UnknownWalletAddress = 'UnknownWalletAddress',
   UnknownPayment = 'UnknownPayment',
   UnknownQuote = 'UnknownQuote',
   WrongState = 'WrongState',
   InvalidQuote = 'InvalidQuote',
   InsufficientGrant = 'InsufficientGrant',
-  InactivePaymentPointer = 'InactivePaymentPointer'
+  InactiveWalletAddress = 'InactiveWalletAddress'
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -19,25 +19,25 @@ export const isOutgoingPaymentError = (o: any): o is OutgoingPaymentError =>
 export const errorToCode: {
   [key in OutgoingPaymentError]: number
 } = {
-  [OutgoingPaymentError.UnknownPaymentPointer]: 404,
+  [OutgoingPaymentError.UnknownWalletAddress]: 404,
   [OutgoingPaymentError.UnknownPayment]: 404,
   [OutgoingPaymentError.UnknownQuote]: 404,
   [OutgoingPaymentError.WrongState]: 409,
   [OutgoingPaymentError.InvalidQuote]: 400,
   [OutgoingPaymentError.InsufficientGrant]: 403,
-  [OutgoingPaymentError.InactivePaymentPointer]: 400
+  [OutgoingPaymentError.InactiveWalletAddress]: 400
 }
 
 export const errorToMessage: {
   [key in OutgoingPaymentError]: string
 } = {
-  [OutgoingPaymentError.UnknownPaymentPointer]: 'unknown payment pointer',
+  [OutgoingPaymentError.UnknownWalletAddress]: 'unknown wallet address',
   [OutgoingPaymentError.UnknownPayment]: 'unknown payment',
   [OutgoingPaymentError.UnknownQuote]: 'unknown quote',
   [OutgoingPaymentError.WrongState]: 'wrong state',
   [OutgoingPaymentError.InvalidQuote]: 'invalid quote',
   [OutgoingPaymentError.InsufficientGrant]: 'unauthorized',
-  [OutgoingPaymentError.InactivePaymentPointer]: 'inactive payment pointer'
+  [OutgoingPaymentError.InactiveWalletAddress]: 'inactive wallet address'
 }
 
 export const FundingError = { ...OutgoingPaymentError, ...TransferError }

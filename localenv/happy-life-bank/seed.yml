@@ -30,20 +30,20 @@ accounts:
     path: accounts/pfry
     id: 97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
     initialBalance: 1
-    postmanEnvVar: pfryPaymentPointer
+    postmanEnvVar: pfryWalletAddress
     assetCode: USD
   - name: 'PlanEx Corp'
     id: a455cc54-b583-455b-836a-e5275c5c05b7
     initialBalance: 2000
     path: accounts/planex
-    postmanEnvVar: planexPaymentPointer
+    postmanEnvVar: planexWalletAddress
     assetCode: USD
   - name: 'Alice Smith'
     path: accounts/asmith
     id: f47ac10b-58cc-4372-a567-0e02b2c3d479
     initialBalance: 500
-    postmanEnvVar: asmithPaymentPointer
-    skipPaymentPointerCreation: true
+    postmanEnvVar: asmithWalletAddress
+    skipWalletAddressCreation: true
     assetCode: USD
   - name: 'Lars'
     path: accounts/lars

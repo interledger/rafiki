@@ -2,7 +2,7 @@
 title: Event Handlers
 ---
 
-Rafiki communicates with the Account Servicing Entity over webhook events, as mentioned in the [_Getting Started_](./getting-started) section. Most events require the Account Servicing Entity interact with Rafiki, either to deposit or withdraw liquidity into or from Rafiki, or to provide payment pointer information. This document will describe how an Account Servicing Entity should handle each of the defined webhook events.
+Rafiki communicates with the Account Servicing Entity over webhook events, as mentioned in the [_Getting Started_](./getting-started) section. Most events require the Account Servicing Entity interact with Rafiki, either to deposit or withdraw liquidity into or from Rafiki, or to provide wallet address information. This document will describe how an Account Servicing Entity should handle each of the defined webhook events.
 
 ## `incoming_payment.created`
 
@@ -109,11 +109,11 @@ ASE->>R: admin API call: WithdrawEventLiquidity
 ASE->>ASE: remove the hold and deduct $8 from the sender's account
 ```
 
-## `payment_pointer.web_monetization`
+## `wallet_address.web_monetization`
 
-The `payment_pointer.web_monetization` event indicates that a payment pointer has received web monetization payments via STREAM (raw ILP access). The Account Servicing Entity should withdraw that liquidity from the payment pointer and credit the receiver's account.
+The `wallet_address.web_monetization` event indicates that a wallet address has received web monetization payments via STREAM (raw ILP access). The Account Servicing Entity should withdraw that liquidity from the wallet address and credit the receiver's account.
 
-Example: A payment pointer received $0.33
+Example: A wallet address received $0.33
 
 ```mermaid
 
@@ -122,16 +122,16 @@ sequenceDiagram
 participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>ASE: webhook event: payment pointer web monetization,<br>received: $0.33
+R->>ASE: webhook event: wallet address web monetization,<br>received: $0.33
 ASE->>R: admin API call: WithdrawEventLiquidity
 ASE->>ASE: credit receiver's account with $0.33
 ```
 
-## `payment_pointer.not_found`
+## `wallet_address.not_found`
 
-The `payment_pointer.not_found` event indicates that a [payment pointer](/reference/glossary#payment-pointer) was requested (via the [Open Payments API](/reference/glossary#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and [create](./getting-started#issuing-payment-pointers) a payment pointer. The initial request for the payment pointer will succeed if the Account Servicing Entity creates it within the configurable [`PAYMENT_POINTER_LOOKUP_TIMEOUT_MS`](/integration/deployment#environment-variables) timeframe.
+The `wallet_address.not_found` event indicates that a [wallet address](/reference/glossary#wallet-address) was requested (via the [Open Payments API](/reference/glossary#open-payments)), but it doesn't exist in Rafiki. When receiving this event, the Account Servicing Entity can perform a lookup for the relevant account in their system, and [create](./getting-started#issuing-wallet-addresses) a wallet address. The initial request for the wallet address will succeed if the Account Servicing Entity creates it within the configurable [`WALLET_ADDRESS_LOOKUP_TIMEOUT_MS`](/integration/deployment#environment-variables) timeframe.
 
-Example: The payment pointer `https://example-wallet.com/carla_garcia` was requested but does not yet exist
+Example: The wallet address `https://example-wallet.com/carla_garcia` was requested but does not yet exist
 
 ```mermaid
 
@@ -140,8 +140,8 @@ sequenceDiagram
 participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>ASE: webhook event: payment pointer not found,<br>payment pointer: https://example-wallet.com/carla_garcia
-ASE->>R: admin API call: CreatePaymentPointer<br>url: https://example-wallet.com/carla_garcia,<br>public name: Carla Eva Garcia
+R->>ASE: webhook event: wallet address not found,<br>wallet address: https://example-wallet.com/carla_garcia
+ASE->>R: admin API call: CreateWalletAddress<br>url: https://example-wallet.com/carla_garcia,<br>public name: Carla Eva Garcia
 ```
 
 ## `asset.liquidity_low`

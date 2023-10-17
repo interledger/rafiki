@@ -69,7 +69,7 @@ interface Model {
 type Grant implements Model {
   "Grant id"
   id: ID!
-  "Payment pointer of the grantee's account"
+  "Wallet address of the grantee's account"
   client: String!
   "Access details"
   access: [Access!]!
@@ -84,7 +84,7 @@ type Grant implements Model {
 type Access implements Model {
   "Access id"
   id: ID!
-  "Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote)"
+  "Wallet address of a sub-resource (incoming payment, outgoing payment, or quote)"
   identifier: String
   "Access type (incoming payment, outgoing payment, or quote)"
   type: String!
@@ -97,7 +97,7 @@ type Access implements Model {
 }
 
 type LimitData {
-  "Payment pointer URL of the receiver"
+  "Wallet address URL of the receiver"
   receiver: String
   "Amount to debit"
   debitAmount: PaymentAmount

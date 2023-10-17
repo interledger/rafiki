@@ -12,7 +12,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../..'
 import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import assert from 'assert'
 
@@ -31,9 +31,9 @@ describe('Connection Service', (): void => {
   })
 
   beforeEach(async (): Promise<void> => {
-    const { id: paymentPointerId } = await createPaymentPointer(deps)
+    const { id: walletAddressId } = await createWalletAddress(deps)
     incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId
+      walletAddressId
     })
   })
 

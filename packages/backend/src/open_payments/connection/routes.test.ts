@@ -11,13 +11,13 @@ import { ConnectionContext } from './middleware'
 import { ConnectionRoutes } from './routes'
 import { createAsset } from '../../tests/asset'
 import { createContext } from '../../tests/context'
-import { PaymentPointer } from '../payment_pointer/model'
+import { WalletAddress } from '../wallet_address/model'
 import {
   IncomingPayment,
   IncomingPaymentState
 } from '../payment/incoming/model'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import base64url from 'base64url'
 
 describe('Connection Routes', (): void => {
@@ -37,16 +37,16 @@ describe('Connection Routes', (): void => {
     jestOpenAPI(resourceServerSpec)
   })
 
-  let paymentPointer: PaymentPointer
+  let walletAddress: WalletAddress
   let incomingPayment: IncomingPayment
   beforeEach(async (): Promise<void> => {
     connectionRoutes = await deps.use('connectionRoutes')
     config = await deps.use('config')
 
     const asset = await createAsset(deps)
-    paymentPointer = await createPaymentPointer(deps, { assetId: asset.id })
+    walletAddress = await createWalletAddress(deps, { assetId: asset.id })
     incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: paymentPointer.id,
+      walletAddressId: walletAddress.id,
       expiresAt: new Date(Date.now() + 30_000),
       incomingAmount: {
         value: BigInt('123'),

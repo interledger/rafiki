@@ -36,13 +36,13 @@ async function getQuote(
   options: StartQuoteOptions
 ): Promise<PaymentQuote> {
   const rates = await deps.ratesService
-    .rates(options.paymentPointer.asset.code)
+    .rates(options.walletAddress.asset.code)
     .catch((_err: Error) => {
       throw new Error('missing rates')
     })
 
   const plugin = deps.makeIlpPlugin({
-    sourceAccount: options.paymentPointer,
+    sourceAccount: options.walletAddress,
     unfulfillable: true
   })
 
@@ -52,8 +52,8 @@ async function getQuote(
       plugin,
       destination: options.receiver.toResolvedPayment(),
       sourceAsset: {
-        scale: options.paymentPointer.asset.scale,
-        code: options.paymentPointer.asset.code
+        scale: options.walletAddress.asset.scale,
+        code: options.walletAddress.asset.code
       }
     }
     if (options.debitAmount) {
@@ -99,12 +99,12 @@ async function getQuote(
 
     return {
       receiver: options.receiver,
-      paymentPointer: options.paymentPointer,
+      walletAddress: options.walletAddress,
       estimatedExchangeRate: ilpQuote.lowEstimatedExchangeRate.valueOf(),
       debitAmount: {
         value: ilpQuote.maxSourceAmount,
-        assetCode: options.paymentPointer.asset.code,
-        assetScale: options.paymentPointer.asset.scale
+        assetCode: options.walletAddress.asset.code,
+        assetScale: options.walletAddress.asset.scale
       },
       receiveAmount: {
         value: ilpQuote.minDeliveryAmount,

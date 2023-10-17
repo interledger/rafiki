@@ -1,7 +1,7 @@
 import {
   MutationResolvers,
   Quote as SchemaQuote,
-  PaymentPointerResolvers,
+  WalletAddressResolvers,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
@@ -34,7 +34,7 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
     const quoteService = await ctx.container.use('quoteService')
     const options: CreateQuoteOptions = {
-      paymentPointerId: args.input.paymentPointerId,
+      walletAddressId: args.input.walletAddressId,
       receiver: args.input.receiver
     }
     if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
@@ -62,18 +62,18 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       }))
   }
 
-export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['quotes'] =
+export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
-    if (!parent.id) throw new Error('missing payment pointer id')
+    if (!parent.id) throw new Error('missing wallet address id')
     const quoteService = await ctx.container.use('quoteService')
-    const quotes = await quoteService.getPaymentPointerPage({
-      paymentPointerId: parent.id,
+    const quotes = await quoteService.getWalletAddressPage({
+      walletAddressId: parent.id,
       pagination: args
     })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage({
-          paymentPointerId: parent.id as string,
+        quoteService.getWalletAddressPage({
+          walletAddressId: parent.id as string,
           pagination
         }),
       quotes
@@ -90,7 +90,7 @@ export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['qu
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
-    paymentPointerId: quote.walletAddressId,
+    walletAddressId: quote.walletAddressId,
     receiver: quote.receiver,
     debitAmount: quote.debitAmount,
     receiveAmount: quote.receiveAmount,

@@ -10,9 +10,9 @@ import { getPageTests } from '../../../shared/baseModel.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import { createAsset } from '../../../tests/asset'
 import {
-  MockPaymentPointer,
-  createPaymentPointer
-} from '../../../tests/paymentPointer'
+  MockWalletAddress,
+  createWalletAddress
+} from '../../../tests/walletAddress'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { Pagination } from '../../../shared/baseModel'
 import { PaymentType } from './model'
@@ -28,9 +28,9 @@ describe('Combined Payment Service', (): void => {
   let knex: Knex
   let combinedPaymentService: CombinedPaymentService
   let sendAsset: Asset
-  let sendPaymentPointerId: string
+  let sendWalletAddressId: string
   let receiveAsset: Asset
-  let receivePaymentPointer: MockPaymentPointer
+  let receiveWalletAddress: MockWalletAddress
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -42,10 +42,10 @@ describe('Combined Payment Service', (): void => {
   beforeEach(async (): Promise<void> => {
     sendAsset = await createAsset(deps)
     receiveAsset = await createAsset(deps)
-    sendPaymentPointerId = (
-      await createPaymentPointer(deps, { assetId: sendAsset.id })
+    sendWalletAddressId = (
+      await createWalletAddress(deps, { assetId: sendAsset.id })
     ).id
-    receivePaymentPointer = await createPaymentPointer(deps, {
+    receiveWalletAddress = await createWalletAddress(deps, {
       assetId: receiveAsset.id
     })
   })
@@ -60,12 +60,12 @@ describe('Combined Payment Service', (): void => {
 
   async function setupPayments(deps: IocContract<AppServices>) {
     const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: receivePaymentPointer.id
+      walletAddressId: receiveWalletAddress.id
     })
-    const receiverUrl = incomingPayment.getUrl(receivePaymentPointer)
+    const receiverUrl = incomingPayment.getUrl(receiveWalletAddress)
 
     const outgoingPayment = await createOutgoingPayment(deps, {
-      paymentPointerId: sendPaymentPointerId,
+      walletAddressId: sendWalletAddressId,
       receiver: receiverUrl,
       debitAmount: {
         value: BigInt(123),
@@ -105,12 +105,12 @@ describe('Combined Payment Service', (): void => {
       ).toMatchObject(toCombinedPayment(PaymentType.Incoming, incomingPayment))
     })
 
-    test('can filter by paymentPointerId', async (): Promise<void> => {
+    test('can filter by walletAddressId', async (): Promise<void> => {
       const { incomingPayment } = await setupPayments(deps)
       const payments = await combinedPaymentService.getPage({
         filter: {
-          paymentPointerId: {
-            in: [incomingPayment.paymentPointerId]
+          walletAddressId: {
+            in: [incomingPayment.walletAddressId]
           }
         }
       })

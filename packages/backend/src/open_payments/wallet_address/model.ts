@@ -1,13 +1,13 @@
 import { Model, Page } from 'objection'
-import { PaymentPointer as OpenPaymentsPaymentPointer } from '@interledger/open-payments'
+import { WalletAddress as OpenPaymentsWalletAddress } from '@interledger/open-payments'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../payment-method/ilp/connector/core/rafiki'
 import { Asset } from '../../asset/model'
 import { BaseModel, Pagination } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
-import { PaymentPointerKey } from '../../open_payments/payment_pointer/key/model'
+import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 
-export class PaymentPointer
+export class WalletAddress
   extends BaseModel
   implements ConnectorAccount, LiquidityAccount
 {
@@ -26,15 +26,15 @@ export class PaymentPointer
     },
     keys: {
       relation: Model.HasManyRelation,
-      modelClass: PaymentPointerKey,
+      modelClass: WalletAddressKey,
       join: {
         from: 'walletAddresses.id',
-        to: 'walletAddressKeys.paymentPointerId'
+        to: 'walletAddressKeys.walletAddressId'
       }
     }
   })
 
-  public keys?: PaymentPointerKey[]
+  public keys?: WalletAddressKey[]
 
   public url!: string
   public publicName?: string
@@ -43,9 +43,9 @@ export class PaymentPointer
   public asset!: Asset
 
   // The cumulative received amount tracked by
-  // `payment_pointer.web_monetization` webhook events.
+  // `wallet_address.web_monetization` webhook events.
   // The value should be equivalent to the following query:
-  // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `paymentPointer.id`
+  // select sum(`withdrawalAmount`) from `webhookEvents` where `withdrawalAccountId` = `walletAddress.id`
   public totalEventsAmount!: bigint
   public processAt!: Date | null
   public deactivatedAt!: Date | null
@@ -57,9 +57,9 @@ export class PaymentPointer
   public async onCredit({
     totalReceived,
     withdrawalThrottleDelay
-  }: OnCreditOptions): Promise<PaymentPointer> {
+  }: OnCreditOptions): Promise<WalletAddress> {
     if (this.asset.withdrawalThreshold !== null) {
-      const paymentPointer = await PaymentPointer.query()
+      const walletAddress = await WalletAddress.query()
         .patchAndFetchById(this.id, {
           processAt: new Date()
         })
@@ -68,8 +68,8 @@ export class PaymentPointer
           totalReceived - this.asset.withdrawalThreshold
         ])
         .withGraphFetched('asset')
-      if (paymentPointer) {
-        return paymentPointer
+      if (walletAddress) {
+        return walletAddress
       }
     }
     if (withdrawalThrottleDelay !== undefined && !this.processAt) {
@@ -80,9 +80,9 @@ export class PaymentPointer
     return this
   }
 
-  public toData(received: bigint): PaymentPointerData {
+  public toData(received: bigint): WalletAddressData {
     return {
-      paymentPointer: {
+      walletAddress: {
         id: this.id,
         createdAt: new Date(+this.createdAt).toISOString(),
         received: received.toString()
@@ -94,7 +94,7 @@ export class PaymentPointer
     authServer
   }: {
     authServer: string
-  }): OpenPaymentsPaymentPointer {
+  }): OpenPaymentsWalletAddress {
     return {
       id: this.url,
       publicName: this.publicName,
@@ -105,36 +105,36 @@ export class PaymentPointer
   }
 }
 
-export enum PaymentPointerEventType {
-  PaymentPointerWebMonetization = 'payment_pointer.web_monetization',
-  PaymentPointerNotFound = 'payment_pointer.not_found'
+export enum WalletAddressEventType {
+  WalletAddressWebMonetization = 'wallet_address.web_monetization',
+  WalletAddressNotFound = 'wallet_address.not_found'
 }
 
-export type PaymentPointerData = {
-  paymentPointer: {
+export type WalletAddressData = {
+  walletAddress: {
     id: string
     createdAt: string
     received: string
   }
 }
 
-export type PaymentPointerRequestedData = {
-  paymentPointerUrl: string
+export type WalletAddressRequestedData = {
+  walletAddressUrl: string
 }
 
-export class PaymentPointerEvent extends WebhookEvent {
-  public type!: PaymentPointerEventType
-  public data!: PaymentPointerData | PaymentPointerRequestedData
+export class WalletAddressEvent extends WebhookEvent {
+  public type!: WalletAddressEventType
+  public data!: WalletAddressData | WalletAddressRequestedData
 }
 
 export interface GetOptions {
   id: string
   client?: string
-  paymentPointerId?: string
+  walletAddressId?: string
 }
 
 export interface ListOptions {
-  paymentPointerId: string
+  walletAddressId: string
   client?: string
   pagination?: Pagination
 }
@@ -149,11 +149,11 @@ class SubresourceQueryBuilder<
   NumberQueryBuilderType!: SubresourceQueryBuilder<M, number>
   PageQueryBuilderType!: SubresourceQueryBuilder<M, Page<M>>
 
-  get({ id, paymentPointerId, client }: GetOptions) {
-    if (paymentPointerId) {
+  get({ id, walletAddressId, client }: GetOptions) {
+    if (walletAddressId) {
       this.where(
-        `${this.modelClass().tableName}.paymentPointerId`,
-        paymentPointerId
+        `${this.modelClass().tableName}.walletAddressId`,
+        walletAddressId
       )
     }
     if (client) {
@@ -161,22 +161,22 @@ class SubresourceQueryBuilder<
     }
     return this.findById(id)
   }
-  list({ paymentPointerId, client, pagination }: ListOptions) {
+  list({ walletAddressId, client, pagination }: ListOptions) {
     if (client) {
       this.where({ client })
     }
     return this.getPage(pagination).where(
-      `${this.modelClass().tableName}.paymentPointerId`,
-      paymentPointerId
+      `${this.modelClass().tableName}.walletAddressId`,
+      walletAddressId
     )
   }
 }
 
-export abstract class PaymentPointerSubresource extends BaseModel {
+export abstract class WalletAddressSubresource extends BaseModel {
   public static readonly urlPath: string
 
   public readonly walletAddressId!: string
-  public paymentPointer?: PaymentPointer
+  public walletAddress?: WalletAddress
 
   public abstract readonly assetId: string
   public abstract asset: Asset
@@ -185,11 +185,11 @@ export abstract class PaymentPointerSubresource extends BaseModel {
 
   static get relationMappings() {
     return {
-      paymentPointer: {
+      walletAddress: {
         relation: Model.BelongsToOneRelation,
-        modelClass: PaymentPointer,
+        modelClass: WalletAddress,
         join: {
-          from: `${this.tableName}.paymentPointerId`,
+          from: `${this.tableName}.walletAddressId`,
           to: 'walletAddresses.id'
         }
       }

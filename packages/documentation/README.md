@@ -81,7 +81,7 @@ For more information about importing things in Javascript, please refer to [impo
    ```http
    {
       "id":"https://wallet.example/alice/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c",
-      "paymentPointer":"https://wallet.example/alice",
+      "walletAddress":"https://wallet.example/alice",
       "receivedAmount": {
          "value":"0",
          "assetCode":"USD",

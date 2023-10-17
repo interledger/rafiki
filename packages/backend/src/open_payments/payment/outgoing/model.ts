@@ -5,9 +5,9 @@ import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
 import {
-  PaymentPointerSubresource,
-  PaymentPointer
-} from '../../payment_pointer/model'
+  WalletAddressSubresource,
+  WalletAddress
+} from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
@@ -22,7 +22,7 @@ export class OutgoingPaymentGrant extends DbErrors(Model) {
 }
 
 export class OutgoingPayment
-  extends PaymentPointerSubresource
+  extends WalletAddressSubresource
   implements ConnectorAccount, LiquidityAccount
 {
   public static readonly tableName = 'outgoingPayments'
@@ -71,8 +71,8 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
-  public getUrl(paymentPointer: PaymentPointer): string {
-    return `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`
+  public getUrl(walletAddress: WalletAddress): string {
+    return `${walletAddress.url}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {
@@ -119,7 +119,7 @@ export class OutgoingPayment
     const data: PaymentData = {
       payment: {
         id: this.id,
-        paymentPointerId: this.walletAddressId,
+        walletAddressId: this.walletAddressId,
         state: this.state,
         receiver: this.receiver,
         debitAmount: {
@@ -153,12 +153,12 @@ export class OutgoingPayment
   }
 
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer
+    walletAddress: WalletAddress
   ): OpenPaymentsOutgoingPayment {
     return {
-      id: this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.url,
-      quoteId: this.quote?.getUrl(paymentPointer) ?? undefined,
+      id: this.getUrl(walletAddress),
+      walletAddress: walletAddress.url,
+      quoteId: this.quote?.getUrl(walletAddress) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
       debitAmount: serializeAmount(this.debitAmount),
       sentAmount: serializeAmount(this.sentAmount),
@@ -203,7 +203,7 @@ export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
 export interface OutgoingPaymentResponse {
   id: string
-  paymentPointerId: string
+  walletAddressId: string
   createdAt: string
   receiver: string
   debitAmount: AmountJSON
