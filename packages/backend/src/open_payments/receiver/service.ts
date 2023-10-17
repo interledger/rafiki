@@ -1,6 +1,6 @@
 import {
   AuthenticatedClient,
-  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
   isPendingGrant,
   AccessType,
   AccessAction
@@ -82,7 +82,7 @@ async function createReceiver(
   }
 
   try {
-    return Receiver.fromIncomingPayment(incomingPaymentOrError)
+    return new Receiver(incomingPaymentOrError)
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(
@@ -103,7 +103,7 @@ async function createLocalIncomingPayment(
   deps: ServiceDependencies,
   args: CreateReceiverArgs,
   walletAddress: WalletAddress
-): Promise<OpenPaymentsIncomingPayment | ReceiverError> {
+): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | ReceiverError> {
   const { expiresAt, incomingAmount, metadata } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
@@ -141,7 +141,7 @@ async function getReceiver(
 ): Promise<Receiver | undefined> {
   const incomingPayment = await getIncomingPayment(deps, url)
   if (incomingPayment) {
-    return Receiver.fromIncomingPayment(incomingPayment)
+    return new Receiver(incomingPayment)
   }
 }
 
@@ -162,7 +162,7 @@ function parseIncomingPaymentUrl(
 async function getIncomingPayment(
   deps: ServiceDependencies,
   url: string
-): Promise<OpenPaymentsIncomingPayment | undefined> {
+): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
   try {
     const urlParseResult = parseIncomingPaymentUrl(url)
     if (!urlParseResult) {
@@ -209,7 +209,7 @@ async function getLocalIncomingPayment({
   deps: ServiceDependencies
   id: string
   walletAddress: WalletAddress
-}): Promise<OpenPaymentsIncomingPayment | undefined> {
+}): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id,
     walletAddressId: walletAddress.id

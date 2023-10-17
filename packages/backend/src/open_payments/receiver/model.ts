@@ -3,22 +3,12 @@ import base64url from 'base64url'
 
 import { Amount, parseAmount } from '../amount'
 import { AssetOptions } from '../../asset/service'
-import {
-  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  ILPStreamConnection as OpenPaymentsConnection
-} from '@interledger/open-payments'
-import { ConnectionBase } from '../connection/model'
+import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod } from '@interledger/open-payments'
 import { IlpAddress, isValidIlpAddress } from 'ilp-packet'
-
-interface OpenPaymentsConnectionWithIlpAddress
-  extends Omit<OpenPaymentsConnection, 'ilpAddress'> {
-  ilpAddress: IlpAddress
-}
 
 type ReceiverIncomingPayment = Readonly<
   Omit<
-    OpenPaymentsIncomingPaymentWithConnection,
-    | 'ilpStreamConnection'
+    OpenPaymentsIncomingPaymentWithPaymentMethod,
     | 'expiresAt'
     | 'receivedAmount'
     | 'incomingAmount'
@@ -33,29 +23,31 @@ type ReceiverIncomingPayment = Readonly<
   }
 >
 
-export class Receiver extends ConnectionBase {
+export class Receiver {
+  public readonly ilpAddress: IlpAddress
+  public readonly sharedSecret: Buffer
+  public readonly assetCode: string
+  public readonly assetScale: number
+  public readonly incomingPayment: ReceiverIncomingPayment
+
   // TODO: remove? still called 1 place
-  static fromConnection(
-    connection: OpenPaymentsConnection
-  ): Receiver | undefined {
-    if (!isValidIlpAddress(connection.ilpAddress)) {
-      throw new Error('Invalid ILP address on stream connection')
-    }
+  // static fromConnection(connection: Connection): Receiver | undefined {
+  //   if (!isValidIlpAddress(connection.ilpAddress)) {
+  //     throw new Error('Invalid ILP address on stream connection')
+  //   }
 
-    return new this({
-      id: connection.id,
-      assetCode: connection.assetCode,
-      assetScale: connection.assetScale,
-      sharedSecret: connection.sharedSecret,
-      ilpAddress: connection.ilpAddress
-    })
-  }
+  //   return new this({
+  //     // id: connection.id,
+  //     // assetCode: connection.assetCode,
+  //     // assetScale: connection.assetScale,
+  //     sharedSecret: connection.sharedSecret,
+  //     ilpAddress: connection.ilpAddress
+  //   })
+  // }
 
-  static fromIncomingPayment(
-    incomingPayment: OpenPaymentsIncomingPaymentWithConnection
-  ): Receiver {
-    if (!incomingPayment.ilpStreamConnection) {
-      throw new Error('Missing stream connection on incoming payment')
+  constructor(incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod) {
+    if (!incomingPayment.methods.length) {
+      throw new Error('Missing payment method(s) on incoming payment')
     }
 
     if (incomingPayment.completed) {
@@ -75,39 +67,31 @@ export class Receiver extends ConnectionBase {
       : undefined
     const receivedAmount = parseAmount(incomingPayment.receivedAmount)
 
-    if (!isValidIlpAddress(incomingPayment.ilpStreamConnection.ilpAddress)) {
-      throw new Error('Invalid ILP address on stream connection')
+    // TODO: handle multiple payment methods
+    const ilpMethod = incomingPayment.methods.find(
+      (method) => method.type === 'ilp'
+    )
+    if (!ilpMethod) {
+      throw new Error('Cannot create receiver from unsupported payment method')
+    }
+    if (!isValidIlpAddress(ilpMethod.ilpAddress)) {
+      throw new Error('Invalid ILP address on ilp payment method')
     }
 
-    return new this(
-      {
-        ...incomingPayment.ilpStreamConnection,
-        ilpAddress: incomingPayment.ilpStreamConnection.ilpAddress
-      },
-      {
-        id: incomingPayment.id,
-        completed: incomingPayment.completed,
-        walletAddress: incomingPayment.walletAddress,
-        expiresAt,
-        receivedAmount,
-        incomingAmount,
-        metadata: incomingPayment.metadata,
-        createdAt: new Date(incomingPayment.createdAt),
-        updatedAt: new Date(incomingPayment.updatedAt)
-      }
-    )
-  }
+    this.ilpAddress = ilpMethod.ilpAddress
+    this.sharedSecret = base64url.toBuffer(ilpMethod.sharedSecret)
+    // TODO: ensure these are the right assetCode/Scales
+    this.assetCode = incomingPayment.receivedAmount.assetCode
+    this.assetScale = incomingPayment.receivedAmount.assetScale
 
-  private constructor(
-    connection: OpenPaymentsConnectionWithIlpAddress,
-    public incomingPayment?: ReceiverIncomingPayment
-  ) {
-    super(
-      connection.ilpAddress,
-      base64url.toBuffer(connection.sharedSecret),
-      connection.assetCode,
-      connection.assetScale
-    )
+    this.incomingPayment = {
+      ...incomingPayment,
+      expiresAt,
+      receivedAmount,
+      incomingAmount,
+      createdAt: new Date(incomingPayment.createdAt),
+      updatedAt: new Date(incomingPayment.updatedAt)
+    }
   }
 
   public get asset(): AssetOptions {

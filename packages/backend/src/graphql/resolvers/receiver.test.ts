@@ -7,7 +7,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { Amount, serializeAmount } from '../../open_payments/amount'
 import {
-  mockIncomingPaymentWithConnection,
+  mockIncomingPaymentWithPaymentMethods,
   mockWalletAddress
 } from '@interledger/open-payments'
 import { CreateReceiverResponse } from '../generated/graphql'
@@ -46,8 +46,8 @@ describe('Receiver Resolver', (): void => {
     `(
       'creates receiver ($#)',
       async ({ metadata, expiresAt, incomingAmount }): Promise<void> => {
-        const receiver = Receiver.fromIncomingPayment(
-          mockIncomingPaymentWithConnection({
+        const receiver = new Receiver(
+          mockIncomingPaymentWithPaymentMethods({
             id: `${walletAddress.id}/incoming-payments/${uuid()}`,
             walletAddress: walletAddress.id,
             metadata,
