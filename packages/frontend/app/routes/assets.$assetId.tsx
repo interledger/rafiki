@@ -148,19 +148,37 @@ export default function ViewAssetPage() {
           </div>
         </div>
         {/* Asset Liquidity Info - END */}
-        {/* Asset Sending Fee Info */}
+        {/* Asset Fee Info */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Sending Fees</h3>
-            {asset.sendingFee ? (
-              <p className='text-sm'>Created at {asset.sendingFee.createdAt}</p>
-            ) : null}
+            <h3 className='text-lg font-medium'>Fees</h3>
             <ErrorPanel errors={response?.errors.sendingFee.message} />
+            <ErrorPanel errors={response?.errors.receivingFee.message} />
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
-                <div className='w-full p-4 space-y-3'>
+            <div className='flex justify-end p-4'>
+              <Button
+                aria-label='view asset fees page'
+                type='button'
+                to={`/assets/view-fees/${asset.id}`}
+              >
+                View all historic fees
+              </Button>
+            </div>
+            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-2'>
+              <Form method='post' replace preventScrollReset>
+                <fieldset disabled={currentPageAction}>
+                  <p className='font-medium'>Sending Fee</p>
+                  {asset.sendingFee ? (
+                    <p className='text-sm' style={{ height: '1.5rem' }}>
+                      Created at {asset.sendingFee.createdAt}
+                    </p>
+                  ) : (
+                    <p
+                      className='text-sm'
+                      style={{ visibility: 'hidden', height: '1.5rem' }}
+                    ></p>
+                  )}
                   <Input type='hidden' name='assetId' value={asset.id} />
                   <Input
                     type='number'
@@ -176,40 +194,31 @@ export default function ViewAssetPage() {
                     defaultValue={asset.sendingFee?.basisPoints ?? undefined}
                     error={response?.errors.sendingFee.fieldErrors.basisPoints}
                   />
-                  <p className='text-gray-500 text-sm mt-2'>
-                    A single basis point is equal to 0.01% of the total fee.
-                  </p>
-                </div>
-                <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save sending fee information'
-                    type='submit'
-                    name='intent'
-                    value='sending-fees'
-                  >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
-                  </Button>
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Asset Sending Fee Info - END */}
-        {/* Asset Receiving Fee Info */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Receiving Fees</h3>
-            {asset.receivingFee ? (
-              <p className='text-sm'>
-                Created at {asset.receivingFee.createdAt}
-              </p>
-            ) : null}
-            <ErrorPanel errors={response?.errors.receivingFee.message} />
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <Form method='post' replace preventScrollReset>
-              <fieldset disabled={currentPageAction}>
-                <div className='w-full p-4 space-y-3'>
+                  <div className='flex justify-end p-4'>
+                    <Button
+                      aria-label='save sending fee information'
+                      type='submit'
+                      name='intent'
+                      value='sending-fees'
+                    >
+                      {currentPageAction ? 'Saving ...' : 'Save'}
+                    </Button>
+                  </div>
+                </fieldset>
+              </Form>
+              <Form method='post' replace preventScrollReset>
+                <fieldset disabled={currentPageAction}>
+                  <p className='font-medium'>Receiving Fee</p>
+                  {asset.receivingFee ? (
+                    <p className='text-sm' style={{ height: '1.5rem' }}>
+                      Created at {asset.receivingFee.createdAt}
+                    </p>
+                  ) : (
+                    <p
+                      className='text-sm'
+                      style={{ visibility: 'hidden', height: '1.5rem' }}
+                    ></p>
+                  )}
                   <Input type='hidden' name='assetId' value={asset.id} />
                   <Input
                     type='number'
@@ -227,43 +236,22 @@ export default function ViewAssetPage() {
                       response?.errors.receivingFee.fieldErrors.basisPoints
                     }
                   />
-                  <p className='text-gray-500 text-sm mt-2'>
-                    A single basis point is equal to 0.01% of the total fee.
-                  </p>
-                </div>
-                <div className='flex justify-end p-4'>
-                  <Button
-                    aria-label='save receiving fee information'
-                    type='submit'
-                    name='intent'
-                    value='receiving-fees'
-                  >
-                    {currentPageAction ? 'Saving ...' : 'Save'}
-                  </Button>
-                </div>
-              </fieldset>
-            </Form>
-          </div>
-        </div>
-        {/* Asset Receiving Fee Info - END */}
-        {/* Historic Asset Fees */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Historic Fees</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='view asset fees page'
-                type='button'
-                to={`/assets/view-fees/${asset.id}`}
-              >
-                View all historic fees
-              </Button>
+                  <div className='flex justify-end p-4'>
+                    <Button
+                      aria-label='save receiving fee information'
+                      type='submit'
+                      name='intent'
+                      value='receiving-fees'
+                    >
+                      {currentPageAction ? 'Saving ...' : 'Save'}
+                    </Button>
+                  </div>
+                </fieldset>
+              </Form>
             </div>
           </div>
         </div>
-        {/* Historic Asset Fees - END */}
+        {/* Asset Fee Info - END */}
       </div>
       <Outlet />
     </div>
