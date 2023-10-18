@@ -170,7 +170,7 @@ export default function ViewAssetPage() {
                 <fieldset disabled={currentPageAction}>
                   <p className='font-medium'>Sending Fee</p>
                   {asset.sendingFee ? (
-                    <p className='text-sm' style={{ height: '1.5rem' }}>
+                    <p className='text-sm' style={{ height: '1.5rem', whiteSpace: 'nowrap' }}>
                       Created at {asset.sendingFee.createdAt}
                     </p>
                   ) : (
@@ -210,7 +210,7 @@ export default function ViewAssetPage() {
                 <fieldset disabled={currentPageAction}>
                   <p className='font-medium'>Receiving Fee</p>
                   {asset.receivingFee ? (
-                    <p className='text-sm' style={{ height: '1.5rem' }}>
+                    <p className='text-sm' style={{ height: '1.5rem', whiteSpace: 'nowrap' }}>
                       Created at {asset.receivingFee.createdAt}
                     </p>
                   ) : (
