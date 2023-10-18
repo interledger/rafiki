@@ -14,7 +14,7 @@ import {
   mockPendingGrant,
   mockGrant,
   mockWalletAddress,
-  mockIncomingPaymentWithConnection
+  mockIncomingPaymentWithPaymentMethods
 } from '@interledger/open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
@@ -130,7 +130,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           ...args,
           walletAddressUrl: walletAddress.id
         })
@@ -197,7 +197,7 @@ describe('Remote Incoming Payment Service', (): void => {
             ]
           }
         } as AccessToken
-        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           ...args,
           walletAddressUrl: walletAddress.id
         })
@@ -270,7 +270,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           ...args,
           walletAddressUrl: walletAddress.id
         })
