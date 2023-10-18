@@ -5,7 +5,7 @@ import {
   AuthenticatedClient,
   AccessType,
   AccessAction,
-  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
   WalletAddress as OpenPaymentsWalletAddress,
   mockWalletAddress,
   Grant as OpenPaymentsGrant,
@@ -118,7 +118,7 @@ describe('Receiver Service', (): void => {
         ${true}       | ${'existing grant'}
       `('remote ($description)', ({ existingGrant }): void => {
         let walletAddress: OpenPaymentsWalletAddress
-        let incomingPayment: OpenPaymentsIncomingPayment
+        let incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethods
         const authServer = faker.internet.url({ appendSlash: false })
         const INCOMING_PAYMENT_PATH = 'incoming-payments'
         const grantOptions = {
