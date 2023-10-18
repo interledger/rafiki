@@ -1,22 +1,20 @@
 openapi: 3.1.0
 info:
   title: Open Payments
-  version: '1.2'
+  version: '1.4'
   license:
     name: Apache 2.0
     identifier: Apache-2.0
   description: |-
-    The Open Payments API is a simple REST API with 5 resource types: **wallet address**, **quote**, **connection**, **incoming payment** and **outgoing payment**.
+    The Open Payments API is a simple REST API with 4 resource types: **wallet address**, **quote**, **incoming payment** and **outgoing payment**.
 
-    The *service endpoint* for the API is always the URL of the wallet address resource and all other resources (except connections) are sub-resources of the wallet address.
+    The *service endpoint* for the API is always the URL of the wallet address resource and all other resources are sub-resources of the wallet address.
 
     An incoming payment defines meta data that is automatically attached to payments made into the wallet address under that incoming payment. This facilitates automation of processes like reconciliation of payment into the wallet address with external systems.
 
     An outgoing payment is an instruction to make a payment out of the wallet address.
 
     A quote is a commitment from the Account Servicing Entity to deliver a particular amount to a receiver when sending a particular amount from the wallet address. It is only valid for a limited time.
-
-    For privacy reasons a connection resource is not a sub-resource of a wallet address.
 
     All resource and collection resource representations use JSON and the media-type `application/json`.  
 
@@ -25,25 +23,15 @@ info:
     2. `/outgoing-payments` contains the **outgoing payment** sub-resources  
     3. `/quotes` contains the **quote** sub-resources
 
-    There is no normative path for **connection** resources. In this documentation we use the path `/connections` but implementations may use any arbitrary path.
-
     Access to resources and permission to execute the methods exposed by the API is determined by the grants given to the client represented by an access token used in API requests.
   summary: An API for open access to financial accounts to send and receive payments.
   contact:
     email: tech@interledger.org
 servers:
-  - url: '{walletAddress}'
-    description: 'Server for when Wallet Address has a pathname  (ie https://openpayments.guide/alice)'
-    variables:
-      walletAddress:
-        default: https://openpayments.guide/alice
-  - url: '{walletAddress}/.well-known/pay'
-    description: 'Server for when Wallet Address has no pathname (ie https://openpayments.guide)'
-    variables:
-      walletAddress:
-        default: https://openpayments.guide
+  - url: 'https://rafiki.money'
+    description: 'Server for wallet address subresources (ie https://rafiki.money/alice)'
 tags:
-  - name: wallet-addres
+  - name: wallet-address
     description: wallet address operations
   - name: incoming-payment
     description: incoming payment operations
@@ -51,32 +39,30 @@ tags:
     description: outgoing payment operations
   - name: quote
     description: quote operations
-  - name: stream-connection
-    description: interledger STREAM connections
 paths:
   /:
     get:
       summary: Get a Wallet Address
       tags:
-        - wallet-addres
+        - wallet-address
       responses:
         '200':
           description: Wallet Address Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/wallet-addres'
+                $ref: '#/components/schemas/wallet-address'
               examples:
-                Get wallet address for $openpayments.guide/alice:
+                Get wallet address for $rafiki.money/alice:
                   value:
-                    id: 'https://openpayments.guide/alice'
+                    id: 'https://rafiki.money/alice'
                     publicName: Alice
                     assetCode: USD
                     assetScale: 2
-                    authServer: 'https://openpayments.guide/auth'
+                    authServer: 'https://rafiki.money/auth'
         '404':
           description: Wallet Address Not Found
-      operationId: get-wallet-addres
+      operationId: get-wallet-address
       description: |-
         Retrieve the public information of the Wallet Address.
 
@@ -89,7 +75,7 @@ paths:
     get:
       summary: Get the keys bound to a Wallet Address
       tags:
-        - wallet-addres
+        - wallet-address
       responses:
         '200':
           description: JWKS Document Found
@@ -100,45 +86,9 @@ paths:
               examples: {}
         '404':
           description: JWKS Document Not Found
-      operationId: get-wallet-addres-keys
+      operationId: get-wallet-address-keys
       description: Retrieve the public keys of the Wallet Address.
       security: []
-  '/connections/{id}':
-    servers:
-      - url: 'https://openpayments.guide'
-    get:
-      summary: Get ILP STREAM credentials for a connection
-      tags:
-        - stream-connection
-      responses:
-        '200':
-          description: Connection Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ilp-stream-connection'
-              examples:
-                Get connection:
-                  value:
-                    id: 'https://openpayments.guide/connections/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-                    ilpAddress: g.ilp.iwuyge987y.98y0f34tsrt8y
-                    sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA
-                    assetCode: USD
-                    assetScale: 2
-        '404':
-          description: Connection Not Found
-      operationId: get-ilp-stream-connection
-      description: |-
-        *NB* Use server url specific to this path.
-
-        Fetch new connection credentials for an ILP STREAM connection.
-
-        A connection is an ephemeral resource that is created to accommodate new incoming payments.
-
-        A new set of credential will be generated each time this API is called.
-      security: []
-    parameters:
-      - $ref: '#/components/parameters/id'
   /incoming-payments:
     post:
       summary: Create an Incoming Payment
@@ -151,12 +101,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/incoming-payment-with-connection'
+                $ref: '#/components/schemas/incoming-payment-with-methods'
               examples:
                 New Incoming Payment for $25:
                   value:
-                    id: 'https://openpayments.guide/alice/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c'
-                    walletAddress: 'https://openpayments.guide/alice/'
+                    id: 'https://rafiki.money/incoming-payments/08394f02-7b7b-45e2-b645-51d04e7c330c'
+                    walletAddress: 'https://rafiki.money/alice/'
                     incomingAmount:
                       value: '2500'
                       assetCode: USD
@@ -169,15 +119,12 @@ paths:
                     expiresAt: '2022-02-03T23:20:50.52Z'
                     metadata:
                       externalRef: INV2022-02-0137
-                    ilpStreamConnection:
-                      id: 'https://openpayments.guide/connections/ff394f02-7b7b-45e2-b645-51d04e7c345c'
-                      ilpAddress: g.ilp.iwuyge987y.98y08y
-                      sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA
-                      assetCode: USD
-                      assetScale: 2
                     createdAt: '2022-03-12T23:20:50.52Z'
                     updatedAt: '2022-04-01T10:24:36.11Z'
-        '401':
+                    methods:
+                      - type: ilp
+                        ilpAddress: g.ilp.iwuyge987y.98y08y
+                        sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA'401'
           $ref: '#/components/responses/401'
         '403':
           $ref: '#/components/responses/403'
@@ -244,7 +191,7 @@ paths:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/incoming-payment-with-connection-url'
+                      $ref: '#/components/schemas/incoming-payment'
               examples:
                 forward pagination:
                   value:
@@ -254,8 +201,8 @@ paths:
                       hasPreviousPage: false
                       hasNextPage: true
                     result:
-                      - id: 'https://openpayments.guide/alice/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
+                        walletAddress: 'https://rafiki.money/alice/'
                         incomingAmount:
                           value: '250'
                           assetCode: USD
@@ -264,21 +211,19 @@ paths:
                           value: '250'
                           assetCode: USD
                           assetScale: 2
-                        ilpStreamConnection: 'https://openpayments.guide/connections/376df9d5-c9a4-4c80-a354-86b915a04ff8'
-                        expiresAt: '2022-04-12T23:20:50.52Z'
-                        createdAt: '2022-03-12T23:20:50.52Z'
-                        updatedAt: '2022-04-01T10:24:36.11Z'
                         metadata:
                           description: 'Hi Mo, this is for the cappuccino I bought for you the other day.'
                           externalRef: Coffee w/ Mo on 10 March 22
+                        expiresAt: '2022-04-12T23:20:50.52Z'
+                        createdAt: '2022-03-12T23:20:50.52Z'
+                        updatedAt: '2022-04-01T10:24:36.11Z'
                         completed: true
-                      - id: 'https://openpayments.guide/alice/incoming-payments/32abc219-3dc3-44ec-a225-790cacfca8fa'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/incoming-payments/32abc219-3dc3-44ec-a225-790cacfca8fa'
+                        walletAddress: 'https://rafiki.money/alice/'
                         receivedAmount:
                           value: '100'
                           assetCode: USD
                           assetScale: 2
-                        ilpStreamConnection: 'https://openpayments.guide/connections/1f6df9d5-c9a4-4c80-a354-86b915a04ff8'
                         expiresAt: '2022-04-12T23:20:50.52Z'
                         createdAt: '2022-03-12T23:20:50.52Z'
                         updatedAt: '2022-04-01T10:24:36.11Z'
@@ -293,21 +238,20 @@ paths:
                       hasPreviousPage: true
                       hasNextPage: false
                     result:
-                      - id: 'https://openpayments.guide/alice/incoming-payments/32abc219-3dc3-44ec-a225-790cacfca8fa'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/incoming-payments/32abc219-3dc3-44ec-a225-790cacfca8fa'
+                        walletAddress: 'https://rafiki.money/alice/'
                         receivedAmount:
                           value: '100'
                           assetCode: USD
                           assetScale: 2
                         completed: true
-                        ilpStreamConnection: 'https://openpayments.guide/connections/1f6df9d5-c9a4-4c80-a354-86b915a04ff8'
                         expiresAt: '2022-04-12T23:20:50.52Z'
                         createdAt: '2022-03-12T23:20:50.52Z'
                         updatedAt: '2022-04-01T10:24:36.11Z'
                         metadata:
                           description: 'I love your website, Alice! Thanks for the great content'
-                      - id: 'https://openpayments.guide/alice/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
+                        walletAddress: 'https://rafiki.money/alice/'
                         incomingAmount:
                           value: '250'
                           assetCode: USD
@@ -317,7 +261,6 @@ paths:
                           assetCode: USD
                           assetScale: 2
                         completed: true
-                        ilpStreamConnection: 'https://openpayments.guide/connections/376df9d5-c9a4-4c80-a354-86b915a04ff8'
                         expiresAt: '2022-04-12T23:20:50.52Z'
                         createdAt: '2022-03-12T23:20:50.52Z'
                         updatedAt: '2022-04-01T10:24:36.11Z'
@@ -353,10 +296,10 @@ paths:
               examples:
                 New Fixed Send Outgoing Payment for $25:
                   value:
-                    id: 'https://openpayments.guide/alice/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
-                    walletAddress: 'https://openpayments.guide/alice/'
+                    id: 'https://rafiki.money/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
+                    walletAddress: 'https://rafiki.money/alice/'
                     failed: false
-                    receiver: 'https://openpayments.guide/bob/incoming-payments/48884225-b393-4872-90de-1b737e2491c2'
+                    receiver: 'https://rafiki.money/bob/incoming-payments/48884225-b393-4872-90de-1b737e2491c2'
                     debitAmount:
                       value: '2600'
                       assetCode: USD
@@ -383,7 +326,7 @@ paths:
             examples:
               Create an outgoing payment based on a quote:
                 value:
-                  quoteId: 'https://openpayments.guide/alice/quotes/ab03296b-0c8b-4776-b94e-7ee27d868d4d'
+                  quoteId: 'https://rafiki.money/quotes/ab03296b-0c8b-4776-b94e-7ee27d868d4d'
                   metadata:
                     externalRef: INV2022-02-0137
             schema:
@@ -439,10 +382,10 @@ paths:
                       hasPreviousPage: false
                       hasNextPage: true
                     result:
-                      - id: 'https://openpayments.guide/alice/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
+                        walletAddress: 'https://rafiki.money/alice/'
                         failed: false
-                        receiver: 'https://openpayments.guide/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
+                        receiver: 'https://rafiki.money/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
                         receiveAmount:
                           value: '2500'
                           assetCode: USD
@@ -460,10 +403,10 @@ paths:
                         metadata:
                           description: APlusVideo subscription
                           externalRef: 'customer: 847458475'
-                      - id: 'https://openpayments.guide/alice/outgoing-payments/0cffa5a4-58fd-4cc8-8e01-7145c72bf07c'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/outgoing-payments/0cffa5a4-58fd-4cc8-8e01-7145c72bf07c'
+                        walletAddress: 'https://rafiki.money/alice/'
                         failed: false
-                        receiver: 'https://openpayments.guide/shoeshop/incoming-payments/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
+                        receiver: 'https://rafiki.money/shoeshop/incoming-payments/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
                         debitAmount:
                           value: '7126'
                           assetCode: USD
@@ -489,10 +432,10 @@ paths:
                       hasPreviousPage: true
                       hasNextPage: false
                     result:
-                      - id: 'https://openpayments.guide/alice/outgoing-payments/0cffa5a4-58fd-4cc8-8e01-7145c72bf07c'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/outgoing-payments/0cffa5a4-58fd-4cc8-8e01-7145c72bf07c'
+                        walletAddress: 'https://rafiki.money/alice/'
                         failed: false
-                        receiver: 'https://openpayments.guide/shoeshop/incoming-payments/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
+                        receiver: 'https://rafiki.money/shoeshop/incoming-payments/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
                         debitAmount:
                           value: '7126'
                           assetCode: USD
@@ -510,10 +453,10 @@ paths:
                         metadata:
                           description: Thank you for your purchase at ShoeShop!
                           externalRef: INV2022-8943756
-                      - id: 'https://openpayments.guide/alice/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
-                        walletAddress: 'https://openpayments.guide/alice/'
+                      - id: 'https://rafiki.money/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
+                        walletAddress: 'https://rafiki.money/alice/'
                         failed: false
-                        receiver: 'https://openpayments.guide/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
+                        receiver: 'https://rafiki.money/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
                         receiveAmount:
                           value: '2500'
                           assetCode: USD
@@ -560,9 +503,9 @@ paths:
               examples:
                 New Fixed Send Quote for $25:
                   value:
-                    id: 'https://openpayments.guide/alice/quotes/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
-                    walletAddress: 'https://openpayments.guide/alice/'
-                    receiver: 'https://openpayments.guide/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
+                    id: 'https://rafiki.money/quotes/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
+                    walletAddress: 'https://rafiki.money/alice/'
+                    receiver: 'https://rafiki.money/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
                     debitAmount:
                       value: '2500'
                       assetCode: USD
@@ -571,6 +514,7 @@ paths:
                       value: '2198'
                       assetCode: EUR
                       assetScale: 2
+                    method: ilp
                     createdAt: '2022-03-12T23:20:50.52Z'
                     expiresAt: '2022-04-12T23:20:50.52Z'
         '400':
@@ -583,16 +527,22 @@ paths:
         content:
           application/json:
             examples:
-              Create fixed-send-amount quote for $25 to an ILP STREAM connection:
+              Create quote for an `receiver` that is an Incoming Payment with an `incomingAmount`:
                 value:
-                  receiver: 'https://openpayments.guide/connections/45a0d0ee-26dc-4c66-89e0-01fbf93156f7'
+                  receiver: 'https://rafiki.money/incoming-payments/37a0d0ee-26dc-4c66-89e0-01fbf93156f7'
+                  method: ilp
+              Create fixed-send amount quote for $25:
+                value:
+                  receiver: 'https://rafiki.money/incoming-payments/37a0d0ee-26dc-4c66-89e0-01fbf93156f7'
+                  method: ilp
                   debitAmount:
                     value: '2500'
                     assetCode: USD
                     assetScale: 2
-              Create fixed-receive-amount quote for $25:
+              Create fixed-receive amount quote for $25:
                 value:
-                  receiver: 'https://openpayments.guide/alice/incoming-payments/37a0d0ee-26dc-4c66-89e0-01fbf93156f7'
+                  receiver: 'https://rafiki.money/incoming-payments/37a0d0ee-26dc-4c66-89e0-01fbf93156f7'
+                  method: ilp
                   receiveAmount:
                     value: '2500'
                     assetCode: USD
@@ -603,29 +553,38 @@ paths:
                   properties:
                     receiver:
                       $ref: ./schemas.yaml#/components/schemas/receiver
+                    method:
+                      $ref: '#/components/schemas/payment-method'
                   required:
                     - receiver
+                    - method
                   additionalProperties: false
                 - description: Create a quote with a fixed-receive amount
                   properties:
                     receiver:
                       $ref: ./schemas.yaml#/components/schemas/receiver
+                    method:
+                      $ref: '#/components/schemas/payment-method'
                     receiveAmount:
                       description: The fixed amount that would be paid into the receiving wallet address given a successful outgoing payment.
                       $ref: ./schemas.yaml#/components/schemas/amount
                   required:
                     - receiver
+                    - method
                     - receiveAmount
                   additionalProperties: false
-                - description: Create a quote with a fixed send amount
+                - description: Create a quote with a fixed-send amount
                   properties:
                     receiver:
                       $ref: ./schemas.yaml#/components/schemas/receiver
+                    method:
+                      $ref: '#/components/schemas/payment-method'
                     debitAmount:
                       description: The fixed amount that would be sent from the sending wallet address given a successful outgoing payment.
                       $ref: ./schemas.yaml#/components/schemas/amount
                   required:
                     - receiver
+                    - method
                     - debitAmount
                   additionalProperties: false
         description: |-
@@ -650,12 +609,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/incoming-payment-with-connection'
+                anyOf:
+                  - $ref: '#/components/schemas/incoming-payment-with-methods'
+                  - $ref: '#/components/schemas/public-incoming-payment'
               examples:
                 Incoming Payment for $25 with $12.34 received so far:
                   value:
-                    id: 'https://openpayments.guide/alice/incoming-payments/2f1b0150-db73-49e8-8713-628baa4a17ff'
-                    walletAddress: 'https://openpayments.guide/alice/'
+                    id: 'https://rafiki.money/incoming-payments/2f1b0150-db73-49e8-8713-628baa4a17ff'
+                    walletAddress: 'https://rafiki.money/alice/'
                     incomingAmount:
                       value: '2500'
                       assetCode: USD
@@ -671,22 +632,20 @@ paths:
                     metadata:
                       description: Thanks for the flowers!
                       externalRef: INV-12876
-                    ilpStreamConnection:
-                      id: 'https://openpayments.guide/connections/4a1b0150-db73-49e8-8713-628baa4a17ff'
-                      ilpAddress: g.ilp.iwuyge987y.98y08y
-                      sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA
-                      assetCode: USD
-                      assetScale: 2
+                    methods:
+                      - type: ilp
+                        ilpAddress: g.ilp.iwuyge987y.98y08y
+                        sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA
         '401':
           $ref: '#/components/responses/401'
         '403':
           $ref: '#/components/responses/403'
         '404':
           description: Incoming Payment Not Found
-      description: A client can fetch the latest state of an incoming payment to determine the amount received into the wallet address.
       parameters:
-        - $ref: '#/components/parameters/signature-input'
-        - $ref: '#/components/parameters/signature'
+        - $ref: '#/components/parameters/optional-signature-input'
+        - $ref: '#/components/parameters/optional-signature'
+      description: A client can fetch the latest state of an incoming payment to determine the amount received into the wallet address.
     parameters:
       - $ref: '#/components/parameters/id'
   '/incoming-payments/{id}/complete':
@@ -706,8 +665,8 @@ paths:
               examples:
                 Completed Incoming Payment:
                   value:
-                    id: 'https://openpayments.guide/alice/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-                    walletAddress: 'https://openpayments.guide/alice/'
+                    id: 'https://rafiki.money/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
+                    walletAddress: 'https://rafiki.money/alice/'
                     incomingAmount:
                       value: '250'
                       assetCode: USD
@@ -754,10 +713,10 @@ paths:
               examples:
                 Outgoing Payment with a fixed send amount of $25:
                   value:
-                    id: 'https://openpayments.guide/bob/outgoing-payments/3859b39e-4666-4ce5-8745-72f1864c5371'
-                    walletAddress: 'https://openpayments.guide/bob/'
+                    id: 'https://rafiki.money/bob/outgoing-payments/3859b39e-4666-4ce5-8745-72f1864c5371'
+                    walletAddress: 'https://rafiki.money/bob/'
                     failed: false
-                    receiver: 'https://openpayments.guide/alice/incoming-payments/2f1b0150-db73-49e8-8713-628baa4a17ff'
+                    receiver: 'https://rafiki.money/incoming-payments/2f1b0150-db73-49e8-8713-628baa4a17ff'
                     debitAmount:
                       value: '2500'
                       assetCode: USD
@@ -803,9 +762,9 @@ paths:
               examples:
                 Quote with a fixed send amount of $25:
                   value:
-                    id: 'https://openpayments.guide/bob/quotes/3859b39e-4666-4ce5-8745-72f1864c5371'
-                    walletAddress: 'https://openpayments.guide/bob/'
-                    receiver: 'https://openpayments.guide/alice/incoming-payments/2f1b0150-db73-49e8-8713-628baa4a17ff'
+                    id: 'https://rafiki.money/bob/quotes/3859b39e-4666-4ce5-8745-72f1864c5371'
+                    walletAddress: 'https://rafiki.money/bob/'
+                    receiver: 'https://rafiki.money/incoming-payments/2f1b0150-db73-49e8-8713-628baa4a17ff'
                     debitAmount:
                       value: '2500'
                       assetCode: USD
@@ -814,6 +773,7 @@ paths:
                       value: '2198'
                       assetCode: EUR
                       assetScale: 2
+                    method: ilp
                     createdAt: '2022-03-12T23:20:50.52Z'
                     expiresAt: '2022-04-12T23:20:50.52Z'
         '401':
@@ -830,17 +790,17 @@ paths:
       - $ref: '#/components/parameters/id'
 components:
   schemas:
-    wallet-addres:
+    wallet-address:
       title: Wallet Address
       type: object
       description: A **wallet address** resource is the root of the API and contains the public details of the financial account represented by the Wallet Address that is also the service endpoint URL.
       additionalProperties: false
       examples:
-        - id: 'https://openpayments.guide/alice'
+        - id: 'https://rafiki.money/alice'
           publicName: Alice
           assetCode: USD
           assetScale: 2
-          authServer: 'https://openpayments.guide/auth'
+          authServer: 'https://rafiki.money/auth'
       properties:
         id:
           type: string
@@ -886,49 +846,13 @@ components:
               kty: OKP
               crv: Ed25519
               x: 11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo
-    ilp-stream-connection:
-      title: ILP Stream Connection
-      type: object
-      description: An **ILP STREAM Connection** is an endpoint that returns unique STREAM connection credentials to establish a STREAM connection to the underlying account.
-      additionalProperties: false
-      examples:
-        - id: 'https://openpayments.guide/connections/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-          ilpApddress: g.ilp.iwuyge987y.98y08y
-          sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA
-      properties:
-        id:
-          type: string
-          format: uri
-          description: The URL identifying the endpoint.
-          readOnly: true
-        ilpAddress:
-          type: string
-          maxLength: 1023
-          pattern: '^(g|private|example|peer|self|test[1-3]?|local)([.][a-zA-Z0-9_~-]+)+$'
-          description: The ILP address to use when establishing a STREAM connection.
-          readOnly: true
-        sharedSecret:
-          type: string
-          pattern: '^[a-zA-Z0-9-_]+$'
-          description: The base64 url-encoded shared secret to use when establishing a STREAM connection.
-          readOnly: true
-        assetCode:
-          $ref: ./schemas.yaml#/components/schemas/assetCode
-        assetScale:
-          $ref: ./schemas.yaml#/components/schemas/assetScale
-      required:
-        - id
-        - ilpAddress
-        - sharedSecret
-        - assetCode
-        - assetScale
     incoming-payment:
       title: Incoming Payment
       description: 'An **incoming payment** resource represents a payment that will be, is currently being, or has been received by the account.'
       type: object
       examples:
-        - id: 'https://openpayments.guide/alice/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-          walletAddress: 'https://openpayments.guide/alice/'
+        - id: 'https://rafiki.money/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
+          walletAddress: 'https://rafiki.money/alice/'
           incomingAmount:
             value: '250'
             assetCode: USD
@@ -944,8 +868,8 @@ components:
           metadata:
             description: 'Hi Mo, this is for the cappuccino I bought for you the other day.'
             externalRef: Coffee w/ Mo on 10 March 22
-        - id: 'https://openpayments.guide/alice/incoming-payments/456da9d5-c9a4-4c80-a354-86b915a04ff8'
-          walletAddress: 'https://openpayments.guide/alice/'
+        - id: 'https://rafiki.money/incoming-payments/456da9d5-c9a4-4c80-a354-86b915a04ff8'
+          walletAddress: 'https://rafiki.money/alice/'
           incomingAmount:
             value: '2500'
             assetCode: USD
@@ -957,6 +881,7 @@ components:
           expiresAt: '2022-04-12T23:20:50.52Z'
           createdAt: '2022-03-12T23:20:50.52Z'
           updatedAt: '2022-03-12T23:20:50.52Z'
+      additionalProperties: false
       properties:
         id:
           type: string
@@ -1000,77 +925,45 @@ components:
         - receivedAmount
         - createdAt
         - updatedAt
-    incoming-payment-with-connection:
-      title: Incoming Payment with Connection
-      description: An **incoming payment** resource with the Interledger STREAM Connection to use to pay into the wallet address under this incoming payment.
-      type: object
-      examples:
-        - id: 'https://openpayments.guide/alice/incoming-payments/016da9d5-c9a4-4c80-a354-86b915a04ff8'
-          walletAddress: 'https://openpayments.guide/alice/'
-          incomingAmount:
-            value: '250'
-            assetCode: USD
-            assetScale: 2
-          receivedAmount:
-            value: '250'
-            assetCode: USD
-            assetScale: 2
-          completed: true
-          expiresAt: '2022-04-12T23:20:50.52Z'
-          createdAt: '2022-03-12T23:20:50.52Z'
-          updatedAt: '2022-04-01T10:24:36.11Z'
-          metadata:
-            description: 'Hi Mo, this is for the cappuccino I bought for you the other day.'
-            externalRef: Coffee w/ Mo on 10 March 22
-          ilpStreamConnection:
-            id: 'https://openpayments.guide/connections/032da9d5-c9a4-4c80-a354-86b915a04ff8'
-            ilpApddress: g.ilp.iwuyge987y.98y08y
-            sharedSecret: 1c7eaXa4rd2fFOBl1iydvCT1tV5TbM3RW1WLCafu_JA
+    incoming-payment-with-methods:
+      title: Incoming Payment with payment methods
+      description: An **incoming payment** resource with public details.
       allOf:
         - $ref: '#/components/schemas/incoming-payment'
         - type: object
           properties:
-            ilpStreamConnection:
-              $ref: '#/components/schemas/ilp-stream-connection'
-      unevaluatedProperties: false
-    incoming-payment-with-connection-url:
-      title: Incoming Payment with Connection
-      description: An **incoming payment** resource with the url for the Interledger STREAM Connection resource to use to pay into the wallet address under this incoming payment.
+            methods:
+              description: The list of payment methods supported by this incoming payment.
+              type: array
+              uniqueItems: true
+              minItems: 0
+              items:
+                anyOf:
+                  - $ref: '#/components/schemas/ilp-payment-method'
+          required:
+            - methods
+    public-incoming-payment:
+      title: Public Incoming Payment
+      description: An **incoming payment** resource with public details.
       type: object
       examples:
-        - id: 'https://openpayments.guide/alice/incoming-payments/456da9d5-c9a4-4c80-a354-86b915a04ff8'
-          walletAddress: 'https://openpayments.guide/alice/'
-          incomingAmount:
-            value: '2500'
-            assetCode: USD
-            assetScale: 2
-          receivedAmount:
+        - receivedAmount:
             value: '0'
             assetCode: USD
             assetScale: 2
-          expiresAt: '2022-04-12T23:20:50.52Z'
-          createdAt: '2022-03-12T23:20:50.52Z'
-          updatedAt: '2022-03-12T23:20:50.52Z'
-          ilpStreamConnection: 'https://openpayments.guide/connections/782da9d5-c9a4-4c80-a354-86b915a04ff8'
-      allOf:
-        - $ref: '#/components/schemas/incoming-payment'
-        - type: object
-          properties:
-            ilpStreamConnection:
-              type: string
-              format: uri
-              description: Endpoint that returns unique STREAM connection credentials to establish a STREAM connection to the underlying account.
-              readOnly: true
-      unevaluatedProperties: false
+      properties:
+        receiveAmount:
+          $ref: ./schemas.yaml#/components/schemas/amount
+      unresolvedProperites: false
     outgoing-payment:
       title: Outgoing Payment
       description: 'An **outgoing payment** resource represents a payment that will be, is currently being, or has previously been, sent from the wallet address.'
       type: object
       examples:
-        - id: 'https://openpayments.guide/alice/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
-          walletAddress: 'https://openpayments.guide/alice/'
+        - id: 'https://rafiki.money/outgoing-payments/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
+          walletAddress: 'https://rafiki.money/alice/'
           failed: false
-          receiver: 'https://openpayments.guide/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
+          receiver: 'https://rafiki.money/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
           receiveAmount:
             value: '2500'
             assetCode: USD
@@ -1088,10 +981,10 @@ components:
           metadata:
             description: APlusVideo subscription
             externalRef: 'customer: 847458475'
-        - id: 'https://openpayments.guide/alice/outgoing-payments/0cffa5a4-58fd-4cc8-8e01-7145c72bf07c'
-          walletAddress: 'https://openpayments.guide/alice/'
+        - id: 'https://rafiki.money/outgoing-payments/0cffa5a4-58fd-4cc8-8e01-7145c72bf07c'
+          walletAddress: 'https://rafiki.money/alice/'
           failed: false
-          receiver: 'https://openpayments.guide/shoeshop/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
+          receiver: 'https://rafiki.money/shoeshop/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
           debitAmount:
             value: '7126'
             assetCode: USD
@@ -1128,7 +1021,7 @@ components:
           default: false
         receiver:
           $ref: ./schemas.yaml#/components/schemas/receiver
-          description: The URL of the incoming payment or ILP STREAM Connection that is being paid.
+          description: The URL of the incoming payment that is being paid.
         receiveAmount:
           $ref: ./schemas.yaml#/components/schemas/amount
           description: The total amount that should be received by the receiver when this outgoing payment has been paid.
@@ -1163,9 +1056,9 @@ components:
       description: A **quote** resource represents the quoted amount details with which an Outgoing Payment may be created.
       type: object
       examples:
-        - id: 'https://openpayments.guide/alice/quotes/ab03296b-0c8b-4776-b94e-7ee27d868d4d'
-          walletAddress: 'https://openpayments.guide/alice/'
-          receiver: 'https://openpayments.guide/shoeshop/incoming-payments/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
+        - id: 'https://rafiki.money/quotes/ab03296b-0c8b-4776-b94e-7ee27d868d4d'
+          walletAddress: 'https://rafiki.money/alice/'
+          receiver: 'https://rafiki.money/shoeshop/incoming-payments/2fe92c6f-ef0d-487c-8759-3784eae6bce9'
           receiveAmount:
             value: '2500'
             assetCode: USD
@@ -1178,11 +1071,12 @@ components:
             value: '2500'
             assetCode: USD
             assetScale: 2
+          method: ilp
           createdAt: '2022-03-12T23:20:50.52Z'
           expiresAt: '2022-04-12T23:20:50.52Z'
-        - id: 'https://openpayments.guide/alice/quotes/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
-          walletAddress: 'https://openpayments.guide/alice/'
-          receiver: 'https://openpayments.guide/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
+        - id: 'https://rafiki.money/quotes/8c68d3cc-0a0f-4216-98b4-4fa44a6c88cf'
+          walletAddress: 'https://rafiki.money/alice/'
+          receiver: 'https://rafiki.money/aplusvideo/incoming-payments/45d495ad-b763-4882-88d7-aa14d261686e'
           debitAmount:
             value: '7126'
             assetCode: USD
@@ -1191,6 +1085,7 @@ components:
             value: '7026'
             assetCode: USD
             assetScale: 2
+          method: ilp
           createdAt: '2022-03-12T23:20:50.52Z'
           expiresAt: '2022-04-12T23:20:50.52Z'
       additionalProperties: false
@@ -1207,13 +1102,15 @@ components:
           readOnly: true
         receiver:
           $ref: ./schemas.yaml#/components/schemas/receiver
-          description: The URL of the incoming payment or ILP STREAM Connection that the quote is created for.
+          description: The URL of the incoming payment that the quote is created for.
         receiveAmount:
           $ref: ./schemas.yaml#/components/schemas/amount
           description: The total amount that should be received by the receiver when the corresponding outgoing payment has been paid.
         debitAmount:
           $ref: ./schemas.yaml#/components/schemas/amount
           description: "The total amount that should be deducted from the sender's account when the corresponding outgoing payment has been paid. "
+        method:
+          $ref: '#/components/schemas/payment-method'
         expiresAt:
           type: string
           description: The date and time when the calculated `debitAmount` is no longer valid.
@@ -1229,6 +1126,7 @@ components:
         - receiveAmount
         - debitAmount
         - createdAt
+        - method
     page-info:
       description: ''
       type: object
@@ -1301,6 +1199,35 @@ components:
           kty: OKP
           crv: Ed25519
           x: oy0L_vTygNE4IogRyn_F5GmHXdqYVjIXkWs2jky7zsI
+    payment-method:
+      type: string
+      enum:
+        - ilp
+    ilp-payment-method:
+      type: object
+      additionalProperties: false
+      properties:
+        type:
+          type: string
+          enum:
+            - ilp
+        ilpAddress:
+          type: string
+          maxLength: 1023
+          pattern: '^(g|private|example|peer|self|test[1-3]?|local)([.][a-zA-Z0-9_~-]+)+$'
+          description: The ILP address to use when establishing a STREAM connection.
+        sharedSecret:
+          type: string
+          pattern: '^[a-zA-Z0-9-_]+$'
+          description: The base64 url-encoded shared secret to use when establishing a STREAM connection.
+      required:
+        - type
+        - ilpAddress
+        - sharedSecret
+      examples:
+        - type: string
+          ilpAddress: string
+          sharedSecret: string
   securitySchemes:
     GNAP:
       name: Authorization
@@ -1332,6 +1259,8 @@ components:
       schema:
         type: integer
         minimum: 1
+        maximum: 100
+        default: 10
       name: first
       in: query
       description: The number of items to return after the cursor.
@@ -1339,6 +1268,8 @@ components:
       schema:
         type: integer
         minimum: 1
+        maximum: 100
+        default: 10
       name: last
       in: query
       description: The number of items to return before the cursor.
@@ -1353,17 +1284,29 @@ components:
       name: Signature
       in: header
       schema:
-        type: string
-        example: 'Signature: sig1=:EWJgAONk3D6542Scj8g51rYeMHw96cH2XiCMxcyL511wyemGcw==:'
+        $ref: '#/components/parameters/optional-signature'
       description: 'The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK.'
       required: true
     signature-input:
       name: Signature-Input
       in: header
       schema:
+        $ref: '#/components/parameters/optional-signature-input'
+      description: 'The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member''s key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member''s value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details.'
+      required: true
+    optional-signature:
+      name: Signature
+      in: header
+      schema:
+        type: string
+        example: 'Signature: sig1=:EWJgAONk3D6542Scj8g51rYeMHw96cH2XiCMxcyL511wyemGcw==:'
+      description: 'The signature generated based on the Signature-Input, using the signing algorithm specified in the "alg" field of the JWK.'
+    optional-signature-input:
+      name: Signature-Input
+      in: header
+      schema:
         type: string
         example: 'Signature-Input: sig1=("@method" "@target-uri" "content-digest" "content-length" "content-type");created=1618884473;keyid="gnap-rsa"'
       description: 'The Signature-Input field is a Dictionary structured field containing the metadata for one or more message signatures generated from components within the HTTP message.  Each member describes a single message signature.  The member''s key is the label that uniquely identifies the message signature within the context of the HTTP message.  The member''s value is the serialization of the covered components Inner List plus all signature metadata parameters identified by the label.  The following components MUST be included: - "@method" - "@target-uri" - "authorization".  When the message contains a request body, the covered components MUST also include the following: - "content-digest"  The keyid parameter of the signature MUST be set to the kid value of the JWK.      See [ietf-httpbis-message-signatures](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-message-signatures#section-4.1) for more details.'
-      required: true
 security:
   - GNAP: []

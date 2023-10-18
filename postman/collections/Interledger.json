@@ -1583,6 +1583,63 @@
 							"response": []
 						},
 						{
+							"name": "Get Incoming Payment (Unauthenticated)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "836507d4-1c20-4b2c-ad6f-b374cb57d305",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "96baae4b-4a6a-4265-b1f5-29d0f16e11ad",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "e53e9769-1a49-4d1d-a1f8-a94e54e4a4fd",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}",
+										"disabled": true
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments",
+										"{{incomingPaymentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "List Incoming Payments",
 							"event": [
 								{

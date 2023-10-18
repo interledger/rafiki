@@ -262,4 +262,11 @@ export class IncomingPayment
       ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
     }
   }
+
+  public toPublicOpenPaymentsType(): Pick<
+    OpenPaymentsIncomingPayment,
+    'receivedAmount'
+  > {
+    return { receivedAmount: serializeAmount(this.receivedAmount) }
+  }
 }
