@@ -327,11 +327,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
 
-      describe.each`
-        toConnection | description
-        ${true}      | ${'connection receiver'}
-        ${false}     | ${'incoming payment receiver'}
-      `('$description', ({ toConnection }): void => {
+      describe('incoming payment receiver', (): void => {
         it.each`
           outgoingPeer | description
           ${false}     | ${''}
@@ -341,11 +337,6 @@ describe('OutgoingPaymentService', (): void => {
           async ({ outgoingPeer }): Promise<void> => {
             const peerService = await deps.use('peerService')
             const peer = await createPeer(deps)
-            if (toConnection) {
-              const fetchedReceiver = connectionService.getUrl(incomingPayment)
-              assert.ok(fetchedReceiver)
-              receiver = fetchedReceiver
-            }
             const quote = await createQuote(deps, {
               walletAddressId,
               receiver,
@@ -802,352 +793,325 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('processNext', (): void => {
-    describe.each`
-      toConnection | description
-      ${true}      | ${'connection'}
-      ${false}     | ${'incoming payment'}
-    `('SENDING (to $description) → ', ({ toConnection }): void => {
-      const receiveAmount = {
-        value: BigInt(123),
-        assetCode: destinationAsset.code,
-        assetScale: destinationAsset.scale
+    const receiveAmount = {
+      value: BigInt(123),
+      assetCode: destinationAsset.code,
+      assetScale: destinationAsset.scale
+    }
+
+    async function setup(
+      opts: Omit<CreateQuoteOptions, 'walletAddressId'>,
+      incomingAmount?: Amount
+    ): Promise<string> {
+      if (incomingAmount) {
+        await incomingPayment.$query(knex).patch({ incomingAmount })
       }
+      const payment = await createOutgoingPayment(deps, {
+        walletAddressId,
+        ...opts
+      })
 
-      beforeEach((): void => {
-        if (toConnection) {
-          const fetchedReceiver = connectionService.getUrl(incomingPayment)
-          assert.ok(fetchedReceiver)
-          receiver = fetchedReceiver
+      trackAmountDelivered(payment.id)
+
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: payment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toMatchObject({
+        state: OutgoingPaymentState.Sending
+      })
+
+      return payment.id
+    }
+
+    test.each`
+      debitAmount    | receiveAmount
+      ${debitAmount} | ${undefined}
+      ${undefined}   | ${receiveAmount}
+    `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
+      const paymentId = await setup({
+        receiver,
+        debitAmount,
+        receiveAmount
+      })
+
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      const amountSent = payment.receiveAmount.value * BigInt(2)
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value - amountSent,
+        amountSent,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: payment.debitAmount.value - amountSent
+      })
+    })
+
+    it('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value * 2n,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
         }
       })
-
-      async function setup(
-        opts: Omit<CreateQuoteOptions, 'walletAddressId'>,
-        incomingAmount?: Amount
-      ): Promise<string> {
-        if (incomingAmount) {
-          await incomingPayment.$query(knex).patch({ incomingAmount })
-        }
-        const payment = await createOutgoingPayment(deps, {
-          walletAddressId,
-          ...opts
-        })
-
-        trackAmountDelivered(payment.id)
-
-        await expect(
-          outgoingPaymentService.fund({
-            id: payment.id,
-            amount: payment.debitAmount.value,
-            transferId: uuid()
-          })
-        ).resolves.toMatchObject({
-          state: OutgoingPaymentState.Sending
-        })
-
-        return payment.id
-      }
-
-      test.each`
-        debitAmount    | receiveAmount
-        ${debitAmount} | ${undefined}
-        ${undefined}   | ${receiveAmount}
-      `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
-        const paymentId = await setup({
-          receiver,
-          debitAmount,
-          receiveAmount
-        })
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const amountSent = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - amountSent,
-          amountSent,
-          amountDelivered: payment.receiveAmount.value,
-          incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value - amountSent
-        })
+      assert.ok(incomingPayment.walletAddress)
+      const paymentId = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount
       })
 
-      it('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
-        incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: receiverWalletAddress.id,
-          incomingAmount: {
-            value: receiveAmount.value * 2n,
-            assetCode: receiverWalletAddress.asset.code,
-            assetScale: receiverWalletAddress.asset.scale
-          }
-        })
-
-        const fetchedReceiver = connectionService.getUrl(incomingPayment)
-        assert.ok(fetchedReceiver)
-        assert.ok(incomingPayment.walletAddress)
-        const paymentId = await setup({
-          receiver: toConnection
-            ? fetchedReceiver
-            : incomingPayment.getUrl(incomingPayment.walletAddress),
-          receiveAmount
-        })
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const amountSent = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - amountSent,
-          amountSent,
-          amountDelivered: payment.receiveAmount.value,
-          incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value - amountSent
-        })
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      const amountSent = payment.receiveAmount.value * BigInt(2)
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value - amountSent,
+        amountSent,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: payment.debitAmount.value - amountSent
       })
+    })
 
-      it('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
-        const paymentId = await setup(
-          {
-            receiver,
-            receiveAmount: toConnection && receiveAmount
-          },
-          receiveAmount
-        )
-
-        const amountAlreadyDelivered = BigInt(34)
-        await payIncomingPayment(amountAlreadyDelivered)
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        // The amountAlreadyDelivered is unknown to the sender when sending to
-        // the connection (instead of the incoming payment), so the entire
-        // receive amount is delivered by the outgoing payment ("overpaying"
-        // the incoming payment).
-        // Incoming payments allow overpayment (above the incomingAmount) for
-        // one packet. In this case, the full payment amount was completed in a
-        // single packet. With a different combination of amounts and
-        // maxPacketAmount limits, an outgoing payment to a connection could
-        // overpay the corresponding incoming payment's incomingAmount without
-        // the full outgoing payment receive amount being delivered.
-        const amountSent = toConnection
-          ? payment.receiveAmount.value * BigInt(2)
-          : (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - amountSent,
-          amountSent,
-          amountDelivered: toConnection
-            ? payment.receiveAmount.value
-            : payment.receiveAmount.value - amountAlreadyDelivered,
-          incomingPaymentReceived: toConnection
-            ? payment.receiveAmount.value + amountAlreadyDelivered
-            : payment.receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value - amountSent
-        })
-      })
-
-      it('SENDING (partial payment then retryable Pay error)', async (): Promise<void> => {
-        mockPay(
-          {
-            maxSourceAmount: BigInt(10),
-            minDeliveryAmount: BigInt(5)
-          },
-          Pay.PaymentError.ClosedByReceiver
-        )
-
-        const paymentId = await setup({
-          receiver,
-          debitAmount
-        })
-
-        for (let i = 0; i < 4; i++) {
-          const payment = await processNext(
-            paymentId,
-            OutgoingPaymentState.Sending
-          )
-          expect(payment.stateAttempts).toBe(i + 1)
-          await expectOutcome(payment, {
-            amountSent: BigInt(10 * (i + 1)),
-            amountDelivered: BigInt(5 * (i + 1))
-          })
-          // Skip through the backoff timer.
-          fastForwardToAttempt(payment.stateAttempts)
-        }
-        // Last attempt fails, but no more retries.
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          Pay.PaymentError.ClosedByReceiver
-        )
-        expect(payment.stateAttempts).toBe(0)
-        // "mockPay" allows a small amount of money to be paid every attempt.
-        await expectOutcome(payment, {
-          accountBalance: BigInt(123 - 10 * 5),
-          amountSent: BigInt(10 * 5),
-          amountDelivered: BigInt(5 * 5),
-          withdrawAmount: BigInt(123 - 10 * 5)
-        })
-      })
-
-      it('FAILED (non-retryable Pay error)', async (): Promise<void> => {
-        mockPay(
-          {
-            maxSourceAmount: BigInt(10),
-            minDeliveryAmount: BigInt(5)
-          },
-          Pay.PaymentError.ReceiverProtocolViolation
-        )
-        const paymentId = await setup({
-          receiver,
-          debitAmount
-        })
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          Pay.PaymentError.ReceiverProtocolViolation
-        )
-        await expectOutcome(payment, {
-          accountBalance: BigInt(123 - 10),
-          amountSent: BigInt(10),
-          amountDelivered: BigInt(5),
-          withdrawAmount: BigInt(123 - 10)
-        })
-      })
-
-      it('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
-        const mockFn = mockPay(
-          {
-            maxSourceAmount: BigInt(10),
-            minDeliveryAmount: BigInt(5)
-          },
-          Pay.PaymentError.ClosedByReceiver
-        )
-        const paymentId = await setup({
+    it('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
+      const paymentId = await setup(
+        {
           receiver,
           receiveAmount
-        })
+        },
+        receiveAmount
+      )
 
+      const amountAlreadyDelivered = BigInt(34)
+      await payIncomingPayment(amountAlreadyDelivered)
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      // The amountAlreadyDelivered is unknown to the sender when sending to
+      // the connection (instead of the incoming payment), so the entire
+      // receive amount is delivered by the outgoing payment ("overpaying"
+      // the incoming payment).
+      // Incoming payments allow overpayment (above the incomingAmount) for
+      // one packet. In this case, the full payment amount was completed in a
+      // single packet. With a different combination of amounts and
+      // maxPacketAmount limits, an outgoing payment to a connection could
+      // overpay the corresponding incoming payment's incomingAmount without
+      // the full outgoing payment receive amount being delivered.
+      const amountSent =
+        (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value - amountSent,
+        amountSent,
+        amountDelivered: payment.receiveAmount.value - amountAlreadyDelivered,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: payment.debitAmount.value - amountSent
+      })
+    })
+
+    it('SENDING (partial payment then retryable Pay error)', async (): Promise<void> => {
+      mockPay(
+        {
+          maxSourceAmount: BigInt(10),
+          minDeliveryAmount: BigInt(5)
+        },
+        Pay.PaymentError.ClosedByReceiver
+      )
+
+      const paymentId = await setup({
+        receiver,
+        debitAmount
+      })
+
+      for (let i = 0; i < 4; i++) {
         const payment = await processNext(
           paymentId,
           OutgoingPaymentState.Sending
         )
-        mockFn.mockRestore()
-        fastForwardToAttempt(1)
+        expect(payment.stateAttempts).toBe(i + 1)
         await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - BigInt(10),
-          amountSent: BigInt(10),
-          amountDelivered: BigInt(5)
+          amountSent: BigInt(10 * (i + 1)),
+          amountDelivered: BigInt(5 * (i + 1))
         })
+        // Skip through the backoff timer.
+        fastForwardToAttempt(payment.stateAttempts)
+      }
+      // Last attempt fails, but no more retries.
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Failed,
+        Pay.PaymentError.ClosedByReceiver
+      )
+      expect(payment.stateAttempts).toBe(0)
+      // "mockPay" allows a small amount of money to be paid every attempt.
+      await expectOutcome(payment, {
+        accountBalance: BigInt(123 - 10 * 5),
+        amountSent: BigInt(10 * 5),
+        amountDelivered: BigInt(5 * 5),
+        withdrawAmount: BigInt(123 - 10 * 5)
+      })
+    })
 
-        // The next attempt is without the mock, so it succeeds.
-        const payment2 = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const sentAmount = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment2, {
-          accountBalance: payment.debitAmount.value - sentAmount,
-          amountSent: sentAmount,
-          amountDelivered: payment.receiveAmount.value
-        })
+    it('FAILED (non-retryable Pay error)', async (): Promise<void> => {
+      mockPay(
+        {
+          maxSourceAmount: BigInt(10),
+          minDeliveryAmount: BigInt(5)
+        },
+        Pay.PaymentError.ReceiverProtocolViolation
+      )
+      const paymentId = await setup({
+        receiver,
+        debitAmount
       })
 
-      // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it('COMPLETED (already fully paid)', async (): Promise<void> => {
-        const paymentId = await setup(
-          {
-            receiver,
-            receiveAmount
-          },
-          receiveAmount
-        )
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Failed,
+        Pay.PaymentError.ReceiverProtocolViolation
+      )
+      await expectOutcome(payment, {
+        accountBalance: BigInt(123 - 10),
+        amountSent: BigInt(10),
+        amountDelivered: BigInt(5),
+        withdrawAmount: BigInt(123 - 10)
+      })
+    })
 
-        await processNext(paymentId, OutgoingPaymentState.Completed)
-        // Pretend that the transaction didn't commit.
-        await OutgoingPayment.query(knex)
-          .findById(paymentId)
-          .patch({ state: OutgoingPaymentState.Sending })
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const sentAmount = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value - sentAmount,
-          amountSent: sentAmount,
-          amountDelivered: payment.receiveAmount.value
-        })
+    it('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
+      const mockFn = mockPay(
+        {
+          maxSourceAmount: BigInt(10),
+          minDeliveryAmount: BigInt(5)
+        },
+        Pay.PaymentError.ClosedByReceiver
+      )
+      const paymentId = await setup({
+        receiver,
+        receiveAmount
       })
 
-      it('COMPLETED (already fully paid)', async (): Promise<void> => {
-        const paymentId = await setup(
-          {
-            receiver,
-            receiveAmount
-          },
-          receiveAmount
-        )
-        // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
-        await payIncomingPayment(receiveAmount.value)
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        await expectOutcome(payment, {
-          accountBalance: payment.debitAmount.value,
-          amountSent: BigInt(0),
-          amountDelivered: BigInt(0),
-          incomingPaymentReceived: receiveAmount.value,
-          withdrawAmount: payment.debitAmount.value
-        })
+      const payment = await processNext(paymentId, OutgoingPaymentState.Sending)
+      mockFn.mockRestore()
+      fastForwardToAttempt(1)
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value - BigInt(10),
+        amountSent: BigInt(10),
+        amountDelivered: BigInt(5)
       })
 
-      it('FAILED (source asset changed)', async (): Promise<void> => {
-        const paymentId = await setup({
+      // The next attempt is without the mock, so it succeeds.
+      const payment2 = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      const sentAmount = payment.receiveAmount.value * BigInt(2)
+      await expectOutcome(payment2, {
+        accountBalance: payment.debitAmount.value - sentAmount,
+        amountSent: sentAmount,
+        amountDelivered: payment.receiveAmount.value
+      })
+    })
+
+    // Caused by retry after failed SENDING→COMPLETED transition commit.
+    it('COMPLETED (already fully paid)', async (): Promise<void> => {
+      const paymentId = await setup(
+        {
           receiver,
-          debitAmount
-        })
-        const { id: assetId } = await createAsset(deps, {
-          code: asset.code,
-          scale: asset.scale + 1
-        })
-        await OutgoingPayment.relatedQuery('walletAddress')
-          .for(paymentId)
-          .patch({
-            assetId
-          })
+          receiveAmount
+        },
+        receiveAmount
+      )
 
-        await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          LifecycleError.SourceAssetConflict
-        )
+      await processNext(paymentId, OutgoingPaymentState.Completed)
+      // Pretend that the transaction didn't commit.
+      await OutgoingPayment.query(knex)
+        .findById(paymentId)
+        .patch({ state: OutgoingPaymentState.Sending })
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      const sentAmount = payment.receiveAmount.value * BigInt(2)
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value - sentAmount,
+        amountSent: sentAmount,
+        amountDelivered: payment.receiveAmount.value
       })
+    })
 
-      it('FAILED (destination asset changed)', async (): Promise<void> => {
-        const paymentId = await setup({
+    it('COMPLETED (already fully paid)', async (): Promise<void> => {
+      const paymentId = await setup(
+        {
           receiver,
-          debitAmount
-        })
-        // Pretend that the destination asset was initially different.
-        await OutgoingPayment.relatedQuery('quote')
-          .for(paymentId)
-          .patch({
-            receiveAmount: {
-              ...receiveAmount,
-              assetScale: 55
-            }
-          })
-        await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          Pay.PaymentError.DestinationAssetConflict
-        )
+          receiveAmount
+        },
+        receiveAmount
+      )
+      // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
+      await payIncomingPayment(receiveAmount.value)
+
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value,
+        amountSent: BigInt(0),
+        amountDelivered: BigInt(0),
+        incomingPaymentReceived: receiveAmount.value,
+        withdrawAmount: payment.debitAmount.value
       })
+    })
+
+    it('FAILED (source asset changed)', async (): Promise<void> => {
+      const paymentId = await setup({
+        receiver,
+        debitAmount
+      })
+      const { id: assetId } = await createAsset(deps, {
+        code: asset.code,
+        scale: asset.scale + 1
+      })
+      await OutgoingPayment.relatedQuery('paymentPointer')
+        .for(paymentId)
+        .patch({
+          assetId
+        })
+
+      await processNext(
+        paymentId,
+        OutgoingPaymentState.Failed,
+        LifecycleError.SourceAssetConflict
+      )
+    })
+
+    it('FAILED (destination asset changed)', async (): Promise<void> => {
+      const paymentId = await setup({
+        receiver,
+        debitAmount
+      })
+      // Pretend that the destination asset was initially different.
+      await OutgoingPayment.relatedQuery('quote')
+        .for(paymentId)
+        .patch({
+          receiveAmount: {
+            ...receiveAmount,
+            assetScale: 55
+          }
+        })
+      await processNext(
+        paymentId,
+        OutgoingPaymentState.Failed,
+        Pay.PaymentError.DestinationAssetConflict
+      )
     })
   })
 
