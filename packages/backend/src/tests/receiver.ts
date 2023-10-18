@@ -18,7 +18,7 @@ export async function createReceiver(
 
   const connectionService = await deps.use('connectionService')
 
-  return Receiver.fromIncomingPayment(
+  return new Receiver(
     incomingPayment.toOpenPaymentsType(
       walletAddress,
       connectionService.get(incomingPayment)!
