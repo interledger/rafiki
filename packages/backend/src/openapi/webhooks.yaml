@@ -287,8 +287,7 @@ components:
                   type: string
                   format: date-time
                 received:
-                  type: string
-                  format: uint64
+                  $ref: ./schemas.yaml#/components/schemas/amount
       additionalProperties: false
     liquidityEvent:
       required:
