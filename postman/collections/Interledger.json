@@ -1606,6 +1606,63 @@
 							"response": []
 						},
 						{
+							"name": "Get Incoming Payment (Unauthenticated)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"id": "836507d4-1c20-4b2c-ad6f-b374cb57d305",
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"id": "96baae4b-4a6a-4265-b1f5-29d0f16e11ad",
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"id": "e53e9769-1a49-4d1d-a1f8-a94e54e4a4fd",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "GNAP {{accessToken}}",
+										"disabled": true
+									},
+									{
+										"key": "Host",
+										"value": "happy-life-bank-backend"
+									}
+								],
+								"url": {
+									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}",
+									"host": [
+										"{{pfryPaymentPointer}}"
+									],
+									"path": [
+										"incoming-payments",
+										"{{incomingPaymentId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "List Incoming Payments",
 							"event": [
 								{
@@ -2273,6 +2330,7 @@
 								{
 									"listen": "test",
 									"script": {
+										"id": "5abe8b73-6d8a-4748-ba9e-20661769ca18",
 										"exec": [
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"accessToken\", body?.access_token?.value);",
@@ -2286,6 +2344,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"id": "43a627a3-dd14-45c4-bdad-99441ba521e8",
 										"exec": [
 											"eval(pm.collectionVariables.get('preRequestSignaturesGrantRequest'))",
 											""
@@ -3192,54 +3251,54 @@
 	],
 	"variable": [
 		{
-			"id": "7bca49f8-2255-4e1e-9e3e-a792bddf7d37",
+			"id": "266936d6-76e4-460d-a29a-411a00cf6143",
 			"key": "OpenPaymentsHost",
 			"value": "http://localhost:3000"
 		},
 		{
-			"id": "cf0b2f1f-0bf8-4efb-90d0-1a729e60c278",
+			"id": "d674fcb8-0411-41ea-bb7b-6ba9cac95fde",
 			"key": "PeerOpenPaymentsHost",
 			"value": "http://localhost:4000"
 		},
 		{
-			"id": "dc12553e-9186-4b46-b3c1-035e4ff0b4fc",
+			"id": "f5263af1-3cdd-42ac-a197-6313d7e60406",
 			"key": "OpenPaymentsAuthHost",
 			"value": "http://localhost:3006"
 		},
 		{
-			"id": "4899179b-2e52-4615-8363-93c442a0dc6f",
+			"id": "f543063c-4b28-4531-ae48-3633499baed5",
 			"key": "PeerOpenPaymentsAuthHost",
 			"value": "http://localhost:4006"
 		},
 		{
-			"id": "09f92422-6952-496e-8d7e-92994e2164b5",
+			"id": "372f33fb-a2d3-47cd-bfdc-6cf77edfc64d",
 			"key": "RafikiGraphqlHost",
 			"value": "http://localhost:3001"
 		},
 		{
-			"id": "21106488-0732-4c92-b8eb-53fa7fdeb66e",
+			"id": "4135489f-3910-4714-af0b-6b822368a384",
 			"key": "RafikiAuthGraphqlHost",
 			"value": "http://localhost:3003",
 			"type": "string"
 		},
 		{
-			"id": "c044d9ae-0430-4359-9c67-d6aa51447ddb",
+			"id": "2d322304-7b78-4f2a-ae11-57e6cac2195c",
 			"key": "PeerGraphqlHost",
 			"value": "http://localhost:4001"
 		},
 		{
-			"id": "290af3fa-0b10-462d-8547-be99f816db33",
+			"id": "5ecfa931-5bba-4732-a77a-33fd71220ab4",
 			"key": "PeerAuthGraphqlHost",
 			"value": "http://localhost:4003",
 			"type": "string"
 		},
 		{
-			"id": "ca873ee6-a434-4423-ac95-66ed1846f651",
+			"id": "5f1fd5cc-2558-4da2-b074-f497641daa4e",
 			"key": "SignatureHost",
 			"value": "http://localhost:3040"
 		},
 		{
-			"id": "d32df9ea-eca8-47b9-869b-740f83e94659",
+			"id": "c265d85a-ef39-4bb7-a048-62f15e61e599",
 			"key": "PeerSignatureHost",
 			"value": "http://localhost:3041"
 		},
@@ -3281,27 +3340,27 @@
 			"value": "dc7b71a5-d78e-450c-b4c5-7db299f2a133"
 		},
 		{
-			"id": "5bbd0d1b-5db2-4d12-9deb-7181bef36f55",
+			"id": "81e722ff-9035-4a6f-9cba-fc2d2e5be49a",
 			"key": "connectionId",
 			"value": "23de6081-b340-4334-b335-a2328bbb3334"
 		},
 		{
-			"id": "8f5b498d-7d5e-4417-8d32-0c49b4b3a832",
+			"id": "0ef0da05-6a9f-48e9-b6a5-62177b47c12d",
 			"key": "outgoingPaymentId",
 			"value": "empty"
 		},
 		{
-			"id": "f3338ce8-95d7-44ef-ba64-9da305900635",
+			"id": "7252b12e-d186-42ba-9ada-fbb9567a406c",
 			"key": "quoteId",
 			"value": "http://backend/d982ab2f-4380-4d05-be3b-43d23a57d23f/quotes/8adaa7f9-fbd2-4cc2-89b5-6f354d68728e"
 		},
 		{
-			"id": "81aa0faf-aaa1-466e-aae9-e46b993cf0f8",
+			"id": "34854223-b49a-4a4f-bdb0-9b1730ccacc3",
 			"key": "tokenId",
 			"value": "f6cf615c-70e8-4b04-bd86-0d6ac41a4c85"
 		},
 		{
-			"id": "d7e2ec43-7ef9-4237-abf3-51e3619c4567",
+			"id": "fa59bbcd-1430-46be-b515-06bc4a987aea",
 			"key": "tomorrow",
 			"value": ""
 		},
@@ -3316,17 +3375,17 @@
 			"value": ""
 		},
 		{
-			"id": "70a748e2-5ade-4d7f-a0cc-b8b4b4aa647f",
+			"id": "3b6431fe-742f-4783-a282-d71e2884f765",
 			"key": "incomingPaymentUrl",
 			"value": ""
 		},
 		{
-			"id": "76c0881b-296b-4ade-b7e4-727a842e6971",
+			"id": "87eef7e9-09bf-418d-80c9-d4ab6a5a7e15",
 			"key": "continueToken",
 			"value": ""
 		},
 		{
-			"id": "125fab79-62cb-45d0-bf18-9a18255172bf",
+			"id": "49590127-133c-4506-8489-ab0d7c031143",
 			"key": "continueId",
 			"value": ""
 		},
@@ -3351,27 +3410,27 @@
 			"value": ""
 		},
 		{
-			"id": "f33bd6de-de53-43d4-91e0-c196f721db11",
+			"id": "53fb7a93-e372-45c8-b759-f77fc526fc37",
 			"key": "preRequestSignatures",
 			"value": "const requestUrl = request.url\n  .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.collectionVariables.get(key))\n  .replace(/localhost:([3,4])000/g, (_, key) =>\n    key === '3' ? 'cloud-nine-wallet-backend' : 'happy-life-bank-backend'\n  )\nconst requestBody =\n  request.method === 'POST' && Object.keys(request.data).length !== 0\n    ? request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n        pm.collectionVariables.get(key)\n      )\n    : undefined\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n// Request Signature Headers\npm.sendRequest(\n  {\n    url: pm.collectionVariables.get('signatureUrl'),\n    method: 'POST',\n    header: {\n      'content-type': 'application/json'\n    },\n    body: {\n      mode: 'raw',\n      raw: JSON.stringify({\n        keyId: pm.collectionVariables.get('keyId'),\n        request: {\n          url: requestUrl,\n          method: request.method,\n          headers: requestHeaders,\n          body: requestBody\n        }\n      })\n    }\n  },\n  (_, res) => {\n    const headers = res.json()\n    for (let [key, value] of Object.entries(headers)) {\n      pm.request.headers.add({ key, value })\n    }\n  }\n)\n"
 		},
 		{
-			"id": "609fc40b-b729-4bf8-84f8-3901fa6f75f6",
+			"id": "7d0fb16c-dfde-4b08-b5af-81274df89253",
 			"key": "preRequestSignaturesGrantRequest",
 			"value": "const url = require('url')\n\nconst body = JSON.parse(request.data)\nconst client = url.parse(body.client)\nconst jwkUrl = `http://localhost:${\n  client.host === 'cloud-nine-wallet-backend' ? '3' : '4'\n}000${client.path}/jwks.json`\npm.collectionVariables.set(\n  'signatureUrl',\n  pm.collectionVariables.get(\n    client.host === 'cloud-nine-wallet-backend'\n      ? 'SignatureHost'\n      : 'PeerSignatureHost'\n  )\n)\n\nconst requestUrl = request.url.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestBody = request.data.replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n  pm.collectionVariables.get(key)\n)\nconst requestHeaders = JSON.parse(\n  JSON.stringify(request.headers).replace(/{{([A-Za-z]\\w+)}}/g, (_, key) =>\n    pm.collectionVariables.get(key)\n  )\n)\n\n// Request Client JWK\npm.sendRequest(\n  {\n    url: jwkUrl,\n    method: 'GET',\n    header: {\n      Host: client.host\n    }\n  },\n  (err, res) => {\n    const keys = res.json()\n    pm.collectionVariables.set('keyId', keys.keys[0].kid)\n\n    // Request Signature Headers\n    pm.sendRequest(\n      {\n        url: pm.collectionVariables.get('signatureUrl'),\n        method: 'POST',\n        header: {\n          'content-type': 'application/json'\n        },\n        body: {\n          mode: 'raw',\n          raw: JSON.stringify({\n            keyId: pm.collectionVariables.get('keyId'),\n            request: {\n              url: requestUrl,\n              method: request.method,\n              headers: requestHeaders,\n              body: requestBody\n            }\n          })\n        }\n      },\n      (_, res) => {\n        const headers = res.json()\n        for (let [key, value] of Object.entries(headers)) {\n          pm.request.headers.add({ key, value })\n        }\n      }\n    )\n  }\n)\n"
 		},
 		{
-			"id": "fc1134c6-3530-42aa-ad7f-e5c2eaf139f9",
+			"id": "f1348533-0aa1-4988-aa05-70352ff3b0de",
 			"key": "signatureUrl",
 			"value": ""
 		},
 		{
-			"id": "374278d5-b71e-40f0-80ae-64966999a2d5",
+			"id": "b6d04985-041c-40b8-a512-4b767c06a170",
 			"key": "keyId",
 			"value": ""
 		},
 		{
-			"id": "f58a7498-3f2f-4c63-ac39-1ec69479498c",
+			"id": "447f3038-1593-44e6-a83b-d69142b0c18c",
 			"key": "peerId",
 			"value": ""
 		},
@@ -3386,27 +3445,27 @@
 			"value": ""
 		},
 		{
-			"id": "875c5100-9a58-4bdb-9c61-84ec262aa62b",
+			"id": "0b2ca6c2-6897-42c5-9705-c0954432a759",
 			"key": "tokenManagementUrl",
 			"value": ""
 		},
 		{
-			"id": "42417819-bef4-436b-96dd-cb8f19e19aaf",
+			"id": "ebc99a02-3d0b-4dca-856d-f1a5850415a5",
 			"key": "quoteDebitAmountValue",
 			"value": ""
 		},
 		{
-			"id": "18477869-6a28-4de0-8fb5-aebedad94ad4",
+			"id": "1174469c-5c59-4a72-b5fe-a828f0702561",
 			"key": "quoteReceiveAmountValue",
 			"value": ""
 		},
 		{
-			"id": "1c265993-5da1-44a3-abde-d2427bbe5c7f",
+			"id": "5245c9eb-434c-4f89-b61a-5571bcea3880",
 			"key": "idempotencyKey",
 			"value": ""
 		},
 		{
-			"id": "64018552-bfff-44d6-bc45-95ac05f848a7",
+			"id": "611442dd-dcd5-4071-9ca0-8e09666c349b",
 			"key": "receiverId",
 			"value": ""
 		}

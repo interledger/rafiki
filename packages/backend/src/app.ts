@@ -30,7 +30,8 @@ import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware,
   Grant,
-  RequestAction
+  RequestAction,
+  authenticatedStatusMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
 import { spspMiddleware } from './payment-method/ilp/spsp/middleware'
@@ -132,6 +133,9 @@ export type HttpSigContext = AppContext & {
 }
 
 // Wallet address subresources
+export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
+  AuthenticatedStatusContext
+
 type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
   WalletAddressContext['request'],
   'body'
@@ -167,7 +171,13 @@ type SubresourceContext = Omit<
   accessAction: NonNullable<WalletAddressContext['accessAction']>
 }
 
+export type AuthenticatedStatusContext = { authenticated: boolean }
+
 type SignedSubresourceContext = SubresourceContext & HttpSigContext
+
+type SubresourceContextWithAuthenticatedStatus = SubresourceContext &
+  HttpSigContext &
+  AuthenticatedStatusContext
 
 export type CreateContext<BodyT> = CollectionContext<BodyT>
 export type ReadContext = SubresourceContext
@@ -457,21 +467,21 @@ export class App {
 
     // GET /incoming-payments/{id}
     // Read incoming payment
-    router.get<DefaultState, SignedSubresourceContext>(
+    router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
       WALLET_ADDRESS_PATH + '/incoming-payments/:id',
       createWalletAddressMiddleware(),
-      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
-        resourceServerSpec,
-        {
-          path: '/incoming-payments/{id}',
-          method: HttpMethod.GET
-        }
-      ),
+      createValidatorMiddleware<
+        ContextType<SubresourceContextWithAuthenticatedStatus>
+      >(resourceServerSpec, {
+        path: '/incoming-payments/{id}',
+        method: HttpMethod.GET
+      }),
       createTokenIntrospectionMiddleware({
         requestType: AccessType.IncomingPayment,
-        requestAction: RequestAction.Read
+        requestAction: RequestAction.Read,
+        bypassError: true
       }),
-      httpsigMiddleware,
+      authenticatedStatusMiddleware,
       incomingPaymentRoutes.get
     )
 
