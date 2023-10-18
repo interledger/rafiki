@@ -2,7 +2,6 @@ import { Model, ModelOptions, QueryContext } from 'objection'
 import { v4 as uuid } from 'uuid'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-// import { Connection } from '../../connection/model'
 import { Connection } from '../../connection/service'
 import {
   WalletAddress,
@@ -15,8 +14,6 @@ import { WebhookEvent } from '../../../webhook/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
-  // IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  // IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
 } from '@interledger/open-payments'
 import base64url from 'base64url'
 
