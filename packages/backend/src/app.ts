@@ -23,7 +23,6 @@ import { HttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './payment-method/ilp/peer/service'
-import { connectionMiddleware } from './open_payments/connection/middleware'
 import { createWalletAddressMiddleware } from './open_payments/wallet_address/middleware'
 import { WalletAddress } from './open_payments/wallet_address/model'
 import { WalletAddressService } from './open_payments/wallet_address/service'
@@ -34,10 +33,7 @@ import {
   RequestAction
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import {
-  spspMiddleware,
-  SPSPConnectionContext
-} from './payment-method/ilp/spsp/middleware'
+import { spspMiddleware } from './payment-method/ilp/spsp/middleware'
 import { SPSPRoutes } from './payment-method/ilp/spsp/routes'
 import {
   IncomingPaymentRoutes,
@@ -360,23 +356,7 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const connectionRoutes = await this.container.use('connectionRoutes')
     const { resourceServerSpec } = await this.container.use('openApi')
-
-    // GET /connections/{id}
-    router.get<DefaultState, SPSPConnectionContext>(
-      WALLET_ADDRESS_PATH + '/connections/:id',
-      connectionMiddleware,
-      spspMiddleware,
-      createValidatorMiddleware<ContextType<SPSPConnectionContext>>(
-        resourceServerSpec,
-        {
-          path: '/connections/{id}',
-          method: HttpMethod.GET
-        }
-      ),
-      connectionRoutes.get
-    )
 
     // POST /incoming-payments
     // Create incoming payment

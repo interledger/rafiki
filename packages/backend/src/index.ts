@@ -38,7 +38,6 @@ import { createConnectorService } from './payment-method/ilp/connector'
 import { createOpenAPI } from '@interledger/openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
 import { createConnectionService } from './open_payments/connection/service'
-import { createConnectionRoutes } from './open_payments/connection/routes'
 import { createWalletAddressKeyService } from './open_payments/wallet_address/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
@@ -290,13 +289,6 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       openPaymentsUrl: config.openPaymentsUrl,
       streamServer: await deps.use('streamServer')
-    })
-  })
-  container.singleton('connectionRoutes', async (deps) => {
-    return createConnectionRoutes({
-      logger: await deps.use('logger'),
-      incomingPaymentService: await deps.use('incomingPaymentService'),
-      connectionService: await deps.use('connectionService')
     })
   })
   container.singleton('receiverService', async (deps) => {
