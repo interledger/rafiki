@@ -218,7 +218,7 @@ export class IncomingPayment
     ilpStreamConnection: Connection
   ): OpenPaymentsIncomingPaymentWithPaymentMethod
   public toOpenPaymentsType(
-    paymentPointer: WalletAddress,
+    walletAddress: WalletAddress,
     ilpStreamConnection?: Connection
   ): OpenPaymentsIncomingPayment | OpenPaymentsIncomingPaymentWithPaymentMethod
 

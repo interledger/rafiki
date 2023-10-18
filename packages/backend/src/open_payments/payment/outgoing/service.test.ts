@@ -1077,11 +1077,9 @@ describe('OutgoingPaymentService', (): void => {
         code: asset.code,
         scale: asset.scale + 1
       })
-      await OutgoingPayment.relatedQuery('paymentPointer')
-        .for(paymentId)
-        .patch({
-          assetId
-        })
+      await OutgoingPayment.relatedQuery('walletAddress').for(paymentId).patch({
+        assetId
+      })
 
       await processNext(
         paymentId,

@@ -29,22 +29,22 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const receiverService = await deps.use('receiverService')
   if (options.validDestination === false) {
-    const paymentPointerService = await deps.use('paymentPointerService')
+    const walletAddressService = await deps.use('walletAddressService')
     const streamServer = await deps.use('streamServer')
     const connection = streamServer.generateCredentials()
 
     const incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: options.paymentPointerId
+      walletAddressId: options.walletAddressId
     })
-    const paymentPointer = await paymentPointerService.get(
-      options.paymentPointerId
+    const walletAddress = await walletAddressService.get(
+      options.walletAddressId
     )
-    assert(paymentPointer)
+    assert(walletAddress)
     jest
       .spyOn(receiverService, 'get')
       .mockResolvedValueOnce(
         new Receiver(
-          incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+          incomingPayment.toOpenPaymentsType(walletAddress, connection)
         )
       )
   }
