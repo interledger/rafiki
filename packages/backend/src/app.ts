@@ -23,7 +23,6 @@ import { HttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
 import { PeerService } from './payment-method/ilp/peer/service'
-import { connectionMiddleware } from './open_payments/connection/middleware'
 import { createWalletAddressMiddleware } from './open_payments/wallet_address/middleware'
 import { WalletAddress } from './open_payments/wallet_address/model'
 import { WalletAddressService } from './open_payments/wallet_address/service'
@@ -34,9 +33,7 @@ import {
   RequestAction
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import {
-  spspMiddleware
-} from './payment-method/ilp/spsp/middleware'
+import { spspMiddleware } from './payment-method/ilp/spsp/middleware'
 import { SPSPRoutes } from './payment-method/ilp/spsp/routes'
 import {
   IncomingPaymentRoutes,
