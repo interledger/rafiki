@@ -40,21 +40,27 @@ exports.up = function (knex) {
       table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId', 'createdAt', 'id'])
+      table.index(['walletAddressId'])
+      table.index(['createdAt'])
+      table.index(['id'])
     }),
     knex.schema.alterTable('incomingPayments', function (table) {
       table.dropForeign(['paymentPointerId'])
       table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId', 'createdAt', 'id'])
+      table.index(['walletAddressId'])
+      table.index(['createdAt'])
+      table.index(['id'])
     }),
     knex.schema.alterTable('outgoingPayments', function (table) {
       table.dropForeign(['paymentPointerId'])
       table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId', 'createdAt', 'id'])
+      table.index(['walletAddressId'])
+      table.index(['createdAt'])
+      table.index(['id'])
     }),
     knex('webhookEvents')
       .update({
