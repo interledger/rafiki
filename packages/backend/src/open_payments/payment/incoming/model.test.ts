@@ -1,6 +1,6 @@
 import { IocContract } from '@adonisjs/fold'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config, IAppConfig } from '../../../config/app'
+import { Config } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
@@ -14,12 +14,10 @@ import { IncomingPayment } from './model'
 describe('Incoming Payment Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {

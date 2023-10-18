@@ -43,7 +43,6 @@ import { isTransferError, TransferError } from '../../../accounting/errors'
 import { AccountingService, TransferOptions } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
-import { ConnectionService } from '../../connection/service'
 import { getTests } from '../../wallet_address/model.test'
 import { Quote } from '../../quote/model'
 import { WalletAddress } from '../../wallet_address/model'
@@ -53,7 +52,6 @@ describe('OutgoingPaymentService', (): void => {
   let appContainer: TestContainer
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
-  let connectionService: ConnectionService
   let knex: Knex
   let walletAddressId: string
   let incomingPayment: IncomingPayment
@@ -241,7 +239,6 @@ describe('OutgoingPaymentService', (): void => {
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
-    connectionService = await deps.use('connectionService')
     knex = appContainer.knex
   })
 

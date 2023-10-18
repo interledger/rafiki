@@ -1,6 +1,5 @@
 import {
   AuthenticatedClient,
-  IncomingPayment as OpenPaymentsIncomingPayment,
   IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
   isPendingGrant,
   AccessAction,

@@ -12,7 +12,6 @@ import {
   GrantRequest,
   mockIncomingPaymentWithPaymentMethods
 } from '@interledger/open-payments'
-import { URL } from 'url'
 import { v4 as uuid } from 'uuid'
 
 import { ReceiverService } from './service'
