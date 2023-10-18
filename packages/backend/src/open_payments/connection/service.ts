@@ -1,8 +1,8 @@
 import { StreamServer } from '@interledger/stream-receiver'
-
 import { BaseService } from '../../shared/baseService'
 import { IncomingPayment } from '../payment/incoming/model'
 import { IlpAddress } from 'ilp-packet'
+
 export interface Connection {
   ilpAddress: IlpAddress
   sharedSecret: Buffer
@@ -10,7 +10,6 @@ export interface Connection {
 
 export interface ConnectionService {
   get(payment: IncomingPayment): Connection | undefined
-  getUrl(payment: IncomingPayment): string | undefined
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -29,8 +28,7 @@ export async function createConnectionService(
     logger: log
   }
   return {
-    get: (payment) => getConnection(deps, payment),
-    getUrl: (payment) => getConnectionUrl(deps, payment)
+    get: (payment) => getConnection(deps, payment)
   }
 }
 
@@ -52,14 +50,4 @@ function getConnection(
     ilpAddress: credentials.ilpAddress,
     sharedSecret: credentials.sharedSecret
   }
-}
-
-function getConnectionUrl(
-  deps: ServiceDependencies,
-  payment: IncomingPayment
-): string | undefined {
-  if (!payment.connectionId) {
-    return undefined
-  }
-  return `${deps.openPaymentsUrl}/connections/${payment.connectionId}`
 }

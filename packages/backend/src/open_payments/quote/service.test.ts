@@ -127,11 +127,10 @@ describe('QuoteService', (): void => {
     }
 
     describe.each`
-      toConnection | incomingAmount    | description
-      ${true}      | ${undefined}      | ${'connection'}
-      ${false}     | ${undefined}      | ${'incomingPayment'}
-      ${false}     | ${incomingAmount} | ${'incomingPayment.incomingAmount'}
-    `('$description', ({ toConnection, incomingAmount }): void => {
+      incomingAmount    | description
+      ${undefined}      | ${'incomingPayment'}
+      ${incomingAmount} | ${'incomingPayment.incomingAmount'}
+    `('$description', ({ incomingAmount }): void => {
       describe.each`
         debitAmount    | receiveAmount    | description
         ${debitAmount} | ${undefined}     | ${'debitAmount'}
@@ -147,12 +146,9 @@ describe('QuoteService', (): void => {
             walletAddressId: receivingWalletAddress.id,
             incomingAmount
           })
-          const connectionService = await deps.use('connectionService')
           options = {
             walletAddressId: sendingWalletAddress.id,
-            receiver: toConnection
-              ? connectionService.getUrl(incomingPayment)
-              : incomingPayment.getUrl(receivingWalletAddress)
+            receiver: incomingPayment.getUrl(receivingWalletAddress)
           }
           if (debitAmount) options.debitAmount = debitAmount
           if (receiveAmount) options.receiveAmount = receiveAmount
@@ -308,27 +304,25 @@ describe('QuoteService', (): void => {
             )
           }
 
-          if (!toConnection) {
-            test.each`
-              state
-              ${IncomingPaymentState.Completed}
-              ${IncomingPaymentState.Expired}
-            `(
-              `returns ${QuoteError.InvalidReceiver} on $state receiver`,
-              async ({ state }): Promise<void> => {
-                await incomingPayment.$query(knex).patch({
-                  state,
-                  expiresAt:
-                    state === IncomingPaymentState.Expired
-                      ? new Date()
-                      : undefined
-                })
-                await expect(quoteService.create(options)).resolves.toEqual(
-                  QuoteError.InvalidReceiver
-                )
-              }
-            )
-          }
+          test.each`
+            state
+            ${IncomingPaymentState.Completed}
+            ${IncomingPaymentState.Expired}
+          `(
+            `returns ${QuoteError.InvalidReceiver} on $state receiver`,
+            async ({ state }): Promise<void> => {
+              await incomingPayment.$query(knex).patch({
+                state,
+                expiresAt:
+                  state === IncomingPaymentState.Expired
+                    ? new Date()
+                    : undefined
+              })
+              await expect(quoteService.create(options)).resolves.toEqual(
+                QuoteError.InvalidReceiver
+              )
+            }
+          )
         }
       })
     })

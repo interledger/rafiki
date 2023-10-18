@@ -1,6 +1,4 @@
-import base64url from 'base64url'
 import { Knex } from 'knex'
-
 import { createTestApp, TestContainer } from '../../tests/app'
 import { ConnectionService } from './service'
 import {
@@ -50,44 +48,9 @@ describe('Connection Service', (): void => {
       const connection = connectionService.get(incomingPayment)
       assert.ok(connection)
       expect(connection).toMatchObject({
-        id: incomingPayment.connectionId,
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret: expect.any(Buffer)
       })
-      expect(connection.url).toEqual(
-        `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
-      )
-      expect(connection.toOpenPaymentsType()).toEqual({
-        id: connection.url,
-        ilpAddress: connection.ilpAddress,
-        sharedSecret: base64url(connection.sharedSecret || ''),
-        assetCode: incomingPayment.asset.code,
-        assetScale: incomingPayment.asset.scale
-      })
-    })
-
-    test.each`
-      state
-      ${IncomingPaymentState.Completed}
-      ${IncomingPaymentState.Expired}
-    `(
-      `returns undefined for $state incoming payment`,
-      async ({ state }): Promise<void> => {
-        await incomingPayment.$query(knex).patch({
-          state,
-          expiresAt:
-            state === IncomingPaymentState.Expired ? new Date() : undefined
-        })
-        expect(connectionService.get(incomingPayment)).toBeUndefined()
-      }
-    )
-  })
-
-  describe('getUrl', (): void => {
-    test('returns connection url for incoming payment', (): void => {
-      expect(connectionService.getUrl(incomingPayment)).toEqual(
-        `${Config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
-      )
     })
 
     test.each`
