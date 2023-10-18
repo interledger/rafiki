@@ -30,21 +30,6 @@ export class Receiver {
   public readonly assetScale: number
   public readonly incomingPayment: ReceiverIncomingPayment
 
-  // TODO: remove? still called 1 place
-  // static fromConnection(connection: Connection): Receiver | undefined {
-  //   if (!isValidIlpAddress(connection.ilpAddress)) {
-  //     throw new Error('Invalid ILP address on stream connection')
-  //   }
-
-  //   return new this({
-  //     // id: connection.id,
-  //     // assetCode: connection.assetCode,
-  //     // assetScale: connection.assetScale,
-  //     sharedSecret: connection.sharedSecret,
-  //     ilpAddress: connection.ilpAddress
-  //   })
-  // }
-
   constructor(incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod) {
     if (!incomingPayment.methods.length) {
       throw new Error('Missing payment method(s) on incoming payment')

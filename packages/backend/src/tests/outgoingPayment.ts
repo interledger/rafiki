@@ -8,6 +8,8 @@ import { isOutgoingPaymentError } from '../open_payments/payment/outgoing/errors
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/service'
 import { LiquidityAccountType } from '../accounting/service'
+import { createIncomingPayment } from './incomingPayment'
+import assert from 'assert'
 
 export async function createOutgoingPayment(
   deps: IocContract<AppServices>,
@@ -28,18 +30,24 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const receiverService = await deps.use('receiverService')
   if (options.validDestination === false) {
-    // TODO: mock differently? receiver.get not longer calls receiver.fromConnection. this is the only remaining caller of fromConnection
+    const paymentPointerService = await deps.use('paymentPointerService')
     const streamServer = await deps.use('streamServer')
-    const { ilpAddress, sharedSecret } = streamServer.generateCredentials()
-    jest.spyOn(receiverService, 'get').mockResolvedValueOnce(
-      Receiver.fromConnection({
-        id: options.receiver,
-        ilpAddress,
-        sharedSecret: base64url(sharedSecret),
-        assetCode: quote.receiveAmount.assetCode,
-        assetScale: quote.receiveAmount.assetScale
-      })
+    const connection = streamServer.generateCredentials()
+
+    const incomingPayment = await createIncomingPayment(deps, {
+      paymentPointerId: options.paymentPointerId
+    })
+    const paymentPointer = await paymentPointerService.get(
+      options.paymentPointerId
     )
+    assert(paymentPointer)
+    jest
+      .spyOn(receiverService, 'get')
+      .mockResolvedValueOnce(
+        new Receiver(
+          incomingPayment.toOpenPaymentsType(paymentPointer, connection)
+        )
+      )
   }
   const outgoingPaymentOrError = await outgoingPaymentService.create({
     ...options,

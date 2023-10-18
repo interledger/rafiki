@@ -131,46 +131,4 @@ describe('Receiver Model', (): void => {
       )
     })
   })
-
-  // describe('fromConnection', () => {
-  //   test('creates receiver', async () => {
-  //     const paymentPointer = await createPaymentPointer(deps)
-  //     const incomingPayment = await createIncomingPayment(deps, {
-  //       paymentPointerId: paymentPointer.id
-  //     })
-
-  //     const connection = connectionService.get(incomingPayment)
-  //     assert(connection instanceof Connection)
-
-  //     const receiver = Receiver.fromConnection(connection.toOpenPaymentsType())
-
-  //     expect(receiver).toEqual({
-  //       assetCode: incomingPayment.asset.code,
-  //       assetScale: incomingPayment.asset.scale,
-  //       incomingAmountValue: undefined,
-  //       receivedAmountValue: undefined,
-  //       ilpAddress: expect.any(String),
-  //       sharedSecret: expect.any(Buffer),
-  //       expiresAt: undefined
-  //     })
-  //   })
-
-  //   test('returns undefined if invalid ilpAdress', async () => {
-  //     const paymentPointer = await createPaymentPointer(deps)
-  //     const incomingPayment = await createIncomingPayment(deps, {
-  //       paymentPointerId: paymentPointer.id
-  //     })
-
-  //     const connection = connectionService.get(incomingPayment)
-  //     assert(connection instanceof Connection)
-
-  //     const openPaymentsConnection = connection.toOpenPaymentsType()
-
-  //     openPaymentsConnection.ilpAddress = 'not base 64 encoded'
-
-  //     expect(() => Receiver.fromConnection(openPaymentsConnection)).toThrow(
-  //       'Invalid ILP address on stream connection'
-  //     )
-  //   })
-  // })
 })
