@@ -56,6 +56,7 @@ export interface Config {
   key: crypto.KeyObject
   publicHost: string
   testnetAutoPeerUrl: string
+  authServerDomain: string
 }
 
 export const CONFIG: Config = {
@@ -66,5 +67,6 @@ export const CONFIG: Config = {
   ),
   key: parseOrProvisionKey(process.env.KEY_FILE),
   publicHost: process.env.PUBLIC_HOST ?? '',
-  testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? ''
+  testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
+  authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006'
 }

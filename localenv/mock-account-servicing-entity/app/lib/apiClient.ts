@@ -92,9 +92,10 @@ export class ApiClient {
 
   public static async endInteraction(
     interactId: string,
-    nonce: string
+    nonce: string,
+    authServerDomain: string
   ): Promise<ApiResponse> {
-    window.location.href = `http://localhost:3006/interact/${interactId}/${nonce}/finish`
+    window.location.href = `${authServerDomain}/interact/${interactId}/${nonce}/finish`
     return {
       isFailure: false
     }

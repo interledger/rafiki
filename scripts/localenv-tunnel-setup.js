@@ -1,9 +1,10 @@
-let tunnelmole
-
 const fs = require('fs')
 const ngrok = require('ngrok')
 const dotenv = require('dotenv')
 const { v4 } = require('uuid')
+
+let tunnelmole
+let envs
 
 const envFile = './localenv/cloud-nine-wallet/.env'
 function checkExistingEnvFile() {
@@ -17,20 +18,29 @@ function checkExistingEnvFile() {
 }
 
 function getEnvs(opUrl, authUrl, connectorUrl) {
-  return Object.entries({
+  return {
     // set to "testing" as in "development" - op client is replacing https with http
     NODE_ENV: 'testing',
     TRUST_PROXY: true,
-    TESTNET_AUTOPEER_URL: 'https://autopeer.rafiki.money',
+    TESTNET_AUTOPEER_URL:
+      process.env.TESTNET_AUTOPEER_URL ?? 'https://autopeer.rafiki.money',
     ILP_ADDRESS: process.env.ILP_ADDRESS || `test.local-playground-${v4()}`,
     CLOUD_NINE_PUBLIC_HOST: opUrl,
     CLOUD_NINE_OPEN_PAYMENTS_URL: opUrl,
     CLOUD_NINE_PAYMENT_POINTER_URL: `${opUrl}/.well-known/pay`,
     CLOUD_NINE_AUTH_SERVER_DOMAIN: authUrl,
-    CLOUD_NINE_CONNECTOR_URL: connectorUrl
-  })
-    .map((entry) => entry.join('='))
-    .join('\n')
+    CLOUD_NINE_CONNECTOR_URL: connectorUrl,
+    NGROK_TOKEN: process.env.NGROK_TOKEN
+  }
+}
+
+async function writeEnvs(envs) {
+  await fs.writeFileSync(
+    './localenv/cloud-nine-wallet/.env',
+    Object.entries(envs)
+      .map((entry) => entry.join('='))
+      .join('\n')
+  )
 }
 
 async function createTunnel(port) {
@@ -41,7 +51,8 @@ async function createTunnel(port) {
 }
 
 async function createNgrokTunnel(port) {
-  const tunnel = await ngrok.connect(port)
+  const authtoken = process.env.NGROK_TOKEN
+  const tunnel = await ngrok.connect({ port, authtoken })
 
   console.log(`Created tunnel for port ${port}: ${tunnel}`)
   return tunnel
@@ -61,18 +72,21 @@ async function connect() {
 
   const connectorUrl = await createTunnel(3002)
 
-  await fs.writeFileSync(
-    './localenv/cloud-nine-wallet/.env',
-    getEnvs(openPaymentsUrl, authUrl, connectorUrl)
-  )
+  envs = getEnvs(openPaymentsUrl, authUrl, connectorUrl)
+  await writeEnvs(envs)
 
   console.log('Tunnels and .env file are ready!')
 }
 
 connect()
 
-process.on('SIGINT', function () {
+process.on('SIGINT', async function () {
   console.log('Tunnels are closing...')
 
+  // clean the env variables as other urls will be generated at next run
+  await writeEnvs({
+    ILP_ADDRESS: envs.ILP_ADDRESS,
+    NGROK_TOKEN: envs.NGROK_TOKEN
+  })
   process.exit()
 })

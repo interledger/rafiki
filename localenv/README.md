@@ -100,6 +100,17 @@ pnpm localenv:compose:psql up
 pnpm localenv:compose:psql down --volumes
 ```
 
+The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
+its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
+The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
+as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
+both include the `local-signature-utils` signature generation app for Postman.
+The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
+data stores created by the primary Rafiki instance so it can't be run by itself.
+The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
+
+#### Autopeering
+
 If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
 
 ```
@@ -109,14 +120,23 @@ pnpm localenv:autopeer:start
 pnpm localenv:autopeer:start:psql
 ```
 
-The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
-its own docker compose files ([Cloud Nine Wallet](./cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](./happy-life-bank/docker-compose.yml)).
-The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
-as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
-both include the `local-signature-utils` signature generation app for Postman.
-The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
-data stores created by the primary Rafiki instance so it can't be run by itself.
-The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
+Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
+The required services will be exposed externally using [ngrok](https://www.npmjs.com/package/ngrok) and [tunnelmole](https://www.npmjs.com/package/tunnelmole) packages.
+Ngrok is used to expose open-payments api and auth api. These apis require a https protocol for correctly validating the requests signatures and ngrok will add X-Forwarded-Proto to secure requests that helps koa to identify requests as secure.
+Tunnelmole package is used for exposing externally ilp connector.
+
+There is no need for ngrok token in case you are planning to try out only the API requests.
+In case you are looking to test the open payments example with the interaction flow, then the ngrok token should be provided in `~/cloud-nine-wallet/.env` file
+as `NGROK_TOKEN={YOUR TOKEN}`. Ngrok does not serve html without providing the auth token.
+
+To use the postman collection examples - copy the created payment pointer and set it into `senderPaymentPointer` postman variable in `Remote Environment`.
+
+After stopping the script it is necessary to clear the environment using the command described in setup. This is necessary as on a new run of the scripts (with autopeeing or not) the payment pointer url will differ.
+
+```
+// tear down and remove volumes
+pnpm localenv:compose down --volumes
+```
 
 ### Shutting down
 
