@@ -97,7 +97,7 @@ function getAdjustedAmounts(
   const amountDelivered = BigInt(
     Math.ceil(
       Number(alreadySentAmount) *
-        (payment.quote.estimatedExchangeRate ??
+        (payment.quote.estimatedExchangeRate ||
           payment.quote.lowEstimatedExchangeRate.valueOf())
     )
   )
