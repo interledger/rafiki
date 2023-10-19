@@ -3,10 +3,11 @@ import type { Props } from '@astrojs/starlight/props';
 import Search from "@astrojs/starlight/components/Search.astro";
 import ThemeSelect from "@astrojs/starlight/components/ThemeSelect.astro";
 import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
+import RafikiLogo from "../components/RafikiLogo.astro";
 ---
 <div class="header sl-flex">
   <a href="/" class="site-logo">
-    <img src="/img/logo.svg" alt="Rafiki logo">
+    <RafikiLogo />
   </a>
   <div class="secondary-wrap">
     <Search {...Astro.props} />
@@ -39,15 +40,16 @@ import SocialIcons from "@astrojs/starlight/components/SocialIcons.astro";
   .site-logo {
     display: flex;
     align-items: center;
-    gap: 0.5em;
-  }
-
-  .site-logo img {
-    width: 6em;
-  }
-
-  .site-logo span {
+    gap: var(--space-xs);
     font-size: larger;
-    white-space: nowrap;
+  }
+
+  .site-logo svg {
+    width: 6em;
+    flex: none;
+  }
+
+  [data-theme='dark'] :global(.logo-text) {
+    fill: white;
   }
 </style>

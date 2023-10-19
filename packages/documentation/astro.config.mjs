@@ -1,8 +1,6 @@
 import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 
-import react from '@astrojs/react'
-
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
 import remarkMermaid from 'remark-mermaidjs'
@@ -177,7 +175,6 @@ export default defineConfig({
         }
       ]
     }),
-    react(),
     GraphQL({
       schema: '../backend/src/graphql/schema.graphql',
       output: './src/content/docs/apis/backend/',
