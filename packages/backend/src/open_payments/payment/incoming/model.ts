@@ -1,5 +1,4 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
-import { v4 as uuid } from 'uuid'
+import { Model } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { Connection } from '../../connection/service'
@@ -87,8 +86,6 @@ export class IncomingPayment
   public expiresAt!: Date
   public state!: IncomingPaymentState
   public metadata?: Record<string, unknown>
-  // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the connectionId. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
-  public connectionId?: string | null
 
   public processAt!: Date | null
 
@@ -192,22 +189,6 @@ export class IncomingPayment
     }
 
     return data
-  }
-
-  public $beforeInsert(context: QueryContext): void {
-    super.$beforeInsert(context)
-    this.connectionId = this.connectionId || uuid()
-  }
-
-  public $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
-    super.$beforeUpdate(opts, queryContext)
-    if (
-      [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
-        this.state
-      )
-    ) {
-      this.connectionId = null
-    }
   }
 
   public toOpenPaymentsType(

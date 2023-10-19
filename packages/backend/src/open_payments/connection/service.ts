@@ -1,6 +1,9 @@
 import { StreamServer } from '@interledger/stream-receiver'
 import { BaseService } from '../../shared/baseService'
-import { IncomingPayment } from '../payment/incoming/model'
+import {
+  IncomingPayment,
+  IncomingPaymentState
+} from '../payment/incoming/model'
 import { IlpAddress } from 'ilp-packet'
 
 export interface Connection {
@@ -36,7 +39,11 @@ function getConnection(
   deps: ServiceDependencies,
   payment: IncomingPayment
 ): Connection | undefined {
-  if (!payment.connectionId) {
+  if (
+    [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
+      payment.state
+    )
+  ) {
     return undefined
   }
   const credentials = deps.streamServer.generateCredentials({

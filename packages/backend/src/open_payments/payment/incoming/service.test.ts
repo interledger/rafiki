@@ -321,8 +321,7 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000),
-        connectionId: null
+        processAt: new Date(now.getTime() + 30_000)
       })
       await expect(
         incomingPaymentService.get({
@@ -330,8 +329,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000),
-        connectionId: null
+        processAt: new Date(now.getTime() + 30_000)
       })
     })
   })
@@ -400,8 +398,7 @@ describe('Incoming Payment Service', (): void => {
           })
         ).resolves.toMatchObject({
           state: IncomingPaymentState.Expired,
-          processAt: new Date(now.getTime() + 30_000),
-          connectionId: null
+          processAt: new Date(now.getTime() + 30_000)
         })
       })
 
@@ -482,8 +479,7 @@ describe('Incoming Payment Service', (): void => {
               eventType === IncomingPaymentEventType.IncomingPaymentExpired
                 ? IncomingPaymentState.Expired
                 : IncomingPaymentState.Completed,
-            processAt: expect.any(Date),
-            connectionId: null
+            processAt: expect.any(Date)
           })
           await expect(
             accountingService.getTotalReceived(incomingPayment.id)
@@ -550,8 +546,7 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000),
-        connectionId: null
+        processAt: new Date(now.getTime() + 30_000)
       })
       await expect(
         incomingPaymentService.get({
@@ -559,8 +554,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(now.getTime() + 30_000),
-        connectionId: null
+        processAt: new Date(now.getTime() + 30_000)
       })
     })
 
@@ -586,8 +580,7 @@ describe('Incoming Payment Service', (): void => {
       ).resolves.toMatchObject({
         id: incomingPayment.id,
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime()),
-        connectionId: null
+        processAt: new Date(incomingPayment.expiresAt.getTime())
       })
       await expect(
         incomingPaymentService.get({
@@ -595,8 +588,7 @@ describe('Incoming Payment Service', (): void => {
         })
       ).resolves.toMatchObject({
         state: IncomingPaymentState.Completed,
-        processAt: new Date(incomingPayment.expiresAt.getTime()),
-        connectionId: null
+        processAt: new Date(incomingPayment.expiresAt.getTime())
       })
     })
 
@@ -619,8 +611,7 @@ describe('Incoming Payment Service', (): void => {
           id: incomingPayment.id
         })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Expired,
-        connectionId: null
+        state: IncomingPaymentState.Expired
       })
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
@@ -630,8 +621,7 @@ describe('Incoming Payment Service', (): void => {
           id: incomingPayment.id
         })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Expired,
-        connectionId: null
+        state: IncomingPaymentState.Expired
       })
     })
 
@@ -644,8 +634,7 @@ describe('Incoming Payment Service', (): void => {
           id: incomingPayment.id
         })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Completed,
-        connectionId: null
+        state: IncomingPaymentState.Completed
       })
       await expect(
         incomingPaymentService.complete(incomingPayment.id)
@@ -655,8 +644,7 @@ describe('Incoming Payment Service', (): void => {
           id: incomingPayment.id
         })
       ).resolves.toMatchObject({
-        state: IncomingPaymentState.Completed,
-        connectionId: null
+        state: IncomingPaymentState.Completed
       })
     })
   })
