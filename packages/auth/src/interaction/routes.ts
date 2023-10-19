@@ -121,7 +121,8 @@ async function getGrantDetails(
   const access = await accessService.getByGrant(interaction.grantId)
 
   ctx.body = {
-    access: access.map(toOpenPaymentsAccess)
+    access: access.map(toOpenPaymentsAccess),
+    state: interaction.state
   }
 }
 

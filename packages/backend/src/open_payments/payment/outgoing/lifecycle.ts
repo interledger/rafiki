@@ -1,5 +1,3 @@
-import * as Pay from '@interledger/pay'
-
 import { LifecycleError } from './errors'
 import {
   OutgoingPayment,
@@ -9,13 +7,11 @@ import {
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
-import { IlpPlugin } from '../../../payment-method/ilp/ilp_plugin'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
   deps: ServiceDependencies,
-  payment: OutgoingPayment,
-  plugin: IlpPlugin
+  payment: OutgoingPayment
 ): Promise<void> {
   if (!payment.quote) throw LifecycleError.MissingQuote
 
@@ -42,29 +38,20 @@ export async function handleSending(
   validateAssets(deps, payment, receiver)
 
   // Due to SENDING→SENDING retries, the quote's amount parameters may need adjusting.
-  const newMaxSourceAmount = payment.debitAmount.value - amountSent
-
-  // This is only an approximation of the true amount delivered due to exchange rate variance. The true amount delivered is returned on stream response packets, but due to connection failures there isn't a reliable way to track that in sync with the amount sent.
-  // eslint-disable-next-line no-case-declarations
-  const amountDelivered = BigInt(
-    Math.ceil(+amountSent.toString() * payment.quote.minExchangeRate.valueOf())
+  const { maxReceiveAmount, maxDebitAmount } = getAdjustedAmounts(
+    deps,
+    payment,
+    receiver,
+    amountSent
   )
-  let newAmountToDeliver = payment.receiveAmount.value - amountDelivered
 
-  if (receiver.incomingAmount && receiver.receivedAmount) {
-    const maxAmountToDeliver =
-      receiver.incomingAmount.value - receiver.receivedAmount.value
-    if (maxAmountToDeliver < newAmountToDeliver) {
-      newAmountToDeliver = maxAmountToDeliver
-    }
-  }
-
-  if (newAmountToDeliver <= BigInt(0)) {
-    // Payment is already (unexpectedly) done. Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
+  if (maxReceiveAmount <= BigInt(0)) {
+    // Payment is already (unexpectedly) done.
+    // Maybe this is a retry and the previous attempt failed to save the state to Postgres. Or the incoming payment could have been paid by a totally different payment in the time since the quote.
     deps.logger.warn(
       {
-        newMaxSourceAmount,
-        newAmountToDeliver,
+        maxDebitAmount,
+        maxReceiveAmount,
         amountSent,
         receiver
       },
@@ -72,65 +59,59 @@ export async function handleSending(
     )
     await handleCompleted(deps, payment)
     return
-  } else if (
-    newMaxSourceAmount <= BigInt(0) ||
-    newAmountToDeliver <= BigInt(0)
-  ) {
+  }
+
+  if (maxDebitAmount <= BigInt(0)) {
     // Similar to the above, but not recoverable (at least not without a re-quote).
-    // I'm not sure whether this case is actually reachable, but handling it here is clearer than passing ilp-pay bad parameters.
+    // I'm not sure whether this case is actually reachable, but handling it here is clearer than passing in bad parameters.
     deps.logger.error(
       {
-        newMaxSourceAmount,
-        newAmountToDeliver
+        maxDebitAmount,
+        maxReceiveAmount
       },
       'handleSending bad retry state'
     )
     throw LifecycleError.BadState
   }
 
-  const lowEstimatedExchangeRate = payment.quote.lowEstimatedExchangeRate
-  const highEstimatedExchangeRate = payment.quote.highEstimatedExchangeRate
-  const minExchangeRate = payment.quote.minExchangeRate
-  const quote: Pay.Quote = {
-    ...payment.quote,
-    paymentType: Pay.PaymentType.FixedDelivery,
-    // Adjust quoted amounts to paymentPointer for prior partial payment.
-    maxSourceAmount: newMaxSourceAmount,
-    minDeliveryAmount: newAmountToDeliver,
-    lowEstimatedExchangeRate,
-    highEstimatedExchangeRate,
-    minExchangeRate
-  }
-
-  const destination = receiver.toResolvedPayment()
-  const receipt = await Pay.pay({ plugin, destination, quote }).finally(() => {
-    return Pay.closeConnection(plugin, destination).catch((err) => {
-      // Ignore connection close failures, all of the money was delivered.
-      deps.logger.warn(
-        {
-          destination: destination.destinationAddress,
-          error: err.message
-        },
-        'close pay connection failed'
-      )
-    })
+  await deps.paymentMethodHandlerService.pay('ILP', {
+    receiver,
+    outgoingPayment: payment,
+    finalDebitAmount: maxDebitAmount,
+    finalReceiveAmount: maxReceiveAmount
   })
 
-  deps.logger.debug(
-    {
-      destination: destination.destinationAddress,
-      error: receipt.error,
-      newMaxSourceAmount,
-      newAmountToDeliver,
-      receiptAmountSent: receipt.amountSent,
-      receiptAmountDelivered: receipt.amountDelivered
-    },
-    'payed'
-  )
-
-  if (receipt.error) throw receipt.error
-
   await handleCompleted(deps, payment)
+}
+
+function getAdjustedAmounts(
+  deps: ServiceDependencies,
+  payment: OutgoingPayment,
+  receiver: Receiver,
+  alreadySentAmount: bigint
+): { maxDebitAmount: bigint; maxReceiveAmount: bigint } {
+  const maxDebitAmount = payment.debitAmount.value - alreadySentAmount
+
+  // This is only an approximation of the true amount delivered due to exchange rate variance. Due to connection failures there isn't a reliable way to track that in sync with the amount sent (particularly within ILP payments)
+  // eslint-disable-next-line no-case-declarations
+  const amountDelivered = BigInt(
+    Math.ceil(
+      Number(alreadySentAmount) *
+        (payment.quote.estimatedExchangeRate ||
+          payment.quote.lowEstimatedExchangeRate.valueOf())
+    )
+  )
+  let maxReceiveAmount = payment.receiveAmount.value - amountDelivered
+
+  if (receiver.incomingAmount && receiver.receivedAmount) {
+    const maxAmountToDeliver =
+      receiver.incomingAmount.value - receiver.receivedAmount.value
+    if (maxAmountToDeliver < maxReceiveAmount) {
+      maxReceiveAmount = maxAmountToDeliver
+    }
+  }
+
+  return { maxDebitAmount, maxReceiveAmount }
 }
 
 export async function handleFailed(
@@ -145,21 +126,21 @@ export async function handleFailed(
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
 }
 
-const handleCompleted = async (
+async function handleCompleted(
   deps: ServiceDependencies,
   payment: OutgoingPayment
-): Promise<void> => {
+): Promise<void> {
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
   await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
 }
 
-export const sendWebhookEvent = async (
+export async function sendWebhookEvent(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   type: PaymentEventType
-): Promise<void> => {
+): Promise<void> {
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
   // So default the amountSent and balance to 0 for outgoing payments still in the funding state
   const amountSent =
@@ -189,11 +170,11 @@ export const sendWebhookEvent = async (
   })
 }
 
-const validateAssets = (
+function validateAssets(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   receiver: Receiver
-): void => {
+): void {
   if (payment.assetId !== payment.paymentPointer?.assetId) {
     throw LifecycleError.SourceAssetConflict
   }
@@ -208,6 +189,6 @@ const validateAssets = (
       },
       'receiver asset changed'
     )
-    throw Pay.PaymentError.DestinationAssetConflict
+    throw LifecycleError.DestinationAssetConflict
   }
 }

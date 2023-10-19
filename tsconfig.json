@@ -8,9 +8,6 @@
     },
     {
       "path": "packages/backend"
-    },
-    {
-      "path": "localenv/local-http-signatures"
     }
   ],
   "files": [],

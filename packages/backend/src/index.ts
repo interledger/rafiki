@@ -343,25 +343,6 @@ export function initIocContainer(
     }
   })
 
-  container.singleton('outgoingPaymentService', async (deps) => {
-    return await createOutgoingPaymentService({
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex'),
-      accountingService: await deps.use('accountingService'),
-      receiverService: await deps.use('receiverService'),
-      makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      peerService: await deps.use('peerService'),
-      paymentPointerService: await deps.use('paymentPointerService')
-    })
-  })
-  container.singleton('outgoingPaymentRoutes', async (deps) => {
-    return createOutgoingPaymentRoutes({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      outgoingPaymentService: await deps.use('outgoingPaymentService')
-    })
-  })
-
   container.singleton('connectorApp', async (deps) => {
     const config = await deps.use('config')
     return await createConnectorService({
@@ -449,6 +430,27 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       quoteService: await deps.use('quoteService')
+    })
+  })
+
+  container.singleton('outgoingPaymentService', async (deps) => {
+    return await createOutgoingPaymentService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      accountingService: await deps.use('accountingService'),
+      receiverService: await deps.use('receiverService'),
+      paymentMethodHandlerService: await deps.use(
+        'paymentMethodHandlerService'
+      ),
+      peerService: await deps.use('peerService'),
+      paymentPointerService: await deps.use('paymentPointerService')
+    })
+  })
+  container.singleton('outgoingPaymentRoutes', async (deps) => {
+    return createOutgoingPaymentRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      outgoingPaymentService: await deps.use('outgoingPaymentService')
     })
   })
 

@@ -82,21 +82,6 @@ services:
       AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-'http://localhost:3006'}
     depends_on:
       - shared-database
-  cloud-nine-signatures:
-    hostname: cloud-nine-wallet-signatures
-    image: rafiki-postman-signatures
-    build:
-      context: ../..
-      dockerfile: ./localenv/local-http-signatures/Dockerfile
-    restart: always
-    ports:
-      - '3040:3000'
-    environment:
-      KEY_FILE: /workspace/private-key.pem
-    volumes:
-      - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
-    networks:
-      - rafiki
   shared-database:
     image: 'postgres:15' # use latest official postgres version
     restart: unless-stopped

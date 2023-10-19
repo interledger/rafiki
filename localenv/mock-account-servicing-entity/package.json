@@ -7,7 +7,7 @@
     "start": "remix-serve build"
   },
   "dependencies": {
-    "@apollo/client": "^3.8.5",
+    "@apollo/client": "^3.8.6",
     "@interledger/http-signature-utils": "1.1.0",
     "@remix-run/node": "^1.19.3",
     "@remix-run/react": "^1.19.3",
@@ -19,12 +19,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "uuid": "^9.0.1",
-    "yaml": "^2.3.2"
+    "yaml": "^2.3.3"
   },
   "devDependencies": {
     "@remix-run/dev": "^1.19.3",
-    "@types/react": "^18.2.25",
-    "@types/react-dom": "^18.2.11"
+    "@types/react": "^18.2.28",
+    "@types/react-dom": "^18.2.13"
   },
   "engines": {
     "node": "18"

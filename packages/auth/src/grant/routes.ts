@@ -13,15 +13,12 @@ import {
 } from './model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
-import {
-  isIncomingPaymentAccessRequest,
-  isQuoteAccessRequest
-} from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
 import { InteractionService } from '../interaction/service'
+import { canSkipInteraction } from './utils'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -99,23 +96,11 @@ async function createGrant(
   deps: ServiceDependencies,
   ctx: CreateContext
 ): Promise<void> {
-  if (canSkipInteraction(deps, ctx)) {
+  if (canSkipInteraction(deps.config, ctx.request.body)) {
     await createApprovedGrant(deps, ctx)
   } else {
     await createPendingGrant(deps, ctx)
   }
-}
-
-function canSkipInteraction(
-  deps: ServiceDependencies,
-  ctx: CreateContext
-): boolean {
-  return ctx.request.body.access_token.access.every(
-    (access) =>
-      (isIncomingPaymentAccessRequest(access) &&
-        !deps.config.incomingPaymentInteraction) ||
-      (isQuoteAccessRequest(access) && !deps.config.quoteInteraction)
-  )
 }
 
 async function createApprovedGrant(

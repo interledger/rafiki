@@ -11,6 +11,7 @@ import { PaymentPointer } from '../open_payments/payment_pointer/model'
 import { Receiver } from '../open_payments/receiver/model'
 
 export type CreateTestQuoteOptions = CreateQuoteOptions & {
+  exchangeRate?: number
   validDestination?: boolean
   withFee?: boolean
 }
@@ -66,7 +67,8 @@ export async function createQuote(
     receiveAmount,
     client,
     validDestination = true,
-    withFee = false
+    withFee = false,
+    exchangeRate = 0.5
   }: CreateTestQuoteOptions
 ): Promise<Quote> {
   const paymentPointerService = await deps.use('paymentPointerService')
@@ -129,7 +131,10 @@ export async function createQuote(
     }
     receiveAmount = {
       value: BigInt(
-        Math.ceil(Number(debitAmount.value) / (2 * (1 + config.slippage)))
+        Math.ceil(
+          Number(debitAmount.value) /
+            ((1 / exchangeRate) * (1 + config.slippage))
+        )
       ),
       assetCode: receiveAsset.code,
       assetScale: receiveAsset.scale
@@ -140,7 +145,11 @@ export async function createQuote(
     }
     debitAmount = {
       value: BigInt(
-        Math.ceil(Number(receiveAmount.value) * 2 * (1 + config.slippage))
+        Math.ceil(
+          Number(receiveAmount.value) *
+            (1 / exchangeRate) *
+            (1 + config.slippage)
+        )
       ),
       assetCode: paymentPointer.asset.code,
       assetScale: paymentPointer.asset.scale
@@ -153,6 +162,15 @@ export async function createQuote(
   }
   const withGraphFetchedExpression = `[${withGraphFetchedArray.join(', ')}]`
 
+  const ilpData = {
+    lowEstimatedExchangeRate: Pay.Ratio.from(exchangeRate) as Pay.PositiveRatio,
+    highEstimatedExchangeRate: Pay.Ratio.from(
+      exchangeRate + 0.000000000001
+    ) as Pay.PositiveRatio,
+    minExchangeRate: Pay.Ratio.from(exchangeRate * 0.99) as Pay.PositiveRatio,
+    maxPacketAmount: BigInt('9223372036854775807')
+  }
+
   return await Quote.query()
     .insertAndFetch({
       paymentPointerId,
@@ -160,25 +178,11 @@ export async function createQuote(
       receiver: receiverUrl,
       debitAmount,
       receiveAmount,
-      maxPacketAmount: BigInt('9223372036854775807'),
-      estimatedExchangeRate: Pay.Ratio.of(
-        Pay.Int.from(500000000000n) as Pay.PositiveInt,
-        Pay.Int.from(1000000000000n) as Pay.PositiveInt
-      ).valueOf(),
-      lowEstimatedExchangeRate: Pay.Ratio.of(
-        Pay.Int.from(500000000000n) as Pay.PositiveInt,
-        Pay.Int.from(1000000000000n) as Pay.PositiveInt
-      ),
-      highEstimatedExchangeRate: Pay.Ratio.of(
-        Pay.Int.from(500000000001n) as Pay.PositiveInt,
-        Pay.Int.from(1000000000000n) as Pay.PositiveInt
-      ),
-      minExchangeRate: Pay.Ratio.of(
-        Pay.Int.from(495n) as Pay.PositiveInt,
-        Pay.Int.from(1000n) as Pay.PositiveInt
-      ),
+      estimatedExchangeRate: exchangeRate,
       expiresAt: new Date(Date.now() + config.quoteLifespan),
-      client
+      client,
+      additionalFields: ilpData,
+      ...ilpData
     })
     .withGraphFetched(withGraphFetchedExpression)
 }

@@ -38,8 +38,8 @@ export async function action({ request }: ActionArgs) {
       case EventType.PaymentPointerNotFound:
         await handlePaymentPointerNotFound(wh)
         break
-      case EventType.LiquidityAsset:
-      case EventType.LiquidityPeer:
+      case EventType.AssetLiquidityLow:
+      case EventType.PeerLiquidityLow:
         await handleLowLiquidity(wh)
         break
       default:

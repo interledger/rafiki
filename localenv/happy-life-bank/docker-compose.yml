@@ -71,19 +71,6 @@ services:
       AUTH_SERVER_DOMAIN: ${HAPPY_LIFE_BANK_AUTH_SERVER_DOMAIN:-'http://localhost:4006'}
     depends_on:
       - cloud-nine-auth
-  happy-life-signatures:
-    hostname: happy-life-bank-signatures
-    image: rafiki-postman-signatures
-    pull_policy: never
-    restart: always
-    ports:
-      - '3041:3000'
-    environment:
-      KEY_FILE: /workspace/private-key.pem
-    volumes:
-      - ../happy-life-bank/private-key.pem:/workspace/private-key.pem
-    depends_on:
-      - cloud-nine-signatures
   happy-life-admin:
     hostname: happy-life-bank-admin
     image: rafiki-frontend
