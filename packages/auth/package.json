@@ -51,7 +51,7 @@
     "@graphql-codegen/introspection": "4.0.0",
     "@graphql-codegen/typescript": "4.0.1",
     "@graphql-codegen/typescript-resolvers": "4.0.1",
-    "@faker-js/faker": "^8.1.0",
+    "@faker-js/faker": "^8.2.0",
     "@types/koa": "2.13.10",
     "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-session": "^6.4.2",

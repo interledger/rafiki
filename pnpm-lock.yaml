@@ -179,8 +179,8 @@ importers:
         specifier: ^3.8.5
         version: 3.8.5(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@faker-js/faker':
-        specifier: ^8.1.0
-        version: 8.1.0
+        specifier: ^8.2.0
+        version: 8.2.0
       '@graphql-codegen/cli':
         specifier: 5.0.0
         version: 5.0.0(@babel/core@7.22.10)(@types/node@18.11.9)(graphql@16.8.1)
@@ -248,8 +248,8 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(@apollo/server@4.9.2)(koa@2.14.2)
       '@faker-js/faker':
-        specifier: ^8.1.0
-        version: 8.1.0
+        specifier: ^8.2.0
+        version: 8.2.0
       '@graphql-tools/graphql-file-loader':
         specifier: ^8.0.0
         version: 8.0.0(graphql@16.8.1)
@@ -3416,8 +3416,8 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@faker-js/faker@8.1.0:
-    resolution: {integrity: sha512-38DT60rumHfBYynif3lmtxMqMqmsOQIxQgEuPZxCk2yUYN0eqWpTACgxi0VpidvsJB8CRxCpvP7B3anK85FjtQ==}
+  /@faker-js/faker@8.2.0:
+    resolution: {integrity: sha512-VacmzZqVxdWdf9y64lDOMZNDMM/FQdtM9IsaOPKOm2suYwEatb8VkdHqOzXcDnZbk7YDE2BmsJmy/2Hmkn563g==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0, npm: '>=6.14.13'}
 
   /@fortawesome/fontawesome-free@6.4.2:
