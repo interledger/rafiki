@@ -106,7 +106,14 @@ describe('Receiver Service', (): void => {
             metadata: incomingPayment.metadata || undefined,
             expiresAt: incomingPayment.expiresAt,
             updatedAt: new Date(incomingPayment.updatedAt),
-            createdAt: new Date(incomingPayment.createdAt)
+            createdAt: new Date(incomingPayment.createdAt),
+            methods: [
+              {
+                type: 'ilp',
+                ilpAddress: expect.any(String),
+                sharedSecret: expect.any(String)
+              }
+            ]
           }
         })
       })
@@ -237,7 +244,14 @@ describe('Receiver Service', (): void => {
               incomingAmount:
                 incomingPayment.incomingAmount &&
                 parseAmount(incomingPayment.incomingAmount),
-              expiresAt: incomingPayment.expiresAt
+              expiresAt: incomingPayment.expiresAt,
+              methods: [
+                {
+                  type: 'ilp',
+                  ilpAddress: expect.any(String),
+                  sharedSecret: expect.any(String)
+                }
+              ]
             }
           })
           expect(clientGetWalletAddressSpy).toHaveBeenCalledWith({
@@ -449,7 +463,15 @@ describe('Receiver Service', (): void => {
               updatedAt: new Date(incomingPayment.updatedAt),
               createdAt: new Date(incomingPayment.createdAt),
               expiresAt:
-                incomingPayment.expiresAt && new Date(incomingPayment.expiresAt)
+                incomingPayment.expiresAt &&
+                new Date(incomingPayment.expiresAt),
+              methods: [
+                {
+                  type: 'ilp',
+                  ilpAddress: incomingPayment.methods[0].ilpAddress,
+                  sharedSecret: expect.any(String)
+                }
+              ]
             }
           })
 
@@ -535,7 +557,14 @@ describe('Receiver Service', (): void => {
               metadata: receiver.incomingPayment?.metadata || undefined,
               updatedAt: receiver.incomingPayment?.updatedAt,
               createdAt: receiver.incomingPayment?.createdAt,
-              expiresAt: receiver.incomingPayment?.expiresAt
+              expiresAt: receiver.incomingPayment?.expiresAt,
+              methods: [
+                {
+                  type: 'ilp',
+                  ilpAddress: receiver.ilpAddress,
+                  sharedSecret: expect.any(String)
+                }
+              ]
             }
           })
 
