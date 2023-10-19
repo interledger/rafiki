@@ -13,10 +13,6 @@ import {
 } from './model'
 import { ClientService } from '../client/service'
 import { BaseService } from '../shared/baseService'
-import {
-  isIncomingPaymentAccessRequest,
-  isQuoteAccessRequest
-} from '../access/types'
 import { IAppConfig } from '../config/app'
 import { AccessTokenService } from '../accessToken/service'
 import { AccessService } from '../access/service'
