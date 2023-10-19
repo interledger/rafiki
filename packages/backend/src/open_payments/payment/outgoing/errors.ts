@@ -1,6 +1,5 @@
-import * as Pay from '@interledger/pay'
-
 import { TransferError } from '../../../accounting/errors'
+import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
 
 export enum OutgoingPaymentError {
   UnknownPaymentPointer = 'UnknownPaymentPointer',
@@ -47,7 +46,7 @@ export type FundingError = OutgoingPaymentError | TransferError
 export const isFundingError = (o: any): o is FundingError =>
   Object.values(FundingError).includes(o)
 
-export type PaymentError = LifecycleError | Pay.PaymentError
+export type PaymentError = LifecycleError | PaymentMethodHandlerError
 
 export enum LifecycleError {
   // Rate fetch failed.
@@ -56,26 +55,12 @@ export enum LifecycleError {
   BadState = 'BadState',
   // Account asset conflicts with debitAmount asset
   SourceAssetConflict = 'SourceAssetConflict',
+  // Destination account asset conflicts with receiveAmount asset
+  DestinationAssetConflict = 'DestinationAssetConflict',
 
   // These errors shouldn't ever trigger (impossible states), but they exist to satisfy types:
   MissingBalance = 'MissingBalance',
   MissingQuote = 'MissingQuote',
   MissingExpiration = 'MissingExpiration',
   Unauthorized = 'Unauthorized'
-}
-
-const retryablePaymentErrors: { [paymentError in PaymentError]?: boolean } = {
-  // Lifecycle errors
-  RatesUnavailable: true,
-  // From @interledger/pay's PaymentError:
-  ConnectorError: true,
-  EstablishmentFailed: true,
-  InsufficientExchangeRate: true,
-  RateProbeFailed: true,
-  IdleTimeout: true,
-  ClosedByReceiver: true
-}
-
-export function canRetryError(err: Error | PaymentError): boolean {
-  return err instanceof Error || !!retryablePaymentErrors[err]
 }
