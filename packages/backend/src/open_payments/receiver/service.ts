@@ -5,7 +5,7 @@ import {
   AccessType,
   AccessAction
 } from '@interledger/open-payments'
-import { StreamCredentialsService } from '../connection/service'
+import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'

@@ -9,7 +9,7 @@ import { truncateTables } from '../../tests/tableManager'
 import {
   IlpStreamCredentials,
   StreamCredentialsService
-} from '../connection/service'
+} from '../../payment-method/ilp/stream-credentials/service'
 import { Receiver } from './model'
 import { IncomingPaymentState } from '../payment/incoming/model'
 import assert from 'assert'

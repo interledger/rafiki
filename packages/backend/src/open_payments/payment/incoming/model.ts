@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { IlpStreamCredentials } from '../../connection/service'
+import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import {
   WalletAddress,
   WalletAddressSubresource

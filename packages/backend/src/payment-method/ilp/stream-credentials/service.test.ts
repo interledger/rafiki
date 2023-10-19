@@ -1,17 +1,17 @@
 import { Knex } from 'knex'
-import { createTestApp, TestContainer } from '../../tests/app'
+import { createTestApp, TestContainer } from '../../../tests/app'
 import { StreamCredentialsService } from './service'
 import {
   IncomingPayment,
   IncomingPaymentState
-} from '../payment/incoming/model'
-import { Config } from '../../config/app'
+} from '../../../open_payments/payment/incoming/model'
+import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
-import { initIocContainer } from '../..'
-import { AppServices } from '../../app'
-import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createWalletAddress } from '../../tests/walletAddress'
-import { truncateTables } from '../../tests/tableManager'
+import { initIocContainer } from '../../..'
+import { AppServices } from '../../../app'
+import { createIncomingPayment } from '../../../tests/incomingPayment'
+import { createWalletAddress } from '../../../tests/walletAddress'
+import { truncateTables } from '../../../tests/tableManager'
 import assert from 'assert'
 
 describe('Stream Credentials Service', (): void => {

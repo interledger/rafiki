@@ -1,9 +1,9 @@
 import { StreamServer } from '@interledger/stream-receiver'
-import { BaseService } from '../../shared/baseService'
+import { BaseService } from '../../../shared/baseService'
 import {
   IncomingPayment,
   IncomingPaymentState
-} from '../payment/incoming/model'
+} from '../../../open_payments/payment/incoming/model'
 import { StreamCredentials as IlpStreamCredentials } from '@interledger/stream-receiver'
 
 export { IlpStreamCredentials }

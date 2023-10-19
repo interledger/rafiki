@@ -21,7 +21,7 @@ import { listSubresource } from '../../wallet_address/routes'
 import {
   IlpStreamCredentials,
   StreamCredentialsService
-} from '../../connection/service'
+} from '../../../payment-method/ilp/stream-credentials/service'
 import {
   AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,

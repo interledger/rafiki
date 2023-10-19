@@ -25,7 +25,7 @@ import {
   MockWalletAddress
 } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { StreamCredentialsService } from '../connection/service'
+import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
 import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { Amount, parseAmount } from '../amount'
