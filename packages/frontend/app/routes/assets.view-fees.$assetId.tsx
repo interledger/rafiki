@@ -95,7 +95,7 @@ export default function AssetFeesPage() {
               ))
             ) : (
               <Table.Row>
-                <Table.Cell colSpan={4} className='text-center'>
+                <Table.Cell colSpan={5} className='text-center'>
                   No fees found.
                 </Table.Cell>
               </Table.Row>

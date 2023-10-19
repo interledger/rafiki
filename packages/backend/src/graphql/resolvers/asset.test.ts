@@ -455,7 +455,6 @@ describe('Asset Resolvers', (): void => {
         }
       })
 
-      // TODO
       test('Can get fees', async (): Promise<void> => {
         const fees: Fee[] = []
         for (let i = 0; i < 2; i++) {
