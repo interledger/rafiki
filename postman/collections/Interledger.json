@@ -1444,39 +1444,6 @@
 					"id": "eb2dba4c-bb3b-4e31-89d1-17e24a158638"
 				},
 				{
-					"name": "STREAM connection",
-					"item": [
-						{
-							"name": "Get STREAM credentials",
-							"id": "ee878ea2-ae30-4d12-b617-d28a92c98d86",
-							"protocolProfileBehavior": {
-								"disableBodyPruning": true
-							},
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									}
-								],
-								"url": {
-									"raw": "{{PeerOpenPaymentsHost}}/connections/{{connectionId}}",
-									"host": [
-										"{{PeerOpenPaymentsHost}}"
-									],
-									"path": [
-										"connections",
-										"{{connectionId}}"
-									]
-								}
-							},
-							"response": []
-						}
-					],
-					"id": "710e5513-49bf-45ab-b15b-efee78a76462"
-				},
-				{
 					"name": "Incoming Payments",
 					"item": [
 						{
@@ -1505,7 +1472,6 @@
 											"",
 											"const body = pm.response.json();",
 											"pm.collectionVariables.set(\"incomingPaymentId\", body.id.split(\"/\").pop());",
-											"pm.collectionVariables.set(\"connectionId\", body.ilpStreamConnection.id.split(\"/\").pop());",
 											""
 										],
 										"type": "text/javascript"
@@ -1707,9 +1673,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}",
+									"raw": "{{pfryWalletAddress}}/incoming-payments/{{incomingPaymentId}}",
 									"host": [
-										"{{pfryPaymentPointer}}"
+										"{{pfryWalletAddress}}"
 									],
 									"path": [
 										"incoming-payments",
@@ -1883,7 +1849,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n}",
+									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2611,7 +2577,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\"\n}",
+									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
