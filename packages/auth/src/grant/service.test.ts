@@ -136,13 +136,13 @@ describe('Grant Service', (): void => {
       })
     })
     test.each`
-      type                          | state                  | interact                       | not       | description
-      ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}                   | ${''}     | ${'incoming payment'}
-      ${AccessType.Quote}           | ${GrantState.Approved} | ${undefined}                   | ${''}     | ${'quote'}
-      ${AccessType.OutgoingPayment} | ${GrantState.Pending}  | ${BASE_GRANT_REQUEST.interact} | ${' not'} | ${'outgoing payment'}
+      type                          | expectedState          | interact
+      ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
+      ${AccessType.Quote}           | ${GrantState.Approved} | ${undefined}
+      ${AccessType.OutgoingPayment} | ${GrantState.Pending}  | ${BASE_GRANT_REQUEST.interact}
     `(
-      'Does$not approve a grant without interaction - $description',
-      async ({ type, state, interact }): Promise<void> => {
+      'Puts $type grant without interaction in $expectedState state',
+      async ({ type, expectedState, interact }): Promise<void> => {
         const grantRequest: GrantRequest = {
           ...BASE_GRANT_REQUEST,
           access_token: {
@@ -159,7 +159,7 @@ describe('Grant Service', (): void => {
         const grant = await grantService.create(grantRequest)
 
         expect(grant).toMatchObject({
-          state,
+          state: expectedState,
           continueId: expect.any(String),
           continueToken: expect.any(String)
         })
