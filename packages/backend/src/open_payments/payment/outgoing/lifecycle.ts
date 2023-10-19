@@ -95,7 +95,11 @@ function getAdjustedAmounts(
   // This is only an approximation of the true amount delivered due to exchange rate variance. Due to connection failures there isn't a reliable way to track that in sync with the amount sent (particularly within ILP payments)
   // eslint-disable-next-line no-case-declarations
   const amountDelivered = BigInt(
-    Math.ceil(Number(alreadySentAmount) * payment.quote.estimatedExchangeRate)
+    Math.ceil(
+      Number(alreadySentAmount) *
+        (payment.quote.estimatedExchangeRate ||
+          payment.quote.lowEstimatedExchangeRate.valueOf())
+    )
   )
   let maxReceiveAmount = payment.receiveAmount.value - amountDelivered
 
