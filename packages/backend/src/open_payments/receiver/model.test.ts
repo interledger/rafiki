@@ -6,11 +6,12 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { ConnectionService } from '../connection/service'
+import { Connection, ConnectionService } from '../connection/service'
 import { Receiver } from './model'
 import { IncomingPaymentState } from '../payment/incoming/model'
 import assert from 'assert'
 import base64url from 'base64url'
+import { IlpAddress } from 'ilp-packet'
 
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
@@ -78,8 +79,10 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
-      const connection = connectionService.get(incomingPayment)
-      assert(connection)
+      const connection: Connection = {
+        ilpAddress: 'test.ilp' as IlpAddress,
+        sharedSecret: Buffer.from('')
+      }
 
       const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
         walletAddress,
@@ -99,7 +102,6 @@ describe('Receiver Model', (): void => {
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
       const connection = connectionService.get(incomingPayment)
-
       assert(connection)
       const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
         walletAddress,
