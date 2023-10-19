@@ -2,7 +2,7 @@ name: c9
 services:
   cloud-nine-mock-ase:
     hostname: cloud-nine-wallet
-    image: rafiki-mock-ase-10
+    image: rafiki-mock-ase
     build:
       context: ../..
       dockerfile: ./localenv/mock-account-servicing-entity/Dockerfile
