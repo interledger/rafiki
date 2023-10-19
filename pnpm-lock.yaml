@@ -203,8 +203,8 @@ importers:
         specifier: ^6.4.4
         version: 6.4.4
       '@types/koa__cors':
-        specifier: ^4.0.1
-        version: 4.0.1
+        specifier: ^4.0.2
+        version: 4.0.2
       '@types/koa__router':
         specifier: ^12.0.1
         version: 12.0.1
@@ -5459,8 +5459,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/koa__cors@4.0.1:
-    resolution: {integrity: sha512-1AigjNVkUTZyYbgCtEEy8OM1aTKtHIDYS+yTrGtOPu/9jYSM7gjGbhgxA1FrJpsuigtd8u+AWOnjwRitQ7/nnw==}
+  /@types/koa__cors@4.0.2:
+    resolution: {integrity: sha512-EV1S9t1PbauzUlKyI4KKrw1E/JWHI15OtdVXkaBm6sI+vXvvSW6JoKcsmAiIqY0PYvt94fycvdrWMTtM15uZmw==}
     dependencies:
       '@types/koa': 2.13.10
     dev: true
