@@ -65,7 +65,6 @@ export class Receiver {
 
     this.ilpAddress = ilpMethod.ilpAddress
     this.sharedSecret = base64url.toBuffer(ilpMethod.sharedSecret)
-    // TODO: ensure these are the right assetCode/Scales
     this.assetCode = incomingPayment.receivedAmount.assetCode
     this.assetScale = incomingPayment.receivedAmount.assetScale
 
