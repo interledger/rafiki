@@ -197,8 +197,8 @@ importers:
         specifier: 2.13.10
         version: 2.13.10
       '@types/koa-bodyparser':
-        specifier: ^4.3.10
-        version: 4.3.10
+        specifier: ^4.3.11
+        version: 4.3.11
       '@types/koa-session':
         specifier: ^6.4.4
         version: 6.4.4
@@ -381,8 +381,8 @@ importers:
         specifier: 2.13.10
         version: 2.13.10
       '@types/koa-bodyparser':
-        specifier: ^4.3.10
-        version: 4.3.10
+        specifier: ^4.3.11
+        version: 4.3.11
       '@types/koa__router':
         specifier: ^12.0.1
         version: 12.0.1
@@ -5427,8 +5427,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/koa-bodyparser@4.3.10:
-    resolution: {integrity: sha512-6ae05pjhmrmGhUR8GYD5qr5p9LTEMEGfGXCsK8VaSL+totwigm8+H/7MHW7K4854CMeuwRAubT8qcc/EagaeIA==}
+  /@types/koa-bodyparser@4.3.11:
+    resolution: {integrity: sha512-ClE+n+3w7BtepmyvAuXBbYDz13lmihha27FF2iIpqymsY6j2VS2f/I9wieyN/sZBMcM/POU7LPlMi2m2iNV+Vg==}
     dependencies:
       '@types/koa': 2.13.10
     dev: true
