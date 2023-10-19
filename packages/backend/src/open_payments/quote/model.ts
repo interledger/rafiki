@@ -27,7 +27,9 @@ export class Quote extends PaymentPointerSubresource {
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
+  public additionalFields!: Record<string, unknown>
 
+  public estimatedExchangeRate?: number
   public feeId?: string
   public fee?: Fee
 

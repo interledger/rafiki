@@ -2,7 +2,6 @@ import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 
 import react from '@astrojs/react'
-// import overrideIntegration from './src/overrideIntegration.mjs'
 
 import remarkMath from 'remark-math'
 import rehypeMathjax from 'rehype-mathjax'
@@ -18,14 +17,18 @@ export default defineConfig({
     rehypePlugins: [rehypeMathjax]
   },
   integrations: [
-    // overrideIntegration(), # TODO: figure out the path problem for this plugin
     starlight({
       title: 'Rafiki',
+      description:
+        'Rafiki is open source software that allows an Account Servicing Entity to enable Interledger functionality on its users’ accounts.',
       customCss: [
         './node_modules/@interledger/docs-design-system/src/styles/orange-theme.css',
         './node_modules/@interledger/docs-design-system/src/styles/ilf-docs.css',
         './src/styles/rafiki.css'
       ],
+      components: {
+        Header: './src/components/Header.astro'
+      },
       head: [
         {
           tag: 'script',
@@ -186,12 +189,6 @@ export default defineConfig({
       linkPrefix: '/apis/auth/'
     })
   ],
-  // Process images with sharp: https://docs.astro.build/en/guides/assets/#using-sharp
-  image: {
-    service: {
-      entrypoint: 'astro/assets/services/sharp'
-    }
-  },
   server: {
     port: 1101
   }

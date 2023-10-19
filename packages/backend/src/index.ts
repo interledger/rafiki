@@ -47,6 +47,8 @@ import { createFeeService } from './fee/service'
 import { createAutoPeeringService } from './payment-method/ilp/auto-peering/service'
 import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
 import axios from 'axios'
+import { createIlpPaymentService } from './payment-method/ilp/service'
+import { createPaymentMethodHandlerService } from './payment-method/handler/service'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -341,26 +343,6 @@ export function initIocContainer(
     }
   })
 
-  container.singleton('quoteService', async (deps) => {
-    const config = await deps.use('config')
-    return await createQuoteService({
-      config,
-      logger: await deps.use('logger'),
-      knex: await deps.use('knex'),
-      makeIlpPlugin: await deps.use('makeIlpPlugin'),
-      receiverService: await deps.use('receiverService'),
-      paymentPointerService: await deps.use('paymentPointerService'),
-      ratesService: await deps.use('ratesService'),
-      feeService: await deps.use('feeService')
-    })
-  })
-  container.singleton('quoteRoutes', async (deps) => {
-    return createQuoteRoutes({
-      config: await deps.use('config'),
-      logger: await deps.use('logger'),
-      quoteService: await deps.use('quoteService')
-    })
-  })
   container.singleton('outgoingPaymentService', async (deps) => {
     return await createOutgoingPaymentService({
       logger: await deps.use('logger'),
@@ -429,6 +411,44 @@ export function initIocContainer(
       logger: await deps.use('logger'),
       knex: await deps.use('knex'),
       autoPeeringService: await deps.use('autoPeeringService')
+    })
+  })
+
+  container.singleton('ilpPaymentService', async (deps) => {
+    return createIlpPaymentService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      config: await deps.use('config'),
+      makeIlpPlugin: await deps.use('makeIlpPlugin'),
+      ratesService: await deps.use('ratesService')
+    })
+  })
+
+  container.singleton('paymentMethodHandlerService', async (deps) => {
+    return createPaymentMethodHandlerService({
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      ilpPaymentService: await deps.use('ilpPaymentService')
+    })
+  })
+
+  container.singleton('quoteService', async (deps) => {
+    return await createQuoteService({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      knex: await deps.use('knex'),
+      receiverService: await deps.use('receiverService'),
+      feeService: await deps.use('feeService'),
+      paymentPointerService: await deps.use('paymentPointerService'),
+      paymentMethodHandlerService: await deps.use('paymentMethodHandlerService')
+    })
+  })
+
+  container.singleton('quoteRoutes', async (deps) => {
+    return createQuoteRoutes({
+      config: await deps.use('config'),
+      logger: await deps.use('logger'),
+      quoteService: await deps.use('quoteService')
     })
   })
 

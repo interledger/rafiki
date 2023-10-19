@@ -48,9 +48,8 @@ export interface IncomingPaymentResponse {
   metadata?: Record<string, unknown>
 }
 
-export type IncomingPaymentData = {
-  incomingPayment: IncomingPaymentResponse
-}
+export type IncomingPaymentData = IncomingPaymentResponse &
+  Record<string, unknown>
 
 export class IncomingPaymentEvent extends WebhookEvent {
   public type!: IncomingPaymentEventType
@@ -166,29 +165,27 @@ export class IncomingPayment
 
   public toData(amountReceived: bigint): IncomingPaymentData {
     const data: IncomingPaymentData = {
-      incomingPayment: {
-        id: this.id,
-        paymentPointerId: this.paymentPointerId,
-        createdAt: new Date(+this.createdAt).toISOString(),
-        expiresAt: this.expiresAt.toISOString(),
-        receivedAmount: {
-          value: amountReceived.toString(),
-          assetCode: this.asset.code,
-          assetScale: this.asset.scale
-        },
-        completed: this.completed,
-        updatedAt: new Date(+this.updatedAt).toISOString()
-      }
+      id: this.id,
+      paymentPointerId: this.paymentPointerId,
+      createdAt: new Date(+this.createdAt).toISOString(),
+      expiresAt: this.expiresAt.toISOString(),
+      receivedAmount: {
+        value: amountReceived.toString(),
+        assetCode: this.asset.code,
+        assetScale: this.asset.scale
+      },
+      completed: this.completed,
+      updatedAt: new Date(+this.updatedAt).toISOString()
     }
 
     if (this.incomingAmount) {
-      data.incomingPayment.incomingAmount = {
+      data.incomingAmount = {
         ...this.incomingAmount,
         value: this.incomingAmount.value.toString()
       }
     }
     if (this.metadata) {
-      data.incomingPayment.metadata = this.metadata
+      data.metadata = this.metadata
     }
 
     return data

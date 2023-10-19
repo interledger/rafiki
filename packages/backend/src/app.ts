@@ -84,6 +84,8 @@ import { AutoPeeringService } from './payment-method/ilp/auto-peering/service'
 import { AutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
 import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
 import { AxiosInstance } from 'axios'
+import { PaymentMethodHandlerService } from './payment-method/handler/service'
+import { IlpPaymentService } from './payment-method/ilp/service'
 
 export interface AppContextData {
   logger: Logger
@@ -225,6 +227,8 @@ export interface AppServices {
   autoPeeringRoutes: Promise<AutoPeeringRoutes>
   connectorApp: Promise<ConnectorApp>
   tigerbeetle: Promise<TigerbeetleClient>
+  paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
+  ilpPaymentService: Promise<IlpPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>
