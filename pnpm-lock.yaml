@@ -121,8 +121,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 3.1.0
-        version: 3.1.0
+        specifier: 3.2.0
+        version: 3.2.0
       '@interledger/openapi':
         specifier: 1.2.0
         version: 1.2.0
@@ -263,8 +263,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 3.1.0
-        version: 3.1.0
+        specifier: 3.2.0
+        version: 3.2.0
       '@interledger/openapi':
         specifier: 1.2.0
         version: 1.2.0
@@ -4121,15 +4121,6 @@ packages:
     resolution: {integrity: sha512-hbp6YrS348c2VlpbLOj0oaPKrg+8nMU0a/xjnCQ3KruTFnqtJJPXr2CM9V17oYI4CLTcEh6mvP3AHpldXOmTHQ==}
     dev: false
 
-  /@interledger/http-signature-utils@1.0.4:
-    resolution: {integrity: sha512-iiHWGzB/c0bwjV9AxkkmOeqEmWO2CY0em372xyeqTQ3DT6GCkB90qhWZ4Tte2pxOgzpowkAfo1cXMW1NMCD8AA==}
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: 1.0.0
-      jose: 4.13.1
-      uuid: 9.0.1
-    dev: false
-
   /@interledger/http-signature-utils@1.1.0:
     resolution: {integrity: sha512-vxNrrp9qk71Pgt5/AcTtPTITnKPNX3P/Ag8+Vwqb2xhYpU9cTTEJJKhRjzOsvxXJ+I4NQ20Bwo/OHyfki48ZRg==}
     dependencies:
@@ -4139,11 +4130,11 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@3.1.0:
-    resolution: {integrity: sha512-b158SxGD0AbhSM+68nN7/cJCAA7Y/hBOmsfeZbyJggZq38eBvOoXMaxsvbFHvVrs3zQs/NkHFwzmaI0txvuLaA==}
+  /@interledger/open-payments@3.2.0:
+    resolution: {integrity: sha512-52jae7P+JCl9hPyksgs6ELUQQZwbc/lpHLqC+Lu822LTLvqZJ2PTBjNa+8bXvAdaLlEpajQ40R4f1VIblsdMdA==}
     dependencies:
-      '@interledger/http-signature-utils': 1.0.4
-      '@interledger/openapi': 1.0.3
+      '@interledger/http-signature-utils': 1.1.0
+      '@interledger/openapi': 1.1.0
       axios: 1.5.1
       base64url: 3.0.1
       http-message-signatures: 0.1.2
@@ -4154,8 +4145,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/openapi@1.0.3:
-    resolution: {integrity: sha512-Xx/Me2tj8DhHpQR9cVjioX/DAUmQnaXWjt8hEVPIru4pDSMHCGG0RmpU2dV+aIiVmkDM2OvJUfKoLGsPVStqrA==}
+  /@interledger/openapi@1.1.0:
+    resolution: {integrity: sha512-tCs2IBbSFdbquOkfO35RYMZ8IN161TupbtXniwvyEOu0yQHI5qiI0EWK6wNE4f8sx85+aiuGcOX61f0sjDM6rQ==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 10.1.0
       ajv: 8.12.0
