@@ -6,7 +6,10 @@ import { AppServices } from '../../app'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { Connection, ConnectionService } from '../connection/service'
+import {
+  IlpStreamCredentials,
+  StreamCredentialsService
+} from '../connection/service'
 import { Receiver } from './model'
 import { IncomingPaymentState } from '../payment/incoming/model'
 import assert from 'assert'
@@ -16,12 +19,12 @@ import { IlpAddress } from 'ilp-packet'
 describe('Receiver Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let connectionService: ConnectionService
+  let streamCredentialsService: StreamCredentialsService
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    connectionService = await deps.use('connectionService')
+    streamCredentialsService = await deps.use('streamCredentialsService')
   })
 
   afterEach(async (): Promise<void> => {
@@ -40,11 +43,11 @@ describe('Receiver Model', (): void => {
         walletAddressId: walletAddress.id
       })
 
-      const connection = connectionService.get(incomingPayment)
-      assert(connection)
+      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      assert(streamCredentials)
 
       const receiver = new Receiver(
-        incomingPayment.toOpenPaymentsType(walletAddress, connection)
+        incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
       )
 
       expect(receiver).toEqual({
@@ -64,8 +67,8 @@ describe('Receiver Model', (): void => {
           methods: [
             {
               type: 'ilp',
-              ilpAddress: connection.ilpAddress,
-              sharedSecret: base64url(connection.sharedSecret)
+              ilpAddress: streamCredentials.ilpAddress,
+              sharedSecret: base64url(streamCredentials.sharedSecret)
             }
           ]
         }
@@ -79,14 +82,14 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.state = IncomingPaymentState.Completed
-      const connection: Connection = {
+      const streamCredentials: IlpStreamCredentials = {
         ilpAddress: 'test.ilp' as IlpAddress,
         sharedSecret: Buffer.from('')
       }
 
       const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
         walletAddress,
-        connection
+        streamCredentials
       )
 
       expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
@@ -101,11 +104,11 @@ describe('Receiver Model', (): void => {
       })
 
       incomingPayment.expiresAt = new Date(Date.now() - 1)
-      const connection = connectionService.get(incomingPayment)
-      assert(connection)
+      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      assert(streamCredentials)
       const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
         walletAddress,
-        connection
+        streamCredentials
       )
 
       expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
@@ -113,19 +116,19 @@ describe('Receiver Model', (): void => {
       )
     })
 
-    test('throws if stream connection has invalid ILP address', async () => {
+    test('throws if stream credentials has invalid ILP address', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id
       })
 
-      const connection = connectionService.get(incomingPayment)
-      assert(connection)
-      ;(connection.ilpAddress as string) = 'not base 64 encoded'
+      const streamCredentials = streamCredentialsService.get(incomingPayment)
+      assert(streamCredentials)
+      ;(streamCredentials.ilpAddress as string) = 'not base 64 encoded'
 
       const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
         walletAddress,
-        connection
+        streamCredentials
       )
 
       expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(

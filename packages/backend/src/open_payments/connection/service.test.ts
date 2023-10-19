@@ -1,6 +1,6 @@
 import { Knex } from 'knex'
 import { createTestApp, TestContainer } from '../../tests/app'
-import { ConnectionService } from './service'
+import { StreamCredentialsService } from './service'
 import {
   IncomingPayment,
   IncomingPaymentState
@@ -14,17 +14,17 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import assert from 'assert'
 
-describe('Connection Service', (): void => {
+describe('Stream Credentials Service', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let connectionService: ConnectionService
+  let streamCredentialsService: StreamCredentialsService
   let knex: Knex
   let incomingPayment: IncomingPayment
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    connectionService = await deps.use('connectionService')
+    streamCredentialsService = await deps.use('streamCredentialsService')
     knex = appContainer.knex
   })
 
@@ -44,10 +44,10 @@ describe('Connection Service', (): void => {
   })
 
   describe('get', (): void => {
-    test('returns connection for incoming payment', (): void => {
-      const connection = connectionService.get(incomingPayment)
-      assert.ok(connection)
-      expect(connection).toMatchObject({
+    test('returns stream credentials for incoming payment', (): void => {
+      const credentials = streamCredentialsService.get(incomingPayment)
+      assert.ok(credentials)
+      expect(credentials).toMatchObject({
         ilpAddress: expect.stringMatching(/^test\.rafiki\.[a-zA-Z0-9_-]{95}$/),
         sharedSecret: expect.any(Buffer)
       })
@@ -65,7 +65,7 @@ describe('Connection Service', (): void => {
           expiresAt:
             state === IncomingPaymentState.Expired ? new Date() : undefined
         })
-        expect(connectionService.get(incomingPayment)).toBeUndefined()
+        expect(streamCredentialsService.get(incomingPayment)).toBeUndefined()
       }
     )
   })

@@ -25,7 +25,7 @@ import {
   MockWalletAddress
 } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { ConnectionService } from '../connection/service'
+import { StreamCredentialsService } from '../connection/service'
 import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { Amount, parseAmount } from '../amount'
@@ -46,7 +46,7 @@ describe('Receiver Service', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let openPaymentsClient: AuthenticatedClient
   let knex: Knex
-  let connectionService: ConnectionService
+  let streamCredentialsService: StreamCredentialsService
   let walletAddressService: WalletAddressService
   let grantService: GrantService
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
@@ -57,7 +57,7 @@ describe('Receiver Service', (): void => {
     receiverService = await deps.use('receiverService')
     incomingPaymentService = await deps.use('incomingPaymentService')
     openPaymentsClient = await deps.use('openPaymentsClient')
-    connectionService = await deps.use('connectionService')
+    streamCredentialsService = await deps.use('streamCredentialsService')
     walletAddressService = await deps.use('walletAddressService')
     grantService = await deps.use('grantService')
     remoteIncomingPaymentService = await deps.use(
@@ -590,14 +590,18 @@ describe('Receiver Service', (): void => {
         ).resolves.toEqual(ReceiverError.InvalidAmount)
       })
 
-      test('throws if error when getting connection for local incoming payment', async (): Promise<void> => {
-        jest.spyOn(connectionService, 'get').mockReturnValueOnce(undefined)
+      test('throws if error when getting stream credentials for local incoming payment', async (): Promise<void> => {
+        jest
+          .spyOn(streamCredentialsService, 'get')
+          .mockReturnValueOnce(undefined)
 
         await expect(
           receiverService.create({
             walletAddressUrl: walletAddress.url
           })
-        ).rejects.toThrow('Could not get connection for local incoming payment')
+        ).rejects.toThrow(
+          'Could not get stream credentials for local incoming payment'
+        )
       })
     })
   })

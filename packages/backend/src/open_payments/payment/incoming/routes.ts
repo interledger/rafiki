@@ -18,8 +18,10 @@ import {
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
 import { listSubresource } from '../../wallet_address/routes'
-import { Connection } from '../../connection/service'
-import { ConnectionService } from '../../connection/service'
+import {
+  IlpStreamCredentials,
+  StreamCredentialsService
+} from '../../connection/service'
 import {
   AccessAction,
   IncomingPayment as OpenPaymentsIncomingPayment,
@@ -31,7 +33,7 @@ interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
-  connectionService: ConnectionService
+  streamCredentialsService: StreamCredentialsService
 }
 
 export type ReadContextWithAuthenticatedStatus = ReadContext &
@@ -105,11 +107,11 @@ async function getIncomingPaymentPrivate(
     ctx.throw(500, 'Error trying to get incoming payment')
   }
   if (!incomingPayment) return ctx.throw(404)
-  const connection = deps.connectionService.get(incomingPayment)
+  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
   ctx.body = incomingPaymentToBody(
     ctx.walletAddress,
     incomingPayment,
-    connection
+    streamCredentials
   )
 }
 
@@ -146,11 +148,13 @@ async function createIncomingPayment(
   }
 
   ctx.status = 201
-  const connection = deps.connectionService.get(incomingPaymentOrError)
+  const streamCredentials = deps.streamCredentialsService.get(
+    incomingPaymentOrError
+  )
   ctx.body = incomingPaymentToBody(
     ctx.walletAddress,
     incomingPaymentOrError,
-    connection
+    streamCredentials
   )
 }
 
@@ -196,7 +200,7 @@ async function listIncomingPayments(
 function incomingPaymentToBody(
   walletAddress: WalletAddress,
   incomingPayment: IncomingPayment,
-  ilpStreamConnection?: Connection
+  ilpStreamCredentials?: IlpStreamCredentials
 ): OpenPaymentsIncomingPayment | IncomingPaymentWithPaymentMethods {
-  return incomingPayment.toOpenPaymentsType(walletAddress, ilpStreamConnection)
+  return incomingPayment.toOpenPaymentsType(walletAddress, ilpStreamCredentials)
 }

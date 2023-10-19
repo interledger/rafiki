@@ -6,7 +6,7 @@ import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
-import { Connection } from '../../connection/service'
+import { IlpStreamCredentials } from '../../connection/service'
 import { serializeAmount } from '../../amount'
 import { IlpAddress } from 'ilp-packet'
 import { IncomingPayment } from './model'
@@ -30,7 +30,7 @@ describe('Incoming Payment Model', (): void => {
   })
 
   describe('toOpenPaymentsType', () => {
-    test('returns incoming payment without connection provided', async () => {
+    test('returns incoming payment without stream credentials provided', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
@@ -52,20 +52,20 @@ describe('Incoming Payment Model', (): void => {
       })
     })
 
-    test('returns incoming payment with connection as object', async () => {
+    test('returns incoming payment with stream credentials as object', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' }
       })
 
-      const connection: Connection = {
+      const streamCredentials: IlpStreamCredentials = {
         ilpAddress: 'test.ilp' as IlpAddress,
         sharedSecret: Buffer.from('')
       }
 
       expect(
-        incomingPayment.toOpenPaymentsType(walletAddress, connection)
+        incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
       ).toEqual({
         id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         walletAddress: walletAddress.url,

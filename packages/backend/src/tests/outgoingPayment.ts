@@ -31,7 +31,7 @@ export async function createOutgoingPayment(
   if (options.validDestination === false) {
     const walletAddressService = await deps.use('walletAddressService')
     const streamServer = await deps.use('streamServer')
-    const connection = streamServer.generateCredentials()
+    const streamCredentials = streamServer.generateCredentials()
 
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: options.walletAddressId
@@ -44,7 +44,7 @@ export async function createOutgoingPayment(
       .spyOn(receiverService, 'get')
       .mockResolvedValueOnce(
         new Receiver(
-          incomingPayment.toOpenPaymentsType(walletAddress, connection)
+          incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
         )
       )
   }

@@ -5,7 +5,7 @@ import {
   AccessType,
   AccessAction
 } from '@interledger/open-payments'
-import { ConnectionService } from '../connection/service'
+import { StreamCredentialsService } from '../connection/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
@@ -29,14 +29,14 @@ interface CreateReceiverArgs {
   metadata?: Record<string, unknown>
 }
 
-// A receiver is resolved from an incoming payment or a connection
+// A receiver is resolved from an incoming payment
 export interface ReceiverService {
   get(url: string): Promise<Receiver | undefined>
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
 interface ServiceDependencies extends BaseService {
-  connectionService: ConnectionService
+  streamCredentialsService: StreamCredentialsService
   grantService: GrantService
   incomingPaymentService: IncomingPaymentService
   openPaymentsUrl: string
@@ -123,16 +123,22 @@ async function createLocalIncomingPayment(
     return incomingPaymentOrError
   }
 
-  const connection = deps.connectionService.get(incomingPaymentOrError)
+  const streamCredentials = deps.streamCredentialsService.get(
+    incomingPaymentOrError
+  )
 
-  if (!connection) {
-    const errorMessage = 'Could not get connection for local incoming payment'
+  if (!streamCredentials) {
+    const errorMessage =
+      'Could not get stream credentials for local incoming payment'
     deps.logger.error({ incomingPaymentOrError }, errorMessage)
 
     throw new Error(errorMessage)
   }
 
-  return incomingPaymentOrError.toOpenPaymentsType(walletAddress, connection)
+  return incomingPaymentOrError.toOpenPaymentsType(
+    walletAddress,
+    streamCredentials
+  )
 }
 
 async function getReceiver(
@@ -219,13 +225,13 @@ async function getLocalIncomingPayment({
     return undefined
   }
 
-  const connection = deps.connectionService.get(incomingPayment)
+  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
-  if (!connection) {
+  if (!streamCredentials) {
     return undefined
   }
 
-  return incomingPayment.toOpenPaymentsType(walletAddress, connection)
+  return incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
 }
 
 async function getIncomingPaymentGrant(

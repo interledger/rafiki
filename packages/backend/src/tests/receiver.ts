@@ -16,12 +16,12 @@ export async function createReceiver(
     walletAddressId: walletAddress.id
   })
 
-  const connectionService = await deps.use('connectionService')
+  const streamCredentialsService = await deps.use('streamCredentialsService')
 
   return new Receiver(
     incomingPayment.toOpenPaymentsType(
       walletAddress,
-      connectionService.get(incomingPayment)!
+      streamCredentialsService.get(incomingPayment)!
     )
   )
 }

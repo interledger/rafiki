@@ -4,15 +4,12 @@ import {
   IncomingPayment,
   IncomingPaymentState
 } from '../payment/incoming/model'
-import { IlpAddress } from 'ilp-packet'
+import { StreamCredentials as IlpStreamCredentials } from '@interledger/stream-receiver'
 
-export interface Connection {
-  ilpAddress: IlpAddress
-  sharedSecret: Buffer
-}
+export { IlpStreamCredentials }
 
-export interface ConnectionService {
-  get(payment: IncomingPayment): Connection | undefined
+export interface StreamCredentialsService {
+  get(payment: IncomingPayment): IlpStreamCredentials | undefined
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -20,25 +17,25 @@ export interface ServiceDependencies extends BaseService {
   streamServer: StreamServer
 }
 
-export async function createConnectionService(
+export async function createStreamCredentialsService(
   deps_: ServiceDependencies
-): Promise<ConnectionService> {
+): Promise<StreamCredentialsService> {
   const log = deps_.logger.child({
-    service: 'ConnectionService'
+    service: 'StreamCredentialsService'
   })
   const deps: ServiceDependencies = {
     ...deps_,
     logger: log
   }
   return {
-    get: (payment) => getConnection(deps, payment)
+    get: (payment) => getStreamCredentials(deps, payment)
   }
 }
 
-function getConnection(
+function getStreamCredentials(
   deps: ServiceDependencies,
   payment: IncomingPayment
-): Connection | undefined {
+): IlpStreamCredentials | undefined {
   if (
     [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
       payment.state
@@ -53,8 +50,5 @@ function getConnection(
       scale: payment.asset.scale
     }
   })
-  return {
-    ilpAddress: credentials.ilpAddress,
-    sharedSecret: credentials.sharedSecret
-  }
+  return credentials
 }

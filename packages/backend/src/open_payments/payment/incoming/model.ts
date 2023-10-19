@@ -1,7 +1,7 @@
 import { Model } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { Connection } from '../../connection/service'
+import { IlpStreamCredentials } from '../../connection/service'
 import {
   WalletAddress,
   WalletAddressSubresource
@@ -196,16 +196,16 @@ export class IncomingPayment
   ): OpenPaymentsIncomingPayment
   public toOpenPaymentsType(
     walletAddress: WalletAddress,
-    ilpStreamConnection: Connection
+    ilpStreamCredentials: IlpStreamCredentials
   ): OpenPaymentsIncomingPaymentWithPaymentMethod
   public toOpenPaymentsType(
     walletAddress: WalletAddress,
-    ilpStreamConnection?: Connection
+    ilpStreamCredentials?: IlpStreamCredentials
   ): OpenPaymentsIncomingPayment | OpenPaymentsIncomingPaymentWithPaymentMethod
 
   public toOpenPaymentsType(
     walletAddress: WalletAddress,
-    ilpStreamConnection?: Connection
+    ilpStreamCredentials?: IlpStreamCredentials
   ):
     | OpenPaymentsIncomingPayment
     | OpenPaymentsIncomingPaymentWithPaymentMethod {
@@ -223,14 +223,14 @@ export class IncomingPayment
       expiresAt: this.expiresAt.toISOString()
     }
 
-    if (ilpStreamConnection) {
+    if (ilpStreamCredentials) {
       return {
         ...baseIncomingPayment,
         methods: [
           {
             type: 'ilp',
-            ilpAddress: ilpStreamConnection.ilpAddress,
-            sharedSecret: base64url(ilpStreamConnection.sharedSecret)
+            ilpAddress: ilpStreamCredentials.ilpAddress,
+            sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
           }
         ]
       }
