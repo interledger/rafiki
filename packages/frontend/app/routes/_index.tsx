@@ -12,7 +12,7 @@ export default function Index() {
           <div className='space-y-8'>
             <p className='text-7xl'>Welcome!</p>
             <p>This is Rafiki&apos;s administrative user interface.</p>
-            <p>{version}</p>
+            <p>v{version}</p>
           </div>
           <p>
             In this web application, you&apos;ll be able to manage peering
