@@ -1,9 +1,6 @@
-/* Site title styling */
-.site-title {
-  font-size: larger;
-  font-weight: normal;
-  color: var(--sl-color-text);
-  gap: var(--space-xs);
+/* Site logo on dark mode */
+[data-theme='dark'] .logo-text {
+  fill: white;
 }
 
 /* Splash page styling */
