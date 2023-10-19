@@ -1650,9 +1650,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}",
+									"raw": "{{pfryWalletAddress}}/incoming-payments/{{incomingPaymentId}}",
 									"host": [
-										"{{pfryPaymentPointer}}"
+										"{{pfryWalletAddress}}"
 									],
 									"path": [
 										"incoming-payments",
