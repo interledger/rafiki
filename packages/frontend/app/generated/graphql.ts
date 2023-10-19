@@ -2137,7 +2137,7 @@ export type GetAssetQueryVariables = Exact<{
 }>;
 
 
-export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, liquidity?: bigint | null, createdAt: string, receivingFee?: { __typename?: 'Fee', basisPoints: number, fixed: bigint, createdAt: string } | null, sendingFee?: { __typename?: 'Fee', basisPoints: number, fixed: bigint, createdAt: string } | null } | null };
+export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, liquidity?: bigint | null, createdAt: string, sendingFee?: { __typename?: 'Fee', basisPoints: number, fixed: bigint, createdAt: string } | null } | null };
 
 export type GetAssetWithFeesQueryVariables = Exact<{
   id: Scalars['String']['input'];

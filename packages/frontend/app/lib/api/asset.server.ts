@@ -39,11 +39,6 @@ export const getAssetInfo = async (args: QueryAssetArgs) => {
           scale
           withdrawalThreshold
           liquidity
-          receivingFee {
-            basisPoints
-            fixed
-            createdAt
-          }
           sendingFee {
             basisPoints
             fixed
