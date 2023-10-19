@@ -81,7 +81,7 @@ async function getIncomingPaymentPublic(
     const incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
       client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      paymentPointerId: ctx.paymentPointer.id
+      walletAddressId: ctx.walletAddress.id
     })
     ctx.body = incomingPayment?.toPublicOpenPaymentsType()
   } catch (err) {
@@ -147,10 +147,14 @@ async function createIncomingPayment(
     )
   }
 
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
   ctx.status = 201
   const connection = deps.connectionService.get(incomingPaymentOrError)
   ctx.body = incomingPaymentToBody(
-    ctx.walletAddress,
+    incomingPaymentOrError.walletAddress,
     incomingPaymentOrError,
     connection
   )
@@ -175,7 +179,12 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(ctx.walletAddress, incomingPaymentOrError)
+
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
+  ctx.body = incomingPaymentToBody(incomingPaymentOrError.walletAddress, incomingPaymentOrError)
 }
 
 async function listIncomingPayments(

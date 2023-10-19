@@ -21,7 +21,7 @@ export function createWalletAddressMiddleware() {
         ctx.throw(401)
       }
     } else {
-      ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.paymentPointerPath}`
+      ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
     }
     const config = await ctx.container.use('config')
     if (ctx.walletAddressUrl !== config.walletAddressUrl) {

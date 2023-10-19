@@ -496,7 +496,6 @@ export class App {
     // Complete incoming payment
     router.post<DefaultState, SignedSubresourceContext>(
       '/incoming-payments/:id/complete',
-      createWalletAddressMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
