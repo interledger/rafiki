@@ -115,7 +115,7 @@ describe('Grant Service', (): void => {
       const grant = await grantService.create(grantRequest)
 
       expect(grant).toMatchObject({
-        state: GrantState.Pending,
+        state: GrantState.Approved,
         continueId: expect.any(String),
         continueToken: expect.any(String),
         finishMethod: FinishMethod.Redirect,
@@ -135,38 +135,46 @@ describe('Grant Service', (): void => {
         type: AccessType.IncomingPayment
       })
     })
-    test('Can issue a grant without interaction', async (): Promise<void> => {
-      const grantRequest: GrantRequest = {
-        ...BASE_GRANT_REQUEST,
-        access_token: {
-          access: [
-            {
-              ...BASE_GRANT_ACCESS,
-              type: AccessType.IncomingPayment
-            }
-          ]
-        },
-        interact: undefined
+    test.each`
+      type                          | expectedState          | interact
+      ${AccessType.IncomingPayment} | ${GrantState.Approved} | ${undefined}
+      ${AccessType.Quote}           | ${GrantState.Approved} | ${undefined}
+      ${AccessType.OutgoingPayment} | ${GrantState.Pending}  | ${BASE_GRANT_REQUEST.interact}
+    `(
+      'Puts $type grant without interaction in $expectedState state',
+      async ({ type, expectedState, interact }): Promise<void> => {
+        const grantRequest: GrantRequest = {
+          ...BASE_GRANT_REQUEST,
+          access_token: {
+            access: [
+              {
+                ...BASE_GRANT_ACCESS,
+                type
+              }
+            ]
+          },
+          interact
+        }
+
+        const grant = await grantService.create(grantRequest)
+
+        expect(grant).toMatchObject({
+          state: expectedState,
+          continueId: expect.any(String),
+          continueToken: expect.any(String)
+        })
+
+        await expect(
+          Access.query(trx)
+            .where({
+              grantId: grant.id
+            })
+            .first()
+        ).resolves.toMatchObject({
+          type
+        })
       }
-
-      const grant = await grantService.create(grantRequest)
-
-      expect(grant).toMatchObject({
-        state: GrantState.Approved,
-        continueId: expect.any(String),
-        continueToken: expect.any(String)
-      })
-
-      await expect(
-        Access.query(trx)
-          .where({
-            grantId: grant.id
-          })
-          .first()
-      ).resolves.toMatchObject({
-        type: AccessType.IncomingPayment
-      })
-    })
+    )
   })
 
   describe('pending', (): void => {

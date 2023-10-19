@@ -15,6 +15,8 @@ import { AccessService } from '../access/service'
 import { Pagination } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 import { AccessTokenService } from '../accessToken/service'
+import { canSkipInteraction } from './utils'
+import { IAppConfig } from '../config/app'
 
 interface GrantFilter {
   identifier?: FilterString
@@ -37,6 +39,7 @@ export interface GrantService {
 }
 
 interface ServiceDependencies extends BaseService {
+  config: IAppConfig
   accessService: AccessService
   accessTokenService: AccessTokenService
   knex: TransactionOrKnex
@@ -89,6 +92,7 @@ interface GrantFilter {
 }
 
 export async function createGrantService({
+  config,
   logger,
   accessService,
   accessTokenService,
@@ -98,6 +102,7 @@ export async function createGrantService({
     service: 'GrantService'
   })
   const deps: ServiceDependencies = {
+    config,
     logger: log,
     accessService,
     accessTokenService,
@@ -213,7 +218,9 @@ async function create(
   const grantTrx = trx || (await Grant.startTransaction(knex))
   try {
     const grantData = {
-      state: interact ? GrantState.Pending : GrantState.Approved,
+      state: canSkipInteraction(deps.config, grantRequest)
+        ? GrantState.Approved
+        : GrantState.Pending,
       startMethod: interact?.start,
       finishMethod: interact?.finish?.method,
       finishUri: interact?.finish?.uri,
