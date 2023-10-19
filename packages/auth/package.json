@@ -54,7 +54,7 @@
     "@faker-js/faker": "^8.1.0",
     "@types/koa": "2.13.10",
     "@types/koa-bodyparser": "^4.3.10",
-    "@types/koa-session": "^6.4.2",
+    "@types/koa-session": "^6.4.4",
     "@types/koa__cors": "^4.0.1",
     "@types/koa__router": "^12.0.1",
     "@types/uuid": "^9.0.5",
