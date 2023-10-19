@@ -104,7 +104,8 @@ describe('Quote Routes', (): void => {
           debitAmount: serializeAmount(quote.debitAmount),
           receiveAmount: serializeAmount(quote.receiveAmount),
           createdAt: quote.createdAt.toISOString(),
-          expiresAt: quote.expiresAt.toISOString()
+          expiresAt: quote.expiresAt.toISOString(),
+          method: quote.method
         }
       },
       urlPath: Quote.urlPath
@@ -229,7 +230,8 @@ describe('Quote Routes', (): void => {
               value: quote.receiveAmount.value.toString()
             },
             createdAt: quote.createdAt.toISOString(),
-            expiresAt: quote.expiresAt.toISOString()
+            expiresAt: quote.expiresAt.toISOString(),
+            method: 'ilp'
           })
         }
       )
@@ -276,7 +278,8 @@ describe('Quote Routes', (): void => {
             value: quote.receiveAmount.value.toString()
           },
           createdAt: quote.createdAt.toISOString(),
-          expiresAt: quote.expiresAt.toISOString()
+          expiresAt: quote.expiresAt.toISOString(),
+          method: 'ilp'
         })
       })
     })
