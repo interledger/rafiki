@@ -1624,7 +1624,6 @@
 									"host": [
 										"{{pfryWalletAddress}}"
 									],
-									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
