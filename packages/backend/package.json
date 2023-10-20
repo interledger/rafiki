@@ -25,7 +25,7 @@
     "@types/koa-bodyparser": "^4.3.11",
     "@types/koa__router": "^12.0.2",
     "@types/lodash": "^4.14.199",
-    "@types/luxon": "^3.3.2",
+    "@types/luxon": "^3.3.3",
     "@types/rosie": "^0.0.43",
     "@types/tmp": "^0.2.4",
     "@types/uuid": "^9.0.5",
