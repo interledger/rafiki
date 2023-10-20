@@ -128,13 +128,13 @@ In case you are looking to test the open payments example with the interaction f
 as `NGROK_TOKEN={YOUR TOKEN}`. Ngrok does not serve html without providing the auth token.
 
 To use the postman collection examples follow the steps:
+
 1. run `docker logs rafiki-cloud-nine-mock-ase-1`
 2. find the list of created payment pointers
 3. copy the url of one of the payment pointers
 4. set the url into `senderPaymentPointer` postman variable in `Remote Environment`
 
 After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeeing or not) the payment pointer url will differ.
-
 
 ### Shutting down
 
