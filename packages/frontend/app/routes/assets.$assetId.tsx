@@ -33,12 +33,8 @@ export async function loader({ params }: LoaderArgs) {
 
   return json({
     asset: {
-      code: asset.code,
-      scale: asset.scale,
-      createdAt: new Date(asset.createdAt).toLocaleString(),
-      id: asset.id,
-      liquidity: asset.liquidity,
-      withdrawalThreshold: asset.withdrawalThreshold,
+      ...asset,
+      createdAt: new Date(asset.createdAt).toLocaleString()
       ...(asset.sendingFee
         ? {
             sendingFee: {
@@ -156,7 +152,7 @@ export default function ViewAssetPage() {
                 type='button'
                 to={`/assets/view-fees/${asset.id}`}
               >
-                View all historic fees
+                Fee history
               </Button>
             </div>
             <Form method='post' replace preventScrollReset>
