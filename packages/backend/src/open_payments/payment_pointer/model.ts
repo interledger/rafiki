@@ -86,7 +86,7 @@ export class PaymentPointer
       paymentPointer: {
         id: this.id,
         createdAt: new Date(+this.createdAt).toISOString(),
-        received: {
+        receivedAmount: {
           value: received.toString(),
           assetCode: this.asset.code,
           assetScale: this.asset.scale
@@ -119,7 +119,7 @@ export type PaymentPointerData = {
   paymentPointer: {
     id: string
     createdAt: string
-    received: AmountJSON
+    receivedAmount: AmountJSON
   }
 }
 

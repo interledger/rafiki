@@ -286,7 +286,7 @@ components:
                 createdAt:
                   type: string
                   format: date-time
-                received:
+                receivedAmount:
                   $ref: ./schemas.yaml#/components/schemas/amount
       additionalProperties: false
     liquidityEvent:

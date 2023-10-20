@@ -122,7 +122,7 @@ sequenceDiagram
 participant ASE as Account Servicing Entity
 participant R as Rafiki
 
-R->>ASE: webhook event: payment pointer web monetization,<br>received: $0.33
+R->>ASE: webhook event: payment pointer web monetization,<br>receivedAmount: $0.33
 ASE->>R: admin API call: WithdrawEventLiquidity
 ASE->>ASE: credit receiver's account with $0.33
 ```
