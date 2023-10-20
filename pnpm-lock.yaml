@@ -396,8 +396,8 @@ importers:
         specifier: ^0.0.44
         version: 0.0.44
       '@types/tmp':
-        specifier: ^0.2.4
-        version: 0.2.4
+        specifier: ^0.2.5
+        version: 0.2.5
       '@types/uuid':
         specifier: ^9.0.5
         version: 9.0.5
@@ -5639,8 +5639,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/tmp@0.2.4:
-    resolution: {integrity: sha512-Vq3rwM+2KgiLacq68EjTJD9cuJ/ne5pXntWn8B8Rxj25SLkGAhCgooCZ1lhcIcV5OFveJ+s5Cqpi+XKfFM/xZA==}
+  /@types/tmp@0.2.5:
+    resolution: {integrity: sha512-KodRrjqWrk/3VyzfR4aeXkf2n5Ssg+bvVUhXlvHVffLiIHriLlrO3vYobB+Kvnr9DkNzMiyWHT3G6hT/xX0ryQ==}
     dev: true
 
   /@types/tough-cookie@4.0.2:
