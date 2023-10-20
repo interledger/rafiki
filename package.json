@@ -26,8 +26,8 @@
     "sanity": "pnpm -r build && pnpm -r test",
     "localenv:autopeer:start": "run-p tunnel:start wait-tunnel:localenv:compose",
     "localenv:autopeer:start:psql": "run-p tunnel:start wait-tunnel:localenv:compose:psql",
-    "wait-tunnel:localenv:compose": "pnpm wait-on:env && pnpm localenv:compose up",
-    "wait-tunnel:localenv:compose:psql": "pnpm wait-on:env && pnpm localenv:compose:psql up",
+    "wait-tunnel:localenv:compose": "pnpm wait-on:env && pnpm localenv:compose up -d",
+    "wait-tunnel:localenv:compose:psql": "pnpm wait-on:env && pnpm localenv:compose:psql up -d",
     "wait-on:env": "npx wait-on -d 1000 ./localenv/cloud-nine-wallet/.env",
     "tunnel:start": "node ./scripts/localenv-tunnel-setup.js"
   },
