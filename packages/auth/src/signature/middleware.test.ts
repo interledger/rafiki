@@ -229,8 +229,10 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.accessToken).toMatchObject(token)
-      expect(ctx.accessToken.grant).toEqual(grant)
+      expect(ctx.accessToken).toMatchObject({
+        ...token,
+        grant
+      })
 
       scope.done()
     })
