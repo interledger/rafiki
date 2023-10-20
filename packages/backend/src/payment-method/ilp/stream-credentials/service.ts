@@ -1,15 +1,12 @@
 import { StreamServer } from '@interledger/stream-receiver'
 import { BaseService } from '../../../shared/baseService'
-import {
-  IncomingPayment,
-  IncomingPaymentState
-} from '../../../open_payments/payment/incoming/model'
+import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
 import { StreamCredentials as IlpStreamCredentials } from '@interledger/stream-receiver'
 
 export { IlpStreamCredentials }
 
 export interface StreamCredentialsService {
-  get(payment: IncomingPayment): IlpStreamCredentials | undefined
+  get(payment: IncomingPayment): IlpStreamCredentials
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -35,14 +32,7 @@ export async function createStreamCredentialsService(
 function getStreamCredentials(
   deps: ServiceDependencies,
   payment: IncomingPayment
-): IlpStreamCredentials | undefined {
-  if (
-    [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
-      payment.state
-    )
-  ) {
-    return undefined
-  }
+): IlpStreamCredentials {
   const credentials = deps.streamServer.generateCredentials({
     paymentTag: payment.id,
     asset: {

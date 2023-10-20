@@ -25,7 +25,6 @@ import {
   MockWalletAddress
 } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
-import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
 import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
 import { Amount, parseAmount } from '../amount'
@@ -38,6 +37,7 @@ import { RemoteIncomingPaymentError } from '../payment/incoming_remote/errors'
 import assert from 'assert'
 import { Receiver } from './model'
 import { Grant } from '../grant/model'
+import { IncomingPaymentState } from '../payment/incoming/model'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -46,7 +46,6 @@ describe('Receiver Service', (): void => {
   let incomingPaymentService: IncomingPaymentService
   let openPaymentsClient: AuthenticatedClient
   let knex: Knex
-  let streamCredentialsService: StreamCredentialsService
   let walletAddressService: WalletAddressService
   let grantService: GrantService
   let remoteIncomingPaymentService: RemoteIncomingPaymentService
@@ -57,7 +56,6 @@ describe('Receiver Service', (): void => {
     receiverService = await deps.use('receiverService')
     incomingPaymentService = await deps.use('incomingPaymentService')
     openPaymentsClient = await deps.use('openPaymentsClient')
-    streamCredentialsService = await deps.use('streamCredentialsService')
     walletAddressService = await deps.use('walletAddressService')
     grantService = await deps.use('grantService')
     remoteIncomingPaymentService = await deps.use(
@@ -590,19 +588,31 @@ describe('Receiver Service', (): void => {
         ).resolves.toEqual(ReceiverError.InvalidAmount)
       })
 
-      test('throws if error when getting stream credentials for local incoming payment', async (): Promise<void> => {
-        jest
-          .spyOn(streamCredentialsService, 'get')
-          .mockReturnValueOnce(undefined)
-
-        await expect(
-          receiverService.create({
-            walletAddressUrl: walletAddress.url
+      test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+        'throws if local incoming payment state is %s',
+        async (): Promise<void> => {
+          const incomingPayment = await createIncomingPayment(deps, {
+            walletAddressId: walletAddress.id,
+            incomingAmount: {
+              value: BigInt(5),
+              assetCode: walletAddress.asset.code,
+              assetScale: walletAddress.asset.scale
+            }
           })
-        ).rejects.toThrow(
-          'Could not get stream credentials for local incoming payment'
-        )
-      })
+          incomingPayment.state = IncomingPaymentState.Completed
+          jest
+            .spyOn(incomingPaymentService, 'create')
+            .mockResolvedValueOnce(incomingPayment)
+
+          await expect(
+            receiverService.create({
+              walletAddressUrl: walletAddress.url
+            })
+          ).rejects.toThrow(
+            'Could not get stream credentials for local incoming payment'
+          )
+        }
+      )
     })
   })
 })

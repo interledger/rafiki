@@ -161,6 +161,13 @@ export class IncomingPayment
     return this
   }
 
+  public isExpiredOrComplete(): boolean {
+    return (
+      this.state === IncomingPaymentState.Expired ||
+      this.state === IncomingPaymentState.Completed
+    )
+  }
+
   public toData(amountReceived: bigint): IncomingPaymentData {
     const data: IncomingPaymentData = {
       incomingPayment: {

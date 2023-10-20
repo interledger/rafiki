@@ -123,17 +123,17 @@ async function createLocalIncomingPayment(
     return incomingPaymentOrError
   }
 
-  const streamCredentials = deps.streamCredentialsService.get(
-    incomingPaymentOrError
-  )
-
-  if (!streamCredentials) {
+  if (incomingPaymentOrError.isExpiredOrComplete()) {
     const errorMessage =
       'Could not get stream credentials for local incoming payment'
     deps.logger.error({ incomingPaymentOrError }, errorMessage)
 
     throw new Error(errorMessage)
   }
+
+  const streamCredentials = deps.streamCredentialsService.get(
+    incomingPaymentOrError
+  )
 
   return incomingPaymentOrError.toOpenPaymentsType(
     walletAddress,
@@ -221,15 +221,11 @@ async function getLocalIncomingPayment({
     walletAddressId: walletAddress.id
   })
 
-  if (!incomingPayment) {
+  if (!incomingPayment || incomingPayment.isExpiredOrComplete()) {
     return undefined
   }
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
-
-  if (!streamCredentials) {
-    return undefined
-  }
 
   return incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
 }

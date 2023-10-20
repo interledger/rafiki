@@ -1,10 +1,7 @@
 import { Knex } from 'knex'
 import { createTestApp, TestContainer } from '../../../tests/app'
 import { StreamCredentialsService } from './service'
-import {
-  IncomingPayment,
-  IncomingPaymentState
-} from '../../../open_payments/payment/incoming/model'
+import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
 import { Config } from '../../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
@@ -52,21 +49,5 @@ describe('Stream Credentials Service', (): void => {
         sharedSecret: expect.any(Buffer)
       })
     })
-
-    test.each`
-      state
-      ${IncomingPaymentState.Completed}
-      ${IncomingPaymentState.Expired}
-    `(
-      `returns undefined for $state incoming payment`,
-      async ({ state }): Promise<void> => {
-        await incomingPayment.$query(knex).patch({
-          state,
-          expiresAt:
-            state === IncomingPaymentState.Expired ? new Date() : undefined
-        })
-        expect(streamCredentialsService.get(incomingPayment)).toBeUndefined()
-      }
-    )
   })
 })
