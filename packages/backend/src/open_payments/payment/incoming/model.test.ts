@@ -93,6 +93,30 @@ describe('Incoming Payment Model', (): void => {
       })
     })
 
+    test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
+      const walletAddress = await createWalletAddress(deps)
+      const incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id,
+        metadata: { description: 'my payment' }
+      })
+      expect(
+        incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
+      ).toEqual({
+        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        walletAddress: walletAddress.url,
+        completed: incomingPayment.completed,
+        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+        incomingAmount: incomingPayment.incomingAmount
+          ? serializeAmount(incomingPayment.incomingAmount)
+          : undefined,
+        expiresAt: incomingPayment.expiresAt.toISOString(),
+        metadata: incomingPayment.metadata ?? undefined,
+        updatedAt: incomingPayment.updatedAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
+        methods: []
+      })
+    })
+
     test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
       'returns incoming payment with empty methods if payment state is %s',
       async (paymentState): Promise<void> => {

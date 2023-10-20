@@ -218,19 +218,20 @@ export class IncomingPayment
 
   public toOpenPaymentsTypeWithMethods(
     walletAddress: WalletAddress,
-    ilpStreamCredentials: IlpStreamCredentials
+    ilpStreamCredentials?: IlpStreamCredentials
   ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
       ...this.toOpenPaymentsType(walletAddress),
-      methods: this.isExpiredOrComplete()
-        ? []
-        : [
-            {
-              type: 'ilp',
-              ilpAddress: ilpStreamCredentials.ilpAddress,
-              sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
-            }
-          ]
+      methods:
+        this.isExpiredOrComplete() || !ilpStreamCredentials
+          ? []
+          : [
+              {
+                type: 'ilp',
+                ilpAddress: ilpStreamCredentials.ilpAddress,
+                sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
+              }
+            ]
     }
   }
 
