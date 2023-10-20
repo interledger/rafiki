@@ -21,4 +21,4 @@ Rafiki is made up of several components including an Interledger connector, a hi
 - the [Open Payments](/reference/glossary#open-payments) API to allow third-parties (with the account holder's consent) to initiate payments and to view the transaction history
 - the [SPSP](/reference/glossary#simple-payments-setup-protocol-spsp) API for simple Interledger Payments
 
-Additionally, this package also includes a reference implementation of a [GNAP](/reference/glossary#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](/reference/glossary#open-payments) API. For more information on the architecture, check out the [Architecture documentation](architecture).
+Additionally, this package also includes a reference implementation of a [GNAP](/reference/glossary#grant-negotiation-authorization-protocol) authorization server which handles the access control for the [Open Payments](/reference/glossary#open-payments) API. For more information on the architecture, check out the [Architecture documentation](/introduction/architecture).
