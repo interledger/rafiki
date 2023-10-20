@@ -590,7 +590,7 @@ describe('Receiver Service', (): void => {
 
       test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
         'throws if local incoming payment state is %s',
-        async (): Promise<void> => {
+        async (paymentState): Promise<void> => {
           const incomingPayment = await createIncomingPayment(deps, {
             walletAddressId: walletAddress.id,
             incomingAmount: {
@@ -599,7 +599,7 @@ describe('Receiver Service', (): void => {
               assetScale: walletAddress.asset.scale
             }
           })
-          incomingPayment.state = IncomingPaymentState.Completed
+          incomingPayment.state = paymentState
           jest
             .spyOn(incomingPaymentService, 'create')
             .mockResolvedValueOnce(incomingPayment)

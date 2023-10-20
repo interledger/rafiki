@@ -6,7 +6,7 @@ import { StreamCredentials as IlpStreamCredentials } from '@interledger/stream-r
 export { IlpStreamCredentials }
 
 export interface StreamCredentialsService {
-  get(payment: IncomingPayment): IlpStreamCredentials
+  get(payment: IncomingPayment): IlpStreamCredentials | undefined
 }
 
 export interface ServiceDependencies extends BaseService {
@@ -32,7 +32,10 @@ export async function createStreamCredentialsService(
 function getStreamCredentials(
   deps: ServiceDependencies,
   payment: IncomingPayment
-): IlpStreamCredentials {
+): IlpStreamCredentials | undefined {
+  if (payment.isExpiredOrComplete()) {
+    return undefined
+  }
   const credentials = deps.streamServer.generateCredentials({
     paymentTag: payment.id,
     asset: {
