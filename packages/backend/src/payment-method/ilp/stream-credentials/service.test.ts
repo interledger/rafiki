@@ -10,6 +10,7 @@ import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
 import assert from 'assert'
+import { IncomingPaymentState } from '../../../graphql/generated/graphql'
 
 describe('Stream Credentials Service', (): void => {
   let deps: IocContract<AppServices>
@@ -49,5 +50,21 @@ describe('Stream Credentials Service', (): void => {
         sharedSecret: expect.any(Buffer)
       })
     })
+
+    test.each`
+      state
+      ${IncomingPaymentState.Completed}
+      ${IncomingPaymentState.Expired}
+    `(
+      `returns undefined for $state incoming payment`,
+      async ({ state }): Promise<void> => {
+        await incomingPayment.$query(knex).patch({
+          state,
+          expiresAt:
+            state === IncomingPaymentState.Expired ? new Date() : undefined
+        })
+        expect(streamCredentialsService.get(incomingPayment)).toBeUndefined()
+      }
+    )
   })
 })
