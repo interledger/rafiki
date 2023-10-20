@@ -1,11 +1,28 @@
 import { AppContext } from '../../app'
+import { CreateBody as IncomingCreateBody } from '../../open_payments/payment/incoming/routes'
+import { CreateBody as OutgoingCreateBody } from '../../open_payments/payment/outgoing/routes'
+
+type CreateBody = IncomingCreateBody | OutgoingCreateBody
 
 export function createWalletAddressMiddleware() {
   return async (
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+    if (
+      ctx.path === '/incoming-payments' ||
+      ctx.path === '/outgoing-payments'
+    ) {
+      if (ctx.method === 'GET') {
+        ctx.walletAddressUrl = ctx.query['wallet-address'] as string
+      } else if (ctx.method === 'POST') {
+        ctx.walletAddressUrl = (ctx.request.body as CreateBody).walletAddress
+      } else {
+        ctx.throw(401)
+      }
+    } else {
+      ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+    }
     const config = await ctx.container.use('config')
     if (ctx.walletAddressUrl !== config.walletAddressUrl) {
       const walletAddressService = await ctx.container.use(

@@ -37,11 +37,10 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-    walletAddressId: ctx.walletAddress.id
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
   })
-  if (!quote) return ctx.throw(404)
-  ctx.body = quoteToBody(ctx.walletAddress, quote)
+  if (!quote || !quote.walletAddress) return ctx.throw(404)
+  ctx.body = quoteToBody(quote.walletAddress, quote)
 }
 
 interface CreateBodyBase {

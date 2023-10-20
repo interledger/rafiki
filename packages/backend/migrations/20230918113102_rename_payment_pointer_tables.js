@@ -40,27 +40,21 @@ exports.up = function (knex) {
       table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId'])
-      table.index(['createdAt'])
-      table.index(['id'])
+      table.index(['walletAddressId', 'createdAt', 'id'])
     }),
     knex.schema.alterTable('incomingPayments', function (table) {
       table.dropForeign(['paymentPointerId'])
       table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId'])
-      table.index(['createdAt'])
-      table.index(['id'])
+      table.index(['walletAddressId', 'createdAt', 'id'])
     }),
     knex.schema.alterTable('outgoingPayments', function (table) {
       table.dropForeign(['paymentPointerId'])
       table.dropIndex(['paymentPointerId', 'createdAt', 'id'])
       table.renameColumn('paymentPointerId', 'walletAddressId')
       table.foreign('walletAddressId').references('walletAddresses.id')
-      table.index(['walletAddressId'])
-      table.index(['createdAt'])
-      table.index(['id'])
+      table.index(['walletAddressId', 'createdAt', 'id'])
     }),
     knex('webhookEvents')
       .update({
@@ -113,7 +107,7 @@ exports.down = function (knex) {
       'ALTER INDEX "walletAddresses_pkey" RENAME TO "paymentPointers_pkey"'
     ),
     knex.raw(
-      'ALTER INDEX "walletAddresses_url_index" RENAME TO "paymentPointers_url_index"'
+      'ALTER INDEX "walletaddresses_url_index" RENAME TO "paymentpointers_url_index"'
     ),
     knex.raw(
       'ALTER INDEX "walletaddresses_processat_index" RENAME TO "paymentpointers_processat_index"'
@@ -122,11 +116,10 @@ exports.down = function (knex) {
       'ALTER TABLE "paymentPointers" DROP CONSTRAINT "walletaddresses_url_unique"'
     ),
     knex.raw(
-      'ALTER TABLE "paymentPointers" DROP CONSTRAINT "walletaddreses_assetid_foreign"'
+      'ALTER TABLE "paymentPointers" DROP CONSTRAINT "walletaddresses_assetid_foreign"'
     ),
     knex.schema.renameTable('walletAddressKeys', 'paymentPointerKeys'),
     knex.schema.alterTable('paymentPointerKeys', function (table) {
-      table.dropForeign(['walletAddressId'])
       table.renameColumn('walletAddressId', 'paymentPointerId')
       table.foreign('paymentPointerId').references('paymentPointers.id')
     }),
@@ -134,7 +127,7 @@ exports.down = function (knex) {
       'ALTER INDEX "walletAddressKeys_pkey" RENAME TO "paymentPointerKeys_pkey"'
     ),
     knex.raw(
-      'ALTER TABLE "paymentpointerKeys" DROP CONSTRAINT "walletaddresskeys_paymentpointerid_foreign"'
+      'ALTER TABLE "paymentPointerKeys" DROP CONSTRAINT "walletaddresskeys_walletaddressid_foreign"'
     ),
     knex.schema.alterTable('quotes', function (table) {
       table.dropForeign(['walletAddressId'])
