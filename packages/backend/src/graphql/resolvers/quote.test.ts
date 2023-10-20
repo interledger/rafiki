@@ -218,7 +218,6 @@ describe('Quote Resolvers', (): void => {
         })
         .then((query): QuoteResponse => query.data?.createQuote)
 
-      console.log(createSpy.mock.calls[0])
       expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)
