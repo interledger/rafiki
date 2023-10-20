@@ -1620,10 +1620,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{pfryWalletAddress}}/incoming-payments/{{incomingPaymentId}}",
+									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}",
+									"protocol": "http",
 									"host": [
-										"{{pfryWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1813,7 +1815,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": {{gfranklinWalletAddress}},\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n    \"method\": \"ilp\"\n}",
+									"raw": "{\n    \"walletAddress\": {{gfranklinWalletAddress}},\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
