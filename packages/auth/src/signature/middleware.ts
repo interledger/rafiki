@@ -9,10 +9,15 @@ import {
 
 import { AppContext } from '../app'
 import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
+import { Config } from '../config/app'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
+  const url =
+    Config.env === 'testing'
+      ? ctx.href.replace('http://', 'https://')
+      : ctx.href
   return {
-    url: ctx.href,
+    url,
     method: ctx.method,
     headers: ctx.headers,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
