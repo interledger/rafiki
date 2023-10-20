@@ -27,7 +27,7 @@
     "@types/lodash": "^4.14.200",
     "@types/luxon": "^3.3.3",
     "@types/rosie": "^0.0.44",
-    "@types/tmp": "^0.2.4",
+    "@types/tmp": "^0.2.5",
     "@types/uuid": "^9.0.5",
     "cross-fetch": "^4.0.0",
     "ilp-protocol-ildcp": "^2.2.3",
