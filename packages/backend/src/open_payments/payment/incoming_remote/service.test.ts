@@ -149,11 +149,12 @@ describe('Remote Incoming Payment Service', (): void => {
         expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
         expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
           {
-            walletAddress: walletAddress.id,
+            url: walletAddress.id,
             accessToken: grant.accessToken
           },
           {
             ...args,
+            walletAddress: walletAddress.id,
             expiresAt: args.expiresAt
               ? args.expiresAt.toISOString()
               : undefined,
@@ -230,13 +231,14 @@ describe('Remote Incoming Payment Service', (): void => {
             expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
             expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
               {
-                walletAddress: walletAddress.id,
+                url: walletAddress.id,
                 accessToken: grant.expired
                   ? newToken.access_token.value
                   : grant.accessToken
               },
               {
                 ...args,
+                walletAddress: walletAddress.id,
                 expiresAt: args.expiresAt
                   ? args.expiresAt.toISOString()
                   : undefined,
@@ -316,11 +318,12 @@ describe('Remote Incoming Payment Service', (): void => {
         })
         expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
           {
-            walletAddress: walletAddress.id,
+            url: walletAddress.id,
             accessToken: grant.access_token.value
           },
           {
             ...args,
+            walletAddress: walletAddress.id,
             expiresAt: args.expiresAt
               ? args.expiresAt.toISOString()
               : undefined,
