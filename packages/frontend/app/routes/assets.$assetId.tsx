@@ -34,7 +34,7 @@ export async function loader({ params }: LoaderArgs) {
   return json({
     asset: {
       ...asset,
-      createdAt: new Date(asset.createdAt).toLocaleString()
+      createdAt: new Date(asset.createdAt).toLocaleString(),
       ...(asset.sendingFee
         ? {
             sendingFee: {
