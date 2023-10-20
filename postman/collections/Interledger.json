@@ -1496,7 +1496,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": {{pfryWalletAddress}},\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1504,10 +1504,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{pfryWalletAddress}}/incoming-payments",
+									"raw": "http://localhost:4000/incoming-payments",
+									"protocol": "http",
 									"host": [
-										"{{pfryWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments"
 									]
@@ -1559,10 +1561,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{pfryWalletAddress}}/incoming-payments/{{incomingPaymentId}}",
+									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}",
+									"protocol": "http",
 									"host": [
-										"{{pfryWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1620,63 +1624,7 @@
 									"host": [
 										"{{pfryWalletAddress}}"
 									],
-									"path": [
-										"incoming-payments",
-										"{{incomingPaymentId}}"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Get Incoming Payment (Unauthenticated)",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"id": "836507d4-1c20-4b2c-ad6f-b374cb57d305",
-										"exec": [
-											"pm.test(\"Status code is 200\", function () {",
-											"    pm.response.to.have.status(200);",
-											"});",
-											""
-										],
-										"type": "text/javascript"
-									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"id": "96baae4b-4a6a-4265-b1f5-29d0f16e11ad",
-										"exec": [
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"id": "e53e9769-1a49-4d1d-a1f8-a94e54e4a4fd",
-							"protocolProfileBehavior": {
-								"disableBodyPruning": true
-							},
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "GNAP {{accessToken}}",
-										"disabled": true
-									},
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									}
-								],
-								"url": {
-									"raw": "{{pfryWalletAddress}}/incoming-payments/{{incomingPaymentId}}",
-									"host": [
-										"{{pfryWalletAddress}}"
-									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1729,22 +1677,28 @@
 									}
 								],
 								"url": {
-									"raw": "{{pfryWalletAddress}}/incoming-payments?first=10",
+									"raw": "http://localhost:4000/incoming-payments?first=10&wallet-address={{pfryWalletAddress}}",
+									"protocol": "http",
 									"host": [
-										"{{pfryWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments"
 									],
 									"query": [
+										{
+											"key": "first",
+											"value": "10"
+										},
 										{
 											"key": "cursor",
 											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
 											"disabled": true
 										},
 										{
-											"key": "first",
-											"value": "10"
+											"key": "wallet-address",
+											"value": "{{pfryWalletAddress}}"
 										}
 									]
 								}
@@ -1781,11 +1735,22 @@
 										"value": "happy-life-bank-backend"
 									}
 								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"walletAddress\": {{pfryWalletAddress}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
 								"url": {
-									"raw": "{{pfryWalletAddress}}/incoming-payments/{{incomingPaymentId}}/complete",
+									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}/complete",
+									"protocol": "http",
 									"host": [
-										"{{pfryWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}",
@@ -1849,7 +1814,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"method\": \"ilp\"\n}",
+									"raw": "{\n    \"walletAddress\": {{gfranklinWalletAddress}},\n    \"receiver\": \"https://happy-life-bank-backend/accounts/pfry/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    }\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1857,10 +1822,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{gfranklinWalletAddress}}/quotes",
+									"raw": "http://localhost:3000/quotes",
+									"protocol": "http",
 									"host": [
-										"{{gfranklinWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"quotes"
 									]
@@ -1912,10 +1879,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{gfranklinWalletAddress}}/quotes/{{quoteId}}",
+									"raw": "http://localhost:3000/quotes/{{quoteId}}",
+									"protocol": "http",
 									"host": [
-										"{{gfranklinWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"quotes",
 										"{{quoteId}}"
@@ -1978,7 +1947,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"quoteId\": \"{{gfranklinWalletAddress}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
+									"raw": "{\n    \"walletAddress\": {{gfranklinWalletAddress}},\n    \"quoteId\": \"{{gfranklinWalletAddress}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1986,10 +1955,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{gfranklinWalletAddress}}/outgoing-payments",
+									"raw": "http://localhost:3000/outgoing-payments",
+									"protocol": "http",
 									"host": [
-										"{{gfranklinWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"outgoing-payments"
 									]
@@ -2041,10 +2012,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{gfranklinWalletAddress}}/outgoing-payments/{{outgoingPaymentId}}",
+									"raw": "http://localhost:3000/outgoing-payments/{{outgoingPaymentId}}",
+									"protocol": "http",
 									"host": [
-										"{{gfranklinWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"outgoing-payments",
 										"{{outgoingPaymentId}}"
@@ -2097,10 +2070,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{gfranklinWalletAddress}}/outgoing-payments?first=2",
+									"raw": "http://localhost:3000/outgoing-payments?first=2&wallet-address={{gfranklinWalletAddress}}",
+									"protocol": "http",
 									"host": [
-										"{{gfranklinWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"outgoing-payments"
 									],
@@ -2113,6 +2088,10 @@
 											"key": "cursor",
 											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
 											"disabled": true
+										},
+										{
+											"key": "wallet-address",
+											"value": "{{gfranklinWalletAddress}}"
 										}
 									]
 								}

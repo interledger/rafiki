@@ -106,16 +106,19 @@ async function getIncomingPaymentPrivate(
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
   }
-  if (!incomingPayment) return ctx.throw(404)
+  if (!incomingPayment || !incomingPayment.walletAddress) return ctx.throw(404)
+
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
+
   ctx.body = incomingPaymentToBody(
-    ctx.walletAddress,
+    incomingPayment.walletAddress,
     incomingPayment,
     streamCredentials
   )
 }
 
 export type CreateBody = {
+  walletAddress: string
   expiresAt?: string
   incomingAmount?: AmountJSON
   metadata?: Record<string, unknown>
@@ -147,12 +150,16 @@ async function createIncomingPayment(
     )
   }
 
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
   ctx.status = 201
   const streamCredentials = deps.streamCredentialsService.get(
     incomingPaymentOrError
   )
   ctx.body = incomingPaymentToBody(
-    ctx.walletAddress,
+    incomingPaymentOrError.walletAddress,
     incomingPaymentOrError,
     streamCredentials
   )
@@ -177,7 +184,15 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(ctx.walletAddress, incomingPaymentOrError)
+
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
+  ctx.body = incomingPaymentToBody(
+    incomingPaymentOrError.walletAddress,
+    incomingPaymentOrError
+  )
 }
 
 async function listIncomingPayments(
