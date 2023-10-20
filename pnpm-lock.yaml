@@ -393,8 +393,8 @@ importers:
         specifier: ^3.3.3
         version: 3.3.3
       '@types/rosie':
-        specifier: ^0.0.43
-        version: 0.0.43
+        specifier: ^0.0.44
+        version: 0.0.44
       '@types/tmp':
         specifier: ^0.2.4
         version: 0.2.4
@@ -5591,8 +5591,8 @@ packages:
       '@types/node': 18.11.9
     dev: true
 
-  /@types/rosie@0.0.43:
-    resolution: {integrity: sha512-MwmveLXXphp2GqAtMILj5YD9KSAZs1XSU22uAxCHNqpDAPMlJu6RhYorrUUaLNI0DZggd+RzDyRD8BO5TKumRQ==}
+  /@types/rosie@0.0.44:
+    resolution: {integrity: sha512-Ex89wZaaeMBHEGNwi9haBkePyYk9T2PQ92E+vjZD2PQ/VOVleQGCKG5bYpyenJ9f1Lfa+A8scMWS7h5f6iVfuQ==}
     dev: true
 
   /@types/sax@1.2.4:
