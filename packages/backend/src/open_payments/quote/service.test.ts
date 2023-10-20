@@ -113,7 +113,8 @@ describe('QuoteService', (): void => {
           },
           client,
           validDestination: false,
-          withFee: true
+          withFee: true,
+          method: 'ilp'
         }),
       get: (options) => quoteService.get(options),
       list: (options) => quoteService.getWalletAddressPage(options)
@@ -148,7 +149,8 @@ describe('QuoteService', (): void => {
           })
           options = {
             walletAddressId: sendingWalletAddress.id,
-            receiver: incomingPayment.getUrl(receivingWalletAddress)
+            receiver: incomingPayment.getUrl(receivingWalletAddress),
+            method: 'ilp'
           }
           if (debitAmount) options.debitAmount = debitAmount
           if (receiveAmount) options.receiveAmount = receiveAmount
@@ -342,7 +344,8 @@ describe('QuoteService', (): void => {
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
-          receiveAmount
+          receiveAmount,
+          method: 'ilp'
         }
 
         const mockedQuote = mockQuote({
@@ -383,7 +386,8 @@ describe('QuoteService', (): void => {
         quoteService.create({
           walletAddressId: uuid(),
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
-          debitAmount
+          debitAmount,
+          method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.UnknownWalletAddress)
     })
@@ -398,7 +402,8 @@ describe('QuoteService', (): void => {
         quoteService.create({
           walletAddressId: walletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
-          debitAmount
+          debitAmount,
+          method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.InactiveWalletAddress)
     })
@@ -408,7 +413,8 @@ describe('QuoteService', (): void => {
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
-          debitAmount
+          debitAmount,
+          method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.InvalidReceiver)
     })
@@ -430,7 +436,8 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress)
+          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          method: 'ilp'
         }
         if (debitAmount) options.debitAmount = debitAmount
         if (receiveAmount) options.receiveAmount = receiveAmount
@@ -499,7 +506,8 @@ describe('QuoteService', (): void => {
 
           const quote = await quoteService.create({
             walletAddressId: sendingWalletAddress.id,
-            receiver: receiver.incomingPayment!.id
+            receiver: receiver.incomingPayment!.id,
+            method: 'ilp'
           })
           assert.ok(!isQuoteError(quote))
 
@@ -576,7 +584,8 @@ describe('QuoteService', (): void => {
               value: debitAmountValue,
               assetCode: sendAsset.code,
               assetScale: sendAsset.scale
-            }
+            },
+            method: 'ilp'
           })
           assert.ok(!isQuoteError(quote))
 

@@ -53,6 +53,7 @@ describe('Quote Routes', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale
       },
+      method: 'ilp',
       client,
       validDestination: false
     })
@@ -137,7 +138,8 @@ describe('Quote Routes', (): void => {
           ...debitAmount,
           value: debitAmount.value.toString(),
           assetScale: debitAmount.assetScale + 1
-        }
+        },
+        method: 'ilp'
       }
       const ctx = setup({})
       await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
@@ -170,7 +172,8 @@ describe('Quote Routes', (): void => {
         '$description',
         async ({ debitAmount, receiveAmount }): Promise<void> => {
           options = {
-            receiver
+            receiver,
+            method: 'ilp'
           }
           if (debitAmount)
             options.debitAmount = {
@@ -208,7 +211,8 @@ describe('Quote Routes', (): void => {
               ...options.receiveAmount,
               value: BigInt(options.receiveAmount.value)
             },
-            client
+            client,
+            method: 'ilp'
           })
           expect(ctx.response).toSatisfyApiSpec()
           const quoteId = (
@@ -238,7 +242,8 @@ describe('Quote Routes', (): void => {
 
       test('receiver.incomingAmount', async (): Promise<void> => {
         options = {
-          receiver
+          receiver,
+          method: 'ilp'
         }
         const ctx = setup({ client })
         let quote: Quote | undefined
@@ -256,7 +261,8 @@ describe('Quote Routes', (): void => {
         expect(quoteSpy).toHaveBeenCalledWith({
           walletAddressId: walletAddress.id,
           receiver,
-          client
+          client,
+          method: 'ilp'
         })
         expect(ctx.response).toSatisfyApiSpec()
         const quoteId = (

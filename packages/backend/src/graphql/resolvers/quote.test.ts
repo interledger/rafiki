@@ -58,6 +58,7 @@ describe('Quote Resolvers', (): void => {
         assetCode: asset.code,
         assetScale: asset.scale
       },
+      method: 'ilp',
       validDestination: false
     })
   }
@@ -217,7 +218,8 @@ describe('Quote Resolvers', (): void => {
         })
         .then((query): QuoteResponse => query.data?.createQuote)
 
-      expect(createSpy).toHaveBeenCalledWith(input)
+      console.log(createSpy.mock.calls[0])
+      expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)
       expect(query.quote?.id).toBe(quote?.id)
@@ -271,7 +273,7 @@ describe('Quote Resolvers', (): void => {
           variables: { input }
         })
         .then((query): QuoteResponse => query.data?.createQuote)
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.code).toBe('500')
       expect(query.success).toBe(false)
       expect(query.message).toBe('Error trying to create quote')

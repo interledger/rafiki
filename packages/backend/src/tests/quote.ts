@@ -65,6 +65,8 @@ export async function createQuote(
     debitAmount,
     receiveAmount,
     client,
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    method,
     validDestination = true,
     withFee = false
   }: CreateTestQuoteOptions

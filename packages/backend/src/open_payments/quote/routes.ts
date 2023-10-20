@@ -46,6 +46,7 @@ async function getQuote(
 
 interface CreateBodyBase {
   receiver: string
+  method: 'ilp'
 }
 
 interface CreateBodyWithDebitAmount extends CreateBodyBase {
@@ -68,7 +69,8 @@ async function createQuote(
   const options: CreateQuoteOptions = {
     walletAddressId: ctx.walletAddress.id,
     receiver: body.receiver,
-    client: ctx.client
+    client: ctx.client,
+    method: body.method
   }
   if (body.debitAmount) options.debitAmount = parseAmount(body.debitAmount)
   if (body.receiveAmount)

@@ -14,14 +14,15 @@ export async function createOutgoingPayment(
   deps: IocContract<AppServices>,
   options: Omit<
     CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
-    'quoteId'
+    'quoteId' | 'method'
   >
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
     walletAddressId: options.walletAddressId,
     client: options.client,
     receiver: options.receiver,
-    validDestination: options.validDestination
+    validDestination: options.validDestination,
+    method: 'ilp'
   }
   if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount

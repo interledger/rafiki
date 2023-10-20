@@ -56,6 +56,7 @@ async function getQuote(
 interface QuoteOptionsBase {
   walletAddressId: string
   receiver: string
+  method: 'ilp'
   client?: string
 }
 

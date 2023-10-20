@@ -337,7 +337,8 @@ describe('OutgoingPaymentService', (): void => {
             const quote = await createQuote(deps, {
               walletAddressId,
               receiver,
-              debitAmount
+              debitAmount,
+              method: 'ilp'
             })
             const options = {
               walletAddressId,
@@ -400,7 +401,8 @@ describe('OutgoingPaymentService', (): void => {
           walletAddressId,
           receiver,
           debitAmount,
-          validDestination: false
+          validDestination: false,
+          method: 'ilp'
         })
         await expect(
           outgoingPaymentService.create({
@@ -438,7 +440,8 @@ describe('OutgoingPaymentService', (): void => {
           walletAddressId,
           receiver,
           debitAmount,
-          validDestination: false
+          validDestination: false,
+          method: 'ilp'
         })
         await expect(
           outgoingPaymentService.create({
@@ -453,7 +456,8 @@ describe('OutgoingPaymentService', (): void => {
           walletAddressId,
           receiver,
           debitAmount,
-          validDestination: false
+          validDestination: false,
+          method: 'ilp'
         })
         await quote.$query(knex).patch({
           expiresAt: new Date()
@@ -475,7 +479,8 @@ describe('OutgoingPaymentService', (): void => {
           const quote = await createQuote(deps, {
             walletAddressId,
             receiver,
-            debitAmount
+            debitAmount,
+            method: 'ilp'
           })
           await incomingPayment.$query(knex).patch({
             state,
@@ -496,7 +501,8 @@ describe('OutgoingPaymentService', (): void => {
           walletAddressId,
           receiver,
           debitAmount,
-          validDestination: false
+          validDestination: false,
+          method: 'ilp'
         })
         const walletAddress = await createWalletAddress(deps)
         const walletAddressUpdated = await WalletAddress.query(
@@ -523,7 +529,8 @@ describe('OutgoingPaymentService', (): void => {
               return await createQuote(deps, {
                 walletAddressId,
                 receiver,
-                debitAmount
+                debitAmount,
+                method: 'ilp'
               })
             })
           )
@@ -571,7 +578,8 @@ describe('OutgoingPaymentService', (): void => {
             quote = await createQuote(deps, {
               walletAddressId,
               receiver,
-              debitAmount
+              debitAmount,
+              method: 'ilp'
             })
             options = {
               walletAddressId,
@@ -831,7 +839,8 @@ describe('OutgoingPaymentService', (): void => {
       const paymentId = await setup({
         receiver,
         debitAmount,
-        receiveAmount
+        receiveAmount,
+        method: 'ilp'
       })
 
       const payment = await processNext(
@@ -860,7 +869,8 @@ describe('OutgoingPaymentService', (): void => {
       assert.ok(incomingPayment.walletAddress)
       const paymentId = await setup({
         receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
-        receiveAmount
+        receiveAmount,
+        method: 'ilp'
       })
 
       const payment = await processNext(
@@ -881,7 +891,8 @@ describe('OutgoingPaymentService', (): void => {
       const paymentId = await setup(
         {
           receiver,
-          receiveAmount
+          receiveAmount,
+          method: 'ilp'
         },
         receiveAmount
       )
@@ -924,7 +935,8 @@ describe('OutgoingPaymentService', (): void => {
 
       const paymentId = await setup({
         receiver,
-        debitAmount
+        debitAmount,
+        method: 'ilp'
       })
 
       for (let i = 0; i < 4; i++) {
@@ -966,7 +978,8 @@ describe('OutgoingPaymentService', (): void => {
       )
       const paymentId = await setup({
         receiver,
-        debitAmount
+        debitAmount,
+        method: 'ilp'
       })
 
       const payment = await processNext(
@@ -992,7 +1005,8 @@ describe('OutgoingPaymentService', (): void => {
       )
       const paymentId = await setup({
         receiver,
-        receiveAmount
+        receiveAmount,
+        method: 'ilp'
       })
 
       const payment = await processNext(paymentId, OutgoingPaymentState.Sending)
@@ -1022,7 +1036,8 @@ describe('OutgoingPaymentService', (): void => {
       const paymentId = await setup(
         {
           receiver,
-          receiveAmount
+          receiveAmount,
+          method: 'ilp'
         },
         receiveAmount
       )
@@ -1048,7 +1063,8 @@ describe('OutgoingPaymentService', (): void => {
       const paymentId = await setup(
         {
           receiver,
-          receiveAmount
+          receiveAmount,
+          method: 'ilp'
         },
         receiveAmount
       )
@@ -1071,7 +1087,8 @@ describe('OutgoingPaymentService', (): void => {
     it('FAILED (source asset changed)', async (): Promise<void> => {
       const paymentId = await setup({
         receiver,
-        debitAmount
+        debitAmount,
+        method: 'ilp'
       })
       const { id: assetId } = await createAsset(deps, {
         code: asset.code,
@@ -1091,7 +1108,8 @@ describe('OutgoingPaymentService', (): void => {
     it('FAILED (destination asset changed)', async (): Promise<void> => {
       const paymentId = await setup({
         receiver,
-        debitAmount
+        debitAmount,
+        method: 'ilp'
       })
       // Pretend that the destination asset was initially different.
       await OutgoingPayment.relatedQuery('quote')
