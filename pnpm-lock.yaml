@@ -303,8 +303,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 5.2.1
-        version: 5.2.1
+        specifier: 5.2.2
+        version: 5.2.2
       '@interledger/openapi':
         specifier: 1.1.0
         version: 1.1.0
@@ -4415,8 +4415,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/open-payments@5.2.1:
-    resolution: {integrity: sha512-JzMOhu5eZRTaan4WFXclZo7eh0Ez+dk4ct7CpZC9nVu3N5rQK2FCG08HpCm55xBp5rKncmUQb6v0f+Bz/B7SHw==}
+  /@interledger/open-payments@5.2.2:
+    resolution: {integrity: sha512-Tp65PDdgwX/Uc47zbuYpOoFAs9k4wV99LBKhEu804zBWeAmWy5ULRsJwDabSgqgmdnjkRhFJEmO/HOxVqb9rTg==}
     dependencies:
       '@interledger/http-signature-utils': 1.1.0
       '@interledger/openapi': 1.2.0
