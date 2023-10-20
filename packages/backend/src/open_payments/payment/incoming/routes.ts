@@ -81,7 +81,7 @@ async function getIncomingPaymentPublic(
     const incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
       client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      paymentPointerId: ctx.paymentPointer.id
+      walletAddressId: ctx.walletAddress.id
     })
     ctx.body = incomingPayment?.toPublicOpenPaymentsType()
   } catch (err) {
@@ -105,16 +105,17 @@ async function getIncomingPaymentPrivate(
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
   }
-  if (!incomingPayment) return ctx.throw(404)
+  if (!incomingPayment || !incomingPayment.walletAddress) return ctx.throw(404)
   const connection = deps.connectionService.get(incomingPayment)
   ctx.body = incomingPaymentToBody(
-    ctx.walletAddress,
+    incomingPayment.walletAddress,
     incomingPayment,
     connection
   )
 }
 
 export type CreateBody = {
+  walletAddress: string
   expiresAt?: string
   incomingAmount?: AmountJSON
   metadata?: Record<string, unknown>
@@ -146,10 +147,14 @@ async function createIncomingPayment(
     )
   }
 
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
   ctx.status = 201
   const connection = deps.connectionService.get(incomingPaymentOrError)
   ctx.body = incomingPaymentToBody(
-    ctx.walletAddress,
+    incomingPaymentOrError.walletAddress,
     incomingPaymentOrError,
     connection
   )
@@ -174,7 +179,12 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(ctx.walletAddress, incomingPaymentOrError)
+
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
+  ctx.body = incomingPaymentToBody(incomingPaymentOrError.walletAddress, incomingPaymentOrError)
 }
 
 async function listIncomingPayments(

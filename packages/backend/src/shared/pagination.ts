@@ -1,6 +1,8 @@
-import { PaginationArgs } from '@interledger/open-payments'
+import { PaginationArgs as OpenPaymentsPaginationArgs } from '@interledger/open-payments'
 
 import { BaseModel, PageInfo, Pagination } from './baseModel'
+
+type PaginationArgs = Omit<OpenPaymentsPaginationArgs, 'wallet-address'>
 
 export function parsePaginationQueryParameters({
   first,

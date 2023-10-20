@@ -297,7 +297,7 @@ describe('Incoming Payment Routes', (): void => {
   describe('get unauthenticated incoming payment', (): void => {
     test('Can get incoming payment with public fields', async (): Promise<void> => {
       const incomingPayment = await createIncomingPayment(deps, {
-        paymentPointerId: paymentPointer.id,
+        walletAddressId: walletAddress.id,
         expiresAt,
         incomingAmount,
         metadata
@@ -312,7 +312,7 @@ describe('Incoming Payment Routes', (): void => {
         params: {
           id: incomingPayment.id
         },
-        paymentPointer
+        walletAddress
       })
       ctx.authenticated = false
 

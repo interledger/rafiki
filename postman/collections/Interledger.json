@@ -1508,7 +1508,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": {{pfryWalletAddress}},\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1516,10 +1516,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{receiverWalletAddress}}/incoming-payments",
+									"raw": "http://localhost:4000/incoming-payments",
+									"protocol": "http",
 									"host": [
-										"{{receiverWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments"
 									]
@@ -1570,10 +1572,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverWalletAddress}}/incoming-payments/{{incomingPaymentId}}",
+									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}",
+									"protocol": "http",
 									"host": [
-										"{{receiverWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1627,10 +1631,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{pfryPaymentPointer}}/incoming-payments/{{incomingPaymentId}}",
+									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}",
+									"protocol": "http",
 									"host": [
-										"{{pfryPaymentPointer}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1682,22 +1688,28 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverWalletAddress}}/incoming-payments?first=10",
+									"raw": "http://localhost:4000/incoming-payments?first=10&wallet-address={{receiverWalletAddress}}",
+									"protocol": "http",
 									"host": [
-										"{{receiverWalletAddress}}"
+										"localhost"
 									],
+									"port": "4000",
 									"path": [
 										"incoming-payments"
 									],
 									"query": [
+										{
+											"key": "first",
+											"value": "10"
+										},
 										{
 											"key": "cursor",
 											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
 											"disabled": true
 										},
 										{
-											"key": "first",
-											"value": "10"
+											"key": "wallet-address",
+											"value": "{{pfryWalletAddress}}"
 										}
 									]
 								}
@@ -1737,11 +1749,22 @@
 										"value": "happy-life-bank-backend"
 									}
 								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"walletAddress\": {{pfryWalletAddress}}\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
 								"url": {
-									"raw": "{{receiverWalletAddress}}/incoming-payments/{{incomingPaymentId}}/complete",
+									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}/complete",
+									"protocol": "http",
 									"host": [
-										"{{receiverWalletAddress}}"
-									],
+										"localhost"
+f									],
+									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}",
@@ -1812,10 +1835,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{senderWalletAddress}}/quotes",
+									"raw": "http://localhost:3000/quotes",
+									"protocol": "http",
 									"host": [
-										"{{senderWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"quotes"
 									]
@@ -1870,10 +1895,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{walletAddress}}/quotes/{{quoteId}}",
+									"raw": "http://localhost:3000/quotes/{{quoteId}}",
+									"protocol": "http",
 									"host": [
-										"{{walletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"quotes",
 										"{{quoteId}}"
@@ -1935,7 +1962,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"yolo\",\n        \"externalRef\": \"INV-001\",\n        \"items\": [\"1\", \"2\", \"3\"]\n    }\n}",
+									"raw": "{\n    \"walletAddress\": {{senderWalletAddress}},\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1943,10 +1970,12 @@
 									}
 								},
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments",
+									"raw": "http://localhost:3000/outgoing-payments",
+									"protocol": "http",
 									"host": [
-										"{{senderWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"outgoing-payments"
 									]
@@ -1997,10 +2026,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments/{{outgoingPaymentId}}",
+									"raw": "http://localhost:3000/outgoing-payments/{{outgoingPaymentId}}",
+									"protocol": "http",
 									"host": [
-										"{{senderWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"outgoing-payments",
 										"{{outgoingPaymentId}}"
@@ -2052,10 +2083,12 @@
 									}
 								],
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments?first=2",
+									"raw": "http://localhost:3000/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}",
+									"protocol": "http",
 									"host": [
-										"{{senderWalletAddress}}"
+										"localhost"
 									],
+									"port": "3000",
 									"path": [
 										"outgoing-payments"
 									],
@@ -2068,6 +2101,10 @@
 											"key": "cursor",
 											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
 											"disabled": true
+										},
+										{
+											"key": "wallet-address",
+											"value": "{{senderWalletAddress}}"
 										}
 									]
 								}
