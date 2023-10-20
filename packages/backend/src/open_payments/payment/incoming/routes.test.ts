@@ -15,7 +15,7 @@ import {
   ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 import {
   IncomingPaymentRoutes,
   CreateBody,
@@ -141,6 +141,36 @@ describe('Incoming Payment Routes', (): void => {
         message: `Error trying to list incoming payments`
       })
     })
+  })
+
+  describe('get', (): void => {
+    test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+      'returns incoming payment with empty methods if payment state is %s',
+      async (paymentState): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id
+        })
+        await incomingPayment.$query().update({ state: paymentState })
+
+        const ctx = setup<ReadContextWithAuthenticatedStatus>({
+          reqOpts: {
+            headers: { Accept: 'application/json' },
+            method: 'GET',
+            url: `/incoming-payments/${incomingPayment.id}`
+          },
+          params: {
+            id: incomingPayment.id
+          },
+          walletAddress
+        })
+
+        await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
+
+        expect(ctx.response).toSatisfyApiSpec()
+        expect(ctx.body).toMatchObject({ methods: [] })
+      }
+    )
   })
 
   describe('create', (): void => {

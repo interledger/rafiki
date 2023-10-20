@@ -135,7 +135,7 @@ async function createLocalIncomingPayment(
     incomingPaymentOrError
   )
 
-  return incomingPaymentOrError.toOpenPaymentsType(
+  return incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
     walletAddress,
     streamCredentials
   )
@@ -227,7 +227,10 @@ async function getLocalIncomingPayment({
 
   const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
-  return incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
+  return incomingPayment.toOpenPaymentsTypeWithMethods(
+    walletAddress,
+    streamCredentials
+  )
 }
 
 async function getIncomingPaymentGrant(

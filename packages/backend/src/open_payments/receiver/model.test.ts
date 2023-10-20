@@ -47,7 +47,10 @@ describe('Receiver Model', (): void => {
       assert(streamCredentials)
 
       const receiver = new Receiver(
-        incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
       )
 
       expect(receiver).toEqual({
@@ -87,10 +90,11 @@ describe('Receiver Model', (): void => {
         sharedSecret: Buffer.from('')
       }
 
-      const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
-        walletAddress,
-        streamCredentials
-      )
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
 
       expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
         'Cannot create receiver from completed incoming payment'
@@ -106,10 +110,11 @@ describe('Receiver Model', (): void => {
       incomingPayment.expiresAt = new Date(Date.now() - 1)
       const streamCredentials = streamCredentialsService.get(incomingPayment)
       assert(streamCredentials)
-      const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
-        walletAddress,
-        streamCredentials
-      )
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
 
       expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
         'Cannot create receiver from expired incoming payment'
@@ -126,10 +131,11 @@ describe('Receiver Model', (): void => {
       assert(streamCredentials)
       ;(streamCredentials.ilpAddress as string) = 'not base 64 encoded'
 
-      const openPaymentsIncomingPayment = incomingPayment.toOpenPaymentsType(
-        walletAddress,
-        streamCredentials
-      )
+      const openPaymentsIncomingPayment =
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
 
       expect(() => new Receiver(openPaymentsIncomingPayment)).toThrow(
         'Invalid ILP address on ilp payment method'

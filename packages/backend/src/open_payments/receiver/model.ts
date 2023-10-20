@@ -31,12 +31,12 @@ export class Receiver {
   public readonly incomingPayment: ReceiverIncomingPayment
 
   constructor(incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethod) {
-    if (!incomingPayment.methods.length) {
-      throw new Error('Missing payment method(s) on incoming payment')
-    }
-
     if (incomingPayment.completed) {
       throw new Error('Cannot create receiver from completed incoming payment')
+    }
+
+    if (!incomingPayment.methods.length) {
+      throw new Error('Missing payment method(s) on incoming payment')
     }
 
     const expiresAt = incomingPayment.expiresAt

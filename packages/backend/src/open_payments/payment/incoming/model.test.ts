@@ -9,7 +9,7 @@ import { truncateTables } from '../../../tests/tableManager'
 import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import { serializeAmount } from '../../amount'
 import { IlpAddress } from 'ilp-packet'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 
 describe('Incoming Payment Model', (): void => {
   let deps: IocContract<AppServices>
@@ -30,7 +30,7 @@ describe('Incoming Payment Model', (): void => {
   })
 
   describe('toOpenPaymentsType', () => {
-    test('returns incoming payment without stream credentials provided', async () => {
+    test('returns incoming payment', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
@@ -51,8 +51,10 @@ describe('Incoming Payment Model', (): void => {
         createdAt: incomingPayment.createdAt.toISOString()
       })
     })
+  })
 
-    test('returns incoming payment with stream credentials as object', async () => {
+  describe('toOpenPaymentsTypeWithMethods', () => {
+    test('returns incoming payment with payment methods', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
@@ -65,7 +67,10 @@ describe('Incoming Payment Model', (): void => {
       }
 
       expect(
-        incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
       ).toEqual({
         id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         walletAddress: walletAddress.url,
@@ -87,5 +92,42 @@ describe('Incoming Payment Model', (): void => {
         ]
       })
     })
+
+    test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+      'returns incoming payment with empty methods if payment state is %s',
+      async (paymentState): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          metadata: { description: 'my payment' }
+        })
+        incomingPayment.state = paymentState
+
+        const streamCredentials: IlpStreamCredentials = {
+          ilpAddress: 'test.ilp' as IlpAddress,
+          sharedSecret: Buffer.from('')
+        }
+
+        expect(
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            walletAddress,
+            streamCredentials
+          )
+        ).toEqual({
+          id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          walletAddress: walletAddress.url,
+          completed: incomingPayment.completed,
+          receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+          incomingAmount: incomingPayment.incomingAmount
+            ? serializeAmount(incomingPayment.incomingAmount)
+            : undefined,
+          expiresAt: incomingPayment.expiresAt.toISOString(),
+          metadata: incomingPayment.metadata ?? undefined,
+          updatedAt: incomingPayment.updatedAt.toISOString(),
+          createdAt: incomingPayment.createdAt.toISOString(),
+          methods: []
+        })
+      }
+    )
   })
 })

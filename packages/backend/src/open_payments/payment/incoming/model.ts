@@ -200,23 +200,8 @@ export class IncomingPayment
 
   public toOpenPaymentsType(
     walletAddress: WalletAddress
-  ): OpenPaymentsIncomingPayment
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamCredentials: IlpStreamCredentials
-  ): OpenPaymentsIncomingPaymentWithPaymentMethod
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamCredentials?: IlpStreamCredentials
-  ): OpenPaymentsIncomingPayment | OpenPaymentsIncomingPaymentWithPaymentMethod
-
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamCredentials?: IlpStreamCredentials
-  ):
-    | OpenPaymentsIncomingPayment
-    | OpenPaymentsIncomingPaymentWithPaymentMethod {
-    const baseIncomingPayment: OpenPaymentsIncomingPayment = {
+  ): OpenPaymentsIncomingPayment {
+    return {
       id: this.getUrl(walletAddress),
       walletAddress: walletAddress.url,
       incomingAmount: this.incomingAmount
@@ -229,21 +214,24 @@ export class IncomingPayment
       updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()
     }
+  }
 
-    if (ilpStreamCredentials) {
-      return {
-        ...baseIncomingPayment,
-        methods: [
-          {
-            type: 'ilp',
-            ilpAddress: ilpStreamCredentials.ilpAddress,
-            sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
-          }
-        ]
-      }
+  public toOpenPaymentsTypeWithMethods(
+    walletAddress: WalletAddress,
+    ilpStreamCredentials: IlpStreamCredentials
+  ): OpenPaymentsIncomingPaymentWithPaymentMethod {
+    return {
+      ...this.toOpenPaymentsType(walletAddress),
+      methods: this.isExpiredOrComplete()
+        ? []
+        : [
+            {
+              type: 'ilp',
+              ilpAddress: ilpStreamCredentials.ilpAddress,
+              sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
+            }
+          ]
     }
-
-    return baseIncomingPayment
   }
 
   public toPublicOpenPaymentsType(): Pick<

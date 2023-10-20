@@ -45,7 +45,10 @@ export async function createOutgoingPayment(
       .spyOn(receiverService, 'get')
       .mockResolvedValueOnce(
         new Receiver(
-          incomingPayment.toOpenPaymentsType(walletAddress, streamCredentials)
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            walletAddress,
+            streamCredentials
+          )
         )
       )
   }
