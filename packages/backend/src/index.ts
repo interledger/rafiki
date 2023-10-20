@@ -37,7 +37,7 @@ import { createWebhookService } from './webhook/service'
 import { createConnectorService } from './payment-method/ilp/connector'
 import { createOpenAPI } from '@interledger/openapi'
 import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
-import { createConnectionService } from './open_payments/connection/service'
+import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
 import { createWalletAddressKeyService } from './open_payments/wallet_address/key/service'
 import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
@@ -267,7 +267,7 @@ export function initIocContainer(
       config: await deps.use('config'),
       logger: await deps.use('logger'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
-      connectionService: await deps.use('connectionService')
+      streamCredentialsService: await deps.use('streamCredentialsService')
     })
   })
   container.singleton('walletAddressRoutes', async (deps) => {
@@ -283,9 +283,9 @@ export function initIocContainer(
       walletAddressService: await deps.use('walletAddressService')
     })
   })
-  container.singleton('connectionService', async (deps) => {
+  container.singleton('streamCredentialsService', async (deps) => {
     const config = await deps.use('config')
-    return await createConnectionService({
+    return await createStreamCredentialsService({
       logger: await deps.use('logger'),
       openPaymentsUrl: config.openPaymentsUrl,
       streamServer: await deps.use('streamServer')
@@ -295,7 +295,7 @@ export function initIocContainer(
     const config = await deps.use('config')
     return await createReceiverService({
       logger: await deps.use('logger'),
-      connectionService: await deps.use('connectionService'),
+      streamCredentialsService: await deps.use('streamCredentialsService'),
       grantService: await deps.use('grantService'),
       incomingPaymentService: await deps.use('incomingPaymentService'),
       openPaymentsUrl: config.openPaymentsUrl,

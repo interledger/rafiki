@@ -20,7 +20,8 @@ export class Quote extends WalletAddressSubresource {
       'receiveAmount',
       'minExchangeRate',
       'lowEstimatedExchangeRate',
-      'highEstimatedExchangeRate'
+      'highEstimatedExchangeRate',
+      'method'
     ]
   }
 
@@ -152,6 +153,10 @@ export class Quote extends WalletAddressSubresource {
     this.highEstimatedExchangeRateDenominator = value.b.value
   }
 
+  public get method(): 'ilp' {
+    return 'ilp'
+  }
+
   $formatJson(json: Pojo): Pojo {
     json = super.$formatJson(json)
     return {
@@ -179,7 +184,8 @@ export class Quote extends WalletAddressSubresource {
       debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,
       expiresAt: this.expiresAt.toISOString(),
-      createdAt: this.createdAt.toISOString()
+      createdAt: this.createdAt.toISOString(),
+      method: this.method
     }
   }
 }

@@ -1,8 +1,7 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
-import { v4 as uuid } from 'uuid'
+import { Model } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { Connection } from '../../connection/model'
+import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import {
   WalletAddress,
   WalletAddressSubresource
@@ -13,9 +12,9 @@ import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/raf
 import { WebhookEvent } from '../../../webhook/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
-  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
+import base64url from 'base64url'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -86,8 +85,6 @@ export class IncomingPayment
   public expiresAt!: Date
   public state!: IncomingPaymentState
   public metadata?: Record<string, unknown>
-  // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the connectionId. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
-  public connectionId?: string | null
 
   public processAt!: Date | null
 
@@ -163,6 +160,13 @@ export class IncomingPayment
     return this
   }
 
+  public isExpiredOrComplete(): boolean {
+    return (
+      this.state === IncomingPaymentState.Expired ||
+      this.state === IncomingPaymentState.Completed
+    )
+  }
+
   public toData(amountReceived: bigint): IncomingPaymentData {
     const data: IncomingPaymentData = {
       id: this.id,
@@ -191,48 +195,10 @@ export class IncomingPayment
     return data
   }
 
-  public $beforeInsert(context: QueryContext): void {
-    super.$beforeInsert(context)
-    this.connectionId = this.connectionId || uuid()
-  }
-
-  public $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
-    super.$beforeUpdate(opts, queryContext)
-    if (
-      [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
-        this.state
-      )
-    ) {
-      this.connectionId = null
-    }
-  }
-
   public toOpenPaymentsType(
     walletAddress: WalletAddress
-  ): OpenPaymentsIncomingPayment
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamConnection: Connection
-  ): OpenPaymentsIncomingPaymentWithConnection
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamConnection: string
-  ): OpenPaymentsIncomingPaymentWithConnectionUrl
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamConnection?: Connection | string
-  ):
-    | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl
-
-  public toOpenPaymentsType(
-    walletAddress: WalletAddress,
-    ilpStreamConnection?: Connection | string
-  ):
-    | OpenPaymentsIncomingPayment
-    | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl {
-    const baseIncomingPayment: OpenPaymentsIncomingPayment = {
+  ): OpenPaymentsIncomingPayment {
+    return {
       id: this.getUrl(walletAddress),
       walletAddress: walletAddress.url,
       incomingAmount: this.incomingAmount
@@ -245,21 +211,24 @@ export class IncomingPayment
       updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()
     }
+  }
 
-    if (!ilpStreamConnection) {
-      return baseIncomingPayment
-    }
-
-    if (typeof ilpStreamConnection === 'string') {
-      return {
-        ...baseIncomingPayment,
-        ilpStreamConnection
-      }
-    }
-
+  public toOpenPaymentsTypeWithMethods(
+    walletAddress: WalletAddress,
+    ilpStreamCredentials?: IlpStreamCredentials
+  ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
-      ...baseIncomingPayment,
-      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
+      ...this.toOpenPaymentsType(walletAddress),
+      methods:
+        this.isExpiredOrComplete() || !ilpStreamCredentials
+          ? []
+          : [
+              {
+                type: 'ilp',
+                ilpAddress: ilpStreamCredentials.ilpAddress,
+                sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
+              }
+            ]
     }
   }
 

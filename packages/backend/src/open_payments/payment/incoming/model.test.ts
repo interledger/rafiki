@@ -1,25 +1,23 @@
 import { IocContract } from '@adonisjs/fold'
 import { createTestApp, TestContainer } from '../../../tests/app'
-import { Config, IAppConfig } from '../../../config/app'
+import { Config } from '../../../config/app'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createWalletAddress } from '../../../tests/walletAddress'
 import { truncateTables } from '../../../tests/tableManager'
-import { Connection } from '../../connection/model'
+import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import { serializeAmount } from '../../amount'
 import { IlpAddress } from 'ilp-packet'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 
 describe('Incoming Payment Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
-  let config: IAppConfig
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
-    config = await deps.use('config')
   })
 
   afterEach(async (): Promise<void> => {
@@ -32,7 +30,7 @@ describe('Incoming Payment Model', (): void => {
   })
 
   describe('toOpenPaymentsType', () => {
-    test('returns incoming payment without connection provided', async () => {
+    test('returns incoming payment', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
@@ -53,18 +51,26 @@ describe('Incoming Payment Model', (): void => {
         createdAt: incomingPayment.createdAt.toISOString()
       })
     })
+  })
 
-    test('returns incoming payment with connection as string', async () => {
+  describe('toOpenPaymentsTypeWithMethods', () => {
+    test('returns incoming payment with payment methods', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' }
       })
 
-      const connection = `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
+      const streamCredentials: IlpStreamCredentials = {
+        ilpAddress: 'test.ilp' as IlpAddress,
+        sharedSecret: Buffer.from('')
+      }
 
       expect(
-        incomingPayment.toOpenPaymentsType(walletAddress, connection)
+        incomingPayment.toOpenPaymentsTypeWithMethods(
+          walletAddress,
+          streamCredentials
+        )
       ).toEqual({
         id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         walletAddress: walletAddress.url,
@@ -77,48 +83,75 @@ describe('Incoming Payment Model', (): void => {
         metadata: incomingPayment.metadata ?? undefined,
         updatedAt: incomingPayment.updatedAt.toISOString(),
         createdAt: incomingPayment.createdAt.toISOString(),
-        ilpStreamConnection: connection
+        methods: [
+          {
+            type: 'ilp',
+            ilpAddress: 'test.ilp',
+            sharedSecret: expect.any(String)
+          }
+        ]
       })
     })
 
-    test('returns incoming payment with connection as object', async () => {
+    test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
       const walletAddress = await createWalletAddress(deps)
       const incomingPayment = await createIncomingPayment(deps, {
         walletAddressId: walletAddress.id,
         metadata: { description: 'my payment' }
       })
+      expect(
+        incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
+      ).toEqual({
+        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        walletAddress: walletAddress.url,
+        completed: incomingPayment.completed,
+        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+        incomingAmount: incomingPayment.incomingAmount
+          ? serializeAmount(incomingPayment.incomingAmount)
+          : undefined,
+        expiresAt: incomingPayment.expiresAt.toISOString(),
+        metadata: incomingPayment.metadata ?? undefined,
+        updatedAt: incomingPayment.updatedAt.toISOString(),
+        createdAt: incomingPayment.createdAt.toISOString(),
+        methods: []
+      })
+    })
 
-      const connection = Connection.fromPayment({
-        payment: incomingPayment,
-        openPaymentsUrl: config.openPaymentsUrl,
-        credentials: {
+    test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+      'returns incoming payment with empty methods if payment state is %s',
+      async (paymentState): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id,
+          metadata: { description: 'my payment' }
+        })
+        incomingPayment.state = paymentState
+
+        const streamCredentials: IlpStreamCredentials = {
           ilpAddress: 'test.ilp' as IlpAddress,
           sharedSecret: Buffer.from('')
         }
-      })
 
-      expect(
-        incomingPayment.toOpenPaymentsType(walletAddress, connection)
-      ).toEqual({
-        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
-        walletAddress: walletAddress.url,
-        completed: incomingPayment.completed,
-        receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-        incomingAmount: incomingPayment.incomingAmount
-          ? serializeAmount(incomingPayment.incomingAmount)
-          : undefined,
-        expiresAt: incomingPayment.expiresAt.toISOString(),
-        metadata: incomingPayment.metadata ?? undefined,
-        updatedAt: incomingPayment.updatedAt.toISOString(),
-        createdAt: incomingPayment.createdAt.toISOString(),
-        ilpStreamConnection: {
-          id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
-          ilpAddress: 'test.ilp',
-          sharedSecret: expect.any(String),
-          assetCode: incomingPayment.asset.code,
-          assetScale: incomingPayment.asset.scale
-        }
-      })
-    })
+        expect(
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            walletAddress,
+            streamCredentials
+          )
+        ).toEqual({
+          id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          walletAddress: walletAddress.url,
+          completed: incomingPayment.completed,
+          receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+          incomingAmount: incomingPayment.incomingAmount
+            ? serializeAmount(incomingPayment.incomingAmount)
+            : undefined,
+          expiresAt: incomingPayment.expiresAt.toISOString(),
+          metadata: incomingPayment.metadata ?? undefined,
+          updatedAt: incomingPayment.updatedAt.toISOString(),
+          createdAt: incomingPayment.createdAt.toISOString(),
+          methods: []
+        })
+      }
+    )
   })
 })

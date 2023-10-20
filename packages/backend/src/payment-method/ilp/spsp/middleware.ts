@@ -1,9 +1,10 @@
-import { WalletAddressContext, SPSPContext } from '../../../app'
-import { ConnectionContext } from '../../../open_payments/connection/middleware'
+import { AppContext, WalletAddressContext, SPSPContext } from '../../../app'
+import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
 
-export type SPSPConnectionContext = ConnectionContext &
+export type SPSPConnectionContext = AppContext &
   SPSPContext & {
     walletAddress?: never
+    incomingPayment: IncomingPayment
   }
 
 export type SPSPWalletAddressContext = WalletAddressContext &

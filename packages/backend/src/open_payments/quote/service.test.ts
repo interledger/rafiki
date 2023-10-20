@@ -113,7 +113,8 @@ describe('QuoteService', (): void => {
           },
           client,
           validDestination: false,
-          withFee: true
+          withFee: true,
+          method: 'ilp'
         }),
       get: (options) => quoteService.get(options),
       list: (options) => quoteService.getWalletAddressPage(options)
@@ -127,11 +128,10 @@ describe('QuoteService', (): void => {
     }
 
     describe.each`
-      toConnection | incomingAmount    | description
-      ${true}      | ${undefined}      | ${'connection'}
-      ${false}     | ${undefined}      | ${'incomingPayment'}
-      ${false}     | ${incomingAmount} | ${'incomingPayment.incomingAmount'}
-    `('$description', ({ toConnection, incomingAmount }): void => {
+      incomingAmount    | description
+      ${undefined}      | ${'incomingPayment'}
+      ${incomingAmount} | ${'incomingPayment.incomingAmount'}
+    `('$description', ({ incomingAmount }): void => {
       describe.each`
         debitAmount    | receiveAmount    | description
         ${debitAmount} | ${undefined}     | ${'debitAmount'}
@@ -147,12 +147,10 @@ describe('QuoteService', (): void => {
             walletAddressId: receivingWalletAddress.id,
             incomingAmount
           })
-          const connectionService = await deps.use('connectionService')
           options = {
             walletAddressId: sendingWalletAddress.id,
-            receiver: toConnection
-              ? connectionService.getUrl(incomingPayment)
-              : incomingPayment.getUrl(receivingWalletAddress)
+            receiver: incomingPayment.getUrl(receivingWalletAddress),
+            method: 'ilp'
           }
           if (debitAmount) options.debitAmount = debitAmount
           if (receiveAmount) options.receiveAmount = receiveAmount
@@ -308,27 +306,25 @@ describe('QuoteService', (): void => {
             )
           }
 
-          if (!toConnection) {
-            test.each`
-              state
-              ${IncomingPaymentState.Completed}
-              ${IncomingPaymentState.Expired}
-            `(
-              `returns ${QuoteError.InvalidReceiver} on $state receiver`,
-              async ({ state }): Promise<void> => {
-                await incomingPayment.$query(knex).patch({
-                  state,
-                  expiresAt:
-                    state === IncomingPaymentState.Expired
-                      ? new Date()
-                      : undefined
-                })
-                await expect(quoteService.create(options)).resolves.toEqual(
-                  QuoteError.InvalidReceiver
-                )
-              }
-            )
-          }
+          test.each`
+            state
+            ${IncomingPaymentState.Completed}
+            ${IncomingPaymentState.Expired}
+          `(
+            `returns ${QuoteError.InvalidReceiver} on $state receiver`,
+            async ({ state }): Promise<void> => {
+              await incomingPayment.$query(knex).patch({
+                state,
+                expiresAt:
+                  state === IncomingPaymentState.Expired
+                    ? new Date()
+                    : undefined
+              })
+              await expect(quoteService.create(options)).resolves.toEqual(
+                QuoteError.InvalidReceiver
+              )
+            }
+          )
         }
       })
     })
@@ -348,7 +344,8 @@ describe('QuoteService', (): void => {
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
           receiver: incomingPayment.getUrl(receivingWalletAddress),
-          receiveAmount
+          receiveAmount,
+          method: 'ilp'
         }
 
         const mockedQuote = mockQuote({
@@ -389,7 +386,8 @@ describe('QuoteService', (): void => {
         quoteService.create({
           walletAddressId: uuid(),
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
-          debitAmount
+          debitAmount,
+          method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.UnknownWalletAddress)
     })
@@ -404,7 +402,8 @@ describe('QuoteService', (): void => {
         quoteService.create({
           walletAddressId: walletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
-          debitAmount
+          debitAmount,
+          method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.InactiveWalletAddress)
     })
@@ -414,7 +413,8 @@ describe('QuoteService', (): void => {
         quoteService.create({
           walletAddressId: sendingWalletAddress.id,
           receiver: `${receivingWalletAddress.url}/incoming-payments/${uuid()}`,
-          debitAmount
+          debitAmount,
+          method: 'ilp'
         })
       ).resolves.toEqual(QuoteError.InvalidReceiver)
     })
@@ -436,7 +436,8 @@ describe('QuoteService', (): void => {
         })
         const options: CreateQuoteOptions = {
           walletAddressId: sendingWalletAddress.id,
-          receiver: incomingPayment.getUrl(receivingWalletAddress)
+          receiver: incomingPayment.getUrl(receivingWalletAddress),
+          method: 'ilp'
         }
         if (debitAmount) options.debitAmount = debitAmount
         if (receiveAmount) options.receiveAmount = receiveAmount
@@ -505,7 +506,8 @@ describe('QuoteService', (): void => {
 
           const quote = await quoteService.create({
             walletAddressId: sendingWalletAddress.id,
-            receiver: receiver.incomingPayment!.id
+            receiver: receiver.incomingPayment!.id,
+            method: 'ilp'
           })
           assert.ok(!isQuoteError(quote))
 
@@ -582,7 +584,8 @@ describe('QuoteService', (): void => {
               value: debitAmountValue,
               assetCode: sendAsset.code,
               assetScale: sendAsset.scale
-            }
+            },
+            method: 'ilp'
           })
           assert.ok(!isQuoteError(quote))
 

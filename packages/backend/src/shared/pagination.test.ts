@@ -212,7 +212,8 @@ describe('Pagination', (): void => {
                 walletAddressId: defaultWalletAddress.id,
                 receiver: secondaryWalletAddress.url,
                 debitAmount,
-                validDestination: false
+                validDestination: false,
+                method: 'ilp'
               })
               quoteIds.push(quote.id)
             }

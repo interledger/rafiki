@@ -15,7 +15,7 @@ import {
   ListContext
 } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
-import { IncomingPayment } from './model'
+import { IncomingPayment, IncomingPaymentState } from './model'
 import {
   IncomingPaymentRoutes,
   CreateBody,
@@ -27,6 +27,7 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
+import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
 
 describe('Incoming Payment Routes', (): void => {
   let deps: IocContract<AppServices>
@@ -92,30 +93,33 @@ describe('Incoming Payment Routes', (): void => {
       get: (ctx) =>
         incomingPaymentRoutes.get(ctx as ReadContextWithAuthenticatedStatus),
       getBody: (incomingPayment, list) => {
-        return {
-          id: incomingPayment.getUrl(walletAddress),
-          walletAddress: walletAddress.url,
-          completed: false,
-          incomingAmount:
-            incomingPayment.incomingAmount &&
-            serializeAmount(incomingPayment.incomingAmount),
-          expiresAt: incomingPayment.expiresAt.toISOString(),
-          createdAt: incomingPayment.createdAt.toISOString(),
-          updatedAt: incomingPayment.updatedAt.toISOString(),
-          receivedAmount: serializeAmount(incomingPayment.receivedAmount),
-          metadata: incomingPayment.metadata,
-          ilpStreamConnection: list
-            ? `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`
-            : {
-                id: `${config.openPaymentsUrl}/connections/${incomingPayment.connectionId}`,
-                ilpAddress: expect.stringMatching(
-                  /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-                ),
-                sharedSecret: expect.stringMatching(/^[a-zA-Z0-9-_]{43}$/),
-                assetCode: incomingPayment.receivedAmount.assetCode,
-                assetScale: incomingPayment.receivedAmount.assetScale
-              }
+        const response: Partial<OpenPaymentsIncomingPaymentWithPaymentMethods> =
+          {
+            id: incomingPayment.getUrl(walletAddress),
+            walletAddress: walletAddress.url,
+            completed: false,
+            incomingAmount:
+              incomingPayment.incomingAmount &&
+              serializeAmount(incomingPayment.incomingAmount),
+            expiresAt: incomingPayment.expiresAt.toISOString(),
+            createdAt: incomingPayment.createdAt.toISOString(),
+            updatedAt: incomingPayment.updatedAt.toISOString(),
+            receivedAmount: serializeAmount(incomingPayment.receivedAmount),
+            metadata: incomingPayment.metadata
+          }
+
+        if (!list) {
+          response.methods = [
+            {
+              type: 'ilp',
+              ilpAddress: expect.stringMatching(
+                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+              ),
+              sharedSecret: expect.any(String)
+            }
+          ]
         }
+        return response
       },
       list: (ctx) => incomingPaymentRoutes.list(ctx),
       urlPath: IncomingPayment.urlPath
@@ -137,6 +141,36 @@ describe('Incoming Payment Routes', (): void => {
         message: `Error trying to list incoming payments`
       })
     })
+  })
+
+  describe('get', (): void => {
+    test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
+      'returns incoming payment with empty methods if payment state is %s',
+      async (paymentState): Promise<void> => {
+        const walletAddress = await createWalletAddress(deps)
+        const incomingPayment = await createIncomingPayment(deps, {
+          walletAddressId: walletAddress.id
+        })
+        await incomingPayment.$query().update({ state: paymentState })
+
+        const ctx = setup<ReadContextWithAuthenticatedStatus>({
+          reqOpts: {
+            headers: { Accept: 'application/json' },
+            method: 'GET',
+            url: `/incoming-payments/${incomingPayment.id}`
+          },
+          params: {
+            id: incomingPayment.id
+          },
+          walletAddress
+        })
+
+        await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
+
+        expect(ctx.response).toSatisfyApiSpec()
+        expect(ctx.body).toMatchObject({ methods: [] })
+      }
+    )
   })
 
   describe('create', (): void => {
@@ -211,15 +245,7 @@ describe('Incoming Payment Routes', (): void => {
         )
           .split('/')
           .pop()
-        const connectionId = (
-          (
-            (ctx.response.body as Record<string, unknown>)[
-              'ilpStreamConnection'
-            ] as Record<string, unknown>
-          )['id'] as string
-        )
-          .split('/')
-          .pop()
+
         expect(ctx.response.body).toEqual({
           id: `${walletAddress.url}/incoming-payments/${incomingPaymentId}`,
           walletAddress: walletAddress.url,
@@ -234,15 +260,15 @@ describe('Incoming Payment Routes', (): void => {
           },
           metadata,
           completed: false,
-          ilpStreamConnection: {
-            id: `${config.openPaymentsUrl}/connections/${connectionId}`,
-            ilpAddress: expect.stringMatching(
-              /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
-            ),
-            sharedSecret: expect.any(String),
-            assetCode: asset.code,
-            assetScale: asset.scale
-          }
+          methods: [
+            {
+              type: 'ilp',
+              ilpAddress: expect.stringMatching(
+                /^test\.rafiki\.[a-zA-Z0-9_-]{95}$/
+              ),
+              sharedSecret: expect.any(String)
+            }
+          ]
         })
       }
     )

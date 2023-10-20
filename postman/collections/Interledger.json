@@ -1423,39 +1423,6 @@
 					"id": "eb2dba4c-bb3b-4e31-89d1-17e24a158638"
 				},
 				{
-					"name": "STREAM connection",
-					"item": [
-						{
-							"name": "Get STREAM credentials",
-							"id": "ee878ea2-ae30-4d12-b617-d28a92c98d86",
-							"protocolProfileBehavior": {
-								"disableBodyPruning": true
-							},
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Host",
-										"value": "happy-life-bank-backend"
-									}
-								],
-								"url": {
-									"raw": "{{PeerOpenPaymentsHost}}/connections/{{connectionId}}",
-									"host": [
-										"{{PeerOpenPaymentsHost}}"
-									],
-									"path": [
-										"connections",
-										"{{connectionId}}"
-									]
-								}
-							},
-							"response": []
-						}
-					],
-					"id": "710e5513-49bf-45ab-b15b-efee78a76462"
-				},
-				{
 					"name": "Incoming Payments",
 					"item": [
 						{
@@ -1487,7 +1454,6 @@
 											"",
 											"const body = pm.response.json();",
 											"pm.environment.set(\"incomingPaymentId\", body.id.split(\"/\").pop());",
-											"pm.environment.set(\"connectionId\", body.ilpStreamConnection.id.split(\"/\").pop());",
 											""
 										],
 										"type": "text/javascript"

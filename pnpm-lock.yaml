@@ -263,8 +263,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 5.2.0
-        version: 5.2.0
+        specifier: 5.2.2
+        version: 5.2.2
       '@interledger/openapi':
         specifier: 1.2.0
         version: 1.2.0
@@ -443,12 +443,6 @@ importers:
 
   packages/documentation:
     dependencies:
-<<<<<<< HEAD
-=======
-      '@astrojs/react':
-        specifier: ^3.0.3
-        version: 3.0.3(@types/react-dom@18.2.13)(@types/react@18.2.28)(react-dom@18.2.0)(react@18.2.0)(vite@4.4.11)
->>>>>>> 8785f31e (feat(backend, mock-ase): rename payment pointer to wallet address in rafiki code (#2029))
       '@astrojs/starlight':
         specifier: ^0.11.1
         version: 0.11.1(astro@3.3.2)
@@ -983,29 +977,6 @@ packages:
       prismjs: 1.29.0
     dev: false
 
-<<<<<<< HEAD
-=======
-  /@astrojs/react@3.0.3(@types/react-dom@18.2.13)(@types/react@18.2.28)(react-dom@18.2.0)(react@18.2.0)(vite@4.4.11):
-    resolution: {integrity: sha512-foliIy1whJobo+ZpsvOMS4WCiR0z4/2Seyxth5xMlweVVM+gA1Lqk0GdzE6F0ISUW9CuXrCRS7ZyTNW8SM6vog==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      '@types/react': ^17.0.50 || ^18.0.21
-      '@types/react-dom': ^17.0.17 || ^18.0.6
-      react: ^17.0.2 || ^18.0.0
-      react-dom: ^17.0.2 || ^18.0.0
-    dependencies:
-      '@types/react': 18.2.28
-      '@types/react-dom': 18.2.13
-      '@vitejs/plugin-react': 4.0.4(vite@4.4.11)
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      ultrahtml: 1.3.0
-    transitivePeerDependencies:
-      - supports-color
-      - vite
-    dev: false
-
->>>>>>> 8785f31e (feat(backend, mock-ase): rename payment pointer to wallet address in rafiki code (#2029))
   /@astrojs/sitemap@3.0.0:
     resolution: {integrity: sha512-qm7npHuUW4q3OOmulqhJ1g69jEQu0Sdc6P8NbOzqIoosj/L+3v4i8dtKBnp6n1UQ4Sx8H8Vdi3Z/On7i9/ZJhw==}
     dependencies:
@@ -4347,8 +4318,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/open-payments@5.2.0:
-    resolution: {integrity: sha512-Rt1ypzDkEimLky2QoJ1cTPkjr0esxGwzoj7rTLwNiT9B5SY30O+dVXhw3AYa3dK4FDwGgDQOQHJlPEHwzrXZng==}
+  /@interledger/open-payments@5.2.2:
+    resolution: {integrity: sha512-Tp65PDdgwX/Uc47zbuYpOoFAs9k4wV99LBKhEu804zBWeAmWy5ULRsJwDabSgqgmdnjkRhFJEmO/HOxVqb9rTg==}
     dependencies:
       '@interledger/http-signature-utils': 1.1.0
       '@interledger/openapi': 1.2.0
@@ -4362,22 +4333,6 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/openapi@1.0.3:
-    resolution: {integrity: sha512-Xx/Me2tj8DhHpQR9cVjioX/DAUmQnaXWjt8hEVPIru4pDSMHCGG0RmpU2dV+aIiVmkDM2OvJUfKoLGsPVStqrA==}
-    dependencies:
-      '@apidevtools/json-schema-ref-parser': 10.1.0
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
-      koa: 2.14.2
-      openapi-default-setter: 12.1.0
-      openapi-request-coercer: 12.1.0
-      openapi-request-validator: 12.1.0
-      openapi-response-validator: 12.1.0
-      openapi-types: 12.1.3
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
   /@interledger/openapi@1.2.0:
     resolution: {integrity: sha512-1+EglSaJfQd/p2a/odIs94xwaOmotWDAZjBT4J0TxXORT2gez83xpUg4mo36t4lD3sjVbHbARqTKiSg2P2jLnw==}
     dependencies:
@@ -4385,17 +4340,10 @@ packages:
       ajv: 8.12.0
       ajv-formats: 2.1.1(ajv@8.12.0)
       koa: 2.14.2
-<<<<<<< HEAD
-      openapi-default-setter: 12.1.0
-      openapi-request-coercer: 12.1.0
-      openapi-request-validator: 12.1.0
-      openapi-response-validator: 12.1.0
-=======
       openapi-default-setter: 12.1.3
       openapi-request-coercer: 12.1.3
       openapi-request-validator: 12.1.3
       openapi-response-validator: 12.1.3
->>>>>>> 8785f31e (feat(backend, mock-ase): rename payment pointer to wallet address in rafiki code (#2029))
       openapi-types: 12.1.3
     transitivePeerDependencies:
       - supports-color
@@ -6320,24 +6268,6 @@ packages:
     resolution: {integrity: sha512-17kVyLq3ePTKOkveHxXuIJZtGYs+cSoev7BlP+Lf4916qfDhk/HBjvlYDe8egrea7LNPHKwSZJK/bzZC+Q6AwQ==}
     dev: true
 
-<<<<<<< HEAD
-=======
-  /@vitejs/plugin-react@4.0.4(vite@4.4.11):
-    resolution: {integrity: sha512-7wU921ABnNYkETiMaZy7XqpueMnpu5VxvVps13MjmCo+utBdD79sZzrApHawHtVX66cCJQQTXFcjH0y9dSUK8g==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    peerDependencies:
-      vite: ^4.2.0
-    dependencies:
-      '@babel/core': 7.22.10
-      '@babel/plugin-transform-react-jsx-self': 7.22.5(@babel/core@7.22.10)
-      '@babel/plugin-transform-react-jsx-source': 7.22.5(@babel/core@7.22.10)
-      react-refresh: 0.14.0
-      vite: 4.4.11
-    transitivePeerDependencies:
-      - supports-color
-    dev: false
-
->>>>>>> 8785f31e (feat(backend, mock-ase): rename payment pointer to wallet address in rafiki code (#2029))
   /@web3-storage/multipart-parser@1.0.0:
     resolution: {integrity: sha512-BEO6al7BYqcnfX15W2cnGR+Q566ACXAT9UQykORCWW80lmkpWsnEob6zJS1ZVBKsSJC8+7vJkHwlp+lXG1UCdw==}
 
@@ -13839,20 +13769,8 @@ packages:
       is-wsl: 2.2.0
     dev: true
 
-  /openapi-default-setter@12.1.0:
-    resolution: {integrity: sha512-nk08UIlCr/kNpH5r7QVmjmMeapFLwJZCqesCxEciu+wuRKrq9YU/gx/D5hhRObtfpo/7ee49MJU4vwPCO65C1A==}
-    dependencies:
-      openapi-types: 12.1.3
-    dev: false
-
   /openapi-default-setter@12.1.3:
     resolution: {integrity: sha512-wHKwvEuOWwke5WcQn8pyCTXT5WQ+rm9FpJmDeEVECEBWjEyB/MVLYfXi+UQeSHTTu2Tg4VDHHmzbjOqN6hYeLQ==}
-    dependencies:
-      openapi-types: 12.1.3
-    dev: false
-
-  /openapi-jsonschema-parameters@12.1.0:
-    resolution: {integrity: sha512-JmJfBHAomeWefA9HAu5Ee9VDtLRG6C2jVwOjHXvBL8BcRw65ibYTmWMvA7MIYbPT1WHe1waUzw4An7a+Nr/RWg==}
     dependencies:
       openapi-types: 12.1.3
     dev: false
@@ -13863,29 +13781,11 @@ packages:
       openapi-types: 12.1.3
     dev: false
 
-  /openapi-request-coercer@12.1.0:
-    resolution: {integrity: sha512-fcZSwRsE/L5coxLhCUCa7LMFBJl8lVbihkR8yXbgLr6jAKHXsKGDB9UWVyZCkJecdROSNwUHmBsnN9kScN27Aw==}
-    dependencies:
-      openapi-types: 12.1.3
-      ts-log: 2.2.4
-    dev: false
-
   /openapi-request-coercer@12.1.3:
     resolution: {integrity: sha512-CT2ZDhBmAZpHhAzHhEN+/J5oMK3Ds99ayLLdXh2Aw1DCcn72EM8VuIGVwG5fSjvkMsgtn7FgltFosHqeM6PRFQ==}
     dependencies:
       openapi-types: 12.1.3
       ts-log: 2.2.5
-    dev: false
-
-  /openapi-request-validator@12.1.0:
-    resolution: {integrity: sha512-WbcX/mrRGq0GBOqf/Rv4X0vY2WUO1ZmOjrWsnRByEIIJ/6LDWVUqlgEnpVEzpDN8Z2/XoK+YPcFnqIalFmn3sA==}
-    dependencies:
-      ajv: 8.12.0
-      ajv-formats: 2.1.1(ajv@8.12.0)
-      content-type: 1.0.4
-      openapi-jsonschema-parameters: 12.1.0
-      openapi-types: 12.1.3
-      ts-log: 2.2.4
     dev: false
 
   /openapi-request-validator@12.1.3:
@@ -13897,13 +13797,6 @@ packages:
       openapi-jsonschema-parameters: 12.1.3
       openapi-types: 12.1.3
       ts-log: 2.2.5
-    dev: false
-
-  /openapi-response-validator@12.1.0:
-    resolution: {integrity: sha512-GavGFToPoCt6iF5IZXfyXggmu4urNYmC0FN4CLJF5y8mbwWviI73Te5fybiUE2TmXvvaGSs9EKumSX7Ibxv6Sw==}
-    dependencies:
-      ajv: 8.12.0
-      openapi-types: 12.1.3
     dev: false
 
   /openapi-response-validator@12.1.3:
@@ -14568,15 +14461,6 @@ packages:
       nanoid: 3.3.6
       picocolors: 1.0.0
       source-map-js: 1.0.2
-
-  /postcss@8.4.31:
-    resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
-    engines: {node: ^10 || ^12 || >=14}
-    dependencies:
-      nanoid: 3.3.6
-      picocolors: 1.0.0
-      source-map-js: 1.0.2
-    dev: false
 
   /postgres-array@2.0.0:
     resolution: {integrity: sha512-VpZrUqU5A69eQyW2c5CA1jtLecCsN2U/bD6VilrFDWq5+5UIEVO7nazS3TEcHf1zuPYO/sqGvUvW62g86RXZuA==}
@@ -15467,14 +15351,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: 2.3.3
-
-  /rollup@3.29.4:
-    resolution: {integrity: sha512-oWzmBZwvYrU0iJHtDmhsm662rC15FRXmcjCk1xD771dFDx5jJ02ufAQQTn0etB2emNk4J9EZg/yWKpsn9BWGRw==}
-    engines: {node: '>=14.18.0', npm: '>=8.0.0'}
-    hasBin: true
-    optionalDependencies:
-      fsevents: 2.3.3
-    dev: false
 
   /rosie@2.1.0:
     resolution: {integrity: sha512-Dbzdc+prLXZuB/suRptDnBUY29SdGvND3bLg6cll8n7PNqzuyCxSlRfrkn8PqjS9n4QVsiM7RCvxCkKAkTQRjA==}
@@ -16516,6 +16392,7 @@ packages:
 
   /ts-log@2.2.4:
     resolution: {integrity: sha512-DEQrfv6l7IvN2jlzc/VTdZJYsWUnQNCsueYjMkC/iXoEoi5fNan6MjeDqkvhfzbmHgdz9UxDUluX3V5HdjTydQ==}
+    dev: true
 
   /ts-log@2.2.5:
     resolution: {integrity: sha512-PGcnJoTBnVGy6yYNFxWVNkdcAuAMstvutN9MgDJIV6L0oG8fB+ZNNy1T+wJzah8RPGor1mZuPQkVfXNDpy9eHA==}
@@ -17116,41 +16993,6 @@ packages:
       - supports-color
       - terser
     dev: true
-
-  /vite@4.4.11:
-    resolution: {integrity: sha512-ksNZJlkcU9b0lBwAGZGGaZHCMqHsc8OpgtoYhsQ4/I2v5cnpmmmqe5pM4nv/4Hn6G/2GhTdj0DhZh2e+Er1q5A==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': '>= 14'
-      less: '*'
-      lightningcss: ^1.21.0
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      lightningcss:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      esbuild: 0.18.20
-      postcss: 8.4.31
-      rollup: 3.29.4
-    optionalDependencies:
-      fsevents: 2.3.3
-    dev: false
 
   /vite@4.4.9(@types/node@18.11.9):
     resolution: {integrity: sha512-2mbUn2LlUmNASWwSCNSJ/EG2HuSRTnVNaydp6vMCm5VIqJsjMfbIWtbH2kDuwUVW5mMUKKZvGPX/rqeqVvv1XA==}

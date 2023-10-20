@@ -14,7 +14,7 @@ import {
   mockPendingGrant,
   mockGrant,
   mockWalletAddress,
-  mockIncomingPaymentWithConnection
+  mockIncomingPaymentWithPaymentMethods
 } from '@interledger/open-payments'
 import { GrantService } from '../../grant/service'
 import { RemoteIncomingPaymentError } from './errors'
@@ -130,7 +130,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           ...args,
           walletAddressUrl: walletAddress.id
         })
@@ -149,11 +149,12 @@ describe('Remote Incoming Payment Service', (): void => {
         expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
         expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
           {
-            walletAddress: walletAddress.id,
+            url: walletAddress.id,
             accessToken: grant.accessToken
           },
           {
             ...args,
+            walletAddress: walletAddress.id,
             expiresAt: args.expiresAt
               ? args.expiresAt.toISOString()
               : undefined,
@@ -197,7 +198,7 @@ describe('Remote Incoming Payment Service', (): void => {
             ]
           }
         } as AccessToken
-        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           ...args,
           walletAddressUrl: walletAddress.id
         })
@@ -230,13 +231,14 @@ describe('Remote Incoming Payment Service', (): void => {
             expect(incomingPayment).toStrictEqual(mockedIncomingPayment)
             expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
               {
-                walletAddress: walletAddress.id,
+                url: walletAddress.id,
                 accessToken: grant.expired
                   ? newToken.access_token.value
                   : grant.accessToken
               },
               {
                 ...args,
+                walletAddress: walletAddress.id,
                 expiresAt: args.expiresAt
                   ? args.expiresAt.toISOString()
                   : undefined,
@@ -270,7 +272,7 @@ describe('Remote Incoming Payment Service', (): void => {
         ${undefined}   | ${undefined}                     | ${undefined}
         ${amount}      | ${new Date(Date.now() + 30_000)} | ${{ description: 'Test incoming payment', externalRef: '#123' }}
       `('creates remote incoming payment ($#)', async (args): Promise<void> => {
-        const mockedIncomingPayment = mockIncomingPaymentWithConnection({
+        const mockedIncomingPayment = mockIncomingPaymentWithPaymentMethods({
           ...args,
           walletAddressUrl: walletAddress.id
         })
@@ -316,11 +318,12 @@ describe('Remote Incoming Payment Service', (): void => {
         })
         expect(clientCreateIncomingPaymentSpy).toHaveBeenCalledWith(
           {
-            walletAddress: walletAddress.id,
+            url: walletAddress.id,
             accessToken: grant.access_token.value
           },
           {
             ...args,
+            walletAddress: walletAddress.id,
             expiresAt: args.expiresAt
               ? args.expiresAt.toISOString()
               : undefined,

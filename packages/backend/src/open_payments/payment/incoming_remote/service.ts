@@ -1,6 +1,6 @@
 import {
   AuthenticatedClient,
-  IncomingPayment as OpenPaymentsIncomingPayment,
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
   isPendingGrant,
   AccessAction,
   WalletAddress as OpenPaymentsWalletAddress
@@ -24,7 +24,9 @@ interface CreateRemoteIncomingPaymentArgs {
 export interface RemoteIncomingPaymentService {
   create(
     args: CreateRemoteIncomingPaymentArgs
-  ): Promise<OpenPaymentsIncomingPayment | RemoteIncomingPaymentError>
+  ): Promise<
+    OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
+  >
 }
 
 interface ServiceDependencies extends BaseService {
@@ -52,7 +54,9 @@ export async function createRemoteIncomingPaymentService(
 async function create(
   deps: ServiceDependencies,
   args: CreateRemoteIncomingPaymentArgs
-): Promise<OpenPaymentsIncomingPayment | RemoteIncomingPaymentError> {
+): Promise<
+  OpenPaymentsIncomingPaymentWithPaymentMethods | RemoteIncomingPaymentError
+> {
   const { walletAddressUrl } = args
   const grantOrError = await getGrant(deps, walletAddressUrl, [
     AccessAction.Create,

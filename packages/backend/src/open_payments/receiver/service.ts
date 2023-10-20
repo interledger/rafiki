@@ -1,12 +1,11 @@
 import {
   AuthenticatedClient,
-  IncomingPayment as OpenPaymentsIncomingPayment,
-  ILPStreamConnection as OpenPaymentsConnection,
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods,
   isPendingGrant,
   AccessType,
   AccessAction
 } from '@interledger/open-payments'
-import { ConnectionService } from '../connection/service'
+import { StreamCredentialsService } from '../../payment-method/ilp/stream-credentials/service'
 import { Grant } from '../grant/model'
 import { GrantService } from '../grant/service'
 import { WalletAddressService } from '../wallet_address/service'
@@ -30,14 +29,14 @@ interface CreateReceiverArgs {
   metadata?: Record<string, unknown>
 }
 
-// A receiver is resolved from an incoming payment or a connection
+// A receiver is resolved from an incoming payment
 export interface ReceiverService {
   get(url: string): Promise<Receiver | undefined>
   create(args: CreateReceiverArgs): Promise<Receiver | ReceiverError>
 }
 
 interface ServiceDependencies extends BaseService {
-  connectionService: ConnectionService
+  streamCredentialsService: StreamCredentialsService
   grantService: GrantService
   incomingPaymentService: IncomingPaymentService
   openPaymentsUrl: string
@@ -46,7 +45,6 @@ interface ServiceDependencies extends BaseService {
   remoteIncomingPaymentService: RemoteIncomingPaymentService
 }
 
-const CONNECTION_URL_REGEX = /\/connections\/(.){36}$/
 const INCOMING_PAYMENT_URL_REGEX =
   /(?<walletAddressUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
 
@@ -84,7 +82,7 @@ async function createReceiver(
   }
 
   try {
-    return Receiver.fromIncomingPayment(incomingPaymentOrError)
+    return new Receiver(incomingPaymentOrError)
   } catch (error) {
     const errorMessage = 'Could not create receiver from incoming payment'
     deps.logger.error(
@@ -105,7 +103,7 @@ async function createLocalIncomingPayment(
   deps: ServiceDependencies,
   args: CreateReceiverArgs,
   walletAddress: WalletAddress
-): Promise<OpenPaymentsIncomingPayment | ReceiverError> {
+): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | ReceiverError> {
   const { expiresAt, incomingAmount, metadata } = args
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
@@ -125,75 +123,31 @@ async function createLocalIncomingPayment(
     return incomingPaymentOrError
   }
 
-  const connection = deps.connectionService.get(incomingPaymentOrError)
+  const streamCredentials = deps.streamCredentialsService.get(
+    incomingPaymentOrError
+  )
 
-  if (!connection) {
-    const errorMessage = 'Could not get connection for local incoming payment'
+  if (!streamCredentials) {
+    const errorMessage =
+      'Could not get stream credentials for local incoming payment'
     deps.logger.error({ incomingPaymentOrError }, errorMessage)
 
     throw new Error(errorMessage)
   }
 
-  return incomingPaymentOrError.toOpenPaymentsType(walletAddress, connection)
+  return incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+    walletAddress,
+    streamCredentials
+  )
 }
 
 async function getReceiver(
   deps: ServiceDependencies,
   url: string
 ): Promise<Receiver | undefined> {
-  if (url.match(CONNECTION_URL_REGEX)) {
-    const connection = await getConnection(deps, url)
-    if (connection) {
-      return Receiver.fromConnection(connection)
-    }
-  } else {
-    const incomingPayment = await getIncomingPayment(deps, url)
-    if (incomingPayment) {
-      return Receiver.fromIncomingPayment(incomingPayment)
-    }
-  }
-}
-
-async function getLocalConnection(
-  deps: ServiceDependencies,
-  url: string
-): Promise<OpenPaymentsConnection | undefined> {
-  const incomingPayment = await deps.incomingPaymentService.getByConnection(
-    url.slice(-36)
-  )
-
-  if (!incomingPayment) {
-    return
-  }
-
-  const connection = deps.connectionService.get(incomingPayment)
-
-  if (!connection) {
-    return
-  }
-
-  return connection.toOpenPaymentsType()
-}
-
-async function getConnection(
-  deps: ServiceDependencies,
-  url: string
-): Promise<OpenPaymentsConnection | undefined> {
-  try {
-    if (url.startsWith(`${deps.openPaymentsUrl}/connections/`)) {
-      return await getLocalConnection(deps, url)
-    }
-
-    return await deps.openPaymentsClient.ilpStreamConnection.get({
-      url
-    })
-  } catch (error) {
-    deps.logger.error(
-      { errorMessage: error instanceof Error && error.message },
-      'Could not get connection'
-    )
-
-    return undefined
+  const incomingPayment = await getIncomingPayment(deps, url)
+  if (incomingPayment) {
+    return new Receiver(incomingPayment)
   }
 }
 
@@ -214,7 +168,7 @@ function parseIncomingPaymentUrl(
 async function getIncomingPayment(
   deps: ServiceDependencies,
   url: string
-): Promise<OpenPaymentsIncomingPayment | undefined> {
+): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
   try {
     const urlParseResult = parseIncomingPaymentUrl(url)
     if (!urlParseResult) {
@@ -261,7 +215,7 @@ async function getLocalIncomingPayment({
   deps: ServiceDependencies
   id: string
   walletAddress: WalletAddress
-}): Promise<OpenPaymentsIncomingPayment | undefined> {
+}): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
     id,
     walletAddressId: walletAddress.id
@@ -271,13 +225,16 @@ async function getLocalIncomingPayment({
     return undefined
   }
 
-  const connection = deps.connectionService.get(incomingPayment)
+  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
 
-  if (!connection) {
+  if (!streamCredentials) {
     return undefined
   }
 
-  return incomingPayment.toOpenPaymentsType(walletAddress, connection)
+  return incomingPayment.toOpenPaymentsTypeWithMethods(
+    walletAddress,
+    streamCredentials
+  )
 }
 
 async function getIncomingPaymentGrant(

@@ -1,4 +1,3 @@
-import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
@@ -13,10 +12,11 @@ import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/service'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
+import assert from 'assert'
 
 type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
-  'quoteId'
+  'quoteId' | 'method'
 >
 
 export async function createOutgoingPayment(
@@ -28,7 +28,8 @@ export async function createOutgoingPayment(
     client: options.client,
     receiver: options.receiver,
     validDestination: options.validDestination,
-    exchangeRate: options.exchangeRate
+    exchangeRate: options.exchangeRate,
+    method: 'ilp'
   }
   if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
@@ -36,17 +37,27 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const receiverService = await deps.use('receiverService')
   if (options.validDestination === false) {
+    const walletAddressService = await deps.use('walletAddressService')
     const streamServer = await deps.use('streamServer')
-    const { ilpAddress, sharedSecret } = streamServer.generateCredentials()
-    jest.spyOn(receiverService, 'get').mockResolvedValueOnce(
-      Receiver.fromConnection({
-        id: options.receiver,
-        ilpAddress,
-        sharedSecret: base64url(sharedSecret),
-        assetCode: quote.receiveAmount.assetCode,
-        assetScale: quote.receiveAmount.assetScale
-      })
+    const streamCredentials = streamServer.generateCredentials()
+
+    const incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: options.walletAddressId
+    })
+    const walletAddress = await walletAddressService.get(
+      options.walletAddressId
     )
+    assert(walletAddress)
+    jest
+      .spyOn(receiverService, 'get')
+      .mockResolvedValueOnce(
+        new Receiver(
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            walletAddress,
+            streamCredentials
+          )
+        )
+      )
   }
   const outgoingPaymentOrError = await outgoingPaymentService.create({
     ...options,
@@ -66,7 +77,7 @@ export async function createOutgoingPayment(
 }
 
 interface CreateOutgoingPaymentWithReceiverArgs {
-  receivingWalletAddres: WalletAddress
+  receivingWalletAddress: WalletAddress
   incomingPaymentOptions?: Partial<CreateIncomingPaymentOptions>
   quoteOptions?: Partial<
     Pick<
@@ -101,13 +112,13 @@ export async function createOutgoingPaymentWithReceiver(
 
   const incomingPayment = await createIncomingPayment(deps, {
     ...args.incomingPaymentOptions,
-    walletAddressId: args.receivingWalletAddres.id
+    walletAddressId: args.receivingWalletAddress.id
   })
 
   const connectionService = await deps.use('connectionService')
-  const receiver = Receiver.fromIncomingPayment(
+  const receiver = new Receiver(
     incomingPayment.toOpenPaymentsType(
-      args.receivingWalletAddres,
+      args.receivingWalletAddress,
       connectionService.get(incomingPayment)!
     )
   )
