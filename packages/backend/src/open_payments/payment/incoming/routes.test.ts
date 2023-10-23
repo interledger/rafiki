@@ -80,6 +80,7 @@ describe('Incoming Payment Routes', (): void => {
   })
 
   describe('get/list', (): void => {
+    console.log('incoming get/list walletAddress=', walletAddress)
     getRouteTests({
       getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) =>

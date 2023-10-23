@@ -50,7 +50,9 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex).get(options).withGraphFetched('[asset, fee]')
+  return Quote.query(deps.knex)
+    .get(options)
+    .withGraphFetched('[asset, fee, walletAddress]')
 }
 
 interface QuoteOptionsBase {
@@ -144,7 +146,7 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate,
           additionalFields: quote.additionalFields
         })
-        .withGraphFetched('[asset, fee]')
+        .withGraphFetched('[asset, fee, walletAddress]')
 
       return await finalizeQuote(
         {
@@ -300,5 +302,5 @@ async function getWalletAddressPage(
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee]')
+    .withGraphFetched('[asset, fee, walletAddress]')
 }

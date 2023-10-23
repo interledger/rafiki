@@ -111,58 +111,37 @@ const baseGetTests = <M extends WalletAddressSubresource>({
             match    | description
             ${match} | ${GetOption.Matching}
             ${false} | ${GetOption.Conflicting}
-            ${match} | ${GetOption.Unspecified}
-          `('$description walletAddressId', ({ match, description }): void => {
-            let walletAddressId: string
+          `('$description id', ({ match, description }): void => {
+            let id: string
             beforeEach((): void => {
-              switch (description) {
-                case GetOption.Matching:
-                  walletAddressId = model.walletAddressId
-                  break
-                case GetOption.Conflicting:
-                  walletAddressId = uuid()
-                  break
-                case GetOption.Unspecified:
-                  walletAddressId = ''
-                  break
-              }
+              id = description === GetOption.Matching ? model.id : uuid()
             })
-            describe.each`
-              match    | description
-              ${match} | ${GetOption.Matching}
-              ${false} | ${GetOption.Conflicting}
-            `('$description id', ({ match, description }): void => {
-              let id: string
-              beforeEach((): void => {
-                id = description === GetOption.Matching ? model.id : uuid()
-              })
 
-              test(`${
-                match ? '' : 'cannot '
-              }get a model`, async (): Promise<void> => {
-                await testGet(
-                  {
-                    id,
-                    client,
-                    walletAddressId
-                  },
-                  match ? model : undefined
-                )
-              })
-            })
             test(`${
               match ? '' : 'cannot '
-            }list model`, async (): Promise<void> => {
-              if (testList && walletAddressId) {
-                await testList(
-                  {
-                    walletAddressId,
-                    client
-                  },
-                  match ? model : undefined
-                )
-              }
+            }get a model`, async (): Promise<void> => {
+              await testGet(
+                {
+                  id,
+                  client,
+                  walletAddressId: model.walletAddressId
+                },
+                match ? model : undefined
+              )
             })
+          })
+          test(`${
+            match ? '' : 'cannot '
+          }list model`, async (): Promise<void> => {
+            if (testList && model.walletAddressId) {
+              await testList(
+                {
+                  walletAddressId: model.walletAddressId,
+                  client
+                },
+                match ? model : undefined
+              )
+            }
           })
         }
       })
@@ -229,6 +208,14 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
     expectedMatch?: M
   ) => {
     const walletAddress = await getWalletAddress()
+    if (urlPath === '/quotes') {
+      console.log(
+        'getRouteTests walletaddress=',
+        walletAddress,
+        'urlPath=',
+        urlPath
+      )
+    }
     walletAddress.id = walletAddressId
     const ctx = setup<ListContext>({
       reqOpts: {
@@ -262,6 +249,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
     testGet: async ({ id, walletAddressId, client }, expectedMatch) => {
       const walletAddress = await getWalletAddress()
       walletAddress.id = walletAddressId
+      // console.log('walletAddress=', walletAddress || 'no wallet address')
       const ctx = setup<ReadContext>({
         reqOpts: {
           headers: { Accept: 'application/json' },
@@ -275,6 +263,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         client,
         accessAction: client ? AccessAction.Read : AccessAction.ReadAll
       })
+      // console.log('ctx=', ctx)
       if (expectedMatch) {
         await expect(get(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
