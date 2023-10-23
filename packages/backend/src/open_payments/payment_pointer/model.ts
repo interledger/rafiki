@@ -6,6 +6,7 @@ import { Asset } from '../../asset/model'
 import { BaseModel, Pagination } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 import { PaymentPointerKey } from '../../open_payments/payment_pointer/key/model'
+import { AmountJSON } from '../amount'
 
 export class PaymentPointer
   extends BaseModel
@@ -85,7 +86,11 @@ export class PaymentPointer
       paymentPointer: {
         id: this.id,
         createdAt: new Date(+this.createdAt).toISOString(),
-        received: received.toString()
+        receivedAmount: {
+          value: received.toString(),
+          assetCode: this.asset.code,
+          assetScale: this.asset.scale
+        }
       }
     }
   }
@@ -114,7 +119,7 @@ export type PaymentPointerData = {
   paymentPointer: {
     id: string
     createdAt: string
-    received: string
+    receivedAmount: AmountJSON
   }
 }
 

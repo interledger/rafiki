@@ -18,12 +18,15 @@ import {
   AssetMutationResponse,
   Asset,
   AssetsConnection,
-  CreateAssetInput
+  CreateAssetInput,
+  FeesConnection
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
 import { FeeService } from '../../fee/service'
 import { Fee, FeeType } from '../../fee/model'
 import { isFeeError } from '../../fee/errors'
+import { createFee } from '../../tests/fee'
+import { createAsset } from '../../tests/asset'
 
 describe('Asset Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -432,6 +435,76 @@ describe('Asset Resolvers', (): void => {
           scale: asset.scale,
           withdrawalThreshold: asset.withdrawalThreshold.toString(),
           liquidityThreshold: asset.liquidityThreshold.toString()
+        })
+      })
+    })
+
+    describe('fees query', () => {
+      let assetId: string
+      beforeEach(async (): Promise<void> => {
+        assetId = (await createAsset(deps)).id
+      })
+
+      getPageTests({
+        getClient: () => appContainer.apolloClient,
+        createModel: () => createFee(deps, assetId),
+        pagedQuery: `fees`,
+        parent: {
+          query: 'asset',
+          getId: () => assetId
+        }
+      })
+
+      test('Can get fees', async (): Promise<void> => {
+        const fees: Fee[] = []
+        for (let i = 0; i < 2; i++) {
+          const fee = await createFee(deps, assetId)
+          assert.ok(!isFeeError(fee))
+          fees.push(fee)
+        }
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query Query($assetId: String!) {
+                asset(id: $assetId) {
+                  fees {
+                    edges {
+                      node {
+                        id
+                        type
+                        assetId
+                        basisPoints
+                        fixed
+                      }
+                      cursor
+                    }
+                  }
+                }
+              }
+            `,
+            variables: {
+              assetId
+            }
+          })
+          .then((query): FeesConnection => {
+            if (query.data) {
+              return query.data.asset.fees
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        expect(query.edges).toHaveLength(2)
+        query.edges.forEach((edge, idx) => {
+          const fee = fees[idx]
+          expect(edge.cursor).toEqual(fee.id)
+          expect(edge.node).toEqual({
+            __typename: 'Fee',
+            id: fee.id,
+            type: fee.type,
+            assetId: assetId,
+            basisPoints: fee.basisPointFee,
+            fixed: fee.fixedFee.toString()
+          })
         })
       })
     })

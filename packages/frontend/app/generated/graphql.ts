@@ -68,6 +68,8 @@ export type Asset = Model & {
   code: Scalars['String']['output'];
   /** Date-time of creation */
   createdAt: Scalars['String']['output'];
+  /** Fetch a page of asset fees */
+  fees?: Maybe<FeesConnection>;
   /** Asset id */
   id: Scalars['ID']['output'];
   /** Available liquidity */
@@ -82,6 +84,14 @@ export type Asset = Model & {
   sendingFee?: Maybe<Fee>;
   /** Minimum amount of liquidity that can be withdrawn from the asset */
   withdrawalThreshold?: Maybe<Scalars['UInt64']['output']>;
+};
+
+
+export type AssetFeesArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AssetEdge = {
@@ -347,12 +357,24 @@ export type FeeDetails = {
   fixed: Scalars['UInt64']['input'];
 };
 
+export type FeeEdge = {
+  __typename?: 'FeeEdge';
+  cursor: Scalars['String']['output'];
+  node: Fee;
+};
+
 export enum FeeType {
   /** Receiver pays the fees */
   Receiving = 'RECEIVING',
   /** Sender pays the fees */
   Sending = 'SENDING'
 }
+
+export type FeesConnection = {
+  __typename?: 'FeesConnection';
+  edges: Array<FeeEdge>;
+  pageInfo: PageInfo;
+};
 
 export type FilterString = {
   in: Array<Scalars['String']['input']>;
@@ -1363,7 +1385,9 @@ export type ResolversTypes = {
   DepositEventLiquidityInput: ResolverTypeWrapper<Partial<DepositEventLiquidityInput>>;
   Fee: ResolverTypeWrapper<Partial<Fee>>;
   FeeDetails: ResolverTypeWrapper<Partial<FeeDetails>>;
+  FeeEdge: ResolverTypeWrapper<Partial<FeeEdge>>;
   FeeType: ResolverTypeWrapper<Partial<FeeType>>;
+  FeesConnection: ResolverTypeWrapper<Partial<FeesConnection>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
   Float: ResolverTypeWrapper<Partial<Scalars['Float']['output']>>;
   Http: ResolverTypeWrapper<Partial<Http>>;
@@ -1472,6 +1496,8 @@ export type ResolversParentTypes = {
   DepositEventLiquidityInput: Partial<DepositEventLiquidityInput>;
   Fee: Partial<Fee>;
   FeeDetails: Partial<FeeDetails>;
+  FeeEdge: Partial<FeeEdge>;
+  FeesConnection: Partial<FeesConnection>;
   FilterString: Partial<FilterString>;
   Float: Partial<Scalars['Float']['output']>;
   Http: Partial<Http>;
@@ -1550,6 +1576,7 @@ export type AmountResolvers<ContextType = any, ParentType extends ResolversParen
 export type AssetResolvers<ContextType = any, ParentType extends ResolversParentTypes['Asset'] = ResolversParentTypes['Asset']> = {
   code?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  fees?: Resolver<Maybe<ResolversTypes['FeesConnection']>, ParentType, ContextType, Partial<AssetFeesArgs>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   liquidityThreshold?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
@@ -1642,6 +1669,18 @@ export type FeeResolvers<ContextType = any, ParentType extends ResolversParentTy
   fixed?: Resolver<ResolversTypes['UInt64'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['FeeType'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FeeEdgeResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeeEdge'] = ResolversParentTypes['FeeEdge']> = {
+  cursor?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  node?: Resolver<ResolversTypes['Fee'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FeesConnectionResolvers<ContextType = any, ParentType extends ResolversParentTypes['FeesConnection'] = ResolversParentTypes['FeesConnection']> = {
+  edges?: Resolver<Array<ResolversTypes['FeeEdge']>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes['PageInfo'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -2042,6 +2081,8 @@ export type Resolvers<ContextType = any> = {
   CreateReceiverResponse?: CreateReceiverResponseResolvers<ContextType>;
   DeletePeerMutationResponse?: DeletePeerMutationResponseResolvers<ContextType>;
   Fee?: FeeResolvers<ContextType>;
+  FeeEdge?: FeeEdgeResolvers<ContextType>;
+  FeesConnection?: FeesConnectionResolvers<ContextType>;
   Http?: HttpResolvers<ContextType>;
   HttpOutgoing?: HttpOutgoingResolvers<ContextType>;
   IncomingPayment?: IncomingPaymentResolvers<ContextType>;
@@ -2096,7 +2137,18 @@ export type GetAssetQueryVariables = Exact<{
 }>;
 
 
-export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, liquidity?: bigint | null, withdrawalThreshold?: bigint | null, createdAt: string } | null };
+export type GetAssetQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', id: string, code: string, scale: number, withdrawalThreshold?: bigint | null, liquidity?: bigint | null, createdAt: string, sendingFee?: { __typename?: 'Fee', basisPoints: number, fixed: bigint, createdAt: string } | null } | null };
+
+export type GetAssetWithFeesQueryVariables = Exact<{
+  id: Scalars['String']['input'];
+  after?: InputMaybe<Scalars['String']['input']>;
+  before?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  last?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetAssetWithFeesQuery = { __typename?: 'Query', asset?: { __typename?: 'Asset', fees?: { __typename?: 'FeesConnection', edges: Array<{ __typename?: 'FeeEdge', cursor: string, node: { __typename?: 'Fee', assetId: string, basisPoints: number, createdAt: string, fixed: bigint, id: string, type: FeeType } }>, pageInfo: { __typename?: 'PageInfo', endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean, startCursor?: string | null } } | null } | null };
 
 export type ListAssetsQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2121,6 +2173,13 @@ export type UpdateAssetMutationVariables = Exact<{
 
 
 export type UpdateAssetMutation = { __typename?: 'Mutation', updateAsset: { __typename?: 'AssetMutationResponse', code: string, success: boolean, message: string } };
+
+export type SetFeeMutationVariables = Exact<{
+  input: SetFeeInput;
+}>;
+
+
+export type SetFeeMutation = { __typename?: 'Mutation', setFee: { __typename?: 'SetFeeResponse', code: string, message: string, success: boolean, fee?: { __typename?: 'Fee', assetId: string, basisPoints: number, createdAt: string, fixed: bigint, id: string, type: FeeType } | null } };
 
 export type AddAssetLiquidityMutationVariables = Exact<{
   input: AddAssetLiquidityInput;

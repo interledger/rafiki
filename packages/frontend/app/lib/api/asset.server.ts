@@ -9,10 +9,15 @@ import type {
   CreateAssetMutationVariables,
   GetAssetQuery,
   GetAssetQueryVariables,
+  GetAssetWithFeesQuery,
+  GetAssetWithFeesQueryVariables,
   ListAssetsQuery,
   ListAssetsQueryVariables,
   QueryAssetArgs,
   QueryAssetsArgs,
+  SetFeeInput,
+  SetFeeMutation,
+  SetFeeMutationVariables,
   UpdateAssetInput,
   UpdateAssetMutation,
   UpdateAssetMutationVariables,
@@ -21,7 +26,7 @@ import type {
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
-export const getAsset = async (args: QueryAssetArgs) => {
+export const getAssetInfo = async (args: QueryAssetArgs) => {
   const response = await apolloClient.query<
     GetAssetQuery,
     GetAssetQueryVariables
@@ -32,9 +37,55 @@ export const getAsset = async (args: QueryAssetArgs) => {
           id
           code
           scale
-          liquidity
           withdrawalThreshold
+          liquidity
+          sendingFee {
+            basisPoints
+            fixed
+            createdAt
+          }
           createdAt
+        }
+      }
+    `,
+    variables: args
+  })
+  return response.data.asset
+}
+
+export const getAssetWithFees = async (args: QueryAssetArgs) => {
+  const response = await apolloClient.query<
+    GetAssetWithFeesQuery,
+    GetAssetWithFeesQueryVariables
+  >({
+    query: gql`
+      query GetAssetWithFeesQuery(
+        $id: String!
+        $after: String
+        $before: String
+        $first: Int
+        $last: Int
+      ) {
+        asset(id: $id) {
+          fees(after: $after, before: $before, first: $first, last: $last) {
+            edges {
+              cursor
+              node {
+                assetId
+                basisPoints
+                createdAt
+                fixed
+                id
+                type
+              }
+            }
+            pageInfo {
+              endCursor
+              hasNextPage
+              hasPreviousPage
+              startCursor
+            }
+          }
         }
       }
     `,
@@ -125,6 +176,36 @@ export const updateAsset = async (args: UpdateAssetInput) => {
   })
 
   return response.data?.updateAsset
+}
+
+export const setFee = async (args: SetFeeInput) => {
+  const response = await apolloClient.mutate<
+    SetFeeMutation,
+    SetFeeMutationVariables
+  >({
+    mutation: gql`
+      mutation SetFeeMutation($input: SetFeeInput!) {
+        setFee(input: $input) {
+          code
+          fee {
+            assetId
+            basisPoints
+            createdAt
+            fixed
+            id
+            type
+          }
+          message
+          success
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.setFee
 }
 
 export const addAssetLiquidity = async (args: AddAssetLiquidityInput) => {
