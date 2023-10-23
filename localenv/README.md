@@ -121,13 +121,8 @@ pnpm localenv:autopeer:start:psql
 ```
 
 Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
-The required services will be exposed externally using [ngrok](https://www.npmjs.com/package/ngrok) and [tunnelmole](https://www.npmjs.com/package/tunnelmole) packages.
-Ngrok is used to expose open-payments api and auth api. These apis require a https protocol for correctly validating the requests signatures and ngrok will add X-Forwarded-Proto to secure requests that helps koa to identify requests as secure.
-Tunnelmole package is used for exposing externally ilp connector.
-
-There is no need for ngrok token in case you are planning to try out only the Rafiki Admin APIs requests.
-In case you are looking to test the open payments example with the interaction flow, then the ngrok token should be provided in `~/cloud-nine-wallet/.env` file
-as `NGROK_TOKEN={YOUR TOKEN}`. Ngrok does not serve html without providing the auth token.
+The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
+The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
 
 To use the postman collection examples follow the steps:
 

@@ -1,5 +1,4 @@
 const fs = require('fs')
-const ngrok = require('ngrok')
 const dotenv = require('dotenv')
 const { v4 } = require('uuid')
 
@@ -19,8 +18,8 @@ function checkExistingEnvFile() {
 
 function getEnvs(opUrl, authUrl, connectorUrl) {
   return {
-    // set to "testing" as in "development" - op client is replacing https with http
-    NODE_ENV: 'testing',
+    // set to "autopeer" as in "development" - op client is replacing https with http
+    NODE_ENV: 'autopeer',
     TRUST_PROXY: true,
     TESTNET_AUTOPEER_URL:
       process.env.TESTNET_AUTOPEER_URL ?? 'https://autopeer.rafiki.money',
@@ -50,14 +49,6 @@ async function createTunnel(port) {
   return tunnel
 }
 
-async function createNgrokTunnel(port) {
-  const authtoken = process.env.NGROK_TOKEN
-  const tunnel = await ngrok.connect({ port, authtoken })
-
-  console.log(`Created tunnel for port ${port}: ${tunnel}`)
-  return tunnel
-}
-
 async function connect() {
   console.log('Starting the tunnels and preparing .env file...')
 
@@ -67,8 +58,8 @@ async function connect() {
   tunnelmole = (await import('tunnelmole')).tunnelmole
 
   // use ngrok for X-Forwarded-Proto header
-  const openPaymentsUrl = await createNgrokTunnel(3000)
-  const authUrl = await createNgrokTunnel(3006)
+  const openPaymentsUrl = await createTunnel(3000)
+  const authUrl = await createTunnel(3006)
 
   const connectorUrl = await createTunnel(3002)
 
