@@ -112,10 +112,10 @@ The `pnpm localenv:compose up` command starts both the primary instance and the 
 If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
 
 ```
-pnpm localenv:autopeer:start
+pnpm localenv:compose:autopeer
 
 // OR to start with Postgres db
-pnpm localenv:autopeer:start:psql
+pnpm localenv:compose:psql:autopeer
 ```
 
 Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
