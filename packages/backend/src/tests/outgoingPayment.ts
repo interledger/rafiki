@@ -44,6 +44,7 @@ export async function createOutgoingPayment(
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: options.walletAddressId
     })
+    await incomingPayment.$query().delete()
     const walletAddress = await walletAddressService.get(
       options.walletAddressId
     )
