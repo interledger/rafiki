@@ -157,6 +157,7 @@ describe('Pagination', (): void => {
               const payment = await createOutgoingPayment(deps, {
                 walletAddressId: defaultWalletAddress.id,
                 receiver: secondaryWalletAddress.url,
+                method: 'ilp',
                 debitAmount,
                 validDestination: false
               })

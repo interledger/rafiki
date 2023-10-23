@@ -16,7 +16,7 @@ import assert from 'assert'
 
 type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
-  'quoteId' | 'method'
+  'quoteId'
 >
 
 export async function createOutgoingPayment(
@@ -29,7 +29,7 @@ export async function createOutgoingPayment(
     receiver: options.receiver,
     validDestination: options.validDestination,
     exchangeRate: options.exchangeRate,
-    method: 'ilp'
+    method: options.method
   }
   if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
@@ -78,6 +78,7 @@ export async function createOutgoingPayment(
 
 interface CreateOutgoingPaymentWithReceiverArgs {
   receivingWalletAddress: WalletAddress
+  method: 'ilp',
   incomingPaymentOptions?: Partial<CreateIncomingPaymentOptions>
   quoteOptions?: Partial<
     Pick<
@@ -115,16 +116,15 @@ export async function createOutgoingPaymentWithReceiver(
     walletAddressId: args.receivingWalletAddress.id
   })
 
-  const connectionService = await deps.use('connectionService')
   const receiver = new Receiver(
-    incomingPayment.toOpenPaymentsType(
-      args.receivingWalletAddress,
-      connectionService.get(incomingPayment)!
+    incomingPayment.toOpenPaymentsTypeWithMethods(
+      args.receivingWalletAddress
     )
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
     walletAddressId: args.sendingWalletAddress.id,
+    method: args.method,
     receiver: receiver.incomingPayment!.id!,
     ...args.quoteOptions
   })

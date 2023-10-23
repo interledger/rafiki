@@ -43,6 +43,7 @@ describe('Outgoing Payment Routes', (): void => {
     return await createOutgoingPayment(deps, {
       ...options,
       walletAddressId: walletAddress.id,
+      method: 'ilp',
       receiver: `${receivingWalletAddress}/incoming-payments/${uuid()}`,
       debitAmount: {
         value: BigInt(56),

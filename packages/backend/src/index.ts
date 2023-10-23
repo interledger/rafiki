@@ -435,7 +435,7 @@ export function initIocContainer(
         'paymentMethodHandlerService'
       ),
       peerService: await deps.use('peerService'),
-      paymentPointerService: await deps.use('paymentPointerService')
+      walletAddressService: await deps.use('walletAddressService')
     })
   })
   container.singleton('outgoingPaymentRoutes', async (deps) => {

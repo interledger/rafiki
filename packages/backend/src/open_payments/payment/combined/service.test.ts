@@ -66,6 +66,7 @@ describe('Combined Payment Service', (): void => {
 
     const outgoingPayment = await createOutgoingPayment(deps, {
       walletAddressId: sendWalletAddressId,
+      method: 'ilp',
       receiver: receiverUrl,
       debitAmount: {
         value: BigInt(123),
