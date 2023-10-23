@@ -116,9 +116,13 @@ export async function createOutgoingPaymentWithReceiver(
     walletAddressId: args.receivingWalletAddress.id
   })
 
+  const streamServer = await deps.use('streamServer')
+  const streamCredentials = streamServer.generateCredentials()
+
   const receiver = new Receiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(
-      args.receivingWalletAddress
+      args.receivingWalletAddress,
+      streamCredentials
     )
   )
 
