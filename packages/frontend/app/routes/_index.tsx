@@ -4,8 +4,7 @@ export default function Index() {
   return (
     <div className='pt-4 flex flex-col'>
       <div
-        className='flex flex-col rounded-md bg-offwhite px-6 text-center'
-        style={{ minHeight: 'calc(100vh - 3rem)' }}
+        className='flex flex-col rounded-md bg-offwhite px-6 text-center min-h-[calc(100vh-3rem)]'
       >
         <div className='p-10 space-y-16'>
           <h1 className='text-9xl pt-16 text-[#F37F64]'>Rafiki Admin</h1>
