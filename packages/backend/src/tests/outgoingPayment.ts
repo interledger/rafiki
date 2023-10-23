@@ -44,6 +44,7 @@ export async function createOutgoingPayment(
     const incomingPayment = await createIncomingPayment(deps, {
       walletAddressId: options.walletAddressId
     })
+    await incomingPayment.$query().delete()
     const walletAddress = await walletAddressService.get(
       options.walletAddressId
     )
@@ -78,7 +79,7 @@ export async function createOutgoingPayment(
 
 interface CreateOutgoingPaymentWithReceiverArgs {
   receivingWalletAddress: WalletAddress
-  method: 'ilp',
+  method: 'ilp'
   incomingPaymentOptions?: Partial<CreateIncomingPaymentOptions>
   quoteOptions?: Partial<
     Pick<
@@ -116,8 +117,8 @@ export async function createOutgoingPaymentWithReceiver(
     walletAddressId: args.receivingWalletAddress.id
   })
 
-  const streamServer = await deps.use('streamServer')
-  const streamCredentials = streamServer.generateCredentials()
+  const streamCredentialsService = await deps.use('streamCredentialsService')
+  const streamCredentials = await streamCredentialsService.get(incomingPayment)
 
   const receiver = new Receiver(
     incomingPayment.toOpenPaymentsTypeWithMethods(
