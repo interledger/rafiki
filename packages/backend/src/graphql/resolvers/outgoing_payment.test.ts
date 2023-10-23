@@ -64,6 +64,7 @@ describe('OutgoingPayment Resolvers', (): void => {
   }): Promise<OutgoingPaymentModel> => {
     return await createOutgoingPayment(deps, {
       ...options,
+      method: 'ilp',
       receiver: `${Config.publicHost}/${uuid()}`,
       debitAmount: {
         value: BigInt(56),

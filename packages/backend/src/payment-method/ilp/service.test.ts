@@ -368,13 +368,13 @@ describe('IlpPaymentService', (): void => {
                   [incomingAssetCode]: exchangeRate
                 }))
 
-                const receivingPaymentPointer =
+                const receivingWalletAddress =
                   walletAddressMap[incomingAssetCode]
                 const sendingWalletAddress = walletAddressMap[debitAssetCode]
 
                 const options: StartQuoteOptions = {
                   walletAddress: sendingWalletAddress,
-                  receiver: await createReceiver(deps, receivingPaymentPointer),
+                  receiver: await createReceiver(deps, receivingWalletAddress),
                   debitAmount: {
                     assetCode: sendingWalletAddress.asset.code,
                     assetScale: sendingWalletAddress.asset.scale,
@@ -391,8 +391,8 @@ describe('IlpPaymentService', (): void => {
                     value: debitAmountValue
                   },
                   receiveAmount: {
-                    assetCode: receivingPaymentPointer.asset.code,
-                    assetScale: receivingPaymentPointer.asset.scale,
+                    assetCode: receivingWalletAddress.asset.code,
+                    assetScale: receivingWalletAddress.asset.scale,
                     value: expectedReceiveAmount
                   }
                 })
@@ -447,7 +447,8 @@ describe('IlpPaymentService', (): void => {
       const { incomingPayment, receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             debitAmount: {
               value: 100n,
@@ -476,7 +477,8 @@ describe('IlpPaymentService', (): void => {
       const { incomingPayment, receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             exchangeRate: 1,
             debitAmount: {
@@ -525,7 +527,8 @@ describe('IlpPaymentService', (): void => {
       const { incomingPayment, receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             debitAmount: {
               value: 100n,
@@ -563,7 +566,8 @@ describe('IlpPaymentService', (): void => {
       const { incomingPayment, receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             debitAmount: {
               value: 100n,
@@ -601,7 +605,8 @@ describe('IlpPaymentService', (): void => {
       const { receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             debitAmount: {
               value: 100n,
@@ -636,7 +641,8 @@ describe('IlpPaymentService', (): void => {
       const { receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             debitAmount: {
               value: 100n,
@@ -675,7 +681,8 @@ describe('IlpPaymentService', (): void => {
       const { receiver, outgoingPayment } =
         await createOutgoingPaymentWithReceiver(deps, {
           sendingWalletAddress: walletAddressMap['USD'],
-          receivingPaymentPointer: walletAddressMap['USD'],
+          receivingWalletAddress: walletAddressMap['USD'],
+          method: 'ilp',
           quoteOptions: {
             debitAmount: {
               value: 100n,

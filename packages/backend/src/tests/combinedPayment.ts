@@ -54,6 +54,7 @@ export async function createCombinedPayment(
         })
       : await createOutgoingPayment(deps, {
           walletAddressId: sendWalletAddressId,
+          method: 'ilp',
           receiver: `${Config.publicHost}/${uuid()}`,
           validDestination: false
         })
