@@ -1729,7 +1729,7 @@
 									"protocol": "http",
 									"host": [
 										"localhost"
-f									],
+									],
 									"port": "4000",
 									"path": [
 										"incoming-payments",
