@@ -150,7 +150,7 @@ export default function ViewAssetPage() {
               <Button
                 aria-label='view asset fees page'
                 type='button'
-                to={`/assets/view-fees/${asset.id}`}
+                to={`/assets/${asset.id}/fee-history`}
               >
                 Fee history
               </Button>
@@ -174,7 +174,8 @@ export default function ViewAssetPage() {
                     error={response?.errors.sendingFee.fieldErrors.basisPoints}
                   />
                   <p className='text-gray-500 text-sm mt-2'>
-                    A single basis point is equal to 0.01% of the total fee.
+                    A single basis point is a fee equal to 0.01% of the total
+                    amount. A fee of 1 basis point on $100 is $0.01.
                   </p>
                   <div className='flex justify-end p-4'>
                     <Button

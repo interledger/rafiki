@@ -45,11 +45,11 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     nextPageUrl = ''
 
   if (fees?.pageInfo.hasPreviousPage) {
-    previousPageUrl = `/assets/view-fees/${assetId}?before=${fees.pageInfo.startCursor}`
+    previousPageUrl = `/assets/${assetId}/fee-history?before=${fees.pageInfo.startCursor}`
   }
 
   if (fees?.pageInfo.hasNextPage) {
-    nextPageUrl = `/assets/view-fees/${assetId}?after=${fees.pageInfo.endCursor}`
+    nextPageUrl = `/assets/${assetId}/fee-history?after=${fees.pageInfo.endCursor}`
   }
 
   return json({ assetId, fees, previousPageUrl, nextPageUrl })
