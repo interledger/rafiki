@@ -2,8 +2,9 @@ import { ForeignKeyViolationError } from 'objection'
 import { BaseService } from '../shared/baseService'
 import { FeeError } from './errors'
 import { Fee, FeeType } from './model'
+import { Pagination } from '../shared/baseModel'
 
-interface CreateOptions {
+export interface CreateOptions {
   assetId: string
   type: FeeType
   fee: {
@@ -14,6 +15,7 @@ interface CreateOptions {
 
 export interface FeeService {
   create(CreateOptions: CreateOptions): Promise<Fee | FeeError>
+  getPage(assetId: string, pagination?: Pagination): Promise<Fee[]>
   getLatestFee(assetId: string, type: FeeType): Promise<Fee | undefined>
 }
 
@@ -31,9 +33,21 @@ export async function createFeeService({
   }
   return {
     create: (options: CreateOptions) => createFee(deps, options),
+    getPage: (assetId: string, pagination: Pagination) =>
+      getFeesPage(deps, assetId, pagination),
     getLatestFee: (assetId: string, type: FeeType) =>
       getLatestFee(deps, assetId, type)
   }
+}
+
+async function getFeesPage(
+  deps: ServiceDependencies,
+  assetId: string,
+  pagination?: Pagination
+): Promise<Fee[]> {
+  const query = Fee.query(deps.knex).where({ assetId }).getPage(pagination)
+
+  return await query
 }
 
 async function getLatestFee(

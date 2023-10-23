@@ -11,6 +11,9 @@ import { Asset } from '../asset/model'
 import { Fee, FeeType } from './model'
 import { v4 } from 'uuid'
 import { FeeError } from './errors'
+import { getPageTests } from '../shared/baseModel.test'
+import { createFee } from '../tests/fee'
+import { Pagination } from '../shared/baseModel'
 
 describe('Fee Service', (): void => {
   let deps: IocContract<AppServices>
@@ -151,6 +154,14 @@ describe('Fee Service', (): void => {
       it('should return undefined if no fees exist for the given asset', async (): Promise<void> => {
         const latestFee = await feeService.getLatestFee(v4(), FeeType.Sending)
         expect(latestFee).toBeUndefined()
+      })
+    })
+
+    describe('Fee pagination', (): void => {
+      getPageTests({
+        createModel: () => createFee(deps, asset.id),
+        getPage: (pagination?: Pagination) =>
+          feeService.getPage(asset.id, pagination)
       })
     })
   })

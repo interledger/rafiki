@@ -442,6 +442,17 @@ type Asset implements Model {
   receivingFee: Fee
   "The sending fee structure for the asset"
   sendingFee: Fee
+  "Fetch a page of asset fees"
+  fees(
+    "Paginating forwards: the cursor before the the requested page."
+    after: String
+    "Paginating backwards: the cursor after the the requested page."
+    before: String
+    "Paginating forwards: The first **n** elements from the page."
+    first: Int
+    "Paginating backwards: The last **n** elements from the page."
+    last: Int
+  ): FeesConnection
   "Date-time of creation"
   createdAt: String!
 }
@@ -979,6 +990,16 @@ input FeeDetails {
   fixed: UInt64!
   "Basis points fee. Should be between 0 and 10000 (inclusive). 1 basis point = 0.01%, 100 basis points = 1%, 10000 basis points = 100%"
   basisPoints: Int!
+}
+
+type FeesConnection {
+  pageInfo: PageInfo!
+  edges: [FeeEdge!]!
+}
+
+type FeeEdge {
+  node: Fee!
+  cursor: String!
 }
 
 input WebhookEventFilter {
