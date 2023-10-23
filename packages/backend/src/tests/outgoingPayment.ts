@@ -13,6 +13,7 @@ import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
 import assert from 'assert'
+import { IlpAddress } from 'ilp-packet'
 
 type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
@@ -116,12 +117,11 @@ export async function createOutgoingPaymentWithReceiver(
     walletAddressId: args.receivingWalletAddress.id
   })
 
-  const connectionService = await deps.use('connectionService')
   const receiver = new Receiver(
-    incomingPayment.toOpenPaymentsType(
-      args.receivingWalletAddress,
-      connectionService.get(incomingPayment)!
-    )
+    incomingPayment.toOpenPaymentsTypeWithMethods(args.receivingWalletAddress, {
+      ilpAddress: 'test.ilp' as IlpAddress,
+      sharedSecret: Buffer.from('')
+    })
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
