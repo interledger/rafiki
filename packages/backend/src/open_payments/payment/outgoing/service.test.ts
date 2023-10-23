@@ -1101,44 +1101,42 @@ describe('OutgoingPaymentService', (): void => {
         receiveAmount
       )
 
-      await processNext(paymentId, OutgoingPaymentState.Completed)
-      // Pretend that the transaction didn't commit.
-      await OutgoingPayment.query(knex)
-        .findById(paymentId)
-        .patch({ state: OutgoingPaymentState.Sending })
-      const payment = await processNext(
+      const { id: assetId } = await createAsset(deps, {
+        code: asset.code,
+        scale: asset.scale + 1
+      })
+
+      await OutgoingPayment.relatedQuery('walletAddress').for(paymentId).patch({
+        assetId
+      })
+
+      await processNext(
         paymentId,
-        OutgoingPaymentState.Completed
+        OutgoingPaymentState.Failed,
+        LifecycleError.SourceAssetConflict
       )
-      const sentAmount = payment.receiveAmount.value * BigInt(2)
-      await expectOutcome(payment, {
-        accountBalance: payment.debitAmount.value - sentAmount,
-        amountSent: sentAmount,
-        amountDelivered: payment.receiveAmount.value
+    })
+    test('FAILED (destination asset changed)', async (): Promise<void> => {
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
       })
 
-      test('FAILED (destination asset changed)', async (): Promise<void> => {
-        const createdPayment = await setup({
-          receiver,
-          debitAmount,
-          method: 'ilp'
+      // Pretend that the destination asset was initially different.
+      await OutgoingPayment.relatedQuery('quote')
+        .for(createdPayment.id)
+        .patch({
+          receiveAmount: {
+            ...receiveAmount,
+            assetScale: 55
+          }
         })
-
-        // Pretend that the destination asset was initially different.
-        await OutgoingPayment.relatedQuery('quote')
-          .for(createdPayment.id)
-          .patch({
-            receiveAmount: {
-              ...receiveAmount,
-              assetScale: 55
-            }
-          })
-        await processNext(
-          createdPayment.id,
-          OutgoingPaymentState.Failed,
-          LifecycleError.DestinationAssetConflict
-        )
-      })
+      await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        LifecycleError.DestinationAssetConflict
+      )
     })
   })
 
