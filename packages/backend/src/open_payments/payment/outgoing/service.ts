@@ -29,10 +29,6 @@ import {
   WalletAddressService,
   WalletAddressSubresourceService
 } from '../../wallet_address/service'
-import {
-  IlpPlugin,
-  IlpPluginOptions
-} from '../../../payment-method/ilp/ilp_plugin'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
@@ -56,7 +52,7 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
-  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
+  paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
 }
 
