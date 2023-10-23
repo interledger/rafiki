@@ -208,6 +208,14 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
     expectedMatch?: M
   ) => {
     const walletAddress = await getWalletAddress()
+    if (urlPath === '/quotes') {
+      console.log(
+        'getRouteTests walletaddress=',
+        walletAddress,
+        'urlPath=',
+        urlPath
+      )
+    }
     walletAddress.id = walletAddressId
     const ctx = setup<ListContext>({
       reqOpts: {
@@ -241,6 +249,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
     testGet: async ({ id, walletAddressId, client }, expectedMatch) => {
       const walletAddress = await getWalletAddress()
       walletAddress.id = walletAddressId
+      // console.log('walletAddress=', walletAddress || 'no wallet address')
       const ctx = setup<ReadContext>({
         reqOpts: {
           headers: { Accept: 'application/json' },
@@ -254,6 +263,7 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         client,
         accessAction: client ? AccessAction.Read : AccessAction.ReadAll
       })
+      // console.log('ctx=', ctx)
       if (expectedMatch) {
         await expect(get(ctx)).resolves.toBeUndefined()
         expect(ctx.response).toSatisfyApiSpec()
