@@ -28,8 +28,7 @@ function getEnvs(opUrl, authUrl, connectorUrl) {
     CLOUD_NINE_OPEN_PAYMENTS_URL: opUrl,
     CLOUD_NINE_PAYMENT_POINTER_URL: `${opUrl}/.well-known/pay`,
     CLOUD_NINE_AUTH_SERVER_DOMAIN: authUrl,
-    CLOUD_NINE_CONNECTOR_URL: connectorUrl,
-    NGROK_TOKEN: process.env.NGROK_TOKEN
+    CLOUD_NINE_CONNECTOR_URL: connectorUrl
   }
 }
 
@@ -57,10 +56,8 @@ async function connect() {
   // import es module
   tunnelmole = (await import('tunnelmole')).tunnelmole
 
-  // use ngrok for X-Forwarded-Proto header
   const openPaymentsUrl = await createTunnel(3000)
   const authUrl = await createTunnel(3006)
-
   const connectorUrl = await createTunnel(3002)
 
   envs = getEnvs(openPaymentsUrl, authUrl, connectorUrl)
@@ -76,8 +73,7 @@ process.on('SIGINT', async function () {
 
   // clean the env variables as other urls will be generated at next run
   await writeEnvs({
-    ILP_ADDRESS: envs.ILP_ADDRESS,
-    NGROK_TOKEN: envs.NGROK_TOKEN
+    ILP_ADDRESS: envs.ILP_ADDRESS
   })
   process.exit()
 })
