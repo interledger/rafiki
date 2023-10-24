@@ -57,7 +57,7 @@ export default function ViewAssetPage() {
   const isSubmitting = navigation.state === 'submitting'
   const currentPageAction = isSubmitting && navigation.formAction === formAction
 
-  const [basicPointsInput, setBasicPointsInput] = useState(
+  const [basisPointsInput, setBasisPointsInput] = useState(
     asset.sendingFee?.basisPoints ?? undefined
   )
 
@@ -176,15 +176,15 @@ export default function ViewAssetPage() {
                     name='basisPoints'
                     label='Basis Points'
                     error={response?.errors.sendingFee.fieldErrors.basisPoints}
-                    value={basicPointsInput}
+                    value={basisPointsInput}
                     onChange={(e) =>
-                      setBasicPointsInput(parseFloat(e?.target?.value))
+                      setBasisPointsInput(parseFloat(e?.target?.value))
                     }
                   />
                   <p className='text-gray-500 text-sm mt-2'>
                     A single basis point is a fee equal to 0.01% of the total
-                    amount. A fee of {basicPointsInput || 1} basis point on $100
-                    is ${(basicPointsInput || 1) * 0.01}.
+                    amount. A fee of {basisPointsInput || 1} basis point on $100
+                    is ${((basisPointsInput || 1) * 0.01).toFixed(4)}.
                   </p>
                   <div className='flex justify-end p-4'>
                     <Button
@@ -304,4 +304,3 @@ export async function action({ request }: ActionArgs) {
     location: '.'
   })
 }
-
