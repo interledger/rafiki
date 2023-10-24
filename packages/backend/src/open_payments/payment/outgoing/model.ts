@@ -72,7 +72,8 @@ export class OutgoingPayment
   }
 
   public getUrl(walletAddress: WalletAddress): string {
-    return `${walletAddress.url}${OutgoingPayment.urlPath}/${this.id}`
+    const url = new URL(walletAddress.url)
+    return `${url.origin}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {

@@ -63,7 +63,8 @@ export class Quote extends WalletAddressSubresource {
   private debitAmountValue!: bigint
 
   public getUrl(walletAddress: WalletAddress): string {
-    return `${walletAddress.url}${Quote.urlPath}/${this.id}`
+    const url = new URL(walletAddress.url)
+    return `${url.origin}${Quote.urlPath}/${this.id}`
   }
 
   public get debitAmount(): Amount {

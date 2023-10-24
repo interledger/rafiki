@@ -32,6 +32,7 @@ describe('Outgoing Payment Routes', (): void => {
   let outgoingPaymentRoutes: OutgoingPaymentRoutes
   let outgoingPaymentService: OutgoingPaymentService
   let walletAddress: WalletAddress
+  let baseUrl: string
 
   const receivingWalletAddress = `https://wallet.example/${uuid()}`
 
@@ -69,6 +70,7 @@ describe('Outgoing Payment Routes', (): void => {
   beforeEach(async (): Promise<void> => {
     const asset = await createAsset(deps)
     walletAddress = await createWalletAddress(deps, { assetId: asset.id })
+    baseUrl = new URL(walletAddress.url).origin
   })
 
   afterEach(async (): Promise<void> => {
@@ -104,7 +106,7 @@ describe('Outgoing Payment Routes', (): void => {
       get: (ctx) => outgoingPaymentRoutes.get(ctx),
       getBody: (outgoingPayment) => {
         return {
-          id: `${walletAddress.url}/outgoing-payments/${outgoingPayment.id}`,
+          id: `${baseUrl}/outgoing-payments/${outgoingPayment.id}`,
           walletAddress: walletAddress.url,
           receiver: outgoingPayment.receiver,
           quoteId: outgoingPayment.quote.getUrl(walletAddress),
@@ -171,7 +173,7 @@ describe('Outgoing Payment Routes', (): void => {
           metadata
         })
         const options = {
-          quoteId: `${walletAddress.url}/quotes/${payment.quote.id}`,
+          quoteId: `${baseUrl}/quotes/${payment.quote.id}`,
           client,
           grant,
           metadata
@@ -195,7 +197,7 @@ describe('Outgoing Payment Routes', (): void => {
           .split('/')
           .pop()
         expect(ctx.response.body).toEqual({
-          id: `${walletAddress.url}/outgoing-payments/${outgoingPaymentId}`,
+          id: `${baseUrl}/outgoing-payments/${outgoingPaymentId}`,
           walletAddress: walletAddress.url,
           receiver: payment.receiver,
           quoteId: options.quoteId,
@@ -225,7 +227,7 @@ describe('Outgoing Payment Routes', (): void => {
       async (error): Promise<void> => {
         const quoteId = uuid()
         const ctx = setup({
-          quoteId: `${walletAddress.url}/quotes/${quoteId}`
+          quoteId: `${baseUrl}/quotes/${quoteId}`
         })
         const createSpy = jest
           .spyOn(outgoingPaymentService, 'create')
