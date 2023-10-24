@@ -3,12 +3,12 @@ import {
   RequestLike,
   validateSignature
 } from '@interledger/http-signature-utils'
-import Koa, { HttpError } from 'koa'
-import { Limits, parseLimits } from '../payment/outgoing/limits'
-import { HttpSigContext, PaymentPointerContext } from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
-import { TokenInfo } from 'token-introspection'
-import { isActiveTokenInfo } from 'token-introspection'
+import axios from 'axios'
+import Koa, { HttpError } from 'koa'
+import { isActiveTokenInfo, TokenInfo } from 'token-introspection'
+import { HttpSigContext, PaymentPointerContext } from '../../app'
+import { Limits, parseLimits } from '../payment/outgoing/limits'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({
@@ -143,10 +143,13 @@ export const httpsigMiddleware = async (
   // cache client key(s)
   let jwks: JWKS | undefined
   try {
-    const openPaymentsClient = await ctx.container.use('openPaymentsClient')
-    jwks = await openPaymentsClient.paymentPointer.getKeys({
-      url: ctx.client
-    })
+    // const openPaymentsClient = await ctx.container.use('openPaymentsClient')
+    // jwks = await openPaymentsClient.paymentPointer.getKeys({
+    //   url: ctx.client
+    // })
+
+    const rpc = await axios.get(`${ctx.client}/jwks.json`)
+    jwks = rpc.data
   } catch (error) {
     const logger = await ctx.container.use('logger')
     logger.debug(

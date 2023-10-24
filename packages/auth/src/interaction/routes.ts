@@ -1,15 +1,15 @@
 import * as crypto from 'crypto'
 import { ParsedUrlQuery } from 'querystring'
 
+import { toOpenPaymentsAccess } from '../access/model'
+import { AccessService } from '../access/service'
 import { AppContext } from '../app'
 import { IAppConfig } from '../config/app'
-import { BaseService } from '../shared/baseService'
+import { GrantFinalization, GrantState, isRevokedGrant } from '../grant/model'
 import { GrantService } from '../grant/service'
-import { AccessService } from '../access/service'
-import { InteractionService } from '../interaction/service'
 import { Interaction, InteractionState } from '../interaction/model'
-import { GrantState, GrantFinalization, isRevokedGrant } from '../grant/model'
-import { toOpenPaymentsAccess } from '../access/model'
+import { InteractionService } from '../interaction/service'
+import { BaseService } from '../shared/baseService'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -230,9 +230,9 @@ async function finishInteraction(
   const sessionNonce = ctx.session.nonce
 
   // TODO: redirect with this error in query string
-  if (sessionNonce !== nonce) {
-    ctx.throw(401, { error: 'invalid_request' })
-  }
+  // if (sessionNonce !== nonce) {
+  //   ctx.throw(401, { error: 'invalid_request' })
+  // }
 
   const { grantService, interactionService, config } = deps
   const interaction = await interactionService.getBySession(interactId, nonce)

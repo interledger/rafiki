@@ -1,6 +1,7 @@
-import { UnauthenticatedClient } from '@interledger/open-payments'
 import { JWK } from '@interledger/http-signature-utils'
+import { UnauthenticatedClient } from '@interledger/open-payments'
 
+import axios from 'axios'
 import { BaseService } from '../shared/baseService'
 
 export interface ClientKey {
@@ -80,9 +81,11 @@ async function getClientKey(
   { client, keyId }: KeyOptions
 ): Promise<JWK | undefined> {
   try {
-    const { keys } = await deps.openPaymentsClient.paymentPointer.getKeys({
-      url: client
-    })
+    // const { keys } = await deps.openPaymentsClient.paymentPointer.getKeys({
+    //   url: client
+    // })
+    const rpc = await axios.get(`${client}/jwks.json`)
+    const { keys } = rpc.data
 
     return keys.find((key: JWK) => key.kid === keyId)
   } catch (error) {

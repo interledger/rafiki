@@ -1,27 +1,27 @@
 import { ParsedUrlQuery } from 'querystring'
 
-import { AppContext } from '../app'
-import { GrantService, GrantRequest as GrantRequestBody } from './service'
-import {
-  Grant,
-  GrantFinalization,
-  GrantState,
-  toOpenPaymentPendingGrant,
-  toOpenPaymentsGrant,
-  isRevokedGrant,
-  isRejectedGrant
-} from './model'
-import { ClientService } from '../client/service'
-import { BaseService } from '../shared/baseService'
+import { AccessService } from '../access/service'
 import {
   isIncomingPaymentAccessRequest,
   isQuoteAccessRequest
 } from '../access/types'
-import { IAppConfig } from '../config/app'
-import { AccessTokenService } from '../accessToken/service'
-import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
+import { AccessTokenService } from '../accessToken/service'
+import { AppContext } from '../app'
+import { ClientService } from '../client/service'
+import { IAppConfig } from '../config/app'
 import { InteractionService } from '../interaction/service'
+import { BaseService } from '../shared/baseService'
+import {
+  Grant,
+  GrantFinalization,
+  GrantState,
+  isRejectedGrant,
+  isRevokedGrant,
+  toOpenPaymentPendingGrant,
+  toOpenPaymentsGrant
+} from './model'
+import { GrantRequest as GrantRequestBody, GrantService } from './service'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService

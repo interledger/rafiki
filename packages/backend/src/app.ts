@@ -1,86 +1,86 @@
-import { join } from 'path'
 import http, { Server } from 'http'
+import { join } from 'path'
 import { ParsedUrlQuery } from 'querystring'
 import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
+import { ApolloServer } from '@apollo/server'
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { koaMiddleware } from '@as-integrations/koa'
+import Router from '@koa/router'
 import { Knex } from 'knex'
 import Koa, { DefaultState } from 'koa'
 import bodyParser from 'koa-bodyparser'
 import { Logger } from 'pino'
-import Router from '@koa/router'
-import { ApolloServer } from '@apollo/server'
-import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
-import { koaMiddleware } from '@as-integrations/koa'
 
-import { IAppConfig } from './config/app'
-import { addResolversToSchema } from '@graphql-tools/schema'
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadSchemaSync } from '@graphql-tools/load'
+import { addResolversToSchema } from '@graphql-tools/schema'
+import { IAppConfig } from './config/app'
 
-import { resolvers } from './graphql/resolvers'
-import { HttpTokenService } from './httpToken/service'
-import { AssetService, AssetOptions } from './asset/service'
-import { AccountingService } from './accounting/service'
-import { PeerService } from './peer/service'
-import { connectionMiddleware } from './open_payments/connection/middleware'
-import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
-import { PaymentPointer } from './open_payments/payment_pointer/model'
-import { PaymentPointerService } from './open_payments/payment_pointer/service'
-import {
-  createTokenIntrospectionMiddleware,
-  httpsigMiddleware,
-  Grant,
-  RequestAction
-} from './open_payments/auth/middleware'
-import { RatesService } from './rates/service'
-import { spspMiddleware, SPSPConnectionContext } from './spsp/middleware'
-import { SPSPRoutes } from './spsp/routes'
-import {
-  IncomingPaymentRoutes,
-  CreateBody as IncomingCreateBody
-} from './open_payments/payment/incoming/routes'
-import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
-import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
-import { IncomingPaymentService } from './open_payments/payment/incoming/service'
-import { StreamServer } from '@interledger/stream-receiver'
-import { WebhookService } from './webhook/service'
-import {
-  QuoteRoutes,
-  CreateBody as QuoteCreateBody
-} from './open_payments/quote/routes'
-import { QuoteService } from './open_payments/quote/service'
-import {
-  OutgoingPaymentRoutes,
-  CreateBody as OutgoingCreateBody
-} from './open_payments/payment/outgoing/routes'
-import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
-import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
-import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
-import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
 import {
   AccessAction,
   AccessType,
   AuthenticatedClient,
   PaginationArgs
 } from '@interledger/open-payments'
-import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
-import { ReceiverService } from './open_payments/receiver/service'
-import { Client as TokenIntrospectionClient } from 'token-introspection'
+import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
+import { StreamServer } from '@interledger/stream-receiver'
+import { AxiosInstance } from 'axios'
 import { applyMiddleware } from 'graphql-middleware'
 import { Redis } from 'ioredis'
+import { Client as TokenIntrospectionClient } from 'token-introspection'
+import { AccountingService } from './accounting/service'
+import { AssetOptions, AssetService } from './asset/service'
+import { AutoPeeringRoutes } from './auto-peering/routes'
+import { AutoPeeringService } from './auto-peering/service'
+import { Rafiki as ConnectorApp } from './connector/core'
+import { FeeService } from './fee/service'
 import {
   idempotencyGraphQLMiddleware,
   lockGraphQLMutationMiddleware
 } from './graphql/middleware'
+import { resolvers } from './graphql/resolvers'
+import { HttpTokenService } from './httpToken/service'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
+import {
+  createTokenIntrospectionMiddleware,
+  Grant,
+  httpsigMiddleware,
+  RequestAction
+} from './open_payments/auth/middleware'
+import { connectionMiddleware } from './open_payments/connection/middleware'
 import { CombinedPaymentService } from './open_payments/payment/combined/service'
-import { FeeService } from './fee/service'
-import { AutoPeeringService } from './auto-peering/service'
-import { AutoPeeringRoutes } from './auto-peering/routes'
-import { Rafiki as ConnectorApp } from './connector/core'
-import { AxiosInstance } from 'axios'
+import {
+  CreateBody as IncomingCreateBody,
+  IncomingPaymentRoutes
+} from './open_payments/payment/incoming/routes'
+import { IncomingPaymentService } from './open_payments/payment/incoming/service'
+import { RemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
+import {
+  CreateBody as OutgoingCreateBody,
+  OutgoingPaymentRoutes
+} from './open_payments/payment/outgoing/routes'
+import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
+import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
+import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
+import { PaymentPointer } from './open_payments/payment_pointer/model'
+import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
+import { PaymentPointerService } from './open_payments/payment_pointer/service'
+import {
+  CreateBody as QuoteCreateBody,
+  QuoteRoutes
+} from './open_payments/quote/routes'
+import { QuoteService } from './open_payments/quote/service'
+import { ReceiverService } from './open_payments/receiver/service'
+import { PeerService } from './peer/service'
+import { RatesService } from './rates/service'
+import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
+import { SPSPConnectionContext, spspMiddleware } from './spsp/middleware'
+import { SPSPRoutes } from './spsp/routes'
+import { WebhookService } from './webhook/service'
 
 export interface AppContextData {
   logger: Logger

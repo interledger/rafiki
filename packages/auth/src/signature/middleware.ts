@@ -2,9 +2,9 @@
 
 import {
   getKeyId,
+  RequestLike,
   validateSignature,
-  validateSignatureHeaders,
-  RequestLike
+  validateSignatureHeaders
 } from '@interledger/http-signature-utils'
 
 import { AppContext } from '../app'
@@ -12,8 +12,14 @@ import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
   const url = ctx.href.replace('http://', 'https://')
+
+  let modifiedUrl = `${url}gnap`
+  if (url.includes('continue')) {
+    modifiedUrl = url
+  }
+
   return {
-    url,
+    url: modifiedUrl,
     method: ctx.method,
     headers: ctx.headers,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
