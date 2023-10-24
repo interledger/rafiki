@@ -52,6 +52,7 @@ export const Config = {
     'http://127.0.0.1:3001/.well-known/pay'
   ),
   env: envString('NODE_ENV', 'development'),
+  trustProxy: envBool('TRUST_PROXY', false),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
     envString('REDIS_TLS_CA_FILE_PATH', ''),
