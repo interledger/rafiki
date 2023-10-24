@@ -109,6 +109,30 @@ The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-com
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
 
+#### Autopeering
+
+If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
+
+```
+pnpm localenv:compose:autopeer
+
+// OR to start with Postgres db
+pnpm localenv:compose:psql:autopeer
+```
+
+Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
+The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
+The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
+
+To use the postman collection examples follow the steps:
+
+1. run `docker logs rafiki-cloud-nine-mock-ase-1`
+2. find the list of created payment pointers
+3. copy the url of one of the payment pointers
+4. set the url into `senderPaymentPointer` postman variable in `Remote Environment`
+
+After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeeing or not) the payment pointer url will differ.
+
 ### Shutting down
 
 ```

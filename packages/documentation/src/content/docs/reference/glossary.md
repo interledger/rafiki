@@ -16,7 +16,7 @@ The Grant Negotiation Authorization Protocol (GNAP) defines a mechanism for dele
 
 ## Interledger Protocol
 
-Interledger is a protocol for sending packets of money across different payment networks or ledgers. For more details, see the [documentation](https://interledger.org/developer-tools/get-started/overview/) and the [specification](https://interledger.org/rfcs/0027-interledger-protocol-4/).
+Interledger is a protocol for sending packets of money across different payment networks or ledgers. For more details, see the [documentation](https://interledger.org/developers/get-started/) and the [specification](https://interledger.org/developers/rfcs/interledger-protocol/).
 
 ## Open Payments
 
@@ -32,11 +32,11 @@ A Peer is a counterparty that a given party transacts with. Within the [Interled
 
 ## Simple Payments Setup Protocol (SPSP)
 
-The Simple Payments Setup Protocol is a basic protocol for exchanging payment information between payee and payer to facilitate payment over Interledger. For more details, see the [SPSP specification](https://interledger.org/rfcs/0009-simple-payment-setup-protocol).
+The Simple Payments Setup Protocol is a basic protocol for exchanging payment information between payee and payer to facilitate payment over Interledger. For more details, see the [SPSP specification](https://interledger.org/developers/rfcs/simple-payment-setup-protocol/).
 
 ## STREAM
 
-STREAM is a multiplexed Interledger Transport Protocol that provides for sending multiple “streams” of money and data between two parties using ILP. For more details, see the [STREAM specification](https://interledger.org/rfcs/0029-stream/).
+STREAM is a multiplexed Interledger Transport Protocol that provides for sending multiple “streams” of money and data between two parties using ILP. For more details, see the [STREAM specification](https://interledger.org/developers/rfcs/stream-protocol/).
 
 ## TigerBeetle
 

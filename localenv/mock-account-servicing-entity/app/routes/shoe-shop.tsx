@@ -1,7 +1,12 @@
-import { useLocation } from '@remix-run/react'
+import { useLoaderData, useLocation } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ApiClient } from '~/lib/apiClient'
 import { parseQueryString } from '~/lib/utils'
+import { CONFIG as config } from '~/lib/parse_config.server'
+
+export function loader() {
+  return config.authServerDomain
+}
 
 function AuthorizedView({
   thirdPartyName,
@@ -16,6 +21,7 @@ function AuthorizedView({
   interactId: string
   nonce: string
 }) {
+  const authServerDomain = useLoaderData<typeof loader>()
   return (
     <>
       <div className='row'>
@@ -35,7 +41,7 @@ function AuthorizedView({
         <button
           className='btn btn-primary'
           onClick={() => {
-            ApiClient.endInteraction(interactId, nonce)
+            ApiClient.endInteraction(interactId, nonce, authServerDomain)
           }}
         >
           Continue

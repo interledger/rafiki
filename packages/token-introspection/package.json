@@ -26,6 +26,6 @@
   "dependencies": {
     "@interledger/openapi": "1.2.0",
     "axios": "^1.5.1",
-    "pino": "^8.16.0"
+    "pino": "^8.16.1"
   }
 }

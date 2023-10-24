@@ -9,8 +9,10 @@ import type {
   CreateWalletAddressInput,
   JwkInput,
   SetFeeResponse,
-  FeeType
-} from '../../generated/graphql'
+  FeeType,
+  CreateOrUpdatePeerByUrlMutationResponse,
+  CreateOrUpdatePeerByUrlInput
+} from 'generated/graphql'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
 
@@ -113,6 +115,52 @@ export async function createPeer(
         throw new Error('Data was empty')
       }
       return data.createPeer
+    })
+}
+
+export async function createAutoPeer(
+  peerUrl: string,
+  assetId: string
+): Promise<CreateOrUpdatePeerByUrlMutationResponse | undefined> {
+  const createAutoPeerMutation = gql`
+    mutation CreateOrUpdatePeerByUrl($input: CreateOrUpdatePeerByUrlInput!) {
+      createOrUpdatePeerByUrl(input: $input) {
+        code
+        success
+        message
+        peer {
+          id
+          name
+          asset {
+            id
+            scale
+            code
+            withdrawalThreshold
+          }
+        }
+      }
+    }
+  `
+
+  const addedLiquidity = '10000' as unknown as bigint
+  const createPeerInput: { input: CreateOrUpdatePeerByUrlInput } = {
+    input: {
+      peerUrl,
+      assetId,
+      addedLiquidity
+    }
+  }
+  return apolloClient
+    .mutate({
+      mutation: createAutoPeerMutation,
+      variables: createPeerInput
+    })
+    .then(({ data }): CreateOrUpdatePeerByUrlMutationResponse => {
+      if (!data.createOrUpdatePeerByUrl.success) {
+        console.log(data.createOrUpdatePeerByUrl)
+        throw new Error(`Data was empty for assetId: ${assetId}`)
+      }
+      return data.createOrUpdatePeerByUrl
     })
 }
 

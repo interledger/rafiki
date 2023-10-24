@@ -69,6 +69,20 @@ export const updateAssetSchema = z
   })
   .merge(uuidSchema)
 
+export const setAssetFeeSchema = z.object({
+  assetId: z.string().uuid(),
+  basisPoints: z.coerce
+    .number()
+    .int()
+    .min(0, { message: 'Basis points should be from 0 to 10000' })
+    .max(10000, { message: 'Basis points should be from 0 to 10000' }),
+  fixed: z.coerce
+    .bigint({
+      invalid_type_error: 'Fixed Fee amount is expected to be a number.'
+    })
+    .positive()
+})
+
 export const createAssetSchema = z
   .object({
     code: z
