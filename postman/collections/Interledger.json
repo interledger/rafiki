@@ -1412,8 +1412,7 @@
 										"{{receiverWalletAddress}}"
 									],
 									"path": [
-										"jwks.json",
-										""
+										"jwks.json"
 									]
 								}
 							},
@@ -1474,7 +1473,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": {{pfryWalletAddress}},\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": \"{{clientWalletAddress}}\",\n    \"incomingAmount\": {\n        \"value\": \"2000\",\n        \"assetCode\": \"USD\",\n        \"assetScale\": 2\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Incoming Payment on Own Account\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1482,12 +1481,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:4000/incoming-payments",
-									"protocol": "http",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments",
 									"host": [
-										"localhost"
+										"{{receiverOpenPaymentsHost}}"
 									],
-									"port": "4000",
 									"path": [
 										"incoming-payments"
 									]
@@ -1538,12 +1535,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}",
-									"protocol": "http",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
 									"host": [
-										"localhost"
+										"{{receiverOpenPaymentsHost}}"
 									],
-									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1597,12 +1592,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}",
-									"protocol": "http",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}",
 									"host": [
-										"localhost"
+										"{{receiverOpenPaymentsHost}}"
 									],
-									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}"
@@ -1654,12 +1647,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:4000/incoming-payments?first=10&wallet-address={{receiverWalletAddress}}",
-									"protocol": "http",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{clientWalletAddress}}",
 									"host": [
-										"localhost"
+										"{{receiverOpenPaymentsHost}}"
 									],
-									"port": "4000",
 									"path": [
 										"incoming-payments"
 									],
@@ -1675,7 +1666,7 @@
 										},
 										{
 											"key": "wallet-address",
-											"value": "{{pfryWalletAddress}}"
+											"value": "{{clientWalletAddress}}"
 										}
 									]
 								}
@@ -1717,7 +1708,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": {{pfryWalletAddress}}\n}",
+									"raw": "{\n    \"walletAddress\": {{clientWalletAddress}}\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1725,12 +1716,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:4000/incoming-payments/{{incomingPaymentId}}/complete",
-									"protocol": "http",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}/complete",
 									"host": [
-										"localhost"
+										"{{receiverOpenPaymentsHost}}"
 									],
-									"port": "4000",
 									"path": [
 										"incoming-payments",
 										"{{incomingPaymentId}}",
@@ -1801,12 +1790,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:3000/quotes",
-									"protocol": "http",
+									"raw": "{{senderOpenPaymentsHost}}/quotes",
 									"host": [
-										"localhost"
+										"{{senderOpenPaymentsHost}}"
 									],
-									"port": "3000",
 									"path": [
 										"quotes"
 									]
@@ -1861,12 +1848,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:3000/quotes/{{quoteId}}",
-									"protocol": "http",
+									"raw": "{{senderOpenPaymentsHost}}/quotes/{{quoteId}}",
 									"host": [
-										"localhost"
+										"{{senderOpenPaymentsHost}}"
 									],
-									"port": "3000",
 									"path": [
 										"quotes",
 										"{{quoteId}}"
@@ -1936,12 +1921,10 @@
 									}
 								},
 								"url": {
-									"raw": "http://localhost:3000/outgoing-payments",
-									"protocol": "http",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments",
 									"host": [
-										"localhost"
+										"{{senderOpenPaymentsHost}}"
 									],
-									"port": "3000",
 									"path": [
 										"outgoing-payments"
 									]
@@ -1992,12 +1975,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:3000/outgoing-payments/{{outgoingPaymentId}}",
-									"protocol": "http",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments/{{outgoingPaymentId}}",
 									"host": [
-										"localhost"
+										"{{senderOpenPaymentsHost}}"
 									],
-									"port": "3000",
 									"path": [
 										"outgoing-payments",
 										"{{outgoingPaymentId}}"
@@ -2049,12 +2030,10 @@
 									}
 								],
 								"url": {
-									"raw": "http://localhost:3000/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}",
-									"protocol": "http",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}",
 									"host": [
-										"localhost"
+										"{{senderOpenPaymentsHost}}"
 									],
-									"port": "3000",
 									"path": [
 										"outgoing-payments"
 									],
@@ -2572,7 +2551,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"incomingAmount\": {\n        \"value\": \"100\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": \"{{clientWalletAddress}}\",\n    \"incomingAmount\": {\n        \"value\": \"100\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2580,9 +2559,9 @@
 									}
 								},
 								"url": {
-									"raw": "{{receiverWalletAddress}}/incoming-payments",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments",
 									"host": [
-										"{{receiverWalletAddress}}"
+										"{{receiverOpenPaymentsHost}}"
 									],
 									"path": [
 										"incoming-payments"
@@ -2696,7 +2675,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"{{receiverWalletAddress}}/incoming-payments/{{incomingPaymentId}}\"\n}",
+									"raw": "{\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2704,9 +2683,9 @@
 									}
 								},
 								"url": {
-									"raw": "{{senderWalletAddress}}/quotes",
+									"raw": "{{senderOpenPaymentsHost}}/quotes",
 									"host": [
-										"{{senderWalletAddress}}"
+										"{{senderOpenPaymentsHost}}"
 									],
 									"path": [
 										"quotes"
