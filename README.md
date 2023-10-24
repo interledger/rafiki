@@ -76,7 +76,7 @@ pnpm i
 
 ### Local Development
 
-The Rafiki local environment is the best way to explore Rafiki locally. The [localenv](localenv) directory contains instructions for setting up a local playground. Do check the README for each individual package for more details.
+The Rafiki local environment is the best way to explore Rafiki locally. The [localenv](localenv) directory contains instructions for setting up a local playground. Please refer to the README for each individual package for more details.
 
 ### Useful commands
 
