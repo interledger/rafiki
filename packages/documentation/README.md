@@ -14,6 +14,12 @@ This website is built with [Starlight](https://starlight.astro.build/), a docume
 $ pnpm i
 ```
 
+- In order to support Mermaid syntax in markdown, we are relying on the [rehype-mermaid](https://github.com/remcohaszing/rehype-mermaid) plugin. This plugin has an unfortunate dependency on [Playwright](https://playwright.dev/).
+
+```sh
+$ pnpm dlx playwright install chromium
+```
+
 - Run the dev server from the /packages/documentation folder:
 
 ```sh
@@ -25,7 +31,7 @@ This command starts a local development server and opens up a browser window. Mo
 - Build the site, again, this must be run from the /packages/documentation folder:
 
 ```sh
-$ pnpm build
+$ pnpm build:docs
 ```
 
 This command generates static content into the build directory and can be served using any static contents hosting service.
