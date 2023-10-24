@@ -158,7 +158,7 @@ export async function createQuote(
     }
   }
 
-  const withGraphFetchedArray = ['asset']
+  const withGraphFetchedArray = ['asset', 'walletAddress']
   if (withFee) {
     withGraphFetchedArray.push('fee')
   }

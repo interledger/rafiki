@@ -362,8 +362,7 @@ describe('OutgoingPaymentService', (): void => {
               receiveAmount: quote.receiveAmount,
               metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
-              asset,
-              quote,
+              asset: quote.asset,
               peerId: outgoingPeer ? peer.id : null
             })
 

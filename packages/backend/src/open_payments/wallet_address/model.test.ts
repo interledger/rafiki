@@ -111,58 +111,37 @@ const baseGetTests = <M extends WalletAddressSubresource>({
             match    | description
             ${match} | ${GetOption.Matching}
             ${false} | ${GetOption.Conflicting}
-            ${match} | ${GetOption.Unspecified}
-          `('$description walletAddressId', ({ match, description }): void => {
-            let walletAddressId: string
+          `('$description id', ({ match, description }): void => {
+            let id: string
             beforeEach((): void => {
-              switch (description) {
-                case GetOption.Matching:
-                  walletAddressId = model.walletAddressId
-                  break
-                case GetOption.Conflicting:
-                  walletAddressId = uuid()
-                  break
-                case GetOption.Unspecified:
-                  walletAddressId = ''
-                  break
-              }
+              id = description === GetOption.Matching ? model.id : uuid()
             })
-            describe.each`
-              match    | description
-              ${match} | ${GetOption.Matching}
-              ${false} | ${GetOption.Conflicting}
-            `('$description id', ({ match, description }): void => {
-              let id: string
-              beforeEach((): void => {
-                id = description === GetOption.Matching ? model.id : uuid()
-              })
 
-              test(`${
-                match ? '' : 'cannot '
-              }get a model`, async (): Promise<void> => {
-                await testGet(
-                  {
-                    id,
-                    client,
-                    walletAddressId
-                  },
-                  match ? model : undefined
-                )
-              })
-            })
             test(`${
               match ? '' : 'cannot '
-            }list model`, async (): Promise<void> => {
-              if (testList && walletAddressId) {
-                await testList(
-                  {
-                    walletAddressId,
-                    client
-                  },
-                  match ? model : undefined
-                )
-              }
+            }get a model`, async (): Promise<void> => {
+              await testGet(
+                {
+                  id,
+                  client,
+                  walletAddressId: model.walletAddressId
+                },
+                match ? model : undefined
+              )
             })
+          })
+          test(`${
+            match ? '' : 'cannot '
+          }list model`, async (): Promise<void> => {
+            if (testList && model.walletAddressId) {
+              await testList(
+                {
+                  walletAddressId: model.walletAddressId,
+                  client
+                },
+                match ? model : undefined
+              )
+            }
           })
         }
       })

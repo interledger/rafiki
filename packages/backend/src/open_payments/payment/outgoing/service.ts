@@ -79,7 +79,7 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('quote.asset')
+    .withGraphFetched('[quote.asset, walletAddress]')
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
 }
@@ -127,7 +127,7 @@ async function createOutgoingPayment(
           client: options.client,
           grantId
         })
-        .withGraphFetched('[quote.asset]')
+        .withGraphFetched('[quote.asset, walletAddress]')
 
       if (
         payment.walletAddressId !== payment.quote.walletAddressId ||
@@ -401,7 +401,7 @@ async function getWalletAddressPage(
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('quote.asset')
+    .withGraphFetched('[quote.asset, walletAddress]')
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )
