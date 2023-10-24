@@ -7,7 +7,7 @@ import {
   useLoaderData,
   useNavigation
 } from '@remix-run/react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { z } from 'zod'
 import { PageHeader } from '~/components'
 import { Button, ErrorPanel, Input } from '~/components/ui'
