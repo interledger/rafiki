@@ -44,6 +44,7 @@ async function getQuote(
 }
 
 interface CreateBodyBase {
+  walletAddress: string
   receiver: string
   method: 'ilp'
 }

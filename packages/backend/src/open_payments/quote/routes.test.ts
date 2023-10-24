@@ -133,6 +133,7 @@ describe('Quote Routes', (): void => {
 
     test('returns error on invalid debitAmount asset', async (): Promise<void> => {
       options = {
+        walletAddress: walletAddress.url,
         receiver,
         debitAmount: {
           ...debitAmount,
@@ -172,6 +173,7 @@ describe('Quote Routes', (): void => {
         '$description',
         async ({ debitAmount, receiveAmount }): Promise<void> => {
           options = {
+            walletAddress: walletAddress.url,
             receiver,
             method: 'ilp'
           }
@@ -242,6 +244,7 @@ describe('Quote Routes', (): void => {
 
       test('receiver.incomingAmount', async (): Promise<void> => {
         options = {
+          walletAddress: walletAddress.url,
           receiver,
           method: 'ilp'
         }
