@@ -720,7 +720,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateWalletAddressKey ($input: CreateWalletAddressKeyInput!) {\n    createWalletAddressKey(input: $input) {\n        code\n        message\n        success\n        walletAddressKey {\n            id\n            revoked\n            walletAddressId\n            createdAt\n            jwk {\n                alg\n                crv\n                kid\n                kty\n                x\n            }\n        }\n    }\n}",
-								"variables": "{\n    \"input\": {\n        \"walletAddresId\": \"{{walletAddressId}}\",\n        \"jwk\": {\n            \"alg\": \"EdDSA\",\n            \"crv\": \"Ed25519\",\n            \"kid\": \"kid_dad93e7f-f40b-484d-99d2-df12c8523176\",\n            \"kty\": \"OKP\", \n            \"x\": \"ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8\"\n        }\n    }\n}"
+								"variables": "{\n    \"input\": {\n        \"walletAddressId\": \"{{walletAddressId}}\",\n        \"jwk\": {\n            \"alg\": \"EdDSA\",\n            \"crv\": \"Ed25519\",\n            \"kid\": \"kid_dad93e7f-f40b-484d-99d2-df12c8523176\",\n            \"kty\": \"OKP\", \n            \"x\": \"ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8\"\n        }\n    }\n}"
 							}
 						},
 						"url": {
@@ -819,7 +819,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateReceiver($input: CreateReceiverInput!) {\n  createReceiver(input: $input) {\n    code\n    message\n    receiver {\n      completed\n      createdAt\n      expiresAt\n      metadata\n      id\n      incomingAmount {\n        assetCode\n        assetScale\n        value\n      }\n      walletAddressUrl\n      receivedAmount {\n        assetCode\n        assetScale\n        value\n      }\n      updatedAt\n    }\n    success\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"expiresAt\": null,\n    \"metadata\": {\n        \"description\": \"Hello my friend\",\n        \"externalRef\": null\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 100\n    },\n    \"walletAddressUrl\": \"http://peer-backend/accounts/pfry\"\n  }\n}"
+								"variables": "{\n  \"input\": {\n    \"expiresAt\": null,\n    \"metadata\": {\n        \"description\": \"Hello my friend\",\n        \"externalRef\": null\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 100\n    },\n    \"walletAddressUrl\": \"https://happy-life-bank-backend/accounts/pfry\"\n  }\n}"
 							}
 						},
 						"url": {
@@ -908,7 +908,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      walletAddressId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"walletAddressId\": \"{{secondwalletAddressId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{walletAddressUrl}}/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 4,\n      \"value\": 50000\n    }\n  }\n}"
+								"variables": "{\n  \"input\": {\n    \"walletAddressId\": \"{{secondWalletAddressId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 6,\n      \"value\": 5000000\n    }\n  }\n}"
 							}
 						},
 						"url": {
@@ -1063,7 +1063,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "query Payments($filter: PaymentFilter) {\n    payments(filter: $filter) {\n        edges {\n        node {\n            id\n            type\n            walletAddressId\n            state\n            metadata\n            createdAt\n        }\n        cursor\n        }\n    }\n}",
-								"variables": "{          \n    \"filter\": {\n        \"type\": {\n            \"in\": [\"OUTGOING\"]\n        },\n        \"walletAddressId\": {\n           \"in\": [{{secondWalletAddressId}}]\n        }\n    }\n}"
+								"variables": "{          \n    \"filter\": {\n        \"type\": {\n            \"in\": [\"OUTGOING\"]\n        },\n        \"walletAddressId\": {\n           \"in\": [\"{{secondWalletAddressId}}\"]\n        }\n    }\n}"
 							}
 						},
 						"url": {
@@ -1800,7 +1800,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"{{receiverWalletAddress}}/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    }\n}",
+									"raw": "{\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\",\n    \"walletAddress\": \"{{senderWalletAddress}}\",\n    \"debitAmount\": {\n        \"value\": \"1000\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1862,7 +1862,8 @@
 									},
 									{
 										"key": "Host",
-										"value": "cloud-nine-wallet-backend"
+										"value": "cloud-nine-wallet-backend",
+										"disabled": true
 									}
 								],
 								"url": {
@@ -1931,7 +1932,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": {{senderWalletAddress}},\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
+									"raw": "{\n    \"walletAddress\": {{senderWalletAddress}},\n    \"quoteId\": \"{{senderOpenPaymentsHost}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
