@@ -1625,10 +1625,28 @@
 									"script": {
 										"id": "bfdb9c3d-2a31-49f6-a835-e007bd2b09d2",
 										"exec": [
+											"request.url = request.url",
+											"    .replace(/{{(receiverWalletAddress)}}/g, (_, key) => pm.environment.get(key))",
+											"    .replace(/http:\\/\\/localhost:([3,4])000/g, (_, key) =>",
+											"          key === '3'",
+											"            ? 'https://' + pm.environment.get('host3000')",
+											"            : 'https://' + pm.environment.get('host4000')",
+											"    )",
+											"console.log(request.url)",
+											"",
 											"if(pm.environment.get('preRequestHost')){",
 											"    eval(pm.environment.get('preRequestHost'))",
 											"}",
-											"eval(pm.environment.get('preRequestSignatures'))"
+											"eval(pm.environment.get('preRequestSignatures'))",
+											"",
+											"pm.request.url.query.idx(2).value = pm.request.url.query.idx(2).value",
+											"    .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.environment.get(key))",
+											"    .replace(/http:\\/\\/localhost:([3,4])000/g, (_, key) =>",
+											"          key === '3'",
+											"            ? 'https://' + pm.environment.get('host3000')",
+											"            : 'https://' + pm.environment.get('host4000')",
+											"    )",
+											""
 										],
 										"type": "text/javascript"
 									}
@@ -1647,7 +1665,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{clientWalletAddress}}",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{receiverWalletAddress}}",
 									"host": [
 										"{{receiverOpenPaymentsHost}}"
 									],
@@ -1666,7 +1684,7 @@
 										},
 										{
 											"key": "wallet-address",
-											"value": "{{clientWalletAddress}}"
+											"value": "{{receiverWalletAddress}}"
 										}
 									]
 								}
