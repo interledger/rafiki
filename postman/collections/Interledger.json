@@ -1721,12 +1721,13 @@
 									},
 									{
 										"key": "Host",
-										"value": "happy-life-bank-backend"
+										"value": "happy-life-bank-backend",
+										"disabled": true
 									}
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": {{clientWalletAddress}}\n}",
+									"raw": "",
 									"options": {
 										"raw": {
 											"language": "json"
