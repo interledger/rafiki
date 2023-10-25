@@ -2551,7 +2551,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": \"{{clientWalletAddress}}\",\n    \"incomingAmount\": {\n        \"value\": \"100\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": \"{{receiverWalletAddress}}\",\n    \"incomingAmount\": {\n        \"value\": \"100\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2675,7 +2675,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\"\n}",
+									"raw": "{\n    \"walletAddress\": \"{{senderWalletAddress}}\",\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\",\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2790,7 +2790,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n     \"interact_ref\": \"351561b8-99f2-40dc-805e-62f65fd10b14\"\n}",
+									"raw": "{\n     \"interact_ref\": \"dd37e467-d056-4a2f-8878-f2f172b4a3b6\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2857,7 +2857,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": \"{{senderWalletAddress}}\",\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2865,9 +2865,9 @@
 									}
 								},
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments",
 									"host": [
-										"{{senderWalletAddress}}"
+										"{{senderOpenPaymentsHost}}"
 									],
 									"path": [
 										"outgoing-payments"
@@ -2919,9 +2919,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments/{{outgoingPaymentId}}",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments/{{outgoingPaymentId}}",
 									"host": [
-										"{{senderWalletAddress}}"
+										"{{senderOpenPaymentsHost}}"
 									],
 									"path": [
 										"outgoing-payments",
