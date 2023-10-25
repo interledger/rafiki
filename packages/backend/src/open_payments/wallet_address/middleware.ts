@@ -11,7 +11,14 @@ export function createWalletAddressMiddleware() {
     next: () => Promise<unknown>
   ): Promise<void> => {
     if (ctx.method === 'GET') {
-      if (ctx.path && ctx.path.startsWith('/incoming-payments')) {
+      if (
+        ctx.path === '/incoming-payments' ||
+        ctx.path === '/outgoing-payments' ||
+        ctx.path === '/quotes'
+      ) {
+        ctx.walletAddressUrl = ctx.query['wallet-address'] as string
+        console.log(ctx.walletAddressUrl)
+      } else if (ctx.path && ctx.path.startsWith('/incoming-payments')) {
         const incomingPaymentService = await ctx.container.use(
           'incomingPaymentService'
         )
