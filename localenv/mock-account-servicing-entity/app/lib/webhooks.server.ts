@@ -178,9 +178,7 @@ export async function handleWalletAddressNotFound(wh: WebHook) {
     throw new Error('No walletAddressUrl found')
   }
 
-  const accountPath = walletAddressUrl.split(
-    `https://${CONFIG.publicHost}/`
-  )[1]
+  const accountPath = walletAddressUrl.split(`https://${CONFIG.publicHost}/`)[1]
 
   const account = await mockAccounts.getByPath(accountPath)
 
