@@ -720,7 +720,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateWalletAddressKey ($input: CreateWalletAddressKeyInput!) {\n    createWalletAddressKey(input: $input) {\n        code\n        message\n        success\n        walletAddressKey {\n            id\n            revoked\n            walletAddressId\n            createdAt\n            jwk {\n                alg\n                crv\n                kid\n                kty\n                x\n            }\n        }\n    }\n}",
-								"variables": "{\n    \"input\": {\n        \"walletAddresId\": \"{{walletAddressId}}\",\n        \"jwk\": {\n            \"alg\": \"EdDSA\",\n            \"crv\": \"Ed25519\",\n            \"kid\": \"kid_dad93e7f-f40b-484d-99d2-df12c8523176\",\n            \"kty\": \"OKP\", \n            \"x\": \"ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8\"\n        }\n    }\n}"
+								"variables": "{\n    \"input\": {\n        \"walletAddressId\": \"{{walletAddressId}}\",\n        \"jwk\": {\n            \"alg\": \"EdDSA\",\n            \"crv\": \"Ed25519\",\n            \"kid\": \"kid_dad93e7f-f40b-484d-99d2-df12c8523176\",\n            \"kty\": \"OKP\", \n            \"x\": \"ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8\"\n        }\n    }\n}"
 							}
 						},
 						"url": {
@@ -3345,6 +3345,287 @@
 								}
 							],
 							"id": "fc9ea025-1962-49c0-8607-19f46df7d03d"
+						},
+						{
+							"name": "Open Payments",
+							"item": [
+								{
+									"name": "Create Asset",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"id": "f852a7a5-0e89-499a-9bff-c53a84d78773",
+												"exec": [
+													"const body = pm.response.json();",
+													"",
+													"pm.environment.set(\"assetId\", body.data.createAsset.asset.id);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"id": "38db3729-ab40-4b75-afeb-18bf96e5c4c0",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "graphql",
+											"graphql": {
+												"query": "mutation CreateAsset($input: CreateAssetInput!) {\n  createAsset(input: $input) {\n    asset {\n      code\n      createdAt\n      id\n      scale\n      withdrawalThreshold\n      liquidityThreshold\n    }\n    code\n    message\n    success\n  }\n}",
+												"variables": "{\n  \"input\": {\n    \"code\": \"USD\",\n    \"scale\": 6,\n    \"withdrawalThreshold\": null,\n    \"liquidityThreshold\": \"100000000\"\n  }\n}"
+											}
+										},
+										"url": {
+											"raw": "{{RafikiGraphqlHost}}/graphql",
+											"host": [
+												"{{RafikiGraphqlHost}}"
+											],
+											"path": [
+												"graphql"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Wallet Address",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"id": "dfb6c98c-9a4b-4466-85d9-84a81e24a966",
+												"exec": [
+													"const body = pm.response.json();",
+													"",
+													"pm.environment.set(\"walletAddressId\", body.data.createWalletAddress.walletAddress.id);",
+													"pm.expect(pm.environment.get(\"walletAddressId\")).to.be.a('string');",
+													"",
+													"pm.environment.set(\"walletAddressUrl\", body.data.createWalletAddress.walletAddress.url);",
+													"pm.expect(pm.environment.get(\"walletAddressUrl\")).to.be.a('string');",
+													"",
+													"pm.environment.set(\"createWalletAddressRequest\", pm.request);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"id": "941a61ee-9dd1-4c7c-a351-b67f96436970",
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"id": "f1e70f96-0021-437f-a4a7-993a978c89c0",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "graphql",
+											"graphql": {
+												"query": "mutation CreateWalletAddres($input: CreateWalletAddressInput!) {\n  createWalletAddress(input: $input) {\n    code\n    success\n    message\n    walletAddress {\n      id\n      createdAt\n      publicName\n      url\n      status\n      asset {\n        code\n        createdAt\n        id\n        scale\n        withdrawalThreshold\n      }\n    }\n  }\n}",
+												"variables": "{\n  \"input\": {\n    \"assetId\": \"{{assetId}}\",\n    \"url\": \"https://{{OpenPaymentsHost}}/timon/{{$randomInt}}\",\n    \"publicName\": \"Timon\"\n  }\n}"
+											}
+										},
+										"url": {
+											"raw": "{{RafikiGraphqlHost}}/graphql",
+											"host": [
+												"{{RafikiGraphqlHost}}"
+											],
+											"path": [
+												"graphql"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Incoming Payment",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"id": "b3d3cc11-7018-45af-b937-97b4f4eaa716",
+												"exec": [
+													"const body = pm.response.json();",
+													"",
+													"pm.environment.set(\"incomingPaymentId\", body.data.createIncomingPayment.payment.id);",
+													"pm.expect(pm.environment.get(\"incomingPaymentId\")).to.be.a('string');"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"id": "2936f67e-bf65-4404-b6f7-81e9a3263e5a",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "graphql",
+											"graphql": {
+												"query": "mutation CreateIncomingPayment ($input: CreateIncomingPaymentInput!) {\n    createIncomingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      expiresAt\n      metadata\n      id\n      incomingAmount {\n        assetCode\n        assetScale\n        value\n      }\n      walletAddressId\n      receivedAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n    }\n    success\n  }\n}",
+												"variables": "{\n  \"input\": {\n    \"expiresAt\": null,\n    \"metadata\": {\n        \"externalRef\": null, \n        \"description\": \"Hello World\"\n    },\n    \"incomingAmount\": null,\n    \"walletAddressId\": \"{{walletAddressId}}\"\n  }\n}"
+											}
+										},
+										"url": {
+											"raw": "{{RafikiGraphqlHost}}/graphql",
+											"host": [
+												"{{RafikiGraphqlHost}}"
+											],
+											"path": [
+												"graphql"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Quote",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"id": "914fbff5-0d44-4c69-bc4d-3a0507af645a",
+												"exec": [
+													"const body = pm.response.json();",
+													"",
+													"pm.environment.set(\"quoteId\", body.data.createQuote.quote.id);",
+													"pm.expect(pm.environment.get(\"quoteId\")).to.be.a('string');"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"id": "63c84a58-3a85-44dd-86cf-8446e0afce8c",
+												"exec": [
+													"// Create an additional wallet address to represent the account that will be sending money",
+													"",
+													"// Reset the uniqueWalletAddress value",
+													"pm.environment.set(\"uniqueWalletAddress\", Math.floor(Math.random() * (1001)));",
+													"",
+													"const initialRequest = pm.environment.get(\"createWalletAddressRequest\");",
+													"",
+													"const postRequest = {",
+													"  url: initialRequest.url,",
+													"  method: initialRequest.method,",
+													"  body: {",
+													"    mode: 'graphql',",
+													"    graphql: {",
+													"        query: initialRequest.body.graphql.query,",
+													"        variables: JSON.stringify({",
+													"            \"input\": {",
+													"                \"assetId\": pm.environment.get(\"assetId\"),",
+													"                \"url\": \"https://\" + pm.environment.get(\"OpenPaymentsHost\") + \"/simon/\" + pm.environment.get(\"uniqueWalletAddress\"),",
+													"                \"publicName\": \"Simon\"",
+													"            }",
+													"        })",
+													"    }",
+													"  }",
+													"};",
+													"",
+													"pm.sendRequest(postRequest, (error, response) => {",
+													"    if (error) {",
+													"        console.log(error);",
+													"    }",
+													"    const body = response.json();",
+													"    pm.test('response should be okay to process', () => {",
+													"        pm.expect(error).to.equal(null);",
+													"        pm.expect(body.data.createWalletAddress.code).to.equal('200');",
+													"        pm.expect(body.data.createWalletAddress.success).to.equal(true);",
+													"    });",
+													"    pm.environment.set(\"secondWalletAddressId\", body.data.createWalletAddress.walletAddress.id);",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"id": "b12539f9-5340-4d82-8e39-9d4d993b5855",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "graphql",
+											"graphql": {
+												"query": "mutation CreateQuote($input: CreateQuoteInput!) {\n  createQuote(input: $input) {\n    code\n    message\n    quote {\n      createdAt\n      expiresAt\n      highEstimatedExchangeRate\n      id\n      lowEstimatedExchangeRate\n      maxPacketAmount\n      minExchangeRate\n      walletAddressId\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n    }\n  }\n}",
+												"variables": "{\n  \"input\": {\n    \"walletAddressId\": \"{{walletAddressId}}\",\n    \"receiveAmount\": null,\n    \"receiver\": \"{{walletAddressUrl}}/incoming-payments/{{incomingPaymentId}}\",\n    \"debitAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 6,\n      \"value\": 50000\n    }\n  }\n}"
+											}
+										},
+										"url": {
+											"raw": "{{RafikiGraphqlHost}}/graphql",
+											"host": [
+												"{{RafikiGraphqlHost}}"
+											],
+											"path": [
+												"graphql"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Create Outgoing Payment",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"id": "7f9d8f1d-5af7-4b24-86e4-3c54f2223f32",
+												"exec": [
+													"const body = pm.response.json();",
+													"",
+													"pm.environment.set(\"outgoingPaymentId\", body.data.createOutgoingPayment.payment.id);",
+													"pm.expect(pm.environment.get(\"outgoingPaymentId\")).to.be.a('string');"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"id": "bc4d294a-5935-459b-b1d6-59ae29ba44e2",
+									"protocolProfileBehavior": {
+										"disableBodyPruning": true
+									},
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "graphql",
+											"graphql": {
+												"query": "mutation CreateOutgoingPayment($input: CreateOutgoingPaymentInput!) {\n  createOutgoingPayment(input: $input) {\n    code\n    message\n    payment {\n      createdAt\n      error\n      metadata\n      id\n      walletAddressId\n      quote {\n        createdAt\n        expiresAt\n        highEstimatedExchangeRate\n        id\n        lowEstimatedExchangeRate\n        maxPacketAmount\n        minExchangeRate\n        walletAddressId\n        receiveAmount {\n          assetCode\n          assetScale\n          value\n        }\n        receiver\n        debitAmount {\n          assetCode\n          assetScale\n          value\n        }\n      }\n      receiveAmount {\n        assetCode\n        assetScale\n        value\n      }\n      receiver\n      debitAmount {\n        assetCode\n        assetScale\n        value\n      }\n      sentAmount {\n        assetCode\n        assetScale\n        value\n      }\n      state\n      stateAttempts\n    }\n    success\n  }\n}",
+												"variables": "{\n  \"input\": {\n    \"metadata\": {\n        \"description\": null,\n        \"externalRef\": null\n    },\n    \"walletAddressId\": \"{{walletAddressId}}\",\n    \"quoteId\": \"{{quoteId}}\"\n  }\n}"
+											}
+										},
+										"url": {
+											"raw": "{{RafikiGraphqlHost}}/graphql",
+											"host": [
+												"{{RafikiGraphqlHost}}"
+											],
+											"path": [
+												"graphql"
+											]
+										}
+									},
+									"response": []
+								}
+							],
+							"id": "03cc8873-a3f0-4c51-a163-89d26f6a7355"
 						}
 					],
 					"id": "1e2e9b69-a5ed-4428-9cc7-4f6c484ff0fb"
