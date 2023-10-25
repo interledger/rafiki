@@ -477,6 +477,7 @@ export class App {
     // Read incoming payment
     router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
       '/incoming-payments/:id',
+      createWalletAddressMiddleware(),
       createValidatorMiddleware<
         ContextType<SubresourceContextWithAuthenticatedStatus>
       >(resourceServerSpec, {
@@ -496,6 +497,7 @@ export class App {
     // Complete incoming payment
     router.post<DefaultState, SignedSubresourceContext>(
       '/incoming-payments/:id/complete',
+      createWalletAddressMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
@@ -515,6 +517,7 @@ export class App {
     // Read outgoing payment
     router.get<DefaultState, SignedSubresourceContext>(
       '/outgoing-payments/:id',
+      createWalletAddressMiddleware(),
       createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
         resourceServerSpec,
         {
