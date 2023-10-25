@@ -55,7 +55,7 @@ describe('Remote Incoming Payment Service', (): void => {
       assetCode: 'USD',
       assetScale: 2
     }
-    const walletAddress = mockWalletAddress()
+    const walletAddress = mockWalletAddress({ id: 'https://example.com' })
     const grantOptions = {
       accessType: AccessType.IncomingPayment,
       accessActions: [AccessAction.Create, AccessAction.ReadAll],

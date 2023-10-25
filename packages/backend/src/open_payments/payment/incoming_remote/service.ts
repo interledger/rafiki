@@ -68,9 +68,10 @@ async function create(
   }
 
   try {
+    const url = new URL(walletAddressUrl)
     return await deps.openPaymentsClient.incomingPayment.create(
       {
-        url: walletAddressUrl,
+        url: url.origin,
         accessToken: grantOrError.accessToken
       },
       {
