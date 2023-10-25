@@ -23,7 +23,7 @@ export interface NewTransferOptions {
   destinationAccountId: AccountId
   amount: bigint
   ledger: number
-  timeout?: bigint
+  timeoutMs?: bigint
   postId?: never
   voidId?: never
 }
@@ -65,7 +65,7 @@ export async function createTransfers(
       user_data: 0n,
       reserved: 0n,
       pending_id: 0n,
-      timeout: 0n,
+      timeoutMs: 0n,
       ledger: 0,
       code: ACCOUNT_TYPE,
       flags: 0,
@@ -83,9 +83,9 @@ export async function createTransfers(
       tbTransfer.credit_account_id = toTigerbeetleId(
         transfer.destinationAccountId
       )
-      if (transfer.timeout) {
+      if (transfer.timeoutMs) {
         tbTransfer.flags |= TransferFlags.pending
-        tbTransfer.timeout = transfer.timeout * BigInt(10e6) // ms -> ns
+        tbTransfer.timeoutMs = transfer.timeoutMs * BigInt(10e6) // ms -> ns
       }
     } else {
       tbTransfer.id = toTigerbeetleId(uuid())

@@ -53,7 +53,7 @@ export function createBalanceMiddleware(): ILPMiddleware {
         destinationAccount: accounts.outgoing,
         sourceAmount,
         destinationAmount: destinationAmountOrError,
-        timeout: BigInt(5e9) // 5 seconds
+        timeoutMs: BigInt(5e3) // 5 seconds in milliseconds
       })
 
       if (isTransferError(trxOrError)) {
