@@ -13,6 +13,7 @@ import {
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
+import { Config } from '../../config/app'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({
@@ -34,8 +35,12 @@ export interface Access {
 }
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
+  const url =
+    Config.env === 'autopeer'
+      ? ctx.href.replace('http://', 'https://')
+      : ctx.href
   return {
-    url: ctx.href,
+    url,
     method: ctx.method,
     headers: ctx.headers,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined

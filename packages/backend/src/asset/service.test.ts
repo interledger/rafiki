@@ -14,6 +14,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
+import { orderBy } from 'lodash'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -221,7 +222,9 @@ describe('Asset Service', (): void => {
         assetService.create(randomAsset())
       ])
 
-      await expect(assetService.getAll()).resolves.toEqual(assets)
+      await expect(assetService.getAll()).resolves.toEqual(
+        orderBy(assets, 'createdAt', 'asc')
+      )
     })
 
     test('returns empty array if no assets', async (): Promise<void> => {

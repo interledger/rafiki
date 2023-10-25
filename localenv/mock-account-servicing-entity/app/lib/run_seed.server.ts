@@ -11,7 +11,8 @@ import {
   createWalletAddress,
   createWalletAddressKey,
   setFee,
-  addAssetLiquidity
+  addAssetLiquidity,
+  createAutoPeer
 } from './requesters'
 import { v4 } from 'uuid'
 import { mockAccounts } from './accounts.server'
@@ -64,6 +65,18 @@ export async function setupFromSeed(config: Config): Promise<void> {
     )
 
     console.log(JSON.stringify(peerResponses, null, 2))
+
+    if (CONFIG.testnetAutoPeerUrl) {
+      console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
+      const autoPeerResponse = await createAutoPeer(
+        CONFIG.testnetAutoPeerUrl,
+        asset.id
+      ).catch((e) => {
+        console.log('error on autopeering: ', e)
+        return
+      })
+      console.log(JSON.stringify(autoPeerResponse, null, 2))
+    }
   }
 
   // Clear the accounts before seeding.
@@ -92,9 +105,10 @@ export async function setupFromSeed(config: Config): Promise<void> {
         return
       }
 
+      console.log('hostname: ', CONFIG.publicHost)
       const walletAddress = await createWalletAddress(
         account.name,
-        `https://${CONFIG.seed.self.hostname}/${account.path}`,
+        `${CONFIG.publicHost}/${account.path}`,
         accountAsset.id
       )
 
@@ -117,8 +131,9 @@ export async function setupFromSeed(config: Config): Promise<void> {
   )
   console.log('seed complete')
   console.log(JSON.stringify(accountResponses, null, 2))
+  const hostname = new URL(CONFIG.publicHost).hostname
   const envVarStrings = config.seed.accounts.map((account) => {
-    return `${account.postmanEnvVar}: http://localhost:${CONFIG.seed.self.openPaymentPublishedPort}/${account.path} hostname: ${CONFIG.seed.self.hostname}`
+    return `${account.postmanEnvVar}: ${CONFIG.publicHost}/${account.path} hostname: ${hostname}`
   })
   console.log(envVarStrings.join('\n'))
 }

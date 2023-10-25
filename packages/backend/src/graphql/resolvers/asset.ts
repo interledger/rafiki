@@ -11,7 +11,7 @@ import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
 import { Pagination } from '../../shared/baseModel'
 import { feeToGraphql } from './fee'
-import { FeeType } from '../../fee/model'
+import { Fee, FeeType } from '../../fee/model'
 
 export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   parent,
@@ -159,6 +159,31 @@ export const getAssetReceivingFee: AssetResolvers<ApolloContext>['receivingFee']
 
     return feeToGraphql(fee)
   }
+
+export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['FeesConnection']> => {
+  const { ...pagination } = args
+  const feeService = await ctx.container.use('feeService')
+  const getPageFn = (pagination_: Pagination) => {
+    if (!parent.id) throw new Error('missing asset id')
+    return feeService.getPage(parent.id, pagination_)
+  }
+  const fees = await getPageFn(pagination)
+  const pageInfo = await getPageInfo(
+    (pagination_: Pagination) => getPageFn(pagination_),
+    fees
+  )
+  return {
+    pageInfo,
+    edges: fees.map((fee: Fee) => ({
+      cursor: fee.id,
+      node: feeToGraphql(fee)
+    }))
+  }
+}
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   id: asset.id,

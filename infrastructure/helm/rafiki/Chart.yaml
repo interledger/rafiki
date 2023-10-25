@@ -28,14 +28,14 @@ dependencies:
     version: "18.1.6"
     repository: "https://charts.bitnami.com/bitnami"
   - name: postgresql
-    version: '12.12.10'
+    version: '13.1.5'
     repository: 'https://charts.bitnami.com/bitnami'
   - name: rafiki-auth
-    version: '0.2.0'
+    version: '0.3.0'
     repository: 'https://interledger.github.io/helm-charts'
   - name: rafiki-backend
-    version: '0.2.0'
+    version: '0.3.0'
     repository: 'https://interledger.github.io/helm-charts'
   - name: rafiki-frontend
-    version: '0.2.0'
+    version: '0.3.0'
     repository: 'https://interledger.github.io/helm-charts'

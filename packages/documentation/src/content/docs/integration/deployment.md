@@ -159,6 +159,7 @@ Now, the Admin UI can be found on localhost:3010.
 | `STREAM_SECRET`                                       | 32 random bytes                                             | seed secret to generate connection secrets                                                                                                             |
 | `TIGERBEETLE_CLUSTER_ID`                              | `0`                                                         | TigerBeetle cluster id                                                                                                                                 |
 | `TIGERBEETLE_REPLICA_ADDRESSES`                       | `3004`                                                      | comma separated IP addresses/ports                                                                                                                     |
+| `TRUST_PROXY`                                         | `false`                                                     | flag to use X-Forwarded-Proto header to determine if connections is secure                                                                             |
 | `USE_TIGERBEETLE`                                     | `false`                                                     | flag - use TigerBeetle or Postgres for accounting                                                                                                      |
 | `WEBHOOK_TIMEOUT`                                     | `2000`                                                      | milliseconds                                                                                                                                           |
 | `WEBHOOK_URL`                                         | `http://127.0.0.1:4001/webhook`                             | endpoint on the Account Servicing Entity that consumes webhook events                                                                                  |
@@ -186,6 +187,7 @@ Now, the Admin UI can be found on localhost:3010.
 | `LOG_LEVEL`                    | `info`                                                           | [Pino Log Level](https://getpino.io/#/docs/api?id=levels)                  |
 | `NODE_ENV`                     | `development`                                                    | node environment, `development`, `test`, or `production`                   |
 | `PORT`                         | `3006`                                                           | port of this Open Payments Auth Server, same as in `AUTH_SERVER_DOMAIN`    |
+| `TRUST_PROXY`                  | `false`                                                          | flag to use X-Forwarded-Proto header to determine if connections is secure |
 | `WAIT_SECONDS`                 | `5`                                                              | wait time included in `grant.continue`                                     |
 | `INTERACTION_EXPIRY_SECONDS`   | `600`                                                            | amount of time an interaction is active                                    |
 
