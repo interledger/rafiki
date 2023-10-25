@@ -73,8 +73,7 @@ async function getIncomingPaymentPublic(
   try {
     const incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      walletAddressId: ctx.walletAddress.id
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
     })
     ctx.body = incomingPayment?.toPublicOpenPaymentsType()
   } catch (err) {
@@ -92,8 +91,7 @@ async function getIncomingPaymentPrivate(
   try {
     incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      walletAddressId: ctx.walletAddress.id
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
     })
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
