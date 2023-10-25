@@ -10,14 +10,27 @@ import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credent
 import { serializeAmount } from '../../amount'
 import { IlpAddress } from 'ilp-packet'
 import { IncomingPayment, IncomingPaymentState } from './model'
+import { WalletAddress } from '../../wallet_address/model'
 
 describe('Incoming Payment Model', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
+  let walletAddress: WalletAddress
+  let baseUrl: string
+  let incomingPayment: IncomingPayment
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
     appContainer = await createTestApp(deps)
+  })
+
+  beforeEach(async (): Promise<void> => {
+    walletAddress = await createWalletAddress(deps)
+    baseUrl = new URL(walletAddress.url).origin
+    incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: walletAddress.id,
+      metadata: { description: 'my payment' }
+    })
   })
 
   afterEach(async (): Promise<void> => {
@@ -31,14 +44,8 @@ describe('Incoming Payment Model', (): void => {
 
   describe('toOpenPaymentsType', () => {
     test('returns incoming payment', async () => {
-      const walletAddress = await createWalletAddress(deps)
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id,
-        metadata: { description: 'my payment' }
-      })
-
       expect(incomingPayment.toOpenPaymentsType(walletAddress)).toEqual({
-        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         walletAddress: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -55,12 +62,6 @@ describe('Incoming Payment Model', (): void => {
 
   describe('toOpenPaymentsTypeWithMethods', () => {
     test('returns incoming payment with payment methods', async () => {
-      const walletAddress = await createWalletAddress(deps)
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id,
-        metadata: { description: 'my payment' }
-      })
-
       const streamCredentials: IlpStreamCredentials = {
         ilpAddress: 'test.ilp' as IlpAddress,
         sharedSecret: Buffer.from('')
@@ -72,7 +73,7 @@ describe('Incoming Payment Model', (): void => {
           streamCredentials
         )
       ).toEqual({
-        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         walletAddress: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -94,15 +95,10 @@ describe('Incoming Payment Model', (): void => {
     })
 
     test('returns incoming payment with empty methods when stream credentials are undefined', async () => {
-      const walletAddress = await createWalletAddress(deps)
-      const incomingPayment = await createIncomingPayment(deps, {
-        walletAddressId: walletAddress.id,
-        metadata: { description: 'my payment' }
-      })
       expect(
         incomingPayment.toOpenPaymentsTypeWithMethods(walletAddress)
       ).toEqual({
-        id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+        id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
         walletAddress: walletAddress.url,
         completed: incomingPayment.completed,
         receivedAmount: serializeAmount(incomingPayment.receivedAmount),
@@ -120,11 +116,6 @@ describe('Incoming Payment Model', (): void => {
     test.each([IncomingPaymentState.Completed, IncomingPaymentState.Expired])(
       'returns incoming payment with empty methods if payment state is %s',
       async (paymentState): Promise<void> => {
-        const walletAddress = await createWalletAddress(deps)
-        const incomingPayment = await createIncomingPayment(deps, {
-          walletAddressId: walletAddress.id,
-          metadata: { description: 'my payment' }
-        })
         incomingPayment.state = paymentState
 
         const streamCredentials: IlpStreamCredentials = {
@@ -138,7 +129,7 @@ describe('Incoming Payment Model', (): void => {
             streamCredentials
           )
         ).toEqual({
-          id: `${walletAddress.url}${IncomingPayment.urlPath}/${incomingPayment.id}`,
+          id: `${baseUrl}${IncomingPayment.urlPath}/${incomingPayment.id}`,
           walletAddress: walletAddress.url,
           completed: incomingPayment.completed,
           receivedAmount: serializeAmount(incomingPayment.receivedAmount),

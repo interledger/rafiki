@@ -1625,10 +1625,28 @@
 									"script": {
 										"id": "bfdb9c3d-2a31-49f6-a835-e007bd2b09d2",
 										"exec": [
+											"request.url = request.url",
+											"    .replace(/{{(receiverWalletAddress)}}/g, (_, key) => pm.environment.get(key))",
+											"    .replace(/http:\\/\\/localhost:([3,4])000/g, (_, key) =>",
+											"          key === '3'",
+											"            ? 'https://' + pm.environment.get('host3000')",
+											"            : 'https://' + pm.environment.get('host4000')",
+											"    )",
+											"console.log(request.url)",
+											"",
 											"if(pm.environment.get('preRequestHost')){",
 											"    eval(pm.environment.get('preRequestHost'))",
 											"}",
-											"eval(pm.environment.get('preRequestSignatures'))"
+											"eval(pm.environment.get('preRequestSignatures'))",
+											"",
+											"pm.request.url.query.idx(2).value = pm.request.url.query.idx(2).value",
+											"    .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.environment.get(key))",
+											"    .replace(/http:\\/\\/localhost:([3,4])000/g, (_, key) =>",
+											"          key === '3'",
+											"            ? 'https://' + pm.environment.get('host3000')",
+											"            : 'https://' + pm.environment.get('host4000')",
+											"    )",
+											""
 										],
 										"type": "text/javascript"
 									}
@@ -1647,7 +1665,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{clientWalletAddress}}",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{receiverWalletAddress}}",
 									"host": [
 										"{{receiverOpenPaymentsHost}}"
 									],
@@ -1666,7 +1684,7 @@
 										},
 										{
 											"key": "wallet-address",
-											"value": "{{clientWalletAddress}}"
+											"value": "{{receiverWalletAddress}}"
 										}
 									]
 								}
@@ -2551,7 +2569,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": \"{{clientWalletAddress}}\",\n    \"incomingAmount\": {\n        \"value\": \"100\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": \"{{receiverWalletAddress}}\",\n    \"incomingAmount\": {\n        \"value\": \"100\",\n        \"assetCode\": \"{{receiverAssetCode}}\",\n        \"assetScale\": {{receiverAssetScale}}\n    },\n    \"expiresAt\": \"{{tomorrow}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2675,7 +2693,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\"\n}",
+									"raw": "{\n    \"walletAddress\": \"{{senderWalletAddress}}\",\n    \"receiver\": \"{{receiverOpenPaymentsHost}}/incoming-payments/{{incomingPaymentId}}\",\n    \"method\": \"ilp\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2790,7 +2808,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n     \"interact_ref\": \"351561b8-99f2-40dc-805e-62f65fd10b14\"\n}",
+									"raw": "{\n     \"interact_ref\": \"dd37e467-d056-4a2f-8878-f2f172b4a3b6\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2857,7 +2875,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
+									"raw": "{\n    \"walletAddress\": \"{{senderWalletAddress}}\",\n    \"quoteId\": \"{{senderWalletAddress}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"Free Money!\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2865,9 +2883,9 @@
 									}
 								},
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments",
 									"host": [
-										"{{senderWalletAddress}}"
+										"{{senderOpenPaymentsHost}}"
 									],
 									"path": [
 										"outgoing-payments"
@@ -2919,9 +2937,9 @@
 									}
 								],
 								"url": {
-									"raw": "{{senderWalletAddress}}/outgoing-payments/{{outgoingPaymentId}}",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments/{{outgoingPaymentId}}",
 									"host": [
-										"{{senderWalletAddress}}"
+										"{{senderOpenPaymentsHost}}"
 									],
 									"path": [
 										"outgoing-payments",

@@ -46,6 +46,7 @@ describe('Incoming Payment Routes', (): void => {
 
   let asset: Asset
   let walletAddress: WalletAddress
+  let baseUrl: string
   let expiresAt: Date
   let incomingAmount: Amount
   let metadata: Record<string, unknown>
@@ -60,6 +61,7 @@ describe('Incoming Payment Routes', (): void => {
     walletAddress = await createWalletAddress(deps, {
       assetId: asset.id
     })
+    baseUrl = new URL(walletAddress.url).origin
     incomingAmount = {
       value: BigInt('123'),
       assetScale: asset.scale,
@@ -247,7 +249,7 @@ describe('Incoming Payment Routes', (): void => {
           .pop()
 
         expect(ctx.response.body).toEqual({
-          id: `${walletAddress.url}/incoming-payments/${incomingPaymentId}`,
+          id: `${baseUrl}/incoming-payments/${incomingPaymentId}`,
           walletAddress: walletAddress.url,
           incomingAmount: incomingAmount ? amount : undefined,
           expiresAt: expiresAt || expect.any(String),
@@ -345,6 +347,7 @@ describe('Incoming Payment Routes', (): void => {
       await expect(incomingPaymentRoutes.get(ctx)).resolves.toBeUndefined()
       expect(ctx.response).toSatisfyApiSpec()
       expect(ctx.body).toEqual({
+        authServer: config.authServerGrantUrl,
         receivedAmount: {
           value: '0',
           assetCode: asset.code,

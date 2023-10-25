@@ -10,20 +10,62 @@ export function createWalletAddressMiddleware() {
     ctx: AppContext,
     next: () => Promise<unknown>
   ): Promise<void> => {
-    if (
-      ctx.path === '/incoming-payments' ||
-      ctx.path === '/outgoing-payments' ||
-      ctx.path === '/quotes'
-    ) {
-      if (ctx.method === 'GET') {
+    if (ctx.method === 'GET') {
+      if (
+        ctx.path === '/incoming-payments' ||
+        ctx.path === '/outgoing-payments' ||
+        ctx.path === '/quotes'
+      ) {
         ctx.walletAddressUrl = ctx.query['wallet-address'] as string
-      } else if (ctx.method === 'POST') {
-        ctx.walletAddressUrl = (ctx.request.body as CreateBody).walletAddress
+      } else if (ctx.path && ctx.path.startsWith('/incoming-payments')) {
+        const incomingPaymentService = await ctx.container.use(
+          'incomingPaymentService'
+        )
+        const incomingPayment = await incomingPaymentService.get({
+          id: ctx.params.id
+        })
+        if (!incomingPayment || !incomingPayment.walletAddress) {
+          ctx.throw(401)
+        }
+        ctx.walletAddressUrl = incomingPayment.walletAddress.url
+      } else if (ctx.path && ctx.path.startsWith('/outgoing-payments')) {
+        const outgoingPaymentService = await ctx.container.use(
+          'outgoingPaymentService'
+        )
+        const outgoingPayment = await outgoingPaymentService.get({
+          id: ctx.params.id
+        })
+        if (!outgoingPayment || !outgoingPayment.walletAddress) {
+          ctx.throw(401)
+        }
+        ctx.walletAddressUrl = outgoingPayment.walletAddress.url
+      } else if (ctx.path && ctx.path.startsWith('/quotes')) {
+        const quoteService = await ctx.container.use('quoteService')
+        const quote = await quoteService.get({ id: ctx.params.id })
+        if (!quote || !quote.walletAddress) {
+          ctx.throw(401)
+        }
+        ctx.walletAddressUrl = quote.walletAddress.url
       } else {
-        ctx.throw(401)
+        ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+      }
+    } else if (ctx.method === 'POST') {
+      if (ctx.path === `/incoming-payments/${ctx.params.id}/complete`) {
+        const incomingPaymentService = await ctx.container.use(
+          'incomingPaymentService'
+        )
+        const incomingPayment = await incomingPaymentService.get({
+          id: ctx.params.id
+        })
+        if (!incomingPayment || !incomingPayment.walletAddress) {
+          ctx.throw(401)
+        }
+        ctx.walletAddressUrl = incomingPayment.walletAddress.url
+      } else {
+        ctx.walletAddressUrl = (ctx.request.body as CreateBody).walletAddress
       }
     } else {
-      ctx.walletAddressUrl = `https://${ctx.request.host}/${ctx.params.walletAddressPath}`
+      ctx.throw(401)
     }
 
     const config = await ctx.container.use('config')

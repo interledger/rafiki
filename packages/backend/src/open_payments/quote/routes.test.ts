@@ -29,8 +29,9 @@ describe('Quote Routes', (): void => {
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
   let walletAddress: WalletAddress
+  let baseUrl: string
 
-  const receiver = `https://wallet2.example/bob/incoming-payments/${uuid()}`
+  const receiver = `https://wallet2.example/incoming-payments/${uuid()}`
   const asset = randomAsset()
   const debitAmount: Amount = {
     value: BigInt(123),
@@ -78,6 +79,7 @@ describe('Quote Routes', (): void => {
     walletAddress = await createWalletAddress(deps, {
       assetId
     })
+    baseUrl = new URL(walletAddress.url).origin
   })
 
   afterEach(async (): Promise<void> => {
@@ -99,7 +101,7 @@ describe('Quote Routes', (): void => {
       get: (ctx) => quoteRoutes.get(ctx),
       getBody: (quote) => {
         return {
-          id: `${walletAddress.url}/quotes/${quote.id}`,
+          id: `${baseUrl}/quotes/${quote.id}`,
           walletAddress: walletAddress.url,
           receiver: quote.receiver,
           debitAmount: serializeAmount(quote.debitAmount),
@@ -224,7 +226,7 @@ describe('Quote Routes', (): void => {
             .pop()
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
-            id: `${walletAddress.url}/quotes/${quoteId}`,
+            id: `${baseUrl}/quotes/${quoteId}`,
             walletAddress: walletAddress.url,
             receiver: quote.receiver,
             debitAmount: {
@@ -275,7 +277,7 @@ describe('Quote Routes', (): void => {
           .pop()
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
-          id: `${walletAddress.url}/quotes/${quoteId}`,
+          id: `${baseUrl}/quotes/${quoteId}`,
           walletAddress: walletAddress.url,
           receiver: options.receiver,
           debitAmount: {

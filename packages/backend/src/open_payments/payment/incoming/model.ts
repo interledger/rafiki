@@ -126,7 +126,8 @@ export class IncomingPayment
   }
 
   public getUrl(walletAddress: WalletAddress): string {
-    return `${walletAddress.url}${IncomingPayment.urlPath}/${this.id}`
+    const url = new URL(walletAddress.url)
+    return `${url.origin}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -232,10 +233,13 @@ export class IncomingPayment
     }
   }
 
-  public toPublicOpenPaymentsType(): Pick<
-    OpenPaymentsIncomingPayment,
-    'receivedAmount'
-  > {
-    return { receivedAmount: serializeAmount(this.receivedAmount) }
+  public toPublicOpenPaymentsType(authServerUrl: string): {
+    receivedAmount: OpenPaymentsIncomingPayment['receivedAmount']
+    authServer: string
+  } {
+    return {
+      receivedAmount: serializeAmount(this.receivedAmount),
+      authServer: authServerUrl
+    }
   }
 }
