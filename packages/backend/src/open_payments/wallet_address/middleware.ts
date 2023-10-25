@@ -17,7 +17,6 @@ export function createWalletAddressMiddleware() {
         ctx.path === '/quotes'
       ) {
         ctx.walletAddressUrl = ctx.query['wallet-address'] as string
-        console.log(ctx.walletAddressUrl)
       } else if (ctx.path && ctx.path.startsWith('/incoming-payments')) {
         const incomingPaymentService = await ctx.container.use(
           'incomingPaymentService'
