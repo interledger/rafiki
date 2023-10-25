@@ -720,7 +720,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateWalletAddressKey ($input: CreateWalletAddressKeyInput!) {\n    createWalletAddressKey(input: $input) {\n        code\n        message\n        success\n        walletAddressKey {\n            id\n            revoked\n            walletAddressId\n            createdAt\n            jwk {\n                alg\n                crv\n                kid\n                kty\n                x\n            }\n        }\n    }\n}",
-								"variables": "{\n    \"input\": {\n        \"walletAddresId\": \"{{walletAddressId}}\",\n        \"jwk\": {\n            \"alg\": \"EdDSA\",\n            \"crv\": \"Ed25519\",\n            \"kid\": \"kid_dad93e7f-f40b-484d-99d2-df12c8523176\",\n            \"kty\": \"OKP\", \n            \"x\": \"ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8\"\n        }\n    }\n}"
+								"variables": "{\n    \"input\": {\n        \"walletAddressId\": \"{{walletAddressId}}\",\n        \"jwk\": {\n            \"alg\": \"EdDSA\",\n            \"crv\": \"Ed25519\",\n            \"kid\": \"kid_dad93e7f-f40b-484d-99d2-df12c8523176\",\n            \"kty\": \"OKP\", \n            \"x\": \"ubqoInifJ5sssIPPnQR1gVPfmoZnJtPhTkyMXNoJF_8\"\n        }\n    }\n}"
 							}
 						},
 						"url": {
@@ -1665,7 +1665,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{receiverWalletAddress}}",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?wallet-address=https://happy-life-bank-backend/accounts/pfry&first=10",
 									"host": [
 										"{{receiverOpenPaymentsHost}}"
 									],
@@ -1674,8 +1674,8 @@
 									],
 									"query": [
 										{
-											"key": "first",
-											"value": "10"
+											"key": "wallet-address",
+											"value": "https://happy-life-bank-backend/accounts/pfry"
 										},
 										{
 											"key": "cursor",
@@ -1683,8 +1683,8 @@
 											"disabled": true
 										},
 										{
-											"key": "wallet-address",
-											"value": "{{receiverWalletAddress}}"
+											"key": "first",
+											"value": "10"
 										}
 									]
 								}
@@ -2048,7 +2048,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments?first=2&wallet-address=https://cloud-nine-wallet-backend/accounts/gfranklin",
 									"host": [
 										"{{senderOpenPaymentsHost}}"
 									],
@@ -2067,7 +2067,7 @@
 										},
 										{
 											"key": "wallet-address",
-											"value": "{{senderWalletAddress}}"
+											"value": "https://cloud-nine-wallet-backend/accounts/gfranklin"
 										}
 									]
 								}
