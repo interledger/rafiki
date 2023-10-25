@@ -76,7 +76,9 @@ async function getIncomingPaymentPublic(
       client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
       walletAddressId: ctx.walletAddress.id
     })
-    ctx.body = incomingPayment?.toPublicOpenPaymentsType()
+    ctx.body = incomingPayment?.toPublicOpenPaymentsType(
+      deps.config.authServerGrantUrl
+    )
   } catch (err) {
     const msg = 'Error trying to get incoming payment'
     deps.logger.error({ err }, msg)

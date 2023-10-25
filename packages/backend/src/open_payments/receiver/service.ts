@@ -46,7 +46,7 @@ interface ServiceDependencies extends BaseService {
 }
 
 const INCOMING_PAYMENT_URL_REGEX =
-  /(?<walletAddressUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
+  /(?<resourceServerUrl>^(.)+)\/incoming-payments\/(?<id>(.){36}$)/
 
 export async function createReceiverService(
   deps_: ServiceDependencies
@@ -153,15 +153,15 @@ async function getReceiver(
 
 function parseIncomingPaymentUrl(
   url: string
-): { id: string; walletAddressUrl: string } | undefined {
+): { id: string; resourceServerUrl: string } | undefined {
   const match = url.match(INCOMING_PAYMENT_URL_REGEX)?.groups
-  if (!match || !match.walletAddressUrl || !match.id) {
+  if (!match || !match.resourceServerUrl || !match.id) {
     return undefined
   }
 
   return {
     id: match.id,
-    walletAddressUrl: match.walletAddressUrl
+    resourceServerUrl: match.resourceServerUrl
   }
 }
 
@@ -174,22 +174,16 @@ async function getIncomingPayment(
     if (!urlParseResult) {
       return undefined
     }
-    // Check if this is a local wallet address
-    const walletAddress = await deps.walletAddressService.getByUrl(
-      urlParseResult.walletAddressUrl
-    )
-    if (walletAddress) {
-      return await getLocalIncomingPayment({
-        deps,
-        id: urlParseResult.id,
-        walletAddress
-      })
+
+    const localIncomingPayment = await getLocalIncomingPayment({
+      deps,
+      id: urlParseResult.id
+    })
+    if (localIncomingPayment) {
+      return localIncomingPayment
     }
 
-    const grant = await getIncomingPaymentGrant(
-      deps,
-      urlParseResult.walletAddressUrl
-    )
+    const grant = await getIncomingPaymentGrant(deps, url)
     if (!grant) {
       throw new Error('Could not find grant')
     } else {
@@ -209,19 +203,16 @@ async function getIncomingPayment(
 
 async function getLocalIncomingPayment({
   deps,
-  id,
-  walletAddress
+  id
 }: {
   deps: ServiceDependencies
   id: string
-  walletAddress: WalletAddress
 }): Promise<OpenPaymentsIncomingPaymentWithPaymentMethods | undefined> {
   const incomingPayment = await deps.incomingPaymentService.get({
-    id,
-    walletAddressId: walletAddress.id
+    id
   })
 
-  if (!incomingPayment) {
+  if (!incomingPayment || !incomingPayment.walletAddress) {
     return undefined
   }
 
@@ -232,23 +223,26 @@ async function getLocalIncomingPayment({
   }
 
   return incomingPayment.toOpenPaymentsTypeWithMethods(
-    walletAddress,
+    incomingPayment.walletAddress,
     streamCredentials
   )
 }
 
 async function getIncomingPaymentGrant(
   deps: ServiceDependencies,
-  walletAddressUrl: string
+  incomingPaymentUrl: string
 ): Promise<Grant | undefined> {
-  const walletAddress = await deps.openPaymentsClient.walletAddress.get({
-    url: walletAddressUrl
-  })
-  if (!walletAddress) {
+  // TODO: replace with OP client method
+  const publicIncomingPaymentResponse = await fetch(incomingPaymentUrl)
+  if (!publicIncomingPaymentResponse.ok) {
+    return undefined
+  }
+  const publicIncomingPayment = await publicIncomingPaymentResponse.json()
+  if (!publicIncomingPayment || !publicIncomingPayment.authServer) {
     return undefined
   }
   const grantOptions = {
-    authServer: walletAddress.authServer,
+    authServer: publicIncomingPayment.authServer,
     accessType: AccessType.IncomingPayment,
     accessActions: [AccessAction.ReadAll]
   }
@@ -279,7 +273,7 @@ async function getIncomingPaymentGrant(
   }
 
   const grant = await deps.openPaymentsClient.grant.request(
-    { url: walletAddress.authServer },
+    { url: publicIncomingPayment.authServer },
     {
       access_token: {
         access: [

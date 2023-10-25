@@ -233,10 +233,13 @@ export class IncomingPayment
     }
   }
 
-  public toPublicOpenPaymentsType(): Pick<
-    OpenPaymentsIncomingPayment,
-    'receivedAmount'
-  > {
-    return { receivedAmount: serializeAmount(this.receivedAmount) }
+  public toPublicOpenPaymentsType(authServerUrl: string): {
+    receivedAmount: OpenPaymentsIncomingPayment['receivedAmount']
+    authServer: string
+  } {
+    return {
+      receivedAmount: serializeAmount(this.receivedAmount),
+      authServer: authServerUrl
+    }
   }
 }
