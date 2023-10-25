@@ -21,6 +21,7 @@ import {
   ReceiverError,
   errorToMessage as receiverErrorToMessage
 } from './errors'
+import { IAppConfig } from '../../config/app'
 
 interface CreateReceiverArgs {
   walletAddressUrl: string
@@ -43,6 +44,7 @@ interface ServiceDependencies extends BaseService {
   walletAddressService: WalletAddressService
   openPaymentsClient: AuthenticatedClient
   remoteIncomingPaymentService: RemoteIncomingPaymentService
+  config: IAppConfig
 }
 
 const INCOMING_PAYMENT_URL_REGEX =
@@ -233,7 +235,16 @@ async function getIncomingPaymentGrant(
   incomingPaymentUrl: string
 ): Promise<Grant | undefined> {
   // TODO: replace with OP client method
-  const publicIncomingPaymentResponse = await fetch(incomingPaymentUrl)
+  // const publicIncomingPayment =
+  //   await deps.openPaymentsClient.incomingPayment.getPublic(incomingPaymentUrl)
+  let url: string
+  if (deps.config.env === 'development') {
+    const parsedUrl = new URL(incomingPaymentUrl)
+    url = `http://${parsedUrl.hostname}${parsedUrl.pathname}`
+  } else {
+    url = incomingPaymentUrl
+  }
+  const publicIncomingPaymentResponse = await fetch(url)
   if (!publicIncomingPaymentResponse.ok) {
     return undefined
   }

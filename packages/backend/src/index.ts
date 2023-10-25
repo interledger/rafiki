@@ -303,7 +303,8 @@ export function initIocContainer(
       openPaymentsClient: await deps.use('openPaymentsClient'),
       remoteIncomingPaymentService: await deps.use(
         'remoteIncomingPaymentService'
-      )
+      ),
+      config: await deps.use('config')
     })
   })
 
