@@ -7,7 +7,7 @@ import { isQuoteError, errorToCode, errorToMessage } from './errors'
 import { Quote } from './model'
 import { AmountJSON, parseAmount } from '../amount'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
-import { PaymentPointer } from '../payment_pointer/model'
+import { WalletAddress } from '../wallet_address/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -37,15 +37,16 @@ async function getQuote(
 ): Promise<void> {
   const quote = await deps.quoteService.get({
     id: ctx.params.id,
-    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-    paymentPointerId: ctx.paymentPointer.id
+    client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
   })
-  if (!quote) return ctx.throw(404)
-  ctx.body = quoteToBody(ctx.paymentPointer, quote)
+  if (!quote || !quote.walletAddress) return ctx.throw(404)
+  ctx.body = quoteToBody(quote.walletAddress, quote)
 }
 
 interface CreateBodyBase {
+  walletAddress: string
   receiver: string
+  method: 'ilp'
 }
 
 interface CreateBodyWithDebitAmount extends CreateBodyBase {
@@ -66,9 +67,10 @@ async function createQuote(
 ): Promise<void> {
   const { body } = ctx.request
   const options: CreateQuoteOptions = {
-    paymentPointerId: ctx.paymentPointer.id,
+    walletAddressId: ctx.walletAddress.id,
     receiver: body.receiver,
-    client: ctx.client
+    client: ctx.client,
+    method: body.method
   }
   if (body.debitAmount) options.debitAmount = parseAmount(body.debitAmount)
   if (body.receiveAmount)
@@ -81,7 +83,7 @@ async function createQuote(
     }
 
     ctx.status = 201
-    ctx.body = quoteToBody(ctx.paymentPointer, quoteOrErr)
+    ctx.body = quoteToBody(ctx.walletAddress, quoteOrErr)
   } catch (err) {
     if (isQuoteError(err)) {
       return ctx.throw(errorToCode[err], errorToMessage[err])
@@ -92,8 +94,8 @@ async function createQuote(
 }
 
 function quoteToBody(
-  paymentPointer: PaymentPointer,
+  walletAddress: WalletAddress,
   quote: Quote
 ): OpenPaymentsQuote {
-  return quote.toOpenPaymentsType(paymentPointer)
+  return quote.toOpenPaymentsType(walletAddress)
 }

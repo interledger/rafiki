@@ -38,7 +38,7 @@ export const createTestApp = async (
   config.autoPeeringServerPort = 0
   config.publicHost = 'https://wallet.example'
   config.openPaymentsUrl = 'https://op.example'
-  config.paymentPointerUrl = 'https://wallet.example/.well-known/pay'
+  config.walletAddressUrl = 'https://wallet.example/.well-known/pay'
   const logger = createLogger({
     transport: {
       target: 'pino-pretty',
@@ -57,7 +57,7 @@ export const createTestApp = async (
   const app = new App(container)
   await start(container, app)
 
-  // Since payment pointers MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
+  // Since wallet addresses MUST use HTTPS, manually mock an HTTPS proxy to the Open Payments / SPSP server
   nock(config.openPaymentsUrl)
     .get(/.*/)
     .matchHeader('Accept', /application\/((ilp-stream|spsp4)\+)?json*./)

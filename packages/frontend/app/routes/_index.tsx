@@ -13,7 +13,7 @@ export default function Index() {
           </div>
           <p>
             In this web application, you&apos;ll be able to manage peering
-            relationships, assets, and payment pointers, among other settings.
+            relationships, assets, and wallet addresses, among other settings.
           </p>
           <p>
             <a href='https://rafiki.dev' className='font-semibold'>

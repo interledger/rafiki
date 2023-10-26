@@ -1,4 +1,3 @@
-import base64url from 'base64url'
 import { v4 as uuid } from 'uuid'
 import { IocContract } from '@adonisjs/fold'
 
@@ -9,10 +8,11 @@ import { isOutgoingPaymentError } from '../open_payments/payment/outgoing/errors
 import { OutgoingPayment } from '../open_payments/payment/outgoing/model'
 import { CreateOutgoingPaymentOptions } from '../open_payments/payment/outgoing/service'
 import { LiquidityAccountType } from '../accounting/service'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { WalletAddress } from '../open_payments/wallet_address/model'
 import { CreateIncomingPaymentOptions } from '../open_payments/payment/incoming/service'
 import { IncomingPayment } from '../open_payments/payment/incoming/model'
 import { createIncomingPayment } from './incomingPayment'
+import assert from 'assert'
 
 type CreateTestQuoteAndOutgoingPaymentOptions = Omit<
   CreateOutgoingPaymentOptions & CreateTestQuoteOptions,
@@ -24,11 +24,12 @@ export async function createOutgoingPayment(
   options: CreateTestQuoteAndOutgoingPaymentOptions
 ): Promise<OutgoingPayment> {
   const quoteOptions: CreateTestQuoteOptions = {
-    paymentPointerId: options.paymentPointerId,
+    walletAddressId: options.walletAddressId,
     client: options.client,
     receiver: options.receiver,
     validDestination: options.validDestination,
-    exchangeRate: options.exchangeRate
+    exchangeRate: options.exchangeRate,
+    method: options.method
   }
   if (options.debitAmount) quoteOptions.debitAmount = options.debitAmount
   if (options.receiveAmount) quoteOptions.receiveAmount = options.receiveAmount
@@ -36,17 +37,28 @@ export async function createOutgoingPayment(
   const outgoingPaymentService = await deps.use('outgoingPaymentService')
   const receiverService = await deps.use('receiverService')
   if (options.validDestination === false) {
+    const walletAddressService = await deps.use('walletAddressService')
     const streamServer = await deps.use('streamServer')
-    const { ilpAddress, sharedSecret } = streamServer.generateCredentials()
-    jest.spyOn(receiverService, 'get').mockResolvedValueOnce(
-      Receiver.fromConnection({
-        id: options.receiver,
-        ilpAddress,
-        sharedSecret: base64url(sharedSecret),
-        assetCode: quote.receiveAmount.assetCode,
-        assetScale: quote.receiveAmount.assetScale
-      })
+    const streamCredentials = streamServer.generateCredentials()
+
+    const incomingPayment = await createIncomingPayment(deps, {
+      walletAddressId: options.walletAddressId
+    })
+    await incomingPayment.$query().delete()
+    const walletAddress = await walletAddressService.get(
+      options.walletAddressId
     )
+    assert(walletAddress)
+    jest
+      .spyOn(receiverService, 'get')
+      .mockResolvedValueOnce(
+        new Receiver(
+          incomingPayment.toOpenPaymentsTypeWithMethods(
+            walletAddress,
+            streamCredentials
+          )
+        )
+      )
   }
   const outgoingPaymentOrError = await outgoingPaymentService.create({
     ...options,
@@ -66,7 +78,8 @@ export async function createOutgoingPayment(
 }
 
 interface CreateOutgoingPaymentWithReceiverArgs {
-  receivingPaymentPointer: PaymentPointer
+  receivingWalletAddress: WalletAddress
+  method: 'ilp'
   incomingPaymentOptions?: Partial<CreateIncomingPaymentOptions>
   quoteOptions?: Partial<
     Pick<
@@ -74,7 +87,7 @@ interface CreateOutgoingPaymentWithReceiverArgs {
       'debitAmount' | 'receiveAmount' | 'exchangeRate'
     >
   >
-  sendingPaymentPointer: PaymentPointer
+  sendingWalletAddress: WalletAddress
   fundOutgoingPayment?: boolean
 }
 
@@ -101,19 +114,22 @@ export async function createOutgoingPaymentWithReceiver(
 
   const incomingPayment = await createIncomingPayment(deps, {
     ...args.incomingPaymentOptions,
-    paymentPointerId: args.receivingPaymentPointer.id
+    walletAddressId: args.receivingWalletAddress.id
   })
 
-  const connectionService = await deps.use('connectionService')
-  const receiver = Receiver.fromIncomingPayment(
-    incomingPayment.toOpenPaymentsType(
-      args.receivingPaymentPointer,
-      connectionService.get(incomingPayment)!
+  const streamCredentialsService = await deps.use('streamCredentialsService')
+  const streamCredentials = await streamCredentialsService.get(incomingPayment)
+
+  const receiver = new Receiver(
+    incomingPayment.toOpenPaymentsTypeWithMethods(
+      args.receivingWalletAddress,
+      streamCredentials
     )
   )
 
   const outgoingPayment = await createOutgoingPayment(deps, {
-    paymentPointerId: args.sendingPaymentPointer.id,
+    walletAddressId: args.sendingWalletAddress.id,
+    method: args.method,
     receiver: receiver.incomingPayment!.id!,
     ...args.quoteOptions
   })

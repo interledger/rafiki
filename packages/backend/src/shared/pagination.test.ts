@@ -2,7 +2,7 @@ import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
 import { createTestApp, TestContainer } from '../tests/app'
 import { Amount } from '../open_payments/amount'
-import { PaymentPointer } from '../open_payments/payment_pointer/model'
+import { WalletAddress } from '../open_payments/wallet_address/model'
 import { IncomingPaymentService } from '../open_payments/payment/incoming/service'
 import { Config, IAppConfig } from '../config/app'
 import { createAsset } from '../tests/asset'
@@ -13,7 +13,7 @@ import { QuoteService } from '../open_payments/quote/service'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createQuote } from '../tests/quote'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
-import { createPaymentPointer } from '../tests/paymentPointer'
+import { createWalletAddress } from '../tests/walletAddress'
 import { getPageInfo, parsePaginationQueryParameters } from './pagination'
 import { AssetService } from '../asset/service'
 import { PeerService } from '../payment-method/ilp/peer/service'
@@ -58,9 +58,9 @@ describe('Pagination', (): void => {
     )
   })
   describe('getPageInfo', (): void => {
-    describe('payment pointer resources', (): void => {
-      let defaultPaymentPointer: PaymentPointer
-      let secondaryPaymentPointer: PaymentPointer
+    describe('wallet address resources', (): void => {
+      let defaultWalletAddress: WalletAddress
+      let secondaryWalletAddress: WalletAddress
       let debitAmount: Amount
 
       beforeEach(async (): Promise<void> => {
@@ -69,10 +69,10 @@ describe('Pagination', (): void => {
         quoteService = await deps.use('quoteService')
 
         const asset = await createAsset(deps)
-        defaultPaymentPointer = await createPaymentPointer(deps, {
+        defaultWalletAddress = await createWalletAddress(deps, {
           assetId: asset.id
         })
-        secondaryPaymentPointer = await createPaymentPointer(deps, {
+        secondaryWalletAddress = await createWalletAddress(deps, {
           assetId: asset.id
         })
         debitAmount = {
@@ -104,7 +104,7 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createIncomingPayment(deps, {
-                paymentPointerId: defaultPaymentPointer.id
+                walletAddressId: defaultWalletAddress.id
               })
               paymentIds.push(payment.id)
             }
@@ -112,14 +112,14 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
-            const page = await incomingPaymentService.getPaymentPointerPage({
-              paymentPointerId: defaultPaymentPointer.id,
+            const page = await incomingPaymentService.getWalletAddressPage({
+              walletAddressId: defaultWalletAddress.id,
               pagination
             })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                incomingPaymentService.getPaymentPointerPage({
-                  paymentPointerId: defaultPaymentPointer.id,
+                incomingPaymentService.getWalletAddressPage({
+                  walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
               page
@@ -155,8 +155,9 @@ describe('Pagination', (): void => {
             const paymentIds: string[] = []
             for (let i = 0; i < num; i++) {
               const payment = await createOutgoingPayment(deps, {
-                paymentPointerId: defaultPaymentPointer.id,
-                receiver: secondaryPaymentPointer.url,
+                walletAddressId: defaultWalletAddress.id,
+                receiver: secondaryWalletAddress.url,
+                method: 'ilp',
                 debitAmount,
                 validDestination: false
               })
@@ -166,14 +167,14 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = paymentIds[cursor]
               else pagination.after = paymentIds[cursor]
             }
-            const page = await outgoingPaymentService.getPaymentPointerPage({
-              paymentPointerId: defaultPaymentPointer.id,
+            const page = await outgoingPaymentService.getWalletAddressPage({
+              walletAddressId: defaultWalletAddress.id,
               pagination
             })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                outgoingPaymentService.getPaymentPointerPage({
-                  paymentPointerId: defaultPaymentPointer.id,
+                outgoingPaymentService.getWalletAddressPage({
+                  walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
               page
@@ -209,10 +210,11 @@ describe('Pagination', (): void => {
             const quoteIds: string[] = []
             for (let i = 0; i < num; i++) {
               const quote = await createQuote(deps, {
-                paymentPointerId: defaultPaymentPointer.id,
-                receiver: secondaryPaymentPointer.url,
+                walletAddressId: defaultWalletAddress.id,
+                receiver: secondaryWalletAddress.url,
                 debitAmount,
-                validDestination: false
+                validDestination: false,
+                method: 'ilp'
               })
               quoteIds.push(quote.id)
             }
@@ -220,14 +222,14 @@ describe('Pagination', (): void => {
               if (pagination.last) pagination.before = quoteIds[cursor]
               else pagination.after = quoteIds[cursor]
             }
-            const page = await quoteService.getPaymentPointerPage({
-              paymentPointerId: defaultPaymentPointer.id,
+            const page = await quoteService.getWalletAddressPage({
+              walletAddressId: defaultWalletAddress.id,
               pagination
             })
             const pageInfo = await getPageInfo(
               (pagination) =>
-                quoteService.getPaymentPointerPage({
-                  paymentPointerId: defaultPaymentPointer.id,
+                quoteService.getWalletAddressPage({
+                  walletAddressId: defaultWalletAddress.id,
                   pagination
                 }),
               page
@@ -242,7 +244,7 @@ describe('Pagination', (): void => {
         )
       })
     })
-    describe('non-payment pointer resources', (): void => {
+    describe('non-wallet address resources', (): void => {
       let assetService: AssetService
       let peerService: PeerService
       beforeEach(async (): Promise<void> => {

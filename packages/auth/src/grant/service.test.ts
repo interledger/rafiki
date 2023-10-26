@@ -373,16 +373,16 @@ describe('Grant Service', (): void => {
 
   describe('getGrantsPage', (): void => {
     let grants: Grant[] = []
-    const paymentPointer = 'example.com/test'
+    const walletAddress = 'example.com/test'
 
     beforeEach(async () => {
       const grantDetails = [
         {
-          identifier: paymentPointer,
+          identifier: walletAddress,
           state: GrantState.Finalized,
           finalizationReason: GrantFinalization.Revoked
         },
-        { identifier: paymentPointer, state: GrantState.Pending },
+        { identifier: walletAddress, state: GrantState.Pending },
         { identifier: 'example.com/test3', state: GrantState.Pending }
       ]
 
@@ -408,7 +408,7 @@ describe('Grant Service', (): void => {
     test('Filter by identifier', async () => {
       const grants = await grantService.getPage(undefined, {
         identifier: {
-          in: [paymentPointer]
+          in: [walletAddress]
         }
       })
 
@@ -439,7 +439,7 @@ describe('Grant Service', (): void => {
     })
 
     test('Can paginate and filter', async (): Promise<void> => {
-      const filter = { identifier: { in: [paymentPointer] } }
+      const filter = { identifier: { in: [walletAddress] } }
       const page = await grantService.getPage(
         {
           first: 1,

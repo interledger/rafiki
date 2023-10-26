@@ -1,7 +1,7 @@
 import { AccessAction } from '@interledger/open-payments'
-import { PaymentPointerSubresource } from './model'
-import { PaymentPointerSubresourceService } from './service'
-import { PaymentPointerContext, ListContext } from '../../app'
+import { WalletAddressSubresource } from './model'
+import { WalletAddressSubresourceService } from './service'
+import { WalletAddressContext, ListContext } from '../../app'
 import {
   getPageInfo,
   parsePaginationQueryParameters
@@ -11,41 +11,41 @@ interface ServiceDependencies {
   authServer: string
 }
 
-export interface PaymentPointerRoutes {
-  get(ctx: PaymentPointerContext): Promise<void>
+export interface WalletAddressRoutes {
+  get(ctx: WalletAddressContext): Promise<void>
 }
 
-export function createPaymentPointerRoutes(
+export function createWalletAddressRoutes(
   deps: ServiceDependencies
-): PaymentPointerRoutes {
+): WalletAddressRoutes {
   return {
-    get: (ctx: PaymentPointerContext) => getPaymentPointer(deps, ctx)
+    get: (ctx: WalletAddressContext) => getWalletAddress(deps, ctx)
   }
 }
 
 // Spec: https://docs.openpayments.guide/reference/get-public-account
-export async function getPaymentPointer(
+export async function getWalletAddress(
   deps: ServiceDependencies,
-  ctx: PaymentPointerContext
+  ctx: WalletAddressContext
 ): Promise<void> {
-  if (!ctx.paymentPointer) {
+  if (!ctx.walletAddress) {
     return ctx.throw(404)
   }
 
-  ctx.body = ctx.paymentPointer.toOpenPaymentsType({
+  ctx.body = ctx.walletAddress.toOpenPaymentsType({
     authServer: deps.authServer
   })
 }
 
-interface ListSubresourceOptions<M extends PaymentPointerSubresource> {
+interface ListSubresourceOptions<M extends WalletAddressSubresource> {
   ctx: ListContext
-  getPaymentPointerPage: PaymentPointerSubresourceService<M>['getPaymentPointerPage']
+  getWalletAddressPage: WalletAddressSubresourceService<M>['getWalletAddressPage']
   toBody: (model: M) => Record<string, unknown>
 }
 
-export const listSubresource = async <M extends PaymentPointerSubresource>({
+export const listSubresource = async <M extends WalletAddressSubresource>({
   ctx,
-  getPaymentPointerPage,
+  getWalletAddressPage,
   toBody
 }: ListSubresourceOptions<M>) => {
   if (ctx.request.query.last) {
@@ -57,15 +57,15 @@ export const listSubresource = async <M extends PaymentPointerSubresource>({
   }
   const pagination = parsePaginationQueryParameters(ctx.request.query)
   const client = ctx.accessAction === AccessAction.List ? ctx.client : undefined
-  const page = await getPaymentPointerPage({
-    paymentPointerId: ctx.paymentPointer.id,
+  const page = await getWalletAddressPage({
+    walletAddressId: ctx.walletAddress.id,
     pagination,
     client
   })
   const pageInfo = await getPageInfo(
     (pagination) =>
-      getPaymentPointerPage({
-        paymentPointerId: ctx.paymentPointer.id,
+      getWalletAddressPage({
+        walletAddressId: ctx.walletAddress.id,
         pagination,
         client
       }),

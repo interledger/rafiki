@@ -9,7 +9,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { Asset } from '../../asset/model'
 import { createAsset } from '../../tests/asset'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
 import { truncateTables } from '../../tests/tableManager'
 import { QuoteError, errorToMessage } from '../../open_payments/quote/errors'
@@ -24,8 +24,8 @@ describe('Quote Resolvers', (): void => {
   let quoteService: QuoteService
   let asset: Asset
 
-  const receivingPaymentPointer = 'http://wallet2.example/bob'
-  const receiver = `${receivingPaymentPointer}/incoming-payments/${uuid()}`
+  const receivingWalletAddress = 'http://wallet2.example/bob'
+  const receiver = `${receivingWalletAddress}/incoming-payments/${uuid()}`
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
@@ -47,27 +47,28 @@ describe('Quote Resolvers', (): void => {
     await appContainer.shutdown()
   })
 
-  const createPaymentPointerQuote = async (
-    paymentPointerId: string
+  const createWalletAddressQuote = async (
+    walletAddressId: string
   ): Promise<QuoteModel> => {
     return await createQuote(deps, {
-      paymentPointerId,
+      walletAddressId,
       receiver,
       debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale
       },
+      method: 'ilp',
       validDestination: false
     })
   }
 
   describe('Query.quote', (): void => {
     test('200', async (): Promise<void> => {
-      const { id: paymentPointerId } = await createPaymentPointer(deps, {
+      const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
-      const quote = await createPaymentPointerQuote(paymentPointerId)
+      const quote = await createWalletAddressQuote(walletAddressId)
 
       const query = await appContainer.apolloClient
         .query({
@@ -75,7 +76,7 @@ describe('Quote Resolvers', (): void => {
             query Quote($quoteId: String!) {
               quote(id: $quoteId) {
                 id
-                paymentPointerId
+                walletAddressId
                 receiver
                 debitAmount {
                   value
@@ -104,7 +105,7 @@ describe('Quote Resolvers', (): void => {
 
       expect(query).toEqual({
         id: quote.id,
-        paymentPointerId,
+        walletAddressId,
         receiver: quote.receiver,
         debitAmount: {
           value: quote.debitAmount.value.toString(),
@@ -166,7 +167,7 @@ describe('Quote Resolvers', (): void => {
         assetScale: asset.scale
       }
       input = {
-        paymentPointerId: uuid(),
+        walletAddressId: uuid(),
         receiver,
         debitAmount
       }
@@ -179,11 +180,11 @@ describe('Quote Resolvers', (): void => {
       ${false}   | ${undefined}     | ${'incoming payment'}
     `('200 ($type)', async ({ withAmount, receiveAmount }): Promise<void> => {
       const amount = withAmount ? debitAmount : undefined
-      const { id: paymentPointerId } = await createPaymentPointer(deps, {
+      const { id: walletAddressId } = await createWalletAddress(deps, {
         assetId: asset.id
       })
       const input = {
-        paymentPointerId,
+        walletAddressId,
         debitAmount: amount,
         receiveAmount,
         receiver
@@ -217,7 +218,7 @@ describe('Quote Resolvers', (): void => {
         })
         .then((query): QuoteResponse => query.data?.createQuote)
 
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.code).toBe('200')
       expect(query.success).toBe(true)
       expect(query.quote?.id).toBe(quote?.id)
@@ -244,7 +245,7 @@ describe('Quote Resolvers', (): void => {
       expect(query.code).toBe('404')
       expect(query.success).toBe(false)
       expect(query.message).toBe(
-        errorToMessage[QuoteError.UnknownPaymentPointer]
+        errorToMessage[QuoteError.UnknownWalletAddress]
       )
       expect(query.quote).toBeNull()
     })
@@ -271,7 +272,7 @@ describe('Quote Resolvers', (): void => {
           variables: { input }
         })
         .then((query): QuoteResponse => query.data?.createQuote)
-      expect(createSpy).toHaveBeenCalledWith(input)
+      expect(createSpy).toHaveBeenCalledWith({ ...input, method: 'ilp' })
       expect(query.code).toBe('500')
       expect(query.success).toBe(false)
       expect(query.message).toBe('Error trying to create quote')
@@ -279,12 +280,12 @@ describe('Quote Resolvers', (): void => {
     })
   })
 
-  describe('Payment pointer quotes', (): void => {
-    let paymentPointerId: string
+  describe('Wallet address quotes', (): void => {
+    let walletAddressId: string
 
     beforeEach(async (): Promise<void> => {
-      paymentPointerId = (
-        await createPaymentPointer(deps, {
+      walletAddressId = (
+        await createWalletAddress(deps, {
           assetId: asset.id
         })
       ).id
@@ -292,11 +293,11 @@ describe('Quote Resolvers', (): void => {
 
     getPageTests({
       getClient: () => appContainer.apolloClient,
-      createModel: () => createPaymentPointerQuote(paymentPointerId),
+      createModel: () => createWalletAddressQuote(walletAddressId),
       pagedQuery: 'quotes',
       parent: {
-        query: 'paymentPointer',
-        getId: () => paymentPointerId
+        query: 'walletAddress',
+        getId: () => walletAddressId
       }
     })
   })

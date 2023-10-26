@@ -4,7 +4,8 @@ import {
   ReadContext,
   CreateContext,
   CompleteContext,
-  ListContext
+  ListContext,
+  AuthenticatedStatusContext
 } from '../../../app'
 import { IAppConfig } from '../../../config/app'
 import { IncomingPaymentService } from './service'
@@ -16,26 +17,22 @@ import {
   isIncomingPaymentError
 } from './errors'
 import { AmountJSON, parseAmount } from '../../amount'
-import { listSubresource } from '../../payment_pointer/routes'
-import { Connection } from '../../connection/model'
-import { ConnectionService } from '../../connection/service'
-import {
-  AccessAction,
-  IncomingPayment as OpenPaymentsIncomingPayment,
-  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
-} from '@interledger/open-payments'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { listSubresource } from '../../wallet_address/routes'
+import { StreamCredentialsService } from '../../../payment-method/ilp/stream-credentials/service'
+import { AccessAction } from '@interledger/open-payments'
 
 interface ServiceDependencies {
   config: IAppConfig
   logger: Logger
   incomingPaymentService: IncomingPaymentService
-  connectionService: ConnectionService
+  streamCredentialsService: StreamCredentialsService
 }
 
+export type ReadContextWithAuthenticatedStatus = ReadContext &
+  AuthenticatedStatusContext
+
 export interface IncomingPaymentRoutes {
-  get(ctx: ReadContext): Promise<void>
+  get(ctx: ReadContextWithAuthenticatedStatus): Promise<void>
   create(ctx: CreateContext<CreateBody>): Promise<void>
   complete(ctx: CompleteContext): Promise<void>
   list(ctx: ListContext): Promise<void>
@@ -49,7 +46,8 @@ export function createIncomingPaymentRoutes(
   })
   const deps = { ...deps_, logger }
   return {
-    get: (ctx: ReadContext) => getIncomingPayment(deps, ctx),
+    get: (ctx: ReadContextWithAuthenticatedStatus) =>
+      getIncomingPayment(deps, ctx),
     create: (ctx: CreateContext<CreateBody>) =>
       createIncomingPayment(deps, ctx),
     complete: (ctx: CompleteContext) => completeIncomingPayment(deps, ctx),
@@ -59,28 +57,59 @@ export function createIncomingPaymentRoutes(
 
 async function getIncomingPayment(
   deps: ServiceDependencies,
-  ctx: ReadContext
+  ctx: ReadContextWithAuthenticatedStatus
+) {
+  if (ctx.authenticated) {
+    await getIncomingPaymentPrivate(deps, ctx)
+  } else {
+    await getIncomingPaymentPublic(deps, ctx)
+  }
+}
+
+async function getIncomingPaymentPublic(
+  deps: ServiceDependencies,
+  ctx: ReadContextWithAuthenticatedStatus
+) {
+  try {
+    const incomingPayment = await deps.incomingPaymentService.get({
+      id: ctx.params.id,
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
+    })
+    ctx.body = incomingPayment?.toPublicOpenPaymentsType(
+      deps.config.authServerGrantUrl
+    )
+  } catch (err) {
+    const msg = 'Error trying to get incoming payment'
+    deps.logger.error({ err }, msg)
+    ctx.throw(500, msg)
+  }
+}
+
+async function getIncomingPaymentPrivate(
+  deps: ServiceDependencies,
+  ctx: ReadContextWithAuthenticatedStatus
 ): Promise<void> {
   let incomingPayment: IncomingPayment | undefined
   try {
     incomingPayment = await deps.incomingPaymentService.get({
       id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      paymentPointerId: ctx.paymentPointer.id
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
     })
   } catch (err) {
     ctx.throw(500, 'Error trying to get incoming payment')
   }
-  if (!incomingPayment) return ctx.throw(404)
-  const connection = deps.connectionService.get(incomingPayment)
-  ctx.body = incomingPaymentToBody(
-    ctx.paymentPointer,
-    incomingPayment,
-    connection
+  if (!incomingPayment || !incomingPayment.walletAddress) return ctx.throw(404)
+
+  const streamCredentials = deps.streamCredentialsService.get(incomingPayment)
+
+  ctx.body = incomingPayment.toOpenPaymentsTypeWithMethods(
+    incomingPayment.walletAddress,
+    streamCredentials
   )
 }
 
 export type CreateBody = {
+  walletAddress: string
   expiresAt?: string
   incomingAmount?: AmountJSON
   metadata?: Record<string, unknown>
@@ -98,7 +127,7 @@ async function createIncomingPayment(
   }
 
   const incomingPaymentOrError = await deps.incomingPaymentService.create({
-    paymentPointerId: ctx.paymentPointer.id,
+    walletAddressId: ctx.walletAddress.id,
     client: ctx.client,
     metadata: body.metadata,
     expiresAt,
@@ -112,12 +141,17 @@ async function createIncomingPayment(
     )
   }
 
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
   ctx.status = 201
-  const connection = deps.connectionService.get(incomingPaymentOrError)
-  ctx.body = incomingPaymentToBody(
-    ctx.paymentPointer,
-    incomingPaymentOrError,
-    connection
+  const streamCredentials = deps.streamCredentialsService.get(
+    incomingPaymentOrError
+  )
+  ctx.body = incomingPaymentOrError.toOpenPaymentsTypeWithMethods(
+    incomingPaymentOrError.walletAddress,
+    streamCredentials
   )
 }
 
@@ -140,7 +174,14 @@ async function completeIncomingPayment(
       errorToMessage[incomingPaymentOrError]
     )
   }
-  ctx.body = incomingPaymentToBody(ctx.paymentPointer, incomingPaymentOrError)
+
+  if (!incomingPaymentOrError.walletAddress) {
+    ctx.throw(404)
+  }
+
+  ctx.body = incomingPaymentOrError.toOpenPaymentsType(
+    incomingPaymentOrError.walletAddress
+  )
 }
 
 async function listIncomingPayments(
@@ -150,13 +191,8 @@ async function listIncomingPayments(
   try {
     await listSubresource({
       ctx,
-      getPaymentPointerPage: deps.incomingPaymentService.getPaymentPointerPage,
-      toBody: (payment) =>
-        incomingPaymentToBody(
-          ctx.paymentPointer,
-          payment,
-          deps.connectionService.getUrl(payment)
-        )
+      getWalletAddressPage: deps.incomingPaymentService.getWalletAddressPage,
+      toBody: (payment) => payment.toOpenPaymentsType(ctx.walletAddress)
     })
   } catch (err) {
     if (err instanceof Koa.HttpError) {
@@ -164,14 +200,4 @@ async function listIncomingPayments(
     }
     ctx.throw(500, 'Error trying to list incoming payments')
   }
-}
-function incomingPaymentToBody(
-  paymentPointer: PaymentPointer,
-  incomingPayment: IncomingPayment,
-  ilpStreamConnection?: Connection | string
-):
-  | OpenPaymentsIncomingPayment
-  | OpenPaymentsIncomingPaymentWithConnection
-  | OpenPaymentsIncomingPaymentWithConnectionUrl {
-  return incomingPayment.toOpenPaymentsType(paymentPointer, ilpStreamConnection)
 }

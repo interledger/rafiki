@@ -7,11 +7,11 @@ import { Quote } from './model'
 import { Amount } from '../amount'
 import { ReceiverService } from '../receiver/service'
 import { Receiver } from '../receiver/model'
-import { GetOptions, ListOptions } from '../payment_pointer/model'
+import { GetOptions, ListOptions } from '../wallet_address/model'
 import {
-  PaymentPointerService,
-  PaymentPointerSubresourceService
-} from '../payment_pointer/service'
+  WalletAddressService,
+  WalletAddressSubresourceService
+} from '../wallet_address/service'
 import { PaymentMethodHandlerService } from '../../payment-method/handler/service'
 import { IAppConfig } from '../../config/app'
 import { FeeService } from '../../fee/service'
@@ -19,7 +19,7 @@ import { FeeType } from '../../fee/model'
 
 const MAX_INT64 = BigInt('9223372036854775807')
 
-export interface QuoteService extends PaymentPointerSubresourceService<Quote> {
+export interface QuoteService extends WalletAddressSubresourceService<Quote> {
   create(options: CreateQuoteOptions): Promise<Quote | QuoteError>
 }
 
@@ -27,7 +27,7 @@ export interface ServiceDependencies extends BaseService {
   config: IAppConfig
   knex: TransactionOrKnex
   receiverService: ReceiverService
-  paymentPointerService: PaymentPointerService
+  walletAddressService: WalletAddressService
   feeService: FeeService
   paymentMethodHandlerService: PaymentMethodHandlerService
 }
@@ -42,7 +42,7 @@ export async function createQuoteService(
   return {
     get: (options) => getQuote(deps, options),
     create: (options: CreateQuoteOptions) => createQuote(deps, options),
-    getPaymentPointerPage: (options) => getPaymentPointerPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
   }
 }
 
@@ -50,12 +50,15 @@ async function getQuote(
   deps: ServiceDependencies,
   options: GetOptions
 ): Promise<Quote | undefined> {
-  return Quote.query(deps.knex).get(options).withGraphFetched('[asset, fee]')
+  return Quote.query(deps.knex)
+    .get(options)
+    .withGraphFetched('[asset, fee, walletAddress]')
 }
 
 interface QuoteOptionsBase {
-  paymentPointerId: string
+  walletAddressId: string
   receiver: string
+  method: 'ilp'
   client?: string
 }
 
@@ -80,20 +83,20 @@ async function createQuote(
   if (options.debitAmount && options.receiveAmount) {
     return QuoteError.InvalidAmount
   }
-  const paymentPointer = await deps.paymentPointerService.get(
-    options.paymentPointerId
+  const walletAddress = await deps.walletAddressService.get(
+    options.walletAddressId
   )
-  if (!paymentPointer) {
-    return QuoteError.UnknownPaymentPointer
+  if (!walletAddress) {
+    return QuoteError.UnknownWalletAddress
   }
-  if (!paymentPointer.isActive) {
-    return QuoteError.InactivePaymentPointer
+  if (!walletAddress.isActive) {
+    return QuoteError.InactiveWalletAddress
   }
   if (options.debitAmount) {
     if (
       options.debitAmount.value <= BigInt(0) ||
-      options.debitAmount.assetCode !== paymentPointer.asset.code ||
-      options.debitAmount.assetScale !== paymentPointer.asset.scale
+      options.debitAmount.assetCode !== walletAddress.asset.code ||
+      options.debitAmount.assetScale !== walletAddress.asset.scale
     ) {
       return QuoteError.InvalidAmount
     }
@@ -107,7 +110,7 @@ async function createQuote(
   try {
     const receiver = await resolveReceiver(deps, options)
     const quote = await deps.paymentMethodHandlerService.getQuote('ILP', {
-      paymentPointer,
+      walletAddress,
       receiver,
       receiveAmount: options.receiveAmount,
       debitAmount: options.debitAmount
@@ -116,15 +119,15 @@ async function createQuote(
     const maxPacketAmount = quote.additionalFields.maxPacketAmount as bigint
 
     const sendingFee = await deps.feeService.getLatestFee(
-      paymentPointer.assetId,
+      walletAddress.assetId,
       FeeType.Sending
     )
 
     return await Quote.transaction(deps.knex, async (trx) => {
       const createdQuote = await Quote.query(trx)
         .insertAndFetch({
-          paymentPointerId: options.paymentPointerId,
-          assetId: paymentPointer.assetId,
+          walletAddressId: options.walletAddressId,
+          assetId: walletAddress.assetId,
           receiver: options.receiver,
           debitAmount: quote.debitAmount,
           receiveAmount: quote.receiveAmount,
@@ -143,7 +146,7 @@ async function createQuote(
           estimatedExchangeRate: quote.estimatedExchangeRate,
           additionalFields: quote.additionalFields
         })
-        .withGraphFetched('[asset, fee]')
+        .withGraphFetched('[asset, fee, walletAddress]')
 
       return await finalizeQuote(
         {
@@ -293,11 +296,11 @@ export async function finalizeQuote(
   return quote
 }
 
-async function getPaymentPointerPage(
+async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<Quote[]> {
   return await Quote.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, fee]')
+    .withGraphFetched('[asset, fee, walletAddress]')
 }

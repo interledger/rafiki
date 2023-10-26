@@ -1,23 +1,24 @@
-import { PaymentPointerContext, SPSPContext } from '../../../app'
-import { ConnectionContext } from '../../../open_payments/connection/middleware'
+import { AppContext, WalletAddressContext, SPSPContext } from '../../../app'
+import { IncomingPayment } from '../../../open_payments/payment/incoming/model'
 
-export type SPSPConnectionContext = ConnectionContext &
+export type SPSPConnectionContext = AppContext &
   SPSPContext & {
-    paymentPointer?: never
+    walletAddress?: never
+    incomingPayment: IncomingPayment
   }
 
-export type SPSPPaymentPointerContext = PaymentPointerContext &
+export type SPSPWalletAddressContext = WalletAddressContext &
   SPSPContext & {
     incomingPayment?: never
   }
 
 export const spspMiddleware = async (
-  ctx: SPSPConnectionContext | SPSPPaymentPointerContext,
+  ctx: SPSPConnectionContext | SPSPWalletAddressContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
   // Fall back to legacy protocols if client doesn't support Open Payments.
   if (ctx.accepts('application/spsp4+json')) {
-    const receiver = ctx.paymentPointer ?? ctx.incomingPayment
+    const receiver = ctx.walletAddress ?? ctx.incomingPayment
     ctx.paymentTag = receiver.id
     ctx.asset = {
       code: receiver.asset.code,

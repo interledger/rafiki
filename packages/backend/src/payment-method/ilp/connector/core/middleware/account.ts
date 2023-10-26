@@ -37,7 +37,7 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
       }
     }
 
-    const { paymentPointers, incomingPayments, peers } = ctx.services
+    const { walletAddresses, incomingPayments, peers } = ctx.services
     const incomingAccount = ctx.state.incomingAccount
     if (!incomingAccount) ctx.throw(401, 'unauthorized')
 
@@ -70,17 +70,17 @@ export function createAccountMiddleware(serverAddress: string): ILPMiddleware {
           return incomingPayment
         }
         // Open Payments SPSP fallback account
-        const paymentPointer = await paymentPointers.get(
+        const walletAddress = await walletAddresses.get(
           ctx.state.streamDestination
         )
-        if (paymentPointer) {
-          if (!paymentPointer.totalEventsAmount) {
+        if (walletAddress) {
+          if (!walletAddress.totalEventsAmount) {
             await createLiquidityAccount(
-              paymentPointer,
+              walletAddress,
               LiquidityAccountType.WEB_MONETIZATION
             )
           }
-          return paymentPointer
+          return walletAddress
         }
       }
       const address = ctx.request.prepare.destination

@@ -175,7 +175,7 @@ function validateAssets(
   payment: OutgoingPayment,
   receiver: Receiver
 ): void {
-  if (payment.assetId !== payment.paymentPointer?.assetId) {
+  if (payment.assetId !== payment.walletAddress?.assetId) {
     throw LifecycleError.SourceAssetConflict
   }
   if (

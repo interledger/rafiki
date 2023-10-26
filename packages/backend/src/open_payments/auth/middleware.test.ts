@@ -10,22 +10,28 @@ import {
 } from '@interledger/http-signature-utils'
 
 import {
+  authenticatedStatusMiddleware,
   createTokenIntrospectionMiddleware,
   httpsigMiddleware
 } from './middleware'
 import { Config } from '../../config/app'
 import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../'
-import { AppServices, HttpSigContext, PaymentPointerContext } from '../../app'
+import {
+  AppServices,
+  HttpSigContext,
+  HttpSigWithAuthenticatedStatusContext,
+  WalletAddressContext
+} from '../../app'
 import { createTestApp, TestContainer } from '../../tests/app'
 import { createContext } from '../../tests/context'
-import { createPaymentPointer } from '../../tests/paymentPointer'
-import { setup } from '../payment_pointer/model.test'
+import { createWalletAddress } from '../../tests/walletAddress'
+import { setup } from '../wallet_address/model.test'
 import { parseLimits } from '../payment/outgoing/limits'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 
 type AppMiddleware = (
-  ctx: PaymentPointerContext,
+  ctx: WalletAddressContext,
   next: () => Promise<void>
 ) => Promise<void>
 
@@ -36,7 +42,7 @@ describe('Auth Middleware', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let middleware: AppMiddleware
-  let ctx: PaymentPointerContext
+  let ctx: WalletAddressContext
   let tokenIntrospectionClient: Client
 
   const type = AccessType.IncomingPayment
@@ -60,13 +66,45 @@ describe('Auth Middleware', (): void => {
           Authorization: `GNAP ${token}`
         }
       },
-      paymentPointer: await createPaymentPointer(deps)
+      walletAddress: await createWalletAddress(deps)
     })
     ctx.container = deps
   })
 
   afterAll(async (): Promise<void> => {
     await appContainer.shutdown()
+  })
+
+  describe('bypassError option', (): void => {
+    test('calls next for HTTP errors', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        bypassError: true
+      })
+      ctx.request.headers.authorization = ''
+
+      const throwSpy = jest.spyOn(ctx, 'throw')
+      await expect(middleware(ctx, next)).resolves.toBeUndefined()
+      expect(throwSpy).toHaveBeenCalledWith(401, 'Unauthorized')
+      expect(next).toHaveBeenCalled()
+    })
+
+    test('throws error for unkonwn errors', async (): Promise<void> => {
+      const middleware = createTokenIntrospectionMiddleware({
+        requestType: type,
+        requestAction: action,
+        bypassError: true
+      })
+      ctx.request.headers.authorization = ''
+      const error = new Error('Unknown')
+      ctx.throw = jest.fn().mockImplementation(() => {
+        throw error
+      }) as never
+
+      await expect(middleware(ctx, next)).rejects.toBe(error)
+      expect(next).not.toHaveBeenCalled()
+    })
   })
 
   test.each`
@@ -142,7 +180,7 @@ describe('Auth Middleware', (): void => {
 
       beforeEach(async (): Promise<void> => {
         if (identifierOption === IdentifierOption.Matching) {
-          identifier = ctx.paymentPointer.url
+          identifier = ctx.walletAddress.url
         } else if (identifierOption === IdentifierOption.Conflicting) {
           identifier = faker.internet.url({ appendSlash: false })
         }
@@ -346,6 +384,78 @@ describe('Auth Middleware', (): void => {
       }
     }
   )
+})
+
+describe('authenticatedStatusMiddleware', (): void => {
+  let deps: IocContract<AppServices>
+  let appContainer: TestContainer
+
+  beforeAll(async (): Promise<void> => {
+    deps = await initIocContainer(Config)
+    appContainer = await createTestApp(deps)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
+  test('sets ctx.authenticated to false if http signature is invalid', async (): Promise<void> => {
+    const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
+      headers: { 'signature-input': '' }
+    })
+
+    expect(authenticatedStatusMiddleware(ctx, next)).resolves.toBeUndefined()
+    expect(next).not.toHaveBeenCalled()
+    expect(ctx.authenticated).toBe(false)
+  })
+
+  test('sets ctx.authenticated to true if http signature is valid', async (): Promise<void> => {
+    const keyId = uuid()
+    const privateKey = generateKeyPairSync('ed25519').privateKey
+    const method = 'GET'
+    const url = faker.internet.url({ appendSlash: false })
+    const request = {
+      method,
+      url,
+      headers: {
+        Accept: 'application/json',
+        Authorization: `GNAP ${token}`
+      }
+    }
+    const ctx = createContext<HttpSigWithAuthenticatedStatusContext>({
+      headers: {
+        Accept: 'application/json',
+        Authorization: `GNAP ${token}`,
+        ...(await createHeaders({
+          request,
+          privateKey,
+          keyId
+        }))
+      },
+      method,
+      url
+    })
+    ctx.container = deps
+    ctx.client = faker.internet.url({ appendSlash: false })
+    const key = generateJwk({
+      keyId,
+      privateKey
+    })
+
+    const scope = nock(ctx.client)
+      .get('/jwks.json')
+      .reply(200, {
+        keys: [key]
+      })
+
+    await expect(
+      authenticatedStatusMiddleware(ctx, next)
+    ).resolves.toBeUndefined()
+    expect(next).toHaveBeenCalled()
+    expect(ctx.authenticated).toBe(true)
+
+    scope.done()
+  })
 })
 
 describe('HTTP Signature Middleware', (): void => {

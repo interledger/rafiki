@@ -93,9 +93,13 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can get an access token by its managementId', async (): Promise<void> => {
+      const retrievedGrant = await Grant.query(trx).findById(grant.id)
       await expect(
         accessTokenService.getByManagementId(accessToken.managementId)
-      ).resolves.toMatchObject(accessToken)
+      ).resolves.toMatchObject({
+        ...accessToken,
+        grant: retrievedGrant
+      })
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {

@@ -32,7 +32,7 @@ export interface Account {
   path: string
   postmanEnvVar: string
   assetCode: string
-  skipPaymentPointerCreation?: boolean
+  skipWalletAddressCreation?: boolean
 }
 
 export interface Fee {

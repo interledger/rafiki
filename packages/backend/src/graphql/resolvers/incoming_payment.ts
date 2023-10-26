@@ -1,6 +1,6 @@
 import {
   ResolversTypes,
-  PaymentPointerResolvers,
+  WalletAddressResolvers,
   MutationResolvers,
   IncomingPayment as SchemaIncomingPayment,
   QueryResolvers
@@ -28,26 +28,24 @@ export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'
     return paymentToGraphql(payment)
   }
 
-export const getPaymentPointerIncomingPayments: PaymentPointerResolvers<ApolloContext>['incomingPayments'] =
+export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloContext>['incomingPayments'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['IncomingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing payment pointer id')
+    if (!parent.id) throw new Error('missing wallet address id')
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
-    const incomingPayments = await incomingPaymentService.getPaymentPointerPage(
-      {
-        paymentPointerId: parent.id,
-        pagination: args
-      }
-    )
+    const incomingPayments = await incomingPaymentService.getWalletAddressPage({
+      walletAddressId: parent.id,
+      pagination: args
+    })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        incomingPaymentService.getPaymentPointerPage({
-          paymentPointerId: parent.id as string,
+        incomingPaymentService.getWalletAddressPage({
+          walletAddressId: parent.id as string,
           pagination
         }),
       incomingPayments
@@ -74,7 +72,7 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
     )
     return incomingPaymentService
       .create({
-        paymentPointerId: args.input.paymentPointerId,
+        walletAddressId: args.input.walletAddressId,
         expiresAt: !args.input.expiresAt
           ? undefined
           : new Date(args.input.expiresAt),
@@ -106,7 +104,7 @@ export function paymentToGraphql(
 ): SchemaIncomingPayment {
   return {
     id: payment.id,
-    paymentPointerId: payment.paymentPointerId,
+    walletAddressId: payment.walletAddressId,
     state: payment.state,
     expiresAt: payment.expiresAt.toISOString(),
     incomingAmount: payment.incomingAmount,

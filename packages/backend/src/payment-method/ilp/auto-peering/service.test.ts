@@ -45,7 +45,7 @@ describe('Auto Peering Service', (): void => {
   })
 
   describe('acceptPeeringRequest', () => {
-    test('creates peer and resolves connection details', async (): Promise<void> => {
+    test('creates peer and resolves stream credential details', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
       const args: PeeringRequestArgs = {
@@ -83,7 +83,7 @@ describe('Auto Peering Service', (): void => {
       })
     })
 
-    test('updates connection details if duplicate peer request', async (): Promise<void> => {
+    test('updates stream credentials details if duplicate peer request', async (): Promise<void> => {
       const asset = await createAsset(deps)
 
       const args: PeeringRequestArgs = {

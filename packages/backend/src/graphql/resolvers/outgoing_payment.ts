@@ -2,7 +2,7 @@ import { quoteToGraphql } from './quote'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
-  PaymentPointerResolvers,
+  WalletAddressResolvers,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
@@ -60,26 +60,24 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
       }))
   }
 
-export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloContext>['outgoingPayments'] =
+export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloContext>['outgoingPayments'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['OutgoingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing payment pointer id')
+    if (!parent.id) throw new Error('missing wallet address id')
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const outgoingPayments = await outgoingPaymentService.getPaymentPointerPage(
-      {
-        paymentPointerId: parent.id,
-        pagination: args
-      }
-    )
+    const outgoingPayments = await outgoingPaymentService.getWalletAddressPage({
+      walletAddressId: parent.id,
+      pagination: args
+    })
     const pageInfo = await getPageInfo(
       (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage({
-          paymentPointerId: parent.id as string,
+        outgoingPaymentService.getWalletAddressPage({
+          walletAddressId: parent.id as string,
           pagination
         }),
       outgoingPayments
@@ -98,7 +96,7 @@ export function paymentToGraphql(
 ): SchemaOutgoingPayment {
   return {
     id: payment.id,
-    paymentPointerId: payment.paymentPointerId,
+    walletAddressId: payment.walletAddressId,
     state: payment.state,
     error: payment.error,
     stateAttempts: payment.stateAttempts,

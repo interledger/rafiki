@@ -1,19 +1,19 @@
 import { Amount } from '../../open_payments/amount'
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
-import { PaymentPointer } from '../../open_payments/payment_pointer/model'
+import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { Receiver } from '../../open_payments/receiver/model'
 import { BaseService } from '../../shared/baseService'
 import { IlpPaymentService } from '../ilp/service'
 
 export interface StartQuoteOptions {
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
   debitAmount?: Amount
   receiveAmount?: Amount
   receiver: Receiver
 }
 
 export interface PaymentQuote {
-  paymentPointer: PaymentPointer
+  walletAddress: WalletAddress
   receiver: Receiver
   debitAmount: Amount
   receiveAmount: Amount

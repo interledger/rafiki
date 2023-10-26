@@ -2,7 +2,7 @@ import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate } from '@remix-run/react'
 import { Badge, PageHeader } from '~/components'
 import { Button, Table } from '~/components/ui'
-import { listPaymentPointers } from '~/lib/api/payment-pointer.server'
+import { listWalletAddresses } from '~/lib/api/wallet-address.server'
 import { paginationSchema } from '~/lib/validate.server'
 
 export const loader = async ({ request }: LoaderArgs) => {
@@ -15,26 +15,26 @@ export const loader = async ({ request }: LoaderArgs) => {
     throw json(null, { status: 400, statusText: 'Invalid pagination.' })
   }
 
-  const paymentPointers = await listPaymentPointers({
+  const walletAddresses = await listWalletAddresses({
     ...pagination.data
   })
 
   let previousPageUrl = '',
     nextPageUrl = ''
 
-  if (paymentPointers.pageInfo.hasPreviousPage) {
-    previousPageUrl = `/payment-pointers?before=${paymentPointers.pageInfo.startCursor}`
+  if (walletAddresses.pageInfo.hasPreviousPage) {
+    previousPageUrl = `/wallet-addresses?before=${walletAddresses.pageInfo.startCursor}`
   }
 
-  if (paymentPointers.pageInfo.hasNextPage) {
-    nextPageUrl = `/payment-pointers?after=${paymentPointers.pageInfo.endCursor}`
+  if (walletAddresses.pageInfo.hasNextPage) {
+    nextPageUrl = `/wallet-addresses?after=${walletAddresses.pageInfo.endCursor}`
   }
 
-  return json({ paymentPointers, previousPageUrl, nextPageUrl })
+  return json({ walletAddresses, previousPageUrl, nextPageUrl })
 }
 
-export default function PaymentPointersPage() {
-  const { paymentPointers, previousPageUrl, nextPageUrl } =
+export default function WalletAddressesPage() {
+  const { walletAddresses, previousPageUrl, nextPageUrl } =
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
@@ -43,26 +43,26 @@ export default function PaymentPointersPage() {
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
         <PageHeader>
           <div className='flex-1'>
-            <h3 className='text-2xl'>Payment Pointers</h3>
+            <h3 className='text-2xl'>Wallet Addresses</h3>
           </div>
           <div className='ml-auto'>
             <Button
-              to='/payment-pointers/create'
-              aria-label='create a new payment pointer'
+              to='/wallet-addresses/create'
+              aria-label='create a new wallet address'
             >
-              Create payment pointer
+              Create wallet address
             </Button>
           </div>
         </PageHeader>
         <Table>
-          <Table.Head columns={['Payment pointer', 'Public name', 'Status']} />
+          <Table.Head columns={['Wallet address', 'Public name', 'Status']} />
           <Table.Body>
-            {paymentPointers.edges.length ? (
-              paymentPointers.edges.map((pp) => (
+            {walletAddresses.edges.length ? (
+              walletAddresses.edges.map((pp) => (
                 <Table.Row
                   key={pp.node.id}
                   className='cursor-pointer'
-                  onClick={() => navigate(`/payment-pointers/${pp.node.id}`)}
+                  onClick={() => navigate(`/wallet-addresses/${pp.node.id}`)}
                 >
                   <Table.Cell>{pp.node.url}</Table.Cell>
                   <Table.Cell>
@@ -84,7 +84,7 @@ export default function PaymentPointersPage() {
             ) : (
               <Table.Row>
                 <Table.Cell colSpan={4} className='text-center'>
-                  No payment pointers found.
+                  No wallet addresses found.
                 </Table.Cell>
               </Table.Row>
             )}
@@ -93,7 +93,7 @@ export default function PaymentPointersPage() {
         <div className='flex items-center justify-between p-5'>
           <Button
             aria-label='go to previous page'
-            disabled={!paymentPointers.pageInfo.hasPreviousPage}
+            disabled={!walletAddresses.pageInfo.hasPreviousPage}
             onClick={() => {
               navigate(previousPageUrl)
             }}
@@ -102,7 +102,7 @@ export default function PaymentPointersPage() {
           </Button>
           <Button
             aria-label='go to next page'
-            disabled={!paymentPointers.pageInfo.hasNextPage}
+            disabled={!walletAddresses.pageInfo.hasNextPage}
             onClick={() => {
               navigate(nextPageUrl)
             }}

@@ -1,8 +1,8 @@
 import { cx } from 'class-variance-authority'
-import type { PaymentPointerStatus } from '~/generated/graphql'
+import type { WalletAddressStatus } from '~/generated/graphql'
 
 type BadgeProps = {
-  status: PaymentPointerStatus
+  status: WalletAddressStatus
 }
 
 export const Badge = ({ status }: BadgeProps) => {

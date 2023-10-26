@@ -1,11 +1,11 @@
 import { Resolvers } from '../generated/graphql'
 import {
-  getPaymentPointer,
-  getPaymentPointers,
-  createPaymentPointer,
-  updatePaymentPointer,
-  triggerPaymentPointerEvents
-} from './payment_pointer'
+  getWalletAddress,
+  getWalletAddresses,
+  createWalletAddress,
+  updateWalletAddress,
+  triggerWalletAddressEvents
+} from './wallet_address'
 import {
   getAsset,
   getAssets,
@@ -16,15 +16,15 @@ import {
   getFees
 } from './asset'
 import {
-  getPaymentPointerIncomingPayments,
+  getWalletAddressIncomingPayments,
   createIncomingPayment,
   getIncomingPayment
 } from './incoming_payment'
-import { getQuote, createQuote, getPaymentPointerQuotes } from './quote'
+import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getPaymentPointerOutgoingPayments
+  getWalletAddressOutgoingPayments
 } from './outgoing_payment'
 import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
@@ -34,7 +34,7 @@ import {
   addPeerLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
-  createPaymentPointerWithdrawal,
+  createWalletAddressWithdrawal,
   postLiquidityWithdrawal,
   voidLiquidityWithdrawal,
   depositEventLiquidity,
@@ -42,9 +42,9 @@ import {
 } from './liquidity'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
-  createPaymentPointerKey,
-  revokePaymentPointerKey
-} from './paymentPointerKey'
+  createWalletAddressKey,
+  revokeWalletAddressKey
+} from './walletAddressKey'
 import { createReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
 import { setFee } from './fee'
@@ -66,8 +66,8 @@ export const resolvers: Resolvers = {
     liquidity: getPeerLiquidity
   },
   Query: {
-    paymentPointer: getPaymentPointer,
-    paymentPointers: getPaymentPointers,
+    walletAddress: getWalletAddress,
+    walletAddresses: getWalletAddresses,
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
@@ -78,17 +78,17 @@ export const resolvers: Resolvers = {
     webhookEvents: getWebhookEvents,
     payments: getCombinedPayments
   },
-  PaymentPointer: {
-    incomingPayments: getPaymentPointerIncomingPayments,
-    outgoingPayments: getPaymentPointerOutgoingPayments,
-    quotes: getPaymentPointerQuotes
+  WalletAddress: {
+    incomingPayments: getWalletAddressIncomingPayments,
+    outgoingPayments: getWalletAddressOutgoingPayments,
+    quotes: getWalletAddressQuotes
   },
   Mutation: {
-    createPaymentPointerKey,
-    revokePaymentPointerKey,
-    createPaymentPointer,
-    updatePaymentPointer,
-    triggerPaymentPointerEvents,
+    createWalletAddressKey,
+    revokeWalletAddressKey,
+    createWalletAddress,
+    updateWalletAddress,
+    triggerWalletAddressEvents,
     createAsset,
     updateAsset: updateAsset,
     createQuote,
@@ -103,7 +103,7 @@ export const resolvers: Resolvers = {
     addPeerLiquidity: addPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
-    createPaymentPointerWithdrawal,
+    createWalletAddressWithdrawal,
     postLiquidityWithdrawal: postLiquidityWithdrawal,
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
