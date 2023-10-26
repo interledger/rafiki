@@ -125,11 +125,11 @@ The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector
 To use the postman collection examples follow the steps:
 
 1. run `docker logs rafiki-cloud-nine-mock-ase-1`
-2. find the list of created payment pointers
-3. copy the url of one of the payment pointers
+2. find the list of created wallet addresses
+3. copy the url of one of the wallet addresses
 4. set the url into `senderPaymentPointer` postman variable in `Remote Environment`
 
-After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeeing or not) the payment pointer url will differ.
+After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
 ### Shutting down
 
