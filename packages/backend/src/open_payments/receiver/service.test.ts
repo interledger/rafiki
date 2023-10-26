@@ -123,6 +123,7 @@ describe('Receiver Service', (): void => {
       `('remote ($description)', ({ existingGrant }): void => {
         let walletAddress: OpenPaymentsWalletAddress
         let incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethods
+        // TODO: replace with PublicIncomingPayment when exported from open-payments
         let publicIncomingPayment: {
           authServer: string
           receivedAmount: OpenPaymentsIncomingPaymentWithPaymentMethods['receivedAmount']
@@ -172,8 +173,6 @@ describe('Receiver Service', (): void => {
           }
         }
 
-        let publicIncomingPaymentMock: () => Promise<Response>
-
         beforeEach(async (): Promise<void> => {
           walletAddress = mockWalletAddress({
             authServer
@@ -182,6 +181,7 @@ describe('Receiver Service', (): void => {
             id: `${walletAddress.id}/incoming-payments/${uuid()}`,
             walletAddress: walletAddress.id
           })
+          // TODO: replace with mockPublicIncomingPayment when exported from open-payments
           publicIncomingPayment = {
             authServer,
             receivedAmount: incomingPayment.receivedAmount
@@ -199,12 +199,6 @@ describe('Receiver Service', (): void => {
               managementId: '8f69de01-5bf9-4603-91ed-eeca101081f1'
             })
           }
-          publicIncomingPaymentMock = () =>
-            Promise.resolve({
-              ok: true,
-              status: 200,
-              json: async () => publicIncomingPayment
-            } as Response)
           jest
             .spyOn(walletAddressService, 'getByUrl')
             .mockResolvedValueOnce(undefined)
