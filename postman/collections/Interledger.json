@@ -807,6 +807,34 @@
 					"response": []
 				},
 				{
+					"name": "Get Incoming Payment",
+					"id": "a7cab5ce-4459-4e34-be83-b8fdf8ab867f",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query GetIncomingPayment($id: String!) {\nincomingPayment(id: $id) {\n    id\n    walletAddressId\n    state\n    expiresAt\n    incomingAmount {\n        value\n        assetCode\n        assetScale\n    }\n    receivedAmount {\n        value\n        assetCode\n        assetScale\n    }\n    metadata\n    createdAt\n  }\n}",
+								"variables": "{\n    \"id\": \"{{incomingPaymentId}}\"\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Receiver (remote Incoming Payment)",
 					"id": "c7f63ae6-c790-43f5-8c8e-163297708693",
 					"protocolProfileBehavior": {
@@ -1023,34 +1051,6 @@
 					"response": []
 				},
 				{
-					"name": "Get Incoming Payment",
-					"id": "a7cab5ce-4459-4e34-be83-b8fdf8ab867f",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "query GetIncomingPayment($id: String!) {\nincomingPayment(id: $id) {\n    id\n    walletAddressId\n    state\n    expiresAt\n    incomingAmount {\n        value\n        assetCode\n        assetScale\n    }\n    receivedAmount {\n        value\n        assetCode\n        assetScale\n    }\n    metadata\n    createdAt\n  }\n}",
-								"variables": "{\n    \"id\": \"{{incomingPaymentId}}\"\n}"
-							}
-						},
-						"url": {
-							"raw": "{{PeerGraphqlHost}}/graphql",
-							"host": [
-								"{{PeerGraphqlHost}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Get Payments",
 					"id": "357ee69f-d258-49c5-a02b-072b566302d2",
 					"protocolProfileBehavior": {
@@ -1147,7 +1147,7 @@
 							"mode": "graphql",
 							"graphql": {
 								"query": "mutation CreateWalletAddressWithdrawal($input: CreateWalletAddressWithdrawalInput!) {\n  createWalletAddressWithdrawal(input: $input) {\n    code\n    error\n    message\n    success\n    withdrawal {\n      amount\n      id\n      walletAddress {\n        id\n        url\n        asset {\n          id\n          code\n          scale\n          withdrawalThreshold\n        }\n      }\n    }\n  }\n}",
-								"variables": "{\n  \"input\": {\n    \"id\": \"02ac56f7-ae5d-4abb-8306-17bf2327b43c\",\n    \"walletAddressId\": \"{{incomingPaymentId}}\",\n    \"idempotencyKey\":\"{{$guid}}\"\n  }\n}"
+								"variables": "{\n  \"input\": {\n    \"id\": \"02ac56f7-ae5d-4abb-8306-17bf2327b43c\",\n    \"walletAddressId\": \"{{walletAddressId}}\",\n    \"idempotencyKey\":\"{{$guid}}\"\n  }\n}"
 							}
 						},
 						"url": {
@@ -1933,7 +1933,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"walletAddress\": {{senderWalletAddress}},\n    \"quoteId\": \"{{senderOpenPaymentsHost}}/quotes/{{quoteId}}\",\n    \"description\": \"yolo\",\n    \"externalRef\": \"INV-001\"\n}",
+									"raw": "{\n    \"walletAddress\": {{senderWalletAddress}},\n    \"quoteId\": \"{{senderOpenPaymentsHost}}/quotes/{{quoteId}}\",\n    \"metadata\": {\n        \"description\": \"yolo\",\n        \"externalRef\": \"INV-001\"\n    }\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2118,7 +2118,7 @@
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
 											"pm.environment.set(\"continueToken\", body.continue.access_token.value);",
 											"pm.environment.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
-											""
+											"pm.environment.set(\"tokenId\", body.access_token.manage.split('/').pop())"
 										],
 										"type": "text/javascript"
 									}
@@ -2494,7 +2494,7 @@
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
 											"pm.environment.set(\"continueToken\", body.continue.access_token.value);",
 											"pm.environment.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
-											""
+											"pm.environment.set(\"tokenId\", body.access_token.manage.split('/').pop())"
 										],
 										"type": "text/javascript"
 									}
@@ -2620,7 +2620,7 @@
 											"pm.environment.set(\"accessToken\", body?.access_token?.value);",
 											"pm.environment.set(\"continueToken\", body.continue.access_token.value);",
 											"pm.environment.set(\"continueId\", body.continue.uri.split(\"/\").pop());",
-											""
+											"pm.environment.set(\"tokenId\", body.access_token.manage.split('/').pop())"
 										],
 										"type": "text/javascript"
 									}
@@ -2797,7 +2797,8 @@
 										"id": "cbd68480-1a0a-4de4-84cb-37b53dce4bb0",
 										"exec": [
 											"const body = pm.response.json();",
-											"pm.environment.set(\"accessToken\", body.access_token.value);"
+											"pm.environment.set(\"accessToken\", body.access_token.value);",
+											"pm.environment.set(\"tokenId\", body.access_token.manage.split('/').pop())"
 										],
 										"type": "text/javascript"
 									}
@@ -2828,7 +2829,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n     \"interact_ref\": \"dd37e467-d056-4a2f-8878-f2f172b4a3b6\"\n}",
+									"raw": "{\n     \"interact_ref\": \"6d519566-234f-4c2e-b56f-6d4a305fc067\"\n}",
 									"options": {
 										"raw": {
 											"language": "json"
