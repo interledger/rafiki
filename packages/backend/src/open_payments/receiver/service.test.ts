@@ -219,12 +219,13 @@ describe('Receiver Service', (): void => {
           ${false} | ${''}
           ${true}  | ${'- after rotating access token'}
         `('resolves incoming payment $description', async ({ rotate }) => {
-          const fetchSpy = jest
-            .spyOn(global, 'fetch')
-            .mockImplementation(publicIncomingPaymentMock)
           const clientRequestGrantSpy = jest
             .spyOn(openPaymentsClient.grant, 'request')
             .mockResolvedValueOnce(grant)
+
+          const clientGetPublicIncomingPaymentSpy = jest
+            .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+            .mockResolvedValueOnce(publicIncomingPayment)
 
           const clientGetIncomingPaymentSpy = jest
             .spyOn(openPaymentsClient.incomingPayment, 'get')
@@ -270,13 +271,15 @@ describe('Receiver Service', (): void => {
               ]
             }
           })
-          expect(fetchSpy).toHaveBeenCalledTimes(1)
           if (!existingGrant) {
             expect(clientRequestGrantSpy).toHaveBeenCalledWith(
               { url: authServer },
               grantRequest
             )
           }
+          expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledWith({
+            url: incomingPayment.id
+          })
           expect(clientGetIncomingPaymentSpy).toHaveBeenCalledWith({
             url: incomingPayment.id,
             accessToken:
@@ -293,12 +296,9 @@ describe('Receiver Service', (): void => {
         })
 
         test('returns undefined for invalid remote public incoming payment', async (): Promise<void> => {
-          const fetchSpy = jest.spyOn(global, 'fetch').mockImplementation(() =>
-            Promise.resolve({
-              ok: false,
-              status: 400
-            } as Response)
-          )
+          const clientGetPublicIncomingPaymentSpy = jest
+            .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+            .mockRejectedValueOnce({ status: 404 })
 
           await expect(
             receiverService.get(
@@ -307,7 +307,7 @@ describe('Receiver Service', (): void => {
               }/${INCOMING_PAYMENT_PATH}/${uuid()}`
             )
           ).resolves.toBeUndefined()
-          expect(fetchSpy).toHaveBeenCalledTimes(1)
+          expect(clientGetPublicIncomingPaymentSpy).toHaveBeenCalledTimes(1)
         })
 
         if (existingGrant) {
@@ -325,8 +325,8 @@ describe('Receiver Service', (): void => {
                 expired: true
               } as Grant)
             jest
-              .spyOn(global, 'fetch')
-              .mockImplementation(publicIncomingPaymentMock)
+              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+              .mockResolvedValueOnce(publicIncomingPayment)
             const clientRequestGrantSpy = jest.spyOn(
               openPaymentsClient.grant,
               'request'
@@ -345,8 +345,8 @@ describe('Receiver Service', (): void => {
             })
             await grant?.$query(knex).patch({ expiresAt: new Date() })
             jest
-              .spyOn(global, 'fetch')
-              .mockImplementation(publicIncomingPaymentMock)
+              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+              .mockResolvedValueOnce(publicIncomingPayment)
             const clientRequestGrantSpy = jest.spyOn(
               openPaymentsClient.grant,
               'request'
@@ -360,8 +360,8 @@ describe('Receiver Service', (): void => {
         } else {
           test('returns undefined for invalid grant', async (): Promise<void> => {
             jest
-              .spyOn(global, 'fetch')
-              .mockImplementation(publicIncomingPaymentMock)
+              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+              .mockResolvedValueOnce(publicIncomingPayment)
             const clientRequestGrantSpy = jest
               .spyOn(openPaymentsClient.grant, 'request')
               .mockRejectedValueOnce(new Error('Could not request grant'))
@@ -377,8 +377,8 @@ describe('Receiver Service', (): void => {
 
           test('returns undefined for interactive grant', async (): Promise<void> => {
             jest
-              .spyOn(global, 'fetch')
-              .mockImplementation(publicIncomingPaymentMock)
+              .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+              .mockResolvedValueOnce(publicIncomingPayment)
             const clientRequestGrantSpy = jest
               .spyOn(openPaymentsClient.grant, 'request')
               .mockResolvedValueOnce({
@@ -401,8 +401,8 @@ describe('Receiver Service', (): void => {
 
         test('returns undefined when fetching remote incoming payment throws', async (): Promise<void> => {
           jest
-            .spyOn(global, 'fetch')
-            .mockImplementation(publicIncomingPaymentMock)
+            .spyOn(openPaymentsClient.incomingPayment, 'getPublic')
+            .mockResolvedValueOnce(publicIncomingPayment)
           jest
             .spyOn(openPaymentsClient.grant, 'request')
             .mockResolvedValueOnce(grant)
