@@ -234,13 +234,6 @@ async function getIncomingPaymentGrant(
   deps: ServiceDependencies,
   incomingPaymentUrl: string
 ): Promise<Grant | undefined> {
-  let url: string
-  if (deps.config.env === 'development') {
-    const parsedUrl = new URL(incomingPaymentUrl)
-    url = `http://${parsedUrl.hostname}${parsedUrl.pathname}`
-  } else {
-    url = incomingPaymentUrl
-  }
   const publicIncomingPayment =
     await deps.openPaymentsClient.incomingPayment.getPublic({
       url: incomingPaymentUrl
