@@ -234,9 +234,6 @@ async function getIncomingPaymentGrant(
   deps: ServiceDependencies,
   incomingPaymentUrl: string
 ): Promise<Grant | undefined> {
-  // TODO: replace with OP client method
-  // const publicIncomingPayment =
-  //   await deps.openPaymentsClient.incomingPayment.getPublic(incomingPaymentUrl)
   let url: string
   if (deps.config.env === 'development') {
     const parsedUrl = new URL(incomingPaymentUrl)
@@ -244,11 +241,10 @@ async function getIncomingPaymentGrant(
   } else {
     url = incomingPaymentUrl
   }
-  const publicIncomingPaymentResponse = await fetch(url)
-  if (!publicIncomingPaymentResponse.ok) {
-    return undefined
-  }
-  const publicIncomingPayment = await publicIncomingPaymentResponse.json()
+  const publicIncomingPayment =
+    await deps.openPaymentsClient.incomingPayment.getPublic({
+      url: incomingPaymentUrl
+    })
   if (!publicIncomingPayment || !publicIncomingPayment.authServer) {
     return undefined
   }
