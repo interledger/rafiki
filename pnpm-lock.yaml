@@ -133,8 +133,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 3.1.0
-        version: 3.1.0
+        specifier: 5.3.1
+        version: 5.3.1
       '@interledger/openapi':
         specifier: 1.2.0
         version: 1.2.0
@@ -275,8 +275,8 @@ importers:
         specifier: 1.1.0
         version: 1.1.0
       '@interledger/open-payments':
-        specifier: 3.1.0
-        version: 3.1.0
+        specifier: 5.3.1
+        version: 5.3.1
       '@interledger/openapi':
         specifier: 1.2.0
         version: 1.2.0
@@ -4133,15 +4133,6 @@ packages:
     resolution: {integrity: sha512-hbp6YrS348c2VlpbLOj0oaPKrg+8nMU0a/xjnCQ3KruTFnqtJJPXr2CM9V17oYI4CLTcEh6mvP3AHpldXOmTHQ==}
     dev: false
 
-  /@interledger/http-signature-utils@1.0.4:
-    resolution: {integrity: sha512-iiHWGzB/c0bwjV9AxkkmOeqEmWO2CY0em372xyeqTQ3DT6GCkB90qhWZ4Tte2pxOgzpowkAfo1cXMW1NMCD8AA==}
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: 1.0.0
-      jose: 4.13.1
-      uuid: 9.0.1
-    dev: false
-
   /@interledger/http-signature-utils@1.1.0:
     resolution: {integrity: sha512-vxNrrp9qk71Pgt5/AcTtPTITnKPNX3P/Ag8+Vwqb2xhYpU9cTTEJJKhRjzOsvxXJ+I4NQ20Bwo/OHyfki48ZRg==}
     dependencies:
@@ -4151,11 +4142,11 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@3.1.0:
-    resolution: {integrity: sha512-b158SxGD0AbhSM+68nN7/cJCAA7Y/hBOmsfeZbyJggZq38eBvOoXMaxsvbFHvVrs3zQs/NkHFwzmaI0txvuLaA==}
+  /@interledger/open-payments@5.3.1:
+    resolution: {integrity: sha512-bFBoEKk6veFN2fwwkNGV4zrR+3GrIkv99ZWjIsHwV17lDht6NhsP3DttS0SwfYaR3VUIhmzAnCiHGOEKYkrybg==}
     dependencies:
-      '@interledger/http-signature-utils': 1.0.4
-      '@interledger/openapi': 1.0.3
+      '@interledger/http-signature-utils': 1.1.0
+      '@interledger/openapi': 1.2.1
       axios: 1.5.1
       base64url: 3.0.1
       http-message-signatures: 0.1.2
@@ -4166,8 +4157,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/openapi@1.0.3:
-    resolution: {integrity: sha512-Xx/Me2tj8DhHpQR9cVjioX/DAUmQnaXWjt8hEVPIru4pDSMHCGG0RmpU2dV+aIiVmkDM2OvJUfKoLGsPVStqrA==}
+  /@interledger/openapi@1.2.0:
+    resolution: {integrity: sha512-1+EglSaJfQd/p2a/odIs94xwaOmotWDAZjBT4J0TxXORT2gez83xpUg4mo36t4lD3sjVbHbARqTKiSg2P2jLnw==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 10.1.0
       ajv: 8.12.0
@@ -4182,8 +4173,8 @@ packages:
       - supports-color
     dev: false
 
-  /@interledger/openapi@1.2.0:
-    resolution: {integrity: sha512-1+EglSaJfQd/p2a/odIs94xwaOmotWDAZjBT4J0TxXORT2gez83xpUg4mo36t4lD3sjVbHbARqTKiSg2P2jLnw==}
+  /@interledger/openapi@1.2.1:
+    resolution: {integrity: sha512-CVEMjLH94svT5ikaojplgZ3YlZAe7ml6G6bt0ZCbqkbwHszUwY1E6RexZZejiGju5QvwS/6Jl/Op5ymv/ECaLg==}
     dependencies:
       '@apidevtools/json-schema-ref-parser': 10.1.0
       ajv: 8.12.0
