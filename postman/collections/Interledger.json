@@ -2985,6 +2985,7 @@
 										{
 											"listen": "test",
 											"script": {
+												"id": "7dedf74a-2eb5-49dd-90c6-f2707b43ff8b",
 												"exec": [
 													"const body = pm.response.json();",
 													"",
@@ -3006,7 +3007,7 @@
 											"mode": "graphql",
 											"graphql": {
 												"query": "mutation CreateReceiver($input: CreateReceiverInput!) {\n  createReceiver(input: $input) {\n    code\n    message\n    receiver {\n      completed\n      createdAt\n      expiresAt\n      metadata\n      id\n      incomingAmount {\n        assetCode\n        assetScale\n        value\n      }\n      walletAddressUrl\n      receivedAmount {\n        assetCode\n        assetScale\n        value\n      }\n      updatedAt\n    }\n    success\n  }\n}",
-												"variables": "{\n  \"input\": {\n    \"metadata\": {\n        \"description\": \"cross currency test\"\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 500\n    },\n    \"walletAddressUrl\": \"https://happy-life-bank-backend/accounts/pfry\"\n  }\n}"
+												"variables": "{\n  \"input\": {\n    \"metadata\": {\n        \"description\": \"For lunch!\"\n    },\n    \"incomingAmount\": {\n      \"assetCode\": \"USD\",\n      \"assetScale\": 2,\n      \"value\": 500\n    },\n    \"walletAddressUrl\": \"https://happy-life-bank-backend/accounts/pfry\"\n  }\n}"
 											}
 										},
 										"url": {
