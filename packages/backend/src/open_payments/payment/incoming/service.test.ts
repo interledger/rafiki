@@ -127,7 +127,7 @@ describe('Incoming Payment Service', (): void => {
             assetCode: String.fromCharCode(
               ...asset.code.split('').map((letter) => {
                 let charCode = letter.charCodeAt(0)
-                if (charCode === 91) {
+                if (charCode < 91) {
                   return --charCode
                 } else {
                   return ++charCode
