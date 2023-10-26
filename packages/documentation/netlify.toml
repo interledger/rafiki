@@ -14,4 +14,4 @@
   publish = "build/"
 
   # Default build command.
-  command = "pnpm install --no-frozen-lockfile && pnpm dlx playwright install chromium && pnpm build"
+  command = "pnpm install --no-frozen-lockfile && pnpm dlx playwright install chromium && pnpm build:docs"

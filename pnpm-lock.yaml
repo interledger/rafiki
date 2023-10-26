@@ -181,7 +181,7 @@ importers:
         specifier: ^8.16.1
         version: 8.16.1
       token-introspection:
-        specifier: workspace:../token-introspection
+        specifier: workspace:*
         version: link:../token-introspection
       uuid:
         specifier: ^9.0.1
@@ -365,7 +365,7 @@ importers:
         specifier: ^0.13.57
         version: 0.13.57
       token-introspection:
-        specifier: workspace:../token-introspection
+        specifier: workspace:*
         version: link:../token-introspection
       uuid:
         specifier: ^9.0.1
