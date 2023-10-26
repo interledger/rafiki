@@ -12,11 +12,14 @@ services:
     ports:
       - '3030:80'
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       LOG_LEVEL: debug
       PORT: 80
       SEED_FILE_LOCATION: /workspace/seed.yml
       KEY_FILE: /workspace/private-key.pem
+      PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-https://cloud-nine-wallet-backend}
+      AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
+      TESTNET_AUTOPEER_URL: ${TESTNET_AUTOPEER_URL}
     volumes:
       - ../cloud-nine-wallet/seed.yml:/workspace/seed.yml
       - ../cloud-nine-wallet/private-key.pem:/workspace/private-key.pem
@@ -33,10 +36,12 @@ services:
     ports:
       - '3000:80'
       - '3001:3001'
+      - '3002:3002'
     networks:
       - rafiki
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
@@ -45,16 +50,17 @@ services:
       USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
       TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
       TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
-      AUTH_SERVER_GRANT_URL: http://cloud-nine-wallet-auth:3006
+      AUTH_SERVER_GRANT_URL: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://cloud-nine-wallet-auth:3006}
       AUTH_SERVER_INTROSPECTION_URL: http://cloud-nine-wallet-auth:3007
-      ILP_ADDRESS: test.cloud-nine-wallet
+      ILP_ADDRESS: ${ILP_ADDRESS:-test.cloud-nine-wallet}
       STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
-      PUBLIC_HOST: http://cloud-nine-wallet-backend
-      OPEN_PAYMENTS_URL: http://cloud-nine-wallet-backend
+      PUBLIC_HOST: ${CLOUD_NINE_PUBLIC_HOST:-http://cloud-nine-wallet-backend}
+      OPEN_PAYMENTS_URL: ${CLOUD_NINE_OPEN_PAYMENTS_URL:-http://cloud-nine-wallet-backend}
       WEBHOOK_URL: http://cloud-nine-wallet/webhooks
       EXCHANGE_RATES_URL: http://cloud-nine-wallet/rates
       REDIS_URL: redis://shared-redis:6379/0
-      PAYMENT_POINTER_URL: https://cloud-nine-wallet-backend/.well-known/pay
+      PAYMENT_POINTER_URL: ${CLOUD_NINE_PAYMENT_POINTER_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
+      ILP_CONNECTOR_ADDRESS: ${CLOUD_NINE_CONNECTOR_URL}
     depends_on:
       - shared-database
       - shared-redis
@@ -71,8 +77,10 @@ services:
       - '3003:3003'
       - '3006:3006'
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
+      TRUST_PROXY: ${TRUST_PROXY}
       AUTH_DATABASE_URL: postgresql://cloud_nine_wallet_auth:cloud_nine_wallet_auth@shared-database/cloud_nine_wallet_auth
+      AUTH_SERVER_DOMAIN: ${CLOUD_NINE_AUTH_SERVER_DOMAIN:-http://localhost:3006}
     depends_on:
       - shared-database
   shared-database:
