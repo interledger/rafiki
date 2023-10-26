@@ -101,6 +101,7 @@ export const grantToGraphql = (grant: Grant): SchemaGrant => ({
   client: grant.client,
   access: grant.access?.map((item) => accessToGraphql(item)),
   state: grant.state,
+  finalizationReason: grant.finalizationReason,
   createdAt: grant.createdAt.toISOString()
 })
 
