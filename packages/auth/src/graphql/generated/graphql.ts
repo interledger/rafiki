@@ -34,6 +34,11 @@ export type Access = Model & {
   type: Scalars['String']['output'];
 };
 
+export type FilterFinalizationReason = {
+  in?: InputMaybe<Array<GrantFinalization>>;
+  notIn?: InputMaybe<Array<GrantFinalization>>;
+};
+
 export type FilterGrantState = {
   in?: InputMaybe<Array<GrantState>>;
   notIn?: InputMaybe<Array<GrantState>>;
@@ -66,6 +71,7 @@ export type GrantEdge = {
 };
 
 export type GrantFilter = {
+  finalizationReason?: InputMaybe<FilterFinalizationReason>;
   identifier?: InputMaybe<FilterString>;
   state?: InputMaybe<FilterGrantState>;
 };
@@ -262,6 +268,7 @@ export type ResolversInterfaceTypes<RefType extends Record<string, unknown>> = {
 export type ResolversTypes = {
   Access: ResolverTypeWrapper<Partial<Access>>;
   Boolean: ResolverTypeWrapper<Partial<Scalars['Boolean']['output']>>;
+  FilterFinalizationReason: ResolverTypeWrapper<Partial<FilterFinalizationReason>>;
   FilterGrantState: ResolverTypeWrapper<Partial<FilterGrantState>>;
   FilterString: ResolverTypeWrapper<Partial<FilterString>>;
   Grant: ResolverTypeWrapper<Partial<Grant>>;
@@ -290,6 +297,7 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   Access: Partial<Access>;
   Boolean: Partial<Scalars['Boolean']['output']>;
+  FilterFinalizationReason: Partial<FilterFinalizationReason>;
   FilterGrantState: Partial<FilterGrantState>;
   FilterString: Partial<FilterString>;
   Grant: Partial<Grant>;

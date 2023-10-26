@@ -46,6 +46,7 @@ type GrantEdge {
 input GrantFilter {
   identifier: FilterString
   state: FilterGrantState
+  finalizationReason: FilterFinalizationReason
 }
 
 input FilterString {
@@ -55,6 +56,11 @@ input FilterString {
 input FilterGrantState {
   in: [GrantState!]
   notIn: [GrantState!]
+}
+
+input FilterFinalizationReason {
+  in: [GrantFinalization!]
+  notIn: [GrantFinalization!]
 }
 
 input RevokeGrantInput {
