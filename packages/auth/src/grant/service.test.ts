@@ -36,6 +36,14 @@ describe('Grant Service', (): void => {
     grantService = await deps.use('grantService')
   })
 
+  afterEach(async (): Promise<void> => {
+    await truncateTables(appContainer.knex)
+  })
+
+  afterAll(async (): Promise<void> => {
+    await appContainer.shutdown()
+  })
+
   describe('grant flow', (): void => {
     let grant: Grant
 
@@ -73,14 +81,6 @@ describe('Grant Service', (): void => {
         expiresIn: 10_000_000,
         grantId: grant.id
       })
-    })
-
-    afterEach(async (): Promise<void> => {
-      await truncateTables(appContainer.knex)
-    })
-
-    afterAll(async (): Promise<void> => {
-      await appContainer.shutdown()
     })
 
     const BASE_GRANT_ACCESS = {
