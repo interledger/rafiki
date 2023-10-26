@@ -457,13 +457,13 @@ importers:
     dependencies:
       '@astrojs/starlight':
         specifier: ^0.11.1
-        version: 0.11.1(astro@3.3.2)
+        version: 0.11.1(astro@3.3.4)
       '@interledger/docs-design-system':
         specifier: ^0.1.1
         version: 0.1.1
       astro:
-        specifier: 3.3.2
-        version: 3.3.2(typescript@4.9.5)
+        specifier: 3.3.4
+        version: 3.3.4(typescript@4.9.5)
       astro-graphql-plugin:
         specifier: ^0.1.0
         version: 0.1.0(graphql@16.8.1)
@@ -908,13 +908,13 @@ packages:
     resolution: {integrity: sha512-06DD2ZnItMwUnH81LBLco3tWjcZ1lGU9rLCCBaeUCGYe9cI0wKyY2W3kDyoW1I6GmcWgt1fu+D1CTvz+FIKf8A==}
     dev: false
 
-  /@astrojs/markdown-remark@3.2.0(astro@3.3.2):
+  /@astrojs/markdown-remark@3.2.0(astro@3.3.4):
     resolution: {integrity: sha512-jigyLfefUZPKgVmmraCkVpdUuFH1R3SrpgQO13axsgwLDBgkggaQpNR5Ag4O9PDualeBtbdt30aYSfvnBKx9Hg==}
     peerDependencies:
       astro: ^3.1.0
     dependencies:
       '@astrojs/prism': 3.0.0
-      astro: 3.3.2(typescript@4.9.5)
+      astro: 3.3.4(typescript@4.9.5)
       github-slugger: 2.0.0
       import-meta-resolve: 3.0.0
       mdast-util-definitions: 6.0.0
@@ -932,13 +932,13 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/markdown-remark@3.3.0(astro@3.3.2):
+  /@astrojs/markdown-remark@3.3.0(astro@3.3.4):
     resolution: {integrity: sha512-ezFzEiZygc/ASe2Eul9v1yrTbNGqSbR348UGNXQ4Dtkx8MYRwfiBfmPm6VnEdfIGkW+bi5qIUReKfc7mPVUkIg==}
     peerDependencies:
       astro: ^3.3.0
     dependencies:
       '@astrojs/prism': 3.0.0
-      astro: 3.3.2(typescript@4.9.5)
+      astro: 3.3.4(typescript@4.9.5)
       github-slugger: 2.0.0
       import-meta-resolve: 3.0.0
       mdast-util-definitions: 6.0.0
@@ -956,16 +956,16 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/mdx@1.1.0(astro@3.3.2):
+  /@astrojs/mdx@1.1.0(astro@3.3.4):
     resolution: {integrity: sha512-rmLZBw3CUCkp+5blBJloV2EqJGRaJTraJygWMfCvrLcCA3vzhwzACnVQKdUDlts8EEr6V6+HXYVqi46AVEfobg==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       astro: ^3.1.0
     dependencies:
-      '@astrojs/markdown-remark': 3.2.0(astro@3.3.2)
+      '@astrojs/markdown-remark': 3.2.0(astro@3.3.4)
       '@mdx-js/mdx': 2.3.0
       acorn: 8.10.0
-      astro: 3.3.2(typescript@4.9.5)
+      astro: 3.3.4(typescript@4.9.5)
       es-module-lexer: 1.3.0
       estree-util-visit: 1.2.1
       github-slugger: 2.0.0
@@ -996,16 +996,16 @@ packages:
       zod: 3.21.1
     dev: false
 
-  /@astrojs/starlight@0.11.1(astro@3.3.2):
+  /@astrojs/starlight@0.11.1(astro@3.3.4):
     resolution: {integrity: sha512-R1kBYnAOqPznsXCPLpSrbFQlKAy7jl7VIw+IY0s4tLfK5A9X6/nuX3Asm/kay6GJ035e9PHTljM5qFcAdJnPDw==}
     peerDependencies:
       astro: ^3.2.0
     dependencies:
-      '@astrojs/mdx': 1.1.0(astro@3.3.2)
+      '@astrojs/mdx': 1.1.0(astro@3.3.4)
       '@astrojs/sitemap': 3.0.0
       '@pagefind/default-ui': 1.0.3
       '@types/mdast': 3.0.12
-      astro: 3.3.2(typescript@4.9.5)
+      astro: 3.3.4(typescript@4.9.5)
       bcp-47: 2.1.0
       execa: 8.0.1
       hast-util-select: 5.0.5
@@ -1021,8 +1021,8 @@ packages:
       - supports-color
     dev: false
 
-  /@astrojs/telemetry@3.0.3:
-    resolution: {integrity: sha512-j19Cf5mfyLt9hxgJ9W/FMdAA5Lovfp7/CINNB/7V71GqvygnL7KXhRC3TzfB+PsVQcBtgWZzCXhUWRbmJ64Raw==}
+  /@astrojs/telemetry@3.0.4:
+    resolution: {integrity: sha512-A+0c7k/Xy293xx6odsYZuXiaHO0PL+bnDoXOc47sGDF5ffIKdKQGRPFl2NMlCF4L0NqN4Ynbgnaip+pPF0s7pQ==}
     engines: {node: '>=18.14.1'}
     dependencies:
       ci-info: 3.8.0
@@ -6749,15 +6749,15 @@ packages:
       - utf-8-validate
     dev: false
 
-  /astro@3.3.2(typescript@4.9.5):
-    resolution: {integrity: sha512-uyimGY0p1gYXKAZe3/RCfbqNbuwpEvPkTKF5TE63Glb9ZgeLUBXu+ZlsG4LIMxCQ40p5F0D5+zuNJdH+om2PQQ==}
+  /astro@3.3.4(typescript@4.9.5):
+    resolution: {integrity: sha512-1yy1p8/QpACpToK2bYFxbbPug7+HeUW+IGvkIss2KQDv4pwDk19UbfQrS8aMHtW3nvR7PpBYL/H/Dprcqxy40A==}
     engines: {node: '>=18.14.1', npm: '>=6.14.0'}
     hasBin: true
     dependencies:
       '@astrojs/compiler': 2.1.0
       '@astrojs/internal-helpers': 0.2.1
-      '@astrojs/markdown-remark': 3.3.0(astro@3.3.2)
-      '@astrojs/telemetry': 3.0.3
+      '@astrojs/markdown-remark': 3.3.0(astro@3.3.4)
+      '@astrojs/telemetry': 3.0.4
       '@babel/core': 7.22.10
       '@babel/generator': 7.22.10
       '@babel/parser': 7.22.10
