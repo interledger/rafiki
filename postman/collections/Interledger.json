@@ -1665,7 +1665,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address=https://happy-life-bank-backend/accounts/pfry",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address={{receiverWalletAddress}}",
 									"host": [
 										"{{receiverOpenPaymentsHost}}"
 									],
@@ -1678,13 +1678,13 @@
 											"value": "10"
 										},
 										{
-											"key": "wallet-address",
-											"value": "https://happy-life-bank-backend/accounts/pfry"
-										},
-										{
 											"key": "cursor",
 											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
 											"disabled": true
+										},
+										{
+											"key": "wallet-address",
+											"value": "{{receiverWalletAddress}}"
 										}
 									]
 								}
@@ -2026,10 +2026,28 @@
 									"script": {
 										"id": "dc5e8d6a-7834-405f-8198-465bb5795824",
 										"exec": [
+											"request.url = request.url",
+											"    .replace(/{{(senderWalletAddress)}}/g, (_, key) => pm.environment.get(key))",
+											"    .replace(/http:\\/\\/localhost:([3,4])000/g, (_, key) =>",
+											"          key === '3'",
+											"            ? 'https://' + pm.environment.get('host3000')",
+											"            : 'https://' + pm.environment.get('host4000')",
+											"    )",
+											"console.log(request.url)",
+											"",
 											"if(pm.environment.get('preRequestHost')){",
 											"    eval(pm.environment.get('preRequestHost'))",
 											"}",
-											"eval(pm.environment.get('preRequestSignatures'))"
+											"eval(pm.environment.get('preRequestSignatures'))",
+											"",
+											"pm.request.url.query.idx(2).value = pm.request.url.query.idx(2).value",
+											"    .replace(/{{([A-Za-z]\\w+)}}/g, (_, key) => pm.environment.get(key))",
+											"    .replace(/http:\\/\\/localhost:([3,4])000/g, (_, key) =>",
+											"          key === '3'",
+											"            ? 'https://' + pm.environment.get('host3000')",
+											"            : 'https://' + pm.environment.get('host4000')",
+											"    )",
+											""
 										],
 										"type": "text/javascript"
 									}
@@ -2048,7 +2066,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments?first=2&wallet-address=https://cloud-nine-wallet-backend/accounts/gfranklin",
+									"raw": "{{senderOpenPaymentsHost}}/outgoing-payments?first=2&wallet-address={{senderWalletAddress}}",
 									"host": [
 										"{{senderOpenPaymentsHost}}"
 									],
@@ -2067,7 +2085,7 @@
 										},
 										{
 											"key": "wallet-address",
-											"value": "https://cloud-nine-wallet-backend/accounts/gfranklin"
+											"value": "{{senderWalletAddress}}"
 										}
 									]
 								}
