@@ -5,7 +5,7 @@ import { canonicalize } from 'json-canonicalize'
 import { WebhookEvent } from './model'
 import { IAppConfig } from '../config/app'
 import { BaseService } from '../shared/baseService'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 import { FilterString } from '../shared/filters'
 
 // First retry waits 10 seconds
@@ -20,6 +20,7 @@ interface WebhookEventFilter {
 interface GetPageOptions {
   pagination?: Pagination
   filter?: WebhookEventFilter
+  sortOrder?: SortOrder
 }
 
 export interface WebhookService {
@@ -178,7 +179,7 @@ async function getWebhookEventsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ): Promise<WebhookEvent[]> {
-  const { filter, pagination } = options ?? {}
+  const { filter, pagination, sortOrder } = options ?? {}
 
   const query = WebhookEvent.query(deps.knex)
 
@@ -186,5 +187,5 @@ async function getWebhookEventsPage(
     query.whereIn('type', filter.type.in)
   }
 
-  return await query.getPage(pagination)
+  return await query.getPage(pagination, sortOrder)
 }

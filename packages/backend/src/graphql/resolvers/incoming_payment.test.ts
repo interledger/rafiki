@@ -26,6 +26,7 @@ import {
   errorToMessage
 } from '../../open_payments/payment/incoming/errors'
 import { Amount, serializeAmount } from '../../open_payments/amount'
+import { SortOrder } from '../../shared/baseModel'
 
 describe('Incoming Payment Resolver', (): void => {
   let deps: IocContract<AppServices>
@@ -73,7 +74,8 @@ describe('Incoming Payment Resolver', (): void => {
       parent: {
         query: 'walletAddress',
         getId: () => walletAddressId
-      }
+      },
+      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     })
   })
 

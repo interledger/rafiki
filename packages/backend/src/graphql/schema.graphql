@@ -12,6 +12,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): AssetsConnection!
 
   "Fetch a peer"
@@ -27,6 +29,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): PeersConnection!
 
   "Fetch a wallet address"
@@ -42,6 +46,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote"
@@ -63,6 +69,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
     "Filter webhook events based on specific criteria."
     filter: WebhookEventFilter
   ): WebhookEventsConnection!
@@ -77,6 +85,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
     "Filter payment events based on specific criteria."
     filter: PaymentFilter
   ): PaymentConnection!
@@ -452,6 +462,8 @@ type Asset implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): FeesConnection
   "Date-time of creation"
   createdAt: String!
@@ -541,6 +553,8 @@ type WalletAddress implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): IncomingPaymentConnection
   "List of quotes created at this wallet address"
   quotes(
@@ -552,6 +566,8 @@ type WalletAddress implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): QuoteConnection
   "List of outgoing payments sent from this wallet address"
   outgoingPayments(
@@ -563,6 +579,8 @@ type WalletAddress implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Choose ascending or descending order for results."
+    sortOrder: String
   ): OutgoingPaymentConnection
   "Date-time of creation"
   createdAt: String!

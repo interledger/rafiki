@@ -1,6 +1,6 @@
 import { TransactionOrKnex } from 'objection'
 import { BaseService } from '../../../shared/baseService'
-import { Pagination } from '../../../shared/baseModel'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { CombinedPayment } from './model'
 import { FilterString } from '../../../shared/filters'
 import { OutgoingPaymentService } from '../outgoing/service'
@@ -13,6 +13,7 @@ interface CombinedPaymentFilter {
 interface GetPageOptions {
   pagination?: Pagination
   filter?: CombinedPaymentFilter
+  sortOrder?: SortOrder
 }
 
 export interface CombinedPaymentService {
@@ -42,7 +43,7 @@ async function getCombinedPaymentsPage(
   deps: ServiceDependencies,
   options?: GetPageOptions
 ) {
-  const { filter, pagination } = options ?? {}
+  const { filter, pagination, sortOrder } = options ?? {}
 
   const query = CombinedPayment.query(deps.knex)
 
@@ -54,5 +55,5 @@ async function getCombinedPaymentsPage(
     query.whereIn('type', filter.type.in)
   }
 
-  return await query.getPage(pagination)
+  return await query.getPage(pagination, sortOrder)
 }

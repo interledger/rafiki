@@ -13,6 +13,7 @@ import {
   webhookEventTypes
 } from '../../tests/webhook'
 import { WebhookEvent } from '../../webhook/model'
+import { SortOrder } from '../../shared/baseModel'
 
 describe('Webhook Events Query', (): void => {
   let deps: IocContract<AppServices>
@@ -35,10 +36,12 @@ describe('Webhook Events Query', (): void => {
   getPageTests({
     getClient: () => appContainer.apolloClient,
     createModel: () => createWebhookEvent(deps),
-    pagedQuery: 'webhookEvents'
+    pagedQuery: 'webhookEvents',
+    sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
   })
 
   test('Can get webhookEvents', async (): Promise<void> => {
+    const sortOrder = SortOrder.Desc // Calling the default getPage will result in descending order
     const webhookEvents: WebhookEvent[] = []
     const numOfEachEventType = 3
 
@@ -52,10 +55,13 @@ describe('Webhook Events Query', (): void => {
         )
       }
     }
+    if (sortOrder === SortOrder.Desc) {
+      webhookEvents.reverse()
+    }
 
     const filter = {
       type: {
-        in: [webhookEventTypes[0], webhookEventTypes[1]]
+        in: [webhookEventTypes[1], webhookEventTypes[2]]
       }
     }
 

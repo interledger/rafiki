@@ -34,6 +34,7 @@ import {
   WalletAddressesConnection
 } from '../generated/graphql'
 import { getPageTests } from './page.test'
+import { SortOrder } from '../../shared/baseModel'
 
 describe('Wallet Address Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -458,9 +459,13 @@ describe('Wallet Address Resolvers', (): void => {
     })
 
     test('Can get page of wallet addresses', async (): Promise<void> => {
+      const sortOrder = SortOrder.Desc // Calling the default getPage will result in descending order
       const walletAddresses: WalletAddressModel[] = []
       for (let i = 0; i < 2; i++) {
         walletAddresses.push(await createWalletAddress(deps))
+      }
+      if (sortOrder === SortOrder.Desc) {
+        walletAddresses.reverse()
       }
       const query = await appContainer.apolloClient
         .query({

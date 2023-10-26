@@ -29,6 +29,7 @@ import {
   OutgoingPaymentResponse,
   OutgoingPaymentState as SchemaPaymentState
 } from '../generated/graphql'
+import { SortOrder } from '../../shared/baseModel'
 
 describe('OutgoingPayment Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -379,7 +380,8 @@ describe('OutgoingPayment Resolvers', (): void => {
       parent: {
         query: 'walletAddress',
         getId: () => walletAddressId
-      }
+      },
+      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     })
   })
 })

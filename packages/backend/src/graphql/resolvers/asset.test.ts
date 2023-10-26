@@ -14,6 +14,7 @@ import { isAssetError } from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
+import { SortOrder } from '../../shared/baseModel'
 import {
   AssetMutationResponse,
   Asset,
@@ -382,11 +383,13 @@ describe('Asset Resolvers', (): void => {
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         }) as Promise<AssetModel>,
-      pagedQuery: 'assets'
+      pagedQuery: 'assets',
+      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     })
 
     test('Can get assets', async (): Promise<void> => {
       const assets: AssetModel[] = []
+      const sortOrder = SortOrder.Desc // Calling the default getPage will result in descending order
       for (let i = 0; i < 2; i++) {
         const asset = await assetService.create({
           ...randomAsset(),
@@ -395,6 +398,9 @@ describe('Asset Resolvers', (): void => {
         })
         assert.ok(!isAssetError(asset))
         assets.push(asset)
+      }
+      if (sortOrder === SortOrder.Desc) {
+        assets.reverse()
       }
       const query = await appContainer.apolloClient
         .query({
@@ -452,15 +458,20 @@ describe('Asset Resolvers', (): void => {
         parent: {
           query: 'asset',
           getId: () => assetId
-        }
+        },
+        sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
       })
 
       test('Can get fees', async (): Promise<void> => {
         const fees: Fee[] = []
+        const sortOrder = SortOrder.Desc
         for (let i = 0; i < 2; i++) {
           const fee = await createFee(deps, assetId)
           assert.ok(!isFeeError(fee))
           fees.push(fee)
+        }
+        if (sortOrder === SortOrder.Desc) {
+          fees.reverse()
         }
         const query = await appContainer.apolloClient
           .query({

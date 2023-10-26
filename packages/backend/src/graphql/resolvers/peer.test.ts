@@ -29,6 +29,7 @@ import {
   UpdatePeerMutationResponse
 } from '../generated/graphql'
 import { AccountingService } from '../../accounting/service'
+import { SortOrder } from '../../shared/baseModel'
 
 describe('Peer Resolvers', (): void => {
   let deps: IocContract<AppServices>
@@ -358,13 +359,18 @@ describe('Peer Resolvers', (): void => {
     getPageTests({
       getClient: () => appContainer.apolloClient,
       createModel: () => createPeer(deps),
-      pagedQuery: 'peers'
+      pagedQuery: 'peers',
+      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     })
 
     test('Can get peers', async (): Promise<void> => {
       const peers: PeerModel[] = []
+      const sortOrder = SortOrder.Desc // Calling the default getPage will result in descending order
       for (let i = 0; i < 2; i++) {
         peers.push(await createPeer(deps, randomPeer()))
+      }
+      if (sortOrder === SortOrder.Desc) {
+        peers.reverse()
       }
       const query = await appContainer.apolloClient
         .query({
