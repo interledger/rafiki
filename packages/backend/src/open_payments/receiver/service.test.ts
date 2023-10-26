@@ -38,6 +38,8 @@ import assert from 'assert'
 import { Receiver } from './model'
 import { Grant } from '../grant/model'
 import { IncomingPaymentState } from '../payment/incoming/model'
+import { PublicIncomingPayment } from '@interledger/open-payments/dist/types'
+import { mockPublicIncomingPayment } from '@interledger/open-payments/dist/test/helpers'
 
 describe('Receiver Service', (): void => {
   let deps: IocContract<AppServices>
@@ -123,11 +125,7 @@ describe('Receiver Service', (): void => {
       `('remote ($description)', ({ existingGrant }): void => {
         let walletAddress: OpenPaymentsWalletAddress
         let incomingPayment: OpenPaymentsIncomingPaymentWithPaymentMethods
-        // TODO: replace with PublicIncomingPayment when exported from open-payments
-        let publicIncomingPayment: {
-          authServer: string
-          receivedAmount: OpenPaymentsIncomingPaymentWithPaymentMethods['receivedAmount']
-        }
+        let publicIncomingPayment: PublicIncomingPayment
         const authServer = faker.internet.url({ appendSlash: false })
         const INCOMING_PAYMENT_PATH = 'incoming-payments'
         const grantOptions = {
@@ -181,11 +179,10 @@ describe('Receiver Service', (): void => {
             id: `${walletAddress.id}/incoming-payments/${uuid()}`,
             walletAddress: walletAddress.id
           })
-          // TODO: replace with mockPublicIncomingPayment when exported from open-payments
-          publicIncomingPayment = {
+          publicIncomingPayment = mockPublicIncomingPayment({
             authServer,
             receivedAmount: incomingPayment.receivedAmount
-          }
+          })
           if (existingGrant) {
             await expect(
               grantService.create({
