@@ -124,7 +124,16 @@ describe('Incoming Payment Service', (): void => {
           walletAddressId,
           incomingAmount: {
             value: BigInt(123),
-            assetCode: asset.code.split('').reverse().join(''),
+            assetCode: String.fromCharCode(
+              ...asset.code.split('').map((letter) => {
+                let charCode = letter.charCodeAt(0)
+                if (charCode === 91) {
+                  return --charCode
+                } else {
+                  return ++charCode
+                }
+              })
+            ),
             assetScale: asset.scale
           },
           expiresAt: new Date(Date.now() + 30_000),
