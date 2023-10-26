@@ -454,6 +454,27 @@ describe('Grant Service', (): void => {
           expect(fetchedGrants.length).toBe(2)
         })
       })
+
+      describe('finalizationReason', () => {
+        test('in', async () => {
+          const grants = await grantService.getPage(undefined, {
+            finalizationReason: {
+              in: [GrantFinalization.Revoked]
+            }
+          })
+
+          expect(grants.length).toBe(1)
+        })
+        test('notIn', async () => {
+          const grants = await grantService.getPage(undefined, {
+            finalizationReason: {
+              notIn: [GrantFinalization.Revoked]
+            }
+          })
+
+          expect(grants.length).toBe(2)
+        })
+      })
     })
   })
 })
