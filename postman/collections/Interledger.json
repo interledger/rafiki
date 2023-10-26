@@ -1665,7 +1665,7 @@
 									}
 								],
 								"url": {
-									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?wallet-address=https://happy-life-bank-backend/accounts/pfry&first=10",
+									"raw": "{{receiverOpenPaymentsHost}}/incoming-payments?first=10&wallet-address=https://happy-life-bank-backend/accounts/pfry",
 									"host": [
 										"{{receiverOpenPaymentsHost}}"
 									],
@@ -1674,6 +1674,10 @@
 									],
 									"query": [
 										{
+											"key": "first",
+											"value": "10"
+										},
+										{
 											"key": "wallet-address",
 											"value": "https://happy-life-bank-backend/accounts/pfry"
 										},
@@ -1681,10 +1685,6 @@
 											"key": "cursor",
 											"value": "ea3bf38f-2719-4473-a0f7-4ba967d1d81b",
 											"disabled": true
-										},
-										{
-											"key": "first",
-											"value": "10"
 										}
 									]
 								}
