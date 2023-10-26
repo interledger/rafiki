@@ -218,8 +218,8 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
       '@types/koa__router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^12.0.3
+        version: 12.0.3
       '@types/uuid':
         specifier: ^9.0.6
         version: 9.0.6
@@ -396,8 +396,8 @@ importers:
         specifier: ^4.3.11
         version: 4.3.11
       '@types/koa__router':
-        specifier: ^12.0.2
-        version: 12.0.2
+        specifier: ^12.0.3
+        version: 12.0.3
       '@types/lodash':
         specifier: ^4.14.200
         version: 4.14.200
@@ -5492,8 +5492,8 @@ packages:
       '@types/koa': 2.13.10
     dev: true
 
-  /@types/koa__router@12.0.2:
-    resolution: {integrity: sha512-xoiDqyIggk1hPOhD980SMhPYqUssvHkIh6CV/j00WemrYqqNM1jMellWJofEKm0ZbgJUyWunFvCHil20dQEhMg==}
+  /@types/koa__router@12.0.3:
+    resolution: {integrity: sha512-5YUJVv6NwM1z7m6FuYpKfNLTZ932Z6EF6xy2BbtpJSyn13DKNQEkXVffFVSnJHxvwwWh2SAeumpjAYUELqgjyw==}
     dependencies:
       '@types/koa': 2.13.10
     dev: true
