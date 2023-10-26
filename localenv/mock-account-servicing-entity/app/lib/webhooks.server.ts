@@ -9,7 +9,6 @@ import {
   addPeerLiquidity,
   createWalletAddress
 } from './requesters'
-import { CONFIG } from '~/lib/parse_config.server'
 
 export enum EventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -178,7 +177,7 @@ export async function handleWalletAddressNotFound(wh: WebHook) {
     throw new Error('No walletAddressUrl found')
   }
 
-  const accountPath = walletAddressUrl.split(`https://${CONFIG.publicHost}/`)[1]
+  const accountPath = new URL(walletAddressUrl).pathname.substring(1)
 
   const account = await mockAccounts.getByPath(accountPath)
 
