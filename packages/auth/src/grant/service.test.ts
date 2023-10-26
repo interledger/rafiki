@@ -403,42 +403,8 @@ describe('Grant Service', (): void => {
     })
 
     test('No filter gets all', async (): Promise<void> => {
-      const grants = await grantService.getPage()
-      const allGrants = await Grant.query()
-      expect(grants.length).toBe(allGrants.length)
-    })
-
-    test('Filter by identifier', async () => {
-      const grants = await grantService.getPage(undefined, {
-        identifier: {
-          in: [walletAddress]
-        }
-      })
-
-      expect(grants.length).toBe(2)
-    })
-
-    test('Filter by grant state', async () => {
-      const grants = await grantService.getPage(undefined, {
-        state: {
-          in: [GrantState.Finalized]
-        },
-        finalizationReason: {
-          in: [GrantFinalization.Revoked]
-        }
-      })
-
-      expect(grants.length).toBe(1)
-    })
-
-    test('Filter out by grant state', async () => {
-      const fetchedGrants = await grantService.getPage(undefined, {
-        finalizationReason: {
-          notIn: [GrantFinalization.Revoked]
-        }
-      })
-
-      expect(fetchedGrants.length).toBe(3)
+      const grantPage = await grantService.getPage()
+      expect(grantPage.length).toBe(grants.length)
     })
 
     test('Can paginate and filter', async (): Promise<void> => {
@@ -453,6 +419,44 @@ describe('Grant Service', (): void => {
 
       expect(page[0].id).toBe(grants?.[1].id)
       expect(page.length).toBe(1)
+    })
+
+    describe('GrantFilter', () => {
+      describe('identifier', () => {
+        test('in', async () => {
+          const grants = await grantService.getPage(undefined, {
+            identifier: {
+              in: [walletAddress]
+            }
+          })
+
+          expect(grants.length).toBe(2)
+        })
+      })
+
+      describe('state', () => {
+        test('in', async () => {
+          const grants = await grantService.getPage(undefined, {
+            state: {
+              in: [GrantState.Finalized]
+            },
+            finalizationReason: {
+              in: [GrantFinalization.Revoked]
+            }
+          })
+
+          expect(grants.length).toBe(1)
+        })
+        test('out', async () => {
+          const fetchedGrants = await grantService.getPage(undefined, {
+            finalizationReason: {
+              notIn: [GrantFinalization.Revoked]
+            }
+          })
+
+          expect(fetchedGrants.length).toBe(3)
+        })
+      })
     })
   })
 })
