@@ -456,8 +456,8 @@ importers:
   packages/documentation:
     dependencies:
       '@astrojs/starlight':
-        specifier: ^0.11.1
-        version: 0.11.1(astro@3.3.4)
+        specifier: ^0.11.2
+        version: 0.11.2(astro@3.3.4)
       '@interledger/docs-design-system':
         specifier: ^0.1.1
         version: 0.1.1
@@ -996,8 +996,8 @@ packages:
       zod: 3.21.1
     dev: false
 
-  /@astrojs/starlight@0.11.1(astro@3.3.4):
-    resolution: {integrity: sha512-R1kBYnAOqPznsXCPLpSrbFQlKAy7jl7VIw+IY0s4tLfK5A9X6/nuX3Asm/kay6GJ035e9PHTljM5qFcAdJnPDw==}
+  /@astrojs/starlight@0.11.2(astro@3.3.4):
+    resolution: {integrity: sha512-bwKYgU70SP1AItFJqdQ1k+cC9cVEvQ849+9pg5Ms3PF1BlN/f0H3bj6SPqRkZnNEwYGREqjbtempJRTnpTaJnA==}
     peerDependencies:
       astro: ^3.2.0
     dependencies:
