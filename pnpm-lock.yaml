@@ -45,8 +45,8 @@ importers:
         specifier: ^29.1.1
         version: 29.1.1(@babel/core@7.23.2)(@jest/types@29.6.3)(jest@29.7.0)(typescript@4.9.5)
       tunnelmole:
-        specifier: ^2.2.4
-        version: 2.2.4
+        specifier: ^2.2.5
+        version: 2.2.5
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -7885,7 +7885,7 @@ packages:
   /cross-fetch@3.1.8:
     resolution: {integrity: sha512-cvA+JwZoU0Xq+h6WkMvAUqPEYy92Obet6UdKLfW60qn99ftItKjB5T+BkyWOFWe2pUyfQ+IJHmpOTznqk1M6Kg==}
     dependencies:
-      node-fetch: 2.6.12
+      node-fetch: 2.7.0
     transitivePeerDependencies:
       - encoding
     dev: true
@@ -16704,8 +16704,8 @@ packages:
       safe-buffer: 5.2.1
     dev: false
 
-  /tunnelmole@2.2.4:
-    resolution: {integrity: sha512-MTtud3IOtS+j+MC39xw/VSPjAswcJ+sx+NOrQMrl29hLYquY8zBLdQKRxKKHwPc+7vZEuRx8mlg8PU3mJnhKHQ==}
+  /tunnelmole@2.2.5:
+    resolution: {integrity: sha512-tuhf5cmxuUYfCC8ECl9rF7J47JB5d7NOdRJxjye9sUVZmgyIihWE4pjim8eybPlRTN+jQedcnTfZyS8wjaT+Wg==}
     hasBin: true
     requiresBuild: true
     dependencies:
@@ -16726,7 +16726,7 @@ packages:
       is-number: 7.0.0
       multer: 1.4.5-lts.1
       nanoid: 3.3.6
-      node-fetch: 2.6.12
+      node-fetch: 2.7.0
       node-localstorage: 2.2.1
       source-map-support: 0.5.21
       toml: 3.0.0
