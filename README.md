@@ -102,7 +102,7 @@ pnpm format
 pnpm checks
 
 # verify code formatting:
-pnpm check:format
+pnpm check:prettier
 
 # verify lint
 pnpm check:lint
