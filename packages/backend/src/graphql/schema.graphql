@@ -175,6 +175,21 @@ type Mutation {
     input: WithdrawEventLiquidityInput!
   ): LiquidityMutationResponse
 
+  "Withdraw incoming payment liquidity"
+  withdrawIncomingPaymentLiquidity(
+    input: WithdrawIncomingPaymentLiquidityInput!
+  ): LiquidityMutationResponse
+
+  "Withdraw outgoing payment liquidity"
+  withdrawOutgoingPaymentLiquidity(
+    input: WithdrawOutgoingPaymentLiquidityInput!
+  ): LiquidityMutationResponse
+
+  "Deposit outgoing payment liquidity"
+  depositOutgoingPaymentLiquidity(
+    input: DepositOutgoingPaymentLiquidityInput!
+  ): LiquidityMutationResponse
+
   "Withdraw liquidity from a wallet address received via Web Monetization."
   createWalletAddressWithdrawal(
     input: CreateWalletAddressWithdrawalInput!
@@ -370,6 +385,27 @@ input PostLiquidityWithdrawalInput {
 input VoidLiquidityWithdrawalInput {
   "The id of the liquidity withdrawal to void."
   withdrawalId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input DepositOutgoingPaymentLiquidityInput {
+  "The id of the outgoing payment to deposit into."
+  outgoingPaymentId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input WithdrawIncomingPaymentLiquidityInput {
+  "The id of the incoming payment to withdraw from."
+  incomingPaymentId: String!
+  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
+  idempotencyKey: String!
+}
+
+input WithdrawOutgoingPaymentLiquidityInput {
+  "The id of the outgoing payment to withdraw from."
+  outgoingPaymentId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
 }
