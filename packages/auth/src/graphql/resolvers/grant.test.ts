@@ -8,13 +8,13 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import {
-  Grant,
+  GrantFinalization,
   GrantsConnection,
   GrantState,
   RevokeGrantInput,
   RevokeGrantMutationResponse
 } from '../generated/graphql'
-import { Grant as GrantModel } from '../../grant/model'
+import { Grant, Grant as GrantModel } from '../../grant/model'
 import { getPageTests } from './page.test'
 import { createGrant } from '../../tests/grant'
 
@@ -90,7 +90,12 @@ describe('Grant Resolvers', (): void => {
       test('identifier', async (): Promise<void> => {
         const grants: GrantModel[] = []
         const identifier = 'https://example.com/test'
-        for (let i = 0; i < 2; i++) {
+        const grantData = [
+          { identifier },
+          { identifier },
+          { identifier: 'https://abc.com/xyz' }
+        ]
+        for (const { identifier } of grantData) {
           const grant = await createGrant(deps, { identifier })
           grants.push(grant)
         }
@@ -138,16 +143,25 @@ describe('Grant Resolvers', (): void => {
       })
 
       test('state: in', async (): Promise<void> => {
-        const grants: GrantModel[] = []
-        for (let i = 0; i < 2; i++) {
+        const grantPatches = [
+          {
+            state: GrantState.Pending
+          },
+          {
+            state: GrantState.Processing
+          },
+          {
+            state: GrantState.Finalized
+          }
+        ]
+        for (const patch of grantPatches) {
           const grant = await createGrant(deps)
-          await grant.$query().patch({ state: GrantState.Pending })
-          grants.push(grant)
+          await grant.$query().patch(patch)
         }
 
         const filter = {
           state: {
-            in: [GrantState.Pending]
+            in: [GrantState.Pending, GrantState.Processing]
           }
         }
 
@@ -175,16 +189,23 @@ describe('Grant Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-        expect(query.edges).toHaveLength(2)
-        expect(grants).toHaveLength(2)
+        query.edges.forEach((edge) => {
+          expect(filter.state.in).toContain(edge.node.state)
+        })
+        expect(query.edges).toHaveLength(
+          grantPatches.filter((p) => filter.state.in.includes(p.state)).length
+        )
       })
 
-      test('state: not in', async (): Promise<void> => {
-        const grants: GrantModel[] = []
-        for (let i = 0; i < 2; i++) {
+      test('state: notIn', async (): Promise<void> => {
+        const grantPatches = [
+          { state: GrantState.Pending },
+          { state: GrantState.Pending },
+          { state: GrantState.Approved }
+        ]
+        for (const patch of grantPatches) {
           const grant = await createGrant(deps)
-          await grant.$query().patch({ state: GrantState.Pending })
-          grants.push(grant)
+          await grant.$query().patch(patch)
         }
 
         const filter = {
@@ -217,8 +238,139 @@ describe('Grant Resolvers', (): void => {
               throw new Error('Data was empty')
             }
           })
-        expect(query.edges).toHaveLength(0)
-        expect(grants).toHaveLength(2)
+        query.edges.forEach((edge) => {
+          expect(filter.state.notIn).not.toContain(edge.node.state)
+        })
+        expect(query.edges).toHaveLength(
+          grantPatches.filter((p) => !filter.state.notIn.includes(p.state))
+            .length
+        )
+      })
+
+      test('finalizationReason: in', async (): Promise<void> => {
+        const grantPatches = [
+          {
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          },
+          {
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          },
+          {
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Issued
+          }
+        ]
+        for (const patch of grantPatches) {
+          const grant = await createGrant(deps)
+          await grant.$query().patch(patch)
+        }
+
+        const filter = {
+          finalizationReason: {
+            in: [GrantFinalization.Revoked]
+          }
+        }
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query grants($filter: GrantFilter) {
+                grants(filter: $filter) {
+                  edges {
+                    node {
+                      id
+                      state
+                      finalizationReason
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { filter }
+          })
+          .then((query): GrantsConnection => {
+            if (query.data) {
+              return query.data.grants
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        query.edges.forEach((edge) => {
+          expect(filter.finalizationReason.in).toContain(
+            edge.node.finalizationReason
+          )
+        })
+        expect(query.edges).toHaveLength(
+          grantPatches.filter((p) =>
+            filter.finalizationReason.in.includes(p.finalizationReason)
+          ).length
+        )
+      })
+
+      test('finalizationReason: notIn', async (): Promise<void> => {
+        const grantPatches = [
+          {
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          },
+          {
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Revoked
+          },
+          {
+            state: GrantState.Finalized,
+            finalizationReason: GrantFinalization.Issued
+          }
+        ]
+        for (const patch of grantPatches) {
+          const grant = await createGrant(deps)
+          await grant.$query().patch(patch)
+        }
+
+        const filter = {
+          finalizationReason: {
+            notIn: [GrantFinalization.Revoked]
+          }
+        }
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query grants($filter: GrantFilter) {
+                grants(filter: $filter) {
+                  edges {
+                    node {
+                      id
+                      state
+                    }
+                    cursor
+                  }
+                }
+              }
+            `,
+            variables: { filter }
+          })
+          .then((query): GrantsConnection => {
+            if (query.data) {
+              return query.data.grants
+            } else {
+              throw new Error('Data was empty')
+            }
+          })
+        query.edges.forEach((edge) => {
+          expect(filter.finalizationReason.notIn).not.toContain(
+            edge.node.finalizationReason
+          )
+        })
+        expect(query.edges).toHaveLength(
+          grantPatches.filter(
+            (p) =>
+              !filter.finalizationReason.notIn.includes(p.finalizationReason)
+          ).length
+        )
       })
     })
   })
