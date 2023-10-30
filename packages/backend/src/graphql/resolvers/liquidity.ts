@@ -433,6 +433,170 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
     }
   }
 
+export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['depositOutgoingPaymentLiquidity'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    return {
+      code: '400',
+      message: 'Error trying to deposit liquidity',
+      success: false
+    }
+    // try {
+    //   const webhookService = await ctx.container.use('webhookService')
+    //   const event = await webhookService.getEvent(args.input.eventId)
+    //   if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
+    //     return responses[LiquidityError.InvalidId]
+    //   }
+    //   if (!event.data.debitAmount) {
+    //     throw new Error()
+    //   }
+    //   const outgoingPaymentService = await ctx.container.use(
+    //     'outgoingPaymentService'
+    //   )
+    //   const paymentOrErr = await outgoingPaymentService.fund({
+    //     id: event.data.id,
+    //     amount: BigInt(event.data.debitAmount.value),
+    //     transferId: event.id
+    //   })
+    //   if (isFundingError(paymentOrErr)) {
+    //     return errorToResponse(paymentOrErr)
+    //   }
+    //   return {
+    //     code: '200',
+    //     success: true,
+    //     message: 'Deposited liquidity'
+    //   }
+    // } catch (error) {
+    //   ctx.logger.error(
+    //     {
+    //       eventId: args.input.eventId,
+    //       error
+    //     },
+    //     'error depositing liquidity'
+    //   )
+    //   return {
+    //     code: '400',
+    //     message: 'Error trying to deposit liquidity',
+    //     success: false
+    //   }
+    // }
+  }
+
+export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawIncomingPaymentLiquidity'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    return {
+      code: '400',
+      message: 'Error trying to withdraw liquidity',
+      success: false
+    }
+    // try {
+    //   const webhookService = await ctx.container.use('webhookService')
+    //   const event = await webhookService.getEvent(args.input.eventId)
+    //   if (!event || !event.withdrawal) {
+    //     return responses[LiquidityError.InvalidId]
+    //   }
+    //   const assetService = await ctx.container.use('assetService')
+    //   const asset = await assetService.get(event.withdrawal.assetId)
+    //   if (!asset) {
+    //     throw new Error()
+    //   }
+    //   const accountingService = await ctx.container.use('accountingService')
+    //   const error = await accountingService.createWithdrawal({
+    //     id: event.id,
+    //     account: {
+    //       id: event.withdrawal.accountId,
+    //       asset
+    //     },
+    //     amount: event.withdrawal.amount
+    //   })
+    //   if (error) {
+    //     return errorToResponse(error)
+    //   }
+    //   // TODO: check for and handle leftover incoming payment or payment balance
+    //   return {
+    //     code: '200',
+    //     success: true,
+    //     message: 'Withdrew liquidity'
+    //   }
+    // } catch (error) {
+    //   ctx.logger.error(
+    //     {
+    //       eventId: args.input.eventId,
+    //       error
+    //     },
+    //     'error withdrawing liquidity'
+    //   )
+    //   return {
+    //     code: '400',
+    //     message: 'Error trying to withdraw liquidity',
+    //     success: false
+    //   }
+    // }
+  }
+
+export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawOutgoingPaymentLiquidity'] =
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    return {
+      code: '400',
+      message: 'Error trying to withdraw liquidity',
+      success: false
+    }
+    // try {
+    //   const webhookService = await ctx.container.use('webhookService')
+    //   const event = await webhookService.getEvent(args.input.eventId)
+    //   if (!event || !event.withdrawal) {
+    //     return responses[LiquidityError.InvalidId]
+    //   }
+    //   const assetService = await ctx.container.use('assetService')
+    //   const asset = await assetService.get(event.withdrawal.assetId)
+    //   if (!asset) {
+    //     throw new Error()
+    //   }
+    //   const accountingService = await ctx.container.use('accountingService')
+    //   const error = await accountingService.createWithdrawal({
+    //     id: event.id,
+    //     account: {
+    //       id: event.withdrawal.accountId,
+    //       asset
+    //     },
+    //     amount: event.withdrawal.amount
+    //   })
+    //   if (error) {
+    //     return errorToResponse(error)
+    //   }
+    //   // TODO: check for and handle leftover incoming payment or payment balance
+    //   return {
+    //     code: '200',
+    //     success: true,
+    //     message: 'Withdrew liquidity'
+    //   }
+    // } catch (error) {
+    //   ctx.logger.error(
+    //     {
+    //       eventId: args.input.eventId,
+    //       error
+    //     },
+    //     'error withdrawing liquidity'
+    //   )
+    //   return {
+    //     code: '400',
+    //     message: 'Error trying to withdraw liquidity',
+    //     success: false
+    //   }
+    // }
+  }
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isLiquidityError = (o: any): o is LiquidityError =>
   Object.values(LiquidityError).includes(o)
