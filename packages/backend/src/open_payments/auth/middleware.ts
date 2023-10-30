@@ -132,6 +132,7 @@ export function createTokenIntrospectionMiddleware({
       await next()
     } catch (err) {
       if (bypassError && err instanceof HttpError) {
+        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
         return await next()
       }
 
