@@ -125,14 +125,9 @@ describe('Incoming Payment Service', (): void => {
           incomingAmount: {
             value: BigInt(123),
             assetCode: String.fromCharCode(
-              ...asset.code.split('').map((letter) => {
-                let charCode = letter.charCodeAt(0)
-                if (charCode < 91) {
-                  return --charCode
-                } else {
-                  return ++charCode
-                }
-              })
+              ...asset.code
+                .split('')
+                .map((letter) => ((letter.charCodeAt(0) + 1 - 65) % 26) + 65)
             ),
             assetScale: asset.scale
           },
