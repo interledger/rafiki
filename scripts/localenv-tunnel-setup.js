@@ -26,7 +26,7 @@ function getEnvs(opUrl, authUrl, connectorUrl) {
     ILP_ADDRESS: process.env.ILP_ADDRESS || `test.local-playground-${v4()}`,
     CLOUD_NINE_PUBLIC_HOST: opUrl,
     CLOUD_NINE_OPEN_PAYMENTS_URL: opUrl,
-    CLOUD_NINE_PAYMENT_POINTER_URL: `${opUrl}/.well-known/pay`,
+    CLOUD_NINE_WALLET_ADDRESS_URL: `${opUrl}/.well-known/pay`,
     CLOUD_NINE_AUTH_SERVER_DOMAIN: authUrl,
     CLOUD_NINE_CONNECTOR_URL: connectorUrl
   }
