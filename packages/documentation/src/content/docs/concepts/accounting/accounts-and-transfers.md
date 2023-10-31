@@ -14,11 +14,11 @@ There is one liquidity account for each of the following resource:
 
 - Asset
 - Peer
-- Wallet Address (for [SPSP](../../reference/glossary#spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
+- Wallet Address (for [SPSP](../../reference/glossary#simple-payments-setup-protocol-spsp) / [Web Monetization](../../reference/glossary#web-monetization) receiving)
 - Incoming Payment
 - Outgoing Payment
 
-Asset and Peer liquidity accounts are created when calling `createAsset` and `createPeer` [GraphQL Admin API mutations](../../apis/backend/mutations.md) respectively, while liquidity accounts for wallet addresses, incoming and outgoing payments are created on-the-fly during payment processing or web monetization events.
+Asset and Peer liquidity accounts are created when calling `createAsset` and `createPeer` [GraphQL Admin API mutations](/apis/backend/mutations) respectively, while liquidity accounts for wallet addresses, incoming and outgoing payments are created on-the-fly during payment processing or web monetization events.
 
 Any liquidity management is done by the [Account Servicing Entity](../../reference/glossary#account-servicing-entity) through the GraphQL Admin API. See [integration](../../integration/event-handlers.md) and [liquidity documentation](./liquidity.md) for more information.
 

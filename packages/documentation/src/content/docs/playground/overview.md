@@ -19,7 +19,7 @@ These packages depend on the following databases:
 
 We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
-This environment will set up an playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
+This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
 ## Environment overview
 
@@ -175,7 +175,7 @@ The Examples folder in the Postman collection includes an eCommerce (Open Paymen
 7. creates an outgoing payment on Grace Franklin's account
 8. fetches the outgoing payment on Grace Franklin's account
 
-Note that one has to go through the interaction flow after requesting a grant for a outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
+Note that one has to go through the interaction flow after requesting a grant for an outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
 
 Example walkthrough:
 
