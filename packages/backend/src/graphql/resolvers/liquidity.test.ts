@@ -1566,7 +1566,7 @@ describe('Liquidity Resolvers', (): void => {
     }
   )
 
-  {
+  describe('Event Liquidity', (): void => {
     let walletAddress: WalletAddress
     let incomingPayment: IncomingPayment
     let payment: OutgoingPayment
@@ -1928,5 +1928,5 @@ describe('Liquidity Resolvers', (): void => {
         }
       )
     })
-  }
+  })
 })
