@@ -87,6 +87,9 @@ describe('Auth Middleware', (): void => {
       const throwSpy = jest.spyOn(ctx, 'throw')
       await expect(middleware(ctx, next)).resolves.toBeUndefined()
       expect(throwSpy).toHaveBeenCalledWith(401, 'Unauthorized')
+      expect(ctx.response.get('WWW-Authenticate')).toBe(
+        `GNAP as_uri=${Config.authServerGrantUrl}`
+      )
       expect(next).toHaveBeenCalled()
     })
 
