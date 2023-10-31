@@ -491,54 +491,50 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    return {
-      code: '400',
-      message: 'Error trying to withdraw liquidity',
-      success: false
+    const { incomingPaymentId } = args.input
+    try {
+      const incomingPaymentService = await ctx.container.use(
+        'incomingPaymentService'
+      )
+      const incomingPayment = await incomingPaymentService.get({
+        id: incomingPaymentId
+      })
+      if (!incomingPayment || !incomingPayment.incomingAmount) {
+        return responses[LiquidityError.InvalidId]
+      }
+
+      const accountingService = await ctx.container.use('accountingService')
+      const error = await accountingService.createWithdrawal({
+        id: incomingPaymentId,
+        account: {
+          id: incomingPaymentId,
+          asset: incomingPayment.asset
+        },
+        amount: incomingPayment.receivedAmount.value
+      })
+
+      if (error) {
+        return errorToResponse(error)
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Withdrew liquidity'
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          incomingPaymentId,
+          error
+        },
+        'error withdrawing liquidity'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to withdraw liquidity',
+        success: false
+      }
     }
-    // try {
-    //   const webhookService = await ctx.container.use('webhookService')
-    //   const event = await webhookService.getEvent(args.input.eventId)
-    //   if (!event || !event.withdrawal) {
-    //     return responses[LiquidityError.InvalidId]
-    //   }
-    //   const assetService = await ctx.container.use('assetService')
-    //   const asset = await assetService.get(event.withdrawal.assetId)
-    //   if (!asset) {
-    //     throw new Error()
-    //   }
-    //   const accountingService = await ctx.container.use('accountingService')
-    //   const error = await accountingService.createWithdrawal({
-    //     id: event.id,
-    //     account: {
-    //       id: event.withdrawal.accountId,
-    //       asset
-    //     },
-    //     amount: event.withdrawal.amount
-    //   })
-    //   if (error) {
-    //     return errorToResponse(error)
-    //   }
-    //   // TODO: check for and handle leftover incoming payment or payment balance
-    //   return {
-    //     code: '200',
-    //     success: true,
-    //     message: 'Withdrew liquidity'
-    //   }
-    // } catch (error) {
-    //   ctx.logger.error(
-    //     {
-    //       eventId: args.input.eventId,
-    //       error
-    //     },
-    //     'error withdrawing liquidity'
-    //   )
-    //   return {
-    //     code: '400',
-    //     message: 'Error trying to withdraw liquidity',
-    //     success: false
-    //   }
-    // }
   }
 
 export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawOutgoingPaymentLiquidity'] =
