@@ -459,8 +459,8 @@ importers:
         specifier: ^0.11.2
         version: 0.11.2(astro@3.4.0)
       '@interledger/docs-design-system':
-        specifier: ^0.1.1
-        version: 0.1.1
+        specifier: ^0.1.2
+        version: 0.1.2
       astro:
         specifier: 3.4.0
         version: 3.4.0(typescript@4.9.5)
@@ -2575,10 +2575,10 @@ packages:
     dependencies:
       '@babel/core': 7.22.10
       '@babel/helper-annotate-as-pure': 7.22.5
-      '@babel/helper-module-imports': 7.22.15
+      '@babel/helper-module-imports': 7.22.5
       '@babel/helper-plugin-utils': 7.22.5
       '@babel/plugin-syntax-jsx': 7.22.5(@babel/core@7.22.10)
-      '@babel/types': 7.23.0
+      '@babel/types': 7.22.10
     dev: true
 
   /@babel/plugin-transform-react-jsx@7.22.5(@babel/core@7.23.2):
@@ -4325,8 +4325,8 @@ packages:
     resolution: {integrity: sha512-dvuCeX5fC9dXgJn9t+X5atfmgQAzUOWqS1254Gh0m6i8wKd10ebXkfNKiRK+1GWi/yTvvLDHpoxLr0xxxeslWw==}
     dev: true
 
-  /@interledger/docs-design-system@0.1.1:
-    resolution: {integrity: sha512-hbp6YrS348c2VlpbLOj0oaPKrg+8nMU0a/xjnCQ3KruTFnqtJJPXr2CM9V17oYI4CLTcEh6mvP3AHpldXOmTHQ==}
+  /@interledger/docs-design-system@0.1.2:
+    resolution: {integrity: sha512-u0FI3HFwZlk1Uqv67yYHQAsaAciZrbwOdaAWpp6OgCOb5CPIEUX9mKfABoZsJHauWa7RfdbyVNPy+cJFJgaItg==}
     dev: false
 
   /@interledger/http-signature-utils@1.1.0:
