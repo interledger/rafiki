@@ -15,7 +15,10 @@ import {
   WalletAddressSubresource
 } from './model'
 import { BaseService } from '../../shared/baseService'
-import { AccountingService } from '../../accounting/service'
+import {
+  AccountingService,
+  LiquidityAccountType
+} from '../../accounting/service'
 import {
   IncomingPayment,
   IncomingPaymentState
@@ -119,13 +122,26 @@ async function createWalletAddress(
     return WalletAddressError.InvalidUrl
   }
   try {
-    return await WalletAddress.query(deps.knex)
+    const wa = await WalletAddress.query(deps.knex)
       .insertAndFetch({
         url: options.url,
         publicName: options.publicName,
         assetId: options.assetId
       })
       .withGraphFetched('asset')
+
+    const acc = await deps.accountingService.createLiquidityAccount(
+      wa,
+      LiquidityAccountType.WEB_MONETIZATION
+    )
+
+    await deps.accountingService.createDeposit({
+      id: 'sadfasd',
+      account: acc,
+      amount: 100n
+    })
+
+    return wa
   } catch (err) {
     if (err instanceof ForeignKeyViolationError) {
       if (err.constraint === 'walletaddresses_assetid_foreign') {
