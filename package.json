@@ -5,10 +5,10 @@
   "license": "Apache-2.0",
   "repository": "https://github.com/interledger/rafiki",
   "engines": {
-    "pnpm": "^8.9.2",
+    "pnpm": "^8.10.1",
     "node": "18"
   },
-  "packageManager": "pnpm@8.9.2",
+  "packageManager": "pnpm@8.10.1",
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "lint": "eslint --max-warnings=0 --fix .",
