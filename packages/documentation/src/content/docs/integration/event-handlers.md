@@ -75,7 +75,7 @@ ASE->>R: admin API call: DepositEventLiquidity
 
 ## `outgoing_payment.completed`
 
-The `outgoing_payment.completed` event indicates that an outgoing payment has successfully sent as many funds as possible to the receiver. The Account Servicing Entity should withdraw any access liquidity from that outgoing payment in Rafiki and use it as they see fit. One option would be to return it to the sender. Another option is that the access liquidity is considered a fee and retained by the Account Servicing Entity. Furthermore, the Account Servicing Entity should remove the hold on the sender's account and debit it.
+The `outgoing_payment.completed` event indicates that an outgoing payment has successfully sent as many funds as possible to the receiver. The Account Servicing Entity should withdraw any excess liquidity from that outgoing payment in Rafiki and use it as they see fit. One option would be to return it to the sender. Another option is that the excess liquidity is considered a fee and retained by the Account Servicing Entity. Furthermore, the Account Servicing Entity should remove the hold on the sender's account and debit it.
 
 Example: An outgoing payment for $12 has been completed. $11.50 were sent. The Account Servicing Entity keeps $0.50 as fees.
 
