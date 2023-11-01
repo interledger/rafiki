@@ -8,4 +8,4 @@ Rafiki implements the Open Payments APIs. Every request and response is validate
 
 The specification version that Rafiki uses is configured in [fetch-schemas.sh](https://github.com/interledger/rafiki/blob/main/scripts/fetch-schemas.sh). Currently, it is using the tagged version [v1.0](https://github.com/interledger/open-payments/tree/v1.0/openapi).
 
-To update the API specification, create a Pull Request on the [Open Payments Github Repository](https://github.com/interledger/open-payments/). Changes will automatically be pushed to [Readme](https://readme.com/), which hosts the [API reference](https://docs.openpayments.guide/reference/) on the [Open Payments website](https://openpayments.guide).
+To update the API specification, create a Pull Request on the [Open Payments GitHub Repository](https://github.com/interledger/open-payments/). Changes will automatically be pushed to [Readme](https://readme.com/), which hosts the [API reference](https://docs.openpayments.guide/reference/) on the [Open Payments website](https://openpayments.guide).

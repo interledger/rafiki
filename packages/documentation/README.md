@@ -64,7 +64,7 @@ Refer to the Starlight documentation on [authoring content](https://starlight.as
 
 ### Docs components
 
-We have extracted some of the commonly repeated patterns within the documentation pages into custom docs components that can be reused. There are components which are shared across all our Starlight documentation sites and those which are specific to this project only. This will determine what the import path is.
+We have extracted some commonly repeated patterns within the documentation pages into custom docs components that can be reused. There are components which are shared across all our Starlight documentation sites and those which are specific to this project only. This will determine what the import path is.
 
 - CodeBlock (Shared)
 - Disclosure (Shared)

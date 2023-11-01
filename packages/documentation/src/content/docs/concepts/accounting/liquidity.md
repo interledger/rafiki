@@ -8,7 +8,7 @@ Rafiki implements a clearing protocol - the [Interledger Protocol](../../referen
 
 ### Asset Liquidity
 
-Asset Liquidity defines the amount of value, denominated in a given asset, Rafiki has at it's disposal to send or forward ILP packets in. It increases if packets denominated in a given asset are received and decreases if packets denominated in a given asset are sent. It is always positive and cannot fall below 0.
+Asset Liquidity defines the amount of value, denominated in a given asset, Rafiki has at its disposal to send or forward ILP packets in. It increases if packets denominated in a given asset are received and decreases if packets denominated in a given asset are sent. It is always positive and cannot fall below 0.
 
 Account Servicing Entities should define and adjust the asset liquidity based on their liquidity risk profile.
 

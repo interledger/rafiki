@@ -19,7 +19,7 @@ Both counterparties need to
 - communicate a connection endpoint for the peer to send packets to
 - exchange auth tokens for the connection endpoint
 
-Additionally, the two counterparties need to agree on a settlement mechanism. However, that is outside of the scope of Interledger / Rafiki.
+Additionally, the two counterparties need to agree on a settlement mechanism. However, that is outside the scope of Interledger / Rafiki.
 
 Note that two counterparties could have multiple peering relationships that differ in e.g. the underlying asset.
 
