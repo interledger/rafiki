@@ -87,7 +87,8 @@ export const createAssetSchema = z
   .object({
     code: z
       .string()
-      .length(3, { message: 'Code should be 3 characters long' })
+      .min(3, { message: 'Code should be atleast 3 characters long' })
+      .max(6, { message: 'Maximum length of Code is 6 characters' })
       .regex(/^[a-zA-Z]+$/, { message: 'Code should only contain letters.' })
       .transform((code) => code.toUpperCase()),
     scale: z.coerce
