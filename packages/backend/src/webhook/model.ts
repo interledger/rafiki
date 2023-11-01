@@ -22,6 +22,7 @@ export class WebhookEvent extends BaseModel {
   }
 
   $formatDatabaseJson(json: Pojo): Pojo {
+    // transforms WebhookEvent.withdrawal to db fields. eg. withdrawal.accountId => withdrawalAccountId
     for (const prefix of fieldPrefixes) {
       if (!json[prefix]) continue
       for (const key in json[prefix]) {
@@ -34,6 +35,7 @@ export class WebhookEvent extends BaseModel {
   }
 
   $parseDatabaseJson(json: Pojo): Pojo {
+    // transforms withdrawal db fields to WebhookEvent.withdrawal. eg. withdrawalAccountId => withdrawal.accountId
     json = super.$parseDatabaseJson(json)
     for (const key in json) {
       const prefix = fieldPrefixes.find((prefix) => key.startsWith(prefix))
