@@ -1163,6 +1163,34 @@
 					"response": []
 				},
 				{
+					"name": "Withdraw Outgoing Payment Liquidity",
+					"id": "8a56ae12-8bd9-4ae4-af91-92cd3adf86bc",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation WithdrawOutgoingPaymentLiquidity($input: WithdrawOutgoingPaymentLiquidityInput!) {\n  withdrawOutgoingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
+								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Create Wallet Address Withdrawal",
 					"id": "84fcddb6-efbf-43d6-a8c6-d3ea8c1bdc40",
 					"protocolProfileBehavior": {
