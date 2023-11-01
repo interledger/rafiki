@@ -24,6 +24,10 @@ interface GetPageOptions {
 
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
+  getLatestByAccountIdAndTypes(
+    withdrawalAccountId: string,
+    types: string[]
+  ): Promise<WebhookEvent | undefined>
   processNext(): Promise<string | undefined>
   getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
 }
@@ -41,6 +45,12 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
+    getLatestByAccountIdAndTypes: (withdrawalAccountId, types) =>
+      getLatestWebhookEventByAccountIdAndTypes(
+        deps,
+        withdrawalAccountId,
+        types
+      ),
     processNext: () => processNextWebhookEvent(deps),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
@@ -51,6 +61,18 @@ async function getWebhookEvent(
   id: string
 ): Promise<WebhookEvent | undefined> {
   return WebhookEvent.query(deps.knex).findById(id)
+}
+
+async function getLatestWebhookEventByAccountIdAndTypes(
+  deps: ServiceDependencies,
+  withdrawalAccountId: string,
+  types: string[]
+): Promise<WebhookEvent | undefined> {
+  return WebhookEvent.query(deps.knex)
+    .where({ withdrawalAccountId })
+    .whereIn('type', types)
+    .orderBy('createdAt', 'DESC')
+    .first()
 }
 
 // Fetch (and lock) a webhook event for work.

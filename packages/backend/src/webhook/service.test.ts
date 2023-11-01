@@ -100,6 +100,75 @@ describe('Webhook Service', (): void => {
     })
   })
 
+  describe('Get Webhook Event by withdrawalAccountId and types', (): void => {
+    const accountIds = [uuid(), uuid()]
+    const PaymentCompleteEvent = 'payment.complete'
+    const PaymentExpiredEvent = 'payment.expired'
+    let events: WebhookEvent[] = []
+    beforeEach(async (): Promise<void> => {
+      const asset = await createAsset(deps)
+      const amount = BigInt(10)
+      events = [
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: PaymentCompleteEvent,
+          data: { id: uuid() },
+          withdrawal: {
+            accountId: accountIds[0],
+            assetId: asset.id,
+            amount
+          }
+        }),
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: PaymentExpiredEvent,
+          data: { id: uuid() },
+          withdrawal: {
+            accountId: accountIds[0],
+            assetId: asset.id,
+            amount
+          }
+        }),
+        await WebhookEvent.query(knex).insertAndFetch({
+          id: uuid(),
+          type: PaymentCompleteEvent,
+          data: { id: uuid() },
+          withdrawal: {
+            accountId: accountIds[1],
+            assetId: asset.id,
+            amount
+          }
+        })
+      ]
+    })
+
+    test('Gets latest event matching account id and type', async (): Promise<void> => {
+      await expect(
+        webhookService.getLatestByAccountIdAndTypes(accountIds[0], [
+          PaymentCompleteEvent,
+          PaymentExpiredEvent
+        ])
+      ).resolves.toEqual(events[1])
+    })
+
+    describe('Returns undefined if no match', (): void => {
+      test('Good account id, bad event type', async (): Promise<void> => {
+        await expect(
+          webhookService.getLatestByAccountIdAndTypes(accountIds[0], [
+            'nonexistant.event'
+          ])
+        ).resolves.toBeUndefined()
+      })
+      test('Bad account id, good event type', async (): Promise<void> => {
+        await expect(
+          webhookService.getLatestByAccountIdAndTypes(uuid(), [
+            PaymentCompleteEvent
+          ])
+        ).resolves.toBeUndefined()
+      })
+    })
+  })
+
   describe('getPage', (): void => {
     getPageTests({
       createModel: () => createWebhookEvent(deps),
