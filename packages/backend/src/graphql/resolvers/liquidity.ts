@@ -15,7 +15,8 @@ import {
 } from '../../open_payments/payment/outgoing/errors'
 import {
   isPaymentEvent,
-  PaymentDepositType
+  PaymentDepositType,
+  PaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { PeerError } from '../../payment-method/ilp/peer/errors'
 import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
@@ -552,54 +553,62 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
     args,
     ctx
   ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    return {
-      code: '400',
-      message: 'Error trying to withdraw liquidity',
-      success: false
+    const { outgoingPaymentId } = args.input
+    try {
+      const outgoingPaymentService = await ctx.container.use(
+        'outgoingPaymentService'
+      )
+      const outgoingPayment = await outgoingPaymentService.get({
+        id: outgoingPaymentId
+      })
+      const webhookService = await ctx.container.use('webhookService')
+      const event = await webhookService.getLatestByAccountIdAndTypes(
+        outgoingPaymentId,
+        [PaymentEventType.PaymentCompleted, PaymentEventType.PaymentFailed]
+      )
+      if (!outgoingPayment || !event?.id) {
+        return responses[LiquidityError.InvalidId]
+      }
+
+      console.log(
+        'outgoingPayment.sentAmount.value: ',
+        outgoingPayment.sentAmount.value
+      )
+      console.log('event.withdrawal: ', event.withdrawal)
+
+      const accountingService = await ctx.container.use('accountingService')
+      const error = await accountingService.createWithdrawal({
+        id: event.id,
+        account: {
+          id: outgoingPaymentId,
+          asset: outgoingPayment.asset
+        },
+        // TODO: I dont think outgoingPayment.sentAmount.value is correct. it should match event.withdrawal but I want to minimize dependency on event... maybe getAccountsTotalSent?
+        amount: outgoingPayment.sentAmount.value
+      })
+
+      if (error) {
+        return errorToResponse(error)
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Withdrew liquidity'
+      }
+    } catch (error) {
+      ctx.logger.error(
+        {
+          outgoingPaymentId,
+          error
+        },
+        'error withdrawing liquidity'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to withdraw liquidity',
+        success: false
+      }
     }
-    // try {
-    //   const webhookService = await ctx.container.use('webhookService')
-    //   const event = await webhookService.getEvent(args.input.eventId)
-    //   if (!event || !event.withdrawal) {
-    //     return responses[LiquidityError.InvalidId]
-    //   }
-    //   const assetService = await ctx.container.use('assetService')
-    //   const asset = await assetService.get(event.withdrawal.assetId)
-    //   if (!asset) {
-    //     throw new Error()
-    //   }
-    //   const accountingService = await ctx.container.use('accountingService')
-    //   const error = await accountingService.createWithdrawal({
-    //     id: event.id,
-    //     account: {
-    //       id: event.withdrawal.accountId,
-    //       asset
-    //     },
-    //     amount: event.withdrawal.amount
-    //   })
-    //   if (error) {
-    //     return errorToResponse(error)
-    //   }
-    //   // TODO: check for and handle leftover incoming payment or payment balance
-    //   return {
-    //     code: '200',
-    //     success: true,
-    //     message: 'Withdrew liquidity'
-    //   }
-    // } catch (error) {
-    //   ctx.logger.error(
-    //     {
-    //       eventId: args.input.eventId,
-    //       error
-    //     },
-    //     'error withdrawing liquidity'
-    //   )
-    //   return {
-    //     code: '400',
-    //     message: 'Error trying to withdraw liquidity',
-    //     success: false
-    //   }
-    // }
   }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
