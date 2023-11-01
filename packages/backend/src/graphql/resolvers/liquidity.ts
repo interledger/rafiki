@@ -18,6 +18,7 @@ import {
   PaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
 import { PeerError } from '../../payment-method/ilp/peer/errors'
+import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
@@ -499,13 +500,21 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
       const incomingPayment = await incomingPaymentService.get({
         id: incomingPaymentId
       })
-      if (!incomingPayment || !incomingPayment.incomingAmount) {
+      const webhookService = await ctx.container.use('webhookService')
+      const event = await webhookService.getLatestByAccountIdAndTypes(
+        incomingPaymentId,
+        [
+          IncomingPaymentEventType.IncomingPaymentCompleted,
+          IncomingPaymentEventType.IncomingPaymentExpired
+        ]
+      )
+      if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
         return responses[LiquidityError.InvalidId]
       }
 
       const accountingService = await ctx.container.use('accountingService')
       const error = await accountingService.createWithdrawal({
-        id: incomingPaymentId,
+        id: event.id,
         account: {
           id: incomingPaymentId,
           asset: incomingPayment.asset
