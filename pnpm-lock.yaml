@@ -456,8 +456,8 @@ importers:
   packages/documentation:
     dependencies:
       '@astrojs/starlight':
-        specifier: ^0.11.2
-        version: 0.11.2(astro@3.4.2)
+        specifier: ^0.12.0
+        version: 0.12.0(astro@3.4.2)
       '@interledger/docs-design-system':
         specifier: ^0.1.2
         version: 0.1.2
@@ -996,8 +996,8 @@ packages:
       zod: 3.21.1
     dev: false
 
-  /@astrojs/starlight@0.11.2(astro@3.4.2):
-    resolution: {integrity: sha512-bwKYgU70SP1AItFJqdQ1k+cC9cVEvQ849+9pg5Ms3PF1BlN/f0H3bj6SPqRkZnNEwYGREqjbtempJRTnpTaJnA==}
+  /@astrojs/starlight@0.12.0(astro@3.4.2):
+    resolution: {integrity: sha512-WPLpq82vbTznNfQjtdLBjKGuDsQE3tpPxFqosjxX+pSeMES/Cz5Dmzla78ej7xWIp7zjovPqkNytbC1EaeOMwA==}
     peerDependencies:
       astro: ^3.2.0
     dependencies:
@@ -4677,7 +4677,7 @@ packages:
     dependencies:
       '@types/istanbul-lib-coverage': 2.0.4
       '@types/istanbul-reports': 3.0.1
-      '@types/node': 18.11.9
+      '@types/node': 18.18.5
       '@types/yargs': 16.0.4
       chalk: 4.1.2
     dev: true
@@ -11852,7 +11852,7 @@ packages:
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
     dependencies:
       '@jest/types': 29.6.3
-      '@types/node': 18.11.9
+      '@types/node': 18.18.5
       chalk: 4.1.2
       ci-info: 3.8.0
       graceful-fs: 4.2.10
