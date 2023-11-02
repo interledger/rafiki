@@ -557,8 +557,7 @@ describe('QuoteService', (): void => {
           fixedFee,
           basisPointFee,
           expectedReceiveAmountValue,
-          exchangeRate,
-          description
+          exchangeRate
         }): Promise<void> => {
           const receiver = await createReceiver(deps, receivingWalletAddress)
 
