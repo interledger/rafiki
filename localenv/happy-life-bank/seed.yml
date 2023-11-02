@@ -28,7 +28,7 @@ accounts:
   - name: 'Philip Fry'
     path: accounts/pfry
     id: 97a3a431-8ee1-48fc-ac85-70e2f5eba8e5
-    initialBalance: 1
+    initialBalance: 50000
     postmanEnvVar: pfryWalletAddress
     assetCode: USD
   - name: 'PlanEx Corp'
@@ -47,7 +47,7 @@ accounts:
   - name: 'Lars'
     path: accounts/lars
     id: fd4ecbc9-205d-4ecd-a030-507d6ce2bde6
-    initialBalance: 5000
+    initialBalance: 50000
     assetCode: EUR
   - name: 'David'
     path: accounts/david
