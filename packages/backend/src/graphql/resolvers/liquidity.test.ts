@@ -1964,7 +1964,7 @@ describe('Liquidity Resolvers', (): void => {
     })
 
     describe('withdrawIncomingPaymentLiquidity', (): void => {
-      let amount = BigInt(10)
+      const amount = BigInt(10)
 
       beforeEach(async (): Promise<void> => {
         await expect(
