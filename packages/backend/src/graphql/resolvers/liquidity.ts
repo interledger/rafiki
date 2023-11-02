@@ -436,11 +436,10 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
   }
 
 export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['depositOutgoingPaymentLiquidity'] =
-  async (
-    parent,
-    args,
-    ctx
-  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+  async () // parent,
+  // args,
+  // ctx
+  : Promise<ResolversTypes['LiquidityMutationResponse']> => {
     return {
       code: '400',
       message: 'Error trying to deposit liquidity',
