@@ -11,7 +11,7 @@
   "dependencies": {
     "@astrojs/starlight": "^0.11.2",
     "@interledger/docs-design-system": "^0.1.2",
-    "astro": "3.4.1",
+    "astro": "3.4.2",
     "astro-graphql-plugin": "^0.1.0",
     "graphql": "^16.8.1",
     "rehype-mathjax": "^5.0.0",
