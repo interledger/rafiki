@@ -46,7 +46,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@apollo/client": "^3.8.6",
+    "@apollo/client": "^3.8.7",
     "@faker-js/faker": "^8.2.0",
     "@graphql-codegen/cli": "5.0.0",
     "@graphql-codegen/introspection": "4.0.0",
