@@ -34,6 +34,6 @@ export class Fee extends BaseModel {
     const feePercentage = this.basisPointFee / 10_000
 
     // TODO: bigint/float multiplication
-    return BigInt(Math.floor(Number(principal) * feePercentage)) + this.fixedFee
+    return BigInt(Math.ceil(Number(principal) * feePercentage)) + this.fixedFee
   }
 }
