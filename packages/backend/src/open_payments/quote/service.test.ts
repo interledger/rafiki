@@ -544,18 +544,20 @@ describe('QuoteService', (): void => {
       })
 
       test.each`
-        debitAmountValue | fixedFee | basisPointFee | expectedReceiveAmountValue | description
-        ${200n}          | ${0}     | ${0}          | ${100n}                    | ${'no fees'}
-        ${200n}          | ${20}    | ${0}          | ${90n}                     | ${'fixed fee'}
-        ${200n}          | ${0}     | ${200}        | ${99n}                     | ${'basis point fee'}
-        ${200n}          | ${20}    | ${200}        | ${89n}                     | ${'fixed and basis point fee'}
+        debitAmountValue | fixedFee | basisPointFee | exchangeRate | expectedReceiveAmountValue | description
+        ${200n}          | ${0}     | ${0}          | ${0.5}       | ${100n}                    | ${'no fees'}
+        ${200n}          | ${20}    | ${0}          | ${0.5}       | ${90n}                     | ${'fixed fee'}
+        ${200n}          | ${0}     | ${200}        | ${0.5}       | ${99n}                     | ${'basis point fee'}
+        ${200n}          | ${20}    | ${200}        | ${0.5}       | ${89n}                     | ${'fixed and basis point fee'}
+        ${200n}          | ${20}    | ${200}        | ${0.455}     | ${80n}                     | ${'fixed and basis point fee with floating exchange rate'}
       `(
         '$description',
         async ({
           debitAmountValue,
           fixedFee,
           basisPointFee,
-          expectedReceiveAmountValue
+          expectedReceiveAmountValue,
+          exchangeRate
         }): Promise<void> => {
           const receiver = await createReceiver(deps, receivingWalletAddress)
 
@@ -570,7 +572,7 @@ describe('QuoteService', (): void => {
             receiver,
             walletAddress: sendingWalletAddress,
             debitAmountValue,
-            exchangeRate: 0.5
+            exchangeRate
           })
 
           jest

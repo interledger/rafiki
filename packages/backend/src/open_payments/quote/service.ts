@@ -224,8 +224,10 @@ function calculateQuoteAmountsAfterFees(
     const estimatedExchangeRate =
       quote.estimatedExchangeRate || quote.lowEstimatedExchangeRate.valueOf()
 
-    const exchangeAdjustedFees = BigInt(Number(fees) * estimatedExchangeRate)
-    receiveAmountValue = BigInt(receiveAmountValue) - exchangeAdjustedFees
+    const exchangeAdjustedFees = BigInt(
+      Math.ceil(Number(fees) * estimatedExchangeRate)
+    )
+    receiveAmountValue -= exchangeAdjustedFees
 
     if (receiveAmountValue <= exchangeAdjustedFees) {
       throw QuoteError.NegativeReceiveAmount

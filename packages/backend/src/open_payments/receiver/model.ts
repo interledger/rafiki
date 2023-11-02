@@ -35,16 +35,16 @@ export class Receiver {
       throw new Error('Cannot create receiver from completed incoming payment')
     }
 
-    if (!incomingPayment.methods.length) {
-      throw new Error('Missing payment method(s) on incoming payment')
-    }
-
     const expiresAt = incomingPayment.expiresAt
       ? new Date(incomingPayment.expiresAt)
       : undefined
 
     if (expiresAt && expiresAt.getTime() <= Date.now()) {
       throw new Error('Cannot create receiver from expired incoming payment')
+    }
+
+    if (!incomingPayment.methods.length) {
+      throw new Error('Missing payment method(s) on incoming payment')
     }
 
     const incomingAmount = incomingPayment.incomingAmount

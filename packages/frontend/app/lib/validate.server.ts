@@ -80,7 +80,7 @@ export const setAssetFeeSchema = z.object({
     .bigint({
       invalid_type_error: 'Fixed Fee amount is expected to be a number.'
     })
-    .positive()
+    .nonnegative()
 })
 
 export const createAssetSchema = z
