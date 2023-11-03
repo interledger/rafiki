@@ -162,7 +162,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
         .query({
           query: parent
             ? gql`
-              query Page($id: String!, $sortOrder: String) {
+              query Page($id: String!, $sortOrder: SortOrder) {
                 ${parent.query}(id: $id) {
                   ${pagedQuery}(first: 10, sortOrder: $sortOrder) {
                     ${queryFields}
@@ -170,7 +170,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
                 }
               }`
             : gql`
-              query Page($sortOrder: String) {
+              query Page($sortOrder: SortOrder) {
                 ${pagedQuery}(first: 10, sortOrder: $sortOrder) {
                   ${queryFields}
                 }
@@ -198,7 +198,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
         .query({
           query: parent
             ? gql`
-              query Page($id: String!, $after: String!, $sortOrder: String) {
+              query Page($id: String!, $after: String!, $sortOrder: SortOrder) {
                 ${parent.query}(id: $id) {
                   ${pagedQuery}(after: $after, sortOrder: $sortOrder) {
                     ${queryFields}
@@ -206,7 +206,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
                 }
               }`
             : gql`
-              query Page($after: String!, $sortOrder: String) {
+              query Page($after: String!, $sortOrder: SortOrder) {
                 ${pagedQuery}(after: $after, sortOrder: $sortOrder) {
                   ${queryFields}
                 }
@@ -235,7 +235,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
         .query({
           query: parent
             ? gql`
-              query Page($id: String!, $after: String!, $sortOrder: String) {
+              query Page($id: String!, $after: String!, $sortOrder: SortOrder) {
                 ${parent.query}(id: $id) {
                   ${pagedQuery}(after: $after, first: 10, sortOrder: $sortOrder) {
                     ${queryFields}
@@ -243,7 +243,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
                 }
               }`
             : gql`
-              query Page($after: String!, $sortOrder: String) {
+              query Page($after: String!, $sortOrder: SortOrder) {
                 ${pagedQuery}(after: $after, first: 10, sortOrder: $sortOrder) {
                   ${queryFields}
                 }
