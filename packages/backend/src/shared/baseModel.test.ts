@@ -3,15 +3,14 @@ import { BaseModel, Pagination, SortOrder } from './baseModel'
 interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
   getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Type[]>
-  sortOrder: SortOrder
 }
 
 export const getPageTests = <Type extends BaseModel>({
   createModel,
-  getPage,
-  sortOrder
+  getPage
 }: PageTestsOptions<Type>): void => {
   describe('Common BaseModel pagination', (): void => {
+    const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     let modelsCreated: Type[]
 
     beforeEach(async (): Promise<void> => {

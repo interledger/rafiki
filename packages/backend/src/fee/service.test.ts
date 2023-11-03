@@ -161,8 +161,7 @@ describe('Fee Service', (): void => {
       getPageTests({
         createModel: () => createFee(deps, asset.id),
         getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-          feeService.getPage(asset.id, pagination, sortOrder),
-        sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+          feeService.getPage(asset.id, pagination, sortOrder)
       })
     })
   })

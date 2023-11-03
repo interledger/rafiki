@@ -106,8 +106,7 @@ describe('Webhook Service', (): void => {
     getPageTests({
       createModel: () => createWebhookEvent(deps),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        webhookService.getPage({ pagination, sortOrder }),
-      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+        webhookService.getPage({ pagination, sortOrder })
     })
   })
 

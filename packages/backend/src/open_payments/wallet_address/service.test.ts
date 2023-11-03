@@ -436,8 +436,7 @@ describe('Open Payments Wallet Address Service', (): void => {
       getPageTests({
         createModel: () => createWalletAddress(deps),
         getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-          walletAddressService.getPage(pagination, sortOrder),
-        sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+          walletAddressService.getPage(pagination, sortOrder)
       })
     })
   })

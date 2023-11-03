@@ -183,8 +183,7 @@ export const getTests = <M extends WalletAddressSubresource>({
         walletAddressId,
         pagination,
         sortOrder
-      }),
-    sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+      })
   })
 }
 

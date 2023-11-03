@@ -428,8 +428,7 @@ describe('Peer Service', (): void => {
     getPageTests({
       createModel: () => createPeer(deps, { assetId: asset.id }),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        peerService.getPage(pagination, sortOrder),
-      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+        peerService.getPage(pagination, sortOrder)
     })
   })
 

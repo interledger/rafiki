@@ -86,8 +86,7 @@ describe('Combined Payment Service', (): void => {
     getPageTests({
       createModel: () => createCombinedPayment(deps),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        combinedPaymentService.getPage({ pagination, sortOrder }),
-      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+        combinedPaymentService.getPage({ pagination, sortOrder })
     })
 
     test('should return empty array if no payments', async (): Promise<void> => {

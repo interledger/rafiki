@@ -211,8 +211,7 @@ describe('Asset Service', (): void => {
     getPageTests({
       createModel: () => createAsset(deps),
       getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
-        assetService.getPage(pagination, sortOrder),
-      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+        assetService.getPage(pagination, sortOrder)
     })
   })
 
