@@ -84,8 +84,8 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
      * Backward pagination
      */
     if (typeof pagination?.before === 'string') {
-      const comparisonOperator = sortOrder === 'asc' ? '<' : '>'
-      const order = sortOrder === 'asc' ? 'desc' : 'asc'
+      const comparisonOperator = sortOrder === SortOrder.Asc ? '<' : '>'
+      const order = sortOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc 
       return this.whereRaw(
         `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.before]
