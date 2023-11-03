@@ -13,7 +13,6 @@ interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
   pagedQuery: string
   parent?: ParentModel
-  sortOrder?: SortOrder
 }
 
 interface ParentModel {
@@ -48,8 +47,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
   getClient,
   createModel,
   pagedQuery,
-  parent,
-  sortOrder = SortOrder.Desc
+  parent
 }: PageTestsOptions<M>): void => {
   const toConnection = (query: ApolloQueryResult<T>): Connection<T> => {
     if (query.data) {
@@ -75,6 +73,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
 
   describe('Common query resolver pagination', (): void => {
     let apolloClient: ApolloClient<NormalizedCacheObject>
+    const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
 
     beforeAll((): void => {
       apolloClient = getClient()

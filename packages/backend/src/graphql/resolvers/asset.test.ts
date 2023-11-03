@@ -383,13 +383,11 @@ describe('Asset Resolvers', (): void => {
           withdrawalThreshold: BigInt(10),
           liquidityThreshold: BigInt(100)
         }) as Promise<AssetModel>,
-      pagedQuery: 'assets',
-      sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+      pagedQuery: 'assets'
     })
 
     test('Can get assets', async (): Promise<void> => {
       const assets: AssetModel[] = []
-      const sortOrder = SortOrder.Desc // Calling the default getPage will result in descending order
       for (let i = 0; i < 2; i++) {
         const asset = await assetService.create({
           ...randomAsset(),
@@ -399,9 +397,7 @@ describe('Asset Resolvers', (): void => {
         assert.ok(!isAssetError(asset))
         assets.push(asset)
       }
-      if (sortOrder === SortOrder.Desc) {
-        assets.reverse()
-      }
+      assets.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -458,8 +454,7 @@ describe('Asset Resolvers', (): void => {
         parent: {
           query: 'asset',
           getId: () => assetId
-        },
-        sortOrder: Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
+        }
       })
 
       test('Can get fees', async (): Promise<void> => {
