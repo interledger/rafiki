@@ -157,7 +157,8 @@ async function createOutgoingPayment(
         throw OutgoingPaymentError.InvalidQuote
       }
       const peer = await deps.peerService.getByDestinationAddress(
-        receiver.ilpAddress
+        receiver.ilpAddress,
+        walletAddress.asset.id
       )
       if (peer) {
         await payment.$query(trx).patch({ peerId: peer.id })

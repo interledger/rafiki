@@ -349,30 +349,39 @@ describe('Peer Service', (): void => {
     test('Can retrieve peer by ILP address', async (): Promise<void> => {
       const peer = await createPeer(deps)
       await expect(
-        peerService.getByDestinationAddress(peer.staticIlpAddress)
+        peerService.getByDestinationAddress(peer.staticIlpAddress, peer.assetId)
       ).resolves.toEqual(peer)
 
       await expect(
-        peerService.getByDestinationAddress(peer.staticIlpAddress + '.suffix')
+        peerService.getByDestinationAddress(
+          peer.staticIlpAddress + '.suffix',
+          peer.assetId
+        )
       ).resolves.toEqual(peer)
 
       await expect(
-        peerService.getByDestinationAddress(peer.staticIlpAddress + 'suffix')
+        peerService.getByDestinationAddress(
+          peer.staticIlpAddress + 'suffix',
+          peer.assetId
+        )
       ).resolves.toBeUndefined()
     })
 
     test('Returns undefined if no account exists with address', async (): Promise<void> => {
       await expect(
-        peerService.getByDestinationAddress('test.nope')
+        peerService.getByDestinationAddress('test.nope', asset.id)
       ).resolves.toBeUndefined()
     })
 
     test('Properly escapes Postgres pattern "_" wildcards in the static address', async (): Promise<void> => {
-      await createPeer(deps, {
+      const peer = await createPeer(deps, {
         staticIlpAddress: 'test.rafiki_with_wildcards'
       })
       await expect(
-        peerService.getByDestinationAddress('test.rafiki-with-wildcards')
+        peerService.getByDestinationAddress(
+          'test.rafiki-with-wildcards',
+          peer.assetId
+        )
       ).resolves.toBeUndefined()
     })
 
@@ -391,7 +400,7 @@ describe('Peer Service', (): void => {
       })
 
       await expect(
-        peerService.getByDestinationAddress('test.rafiki')
+        peerService.getByDestinationAddress('test.rafiki', asset.id)
       ).resolves.toEqual(peer)
       await expect(
         peerService.getByDestinationAddress('test.rafiki', secondAsset.id)
