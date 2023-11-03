@@ -384,10 +384,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -5586,10 +5586,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -5733,10 +5733,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -5839,10 +5839,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -5974,10 +5974,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -6063,10 +6063,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -6848,6 +6848,29 @@
         "possibleTypes": null
       },
       {
+        "kind": "ENUM",
+        "name": "SortOrder",
+        "description": null,
+        "fields": null,
+        "inputFields": null,
+        "interfaces": null,
+        "enumValues": [
+          {
+            "name": "ASC",
+            "description": "Choose ascending order for results.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "DESC",
+            "description": "Choose descending order for results.",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
         "kind": "SCALAR",
         "name": "String",
         "description": "The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.",
@@ -7587,10 +7610,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -7660,10 +7683,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,
@@ -7745,10 +7768,10 @@
               },
               {
                 "name": "sortOrder",
-                "description": "Choose ascending or descending order for results.",
+                "description": "Ascending or descending order of creation.",
                 "type": {
-                  "kind": "SCALAR",
-                  "name": "String",
+                  "kind": "ENUM",
+                  "name": "SortOrder",
                   "ofType": null
                 },
                 "defaultValue": null,

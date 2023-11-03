@@ -24,8 +24,8 @@ export interface PageInfo {
 }
 
 export enum SortOrder {
-  Asc = 'asc',
-  Desc = 'desc'
+  Asc = 'ASC',
+  Desc = 'DESC'
 }
 
 class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
@@ -85,7 +85,7 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
      */
     if (typeof pagination?.before === 'string') {
       const comparisonOperator = sortOrder === SortOrder.Asc ? '<' : '>'
-      const order = sortOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc 
+      const order = sortOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc
       return this.whereRaw(
         `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.before]

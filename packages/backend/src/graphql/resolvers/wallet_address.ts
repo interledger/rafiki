@@ -25,7 +25,7 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
   ): Promise<ResolversTypes['WalletAddressesConnection']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
     const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const walletAddresses = await walletAddressService.getPage(
       pagination,
       order

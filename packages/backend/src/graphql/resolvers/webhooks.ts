@@ -15,7 +15,7 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
     ctx
   ): Promise<ResolversTypes['WebhookEventsConnection']> => {
     const { filter, sortOrder, ...pagination } = args
-    const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const webhookService = await ctx.container.use('webhookService')
     const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
       webhookService.getPage({

@@ -14,7 +14,7 @@ export const getCombinedPayments: QueryResolvers<ApolloContext>['payments'] =
       'combinedPaymentService'
     )
     const { filter, sortOrder, ...pagination } = args
-    const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
 
     const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
       combinedPaymentService.getPage({

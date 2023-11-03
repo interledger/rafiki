@@ -68,7 +68,7 @@ export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quot
     if (!parent.id) throw new Error('missing wallet address id')
     const quoteService = await ctx.container.use('quoteService')
     const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const quotes = await quoteService.getWalletAddressPage({
       walletAddressId: parent.id,
       pagination,

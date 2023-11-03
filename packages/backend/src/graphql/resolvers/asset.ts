@@ -20,7 +20,7 @@ export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
 ): Promise<ResolversTypes['AssetsConnection']> => {
   const assetService = await ctx.container.use('assetService')
   const { sortOrder, ...pagination } = args
-  const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const assets = await assetService.getPage(pagination, order)
   const pageInfo = await getPageInfo(
     (pagination: Pagination, sortOrder?: SortOrder) =>
@@ -175,7 +175,7 @@ export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
     if (!parent.id) throw new Error('missing asset id')
     return feeService.getPage(parent.id, pagination_, sortOrder_)
   }
-  const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
   const fees = await getPageFn(pagination, order)
   const pageInfo = await getPageInfo(
     (pagination_: Pagination, sortOrder_?: SortOrder) =>

@@ -39,7 +39,7 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
       'incomingPaymentService'
     )
     const { sortOrder, ...pagination } = args
-    const order = sortOrder === 'asc' ? SortOrder.Asc : SortOrder.Desc
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const incomingPayments = await incomingPaymentService.getWalletAddressPage({
       walletAddressId: parent.id,
       pagination,

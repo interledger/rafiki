@@ -178,7 +178,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
             `,
           variables: {
             id: parent?.getId(),
-            sortOrder: sortOrder === SortOrder.Asc ? 'asc' : 'desc'
+            sortOrder: sortOrder === SortOrder.Asc ? 'ASC' : 'DESC'
           }
         })
         .then(toConnection)
@@ -215,7 +215,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
           variables: {
             id: parent?.getId(),
             after: models[19].id,
-            sortOrder: sortOrder === SortOrder.Asc ? 'asc' : 'desc'
+            sortOrder: sortOrder === SortOrder.Asc ? 'ASC' : 'DESC'
           }
         })
         .then(toConnection)
@@ -252,7 +252,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
           variables: {
             id: parent?.getId(),
             after: models[44].id,
-            sortOrder: sortOrder === SortOrder.Asc ? 'asc' : 'desc'
+            sortOrder: sortOrder === SortOrder.Asc ? 'ASC' : 'DESC'
           }
         })
         .then(toConnection)
