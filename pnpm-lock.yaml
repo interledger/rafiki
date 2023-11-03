@@ -63,8 +63,8 @@ importers:
         specifier: ^3.8.7
         version: 3.8.7(graphql@16.8.1)(react-dom@18.2.0)(react@18.2.0)
       '@interledger/http-signature-utils':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 2.0.0
+        version: 2.0.0
       '@remix-run/node':
         specifier: ^1.19.3
         version: 1.19.3
@@ -130,8 +130,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0(graphql@16.8.1)
       '@interledger/http-signature-utils':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 2.0.0
+        version: 2.0.0
       '@interledger/open-payments':
         specifier: 6.0.0
         version: 6.0.0
@@ -272,8 +272,8 @@ importers:
         specifier: ^10.0.0
         version: 10.0.0(graphql@16.8.1)
       '@interledger/http-signature-utils':
-        specifier: 1.1.0
-        version: 1.1.0
+        specifier: 2.0.0
+        version: 2.0.0
       '@interledger/open-payments':
         specifier: 6.0.0
         version: 6.0.0
@@ -4319,15 +4319,6 @@ packages:
 
   /@interledger/docs-design-system@0.1.2:
     resolution: {integrity: sha512-u0FI3HFwZlk1Uqv67yYHQAsaAciZrbwOdaAWpp6OgCOb5CPIEUX9mKfABoZsJHauWa7RfdbyVNPy+cJFJgaItg==}
-    dev: false
-
-  /@interledger/http-signature-utils@1.1.0:
-    resolution: {integrity: sha512-vxNrrp9qk71Pgt5/AcTtPTITnKPNX3P/Ag8+Vwqb2xhYpU9cTTEJJKhRjzOsvxXJ+I4NQ20Bwo/OHyfki48ZRg==}
-    dependencies:
-      http-message-signatures: 0.1.2
-      httpbis-digest-headers: 1.0.0
-      jose: 4.13.1
-      uuid: 9.0.1
     dev: false
 
   /@interledger/http-signature-utils@2.0.0:
