@@ -25,7 +25,7 @@
     "@graphql-tools/graphql-file-loader": "^8.0.0",
     "@graphql-tools/load": "^8.0.0",
     "@graphql-tools/schema": "^10.0.0",
-    "@interledger/http-signature-utils": "1.1.0",
+    "@interledger/http-signature-utils": "2.0.0",
     "@interledger/open-payments": "6.0.0",
     "@interledger/openapi": "1.2.1",
     "@koa/cors": "^4.0.0",

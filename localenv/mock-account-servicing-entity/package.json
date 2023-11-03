@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.7",
-    "@interledger/http-signature-utils": "1.1.0",
+    "@interledger/http-signature-utils": "2.0.0",
     "@remix-run/node": "^1.19.3",
     "@remix-run/react": "^1.19.3",
     "@remix-run/serve": "^1.19.3",
