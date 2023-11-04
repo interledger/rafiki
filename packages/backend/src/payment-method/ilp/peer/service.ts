@@ -17,7 +17,7 @@ import {
 import { AssetService } from '../../../asset/service'
 import { HttpTokenOptions, HttpTokenService } from '../peer-http-token/service'
 import { HttpTokenError } from '../peer-http-token/errors'
-import { Pagination } from '../../../shared/baseModel'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { BaseService } from '../../../shared/baseService'
 import { isValidHttpUrl } from '../../../shared/utils'
 import { v4 as uuid } from 'uuid'
@@ -65,7 +65,7 @@ export interface PeerService {
     assetId?: string
   ): Promise<Peer | undefined>
   getByIncomingToken(token: string): Promise<Peer | undefined>
-  getPage(pagination?: Pagination): Promise<Peer[]>
+  getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Peer[]>
   addLiquidity(
     args: AddPeerLiquidityArgs
   ): Promise<void | PeerError.UnknownPeer | TransferError>
@@ -103,7 +103,8 @@ export async function createPeerService({
     getByDestinationAddress: (destinationAddress, assetId) =>
       getPeerByDestinationAddress(deps, destinationAddress, assetId),
     getByIncomingToken: (token) => getPeerByIncomingToken(deps, token),
-    getPage: (pagination?) => getPeersPage(deps, pagination),
+    getPage: (pagination?, sortOrder?) =>
+      getPeersPage(deps, pagination, sortOrder),
     addLiquidity: (args) => addLiquidityById(deps, args),
     delete: (id) => deletePeer(deps, id)
   }
@@ -371,10 +372,11 @@ async function getPeerByIncomingToken(
  */
 async function getPeersPage(
   deps: ServiceDependencies,
-  pagination?: Pagination
+  pagination?: Pagination,
+  sortOrder?: SortOrder
 ): Promise<Peer[]> {
   return await Peer.query(deps.knex)
-    .getPage(pagination)
+    .getPage(pagination, sortOrder)
     .withGraphFetched('asset')
 }
 

@@ -13,7 +13,7 @@ import { v4 } from 'uuid'
 import { FeeError } from './errors'
 import { getPageTests } from '../shared/baseModel.test'
 import { createFee } from '../tests/fee'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 
 describe('Fee Service', (): void => {
   let deps: IocContract<AppServices>
@@ -160,8 +160,8 @@ describe('Fee Service', (): void => {
     describe('Fee pagination', (): void => {
       getPageTests({
         createModel: () => createFee(deps, asset.id),
-        getPage: (pagination?: Pagination) =>
-          feeService.getPage(asset.id, pagination)
+        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+          feeService.getPage(asset.id, pagination, sortOrder)
       })
     })
   })

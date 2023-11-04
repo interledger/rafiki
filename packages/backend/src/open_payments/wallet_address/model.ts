@@ -3,7 +3,7 @@ import { WalletAddress as OpenPaymentsWalletAddress } from '@interledger/open-pa
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../payment-method/ilp/connector/core/rafiki'
 import { Asset } from '../../asset/model'
-import { BaseModel, Pagination } from '../../shared/baseModel'
+import { BaseModel, Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookEvent } from '../../webhook/model'
 import { WalletAddressKey } from '../../open_payments/wallet_address/key/model'
 import { AmountJSON } from '../amount'
@@ -142,6 +142,7 @@ export interface ListOptions {
   walletAddressId: string
   client?: string
   pagination?: Pagination
+  sortOrder?: SortOrder
 }
 
 class SubresourceQueryBuilder<
@@ -166,11 +167,11 @@ class SubresourceQueryBuilder<
     }
     return this.findById(id)
   }
-  list({ walletAddressId, client, pagination }: ListOptions) {
+  list({ walletAddressId, client, pagination, sortOrder }: ListOptions) {
     if (client) {
       this.where({ client })
     }
-    return this.getPage(pagination).where(
+    return this.getPage(pagination, sortOrder).where(
       `${this.modelClass().tableName}.walletAddressId`,
       walletAddressId
     )

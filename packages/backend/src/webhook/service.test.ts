@@ -20,7 +20,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 import {
   createWebhookEvent,
   randomWebhookEvent,
@@ -35,6 +35,7 @@ describe('Webhook Service', (): void => {
   let knex: Knex
   let webhookUrl: URL
   let event: WebhookEvent
+  let sortOrder: SortOrder
   const WEBHOOK_SECRET = 'test secret'
 
   async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
@@ -62,6 +63,7 @@ describe('Webhook Service', (): void => {
     webhookService = await deps.use('webhookService')
     accountingService = await deps.use('accountingService')
     webhookUrl = new URL(Config.webhookUrl)
+    sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
   })
 
   afterEach(async (): Promise<void> => {
@@ -103,8 +105,8 @@ describe('Webhook Service', (): void => {
   describe('getPage', (): void => {
     getPageTests({
       createModel: () => createWebhookEvent(deps),
-      getPage: (pagination?: Pagination) =>
-        webhookService.getPage({ pagination })
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        webhookService.getPage({ pagination, sortOrder })
     })
   })
 
@@ -145,7 +147,8 @@ describe('Webhook Service', (): void => {
           type: {
             in: [type]
           }
-        }
+        },
+        sortOrder
       })
       const expectedLength = webhookEvents.filter(
         (event) => event.type === type
@@ -159,9 +162,13 @@ describe('Webhook Service', (): void => {
       const idsOfTypeY = webhookEvents
         .filter((event) => event.type === type)
         .map((event) => event.id)
+      if (sortOrder === SortOrder.Desc) {
+        idsOfTypeY.reverse()
+      }
       const page = await webhookService.getPage({
         pagination: { first: 10, after: idsOfTypeY[0] },
-        filter
+        filter,
+        sortOrder
       })
       expect(page[0].id).toBe(idsOfTypeY[1])
       expect(page.filter((event) => event.type === type).length).toBe(

@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
 import { AssetService } from './service'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
@@ -210,7 +210,8 @@ describe('Asset Service', (): void => {
   describe('getPage', (): void => {
     getPageTests({
       createModel: () => createAsset(deps),
-      getPage: (pagination?: Pagination) => assetService.getPage(pagination)
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        assetService.getPage(pagination, sortOrder)
     })
   })
 

@@ -12,6 +12,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): AssetsConnection!
 
   "Fetch a peer"
@@ -27,6 +29,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): PeersConnection!
 
   "Fetch a wallet address"
@@ -42,6 +46,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): WalletAddressesConnection!
 
   "Fetch an Open Payments quote"
@@ -63,6 +69,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
     "Filter webhook events based on specific criteria."
     filter: WebhookEventFilter
   ): WebhookEventsConnection!
@@ -77,6 +85,8 @@ type Query {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
     "Filter payment events based on specific criteria."
     filter: PaymentFilter
   ): PaymentConnection!
@@ -452,9 +462,18 @@ type Asset implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): FeesConnection
   "Date-time of creation"
   createdAt: String!
+}
+
+enum SortOrder {
+  "Choose ascending order for results."
+  ASC
+  "Choose descending order for results."
+  DESC
 }
 
 enum LiquidityError {
@@ -541,6 +560,8 @@ type WalletAddress implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): IncomingPaymentConnection
   "List of quotes created at this wallet address"
   quotes(
@@ -552,6 +573,8 @@ type WalletAddress implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): QuoteConnection
   "List of outgoing payments sent from this wallet address"
   outgoingPayments(
@@ -563,6 +586,8 @@ type WalletAddress implements Model {
     first: Int
     "Paginating backwards: The last **n** elements from the page."
     last: Int
+    "Ascending or descending order of creation."
+    sortOrder: SortOrder
   ): OutgoingPaymentConnection
   "Date-time of creation"
   createdAt: String!

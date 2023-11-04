@@ -6,7 +6,7 @@ import {
 } from '../generated/graphql'
 import { getPageInfo } from '../../shared/pagination'
 import { WebhookEvent } from '../../webhook/model'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
   async (
@@ -14,14 +14,21 @@ export const getWebhookEvents: QueryResolvers<ApolloContext>['webhookEvents'] =
     args,
     ctx
   ): Promise<ResolversTypes['WebhookEventsConnection']> => {
-    const { filter, ...pagination } = args
+    const { filter, sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const webhookService = await ctx.container.use('webhookService')
-    const getPageFn = (pagination_: Pagination) =>
-      webhookService.getPage({ pagination: pagination_, filter })
-    const webhookEvents = await getPageFn(pagination)
+    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      webhookService.getPage({
+        pagination: pagination_,
+        filter,
+        sortOrder: sortOrder_
+      })
+    const webhookEvents = await getPageFn(pagination, order)
     const pageInfo = await getPageInfo(
-      (pagination_: Pagination) => getPageFn(pagination_),
-      webhookEvents
+      (pagination_: Pagination, sortOrder_?: SortOrder) =>
+        getPageFn(pagination_, sortOrder_),
+      webhookEvents,
+      order
     )
     return {
       pageInfo,

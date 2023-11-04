@@ -462,6 +462,7 @@ describe('Wallet Address Resolvers', (): void => {
       for (let i = 0; i < 2; i++) {
         walletAddresses.push(await createWalletAddress(deps))
       }
+      walletAddresses.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
         .query({
           query: gql`

@@ -18,6 +18,7 @@ import {
   AuthenticatedStatusContext
 } from '../../app'
 import { getPageTests } from '../../shared/baseModel.test'
+import { SortOrder } from '../../shared/baseModel'
 import { createContext } from '../../tests/context'
 import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
@@ -68,6 +69,7 @@ interface BaseTestsOptions<M> {
   createModel: (options: { client?: string }) => Promise<M>
   testGet: (options: TestGetOptions, expectedMatch?: M) => void
   testList?: (options: ListOptions, expectedMatch?: M) => void
+  sortOrder?: SortOrder
 }
 
 const baseGetTests = <M extends WalletAddressSubresource>({
@@ -176,10 +178,11 @@ export const getTests = <M extends WalletAddressSubresource>({
       walletAddressId = model.walletAddressId
       return model
     },
-    getPage: (pagination) =>
+    getPage: (pagination, sortOrder) =>
       list({
         walletAddressId,
-        pagination
+        pagination,
+        sortOrder
       })
   })
 }
@@ -193,6 +196,7 @@ type RouteTestsOptions<M> = Omit<
   getBody: (model: M, list?: boolean) => Record<string, unknown>
   list?: (ctx: ListContext) => Promise<void>
   urlPath: string
+  sortOrder?: SortOrder
 }
 
 export const getRouteTests = <M extends WalletAddressSubresource>({
@@ -201,7 +205,8 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
   get,
   getBody,
   list,
-  urlPath
+  urlPath,
+  sortOrder
 }: RouteTestsOptions<M>): void => {
   const testList = async (
     { walletAddressId, client }: ListOptions,
@@ -266,7 +271,8 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
       }
     },
     // tests walletAddressId / client filtering
-    testList: list && testList
+    testList: list && testList,
+    sortOrder: sortOrder
   })
 
   if (list) {
@@ -277,6 +283,9 @@ export const getRouteTests = <M extends WalletAddressSubresource>({
         models = []
         for (let i = 0; i < 3; i++) {
           models.push(await createModel({}))
+        }
+        if (sortOrder === SortOrder.Desc) {
+          models.reverse()
         }
       })
 

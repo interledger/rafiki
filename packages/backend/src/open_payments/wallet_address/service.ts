@@ -21,7 +21,7 @@ import {
   IncomingPaymentState
 } from '../payment/incoming/model'
 import { IAppConfig } from '../../config/app'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { WebhookService } from '../../webhook/service'
 import { poll } from '../../shared/utils'
 
@@ -47,7 +47,10 @@ export interface WalletAddressService {
   get(id: string): Promise<WalletAddress | undefined>
   getByUrl(url: string): Promise<WalletAddress | undefined>
   getOrPollByUrl(url: string): Promise<WalletAddress | undefined>
-  getPage(pagination?: Pagination): Promise<WalletAddress[]>
+  getPage(
+    pagination?: Pagination,
+    sortOrder?: SortOrder
+  ): Promise<WalletAddress[]>
   processNext(): Promise<string | undefined>
   triggerEvents(limit: number): Promise<number>
 }
@@ -82,7 +85,8 @@ export async function createWalletAddressService({
     get: (id) => getWalletAddress(deps, id),
     getByUrl: (url) => getWalletAddressByUrl(deps, url),
     getOrPollByUrl: (url) => getOrPollByUrl(deps, url),
-    getPage: (pagination?) => getWalletAddressPage(deps, pagination),
+    getPage: (pagination?, sortOrder?) =>
+      getWalletAddressPage(deps, pagination, sortOrder),
     processNext: () => processNextWalletAddress(deps),
     triggerEvents: (limit) => triggerWalletAddressEvents(deps, limit)
   }
@@ -223,10 +227,11 @@ async function getWalletAddressByUrl(
 
 async function getWalletAddressPage(
   deps: ServiceDependencies,
-  pagination?: Pagination
+  pagination?: Pagination,
+  sortOrder?: SortOrder
 ): Promise<WalletAddress[]> {
   return await WalletAddress.query(deps.knex)
-    .getPage(pagination)
+    .getPage(pagination, sortOrder)
     .withGraphFetched('asset')
 }
 

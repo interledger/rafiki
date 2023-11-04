@@ -27,6 +27,7 @@ import { createWalletAddress } from '../../../tests/walletAddress'
 import { Asset } from '../../../asset/model'
 import { IncomingPaymentError, errorToCode, errorToMessage } from './errors'
 import { IncomingPaymentService } from './service'
+import { SortOrder } from '../../../shared/baseModel'
 import { IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethods } from '@interledger/open-payments'
 
 describe('Incoming Payment Routes', (): void => {
@@ -124,7 +125,8 @@ describe('Incoming Payment Routes', (): void => {
         return response
       },
       list: (ctx) => incomingPaymentRoutes.list(ctx),
-      urlPath: IncomingPayment.urlPath
+      urlPath: IncomingPayment.urlPath,
+      sortOrder: SortOrder.Desc
     })
 
     test('returns 500 for unexpected error', async (): Promise<void> => {

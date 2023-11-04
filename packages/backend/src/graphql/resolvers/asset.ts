@@ -9,7 +9,7 @@ import { Asset } from '../../asset/model'
 import { AssetError, isAssetError } from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { feeToGraphql } from './fee'
 import { Fee, FeeType } from '../../fee/model'
 
@@ -19,10 +19,14 @@ export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   ctx
 ): Promise<ResolversTypes['AssetsConnection']> => {
   const assetService = await ctx.container.use('assetService')
-  const assets = await assetService.getPage(args)
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const assets = await assetService.getPage(pagination, order)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => assetService.getPage(pagination),
-    assets
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      assetService.getPage(pagination, sortOrder),
+    assets,
+    order
   )
   return {
     pageInfo,
@@ -165,16 +169,19 @@ export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
   args,
   ctx
 ): Promise<ResolversTypes['FeesConnection']> => {
-  const { ...pagination } = args
+  const { sortOrder, ...pagination } = args
   const feeService = await ctx.container.use('feeService')
-  const getPageFn = (pagination_: Pagination) => {
+  const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) => {
     if (!parent.id) throw new Error('missing asset id')
-    return feeService.getPage(parent.id, pagination_)
+    return feeService.getPage(parent.id, pagination_, sortOrder_)
   }
-  const fees = await getPageFn(pagination)
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const fees = await getPageFn(pagination, order)
   const pageInfo = await getPageInfo(
-    (pagination_: Pagination) => getPageFn(pagination_),
-    fees
+    (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      getPageFn(pagination_, sortOrder_),
+    fees,
+    order
   )
   return {
     pageInfo,

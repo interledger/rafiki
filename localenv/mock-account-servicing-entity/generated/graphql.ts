@@ -92,6 +92,7 @@ export type AssetFeesArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 export type AssetEdge = {
@@ -893,6 +894,7 @@ export type QueryAssetsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -912,6 +914,7 @@ export type QueryPaymentsArgs = {
   filter?: InputMaybe<PaymentFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -925,6 +928,7 @@ export type QueryPeersArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -943,6 +947,7 @@ export type QueryWalletAddressesArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -952,6 +957,7 @@ export type QueryWebhookEventsArgs = {
   filter?: InputMaybe<WebhookEventFilter>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 export type Quote = {
@@ -1055,6 +1061,13 @@ export type SetFeeResponse = MutationResponse & {
   message: Scalars['String']['output'];
   success: Scalars['Boolean']['output'];
 };
+
+export enum SortOrder {
+  /** Choose ascending order for results. */
+  Asc = 'ASC',
+  /** Choose descending order for results. */
+  Desc = 'DESC'
+}
 
 export type TransferMutationResponse = MutationResponse & {
   __typename?: 'TransferMutationResponse';
@@ -1169,6 +1182,7 @@ export type WalletAddressIncomingPaymentsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -1177,6 +1191,7 @@ export type WalletAddressOutgoingPaymentsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 
@@ -1185,6 +1200,7 @@ export type WalletAddressQuotesArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
+  sortOrder?: InputMaybe<SortOrder>;
 };
 
 export type WalletAddressEdge = {
@@ -1436,6 +1452,7 @@ export type ResolversTypes = {
   RevokeWalletAddressKeyMutationResponse: ResolverTypeWrapper<Partial<RevokeWalletAddressKeyMutationResponse>>;
   SetFeeInput: ResolverTypeWrapper<Partial<SetFeeInput>>;
   SetFeeResponse: ResolverTypeWrapper<Partial<SetFeeResponse>>;
+  SortOrder: ResolverTypeWrapper<Partial<SortOrder>>;
   String: ResolverTypeWrapper<Partial<Scalars['String']['output']>>;
   TransferMutationResponse: ResolverTypeWrapper<Partial<TransferMutationResponse>>;
   TriggerWalletAddressEventsInput: ResolverTypeWrapper<Partial<TriggerWalletAddressEventsInput>>;
