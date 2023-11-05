@@ -166,7 +166,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
                 }
               }`
             : gql`
-              query Page() {
+              query Page {
                 ${pagedQuery}(first: 10) {
                   ${queryFields}
                 }
