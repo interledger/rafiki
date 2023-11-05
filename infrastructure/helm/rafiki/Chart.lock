@@ -13,6 +13,6 @@ dependencies:
   version: 0.4.0
 - name: rafiki-frontend
   repository: https://interledger.github.io/helm-charts
-  version: 0.3.0
-digest: sha256:432bc15f1ee79bd8125f6e0b5d85341f3131c19e5e077138d16f43ae7e5adc2b
-generated: "2023-11-05T22:46:55.403700668Z"
+  version: 0.4.0
+digest: sha256:d7ede96451be5c6705d09de527315f8e5361173aae5b865c1824ab181e087585
+generated: "2023-11-05T23:24:07.584777035Z"
