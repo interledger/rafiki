@@ -22,7 +22,6 @@ import {
   setup as setupContext
 } from '../../wallet_address/model.test'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
-import { SortOrder } from '../../../shared/baseModel'
 import { createWalletAddress } from '../../../tests/walletAddress'
 
 describe('Outgoing Payment Routes', (): void => {
@@ -121,8 +120,7 @@ describe('Outgoing Payment Routes', (): void => {
         }
       },
       list: (ctx) => outgoingPaymentRoutes.list(ctx),
-      urlPath: OutgoingPayment.urlPath,
-      sortOrder: SortOrder.Desc
+      urlPath: OutgoingPayment.urlPath
     })
 
     test('returns 500 for unexpected error', async (): Promise<void> => {

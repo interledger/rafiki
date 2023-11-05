@@ -18,9 +18,6 @@ export const getPageTests = <Type extends BaseModel>({
       for (let i = 0; i < 22; i++) {
         modelsCreated.push(await createModel())
       }
-      if (sortOrder === SortOrder.Desc) {
-        modelsCreated.reverse()
-      }
     })
 
     test.each`
@@ -33,6 +30,9 @@ export const getPageTests = <Type extends BaseModel>({
       ${{ last: 5, before: 10 }}  | ${{ length: 5, first: 5, last: 9 }}    | ${'Can paginate backwards from a cursor with a limit'}
       ${{ after: 0, before: 19 }} | ${{ length: 20, first: 1, last: 20 }}  | ${'Providing before and after results in forward pagination'}
     `('$description', async ({ pagination, expected }): Promise<void> => {
+      if (sortOrder === SortOrder.Desc) {
+        modelsCreated.reverse()
+      }
       if (pagination?.after !== undefined) {
         pagination.after = modelsCreated[pagination.after].id
       }
@@ -58,16 +58,23 @@ export const getPageTests = <Type extends BaseModel>({
       )
     })
 
-    test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
+    test.each`
+      order             | description
+      ${SortOrder.Asc}  | ${'Backwards/Forwards pagination results in same order for ASC.'}
+      ${SortOrder.Desc} | ${'Backwards/Forwards pagination results in same order for DESC.'}
+    `('$description', async ({ order }): Promise<void> => {
+      if (order === SortOrder.Desc) {
+        modelsCreated.reverse()
+      }
       const paginationForwards = {
         first: 10
       }
-      const modelsForwards = await getPage(paginationForwards, sortOrder)
+      const modelsForwards = await getPage(paginationForwards, order)
       const paginationBackwards = {
         last: 10,
         before: modelsCreated[10].id
       }
-      const modelsBackwards = await getPage(paginationBackwards, sortOrder)
+      const modelsBackwards = await getPage(paginationBackwards, order)
       expect(modelsForwards).toHaveLength(10)
       expect(modelsBackwards).toHaveLength(10)
       expect(modelsForwards).toEqual(modelsBackwards)

@@ -405,24 +405,20 @@ describe('Open Payments Wallet Address Service', (): void => {
         hasNextPage,
         hasPreviousPage
       }): Promise<void> => {
-        const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
         const walletAddressIds: string[] = []
         for (let i = 0; i < num; i++) {
           const walletAddress = await createWalletAddress(deps)
           walletAddressIds.push(walletAddress.id)
         }
-        if (sortOrder === SortOrder.Desc) {
-          walletAddressIds.reverse()
-        }
+        walletAddressIds.reverse() // default order is descending
         if (cursor) {
           if (pagination.last) pagination.before = walletAddressIds[cursor]
           else pagination.after = walletAddressIds[cursor]
         }
-        const page = await walletAddressService.getPage(pagination, sortOrder)
+        const page = await walletAddressService.getPage(pagination)
         const pageInfo = await getPageInfo(
-          (pagination) => walletAddressService.getPage(pagination, sortOrder),
-          page,
-          sortOrder
+          (pagination) => walletAddressService.getPage(pagination),
+          page
         )
         expect(pageInfo).toEqual({
           startCursor: walletAddressIds[start],
