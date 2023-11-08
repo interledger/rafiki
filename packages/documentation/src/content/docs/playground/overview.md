@@ -75,7 +75,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](https://github.com/interledger/rafiki/blob/main/README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- [postman](https://www.postman.com/downloads/)
+- ([postman](https://www.postman.com/downloads/))
 
 ### Setup
 
@@ -137,7 +137,7 @@ pnpm localenv:compose down --volumes
 
 #### Postman & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the [Postman API collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). It requires you to either load the [Local Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Local%20Playground%20Environment.postman_environment.json) or the [Remote Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Remote%20Environment.postman_environment.json).
+The Open Payments APIs can be interacted with using the [Postman API collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). You can either log into Postman and fork the collection or you can [import it from source](https://raw.githubusercontent.com/interledger/rafiki/main/postman/collections/Interledger.json). It requires you to either load the [Local Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Local%20Playground%20Environment.postman_environment.json) or the [Remote Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Remote%20Environment.postman_environment.json).
 
 The Examples folder in the Postman API collection includes an eCommerce (Open Payments) example that can be executed one by one. It
 
