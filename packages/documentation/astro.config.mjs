@@ -141,9 +141,16 @@ export default defineConfig({
             {
               label: 'Local Playground',
               collapsed: true,
-              autogenerate: {
-                directory: 'playground'
-              }
+              items: [
+                {
+                  label: 'Overview',
+                  link: 'playground/overview'
+                },
+                {
+                  label: 'Auto-Peering',
+                  link: 'playground/autopeering'
+                }
+              ]
             },
             {
               label: 'Reference',
