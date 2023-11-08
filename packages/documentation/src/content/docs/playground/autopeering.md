@@ -15,7 +15,7 @@ Your local Rafiki instance will be peered automatically with the remote [Rafiki.
 The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
 The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
 
-To use the [Postman API examples](/playground/overview/usage), follow these steps:
+To use the [Postman API examples](/playground/overview/#postman--open-payments-apis), follow these steps:
 
 1. run `docker logs rafiki-cloud-nine-mock-ase-1` (alternatively, check http://localhost:3030)
 2. find the list of created wallet addresses
