@@ -8,20 +8,15 @@ Rafiki is intended to be run by [Account Servicing Entities](/reference/glossary
 
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
 
-- exchange rates
-- fees
+- [exchange rates](#exchange-rates)
 - [webhook events listener](#webhook-events-listener)
 - [Identity Provider](#identity-provider)
 
 Furthermore, each payment account managed by the Account Servicing Entity needs to be issued at least one [wallet address](#issuing-wallet-addresses) in order to be serviced by Rafiki and send or receive Interledger payments.
 
-## Quotes and Fees
+## Exchange Rates
 
-Every Interledger payment is preceded with a quote that estimates the costs for transferring value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. They can specify fixed and variable fees per asset using the Admin API. How they structure those fees is completely up to the Account Servicing Entity.
-
-### Exchange Rates
-
-For the quoting to be successful, Rafiki needs to be provided with the current exchange rate by the Account Servicing Entity. The Account Servicing Entity needs to expose an endpoint that accepts a `GET` requests and responds as follows.
+Every Interledger payment is preceded by a rate probe that estimates the costs for transferring value from A to B over the network (= network fee). For the rate probe to be successful, Rafiki needs to be provided with the current exchange rate by the Account Servicing Entity. The Account Servicing Entity needs to expose an endpoint that accepts a `GET` requests and responds as follows.
 
 #### Response Body
 
@@ -33,11 +28,13 @@ For the quoting to be successful, Rafiki needs to be provided with the current e
 
 The response status code for a successful request is a `200`. The `mock-account-servicing-entity` includes a [minimalistic example](https://github.com/interledger/rafiki/blob/main/localenv/mock-account-servicing-entity/app/routes/rates.ts).
 
-The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint.
+The `backend` package requires an environment variable called `EXCHANGE_RATES_URL` which MUST specify the URL of this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/exchange-rates.yaml).
 
-### Fees
+### Rate Probe Quotes and Fees
 
-Sending fees can be set on a given asset using the `setFee` graphql mutation if desired:
+The Account Servicing Entity may charge fees on top of the estimated network fee for facilitating the transfer. They can specify fixed and variable fees per asset using the Admin API or UI. How they structure those fees is completely up to the Account Servicing Entity.
+
+Sending fees can be set on a given asset using Admin UI or the `setFee` graphql mutation if desired:
 
 Mutation:
 
@@ -127,7 +124,7 @@ The endpoint accepts a `POST` request with
 
 The Account Servicing Entity's expected behavior when observing these webhook events is detailed in the [Event Handlers](/integration/event-handlers) documentation.
 
-The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint.
+The `backend` package requires an environment variable called `WEBHOOK_URL` which MUST specify this endpoint. An OpenAPI specification of that endpoint can be found [here](https://github.com/interledger/rafiki/blob/main/packages/backend/src/openapi/webhooks.yaml).
 
 ## Identity Provider
 
