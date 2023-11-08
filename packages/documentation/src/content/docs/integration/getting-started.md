@@ -9,7 +9,6 @@ Rafiki is intended to be run by [Account Servicing Entities](/reference/glossary
 Account Servicing Entities provide and maintain payment accounts. In order to make these accounts Interledger-enabled via Rafiki, they need to provide the following endpoints and services:
 
 - exchange rates
-- fees
 - [webhook events listener](#webhook-events-listener)
 - [Identity Provider](#identity-provider)
 
@@ -17,7 +16,7 @@ Furthermore, each payment account managed by the Account Servicing Entity needs 
 
 ## Quotes and Fees
 
-Every Interledger payment is preceded with a quote that estimates the costs for transferring value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. They can specify fixed and variable fees per asset using the Admin API. How they structure those fees is completely up to the Account Servicing Entity.
+Every Interledger payment is preceded by a rate probe that estimates the costs for transferring value from A to B. The Account Servicing Entity may charge fees on top of that for facilitating that transfer. They can specify fixed and variable fees per asset using the Admin API or UI. How they structure those fees is completely up to the Account Servicing Entity.
 
 ### Exchange Rates
 
@@ -37,7 +36,7 @@ The `backend` package requires an environment variable called `EXCHANGE_RATES_UR
 
 ### Fees
 
-Sending fees can be set on a given asset using the `setFee` graphql mutation if desired:
+Sending fees can be set on a given asset using Admin UI or the `setFee` graphql mutation if desired:
 
 Mutation:
 
