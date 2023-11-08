@@ -2,16 +2,16 @@
 title: Autopeering
 ---
 
-If you want to start one local instance of Rafiki and peer it automatically to rafiki.money, you can run the following commands:
+If you want to start one local instance of Rafiki and peer it automatically to [Rafiki.money](https://rafiki.money), you can run the following commands:
 
 ```
-pnpm localenv:compose:autopeer -d
+pnpm localenv:compose:autopeer
 
 // OR to start with Postgres db
-pnpm localenv:compose:psql:autopeer -d
+pnpm localenv:compose:psql:autopeer
 ```
 
-Your local Rafiki instance will be peered automatically with https://rafiki.money instance.
+Your local Rafiki instance will be peered automatically with the remote [Rafiki.money](https://rafiki.money) instance.
 The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
 The exposed ports are 3000(open-payments), 3006(auth server), 3002(ILP connector).
 
