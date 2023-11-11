@@ -438,8 +438,8 @@ importers:
         specifier: ~18.2.0
         version: 18.2.0
       rosie:
-        specifier: ^2.1.0
-        version: 2.1.0
+        specifier: ^2.1.1
+        version: 2.1.1
       testcontainers:
         specifier: ^10.2.2
         version: 10.2.2
@@ -15670,8 +15670,8 @@ packages:
     optionalDependencies:
       fsevents: 2.3.3
 
-  /rosie@2.1.0:
-    resolution: {integrity: sha512-Dbzdc+prLXZuB/suRptDnBUY29SdGvND3bLg6cll8n7PNqzuyCxSlRfrkn8PqjS9n4QVsiM7RCvxCkKAkTQRjA==}
+  /rosie@2.1.1:
+    resolution: {integrity: sha512-2AXB7WrIZXtKMZ6Q/PlozqPF5nu/x7NEvRJZOblrJuprrPfm5gL8JVvJPj9aaib9F8IUALnLUFhzXrwEtnI5cQ==}
     engines: {node: '>=10'}
     dev: true
 
