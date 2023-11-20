@@ -570,21 +570,10 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
         return responses[LiquidityError.InvalidId]
       }
 
-      console.log(
-        'outgoingPayment.sentAmount.value: ',
-        outgoingPayment.sentAmount.value
-      )
-      console.log('event.withdrawal: ', event.withdrawal)
-
       const accountingService = await ctx.container.use('accountingService')
-      // TODO: should be same as event.withdrawal.amount but wanted to depend on event as little as possible
       const balance = await accountingService.getBalance(outgoingPayment.id)
-
-      // TODO: this includes when balance is 0. is that right? or should we allow creating a withdrawal of 0?
-      // TODO: better error for when no balance is found?
-      // TODO: what happens for duplicate withdrawals? hit this endpoint with the same id twice? does it get passed this and error with transfer exists at createWithdrawal?
       if (!balance) {
-        return responses[LiquidityError.InvalidId]
+        return responses[LiquidityError.InsufficientBalance]
       }
 
       const error = await accountingService.createWithdrawal({
