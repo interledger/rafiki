@@ -14,7 +14,7 @@ import {
   createWalletAddress
 } from '../../../tests/walletAddress'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
-import { Pagination } from '../../../shared/baseModel'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { PaymentType } from './model'
 import { Asset } from '../../../asset/model'
 import {
@@ -85,8 +85,8 @@ describe('Combined Payment Service', (): void => {
   describe('CombinedPayment Service', (): void => {
     getPageTests({
       createModel: () => createCombinedPayment(deps),
-      getPage: (pagination?: Pagination) =>
-        combinedPaymentService.getPage({ pagination })
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        combinedPaymentService.getPage({ pagination, sortOrder })
     })
 
     test('should return empty array if no payments', async (): Promise<void> => {

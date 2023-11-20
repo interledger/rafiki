@@ -23,6 +23,11 @@ export interface PageInfo {
   hasPreviousPage: boolean
 }
 
+export enum SortOrder {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
 class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
   M,
   R
@@ -45,7 +50,10 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
    * @param pagination Pagination - cursors and limits.
    * @returns Model[] An array of Models that form a page.
    */
-  getPage(pagination?: Pagination): this {
+  getPage(
+    pagination?: Pagination,
+    sortOrder: SortOrder = SortOrder.Desc
+  ): this {
     const tableName = this.modelClass().tableName
     if (
       typeof pagination?.before === 'undefined' &&
@@ -57,33 +65,34 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
     if (first < 0 || first > 100) throw new Error('Pagination index error')
     const last = pagination?.last || 20
     if (last < 0 || last > 100) throw new Error('Pagination index error')
-
     /**
      * Forward pagination
      */
     if (typeof pagination?.after === 'string') {
+      const comparisonOperator = sortOrder === SortOrder.Asc ? '>' : '<'
       return this.whereRaw(
-        `("${tableName}"."createdAt", "${tableName}"."id") > (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
+        `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.after]
       )
         .orderBy([
-          { column: 'createdAt', order: 'asc' },
-          { column: 'id', order: 'asc' }
+          { column: 'createdAt', order: sortOrder },
+          { column: 'id', order: sortOrder }
         ])
         .limit(first)
     }
-
     /**
      * Backward pagination
      */
     if (typeof pagination?.before === 'string') {
+      const comparisonOperator = sortOrder === SortOrder.Asc ? '<' : '>'
+      const order = sortOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc
       return this.whereRaw(
-        `("${tableName}"."createdAt", "${tableName}"."id") < (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
+        `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.before]
       )
         .orderBy([
-          { column: 'createdAt', order: 'desc' },
-          { column: 'id', order: 'desc' }
+          { column: 'createdAt', order },
+          { column: 'id', order }
         ])
         .limit(last)
         .runAfter((models) => {
@@ -94,8 +103,8 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
     }
 
     return this.orderBy([
-      { column: 'createdAt', order: 'asc' },
-      { column: 'id', order: 'asc' }
+      { column: 'createdAt', order: sortOrder },
+      { column: 'id', order: sortOrder }
     ]).limit(first)
   }
 }

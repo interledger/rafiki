@@ -52,10 +52,11 @@ describe('Webhook Events Query', (): void => {
         )
       }
     }
+    webhookEvents.reverse() // Calling the default getPage will result in descending order
 
     const filter = {
       type: {
-        in: [webhookEventTypes[0], webhookEventTypes[1]]
+        in: [webhookEventTypes[1], webhookEventTypes[2]]
       }
     }
 

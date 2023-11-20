@@ -1,4 +1,4 @@
-import { parseOrProvisionKey } from '@interledger/http-signature-utils'
+import { loadOrGenerateKey } from '@interledger/http-signature-utils'
 import * as crypto from 'crypto'
 import dotenv from 'dotenv'
 import * as fs from 'fs'
@@ -113,7 +113,7 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
+  privateKey: loadOrGenerateKey(envString('PRIVATE_KEY_FILE', '')),
 
   graphQLIdempotencyKeyLockMs: envInt('GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS', 2000),
   graphQLIdempotencyKeyTtlMs: envInt(

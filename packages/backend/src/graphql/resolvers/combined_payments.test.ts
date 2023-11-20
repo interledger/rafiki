@@ -112,7 +112,7 @@ describe('Payment', (): void => {
       PaymentType.Outgoing,
       outgoingPayment
     )
-    expect(query.edges[0].node).toMatchObject({
+    expect(query.edges[1].node).toMatchObject({
       id: combinedOutgoingPayment.id,
       type: combinedOutgoingPayment.type,
       metadata: combinedOutgoingPayment.metadata,
@@ -125,7 +125,7 @@ describe('Payment', (): void => {
       PaymentType.Incoming,
       incomingPayment
     )
-    expect(query.edges[1].node).toMatchObject({
+    expect(query.edges[0].node).toMatchObject({
       id: combinedIncomingPayment.id,
       type: combinedIncomingPayment.type,
       metadata: combinedIncomingPayment.metadata,

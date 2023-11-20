@@ -14,6 +14,7 @@ import { isAssetError } from '../../asset/errors'
 import { Asset as AssetModel } from '../../asset/model'
 import { AssetService } from '../../asset/service'
 import { randomAsset } from '../../tests/asset'
+import { SortOrder } from '../../shared/baseModel'
 import {
   AssetMutationResponse,
   Asset,
@@ -396,6 +397,7 @@ describe('Asset Resolvers', (): void => {
         assert.ok(!isAssetError(asset))
         assets.push(asset)
       }
+      assets.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -457,10 +459,14 @@ describe('Asset Resolvers', (): void => {
 
       test('Can get fees', async (): Promise<void> => {
         const fees: Fee[] = []
+        const sortOrder = SortOrder.Desc
         for (let i = 0; i < 2; i++) {
           const fee = await createFee(deps, assetId)
           assert.ok(!isFeeError(fee))
           fees.push(fee)
+        }
+        if (sortOrder === SortOrder.Desc) {
+          fees.reverse()
         }
         const query = await appContainer.apolloClient
           .query({

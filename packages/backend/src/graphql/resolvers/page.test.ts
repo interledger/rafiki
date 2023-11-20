@@ -6,7 +6,7 @@ import {
 import { gql } from '@apollo/client'
 
 import { Model, PageInfo } from '../generated/graphql'
-import { BaseModel } from '../../shared/baseModel'
+import { BaseModel, SortOrder } from '../../shared/baseModel'
 
 interface PageTestsOptions<Type> {
   getClient: () => ApolloClient<NormalizedCacheObject>
@@ -73,6 +73,7 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
 
   describe('Common query resolver pagination', (): void => {
     let apolloClient: ApolloClient<NormalizedCacheObject>
+    const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
 
     beforeAll((): void => {
       apolloClient = getClient()
@@ -83,11 +84,13 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
       for (let i = 0; i < 50; i++) {
         models.push(await createModel())
       }
+
       return models
     }
 
     test('pageInfo is correct on default query without params', async (): Promise<void> => {
       const models = await createModels()
+      models.reverse() // default is SortOrder.Desc
       const query = await apolloClient
         .query({
           query: parent
@@ -151,26 +154,30 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
 
     test('pageInfo is correct on pagination from start', async (): Promise<void> => {
       const models = await createModels()
+      if (sortOrder === SortOrder.Desc) {
+        models.reverse()
+      }
       const query = await apolloClient
         .query({
           query: parent
             ? gql`
-              query Page($id: String!) {
+              query Page($id: String!, $sortOrder: SortOrder) {
                 ${parent.query}(id: $id) {
-                  ${pagedQuery}(first: 10) {
+                  ${pagedQuery}(first: 10, sortOrder: $sortOrder) {
                     ${queryFields}
                   }
                 }
               }`
             : gql`
-              query Page {
-                ${pagedQuery}(first: 10) {
+              query Page($sortOrder: SortOrder) {
+                ${pagedQuery}(first: 10, sortOrder: $sortOrder) {
                   ${queryFields}
                 }
               }
             `,
           variables: {
-            id: parent?.getId()
+            id: parent?.getId(),
+            sortOrder: sortOrder === SortOrder.Asc ? 'ASC' : 'DESC'
           }
         })
         .then(toConnection)
@@ -183,27 +190,31 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
 
     test('pageInfo is correct on pagination from middle', async (): Promise<void> => {
       const models = await createModels()
+      if (sortOrder === SortOrder.Desc) {
+        models.reverse()
+      }
       const query = await apolloClient
         .query({
           query: parent
             ? gql`
-              query Page($id: String!, $after: String!) {
+              query Page($id: String!, $after: String!, $sortOrder: SortOrder) {
                 ${parent.query}(id: $id) {
-                  ${pagedQuery}(after: $after) {
+                  ${pagedQuery}(after: $after, sortOrder: $sortOrder) {
                     ${queryFields}
                   }
                 }
               }`
             : gql`
-              query Page($after: String!) {
-                ${pagedQuery}(after: $after) {
+              query Page($after: String!, $sortOrder: SortOrder) {
+                ${pagedQuery}(after: $after, sortOrder: $sortOrder) {
                   ${queryFields}
                 }
               }
             `,
           variables: {
             id: parent?.getId(),
-            after: models[19].id
+            after: models[19].id,
+            sortOrder: sortOrder === SortOrder.Asc ? 'ASC' : 'DESC'
           }
         })
         .then(toConnection)
@@ -216,27 +227,31 @@ export const getPageTests = <T extends Model, M extends BaseModel>({
 
     test('pageInfo is correct on pagination near end', async (): Promise<void> => {
       const models = await createModels()
+      if (sortOrder === SortOrder.Desc) {
+        models.reverse()
+      }
       const query = await apolloClient
         .query({
           query: parent
             ? gql`
-              query Page($id: String!, $after: String!) {
+              query Page($id: String!, $after: String!, $sortOrder: SortOrder) {
                 ${parent.query}(id: $id) {
-                  ${pagedQuery}(after: $after, first: 10) {
+                  ${pagedQuery}(after: $after, first: 10, sortOrder: $sortOrder) {
                     ${queryFields}
                   }
                 }
               }`
             : gql`
-              query Page($after: String!) {
-                ${pagedQuery}(after: $after, first: 10) {
+              query Page($after: String!, $sortOrder: SortOrder) {
+                ${pagedQuery}(after: $after, first: 10, sortOrder: $sortOrder) {
                   ${queryFields}
                 }
               }
             `,
           variables: {
             id: parent?.getId(),
-            after: models[44].id
+            after: models[44].id,
+            sortOrder: sortOrder === SortOrder.Asc ? 'ASC' : 'DESC'
           }
         })
         .then(toConnection)

@@ -17,7 +17,7 @@ These packages depend on the following databases:
 - Postgres (Open Payments resources, auth resources)
 - Redis (STREAM details)
 
-We provide containerized versions of our packages together with two pre-configured docker-compose files ([peer1](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml) and [peer2](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
+We provide containerized versions of our packages together with two pre-configured docker-compose files ([Cloud Nine Wallet](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml) and [Happy Life Bank](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)) to start two Mock Account Servicing Entities with their respective Rafiki backend and auth servers. They automatically peer and 2 to 3 user accounts are created on both of them.
 
 This environment will set up a playground where you can use the Rafiki Admin APIs and the Open Payments APIs.
 
@@ -37,7 +37,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (e) Open Payments Auth API - accessible at http://localhost:3006
 
-(f) Postman Signature Service - accessible at http://localhost:3040
+(f) DEPRECATED: ~~Postman Signature Service - accessible at http://localhost:3040~~
 
 #### Happy Life Bank
 
@@ -51,7 +51,7 @@ This environment will set up a playground where you can use the Rafiki Admin API
 
 (k) Open Payments Auth API - accessible at http://localhost:4006
 
-(l) Postman Signature Service - accessible at http://localhost:3041
+(l) DEPRECATED: ~~Postman Signature Service - accessible at http://localhost:3041~~
 
 #### Database
 
@@ -75,7 +75,7 @@ When clicking on the Account Name, a list of Transactions appears.
 
 - [Rafiki local environment setup](https://github.com/interledger/rafiki/blob/main/README.md#environment-setup)
 - [docker](https://docs.docker.com/get-docker/)
-- [postman](https://www.postman.com/downloads/)
+- ([postman](https://www.postman.com/downloads/))
 
 ### Setup
 
@@ -101,35 +101,10 @@ pnpm localenv:compose:psql down --volumes
 The local environment consists of a primary Rafiki instance and a secondary Rafiki instance, each with
 its own docker compose files ([Cloud Nine Wallet](https://github.com/interledger/rafiki/blob/main/localenv/cloud-nine-wallet/docker-compose.yml), [Happy Life Bank](https://github.com/interledger/rafiki/blob/main/localenv/happy-life-bank/docker-compose.yml)).
 The primary Cloud Nine Wallet docker compose file (`./cloud-nine-wallet/docker-compose.yml`) includes the main Rafiki services `backend` and `auth`, as well
-as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own. Furthermore,
-both include the `local-signature-utils` signature generation app for Postman.
+as the required data stores tigerbeetle (if enabled), redis, and postgres, so it can be run on its own.
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
-
-#### Autopeering
-
-If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
-
-```
-pnpm localenv:compose:autopeer
-
-// OR to start with Postgres db
-pnpm localenv:compose:psql:autopeer
-```
-
-Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
-The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
-The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
-
-To use the postman collection examples follow the steps:
-
-1. run `docker logs rafiki-cloud-nine-mock-ase-1`
-2. find the list of created wallet addresses
-3. copy the url of one of the wallet addresses
-4. set the url into `senderWalletAddress` postman variable in `Remote Environment`
-
-After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
 ### Shutting down
 
@@ -162,24 +137,26 @@ pnpm localenv:compose down --volumes
 
 #### Postman & Open Payments APIs
 
-The Open Payments APIs can be interacted with using the [Postman collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). It is configured to use the default endpoints of the local environment.
+The Open Payments APIs can be interacted with using the [Postman API collection](https://www.postman.com/interledger/workspace/interledger/api/84fc90ca-3153-4865-8b49-b91218e5d574). You can either log into Postman and fork the collection or you can [import it from source](https://raw.githubusercontent.com/interledger/rafiki/main/postman/collections/Interledger.json). It requires you to either load the [Local Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Local%20Playground%20Environment.postman_environment.json) or the [Remote Environment](https://raw.githubusercontent.com/interledger/rafiki/main/postman/environments/Remote%20Environment.postman_environment.json).
 
-The Examples folder in the Postman collection includes an eCommerce (Open Payments) example that can be executed one by one. It
+The Examples folder in the Postman API collection includes an eCommerce (Open Payments) example that can be executed one by one. It
 
-1. requests a grant to create an incoming payment on Philip Fry's account
-2. creates an incoming payment on Philip Fry's account
-3. requests a grant to create (and read) a quote on Grace Franklin's account
-4. creates a quote on Grace Franklin's account
-5. requests a grant to create (and read) an outgoing payment on Grace Franklin's account
-6. continues the grant request (via the interaction flow)
-7. creates an outgoing payment on Grace Franklin's account
-8. fetches the outgoing payment on Grace Franklin's account
+1. gets the sender's wallet address
+2. gets the receiver's wallet address
+3. requests a grant to create an incoming payment on the receiver's account
+4. creates an incoming payment on the receiver's account
+5. requests a grant to create (and read) a quote on the senders's account
+6. creates a quote on the sender's account
+7. requests a grant to create (and read) an outgoing payment on the sender's account
+8. creates an outgoing payment on the sender's account
+9. fetches the outgoing payment on the sender's account
 
 Note that one has to go through the interaction flow after requesting a grant for an outgoing payment. More information about the interaction flow can be found [here](/concepts/open-payments/grant-interaction).
 
-Example walkthrough:
+<!-- TODO: Update! -->
+<!-- Example walkthrough:
 
-https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4
+https://user-images.githubusercontent.com/15069181/230445040-6fa505f5-86e5-44b2-841e-77c97d646368.mp4 -->
 
 #### Admin UI
 

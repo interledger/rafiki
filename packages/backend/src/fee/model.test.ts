@@ -37,6 +37,7 @@ describe('Fee Model', (): void => {
       ${100n}   | ${10n}   | ${0}          | ${10n}
       ${100n}   | ${0n}    | ${100}        | ${1n}
       ${100n}   | ${10n}   | ${100}        | ${11n}
+      ${1000n}  | ${0n}    | ${145}        | ${15n}
     `(
       'A fee of $fixedFee fixed and $basisPointFee results in $expectedResult for an amount of $principal',
       async ({

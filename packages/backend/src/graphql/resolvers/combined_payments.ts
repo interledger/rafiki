@@ -5,7 +5,7 @@ import {
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CombinedPayment } from '../../open_payments/payment/combined/model'
 
 export const getCombinedPayments: QueryResolvers<ApolloContext>['payments'] =
@@ -13,15 +13,22 @@ export const getCombinedPayments: QueryResolvers<ApolloContext>['payments'] =
     const combinedPaymentService = await ctx.container.use(
       'combinedPaymentService'
     )
-    const { filter, ...pagination } = args
+    const { filter, sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
 
-    const getPageFn = (pagination_: Pagination) =>
-      combinedPaymentService.getPage({ pagination: pagination_, filter })
+    const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      combinedPaymentService.getPage({
+        pagination: pagination_,
+        filter,
+        sortOrder: sortOrder_
+      })
 
-    const payments = await getPageFn(pagination)
+    const payments = await getPageFn(pagination, order)
     const pageInfo = await getPageInfo(
-      (pagination_: Pagination) => getPageFn(pagination_),
-      payments
+      (pagination_: Pagination, sortOrder_?: SortOrder) =>
+        getPageFn(pagination_, sortOrder_),
+      payments,
+      order
     )
 
     return {

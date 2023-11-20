@@ -10,7 +10,7 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { Asset } from '../../../asset/model'
-import { Pagination } from '../../../shared/baseModel'
+import { Pagination, SortOrder } from '../../../shared/baseModel'
 import { getPageTests } from '../../../shared/baseModel.test'
 import { createAsset } from '../../../tests/asset'
 import { createPeer } from '../../../tests/peer'
@@ -427,8 +427,8 @@ describe('Peer Service', (): void => {
   describe('Peer pagination', (): void => {
     getPageTests({
       createModel: () => createPeer(deps, { assetId: asset.id }),
-      getPage: (pagination: Pagination | undefined) =>
-        peerService.getPage(pagination)
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        peerService.getPage(pagination, sortOrder)
     })
   })
 

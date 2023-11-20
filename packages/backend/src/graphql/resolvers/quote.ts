@@ -14,7 +14,7 @@ import {
 import { Quote } from '../../open_payments/quote/model'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CreateQuoteOptions } from '../../open_payments/quote/service'
 
 export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
@@ -67,17 +67,22 @@ export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quot
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
     if (!parent.id) throw new Error('missing wallet address id')
     const quoteService = await ctx.container.use('quoteService')
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const quotes = await quoteService.getWalletAddressPage({
       walletAddressId: parent.id,
-      pagination: args
+      pagination,
+      sortOrder: order
     })
     const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
+      (pagination: Pagination, sortOrder?: SortOrder) =>
         quoteService.getWalletAddressPage({
           walletAddressId: parent.id as string,
-          pagination
+          pagination,
+          sortOrder
         }),
-      quotes
+      quotes,
+      order
     )
     return {
       pageInfo,

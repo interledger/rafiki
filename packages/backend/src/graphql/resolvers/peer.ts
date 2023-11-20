@@ -14,7 +14,7 @@ import {
 } from '../../payment-method/ilp/peer/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   parent,
@@ -22,10 +22,14 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   ctx
 ): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
-  const peers = await peerService.getPage(args)
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const peers = await peerService.getPage(pagination, order)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => peerService.getPage(pagination),
-    peers
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      peerService.getPage(pagination, sortOrder),
+    peers,
+    order
   )
   return {
     pageInfo,

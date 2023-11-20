@@ -14,7 +14,7 @@ import {
 } from '../../open_payments/payment/incoming/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getIncomingPayment: QueryResolvers<ApolloContext>['incomingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['IncomingPayment']> => {
@@ -38,17 +38,22 @@ export const getWalletAddressIncomingPayments: WalletAddressResolvers<ApolloCont
     const incomingPaymentService = await ctx.container.use(
       'incomingPaymentService'
     )
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
     const incomingPayments = await incomingPaymentService.getWalletAddressPage({
       walletAddressId: parent.id,
-      pagination: args
+      pagination,
+      sortOrder: order
     })
     const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
+      (pagination: Pagination, sortOrder?: SortOrder) =>
         incomingPaymentService.getWalletAddressPage({
           walletAddressId: parent.id as string,
-          pagination
+          pagination,
+          sortOrder
         }),
-      incomingPayments
+      incomingPayments,
+      order
     )
 
     return {

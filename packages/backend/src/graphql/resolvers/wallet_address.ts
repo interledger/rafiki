@@ -15,7 +15,7 @@ import {
 } from '../../open_payments/wallet_address/errors'
 import { WalletAddress } from '../../open_payments/wallet_address/model'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'] =
   async (
@@ -24,9 +24,15 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
     ctx
   ): Promise<ResolversTypes['WalletAddressesConnection']> => {
     const walletAddressService = await ctx.container.use('walletAddressService')
-    const walletAddresses = await walletAddressService.getPage(args)
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const walletAddresses = await walletAddressService.getPage(
+      pagination,
+      order
+    )
     const pageInfo = await getPageInfo(
-      (pagination: Pagination) => walletAddressService.getPage(pagination),
+      (pagination: Pagination, sortOrder?: SortOrder) =>
+        walletAddressService.getPage(pagination, sortOrder),
       walletAddresses
     )
     return {

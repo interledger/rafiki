@@ -22,7 +22,7 @@ import { faker } from '@faker-js/faker'
 import { createIncomingPayment } from '../../tests/incomingPayment'
 import { getPageInfo } from '../../shared/pagination'
 import { getPageTests } from '../../shared/baseModel.test'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
 import { withConfigOverride } from '../../tests/helpers'
 
@@ -405,19 +405,24 @@ describe('Open Payments Wallet Address Service', (): void => {
         hasNextPage,
         hasPreviousPage
       }): Promise<void> => {
+        const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
         const walletAddressIds: string[] = []
         for (let i = 0; i < num; i++) {
           const walletAddress = await createWalletAddress(deps)
           walletAddressIds.push(walletAddress.id)
         }
+        if (sortOrder === SortOrder.Desc) {
+          walletAddressIds.reverse()
+        }
         if (cursor) {
           if (pagination.last) pagination.before = walletAddressIds[cursor]
           else pagination.after = walletAddressIds[cursor]
         }
-        const page = await walletAddressService.getPage(pagination)
+        const page = await walletAddressService.getPage(pagination, sortOrder)
         const pageInfo = await getPageInfo(
-          (pagination) => walletAddressService.getPage(pagination),
-          page
+          (pagination) => walletAddressService.getPage(pagination, sortOrder),
+          page,
+          sortOrder
         )
         expect(pageInfo).toEqual({
           startCursor: walletAddressIds[start],
@@ -430,8 +435,8 @@ describe('Open Payments Wallet Address Service', (): void => {
     describe('getPage', (): void => {
       getPageTests({
         createModel: () => createWalletAddress(deps),
-        getPage: (pagination?: Pagination) =>
-          walletAddressService.getPage(pagination)
+        getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+          walletAddressService.getPage(pagination, sortOrder)
       })
     })
   })

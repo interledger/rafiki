@@ -366,6 +366,7 @@ describe('Peer Resolvers', (): void => {
       for (let i = 0; i < 2; i++) {
         peers.push(await createPeer(deps, randomPeer()))
       }
+      peers.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
         .query({
           query: gql`
