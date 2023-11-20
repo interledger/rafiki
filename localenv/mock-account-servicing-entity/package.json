@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "@remix-run/dev": "^1.19.3",
-    "@types/react": "^18.2.34",
-    "@types/react-dom": "^18.2.14"
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15"
   },
   "engines": {
     "node": "18"
