@@ -28,7 +28,7 @@
     "@types/luxon": "^3.3.3",
     "@types/rosie": "^0.0.45",
     "@types/tmp": "^0.2.6",
-    "@types/uuid": "^9.0.6",
+    "@types/uuid": "^9.0.7",
     "cross-fetch": "^4.0.0",
     "ilp-protocol-ildcp": "^2.2.3",
     "ilp-protocol-stream": "^2.7.1",
