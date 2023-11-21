@@ -58,7 +58,8 @@ export const getPageTests = <Type extends BaseModel>({
       ${SortOrder.Asc}  | ${'Backwards/Forwards pagination results in same order for ASC.'}
       ${SortOrder.Desc} | ${'Backwards/Forwards pagination results in same order for DESC.'}
     `('$description', async ({ order }): Promise<void> => {
-      if (order === SortOrder.Desc) {
+      // model is in DESC order
+      if (order === SortOrder.Asc) {
         modelsCreated.reverse()
       }
       const paginationForwards = {
