@@ -10,7 +10,6 @@ export const getPageTests = <Type extends BaseModel>({
   getPage
 }: PageTestsOptions<Type>): void => {
   describe('Common BaseModel pagination', (): void => {
-    const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     let modelsCreated: Type[]
 
     beforeEach(async (): Promise<void> => {
@@ -18,6 +17,7 @@ export const getPageTests = <Type extends BaseModel>({
       for (let i = 0; i < 22; i++) {
         modelsCreated.push(await createModel())
       }
+      modelsCreated.reverse() // default sort order is DESC
     })
 
     test.each`
@@ -30,16 +30,13 @@ export const getPageTests = <Type extends BaseModel>({
       ${{ last: 5, before: 10 }}  | ${{ length: 5, first: 5, last: 9 }}    | ${'Can paginate backwards from a cursor with a limit'}
       ${{ after: 0, before: 19 }} | ${{ length: 20, first: 1, last: 20 }}  | ${'Providing before and after results in forward pagination'}
     `('$description', async ({ pagination, expected }): Promise<void> => {
-      if (sortOrder === SortOrder.Desc) {
-        modelsCreated.reverse()
-      }
       if (pagination?.after !== undefined) {
         pagination.after = modelsCreated[pagination.after].id
       }
       if (pagination?.before !== undefined) {
         pagination.before = modelsCreated[pagination.before].id
       }
-      const models = await getPage(pagination, sortOrder)
+      const models = await getPage(pagination)
       expect(models).toHaveLength(expected.length)
       expect(models[0].id).toEqual(modelsCreated[expected.first].id)
       expect(models[expected.length - 1].id).toEqual(
@@ -53,9 +50,7 @@ export const getPageTests = <Type extends BaseModel>({
       ${{ first: -1 }}  | ${'Pagination index error'}                   | ${"Can't request less than 0"}
       ${{ first: 101 }} | ${'Pagination index error'}                   | ${"Can't request more than 100"}
     `('$description', async ({ pagination, expectedError }): Promise<void> => {
-      await expect(getPage(pagination, sortOrder)).rejects.toThrow(
-        expectedError
-      )
+      await expect(getPage(pagination)).rejects.toThrow(expectedError)
     })
 
     test.each`
