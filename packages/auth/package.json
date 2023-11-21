@@ -52,7 +52,7 @@
     "@graphql-codegen/introspection": "4.0.0",
     "@graphql-codegen/typescript": "4.0.1",
     "@graphql-codegen/typescript-resolvers": "4.0.1",
-    "@types/koa": "2.13.11",
+    "@types/koa": "2.13.12",
     "@types/koa-bodyparser": "^4.3.12",
     "@types/koa-session": "^6.4.5",
     "@types/koa__cors": "^4.0.3",
