@@ -7,6 +7,7 @@ import {
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
+import Objection from 'objection'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
@@ -156,18 +157,24 @@ export async function sendWebhookEvent(
     throw LifecycleError.MissingBalance
   }
 
-  const withdrawal = balance
-    ? {
-        accountId: payment.id,
-        assetId: payment.assetId,
-        amount: balance
-      }
-    : undefined
-  await PaymentEvent.query(deps.knex).insert({
+  const eventPayload: Objection.PartialModelObject<PaymentEvent> = {
     type,
-    data: payment.toData({ amountSent, balance }),
-    withdrawal
-  })
+    data: payment.toData({ amountSent, balance })
+  }
+
+  if (type === PaymentEventType.PaymentCreated) {
+    eventPayload.depositAccountId = payment.id
+  } else {
+    eventPayload.withdrawal = balance
+      ? {
+          accountId: payment.id,
+          assetId: payment.assetId,
+          amount: balance
+        }
+      : undefined
+  }
+
+  await PaymentEvent.query(deps.knex).insert(eventPayload)
 }
 
 function validateAssets(

@@ -436,54 +436,55 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
   }
 
 export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['depositOutgoingPaymentLiquidity'] =
-  async () // parent,
-  // args,
-  // ctx
-  : Promise<ResolversTypes['LiquidityMutationResponse']> => {
-    return {
-      code: '400',
-      message: 'Error trying to deposit liquidity',
-      success: false
+  async (
+    parent,
+    args,
+    ctx
+  ): Promise<ResolversTypes['LiquidityMutationResponse']> => {
+    try {
+      const { outgoingPaymentId } = args.input
+      const webhookService = await ctx.container.use('webhookService')
+      const event = await webhookService.getLatestByAccount({
+        depositAccountId: outgoingPaymentId,
+        types: [PaymentDepositType.PaymentCreated]
+      })
+      if (!event || !isPaymentEvent(event)) {
+        return responses[LiquidityError.InvalidId]
+      }
+
+      if (!event.data.debitAmount) {
+        throw new Error()
+      }
+      const outgoingPaymentService = await ctx.container.use(
+        'outgoingPaymentService'
+      )
+      const paymentOrErr = await outgoingPaymentService.fund({
+        id: outgoingPaymentId,
+        amount: BigInt(event.data.debitAmount.value),
+        transferId: event.id
+      })
+      if (isFundingError(paymentOrErr)) {
+        return errorToResponse(paymentOrErr)
+      }
+      return {
+        code: '200',
+        success: true,
+        message: 'Deposited liquidity'
+      }
+    } catch (err) {
+      ctx.logger.error(
+        {
+          outgoingPaymentId: args.input.outgoingPaymentId,
+          err
+        },
+        'error depositing liquidity'
+      )
+      return {
+        code: '400',
+        message: 'Error trying to deposit liquidity',
+        success: false
+      }
     }
-    // try {
-    //   const webhookService = await ctx.container.use('webhookService')
-    //   const event = await webhookService.getEvent(args.input.eventId)
-    //   if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
-    //     return responses[LiquidityError.InvalidId]
-    //   }
-    //   if (!event.data.debitAmount) {
-    //     throw new Error()
-    //   }
-    //   const outgoingPaymentService = await ctx.container.use(
-    //     'outgoingPaymentService'
-    //   )
-    //   const paymentOrErr = await outgoingPaymentService.fund({
-    //     id: event.data.id,
-    //     amount: BigInt(event.data.debitAmount.value),
-    //     transferId: event.id
-    //   })
-    //   if (isFundingError(paymentOrErr)) {
-    //     return errorToResponse(paymentOrErr)
-    //   }
-    //   return {
-    //     code: '200',
-    //     success: true,
-    //     message: 'Deposited liquidity'
-    //   }
-    // } catch (error) {
-    //   ctx.logger.error(
-    //     {
-    //       eventId: args.input.eventId,
-    //       error
-    //     },
-    //     'error depositing liquidity'
-    //   )
-    //   return {
-    //     code: '400',
-    //     message: 'Error trying to deposit liquidity',
-    //     success: false
-    //   }
-    // }
   }
 
 export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>['withdrawIncomingPaymentLiquidity'] =
@@ -501,13 +502,13 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
         id: incomingPaymentId
       })
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccountIdAndTypes(
-        incomingPaymentId,
-        [
+      const event = await webhookService.getLatestByAccount({
+        withdrawalAccountId: incomingPaymentId,
+        types: [
           IncomingPaymentEventType.IncomingPaymentCompleted,
           IncomingPaymentEventType.IncomingPaymentExpired
         ]
-      )
+      })
       if (!incomingPayment || !incomingPayment.receivedAmount || !event?.id) {
         return responses[LiquidityError.InvalidId]
       }
@@ -561,11 +562,13 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
         id: outgoingPaymentId
       })
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccountIdAndTypes(
-        outgoingPaymentId,
-        [PaymentEventType.PaymentCompleted, PaymentEventType.PaymentFailed]
-      )
-      // TODO: this will include when event.withdrawal.amount is 0. is that right? should we allow creating a withdrawal of 0?
+      const event = await webhookService.getLatestByAccount({
+        withdrawalAccountId: outgoingPaymentId,
+        types: [
+          PaymentEventType.PaymentCompleted,
+          PaymentEventType.PaymentFailed
+        ]
+      })
       if (!outgoingPayment || !event?.id) {
         return responses[LiquidityError.InvalidId]
       }

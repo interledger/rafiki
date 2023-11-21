@@ -25,9 +25,8 @@ interface GetPageOptions {
 
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
-  getLatestByAccountIdAndTypes(
-    withdrawalAccountId: string,
-    types: string[]
+  getLatestByAccount(
+    options: WebhookByAccountOptions
   ): Promise<WebhookEvent | undefined>
   processNext(): Promise<string | undefined>
   getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
@@ -46,12 +45,8 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
-    getLatestByAccountIdAndTypes: (withdrawalAccountId, types) =>
-      getLatestWebhookEventByAccountIdAndTypes(
-        deps,
-        withdrawalAccountId,
-        types
-      ),
+    getLatestByAccount: (options) =>
+      getLatestWebhookEventByAccount(deps, options),
     processNext: () => processNextWebhookEvent(deps),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
@@ -64,16 +59,38 @@ async function getWebhookEvent(
   return WebhookEvent.query(deps.knex).findById(id)
 }
 
-async function getLatestWebhookEventByAccountIdAndTypes(
+interface WebhookEventOptions {
+  types?: string[]
+}
+interface DepositOptions extends WebhookEventOptions {
+  depositAccountId: string
+}
+interface WithdrawalOptions extends WebhookEventOptions {
+  withdrawalAccountId: string
+}
+type WebhookByAccountOptions = DepositOptions | WithdrawalOptions
+
+async function getLatestWebhookEventByAccount(
   deps: ServiceDependencies,
-  withdrawalAccountId: string,
-  types: string[]
+  options: WebhookByAccountOptions
 ): Promise<WebhookEvent | undefined> {
-  return WebhookEvent.query(deps.knex)
-    .where({ withdrawalAccountId })
-    .whereIn('type', types)
+  const { types } = options
+
+  const query = WebhookEvent.query(deps.knex)
     .orderBy('createdAt', 'DESC')
     .first()
+
+  if (types && types.length) {
+    query.whereIn('type', types)
+  }
+
+  if ('depositAccountId' in options) {
+    query.where({ depositAccountId: options.depositAccountId })
+  } else {
+    query.where({ withdrawalAccountId: options.withdrawalAccountId })
+  }
+
+  return await query
 }
 
 // Fetch (and lock) a webhook event for work.
