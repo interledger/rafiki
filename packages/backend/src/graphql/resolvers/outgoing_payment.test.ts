@@ -127,6 +127,7 @@ describe('OutgoingPayment Resolvers', (): void => {
                     error
                     stateAttempts
                     receiver
+                    liquidity
                     debitAmount {
                       value
                       assetCode
@@ -169,6 +170,7 @@ describe('OutgoingPayment Resolvers', (): void => {
             error,
             stateAttempts: 0,
             receiver: payment.receiver,
+            liquidity: '0',
             debitAmount: {
               value: payment.debitAmount.value.toString(),
               assetCode: payment.debitAmount.assetCode,

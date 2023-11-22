@@ -6,7 +6,11 @@ import {
   LiquidityMutationResponse,
   WalletAddressWithdrawalMutationResponse,
   AssetResolvers,
-  PeerResolvers
+  PeerResolvers,
+  WalletAddressResolvers,
+  IncomingPaymentResolvers,
+  OutgoingPaymentResolvers,
+  PaymentResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -25,6 +29,26 @@ export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   }
 
 export const getPeerLiquidity: PeerResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
+    return await getLiquidity(ctx, parent.id as string)
+  }
+
+export const getWalletAddressLiquidity: WalletAddressResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
+    return await getLiquidity(ctx, parent.id as string)
+  }
+
+export const getIncomingPaymentLiquidity: IncomingPaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
+    return await getLiquidity(ctx, parent.id as string)
+  }
+
+export const getOutgoingPaymentLiquidity: OutgoingPaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
+    return await getLiquidity(ctx, parent.id as string)
+  }
+
+export const getPaymentLiquidity: PaymentResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
     return await getLiquidity(ctx, parent.id as string)
   }

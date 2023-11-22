@@ -2823,6 +2823,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidity",
+            "description": "Available liquidity",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "metadata",
             "description": "Additional metadata associated with the incoming payment.",
             "args": [],
@@ -4551,6 +4563,18 @@
             "deprecationReason": null
           },
           {
+            "name": "liquidity",
+            "description": "Available liquidity",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "metadata",
             "description": "Additional metadata associated with the outgoing payment.",
             "args": [],
@@ -4983,6 +5007,18 @@
                 "name": "ID",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidity",
+            "description": "Available liquidity",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -7624,6 +7660,18 @@
             "type": {
               "kind": "OBJECT",
               "name": "IncomingPaymentConnection",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "liquidity",
+            "description": "Available liquidity",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "UInt64",
               "ofType": null
             },
             "isDeprecated": false,

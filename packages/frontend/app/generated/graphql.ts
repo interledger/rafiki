@@ -424,6 +424,8 @@ export type IncomingPayment = BasePayment & Model & {
   id: Scalars['ID']['output'];
   /** The maximum amount that should be paid into the wallet address under this incoming payment. */
   incomingAmount?: Maybe<Amount>;
+  /** Available liquidity */
+  liquidity?: Maybe<Scalars['UInt64']['output']>;
   /** Additional metadata associated with the incoming payment. */
   metadata?: Maybe<Scalars['JSONObject']['output']>;
   /** The total amount that has been paid into the wallet address under this incoming payment. */
@@ -718,6 +720,8 @@ export type OutgoingPayment = BasePayment & Model & {
   error?: Maybe<Scalars['String']['output']>;
   /** Outgoing payment id */
   id: Scalars['ID']['output'];
+  /** Available liquidity */
+  liquidity?: Maybe<Scalars['UInt64']['output']>;
   /** Additional metadata associated with the outgoing payment. */
   metadata?: Maybe<Scalars['JSONObject']['output']>;
   /** Quote for this outgoing payment */
@@ -784,6 +788,8 @@ export type Payment = BasePayment & Model & {
   createdAt: Scalars['String']['output'];
   /** Payment id */
   id: Scalars['ID']['output'];
+  /** Available liquidity */
+  liquidity?: Maybe<Scalars['UInt64']['output']>;
   /** Additional metadata associated with the payment. */
   metadata?: Maybe<Scalars['JSONObject']['output']>;
   /** Either the IncomingPaymentState or OutgoingPaymentState according to type */
@@ -1164,6 +1170,8 @@ export type WalletAddress = Model & {
   id: Scalars['ID']['output'];
   /** List of incoming payments received by this wallet address */
   incomingPayments?: Maybe<IncomingPaymentConnection>;
+  /** Available liquidity */
+  liquidity?: Maybe<Scalars['UInt64']['output']>;
   /** List of outgoing payments sent from this wallet address */
   outgoingPayments?: Maybe<OutgoingPaymentConnection>;
   /** Public name associated with the wallet address */
@@ -1717,6 +1725,7 @@ export type IncomingPaymentResolvers<ContextType = any, ParentType extends Resol
   expiresAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   incomingAmount?: Resolver<Maybe<ResolversTypes['Amount']>, ParentType, ContextType>;
+  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   receivedAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   state?: Resolver<ResolversTypes['IncomingPaymentState'], ParentType, ContextType>;
@@ -1811,6 +1820,7 @@ export type OutgoingPaymentResolvers<ContextType = any, ParentType extends Resol
   debitAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
   error?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType>;
   receiveAmount?: Resolver<ResolversTypes['Amount'], ParentType, ContextType>;
@@ -1853,6 +1863,7 @@ export type PageInfoResolvers<ContextType = any, ParentType extends ResolversPar
 export type PaymentResolvers<ContextType = any, ParentType extends ResolversParentTypes['Payment'] = ResolversParentTypes['Payment']> = {
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['JSONObject']>, ParentType, ContextType>;
   state?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   type?: Resolver<ResolversTypes['PaymentType'], ParentType, ContextType>;
@@ -2019,6 +2030,7 @@ export type WalletAddressResolvers<ContextType = any, ParentType extends Resolve
   createdAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   incomingPayments?: Resolver<Maybe<ResolversTypes['IncomingPaymentConnection']>, ParentType, ContextType, Partial<WalletAddressIncomingPaymentsArgs>>;
+  liquidity?: Resolver<Maybe<ResolversTypes['UInt64']>, ParentType, ContextType>;
   outgoingPayments?: Resolver<Maybe<ResolversTypes['OutgoingPaymentConnection']>, ParentType, ContextType, Partial<WalletAddressOutgoingPaymentsArgs>>;
   publicName?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   quotes?: Resolver<Maybe<ResolversTypes['QuoteConnection']>, ParentType, ContextType, Partial<WalletAddressQuotesArgs>>;

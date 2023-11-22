@@ -317,6 +317,7 @@ describe('Incoming Payment Resolver', (): void => {
                   walletAddressId
                   state
                   expiresAt
+                  liquidity
                   incomingAmount {
                     value
                     assetCode
@@ -343,6 +344,7 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId: payment.walletAddressId,
           state,
           expiresAt: expiresAt.toISOString(),
+          liquidity: '0',
           incomingAmount: {
             value: payment.incomingAmount?.value.toString(),
             assetCode: payment.incomingAmount?.assetCode,
