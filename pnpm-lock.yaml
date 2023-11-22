@@ -15,8 +15,8 @@ importers:
         specifier: ^0.2.29
         version: 0.2.29(@swc/core@1.3.92)
       '@types/jest':
-        specifier: ^29.5.9
-        version: 29.5.9
+        specifier: ^29.5.10
+        version: 29.5.10
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.10.0
         version: 6.10.0(@typescript-eslint/parser@6.10.0)(eslint@8.53.0)(typescript@4.9.5)
@@ -2883,7 +2883,7 @@ packages:
     resolution: {integrity: sha512-8SegXApWe6VoNw0r9JHpSteLKTpTiLZ4rMlGIm9JQ18KiCtyQiAMEazujAHrUS5flrcqYZa75ukev3P6QmUwUw==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.22.10
+      '@babel/code-frame': 7.22.13
       '@babel/parser': 7.23.0
       '@babel/types': 7.23.0
     dev: true
@@ -5621,8 +5621,8 @@ packages:
       '@types/istanbul-lib-report': 3.0.0
     dev: true
 
-  /@types/jest@29.5.9:
-    resolution: {integrity: sha512-zJeWhqBwVoPm83sP8h1/SVntwWTu5lZbKQGCvBjxQOyEWnKnsaomt2y7SlV4KfwlrHAHHAn00Sh4IAWaIsGOgQ==}
+  /@types/jest@29.5.10:
+    resolution: {integrity: sha512-tE4yxKEphEyxj9s4inideLHktW/x6DwesIwWZ9NN1FKf9zbJYsnhBoA9vrHA/IuIOKwPa5PcFBNV4lpMIOEzyQ==}
     dependencies:
       expect: 29.7.0
       pretty-format: 29.7.0
@@ -16895,7 +16895,7 @@ packages:
       '@types/commander': 2.12.2
       '@types/deep-equal': 1.0.3
       '@types/is-number': 7.0.4
-      '@types/jest': 29.5.9
+      '@types/jest': 29.5.10
       '@types/node-fetch': 2.6.2
       '@types/node-localstorage': 1.3.2
       '@types/node-persist': 3.1.5
