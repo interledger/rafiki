@@ -33,7 +33,8 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
     const pageInfo = await getPageInfo(
       (pagination: Pagination, sortOrder?: SortOrder) =>
         walletAddressService.getPage(pagination, sortOrder),
-      walletAddresses
+      walletAddresses,
+      order
     )
     return {
       pageInfo,
