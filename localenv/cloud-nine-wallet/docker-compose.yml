@@ -59,6 +59,10 @@ services:
       REDIS_URL: redis://shared-redis:6379/0
       WALLET_ADDRESS_URL: ${CLOUD_NINE_WALLET_ADDRESS_URL:-https://cloud-nine-wallet-backend/.well-known/pay}
       ILP_CONNECTOR_ADDRESS: ${CLOUD_NINE_CONNECTOR_URL}
+      ENABLE_TELEMETRY: true
+      OPEN_TELEMETRY_COLLECTOR_URL: http://cloud-nine-otel-collector:4317
+      OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
+      TELEMETRY_SERVICE_NAME: CLOUD-NINE
     depends_on:
       - shared-database
       - shared-redis
@@ -117,6 +121,20 @@ services:
       ENABLE_INSECURE_MESSAGE_COOKIE: true
     depends_on:
       - cloud-nine-backend
+  cloud-nine-otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml", ""]
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID-''}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY-''}
+    volumes:
+      - ../collector/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    networks:
+      - rafiki
+    expose:
+      - 4317
+    ports:
+    - "13133:13133" # health_check extension 
 
 volumes:
   database-data: # named volumes can be managed easier using docker-compose

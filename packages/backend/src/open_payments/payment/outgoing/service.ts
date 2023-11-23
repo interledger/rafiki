@@ -391,6 +391,9 @@ async function fundPayment(
       return error
     }
     await payment.$query(trx).patch({ state: OutgoingPaymentState.Sending })
+
+    //Transactions total metric mighe need to be used here
+
     return await addSentAmount(deps, payment)
   })
 }

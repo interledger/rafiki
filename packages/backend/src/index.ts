@@ -48,6 +48,7 @@ import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/route
 import axios from 'axios'
 import { createIlpPaymentService } from './payment-method/ilp/service'
 import { createPaymentMethodHandlerService } from './payment-method/handler/service'
+import { TelemetryService, createTelemetryService } from './telemetry/meter'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -127,6 +128,19 @@ export function initIocContainer(
       replica_addresses: config.tigerbeetleReplicaAddresses
     })
   })
+
+  if (config.enableTelemetry) {
+    container.singleton('telemetry', async (deps) => {
+      const config = await deps.use('config')
+      return createTelemetryService({
+        logger: await deps.use('logger'),
+        serviceName: config.telemetryServiceName,
+        collectorUrl: config.openTelemetryCollectorUrl,
+        exportIntervalMillis: config.openTelemetryExportInterval
+      })
+    })
+  }
+
   container.singleton('openApi', async () => {
     const resourceServerSpec = await createOpenAPI(
       path.resolve(__dirname, './openapi/resource-server.yaml')
@@ -184,10 +198,16 @@ export function initIocContainer(
     const knex = await deps.use('knex')
     const config = await deps.use('config')
 
+    let telemetry: TelemetryService | undefined
+    if (config.enableTelemetry) {
+      telemetry = await deps.use('telemetry')
+    }
+
     if (config.useTigerbeetle) {
       const tigerbeetle = await deps.use('tigerbeetle')
 
       return createTigerbeetleAccountingService({
+        telemetry,
         logger,
         knex,
         tigerbeetle,
@@ -196,6 +216,7 @@ export function initIocContainer(
     }
 
     return createPsqlAccountingService({
+      telemetry,
       logger,
       knex,
       withdrawalThrottleDelay: config.withdrawalThrottleDelay

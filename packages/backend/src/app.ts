@@ -83,7 +83,7 @@ import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
 import { AxiosInstance } from 'axios'
 import { PaymentMethodHandlerService } from './payment-method/handler/service'
 import { IlpPaymentService } from './payment-method/ilp/service'
-
+import { TelemetryService } from './telemetry/meter'
 export interface AppContextData {
   logger: Logger
   container: AppContainer
@@ -204,6 +204,7 @@ const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
+  telemetry: Promise<TelemetryService>
   knex: Promise<Knex>
   axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
@@ -281,6 +282,17 @@ export class App {
       }
     }
   }
+
+  // let counter = 0
+  // const telemetry = await this.container.use('telemetry')
+  // setInterval(() => {
+  //   counter++
+  //   console.log(
+  //     `HERE ---------------------------####################---------------`
+  //   )
+  //   console.log(`counter: ${counter}`)
+  //   telemetry.getCounter('test')?.add(1)
+  // }, 10000)
 
   public async startAdminServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()

@@ -1,0 +1,40 @@
+extensions:
+  sigv4auth:
+    assume_role:
+      arn: 'arn:aws:iam::145795521759:role/PrometheusRemoteWrite'
+      sts_region: 'eu-west-2'
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+        cors:
+          allowed_origins:
+            - http://*
+            - https://*
+
+processors:
+  batch:
+
+exporters:
+  logging:
+    verbosity: 'normal'
+  prometheusremotewrite:
+    endpoint: 'https://aps-workspaces.eu-west-2.amazonaws.com/workspaces/ws-7c8fd050-cb3b-451f-9971-1e6099db2e8f/api/v1/remote_write'
+    auth:
+      authenticator: sigv4auth
+
+service:
+  telemetry:
+    logs:
+      level: 'debug'
+    metrics:
+      level: 'detailed'
+      address: 0.0.0.0:8888
+  extensions: [sigv4auth]
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, prometheusremotewrite]

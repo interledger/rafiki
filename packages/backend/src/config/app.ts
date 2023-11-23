@@ -32,6 +32,15 @@ dotenv.config({
 
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
+  enableTelemetry: envBool('ENABLE_TELEMETRY', true),
+  telemetryServiceName: envString('TELEMETRY_SERVICE_NAME', 'Rafiki'),
+  openTelemetryCollectorUrl: envString(
+    'OPEN_TELEMETRY_COLLECTOR_URL',
+    'http://otel-collector:4317'
+  ),
+  openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 60000),
+  // publicHost is for open payments URLs.
+  publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
   adminPort: envInt('ADMIN_PORT', 3001),
   openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3000'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
