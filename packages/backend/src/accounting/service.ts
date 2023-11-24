@@ -1,5 +1,5 @@
 import { TransactionOrKnex } from 'objection'
-import { TelemetryService } from '../telemetry/meter'
+import { Metrics, TelemetryService } from '../telemetry/meter'
 import { isTransferError, TransferError } from './errors'
 
 export enum LiquidityAccountType {
@@ -191,7 +191,10 @@ export async function createAccountToAccountTransfer(
           withdrawalThrottleDelay
         })
 
-        telemetry?.collectTransactionCountMetric(destinationAccount.asset.code)
+        telemetry?.getCounter(Metrics.TRANSACTIONS_TOTAL)?.add(1, {
+          source: telemetry.getServiceName() ?? 'Rafiki',
+          asset_code: destinationAccount.asset.code
+        })
       }
     },
     void: async (): Promise<void | TransferError> => {

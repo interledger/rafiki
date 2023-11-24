@@ -20,7 +20,7 @@ import { AssetOptions } from '../../../../asset/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
 import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
 import { RatesService } from '../../../../rates/service'
-import { TelemetryService } from '../../../../telemetry/meter'
+import { Metrics, TelemetryService } from '../../../../telemetry/meter'
 import { PeerService } from '../../peer/service'
 import { createTokenAuthMiddleware } from './middleware'
 import {
@@ -186,11 +186,20 @@ export class Rafiki<T = any> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
 
-    this.config.telemetry?.collectTransactionsAmountMetric({
-      amount: BigInt(prepare.amount),
-      asset: sourceAccount.asset,
-      unfulfillable
-    })
+    if (!unfulfillable && Number(prepare.amount)) {
+      const scalingFactor = sourceAccount.asset.scale
+        ? Math.pow(10, 4 - sourceAccount.asset.scale)
+        : undefined
+      const totalReceivedInAssetScale4 =
+        Number(prepare.amount) * Number(scalingFactor)
+
+      this.config.telemetry
+        ?.getCounter(Metrics.TRANSACTIONS_AMOUNT)
+        ?.add(totalReceivedInAssetScale4, {
+          asset_code: sourceAccount.asset.code,
+          source: this.config.telemetry?.getServiceName() ?? 'Rafiki'
+        })
+    }
 
     await this.routes(
       {
