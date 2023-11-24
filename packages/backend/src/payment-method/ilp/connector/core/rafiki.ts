@@ -19,6 +19,7 @@ import {
 } from '../../../../accounting/errors'
 import {
   LiquidityAccount,
+  LiquidityAccountAsset,
   LiquidityAccountType,
   Transaction
 } from '../../../../accounting/service'
@@ -26,6 +27,7 @@ import { AssetOptions } from '../../../../asset/service'
 import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
 import { PeerService } from '../../peer/service'
+import { TelemetryService } from '../../../../telemetry/meter'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -71,6 +73,7 @@ export interface AccountingService {
 export interface RafikiServices {
   //router: Router
   accounting: AccountingService
+  telemetry?: TelemetryService
   walletAddresses: WalletAddressService
   logger: Logger
   incomingPayments: IncomingPaymentService
@@ -111,6 +114,15 @@ export type ILPContext<T = any> = {
   revertTotalReceived?: () => Promise<number>
   state: T
 }
+export type IlpObservabilityParameters = {
+  asset: LiquidityAccountAsset
+  amount: bigint
+  unfulfillable: boolean
+}
+
+export type IlpObservabilityCallback = (
+  params: IlpObservabilityParameters
+) => void
 
 export class Rafiki<T = any> {
   //private _router?: Router
@@ -169,10 +181,17 @@ export class Rafiki<T = any> {
   async handleIlpData(
     sourceAccount: IncomingAccount,
     unfulfillable: boolean,
-    rawPrepare: Buffer
+    rawPrepare: Buffer,
+    observabilityCallback: IlpObservabilityCallback
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
+
+    observabilityCallback({
+      amount: BigInt(prepare.amount),
+      asset: sourceAccount.asset,
+      unfulfillable
+    })
     await this.routes(
       {
         request: { prepare, rawPrepare },

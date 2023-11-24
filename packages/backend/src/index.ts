@@ -1,54 +1,56 @@
-import path from 'path'
-import createLogger from 'pino'
-import { knex } from 'knex'
-import { Model } from 'objection'
 import { Ioc, IocContract } from '@adonisjs/fold'
 import { Redis } from 'ioredis'
+import { knex } from 'knex'
+import { Model } from 'objection'
+import path from 'path'
+import createLogger from 'pino'
 import { createClient } from 'tigerbeetle-node'
 import { createClient as createIntrospectionClient } from 'token-introspection'
 
-import { App, AppServices } from './app'
-import { Config } from './config/app'
-import { createRatesService } from './rates/service'
-import { createQuoteRoutes } from './open_payments/quote/routes'
-import { createQuoteService } from './open_payments/quote/service'
-import { createOutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
-import { createOutgoingPaymentService } from './open_payments/payment/outgoing/service'
-import {
-  createIlpPlugin,
-  IlpPlugin,
-  IlpPluginOptions
-} from './payment-method/ilp/ilp_plugin'
-import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
-import { createAssetService } from './asset/service'
-import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
+import { createOpenAPI } from '@interledger/openapi'
+import { StreamServer } from '@interledger/stream-receiver'
+import axios from 'axios'
 import { createAccountingService as createPsqlAccountingService } from './accounting/psql/service'
-import { createPeerService } from './payment-method/ilp/peer/service'
+import { createAccountingService as createTigerbeetleAccountingService } from './accounting/tigerbeetle/service'
+import { App, AppServices } from './app'
+import { createAssetService } from './asset/service'
+import { Config } from './config/app'
+import { createFeeService } from './fee/service'
 import { createAuthServerService } from './open_payments/authServer/service'
 import { createGrantService } from './open_payments/grant/service'
-import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
-import { createWalletAddressService } from './open_payments/wallet_address/service'
-import { createWalletAddressKeyRoutes } from './open_payments/wallet_address/key/routes'
-import { createWalletAddressRoutes } from './open_payments/wallet_address/routes'
+import { createCombinedPaymentService } from './open_payments/payment/combined/service'
 import { createIncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
 import { createIncomingPaymentService } from './open_payments/payment/incoming/service'
-import { StreamServer } from '@interledger/stream-receiver'
-import { createWebhookService } from './webhook/service'
-import { createConnectorService } from './payment-method/ilp/connector'
-import { createOpenAPI } from '@interledger/openapi'
-import { createAuthenticatedClient as createOpenPaymentsClient } from '@interledger/open-payments'
-import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
-import { createWalletAddressKeyService } from './open_payments/wallet_address/key/service'
-import { createReceiverService } from './open_payments/receiver/service'
 import { createRemoteIncomingPaymentService } from './open_payments/payment/incoming_remote/service'
-import { createCombinedPaymentService } from './open_payments/payment/combined/service'
-import { createFeeService } from './fee/service'
-import { createAutoPeeringService } from './payment-method/ilp/auto-peering/service'
-import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
-import axios from 'axios'
-import { createIlpPaymentService } from './payment-method/ilp/service'
+import { createOutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
+import { createOutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import { createQuoteRoutes } from './open_payments/quote/routes'
+import { createQuoteService } from './open_payments/quote/service'
+import { createReceiverService } from './open_payments/receiver/service'
+import { createWalletAddressKeyRoutes } from './open_payments/wallet_address/key/routes'
+import { createWalletAddressKeyService } from './open_payments/wallet_address/key/service'
+import { createWalletAddressRoutes } from './open_payments/wallet_address/routes'
+import { createWalletAddressService } from './open_payments/wallet_address/service'
 import { createPaymentMethodHandlerService } from './payment-method/handler/service'
+import { createAutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
+import { createAutoPeeringService } from './payment-method/ilp/auto-peering/service'
+import { createConnectorService } from './payment-method/ilp/connector'
+import {
+  IlpPlugin,
+  IlpPluginOptions,
+  createIlpPlugin
+} from './payment-method/ilp/ilp_plugin'
+import { createHttpTokenService } from './payment-method/ilp/peer-http-token/service'
+import { createPeerService } from './payment-method/ilp/peer/service'
+import { createIlpPaymentService } from './payment-method/ilp/service'
+import { createSPSPRoutes } from './payment-method/ilp/spsp/routes'
+import { createStreamCredentialsService } from './payment-method/ilp/stream-credentials/service'
+import { createRatesService } from './rates/service'
+import { collectTransactionsAmountMetric } from './telemetry/collectors'
 import { TelemetryService, createTelemetryService } from './telemetry/meter'
+import { createWebhookService } from './webhook/service'
+import { IlpObservabilityParameters } from './payment-method/ilp/connector/core'
 
 BigInt.prototype.toJSON = function () {
   return this.toString()
@@ -353,12 +355,22 @@ export function initIocContainer(
 
   container.singleton('makeIlpPlugin', async (deps) => {
     const connectorApp = await deps.use('connectorApp')
+    const telemetry = await deps.use('telemetry')
+    const observabilityCallback = (params: IlpObservabilityParameters) => {
+      collectTransactionsAmountMetric(telemetry, params)
+    }
+
     return ({
       sourceAccount,
       unfulfillable = false
     }: IlpPluginOptions): IlpPlugin => {
       return createIlpPlugin((data: Buffer): Promise<Buffer> => {
-        return connectorApp.handleIlpData(sourceAccount, unfulfillable, data)
+        return connectorApp.handleIlpData(
+          sourceAccount,
+          unfulfillable,
+          data,
+          observabilityCallback
+        )
       })
     }
   })
