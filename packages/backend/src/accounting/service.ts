@@ -1,5 +1,4 @@
 import { TransactionOrKnex } from 'objection'
-import { collectTransactionCountMetric } from '../telemetry/collectors'
 import { TelemetryService } from '../telemetry/meter'
 import { isTransferError, TransferError } from './errors'
 
@@ -192,11 +191,7 @@ export async function createAccountToAccountTransfer(
           withdrawalThrottleDelay
         })
 
-        telemetry &&
-          collectTransactionCountMetric(
-            telemetry,
-            destinationAccount.asset.code
-          )
+        telemetry?.collectTransactionCountMetric(destinationAccount.asset.code)
       }
     },
     void: async (): Promise<void | TransferError> => {

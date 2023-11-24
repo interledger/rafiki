@@ -15,10 +15,13 @@ import {
 } from '@opentelemetry/sdk-metrics'
 
 import { BaseService } from '../shared/baseService'
+import { IlpObservabilityParameters } from '../payment-method/ilp/connector/core'
 
 export interface TelemetryService {
   getCounter(name: string): Counter | undefined
   getServiceName(): string | undefined
+  collectTransactionsAmountMetric(params: IlpObservabilityParameters): void
+  collectTransactionCountMetric(assetCode?: string): void
 }
 
 interface TelemetryServiceDependencies extends BaseService {
@@ -92,5 +95,60 @@ class TelemetryServiceImpl implements TelemetryService {
 
   public getServiceName(): string | undefined {
     return this.serviceName
+  }
+
+  public collectTransactionsAmountMetric(
+    params: IlpObservabilityParameters
+  ): void {
+    const { asset, amount, unfulfillable } = params
+
+    if (unfulfillable || !amount) {
+      //can collect metrics such as count of unfulfillable packets here
+      return
+    }
+
+    console.log(
+      `######################## [TELEMETRY]Gathering Transaction Amount Metric............`
+    )
+
+    const scalingFactor = asset.scale
+      ? Math.pow(10, 4 - asset.scale)
+      : undefined
+    console.log(
+      `scaling factor is: Math.pow(10 , 4 - ${asset.scale}) === ${scalingFactor}`
+    )
+
+    const totalReceivedInAssetScale4 = Number(amount) * Number(scalingFactor)
+
+    console.log(
+      `totalReceivedInAssetScale4 (${totalReceivedInAssetScale4}) =   totalReceived(${amount}) * scalingFactor(${scalingFactor})`
+    )
+
+    this?.getCounter(Metrics.TRANSACTIONS_AMOUNT)?.add(
+      totalReceivedInAssetScale4,
+      {
+        asset_code: asset.code,
+        source: this.getServiceName() ?? 'Rafiki'
+      }
+    )
+
+    console.log(
+      '######################## [TELEMETRY] Transaction Amount  Metric Collected ####################'
+    )
+  }
+
+  public collectTransactionCountMetric(assetCode?: string): void {
+    console.log(
+      `######################## [TELEMETRY]Gathering Transaction Count Metric..........`
+    )
+
+    this.getCounter(Metrics.TRANSACTIONS_TOTAL)?.add(1, {
+      source: this.getServiceName() ?? 'Rafiki',
+      asset_code: assetCode
+    })
+
+    console.log(
+      '######################## [TELEMETRY] Transaction Count  Metric Collected ####################'
+    )
   }
 }

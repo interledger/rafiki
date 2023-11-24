@@ -1,37 +1,39 @@
-import { Redis } from 'ioredis'
 import { StreamServer } from '@interledger/stream-receiver'
+import { Redis } from 'ioredis'
 
+import { AccountingService } from '../../../accounting/service'
+import { IncomingPaymentService } from '../../../open_payments/payment/incoming/service'
+import { WalletAddressService } from '../../../open_payments/wallet_address/service'
+import { RatesService } from '../../../rates/service'
+import { BaseService } from '../../../shared/baseService'
+import { TelemetryService } from '../../../telemetry/meter'
+import { PeerService } from '../peer/service'
 import {
-  createApp,
-  Rafiki,
   ILPContext,
   ILPMiddleware,
+  Rafiki,
+  createAccountMiddleware,
+  createApp,
   createBalanceMiddleware,
-  createIncomingErrorHandlerMiddleware,
-  createIldcpMiddleware,
-  createStreamController,
-  createOutgoingExpireMiddleware,
   createClientController,
+  createIldcpMiddleware,
+  createIncomingErrorHandlerMiddleware,
   createIncomingMaxPacketAmountMiddleware,
   createIncomingRateLimitMiddleware,
   createIncomingThroughputMiddleware,
+  createOutgoingExpireMiddleware,
   createOutgoingReduceExpiryMiddleware,
   createOutgoingThroughputMiddleware,
   createOutgoingValidateFulfillmentMiddleware,
-  createAccountMiddleware,
-  createStreamAddressMiddleware
+  createStreamAddressMiddleware,
+  createStreamController
 } from './core'
-import { AccountingService } from '../../../accounting/service'
-import { WalletAddressService } from '../../../open_payments/wallet_address/service'
-import { IncomingPaymentService } from '../../../open_payments/payment/incoming/service'
-import { PeerService } from '../peer/service'
-import { RatesService } from '../../../rates/service'
-import { BaseService } from '../../../shared/baseService'
 
 interface ServiceDependencies extends BaseService {
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
+  telemetry: TelemetryService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
   peerService: PeerService
@@ -44,6 +46,7 @@ export async function createConnectorService({
   redis,
   ratesService,
   accountingService,
+  telemetry,
   walletAddressService,
   incomingPaymentService,
   peerService,
@@ -57,6 +60,7 @@ export async function createConnectorService({
         service: 'ConnectorService'
       }),
       accounting: accountingService,
+      telemetry,
       walletAddresses: walletAddressService,
       incomingPayments: incomingPaymentService,
       peers: peerService,

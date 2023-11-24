@@ -1,18 +1,11 @@
 import * as http from 'http'
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import Koa, { Middleware } from 'koa'
-import { Redis } from 'ioredis'
-import { Logger } from 'pino'
-import { Errors } from 'ilp-packet'
 import { StreamServer } from '@interledger/stream-receiver'
+import { Errors } from 'ilp-packet'
+import { Redis } from 'ioredis'
+import Koa, { Middleware } from 'koa'
+import { Logger } from 'pino'
 //import { Router } from './services/router'
-import {
-  createIlpPacketMiddleware,
-  ZeroCopyIlpPrepare,
-  IlpResponse
-} from './middleware/ilp-packet'
-import { createTokenAuthMiddleware } from './middleware'
-import { RatesService } from '../../../../rates/service'
 import {
   CreateAccountError,
   TransferError
@@ -24,10 +17,17 @@ import {
   Transaction
 } from '../../../../accounting/service'
 import { AssetOptions } from '../../../../asset/service'
-import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
-import { PeerService } from '../../peer/service'
+import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
+import { RatesService } from '../../../../rates/service'
 import { TelemetryService } from '../../../../telemetry/meter'
+import { PeerService } from '../../peer/service'
+import { createTokenAuthMiddleware } from './middleware'
+import {
+  IlpResponse,
+  ZeroCopyIlpPrepare,
+  createIlpPacketMiddleware
+} from './middleware/ilp-packet'
 
 // Model classes that represent an Interledger sender, receiver, or
 // connector SHOULD implement this ConnectorAccount interface.
@@ -181,17 +181,17 @@ export class Rafiki<T = any> {
   async handleIlpData(
     sourceAccount: IncomingAccount,
     unfulfillable: boolean,
-    rawPrepare: Buffer,
-    observabilityCallback: IlpObservabilityCallback
+    rawPrepare: Buffer
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
 
-    observabilityCallback({
+    this.config.telemetry?.collectTransactionsAmountMetric({
       amount: BigInt(prepare.amount),
       asset: sourceAccount.asset,
       unfulfillable
     })
+
     await this.routes(
       {
         request: { prepare, rawPrepare },
