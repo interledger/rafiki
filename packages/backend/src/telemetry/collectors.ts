@@ -8,8 +8,7 @@ export function collectTransactionsAmountMetric(
   const { asset, amount, unfulfillable } = params
 
   if (unfulfillable) {
-    console.log('unfulfillable')
-    //can collect metrics on unfulfillable packets here
+    //can collect metrics such as count of unfulfillable packets here
     return
   }
 
