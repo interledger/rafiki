@@ -7,21 +7,23 @@ assets:
     scale: 2
     liquidity: 1000000
     liquidityThreshold: 100000
-  - code: EUR
-    scale: 2
-    liquidity: 1000000
-    liquidityThreshold: 100000
-  - code: MXN
-    scale: 2
-    liquidity: 1000000
-    liquidityThreshold: 100000
-  - code: JPY
-    scale: 0
-    liquidity: 10000
-    liquidityThreshold: 1000
+  # - code: EUR
+  #   scale: 2
+  #   liquidity: 1000000
+  #   liquidityThreshold: 100000
+  # - code: MXN
+  #   scale: 2
+  #   liquidity: 1000000
+  #   liquidityThreshold: 100000
+  # - code: JPY
+  #   scale: 0
+  #   liquidity: 10000
+  #   liquidityThreshold: 1000
 peers:
   - initialLiquidity: '100000000'
     name: happy-life-bank
+    incomingToken: '6675d4d7-42dc-4884-b3fd-77fb6560b880'
+    outgoingToken: '6675d4d7-42dc-4884-b3fd-77fb6560b880'
     peerUrl: http://happy-life-bank-backend:3002
     peerIlpAddress: test.happy-life-bank
     liquidityThreshold: 10000

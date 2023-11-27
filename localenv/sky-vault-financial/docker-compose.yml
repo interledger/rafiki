@@ -1,4 +1,4 @@
-name: hl
+name: sv
 services:
   sky-vault-mock-ase:
     hostname: sky-vault-financial

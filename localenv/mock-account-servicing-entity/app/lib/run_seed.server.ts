@@ -49,7 +49,9 @@ export async function setupFromSeed(config: Config): Promise<void> {
           asset.id,
           asset.code,
           peer.name,
-          peer.liquidityThreshold
+          peer.liquidityThreshold,
+          peer.incomingToken,
+          peer.outgoingToken
         ).then((response) => response.peer)
         if (!peerResponse) {
           throw new Error('peer response not defined')
