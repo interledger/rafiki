@@ -6,7 +6,6 @@ import { Redis } from 'ioredis'
 import Koa, { Middleware } from 'koa'
 import { Logger } from 'pino'
 //import { Router } from './services/router'
-import { ValueType } from '@opentelemetry/api'
 import {
   CreateAccountError,
   TransferError
@@ -186,25 +185,6 @@ export class Rafiki<T = any> {
   ): Promise<Buffer> {
     const prepare = new ZeroCopyIlpPrepare(rawPrepare)
     const response = new IlpResponse()
-
-    if (!unfulfillable && Number(prepare.amount)) {
-      const scalingFactor = sourceAccount.asset.scale
-        ? Math.pow(10, 4 - sourceAccount.asset.scale)
-        : undefined
-      const totalReceivedInAssetScale4 =
-        Number(prepare.amount) * Number(scalingFactor)
-
-      this.config.telemetry
-        ?.getOrCreate('transactions_amount', {
-          description:
-            'Amount sent through the network. Asset Code & Asset Scale are sent as attributes',
-          valueType: ValueType.DOUBLE
-        })
-        .add(totalReceivedInAssetScale4, {
-          asset_code: sourceAccount.asset.code,
-          source: this.config.telemetry?.getServiceName()
-        })
-    }
 
     await this.routes(
       {

@@ -28,6 +28,7 @@ import {
   createStreamAddressMiddleware,
   createStreamController
 } from './core'
+import { createTelemetryMiddleware } from './core/middleware/telemetry'
 
 interface ServiceDependencies extends BaseService {
   redis: Redis
@@ -80,6 +81,8 @@ export async function createConnectorService({
 
       // Local pay
       createBalanceMiddleware(),
+
+      createTelemetryMiddleware(),
       // Outgoing Rules
       createStreamController(),
       createOutgoingThroughputMiddleware(),
