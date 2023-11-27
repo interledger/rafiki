@@ -3,7 +3,8 @@ import {
   OutgoingPayment,
   OutgoingPaymentState,
   PaymentEvent,
-  PaymentEventType
+  PaymentEventType,
+  isPaymentDepositEvenType
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
@@ -162,7 +163,7 @@ export async function sendWebhookEvent(
     data: payment.toData({ amountSent, balance })
   }
 
-  if (type === PaymentEventType.PaymentCreated) {
+  if (isPaymentDepositEvenType(type)) {
     eventPayload.depositAccountId = payment.id
   } else {
     eventPayload.withdrawal = balance

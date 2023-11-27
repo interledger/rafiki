@@ -229,6 +229,9 @@ export const isPaymentEventType = (o: any): o is PaymentEventType =>
 export const isPaymentEvent = (o: any): o is PaymentEvent =>
   o instanceof WebhookEvent && isPaymentEventType(o.type)
 
+export const isPaymentDepositEvenType = (o: any): o is PaymentDepositType =>
+  Object.values(PaymentDepositType).includes(o)
+
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
