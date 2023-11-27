@@ -40,6 +40,7 @@ services:
       - rafiki
     environment:
       NODE_ENV: ${NODE_ENV:-development}
+      INSTANCE_NAME: CLOUD-NINE
       TRUST_PROXY: ${TRUST_PROXY}
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
@@ -62,7 +63,6 @@ services:
       ENABLE_TELEMETRY: true
       OPEN_TELEMETRY_COLLECTOR_URL: http://cloud-nine-otel-collector:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
-      TELEMETRY_SERVICE_NAME: CLOUD-NINE
     depends_on:
       - shared-database
       - shared-redis

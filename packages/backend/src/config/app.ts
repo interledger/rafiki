@@ -33,7 +33,6 @@ dotenv.config({
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   enableTelemetry: envBool('ENABLE_TELEMETRY', true),
-  telemetryServiceName: envString('TELEMETRY_SERVICE_NAME', 'Rafiki'),
   openTelemetryCollectorUrl: envString(
     'OPEN_TELEMETRY_COLLECTOR_URL',
     'http://otel-collector:4317'

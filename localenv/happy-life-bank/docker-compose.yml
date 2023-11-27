@@ -34,6 +34,7 @@ services:
       - rafiki
     environment:
       NODE_ENV: development
+      INSTANCE_NAME: HAPPY-LIFE
       LOG_LEVEL: debug
       ADMIN_PORT: 3001
       CONNECTOR_PORT: 3002
@@ -54,11 +55,9 @@ services:
       ENABLE_TELEMETRY: true
       OPEN_TELEMETRY_COLLECTOR_URL: http://happy-life-otel-collector:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
-      TELEMETRY_SERVICE_NAME: HAPPY-LIFE
 
     depends_on:
       - cloud-nine-backend
-      # - happy-life-otel-collector
   happy-life-auth:
     hostname: happy-life-bank-auth
     image: rafiki-auth
