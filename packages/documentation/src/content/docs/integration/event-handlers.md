@@ -33,7 +33,7 @@ participant ASE as Account Servicing Entity
 participant R as Rafiki
 
 R->>ASE: webhook event: incoming payment completed,<br>receivedAmount: $10
-ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
 ASE->>ASE: credit receiver's account with $10
 ```
 
@@ -51,7 +51,7 @@ participant ASE as Account Servicing Entity
 participant R as Rafiki
 
 R->>ASE: webhook event: incoming payment expired,<br>receivedAmount: $2.55
-ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
 ASE->>ASE: credit receiver's account with $2.55
 ```
 
@@ -70,7 +70,7 @@ participant R as Rafiki
 
 R->>ASE: webhook event: outgoing payment created,<br>debitAmount: $12
 ASE->>ASE: put hold of $12 on sender's account
-ASE->>R: admin API call: DepositEventLiquidity
+ASE->>R: admin API call: DepositOutgoingPaymentLiquidity
 ```
 
 ## `outgoing_payment.completed`
@@ -87,7 +87,7 @@ participant ASE as Account Servicing Entity
 participant R as Rafiki
 
 R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
-ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
 ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
 ```
 
@@ -105,7 +105,7 @@ participant ASE as Account Servicing Entity
 participant R as Rafiki
 
 R->>ASE: webhook event: outgoing failed,<br>debitAmount: $12, sentAmount:$8
-ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
 ASE->>ASE: remove the hold and deduct $8 from the sender's account
 ```
 
@@ -123,7 +123,7 @@ participant ASE as Account Servicing Entity
 participant R as Rafiki
 
 R->>ASE: webhook event: wallet address web monetization,<br>receivedAmount: $0.33
-ASE->>R: admin API call: WithdrawEventLiquidity
+ASE->>R: admin API call: CreateWalletAddressWithdrawal
 ASE->>ASE: credit receiver's account with $0.33
 ```
 
