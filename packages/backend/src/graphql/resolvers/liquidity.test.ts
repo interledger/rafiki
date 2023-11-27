@@ -2380,5 +2380,151 @@ describe('Liquidity Resolvers', (): void => {
         })
       })
     })
+
+    describe('depositOutgoingPaymentLiquidity', (): void => {
+      describe.each(Object.values(DepositEventType).map((type) => [type]))(
+        '%s',
+        (type): void => {
+          let eventId: string
+
+          beforeEach(async (): Promise<void> => {
+            eventId = uuid()
+            await PaymentEvent.query(knex).insertAndFetch({
+              id: eventId,
+              type,
+              data: outgoingPayment.toData({
+                amountSent: BigInt(0),
+                balance: BigInt(0)
+              }),
+              depositAccountId: outgoingPayment.id
+            })
+          })
+
+          test('Can deposit account liquidity', async (): Promise<void> => {
+            const depositSpy = jest.spyOn(accountingService, 'createDeposit')
+            const response = await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation DepositLiquidity(
+                    $input: DepositOutgoingPaymentLiquidityInput!
+                  ) {
+                    depositOutgoingPaymentLiquidity(input: $input) {
+                      code
+                      success
+                      message
+                      error
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    outgoingPaymentId: outgoingPayment.id,
+                    idempotencyKey: uuid()
+                  }
+                }
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.depositOutgoingPaymentLiquidity
+                } else {
+                  throw new Error('Data was empty')
+                }
+              })
+
+            expect(response.success).toBe(true)
+            expect(response.code).toEqual('200')
+            expect(response.error).toBeNull()
+            assert.ok(outgoingPayment.debitAmount)
+            await expect(depositSpy).toHaveBeenCalledWith({
+              id: eventId,
+              account: expect.any(OutgoingPayment),
+              amount: outgoingPayment.debitAmount.value
+            })
+            await expect(
+              accountingService.getBalance(outgoingPayment.id)
+            ).resolves.toEqual(outgoingPayment.debitAmount.value)
+          })
+
+          test("Can't deposit for non-existent outgoing payment id", async (): Promise<void> => {
+            const response = await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation DepositLiquidity(
+                    $input: DepositOutgoingPaymentLiquidityInput!
+                  ) {
+                    depositOutgoingPaymentLiquidity(input: $input) {
+                      code
+                      success
+                      message
+                      error
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    outgoingPaymentId: uuid(),
+                    idempotencyKey: uuid()
+                  }
+                }
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.depositOutgoingPaymentLiquidity
+                } else {
+                  throw new Error('Data was empty')
+                }
+              })
+
+            expect(response.success).toBe(false)
+            expect(response.code).toEqual('400')
+            expect(response.message).toEqual('Invalid id')
+            expect(response.error).toEqual(LiquidityError.InvalidId)
+          })
+
+          test('Returns an error for existing transfer', async (): Promise<void> => {
+            await expect(
+              accountingService.createDeposit({
+                id: eventId,
+                account: incomingPayment,
+                amount: BigInt(100)
+              })
+            ).resolves.toBeUndefined()
+            const response = await appContainer.apolloClient
+              .mutate({
+                mutation: gql`
+                  mutation DepositLiquidity(
+                    $input: DepositOutgoingPaymentLiquidityInput!
+                  ) {
+                    depositOutgoingPaymentLiquidity(input: $input) {
+                      code
+                      success
+                      message
+                      error
+                    }
+                  }
+                `,
+                variables: {
+                  input: {
+                    outgoingPaymentId: outgoingPayment.id,
+                    idempotencyKey: uuid()
+                  }
+                }
+              })
+              .then((query): LiquidityMutationResponse => {
+                if (query.data) {
+                  return query.data.depositOutgoingPaymentLiquidity
+                } else {
+                  throw new Error('Data was empty')
+                }
+              })
+
+            expect(response.success).toBe(false)
+            expect(response.code).toEqual('409')
+            expect(response.message).toEqual('Transfer exists')
+            expect(response.error).toEqual(LiquidityError.TransferExists)
+          })
+        }
+      )
+    })
   })
 })
