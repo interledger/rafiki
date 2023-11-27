@@ -93,8 +93,10 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
   await apolloClient
     .mutate({
       mutation: gql`
-        mutation DepositEventLiquidity($input: DepositEventLiquidityInput!) {
-          depositEventLiquidity(input: $input) {
+        mutation DepositOutgoingPaymentLiquidity(
+          $input: DepositOutgoingPaymentLiquidityInput!
+        ) {
+          depositOutgoingPaymentLiquidity(input: $input) {
             code
             success
             message
@@ -104,14 +106,14 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
       `,
       variables: {
         input: {
-          eventId: wh.id,
+          outgoingPaymentId: payment.id,
           idempotencyKey: uuid()
         }
       }
     })
     .then((query): LiquidityMutationResponse => {
       if (query.data) {
-        return query.data.depositEventLiquidity
+        return query.data.depositOutgoingPaymentLiquidity
       } else {
         throw new Error('Data was empty')
       }
