@@ -6,6 +6,7 @@ import { Redis } from 'ioredis'
 import Koa, { Middleware } from 'koa'
 import { Logger } from 'pino'
 //import { Router } from './services/router'
+import { ValueType } from '@opentelemetry/api'
 import {
   CreateAccountError,
   TransferError
@@ -20,7 +21,7 @@ import { AssetOptions } from '../../../../asset/service'
 import { IncomingPaymentService } from '../../../../open_payments/payment/incoming/service'
 import { WalletAddressService } from '../../../../open_payments/wallet_address/service'
 import { RatesService } from '../../../../rates/service'
-import { Metrics, TelemetryService } from '../../../../telemetry/meter'
+import { TelemetryService } from '../../../../telemetry/meter'
 import { PeerService } from '../../peer/service'
 import { createTokenAuthMiddleware } from './middleware'
 import {
@@ -194,10 +195,14 @@ export class Rafiki<T = any> {
         Number(prepare.amount) * Number(scalingFactor)
 
       this.config.telemetry
-        ?.getCounter(Metrics.TRANSACTIONS_AMOUNT)
-        ?.add(totalReceivedInAssetScale4, {
+        ?.getOrCreate('transactions_amount', {
+          description:
+            'Amount sent through the network. Asset Code & Asset Scale are sent as attributes',
+          valueType: ValueType.DOUBLE
+        })
+        .add(totalReceivedInAssetScale4, {
           asset_code: sourceAccount.asset.code,
-          source: this.config.telemetry?.getServiceName() ?? 'Rafiki'
+          source: this.config.telemetry?.getServiceName()
         })
     }
 

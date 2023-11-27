@@ -283,17 +283,6 @@ export class App {
     }
   }
 
-  // let counter = 0
-  // const telemetry = await this.container.use('telemetry')
-  // setInterval(() => {
-  //   counter++
-  //   console.log(
-  //     `HERE ---------------------------####################---------------`
-  //   )
-  //   console.log(`counter: ${counter}`)
-  //   telemetry.getCounter('test')?.add(1)
-  // }, 10000)
-
   public async startAdminServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
     const httpServer = http.createServer(koa.callback())

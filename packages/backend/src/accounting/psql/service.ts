@@ -6,14 +6,14 @@ import { BaseService } from '../../shared/baseService'
 import { isTransferError, TransferError } from '../errors'
 import {
   AccountingService,
+  createAccountToAccountTransfer,
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
   Transaction,
   TransferOptions,
   TransferToCreate,
-  Withdrawal,
-  createAccountToAccountTransfer
+  Withdrawal
 } from '../service'
 import { getAccountBalances } from './balance'
 import {
@@ -33,10 +33,8 @@ import {
   voidTransfers
 } from './ledger-transfer'
 import { LedgerTransfer, LedgerTransferType } from './ledger-transfer/model'
-import { TelemetryService } from '../../telemetry/meter'
 
 export interface ServiceDependencies extends BaseService {
-  telemetry?: TelemetryService
   knex: TransactionOrKnex
   withdrawalThrottleDelay?: number
 }
@@ -203,7 +201,6 @@ export async function createTransfer(
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
   return createAccountToAccountTransfer({
-    telemetry: deps.telemetry,
     transferArgs: args,
     withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
     voidTransfers: async (transferRefs) => voidTransfers(deps, transferRefs),

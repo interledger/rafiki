@@ -3,7 +3,6 @@ import {
   DiagConsoleLogger,
   DiagLogLevel,
   MetricOptions,
-  ValueType,
   diag,
   metrics
 } from '@opentelemetry/api'
@@ -17,19 +16,14 @@ import {
 import { BaseService } from '../shared/baseService'
 
 export interface TelemetryService {
-  getCounter(name: string): Counter | undefined
+  getOrCreate(name: string, options?: MetricOptions): Counter
   getServiceName(): string | undefined
 }
 
 interface TelemetryServiceDependencies extends BaseService {
-  serviceName?: string
+  serviceName: string
   collectorUrl?: string
   exportIntervalMillis?: number
-}
-
-export enum Metrics {
-  TRANSACTIONS_TOTAL = 'transactions_total',
-  TRANSACTIONS_AMOUNT = 'transactions_amount'
 }
 
 export function createTelemetryService(
@@ -39,7 +33,7 @@ export function createTelemetryService(
 }
 
 class TelemetryServiceImpl implements TelemetryService {
-  private serviceName: string | undefined
+  private serviceName: string
 
   private counters = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
@@ -65,29 +59,23 @@ class TelemetryServiceImpl implements TelemetryService {
     meterProvider.addMetricReader(metricReader)
 
     metrics.setGlobalMeterProvider(meterProvider)
-
-    //* init counters
-    this.createCounter(Metrics.TRANSACTIONS_TOTAL, {
-      description: 'Count of funded transactions'
-    })
-
-    this.createCounter(Metrics.TRANSACTIONS_AMOUNT, {
-      description:
-        'Amount sent through the network. Asset Code & Asset Scale are sent as attributes',
-      valueType: ValueType.DOUBLE
-    })
   }
 
   private createCounter(
     name: string,
     options: MetricOptions | undefined
-  ): void {
+  ): Counter {
     const counter = metrics.getMeter('Rafiki').createCounter(name, options)
     this.counters.set(name, counter)
+    return counter
   }
 
-  public getCounter(name: string): Counter | undefined {
-    return this.counters.get(name)
+  public getOrCreate(name: string, options?: MetricOptions): Counter {
+    const existing = this.counters.get(name)
+    if (existing) {
+      return existing
+    }
+    return this.createCounter(name, options)
   }
 
   public getServiceName(): string | undefined {

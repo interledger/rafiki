@@ -33,7 +33,7 @@ interface ServiceDependencies extends BaseService {
   redis: Redis
   ratesService: RatesService
   accountingService: AccountingService
-  telemetry: TelemetryService
+  telemetry?: TelemetryService
   walletAddressService: WalletAddressService
   incomingPaymentService: IncomingPaymentService
   peerService: PeerService

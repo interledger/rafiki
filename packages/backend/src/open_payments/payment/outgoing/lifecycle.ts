@@ -81,6 +81,15 @@ export async function handleSending(
     finalReceiveAmount: maxReceiveAmount
   })
 
+  deps.telemetry
+    ?.getOrCreate('transactions_total', {
+      description: 'Count of funded transactions'
+    })
+    .add(1, {
+      source: deps.telemetry?.getServiceName(),
+      asset_code: payment.sentAmount.assetCode
+    })
+
   await handleCompleted(deps, payment)
 }
 

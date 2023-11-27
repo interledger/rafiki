@@ -1,16 +1,8 @@
 import { Client } from 'tigerbeetle-node'
 import { v4 as uuid } from 'uuid'
 
-import { calculateBalance, createAccounts, getAccounts } from './accounts'
-import {
-  areAllAccountExistsErrors,
-  TigerbeetleCreateAccountError,
-  TigerbeetleUnknownAccountError
-} from './errors'
-import { NewTransferOptions, createTransfers } from './transfers'
 import { BaseService } from '../../shared/baseService'
 import { validateId } from '../../shared/utils'
-import { toTigerbeetleId } from './utils'
 import {
   AccountAlreadyExistsError,
   BalanceTransferError,
@@ -18,15 +10,22 @@ import {
 } from '../errors'
 import {
   AccountingService,
-  createAccountToAccountTransfer,
   Deposit,
   LiquidityAccount,
   LiquidityAccountType,
   Transaction,
   TransferOptions,
-  Withdrawal
+  Withdrawal,
+  createAccountToAccountTransfer
 } from '../service'
-import { TelemetryService } from '../../telemetry/meter'
+import { calculateBalance, createAccounts, getAccounts } from './accounts'
+import {
+  TigerbeetleCreateAccountError,
+  TigerbeetleUnknownAccountError,
+  areAllAccountExistsErrors
+} from './errors'
+import { NewTransferOptions, createTransfers } from './transfers'
+import { toTigerbeetleId } from './utils'
 
 export enum TigerbeetleAccountCode {
   LIQUIDITY_WEB_MONETIZATION = 1,
@@ -49,7 +48,6 @@ export const convertToTigerbeetleAccountCode: {
 }
 
 export interface ServiceDependencies extends BaseService {
-  telemetry?: TelemetryService
   tigerbeetle: Client
   withdrawalThrottleDelay?: number
 }
@@ -218,7 +216,6 @@ export async function createTransfer(
   args: TransferOptions
 ): Promise<Transaction | TransferError> {
   return createAccountToAccountTransfer({
-    telemetry: deps.telemetry,
     transferArgs: args,
     withdrawalThrottleDelay: deps.withdrawalThrottleDelay,
     voidTransfers: async (transferIds) => {

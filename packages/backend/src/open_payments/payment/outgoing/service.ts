@@ -35,6 +35,7 @@ import { Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
 import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
+import { TelemetryService } from '../../../telemetry/meter'
 
 export interface OutgoingPaymentService
   extends WalletAddressSubresourceService<OutgoingPayment> {
@@ -54,6 +55,7 @@ export interface ServiceDependencies extends BaseService {
   peerService: PeerService
   paymentMethodHandlerService: PaymentMethodHandlerService
   walletAddressService: WalletAddressService
+  telemetry?: TelemetryService
 }
 
 export async function createOutgoingPaymentService(
