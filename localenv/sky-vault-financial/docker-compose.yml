@@ -1,0 +1,93 @@
+name: hl
+services:
+  sky-vault-mock-ase:
+    hostname: sky-vault-financial
+    image: rafiki-mock-ase
+    pull_policy: never
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '3032:80'
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      PORT: 80
+      SEED_FILE_LOCATION: /workspace/seed.yml
+      KEY_FILE: /workspace/private-key.pem
+      PUBLIC_HOST: https://sky-vault-financial-backend
+    volumes:
+      - ../sky-vault-financial/seed.yml:/workspace/seed.yml
+      - ../sky-vault-financial/private-key.pem:/workspace/private-key.pem
+    depends_on:
+      - cloud-nine-mock-ase
+      - sky-vault-backend
+  sky-vault-backend:
+    hostname: sky-vault-financial-backend
+    image: rafiki-backend
+    pull_policy: never
+    restart: always
+    privileged: true
+    ports:
+      - "6000:80"
+      - "6001:3001"
+    networks:
+      - rafiki
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+      ADMIN_PORT: 3001
+      CONNECTOR_PORT: 3002
+      OPEN_PAYMENTS_PORT: 80
+      DATABASE_URL: postgresql://sky_vault_financial_backend:sky_vault_financial_backend@shared-database/sky_vault_financial_backend
+      USE_TIGERBEETLE: ${USE_TIGERBEETLE-false}
+      TIGERBEETLE_CLUSTER_ID: ${TIGERBEETLE_CLUSTER_ID-0}
+      TIGERBEETLE_REPLICA_ADDRESSES: ${TIGERBEETLE_REPLICA_ADDRESSES-''}
+      AUTH_SERVER_GRANT_URL: http://sky-vault-financial-auth:3006
+      AUTH_SERVER_INTROSPECTION_URL: http://sky-vault-financial-auth:3007
+      ILP_ADDRESS: test.sky-vault-financial
+      STREAM_SECRET: BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=
+      PUBLIC_HOST: http://sky-vault-financial-backend
+      WEBHOOK_URL: http://sky-vault-financial/webhooks
+      OPEN_PAYMENTS_URL: http://sky-vault-financial-backend
+      EXCHANGE_RATES_URL: http://sky-vault-financial/rates
+      REDIS_URL: redis://shared-redis:6379/1
+      WALLET_ADDRESS_URL: https://sky-vault-financial-backend/.well-known/pay
+    depends_on:
+      - cloud-nine-backend
+  sky-vault-auth:
+    hostname: sky-vault-financial-auth
+    image: rafiki-auth
+    pull_policy: never
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '6003:3003'
+      - '6006:3006'
+    environment:
+      NODE_ENV: development
+      AUTH_DATABASE_URL: postgresql://sky_vault_financial_auth:sky_vault_financial_auth@shared-database/sky_vault_financial_auth
+      AUTH_SERVER_DOMAIN: http://localhost:6006
+    depends_on:
+      - cloud-nine-auth
+  sky-vault-admin:
+    hostname: sky-vault-financial-admin
+    image: rafiki-frontend
+    pull_policy: never
+    restart: always
+    networks:
+      - rafiki
+    ports:
+      - '6010:6010'
+    environment:
+      PORT: 6010
+      GRAPHQL_URL: http://sky-vault-financial-backend:3001/graphql
+      OPEN_PAYMENTS_URL: https://sky-vault-financial-backend/
+    depends_on:
+      - cloud-nine-admin
+      - sky-vault-backend
+
+networks:
+  rafiki:
+    external: true

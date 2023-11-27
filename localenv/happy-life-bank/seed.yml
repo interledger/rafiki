@@ -21,8 +21,14 @@ assets:
     liquidityThreshold: 1000
 peers:
   - initialLiquidity: '1000000000000'
+    name: cloud-nine
     peerUrl: http://cloud-nine-wallet-backend:3002
     peerIlpAddress: test.cloud-nine-wallet
+    liquidityThreshold: 100000
+  - initialLiquidity: '1000000000000'
+    name: sky-vault-financial
+    peerUrl: http://sky-vault-financial-backend:3002
+    peerIlpAddress: test.sky-vault-financial
     liquidityThreshold: 100000
 accounts:
   - name: 'Philip Fry'

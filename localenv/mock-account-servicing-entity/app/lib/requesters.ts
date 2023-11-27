@@ -96,8 +96,11 @@ export async function createPeer(
     input: {
       staticIlpAddress,
       http: {
-        incoming: { authTokens: [`test-${assetCode}`] },
-        outgoing: { endpoint: outgoingEndpoint, authToken: `test-${assetCode}` }
+        incoming: { authTokens: [`test-${assetCode}-${name}`] },
+        outgoing: {
+          endpoint: outgoingEndpoint,
+          authToken: `test-${assetCode}-${name}`
+        }
       },
       assetId,
       name,
