@@ -175,16 +175,6 @@ type Mutation {
     input: CreateOutgoingPaymentInput!
   ): OutgoingPaymentResponse!
 
-  "Deposit webhook event liquidity"
-  depositEventLiquidity(
-    input: DepositEventLiquidityInput!
-  ): LiquidityMutationResponse
-
-  "Withdraw webhook event liquidity"
-  withdrawEventLiquidity(
-    input: WithdrawEventLiquidityInput!
-  ): LiquidityMutationResponse
-
   "Withdraw incoming payment liquidity"
   withdrawIncomingPaymentLiquidity(
     input: WithdrawIncomingPaymentLiquidityInput!
@@ -416,20 +406,6 @@ input WithdrawIncomingPaymentLiquidityInput {
 input WithdrawOutgoingPaymentLiquidityInput {
   "The id of the outgoing payment to withdraw from."
   outgoingPaymentId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
-  idempotencyKey: String!
-}
-
-input DepositEventLiquidityInput {
-  "The id of the event to deposit into."
-  eventId: String!
-  "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
-  idempotencyKey: String!
-}
-
-input WithdrawEventLiquidityInput {
-  "The id of the event to withdraw from."
-  eventId: String!
   "Unique key to ensure duplicate or retried requests are processed only once. See [idempotence](https://en.wikipedia.org/wiki/Idempotence)"
   idempotencyKey: String!
 }

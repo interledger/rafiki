@@ -37,8 +37,6 @@ import {
   createWalletAddressWithdrawal,
   postLiquidityWithdrawal,
   voidLiquidityWithdrawal,
-  depositEventLiquidity,
-  withdrawEventLiquidity,
   depositOutgoingPaymentLiquidity,
   withdrawIncomingPaymentLiquidity,
   withdrawOutgoingPaymentLiquidity
@@ -109,8 +107,6 @@ export const resolvers: Resolvers = {
     createWalletAddressWithdrawal,
     postLiquidityWithdrawal: postLiquidityWithdrawal,
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
-    depositEventLiquidity,
-    withdrawEventLiquidity,
     depositOutgoingPaymentLiquidity,
     withdrawIncomingPaymentLiquidity,
     withdrawOutgoingPaymentLiquidity,
