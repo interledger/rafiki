@@ -151,15 +151,17 @@ function validateTransferStateUpdate(
 
 export async function createTransfers(
   deps: ServiceDependencies,
-  transfers: CreateLedgerTransferArgs[]
+  transfers: CreateLedgerTransferArgs[],
+  trx?: TransactionOrKnex
 ): Promise<CreateTransfersResult> {
-  const trx = await deps.knex.transaction()
+  const transaction =
+    (await trx?.transaction()) ?? (await deps.knex.transaction())
 
   const errors: CreateTransferError[] = []
   const results: LedgerTransfer[] = []
 
   for (const [index, transfer] of transfers.entries()) {
-    const error = await validateTransfer(deps, transfer, trx)
+    const error = await validateTransfer(deps, transfer, transaction)
 
     if (error) {
       errors.push({ index, error })
@@ -167,9 +169,9 @@ export async function createTransfers(
     }
 
     try {
-      const createdTransfer = await LedgerTransfer.query(trx).insertAndFetch(
-        prepareTransfer(transfer)
-      )
+      const createdTransfer = await LedgerTransfer.query(
+        transaction
+      ).insertAndFetch(prepareTransfer(transfer))
 
       results.push(createdTransfer)
     } catch (error) {
@@ -183,16 +185,16 @@ export async function createTransfers(
   }
 
   if (errors.length > 0) {
-    await trx.rollback()
+    await transaction.rollback()
     return { results: [], errors }
   }
 
   try {
-    await trx.commit()
+    await transaction.commit()
 
     return { results, errors: [] }
   } catch (error) {
-    await trx.rollback()
+    await transaction.rollback()
 
     const errorMessage = 'Could not create transfer(s)'
     deps.logger.error(

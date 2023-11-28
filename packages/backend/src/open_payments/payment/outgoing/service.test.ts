@@ -1,8 +1,6 @@
 import assert from 'assert'
 import { faker } from '@faker-js/faker'
-import nock from 'nock'
 import { Knex } from 'knex'
-import * as Pay from '@interledger/pay'
 import { v4 as uuid } from 'uuid'
 
 import {
@@ -20,9 +18,9 @@ import { createAsset } from '../../../tests/asset'
 import { createIncomingPayment } from '../../../tests/incomingPayment'
 import { createOutgoingPayment } from '../../../tests/outgoingPayment'
 import {
-  createPaymentPointer,
-  MockPaymentPointer
-} from '../../../tests/paymentPointer'
+  createWalletAddress,
+  MockWalletAddress
+} from '../../../tests/walletAddress'
 import { createPeer } from '../../../tests/peer'
 import { createQuote } from '../../../tests/quote'
 import { IocContract } from '@adonisjs/fold'
@@ -39,25 +37,27 @@ import {
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
-import { isTransferError, TransferError } from '../../../accounting/errors'
-import { AccountingService, TransferOptions } from '../../../accounting/service'
+import { isTransferError } from '../../../accounting/errors'
+import { AccountingService } from '../../../accounting/service'
 import { AssetOptions } from '../../../asset/service'
 import { Amount } from '../../amount'
-import { ConnectionService } from '../../connection/service'
-import { getTests } from '../../payment_pointer/model.test'
+import { getTests } from '../../wallet_address/model.test'
 import { Quote } from '../../quote/model'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { WalletAddress } from '../../wallet_address/model'
+import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
+import { PaymentMethodHandlerError } from '../../../payment-method/handler/errors'
+import { mockRatesApi } from '../../../tests/rates'
 
 describe('OutgoingPaymentService', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let outgoingPaymentService: OutgoingPaymentService
   let accountingService: AccountingService
-  let connectionService: ConnectionService
+  let paymentMethodHandlerService: PaymentMethodHandlerService
   let knex: Knex
-  let paymentPointerId: string
+  let walletAddressId: string
   let incomingPayment: IncomingPayment
-  let receiverPaymentPointer: MockPaymentPointer
+  let receiverWalletAddress: MockWalletAddress
   let receiver: string
   let amtDelivered: bigint
   let trx: Knex.Transaction
@@ -67,7 +67,7 @@ describe('OutgoingPaymentService', (): void => {
     code: 'USD'
   }
 
-  const sendAmount: Amount = {
+  const debitAmount: Amount = {
     value: BigInt(123),
     assetCode: asset.code,
     assetScale: asset.scale
@@ -77,6 +77,8 @@ describe('OutgoingPaymentService', (): void => {
     scale: 9,
     code: 'XRP'
   }
+
+  const exchangeRate = 0.5
 
   const webhookTypes: {
     [key in OutgoingPaymentState]: PaymentEventType | undefined
@@ -110,20 +112,43 @@ describe('OutgoingPaymentService', (): void => {
     return payment
   }
 
-  function mockPay(
-    extendQuote: Partial<Pay.Quote>,
-    error?: Pay.PaymentError
-  ): jest.SpyInstance<Promise<Pay.PaymentProgress>, [options: Pay.PayOptions]> {
-    const { pay } = Pay
+  async function makeTransfer(args: {
+    incomingPayment: IncomingPayment
+    receiveAmount: bigint
+    outgoingPayment: OutgoingPayment
+    debitAmount: bigint
+  }): Promise<void> {
+    const transfer = await accountingService.createTransfer({
+      sourceAccount: args.outgoingPayment,
+      destinationAccount: incomingPayment,
+      sourceAmount: args.debitAmount,
+      destinationAmount: args.receiveAmount,
+      timeout: 0n
+    })
+
+    assert.ok(!isTransferError(transfer))
+
+    await transfer.post()
+
+    amtDelivered += args.receiveAmount
+  }
+
+  function mockPaymentHandlerPay(
+    outgoingPayment: OutgoingPayment,
+    incomingPayment: IncomingPayment,
+    error?: PaymentMethodHandlerError
+  ) {
     return jest
-      .spyOn(Pay, 'pay')
-      .mockImplementation(async (opts: Pay.PayOptions) => {
-        const res = await pay({
-          ...opts,
-          quote: { ...opts.quote, ...extendQuote }
+      .spyOn(paymentMethodHandlerService, 'pay')
+      .mockImplementationOnce(async (_, args) => {
+        if (error) throw error
+
+        await makeTransfer({
+          outgoingPayment,
+          incomingPayment,
+          debitAmount: args.finalDebitAmount,
+          receiveAmount: args.finalReceiveAmount
         })
-        if (error) res.error = error
-        return res
       })
   }
 
@@ -151,32 +176,6 @@ describe('OutgoingPaymentService', (): void => {
     await incomingPayment.onCredit({
       totalReceived
     })
-  }
-
-  function trackAmountDelivered(sourcePaymentPointerId: string): void {
-    const { createTransfer } = accountingService
-    jest
-      .spyOn(accountingService, 'createTransfer')
-      .mockImplementation(async (options: TransferOptions) => {
-        const trxOrError = await createTransfer(options)
-        if (
-          !isTransferError(trxOrError) &&
-          options.sourceAccount.id === sourcePaymentPointerId
-        ) {
-          return {
-            post: async (): Promise<void | TransferError> => {
-              const err = await trxOrError.post()
-              if (!err) {
-                amtDelivered +=
-                  options.destinationAmount || options.sourceAmount
-              }
-              return err
-            },
-            void: trxOrError.void
-          }
-        }
-        return trxOrError
-      })
   }
 
   async function expectOutcome(
@@ -215,7 +214,7 @@ describe('OutgoingPaymentService', (): void => {
         accountingService.getTotalReceived(incomingPayment.id)
       ).resolves.toEqual(incomingPaymentReceived)
     }
-    if (withdrawAmount !== undefined) {
+    if (withdrawAmount !== undefined && withdrawAmount > 0) {
       await expect(
         PaymentEvent.query(knex).where({
           withdrawalAccountId: payment.id,
@@ -226,55 +225,50 @@ describe('OutgoingPaymentService', (): void => {
   }
 
   beforeAll(async (): Promise<void> => {
-    Config.exchangeRatesUrl = 'https://test.rates'
-    nock(Config.exchangeRatesUrl)
-      .get('/')
-      .query(true)
-      .reply(200, () => ({
-        base: 'USD',
-        rates: {
-          XRP: 2.0
-        }
-      }))
-      .persist()
-    deps = await initIocContainer(Config)
+    const exchangeRatesUrl = 'https://test.rates'
+
+    mockRatesApi(exchangeRatesUrl, () => ({
+      XRP: exchangeRate
+    }))
+
+    deps = await initIocContainer({ ...Config, exchangeRatesUrl })
     appContainer = await createTestApp(deps)
     outgoingPaymentService = await deps.use('outgoingPaymentService')
     accountingService = await deps.use('accountingService')
-    connectionService = await deps.use('connectionService')
+    paymentMethodHandlerService = await deps.use('paymentMethodHandlerService')
     knex = appContainer.knex
   })
 
   beforeEach(async (): Promise<void> => {
     const { id: sendAssetId } = await createAsset(deps, asset)
-    const paymentPointer = await createPaymentPointer(deps, {
+    const walletAddress = await createWalletAddress(deps, {
       assetId: sendAssetId
     })
-    paymentPointerId = paymentPointer.id
+    walletAddressId = walletAddress.id
     const { id: destinationAssetId } = await createAsset(deps, destinationAsset)
-    receiverPaymentPointer = await createPaymentPointer(deps, {
+    receiverWalletAddress = await createWalletAddress(deps, {
       assetId: destinationAssetId,
       mockServerPort: appContainer.openPaymentsPort
     })
     await expect(
       accountingService.createDeposit({
         id: uuid(),
-        account: receiverPaymentPointer.asset,
+        account: receiverWalletAddress.asset,
         amount: BigInt(123)
       })
     ).resolves.toBeUndefined()
 
     incomingPayment = await createIncomingPayment(deps, {
-      paymentPointerId: receiverPaymentPointer.id
+      walletAddressId: receiverWalletAddress.id
     })
-    receiver = incomingPayment.getUrl(receiverPaymentPointer)
+    receiver = incomingPayment.getUrl(receiverWalletAddress)
 
     amtDelivered = BigInt(0)
   })
 
   afterEach(async (): Promise<void> => {
     jest.restoreAllMocks()
-    receiverPaymentPointer.scope?.persist(false)
+    receiverWalletAddress.scope?.persist(false)
     await truncateTables(knex)
   })
 
@@ -282,18 +276,19 @@ describe('OutgoingPaymentService', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('get/getPaymentPointerPage', (): void => {
+  describe('get/getWalletAddressPage', (): void => {
     getTests({
       createModel: ({ client }) =>
         createOutgoingPayment(deps, {
-          paymentPointerId,
+          walletAddressId,
           client,
           receiver,
-          sendAmount,
-          validDestination: false
+          debitAmount,
+          validDestination: false,
+          method: 'ilp'
         }),
       get: (options) => outgoingPaymentService.get(options),
-      list: (options) => outgoingPaymentService.getPaymentPointerPage(options)
+      list: (options) => outgoingPaymentService.getWalletAddressPage(options)
     })
   })
 
@@ -327,11 +322,7 @@ describe('OutgoingPaymentService', (): void => {
         }
       })
 
-      describe.each`
-        toConnection | description
-        ${true}      | ${'connection receiver'}
-        ${false}     | ${'incoming payment receiver'}
-      `('$description', ({ toConnection }): void => {
+      describe('incoming payment receiver', (): void => {
         it.each`
           outgoingPeer | description
           ${false}     | ${''}
@@ -341,18 +332,14 @@ describe('OutgoingPaymentService', (): void => {
           async ({ outgoingPeer }): Promise<void> => {
             const peerService = await deps.use('peerService')
             const peer = await createPeer(deps)
-            if (toConnection) {
-              const fetchedReceiver = connectionService.getUrl(incomingPayment)
-              assert.ok(fetchedReceiver)
-              receiver = fetchedReceiver
-            }
             const quote = await createQuote(deps, {
-              paymentPointerId,
+              walletAddressId,
               receiver,
-              sendAmount
+              debitAmount,
+              method: 'ilp'
             })
             const options = {
-              paymentPointerId,
+              walletAddressId,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -369,14 +356,13 @@ describe('OutgoingPaymentService', (): void => {
             assert.ok(!isOutgoingPaymentError(payment))
             expect(payment).toMatchObject({
               id: quote.id,
-              paymentPointerId,
+              walletAddressId,
               receiver: quote.receiver,
-              sendAmount: quote.sendAmount,
+              debitAmount: quote.debitAmount,
               receiveAmount: quote.receiveAmount,
               metadata: options.metadata,
               state: OutgoingPaymentState.Funding,
-              asset,
-              quote,
+              asset: quote.asset,
               peerId: outgoingPeer ? peer.id : null
             })
 
@@ -386,7 +372,7 @@ describe('OutgoingPaymentService', (): void => {
               })
             ).resolves.toEqual(payment)
 
-            const expectedPaymentData: Partial<PaymentData['payment']> = {
+            const expectedPaymentData: Partial<PaymentData> = {
               id: payment.id
             }
             if (outgoingPeer) {
@@ -398,34 +384,33 @@ describe('OutgoingPaymentService', (): void => {
               })
             ).resolves.toMatchObject([
               {
-                data: {
-                  payment: expectedPaymentData
-                }
+                data: expectedPaymentData
               }
             ])
           }
         )
       })
 
-      it('fails to create on unknown payment pointer', async () => {
+      it('fails to create on unknown wallet address', async () => {
         const { id: quoteId } = await createQuote(deps, {
-          paymentPointerId,
+          walletAddressId,
           receiver,
-          sendAmount,
-          validDestination: false
+          debitAmount,
+          validDestination: false,
+          method: 'ilp'
         })
         await expect(
           outgoingPaymentService.create({
-            paymentPointerId: uuid(),
+            walletAddressId: uuid(),
             quoteId
           })
-        ).resolves.toEqual(OutgoingPaymentError.UnknownPaymentPointer)
+        ).resolves.toEqual(OutgoingPaymentError.UnknownWalletAddress)
       })
 
       it('fails to create on unknown quote', async () => {
         await expect(
           outgoingPaymentService.create({
-            paymentPointerId,
+            walletAddressId,
             quoteId: uuid()
           })
         ).resolves.toEqual(OutgoingPaymentError.UnknownQuote)
@@ -433,28 +418,30 @@ describe('OutgoingPaymentService', (): void => {
 
       it('fails to create on "consumed" quote', async () => {
         const { quote } = await createOutgoingPayment(deps, {
-          paymentPointerId,
+          walletAddressId,
           receiver,
-          validDestination: false
+          validDestination: false,
+          method: 'ilp'
         })
         await expect(
           outgoingPaymentService.create({
-            paymentPointerId,
+            walletAddressId,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
       })
 
-      it('fails to create on invalid quote payment pointer', async () => {
+      it('fails to create on invalid quote wallet address', async () => {
         const quote = await createQuote(deps, {
-          paymentPointerId,
+          walletAddressId,
           receiver,
-          sendAmount,
-          validDestination: false
+          debitAmount,
+          validDestination: false,
+          method: 'ilp'
         })
         await expect(
           outgoingPaymentService.create({
-            paymentPointerId: receiverPaymentPointer.id,
+            walletAddressId: receiverWalletAddress.id,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -462,17 +449,18 @@ describe('OutgoingPaymentService', (): void => {
 
       it('fails to create on expired quote', async () => {
         const quote = await createQuote(deps, {
-          paymentPointerId,
+          walletAddressId,
           receiver,
-          sendAmount,
-          validDestination: false
+          debitAmount,
+          validDestination: false,
+          method: 'ilp'
         })
         await quote.$query(knex).patch({
           expiresAt: new Date()
         })
         await expect(
           outgoingPaymentService.create({
-            paymentPointerId,
+            walletAddressId,
             quoteId: quote.id
           })
         ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
@@ -485,9 +473,10 @@ describe('OutgoingPaymentService', (): void => {
         `fails to create on $state quote receiver`,
         async ({ state }): Promise<void> => {
           const quote = await createQuote(deps, {
-            paymentPointerId,
+            walletAddressId,
             receiver,
-            sendAmount
+            debitAmount,
+            method: 'ilp'
           })
           await incomingPayment.$query(knex).patch({
             state,
@@ -496,31 +485,32 @@ describe('OutgoingPaymentService', (): void => {
           })
           await expect(
             outgoingPaymentService.create({
-              paymentPointerId,
+              walletAddressId,
               quoteId: quote.id
             })
           ).resolves.toEqual(OutgoingPaymentError.InvalidQuote)
         }
       )
 
-      test('fails to create on inactive payment pointer', async () => {
+      test('fails to create on inactive wallet address', async () => {
         const { id: quoteId } = await createQuote(deps, {
-          paymentPointerId,
+          walletAddressId,
           receiver,
-          sendAmount,
-          validDestination: false
+          debitAmount,
+          validDestination: false,
+          method: 'ilp'
         })
-        const paymentPointer = await createPaymentPointer(deps)
-        const paymentPointerUpdated = await PaymentPointer.query(
+        const walletAddress = await createWalletAddress(deps)
+        const walletAddressUpdated = await WalletAddress.query(
           knex
-        ).patchAndFetchById(paymentPointer.id, { deactivatedAt: new Date() })
-        assert.ok(!paymentPointerUpdated.isActive)
+        ).patchAndFetchById(walletAddress.id, { deactivatedAt: new Date() })
+        assert.ok(!walletAddressUpdated.isActive)
         await expect(
           outgoingPaymentService.create({
-            paymentPointerId: paymentPointer.id,
+            walletAddressId: walletAddress.id,
             quoteId
           })
-        ).resolves.toEqual(OutgoingPaymentError.InactivePaymentPointer)
+        ).resolves.toEqual(OutgoingPaymentError.InactiveWalletAddress)
       })
 
       if (grantOption !== GrantOption.None) {
@@ -528,20 +518,21 @@ describe('OutgoingPaymentService', (): void => {
           assert.ok(grant)
           grant.limits = {
             receiver,
-            sendAmount
+            debitAmount
           }
           const quotes = await Promise.all(
             [0, 1].map(async (_) => {
               return await createQuote(deps, {
-                paymentPointerId,
+                walletAddressId,
                 receiver,
-                sendAmount
+                debitAmount,
+                method: 'ilp'
               })
             })
           )
           const options = quotes.map((quote) => {
             return {
-              paymentPointerId,
+              walletAddressId,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -549,7 +540,8 @@ describe('OutgoingPaymentService', (): void => {
               },
               grant,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              callback: (f: any) => setTimeout(f, 5000)
+              callback: (f: any) => setTimeout(f, 20),
+              grantLockTimeoutMs: 20
             }
           })
 
@@ -561,7 +553,7 @@ describe('OutgoingPaymentService', (): void => {
                 })
               )
             ).rejects.toThrowError(
-              'Defined query timeout of 5000ms exceeded when running query.'
+              'Defined query timeout of 20ms exceeded when running query.'
             )
           } else {
             await Promise.all(
@@ -581,12 +573,13 @@ describe('OutgoingPaymentService', (): void => {
           let interval: string
           beforeEach(async (): Promise<void> => {
             quote = await createQuote(deps, {
-              paymentPointerId,
+              walletAddressId,
               receiver,
-              sendAmount
+              debitAmount,
+              method: 'ilp'
             })
             options = {
-              paymentPointerId,
+              walletAddressId,
               quoteId: quote.id,
               metadata: {
                 description: 'rent',
@@ -601,7 +594,7 @@ describe('OutgoingPaymentService', (): void => {
             const start = new Date(Date.now() + 24 * 60 * 60 * 1000)
             assert.ok(grant)
             grant.limits = {
-              sendAmount,
+              debitAmount: debitAmount,
               interval: `R0/${start.toISOString()}/P1M`
             }
             await expect(
@@ -610,8 +603,8 @@ describe('OutgoingPaymentService', (): void => {
           })
           test.each`
             limits                                                                         | description
-            ${{ sendAmount: { assetCode: 'EUR', assetScale: asset.scale } }}               | ${'sendAmount asset code'}
-            ${{ sendAmount: { assetCode: asset.code, assetScale: 2 } }}                    | ${'sendAmount asset scale'}
+            ${{ debitAmount: { assetCode: 'EUR', assetScale: asset.scale } }}              | ${'debitAmount asset code'}
+            ${{ debitAmount: { assetCode: asset.code, assetScale: 2 } }}                   | ${'debitAmount asset scale'}
             ${{ receiveAmount: { assetCode: 'EUR', assetScale: destinationAsset.scale } }} | ${'receiveAmount asset code'}
             ${{ receiveAmount: { assetCode: destinationAsset.code, assetScale: 2 } }}      | ${'receiveAmount asset scale'}
           `(
@@ -625,25 +618,25 @@ describe('OutgoingPaymentService', (): void => {
             }
           )
           test.each`
-            sendAmount | description
-            ${true}    | ${'sendAmount'}
-            ${false}   | ${'receiveAmount'}
+            debitAmount | description
+            ${true}     | ${'debitAmount'}
+            ${false}    | ${'receiveAmount'}
           `(
             'fails if grant limit $description is not enough for payment',
-            async ({ sendAmount }): Promise<void> => {
+            async ({ debitAmount }): Promise<void> => {
               const amount = {
                 value: BigInt(12),
-                assetCode: sendAmount
+                assetCode: debitAmount
                   ? quote.asset.code
                   : quote.receiveAmount.assetCode,
-                assetScale: sendAmount
+                assetScale: debitAmount
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
-              grant.limits = sendAmount
+              grant.limits = debitAmount
                 ? {
-                    sendAmount: amount,
+                    debitAmount: amount,
                     interval
                   }
                 : {
@@ -656,27 +649,27 @@ describe('OutgoingPaymentService', (): void => {
             }
           )
           test.each`
-            sendAmount | failed   | description
-            ${true}    | ${false} | ${'sendAmount'}
-            ${false}   | ${false} | ${'receiveAmount'}
-            ${true}    | ${true}  | ${'sendAmount, failed first payment'}
-            ${false}   | ${true}  | ${'receiveAmount, failed first payment'}
+            debitAmount | failed   | description
+            ${true}     | ${false} | ${'debitAmount'}
+            ${false}    | ${false} | ${'receiveAmount'}
+            ${true}     | ${true}  | ${'debitAmount, failed first payment'}
+            ${false}    | ${true}  | ${'receiveAmount, failed first payment'}
           `(
             'fails if limit was already used up - $description',
-            async ({ sendAmount, failed }): Promise<void> => {
+            async ({ debitAmount, failed }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(200),
-                assetCode: sendAmount
+                assetCode: debitAmount
                   ? quote.asset.code
                   : quote.receiveAmount.assetCode,
-                assetScale: sendAmount
+                assetScale: debitAmount
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
               grant.limits = {
-                sendAmount: sendAmount ? grantAmount : undefined,
-                receiveAmount: sendAmount ? undefined : grantAmount,
+                debitAmount: debitAmount ? grantAmount : undefined,
+                receiveAmount: debitAmount ? undefined : grantAmount,
                 interval
               }
               const paymentAmount = {
@@ -684,14 +677,15 @@ describe('OutgoingPaymentService', (): void => {
                 value: BigInt(190)
               }
               const firstPayment = await createOutgoingPayment(deps, {
-                paymentPointerId,
+                walletAddressId,
                 receiver: `${
                   Config.publicHost
                 }/${uuid()}/incoming-payments/${uuid()}`,
-                sendAmount: sendAmount ? paymentAmount : undefined,
-                receiveAmount: sendAmount ? undefined : paymentAmount,
+                debitAmount: debitAmount ? paymentAmount : undefined,
+                receiveAmount: debitAmount ? undefined : paymentAmount,
                 grant,
-                validDestination: false
+                validDestination: false,
+                method: 'ilp'
               })
               assert.ok(firstPayment)
               if (failed) {
@@ -702,7 +696,7 @@ describe('OutgoingPaymentService', (): void => {
                 jest
                   .spyOn(accountingService, 'getTotalSent')
                   .mockResolvedValueOnce(
-                    sendAmount ? BigInt(188) : BigInt(188 * 2)
+                    debitAmount ? BigInt(188) : BigInt(188 * 2)
                   )
               }
 
@@ -727,36 +721,36 @@ describe('OutgoingPaymentService', (): void => {
           )
 
           test.each`
-            sendAmount | competingPayment | failed       | half     | description
-            ${true}    | ${false}         | ${undefined} | ${false} | ${'sendAmount w/o competing payment'}
-            ${false}   | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
-            ${true}    | ${true}          | ${false}     | ${false} | ${'sendAmount w/ competing payment'}
-            ${false}   | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
-            ${true}    | ${true}          | ${true}      | ${false} | ${'sendAmount w/ failed competing payment'}
-            ${false}   | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
-            ${true}    | ${true}          | ${true}      | ${true}  | ${'sendAmount w/ half-way failed competing payment'}
-            ${false}   | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
+            debitAmount | competingPayment | failed       | half     | description
+            ${true}     | ${false}         | ${undefined} | ${false} | ${'debitAmount w/o competing payment'}
+            ${false}    | ${false}         | ${undefined} | ${false} | ${'receiveAmount w/o competing payment'}
+            ${true}     | ${true}          | ${false}     | ${false} | ${'debitAmount w/ competing payment'}
+            ${false}    | ${true}          | ${false}     | ${false} | ${'receiveAmount w/ competing payment'}
+            ${true}     | ${true}          | ${true}      | ${false} | ${'debitAmount w/ failed competing payment'}
+            ${false}    | ${true}          | ${true}      | ${false} | ${'receiveAmount w/ failed competing payment'}
+            ${true}     | ${true}          | ${true}      | ${true}  | ${'debitAmount w/ half-way failed competing payment'}
+            ${false}    | ${true}          | ${true}      | ${true}  | ${'receiveAmount half-way w/ failed competing payment'}
           `(
             'succeeds if grant limit is enough for payment - $description',
             async ({
-              sendAmount,
+              debitAmount,
               competingPayment,
               failed,
               half
             }): Promise<void> => {
               const grantAmount = {
                 value: BigInt(1234567),
-                assetCode: sendAmount
+                assetCode: debitAmount
                   ? quote.asset.code
                   : quote.receiveAmount.assetCode,
-                assetScale: sendAmount
+                assetScale: debitAmount
                   ? quote.asset.scale
                   : quote.receiveAmount.assetScale
               }
               assert.ok(grant)
-              grant.limits = sendAmount
+              grant.limits = debitAmount
                 ? {
-                    sendAmount: grantAmount,
+                    debitAmount: grantAmount,
                     interval
                   }
                 : {
@@ -769,15 +763,16 @@ describe('OutgoingPaymentService', (): void => {
                   value: BigInt(7)
                 }
                 const firstPayment = await createOutgoingPayment(deps, {
-                  paymentPointerId,
+                  walletAddressId,
                   receiver: `${
                     Config.publicHost
                   }/${uuid()}/incoming-payments/${uuid()}`,
-                  sendAmount: sendAmount ? paymentAmount : undefined,
-                  receiveAmount: sendAmount ? undefined : paymentAmount,
+                  debitAmount: debitAmount ? paymentAmount : undefined,
+                  receiveAmount: debitAmount ? undefined : paymentAmount,
                   client,
                   grant,
-                  validDestination: false
+                  validDestination: false,
+                  method: 'ilp'
                 })
                 assert.ok(firstPayment)
                 if (failed) {
@@ -802,352 +797,345 @@ describe('OutgoingPaymentService', (): void => {
   })
 
   describe('processNext', (): void => {
-    describe.each`
-      toConnection | description
-      ${true}      | ${'connection'}
-      ${false}     | ${'incoming payment'}
-    `('SENDING (to $description) → ', ({ toConnection }): void => {
-      const receiveAmount = {
-        value: BigInt(123),
-        assetCode: destinationAsset.code,
-        assetScale: destinationAsset.scale
+    const receiveAmount = {
+      value: BigInt(123),
+      assetCode: destinationAsset.code,
+      assetScale: destinationAsset.scale
+    }
+
+    async function setup(
+      opts: Omit<CreateQuoteOptions, 'walletAddressId'>,
+      incomingAmount?: Amount
+    ): Promise<OutgoingPayment> {
+      if (incomingAmount) {
+        await incomingPayment.$query(knex).patch({ incomingAmount })
       }
+      const payment = await createOutgoingPayment(deps, {
+        walletAddressId,
+        ...opts
+      })
 
-      beforeEach((): void => {
-        if (toConnection) {
-          const fetchedReceiver = connectionService.getUrl(incomingPayment)
-          assert.ok(fetchedReceiver)
-          receiver = fetchedReceiver
+      await expect(
+        outgoingPaymentService.fund({
+          id: payment.id,
+          amount: payment.debitAmount.value,
+          transferId: uuid()
+        })
+      ).resolves.toMatchObject({
+        state: OutgoingPaymentState.Sending
+      })
+
+      return payment
+    }
+
+    test.each`
+      debitAmount    | receiveAmount
+      ${debitAmount} | ${undefined}
+      ${undefined}   | ${receiveAmount}
+    `('COMPLETED', async ({ debitAmount, receiveAmount }): Promise<void> => {
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        receiveAmount,
+        method: 'ilp'
+      })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+    })
+
+    test('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: receiverWalletAddress.id,
+        incomingAmount: {
+          value: receiveAmount.value * 2n,
+          assetCode: receiverWalletAddress.asset.code,
+          assetScale: receiverWalletAddress.asset.scale
         }
       })
+      assert.ok(incomingPayment.walletAddress)
+      const createdPayment = await setup({
+        receiver: incomingPayment.getUrl(incomingPayment.walletAddress),
+        receiveAmount,
+        method: 'ilp'
+      })
 
-      async function setup(
-        opts: Omit<CreateQuoteOptions, 'paymentPointerId'>,
-        incomingAmount?: Amount
-      ): Promise<string> {
-        if (incomingAmount) {
-          await incomingPayment.$query(knex).patch({ incomingAmount })
-        }
-        const payment = await createOutgoingPayment(deps, {
-          paymentPointerId,
-          ...opts
-        })
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+    })
 
-        trackAmountDelivered(payment.id)
-
-        await expect(
-          outgoingPaymentService.fund({
-            id: payment.id,
-            amount: payment.sendAmount.value,
-            transferId: uuid()
-          })
-        ).resolves.toMatchObject({
-          state: OutgoingPaymentState.Sending
-        })
-
-        return payment.id
-      }
-
-      test.each`
-        sendAmount    | receiveAmount
-        ${sendAmount} | ${undefined}
-        ${undefined}  | ${receiveAmount}
-      `('COMPLETED', async ({ sendAmount, receiveAmount }): Promise<void> => {
-        const paymentId = await setup({
+    test('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
+      const createdPayment = await setup(
+        {
           receiver,
-          sendAmount,
-          receiveAmount
-        })
+          receiveAmount,
+          method: 'ilp'
+        },
+        receiveAmount
+      )
 
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const amountSent = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - amountSent,
-          amountSent,
-          amountDelivered: payment.receiveAmount.value,
-          incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value - amountSent
-        })
+      const amountAlreadyDelivered = BigInt(34)
+      await payIncomingPayment(amountAlreadyDelivered)
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      // The amountAlreadyDelivered is unknown to the sender when sending to
+      // the connection (instead of the incoming payment), so the entire
+      // receive amount is delivered by the outgoing payment ("overpaying"
+      // the incoming payment).
+      // Incoming payments allow overpayment (above the incomingAmount) for
+      // one packet. In this case, the full payment amount was completed in a
+      // single packet. With a different combination of amounts and
+      // maxPacketAmount limits, an outgoing payment to a connection could
+      // overpay the corresponding incoming payment's incomingAmount without
+      // the full outgoing payment receive amount being delivered.
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value - amountAlreadyDelivered,
+        incomingPaymentReceived: payment.receiveAmount.value,
+        withdrawAmount: 0n
+      })
+    })
+
+    test('SENDING -> FAILED (partial payment then retryable Pay error)', async (): Promise<void> => {
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
       })
 
-      it('COMPLETED (receiveAmount < incomingPayment.incomingAmount)', async (): Promise<void> => {
-        incomingPayment = await createIncomingPayment(deps, {
-          paymentPointerId: receiverPaymentPointer.id,
-          incomingAmount: {
-            value: receiveAmount.value * 2n,
-            assetCode: receiverPaymentPointer.asset.code,
-            assetScale: receiverPaymentPointer.asset.scale
-          }
-        })
-
-        const fetchedReceiver = connectionService.getUrl(incomingPayment)
-        assert.ok(fetchedReceiver)
-        assert.ok(incomingPayment.paymentPointer)
-        const paymentId = await setup({
-          receiver: toConnection
-            ? fetchedReceiver
-            : incomingPayment.getUrl(incomingPayment.paymentPointer),
-          receiveAmount
-        })
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const amountSent = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - amountSent,
-          amountSent,
-          amountDelivered: payment.receiveAmount.value,
-          incomingPaymentReceived: payment.receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value - amountSent
-        })
+      await makeTransfer({
+        incomingPayment,
+        receiveAmount: 5n,
+        outgoingPayment: createdPayment,
+        debitAmount: 10n
       })
 
-      it('COMPLETED (with incoming payment initially partially paid)', async (): Promise<void> => {
-        const paymentId = await setup(
-          {
-            receiver,
-            receiveAmount: toConnection && receiveAmount
-          },
-          receiveAmount
-        )
-
-        const amountAlreadyDelivered = BigInt(34)
-        await payIncomingPayment(amountAlreadyDelivered)
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        // The amountAlreadyDelivered is unknown to the sender when sending to
-        // the connection (instead of the incoming payment), so the entire
-        // receive amount is delivered by the outgoing payment ("overpaying"
-        // the incoming payment).
-        // Incoming payments allow overpayment (above the incomingAmount) for
-        // one packet. In this case, the full payment amount was completed in a
-        // single packet. With a different combination of amounts and
-        // maxPacketAmount limits, an outgoing payment to a connection could
-        // overpay the corresponding incoming payment's incomingAmount without
-        // the full outgoing payment receive amount being delivered.
-        const amountSent = toConnection
-          ? payment.receiveAmount.value * BigInt(2)
-          : (payment.receiveAmount.value - amountAlreadyDelivered) * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - amountSent,
-          amountSent,
-          amountDelivered: toConnection
-            ? payment.receiveAmount.value
-            : payment.receiveAmount.value - amountAlreadyDelivered,
-          incomingPaymentReceived: toConnection
-            ? payment.receiveAmount.value + amountAlreadyDelivered
-            : payment.receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value - amountSent
-        })
+      const retryableError = new PaymentMethodHandlerError('Failed payment', {
+        description: '',
+        retryable: true
       })
 
-      it('SENDING (partial payment then retryable Pay error)', async (): Promise<void> => {
-        mockPay(
-          {
-            maxSourceAmount: BigInt(10),
-            minDeliveryAmount: BigInt(5)
-          },
-          Pay.PaymentError.ClosedByReceiver
-        )
-
-        const paymentId = await setup({
-          receiver,
-          sendAmount
-        })
-
-        for (let i = 0; i < 4; i++) {
-          const payment = await processNext(
-            paymentId,
-            OutgoingPaymentState.Sending
-          )
-          expect(payment.stateAttempts).toBe(i + 1)
-          await expectOutcome(payment, {
-            amountSent: BigInt(10 * (i + 1)),
-            amountDelivered: BigInt(5 * (i + 1))
-          })
-          // Skip through the backoff timer.
-          fastForwardToAttempt(payment.stateAttempts)
-        }
-        // Last attempt fails, but no more retries.
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          Pay.PaymentError.ClosedByReceiver
-        )
-        expect(payment.stateAttempts).toBe(0)
-        // "mockPay" allows a small amount of money to be paid every attempt.
-        await expectOutcome(payment, {
-          accountBalance: BigInt(123 - 10 * 5),
-          amountSent: BigInt(10 * 5),
-          amountDelivered: BigInt(5 * 5),
-          withdrawAmount: BigInt(123 - 10 * 5)
-        })
-      })
-
-      it('FAILED (non-retryable Pay error)', async (): Promise<void> => {
-        mockPay(
-          {
-            maxSourceAmount: BigInt(10),
-            minDeliveryAmount: BigInt(5)
-          },
-          Pay.PaymentError.ReceiverProtocolViolation
-        )
-        const paymentId = await setup({
-          receiver,
-          sendAmount
-        })
+      for (let i = 0; i < 4; i++) {
+        mockPaymentHandlerPay(createdPayment, incomingPayment, retryableError)
 
         const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          Pay.PaymentError.ReceiverProtocolViolation
-        )
-        await expectOutcome(payment, {
-          accountBalance: BigInt(123 - 10),
-          amountSent: BigInt(10),
-          amountDelivered: BigInt(5),
-          withdrawAmount: BigInt(123 - 10)
-        })
-      })
-
-      it('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
-        const mockFn = mockPay(
-          {
-            maxSourceAmount: BigInt(10),
-            minDeliveryAmount: BigInt(5)
-          },
-          Pay.PaymentError.ClosedByReceiver
-        )
-        const paymentId = await setup({
-          receiver,
-          receiveAmount
-        })
-
-        const payment = await processNext(
-          paymentId,
+          createdPayment.id,
           OutgoingPaymentState.Sending
         )
-        mockFn.mockRestore()
-        fastForwardToAttempt(1)
-        await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - BigInt(10),
-          amountSent: BigInt(10),
-          amountDelivered: BigInt(5)
-        })
+        expect(payment.stateAttempts).toBe(i + 1)
+        // Skip through the backoff timer.
+        fastForwardToAttempt(payment.stateAttempts)
+      }
 
-        // The next attempt is without the mock, so it succeeds.
-        const payment2 = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const sentAmount = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment2, {
-          accountBalance: payment.sendAmount.value - sentAmount,
-          amountSent: sentAmount,
-          amountDelivered: payment.receiveAmount.value
-        })
+      mockPaymentHandlerPay(createdPayment, incomingPayment, retryableError)
+
+      // Last attempt fails, but no more retries.
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        retryableError.message
+      )
+
+      expect(payment.stateAttempts).toBe(0)
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value - 10n,
+        amountSent: 10n,
+        amountDelivered: 5n,
+        incomingPaymentReceived: 5n,
+        withdrawAmount: payment.debitAmount.value - 10n
+      })
+    })
+
+    test('FAILED (non-retryable error)', async (): Promise<void> => {
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
       })
 
-      // Caused by retry after failed SENDING→COMPLETED transition commit.
-      it('COMPLETED (already fully paid)', async (): Promise<void> => {
-        const paymentId = await setup(
-          {
-            receiver,
-            receiveAmount
-          },
-          receiveAmount
-        )
-
-        await processNext(paymentId, OutgoingPaymentState.Completed)
-        // Pretend that the transaction didn't commit.
-        await OutgoingPayment.query(knex)
-          .findById(paymentId)
-          .patch({ state: OutgoingPaymentState.Sending })
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        const sentAmount = payment.receiveAmount.value * BigInt(2)
-        await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value - sentAmount,
-          amountSent: sentAmount,
-          amountDelivered: payment.receiveAmount.value
+      mockPaymentHandlerPay(
+        createdPayment,
+        incomingPayment,
+        new PaymentMethodHandlerError('Failed payment', {
+          description: '',
+          retryable: false
         })
+      )
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        'Failed payment'
+      )
+
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value,
+        amountSent: 0n,
+        amountDelivered: 0n,
+        incomingPaymentReceived: incomingPayment.receivedAmount.value,
+        withdrawAmount: 0n
+      })
+    })
+
+    test('SENDING→COMPLETED (partial payment, resume, complete)', async (): Promise<void> => {
+      const createdPayment = await setup({
+        receiver,
+        receiveAmount,
+        method: 'ilp'
       })
 
-      it('COMPLETED (already fully paid)', async (): Promise<void> => {
-        const paymentId = await setup(
-          {
-            receiver,
-            receiveAmount
-          },
-          receiveAmount
-        )
-        // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
-        await payIncomingPayment(receiveAmount.value)
-
-        const payment = await processNext(
-          paymentId,
-          OutgoingPaymentState.Completed
-        )
-        await expectOutcome(payment, {
-          accountBalance: payment.sendAmount.value,
-          amountSent: BigInt(0),
-          amountDelivered: BigInt(0),
-          incomingPaymentReceived: receiveAmount.value,
-          withdrawAmount: payment.sendAmount.value
-        })
+      await makeTransfer({
+        incomingPayment,
+        receiveAmount: 5n,
+        outgoingPayment: createdPayment,
+        debitAmount: 10n
       })
 
-      it('FAILED (source asset changed)', async (): Promise<void> => {
-        const paymentId = await setup({
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value
+      })
+    })
+
+    // Caused by retry after failed SENDING→COMPLETED transition commit.
+    test('COMPLETED (already fully paid)', async (): Promise<void> => {
+      const createdPayment = await setup(
+        {
           receiver,
-          sendAmount
-        })
-        const { id: assetId } = await createAsset(deps, {
-          code: asset.code,
-          scale: asset.scale + 1
-        })
-        await OutgoingPayment.relatedQuery('paymentPointer')
-          .for(paymentId)
-          .patch({
-            assetId
-          })
+          receiveAmount,
+          method: 'ilp'
+        },
+        receiveAmount
+      )
 
-        await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          LifecycleError.SourceAssetConflict
-        )
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+
+      await processNext(createdPayment.id, OutgoingPaymentState.Completed)
+      // Pretend that the transaction didn't commit.
+      await OutgoingPayment.query(knex)
+        .findById(createdPayment.id)
+        .patch({ state: OutgoingPaymentState.Sending })
+
+      mockPaymentHandlerPay(createdPayment, incomingPayment)
+      const payment = await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: 0n,
+        amountSent: payment.debitAmount.value,
+        amountDelivered: payment.receiveAmount.value,
+        incomingPaymentReceived: payment.receiveAmount.value
       })
+    })
 
-      it('FAILED (destination asset changed)', async (): Promise<void> => {
-        const paymentId = await setup({
+    test('COMPLETED (already fully paid)', async (): Promise<void> => {
+      const { id: paymentId } = await setup(
+        {
           receiver,
-          sendAmount
-        })
-        // Pretend that the destination asset was initially different.
-        await OutgoingPayment.relatedQuery('quote')
-          .for(paymentId)
-          .patch({
-            receiveAmount: {
-              ...receiveAmount,
-              assetScale: 55
-            }
-          })
-        await processNext(
-          paymentId,
-          OutgoingPaymentState.Failed,
-          Pay.PaymentError.DestinationAssetConflict
-        )
+          receiveAmount,
+          method: 'ilp'
+        },
+        receiveAmount
+      )
+      // The quote thinks there's a full amount to pay, but actually sending will find the incoming payment has been paid (e.g. by another payment).
+      await payIncomingPayment(receiveAmount.value)
+
+      const payment = await processNext(
+        paymentId,
+        OutgoingPaymentState.Completed
+      )
+      await expectOutcome(payment, {
+        accountBalance: payment.debitAmount.value,
+        amountSent: BigInt(0),
+        amountDelivered: BigInt(0),
+        incomingPaymentReceived: receiveAmount.value,
+        withdrawAmount: payment.debitAmount.value
       })
+    })
+
+    test('FAILED (source asset changed)', async (): Promise<void> => {
+      const { id: paymentId } = await setup(
+        {
+          receiver,
+          receiveAmount,
+          method: 'ilp'
+        },
+        receiveAmount
+      )
+
+      const { id: assetId } = await createAsset(deps, {
+        code: asset.code,
+        scale: asset.scale + 1
+      })
+
+      await OutgoingPayment.relatedQuery('walletAddress').for(paymentId).patch({
+        assetId
+      })
+
+      await processNext(
+        paymentId,
+        OutgoingPaymentState.Failed,
+        LifecycleError.SourceAssetConflict
+      )
+    })
+    test('FAILED (destination asset changed)', async (): Promise<void> => {
+      const createdPayment = await setup({
+        receiver,
+        debitAmount,
+        method: 'ilp'
+      })
+
+      // Pretend that the destination asset was initially different.
+      await OutgoingPayment.relatedQuery('quote')
+        .for(createdPayment.id)
+        .patch({
+          receiveAmount: {
+            ...receiveAmount,
+            assetScale: 55
+          }
+        })
+      await processNext(
+        createdPayment.id,
+        OutgoingPaymentState.Failed,
+        LifecycleError.DestinationAssetConflict
+      )
     })
   })
 
@@ -1157,12 +1145,13 @@ describe('OutgoingPaymentService', (): void => {
 
     beforeEach(async (): Promise<void> => {
       payment = await createOutgoingPayment(deps, {
-        paymentPointerId,
+        walletAddressId,
         receiver,
-        sendAmount,
-        validDestination: false
+        debitAmount,
+        validDestination: false,
+        method: 'ilp'
       })
-      quoteAmount = payment.sendAmount.value
+      quoteAmount = payment.debitAmount.value
       await expectOutcome(payment, { accountBalance: BigInt(0) })
     }, 10_000)
 

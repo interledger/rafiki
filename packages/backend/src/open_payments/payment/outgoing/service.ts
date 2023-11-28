@@ -22,22 +22,22 @@ import {
   AccountingService,
   LiquidityAccountType
 } from '../../../accounting/service'
-import { PeerService } from '../../../peer/service'
+import { PeerService } from '../../../payment-method/ilp/peer/service'
 import { ReceiverService } from '../../receiver/service'
-import { GetOptions, ListOptions } from '../../payment_pointer/model'
+import { GetOptions, ListOptions } from '../../wallet_address/model'
 import {
-  PaymentPointerService,
-  PaymentPointerSubresourceService
-} from '../../payment_pointer/service'
-import { IlpPlugin, IlpPluginOptions } from '../../../shared/ilp_plugin'
+  WalletAddressService,
+  WalletAddressSubresourceService
+} from '../../wallet_address/service'
 import { sendWebhookEvent } from './lifecycle'
 import * as worker from './worker'
 import { Interval } from 'luxon'
 import { knex } from 'knex'
 import { AccountAlreadyExistsError } from '../../../accounting/errors'
+import { PaymentMethodHandlerService } from '../../../payment-method/handler/service'
 
 export interface OutgoingPaymentService
-  extends PaymentPointerSubresourceService<OutgoingPayment> {
+  extends WalletAddressSubresourceService<OutgoingPayment> {
   create(
     options: CreateOutgoingPaymentOptions
   ): Promise<OutgoingPayment | OutgoingPaymentError>
@@ -52,8 +52,8 @@ export interface ServiceDependencies extends BaseService {
   accountingService: AccountingService
   receiverService: ReceiverService
   peerService: PeerService
-  makeIlpPlugin: (options: IlpPluginOptions) => IlpPlugin
-  paymentPointerService: PaymentPointerService
+  paymentMethodHandlerService: PaymentMethodHandlerService
+  walletAddressService: WalletAddressService
 }
 
 export async function createOutgoingPaymentService(
@@ -69,7 +69,7 @@ export async function createOutgoingPaymentService(
       createOutgoingPayment(deps, options),
     fund: (options) => fundPayment(deps, options),
     processNext: () => worker.processPendingPayment(deps),
-    getPaymentPointerPage: (options) => getPaymentPointerPage(deps, options)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options)
   }
 }
 
@@ -79,18 +79,19 @@ async function getOutgoingPayment(
 ): Promise<OutgoingPayment | undefined> {
   const outgoingPayment = await OutgoingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('quote.asset')
+    .withGraphFetched('[quote.asset, walletAddress]')
   if (outgoingPayment) return await addSentAmount(deps, outgoingPayment)
   else return
 }
 
 export interface CreateOutgoingPaymentOptions {
-  paymentPointerId: string
+  walletAddressId: string
   quoteId: string
   client?: string
   grant?: Grant
   metadata?: Record<string, unknown>
   callback?: (f: unknown) => NodeJS.Timeout
+  grantLockTimeoutMs?: number
 }
 
 async function createOutgoingPayment(
@@ -98,17 +99,15 @@ async function createOutgoingPayment(
   options: CreateOutgoingPaymentOptions
 ): Promise<OutgoingPayment | OutgoingPaymentError> {
   const grantId = options.grant?.id
-  const paymentPointerId = options.paymentPointerId
+  const walletAddressId = options.walletAddressId
   try {
     return await OutgoingPayment.transaction(deps.knex, async (trx) => {
-      const paymentPointer = await deps.paymentPointerService.get(
-        paymentPointerId
-      )
-      if (!paymentPointer) {
-        throw OutgoingPaymentError.UnknownPaymentPointer
+      const walletAddress = await deps.walletAddressService.get(walletAddressId)
+      if (!walletAddress) {
+        throw OutgoingPaymentError.UnknownWalletAddress
       }
-      if (!paymentPointer.isActive) {
-        throw OutgoingPaymentError.InactivePaymentPointer
+      if (!walletAddress.isActive) {
+        throw OutgoingPaymentError.InactiveWalletAddress
       }
 
       if (grantId) {
@@ -122,16 +121,16 @@ async function createOutgoingPayment(
       const payment = await OutgoingPayment.query(trx)
         .insertAndFetch({
           id: options.quoteId,
-          paymentPointerId,
+          walletAddressId: walletAddressId,
           metadata: options.metadata,
           state: OutgoingPaymentState.Funding,
           client: options.client,
           grantId
         })
-        .withGraphFetched('[quote.asset]')
+        .withGraphFetched('[quote.asset, walletAddress]')
 
       if (
-        payment.paymentPointerId !== payment.quote.paymentPointerId ||
+        payment.walletAddressId !== payment.quote.walletAddressId ||
         payment.quote.expiresAt.getTime() <= payment.createdAt.getTime()
       ) {
         throw OutgoingPaymentError.InvalidQuote
@@ -146,7 +145,8 @@ async function createOutgoingPayment(
             },
             payment,
             options.grant,
-            options.callback
+            options.callback,
+            options.grantLockTimeoutMs
           ))
         ) {
           throw OutgoingPaymentError.InsufficientGrant
@@ -182,9 +182,9 @@ async function createOutgoingPayment(
       if (err.constraint === 'outgoingpayments_id_foreign') {
         return OutgoingPaymentError.UnknownQuote
       } else if (
-        err.constraint === 'outgoingpayments_paymentpointerid_foreign'
+        err.constraint === 'outgoingpayments_walletaddressid_foreign'
       ) {
-        return OutgoingPaymentError.UnknownPaymentPointer
+        return OutgoingPaymentError.UnknownWalletAddress
       }
     } else if (isOutgoingPaymentError(err)) {
       return err
@@ -233,9 +233,9 @@ function validateAmountAssets(
   limits: Limits
 ): boolean {
   if (
-    limits.sendAmount &&
-    (limits.sendAmount.assetCode !== payment.asset.code ||
-      limits.sendAmount.assetScale !== payment.asset.scale)
+    limits.debitAmount &&
+    (limits.debitAmount.assetCode !== payment.asset.code ||
+      limits.debitAmount.assetScale !== payment.asset.scale)
   ) {
     return false
   }
@@ -255,7 +255,8 @@ async function validateGrant(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
   grant: Grant,
-  callback?: (f: unknown) => NodeJS.Timeout
+  callback?: (f: unknown) => NodeJS.Timeout,
+  grantLockTimeoutMs: number = 5000
 ): Promise<boolean> {
   if (!grant.limits) {
     return true
@@ -264,10 +265,10 @@ async function validateGrant(
   if (!paymentLimits) {
     return false
   }
-  if (!paymentLimits.sendAmount && !paymentLimits.receiveAmount) return true
+  if (!paymentLimits.debitAmount && !paymentLimits.receiveAmount) return true
   if (
-    (paymentLimits.sendAmount &&
-      paymentLimits.sendAmount.value < payment.sendAmount.value) ||
+    (paymentLimits.debitAmount &&
+      paymentLimits.debitAmount.value < payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value < payment.receiveAmount.value)
   ) {
@@ -282,7 +283,7 @@ async function validateGrant(
     .select()
     .where('id', grant.id)
     .forNoKeyUpdate()
-    .timeout(5000)
+    .timeout(grantLockTimeoutMs)
 
   if (callback) await new Promise(callback)
 
@@ -322,16 +323,17 @@ async function validateGrant(
         // Estimate delivered amount of failed payment
         receivedAmount +=
           (grantPayment.receiveAmount.value * totalSent) /
-          grantPayment.sendAmount.value
+          grantPayment.debitAmount.value
       } else {
-        sentAmount += grantPayment.sendAmount.value
+        sentAmount += grantPayment.debitAmount.value
         receivedAmount += grantPayment.receiveAmount.value
       }
     }
   }
   if (
-    (paymentLimits.sendAmount &&
-      paymentLimits.sendAmount.value - sentAmount < payment.sendAmount.value) ||
+    (paymentLimits.debitAmount &&
+      paymentLimits.debitAmount.value - sentAmount <
+        payment.debitAmount.value) ||
     (paymentLimits.receiveAmount &&
       paymentLimits.receiveAmount.value - receivedAmount <
         payment.receiveAmount.value)
@@ -360,7 +362,7 @@ async function fundPayment(
     if (payment.state !== OutgoingPaymentState.Funding) {
       return FundingError.WrongState
     }
-    if (amount !== payment.sendAmount.value) return FundingError.InvalidAmount
+    if (amount !== payment.debitAmount.value) return FundingError.InvalidAmount
 
     // Create the outgoing payment liquidity account before trying to transfer funds to it.
     try {
@@ -393,13 +395,13 @@ async function fundPayment(
   })
 }
 
-async function getPaymentPointerPage(
+async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<OutgoingPayment[]> {
   const page = await OutgoingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('quote.asset')
+    .withGraphFetched('[quote.asset, walletAddress]')
   const amounts = await deps.accountingService.getAccountsTotalSent(
     page.map((payment: OutgoingPayment) => payment.id)
   )

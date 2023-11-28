@@ -12,9 +12,13 @@ import { Asset } from '../../asset/model'
 import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
-import { errorToCode, errorToMessage, PeerError } from '../../peer/errors'
-import { Peer as PeerModel } from '../../peer/model'
-import { PeerService } from '../../peer/service'
+import {
+  errorToCode,
+  errorToMessage,
+  PeerError
+} from '../../payment-method/ilp/peer/errors'
+import { Peer as PeerModel } from '../../payment-method/ilp/peer/model'
+import { PeerService } from '../../payment-method/ilp/peer/service'
 import { createAsset } from '../../tests/asset'
 import { createPeer } from '../../tests/peer'
 import {
@@ -46,7 +50,9 @@ describe('Peer Resolvers', (): void => {
     },
     maxPacketAmount: BigInt(100),
     staticIlpAddress: 'test.' + uuid(),
-    name: faker.person.fullName()
+    name: faker.person.fullName(),
+    liquidityThreshold: BigInt(100),
+    initialLiquidity: BigInt(100)
   })
 
   beforeAll(async (): Promise<void> => {
@@ -96,6 +102,7 @@ describe('Peer Resolvers', (): void => {
                   staticIlpAddress
                   liquidity
                   name
+                  liquidityThreshold
                 }
               }
             }
@@ -132,8 +139,9 @@ describe('Peer Resolvers', (): void => {
         },
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         staticIlpAddress: peer.staticIlpAddress,
-        liquidity: '0',
-        name: peer.name
+        liquidity: peer.initialLiquidity?.toString(),
+        name: peer.name,
+        liquidityThreshold: peer.liquidityThreshold?.toString()
       })
       delete peer.http.incoming
       await expect(peerService.get(response.peer.id)).resolves.toMatchObject({
@@ -151,6 +159,8 @@ describe('Peer Resolvers', (): void => {
       ${PeerError.InvalidStaticIlpAddress}
       ${PeerError.InvalidHTTPEndpoint}
       ${PeerError.UnknownAsset}
+      ${PeerError.DuplicatePeer}
+      ${PeerError.InvalidInitialLiquidity}
     `('4XX - $error', async ({ error }): Promise<void> => {
       jest.spyOn(peerService, 'create').mockResolvedValueOnce(error)
       const peer = randomPeer()
@@ -247,6 +257,7 @@ describe('Peer Resolvers', (): void => {
                   staticIlpAddress
                   liquidity
                   name
+                  liquidityThreshold
                 }
               }
             `,
@@ -280,7 +291,8 @@ describe('Peer Resolvers', (): void => {
         staticIlpAddress: peer.staticIlpAddress,
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         liquidity: '0',
-        name: peer.name
+        name: peer.name,
+        liquidityThreshold: '100'
       })
 
       await accountingService.createDeposit({
@@ -307,7 +319,8 @@ describe('Peer Resolvers', (): void => {
         staticIlpAddress: peer.staticIlpAddress,
         maxPacketAmount: peer.maxPacketAmount?.toString(),
         liquidity: '100',
-        name: peer.name
+        name: peer.name,
+        liquidityThreshold: '100'
       })
     })
 
@@ -353,6 +366,7 @@ describe('Peer Resolvers', (): void => {
       for (let i = 0; i < 2; i++) {
         peers.push(await createPeer(deps, randomPeer()))
       }
+      peers.reverse() // Calling the default getPage will result in descending order
       const query = await appContainer.apolloClient
         .query({
           query: gql`
@@ -374,6 +388,7 @@ describe('Peer Resolvers', (): void => {
                     }
                     staticIlpAddress
                     name
+                    liquidityThreshold
                   }
                   cursor
                 }
@@ -410,7 +425,8 @@ describe('Peer Resolvers', (): void => {
           },
           staticIlpAddress: peer.staticIlpAddress,
           maxPacketAmount: peer.maxPacketAmount?.toString(),
-          name: peer.name
+          name: peer.name,
+          liquidityThreshold: '100'
         })
       })
     })
@@ -437,7 +453,8 @@ describe('Peer Resolvers', (): void => {
           }
         },
         staticIlpAddress: 'g.rafiki.' + peer.id,
-        name: faker.person.fullName()
+        name: faker.person.fullName(),
+        liquidityThreshold: BigInt(200)
       }
       assert.ok(updateOptions.http)
       const response = await appContainer.apolloClient
@@ -459,6 +476,7 @@ describe('Peer Resolvers', (): void => {
                   }
                   staticIlpAddress
                   name
+                  liquidityThreshold
                 }
               }
             }
@@ -488,7 +506,8 @@ describe('Peer Resolvers', (): void => {
           }
         },
         staticIlpAddress: updateOptions.staticIlpAddress,
-        name: updateOptions.name
+        name: updateOptions.name,
+        liquidityThreshold: '200'
       })
       await expect(peerService.get(peer.id)).resolves.toMatchObject({
         asset: peer.asset,
@@ -497,7 +516,8 @@ describe('Peer Resolvers', (): void => {
         },
         maxPacketAmount: BigInt(updateOptions.maxPacketAmount),
         staticIlpAddress: updateOptions.staticIlpAddress,
-        name: updateOptions.name
+        name: updateOptions.name,
+        liquidityThreshold: BigInt(200)
       })
     })
 

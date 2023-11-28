@@ -32,18 +32,20 @@ export async function createAccount(
 
 export async function getLiquidityAccount(
   deps: ServiceDependencies,
-  accountRef: string
+  accountRef: string,
+  trx?: TransactionOrKnex
 ): Promise<LedgerAccount | undefined> {
-  return LedgerAccount.query(deps.knex)
+  return LedgerAccount.query(trx ?? deps.knex)
     .findOne({ accountRef })
     .whereNot({ type: LedgerAccountType.SETTLEMENT })
 }
 
 export async function getSettlementAccount(
   deps: ServiceDependencies,
-  accountRef: string
+  accountRef: string,
+  trx?: TransactionOrKnex
 ): Promise<LedgerAccount | undefined> {
-  return LedgerAccount.query(deps.knex)
+  return LedgerAccount.query(trx ?? deps.knex)
     .findOne({ accountRef })
     .where({ type: LedgerAccountType.SETTLEMENT })
 }

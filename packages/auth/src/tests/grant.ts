@@ -1,16 +1,24 @@
+import { v4 } from 'uuid'
 import { faker } from '@faker-js/faker'
-import { FinishMethod, Grant, StartMethod } from '../grant/model'
-import { generateNonce } from '../shared/utils'
 import { AccessAction, AccessType } from '@interledger/open-payments'
 import { IocContract } from '@adonisjs/fold'
 import { AppServices } from '../app'
+import {
+  Grant,
+  GrantState,
+  GrantFinalization,
+  StartMethod,
+  FinishMethod
+} from '../grant/model'
+import { generateNonce, generateToken } from '../shared/utils'
+
+const CLIENT = faker.internet.url({ appendSlash: false })
 
 export async function createGrant(
   deps: IocContract<AppServices>,
   options?: { identifier?: string }
 ): Promise<Grant> {
   const grantService = await deps.use('grantService')
-  const CLIENT = faker.internet.url({ appendSlash: false })
   const BASE_GRANT_ACCESS = {
     actions: [AccessAction.Create, AccessAction.Read, AccessAction.List],
     identifier: options?.identifier
@@ -39,4 +47,25 @@ export async function createGrant(
       ]
     }
   })
+}
+
+export interface GenerateBaseGrantOptions {
+  state?: GrantState
+  finalizationReason?: GrantFinalization
+}
+
+export const generateBaseGrant = (options: GenerateBaseGrantOptions = {}) => {
+  const { state = GrantState.Processing, finalizationReason = undefined } =
+    options
+  return {
+    state,
+    finalizationReason,
+    startMethod: [StartMethod.Redirect],
+    continueToken: generateToken(),
+    continueId: v4(),
+    finishMethod: FinishMethod.Redirect,
+    finishUri: 'https://example.com',
+    clientNonce: generateNonce(),
+    client: CLIENT
+  }
 }

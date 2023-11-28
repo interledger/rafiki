@@ -1,27 +1,30 @@
 import { Resolvers } from '../generated/graphql'
 import {
-  getPaymentPointer,
-  getPaymentPointers,
-  createPaymentPointer,
-  updatePaymentPointer,
-  triggerPaymentPointerEvents
-} from './payment_pointer'
+  getWalletAddress,
+  getWalletAddresses,
+  createWalletAddress,
+  updateWalletAddress,
+  triggerWalletAddressEvents
+} from './wallet_address'
 import {
   getAsset,
   getAssets,
   createAsset,
-  updateAssetWithdrawalThreshold
+  updateAsset,
+  getAssetReceivingFee,
+  getAssetSendingFee,
+  getFees
 } from './asset'
 import {
-  getPaymentPointerIncomingPayments,
+  getWalletAddressIncomingPayments,
   createIncomingPayment,
   getIncomingPayment
 } from './incoming_payment'
-import { getQuote, createQuote, getPaymentPointerQuotes } from './quote'
+import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
 import {
   getOutgoingPayment,
   createOutgoingPayment,
-  getPaymentPointerOutgoingPayments
+  getWalletAddressOutgoingPayments
 } from './outgoing_payment'
 import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
@@ -31,7 +34,7 @@ import {
   addPeerLiquidity,
   createAssetLiquidityWithdrawal,
   createPeerLiquidityWithdrawal,
-  createPaymentPointerWithdrawal,
+  createWalletAddressWithdrawal,
   postLiquidityWithdrawal,
   voidLiquidityWithdrawal,
   depositEventLiquidity,
@@ -39,26 +42,32 @@ import {
 } from './liquidity'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
-  createPaymentPointerKey,
-  revokePaymentPointerKey
-} from './paymentPointerKey'
+  createWalletAddressKey,
+  revokeWalletAddressKey
+} from './walletAddressKey'
 import { createReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
+import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
+import { getCombinedPayments } from './combined_payments'
+import { createOrUpdatePeerByUrl } from './auto-peering'
 
 export const resolvers: Resolvers = {
   UInt8: GraphQLUInt8,
   UInt64: GraphQLBigInt,
   JSONObject: GraphQLJSONObject,
   Asset: {
-    liquidity: getAssetLiquidity
+    liquidity: getAssetLiquidity,
+    sendingFee: getAssetSendingFee,
+    receivingFee: getAssetReceivingFee,
+    fees: getFees
   },
   Peer: {
     liquidity: getPeerLiquidity
   },
   Query: {
-    paymentPointer: getPaymentPointer,
-    paymentPointers: getPaymentPointers,
+    walletAddress: getWalletAddress,
+    walletAddresses: getWalletAddresses,
     asset: getAsset,
     assets: getAssets,
     outgoingPayment: getOutgoingPayment,
@@ -66,36 +75,39 @@ export const resolvers: Resolvers = {
     peer: getPeer,
     peers: getPeers,
     quote: getQuote,
-    webhookEvents: getWebhookEvents
+    webhookEvents: getWebhookEvents,
+    payments: getCombinedPayments
   },
-  PaymentPointer: {
-    incomingPayments: getPaymentPointerIncomingPayments,
-    outgoingPayments: getPaymentPointerOutgoingPayments,
-    quotes: getPaymentPointerQuotes
+  WalletAddress: {
+    incomingPayments: getWalletAddressIncomingPayments,
+    outgoingPayments: getWalletAddressOutgoingPayments,
+    quotes: getWalletAddressQuotes
   },
   Mutation: {
-    createPaymentPointerKey,
-    revokePaymentPointerKey,
-    createPaymentPointer,
-    updatePaymentPointer,
-    triggerPaymentPointerEvents,
+    createWalletAddressKey,
+    revokeWalletAddressKey,
+    createWalletAddress,
+    updateWalletAddress,
+    triggerWalletAddressEvents,
     createAsset,
-    updateAssetWithdrawalThreshold,
+    updateAsset: updateAsset,
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,
     createReceiver,
     createPeer: createPeer,
+    createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,
     updatePeer: updatePeer,
     deletePeer: deletePeer,
     addAssetLiquidity: addAssetLiquidity,
     addPeerLiquidity: addPeerLiquidity,
     createAssetLiquidityWithdrawal: createAssetLiquidityWithdrawal,
     createPeerLiquidityWithdrawal: createPeerLiquidityWithdrawal,
-    createPaymentPointerWithdrawal,
+    createWalletAddressWithdrawal,
     postLiquidityWithdrawal: postLiquidityWithdrawal,
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
-    withdrawEventLiquidity
+    withdrawEventLiquidity,
+    setFee
   }
 }

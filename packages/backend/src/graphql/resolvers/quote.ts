@@ -1,7 +1,7 @@
 import {
   MutationResolvers,
   Quote as SchemaQuote,
-  PaymentPointerResolvers,
+  WalletAddressResolvers,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
@@ -14,7 +14,7 @@ import {
 import { Quote } from '../../open_payments/quote/model'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 import { CreateQuoteOptions } from '../../open_payments/quote/service'
 
 export const getQuote: QueryResolvers<ApolloContext>['quote'] = async (
@@ -34,10 +34,11 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteResponse']> => {
     const quoteService = await ctx.container.use('quoteService')
     const options: CreateQuoteOptions = {
-      paymentPointerId: args.input.paymentPointerId,
-      receiver: args.input.receiver
+      walletAddressId: args.input.walletAddressId,
+      receiver: args.input.receiver,
+      method: 'ilp'
     }
-    if (args.input.sendAmount) options.sendAmount = args.input.sendAmount
+    if (args.input.debitAmount) options.debitAmount = args.input.debitAmount
     if (args.input.receiveAmount)
       options.receiveAmount = args.input.receiveAmount
     return quoteService
@@ -62,21 +63,26 @@ export const createQuote: MutationResolvers<ApolloContext>['createQuote'] =
       }))
   }
 
-export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['quotes'] =
+export const getWalletAddressQuotes: WalletAddressResolvers<ApolloContext>['quotes'] =
   async (parent, args, ctx): Promise<ResolversTypes['QuoteConnection']> => {
-    if (!parent.id) throw new Error('missing payment pointer id')
+    if (!parent.id) throw new Error('missing wallet address id')
     const quoteService = await ctx.container.use('quoteService')
-    const quotes = await quoteService.getPaymentPointerPage({
-      paymentPointerId: parent.id,
-      pagination: args
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const quotes = await quoteService.getWalletAddressPage({
+      walletAddressId: parent.id,
+      pagination,
+      sortOrder: order
     })
     const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
-        quoteService.getPaymentPointerPage({
-          paymentPointerId: parent.id as string,
-          pagination
+      (pagination: Pagination, sortOrder?: SortOrder) =>
+        quoteService.getWalletAddressPage({
+          walletAddressId: parent.id as string,
+          pagination,
+          sortOrder
         }),
-      quotes
+      quotes,
+      order
     )
     return {
       pageInfo,
@@ -90,9 +96,9 @@ export const getPaymentPointerQuotes: PaymentPointerResolvers<ApolloContext>['qu
 export function quoteToGraphql(quote: Quote): SchemaQuote {
   return {
     id: quote.id,
-    paymentPointerId: quote.paymentPointerId,
+    walletAddressId: quote.walletAddressId,
     receiver: quote.receiver,
-    sendAmount: quote.sendAmount,
+    debitAmount: quote.debitAmount,
     receiveAmount: quote.receiveAmount,
     maxPacketAmount: quote.maxPacketAmount,
     minExchangeRate: quote.minExchangeRate.valueOf(),

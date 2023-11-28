@@ -1,14 +1,13 @@
 # Local Playground
 
-We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](../packages/documentation/docs/reference/glossary.md#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](../packages/documentation/docs/reference/glossary.md#open-payments) APIs with its required [GNAP](../packages/documentation/docs/reference/glossary.md#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
+We have created a suite of packages that, together, mock an account servicing entity that has deployed Rafiki, exposing an [SPSP](https://rafiki.dev/reference/glossary/#simple-payments-setup-protocol-spsp) endpoint, the [Open Payments](https://rafiki.dev/concepts/open-payments/overview/) APIs with its required [GNAP](https://rafiki.dev/reference/glossary/#grant-negotiation-authorization-protocol) auth endpoints to request grants, a STREAM endpoint for receiving Interledger packets, and a UI to view and manage the Rafiki instance. Additionally, we provide a simple request signing service that is used by Postman to generate request signatures required by the Open Payments APIs.
 
 These packages include:
 
 - `backend` (SPSP, Open Payments APIs, GraphQL Admin APIs, STREAM endpoint)
 - `auth` (GNAP auth server)
-- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](../packages/documentation/docs/reference/glossary.md#account-servicing-entity))
+- `mock-account-servicing-entity` (mocks an [Account Servicing Entity](https://rafiki.dev/concepts/account-servicing-entity/)
 - `frontend` (Remix app to expose a UI for Rafiki Admin management via interaction with the `backend` Admin APIs)
-- `local-http-signatures` (request signature generation for Postman)
 
 These packages depend on the following databases:
 
@@ -30,27 +29,31 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 (b) Admin API - accessible at http://localhost:3001/graphql
 
-(c) Open Payments API - accessible at http://localhost:3000
+(c) Auth API - accessible at http://localhost:3003/graphql
 
-(d) Rafiki Admin - accessible at http://localhost:3010
+(d) Open Payments API - accessible at http://localhost:3000
 
-(e) Open Payments Auth API - accessible at http://localhost:3006
+(e) Rafiki Admin - accessible at http://localhost:3010
 
-(f) Postman Signature Service - accessible at http://localhost:3040
+(f) Open Payments Auth API - accessible at http://localhost:3006
+
+(g) Postman Signature Service - accessible at http://localhost:3040
 
 #### Happy Life Bank
 
-(g) User Interface - accessible at http://localhost:3031
+(h) User Interface - accessible at http://localhost:3031
 
-(h) Admin API - accessible at http://localhost:4001/graphql
+(i) Admin API - accessible at http://localhost:4001/graphql
 
-(i) Open Payments API - accessible at http://localhost:4000
+(j) Auth API - accessible at http://localhost:4003/graphql
 
-(j) Rafiki Admin - accessible at http://localhost:4010
+(k) Open Payments API - accessible at http://localhost:4000
 
-(k) Open Payments Auth API - accessible at http://localhost:4006
+(l) Rafiki Admin - accessible at http://localhost:4010
 
-(l) Postman Signature Service - accessible at http://localhost:3041
+(m) Open Payments Auth API - accessible at http://localhost:4006
+
+(n) Postman Signature Service - accessible at http://localhost:3041
 
 #### Database
 
@@ -105,6 +108,30 @@ both include the `local-signature-utils` signature generation app for Postman.
 The secondary Happy Life Bank docker compose file (`./happy-life-bank/docker-compose.yml`) includes only the Rafiki services, not the data stores. It uses the
 data stores created by the primary Rafiki instance so it can't be run by itself.
 The `pnpm localenv:compose up` command starts both the primary instance and the secondary.
+
+#### Autopeering
+
+If you want to start the local env and peer it automatically to rafiki.money, you can run the following commands:
+
+```
+pnpm localenv:compose:autopeer
+
+// OR to start with Postgres db
+pnpm localenv:compose:psql:autopeer
+```
+
+Your local cloud nine rafiki instance will be peered automatically in this case with https://rafiki.money instance.
+The required services will be exposed externally using [tunnelmole](https://www.npmjs.com/package/tunnelmole) package.
+The exposed ports are 3000(open-payments), 3006(auth server), 3002(ilp connector).
+
+To use the postman collection examples follow the steps:
+
+1. run `docker logs rafiki-cloud-nine-mock-ase-1`
+2. find the list of created wallet addresses
+3. copy the url of one of the wallet addresses
+4. set the url into `senderWalletAddress` postman variable in `Remote Environment`
+
+After stopping the script it is necessary to clear the environment using the command described in [Shutting down](#Shutting-down). This is necessary as on a new run of the scripts (with autopeering or not) the wallet address url will differ.
 
 ### Shutting down
 
@@ -166,7 +193,7 @@ In addition to the using the Admin UI for interacting with the Admin APIs, you c
 
 #### SPSP
 
-Every payment pointer also serves as an SPSP endpoint. A GET request to e.g. `http://localhost:3000/accounts/gfranklin` with `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details.
+Every wallet address also serves as an SPSP endpoint. A GET request to e.g. `http://localhost:3000/accounts/gfranklin` with `Accept` header `application/spsp4+json` will return an SPSP response with STREAM connection details.
 
 ```http
 http GET http://localhost:3000/accounts/gfranklin Host:backend Accept:application/spsp4+json

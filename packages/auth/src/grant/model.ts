@@ -7,6 +7,7 @@ import {
   Grant as OpenPaymentsGrant
 } from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
+import { Interaction } from '../interaction/model'
 
 export enum StartMethod {
   Redirect = 'redirect'
@@ -16,11 +17,17 @@ export enum FinishMethod {
   Redirect = 'redirect'
 }
 
-export enum GrantState {
-  Pending = 'PENDING',
-  Granted = 'GRANTED',
+export enum GrantFinalization {
+  Issued = 'ISSUED',
   Revoked = 'REVOKED',
   Rejected = 'REJECTED'
+}
+
+export enum GrantState {
+  Processing = 'PROCESSING',
+  Pending = 'PENDING',
+  Approved = 'APPROVED',
+  Finalized = 'FINALIZED'
 }
 
 export class Grant extends BaseModel {
@@ -45,10 +52,19 @@ export class Grant extends BaseModel {
         from: 'grants.id',
         to: 'accesses.grantId'
       }
+    },
+    interaction: {
+      relation: Model.HasManyRelation,
+      modelClass: join(__dirname, '../interaction/model'),
+      join: {
+        from: 'grants.id',
+        to: 'interactions.grantId'
+      }
     }
   })
   public access!: Access[]
   public state!: GrantState
+  public finalizationReason?: GrantFinalization
   public startMethod!: StartMethod[]
   public identifier!: string
 
@@ -60,10 +76,6 @@ export class Grant extends BaseModel {
   public finishUri?: string
   public client!: string
   public clientNonce?: string // client-generated nonce for post-interaction hash
-
-  public interactId?: string
-  public interactRef?: string
-  public interactNonce?: string // AS-generated nonce for post-interaction hash
 }
 
 interface ToOpenPaymentsPendingGrantArgs {
@@ -77,16 +89,13 @@ interface ToOpenPaymentsPendingGrantArgs {
 
 export function toOpenPaymentPendingGrant(
   grant: Grant,
+  interaction: Interaction,
   args: ToOpenPaymentsPendingGrantArgs
 ): OpenPaymentsPendingGrant {
-  if (!isPendingGrant(grant)) {
-    throw new Error('Expected pending/interactive grant')
-  }
-
   const { authServerUrl, client, waitTimeSeconds } = args
 
   const redirectUri = new URL(
-    authServerUrl + `/interact/${grant.interactId}/${grant.interactNonce}`
+    authServerUrl + `/interact/${interaction.id}/${interaction.nonce}`
   )
 
   redirectUri.searchParams.set('clientName', client.name)
@@ -95,13 +104,13 @@ export function toOpenPaymentPendingGrant(
   return {
     interact: {
       redirect: redirectUri.toString(),
-      finish: grant.interactNonce
+      finish: interaction.nonce
     },
     continue: {
       access_token: {
         value: grant.continueToken
       },
-      uri: `${authServerUrl}/auth/continue/${grant.continueId}`,
+      uri: `${authServerUrl}/continue/${grant.continueId}`,
       wait: waitTimeSeconds
     }
   }
@@ -130,20 +139,25 @@ export function toOpenPaymentsGrant(
   }
 }
 
-export interface PendingGrant extends Grant {
+export interface FinishableGrant extends Grant {
   finishMethod: NonNullable<Grant['finishMethod']>
   finishUri: NonNullable<Grant['finishUri']>
-  interactId: NonNullable<Grant['interactId']>
-  interactRef: NonNullable<Grant['interactRef']>
-  interactNonce: NonNullable<Grant['interactNonce']> // AS-generated nonce for post-interaction hash
 }
 
-export function isPendingGrant(grant: Grant): grant is PendingGrant {
+export function isFinishableGrant(grant: Grant): grant is FinishableGrant {
+  return !!(grant.finishMethod && grant.finishUri)
+}
+
+export function isRejectedGrant(grant: Grant): boolean {
   return !!(
-    grant.finishMethod &&
-    grant.finishUri &&
-    grant.interactId &&
-    grant.interactRef &&
-    grant.interactNonce
+    grant.state === GrantState.Finalized &&
+    grant.finalizationReason === GrantFinalization.Rejected
+  )
+}
+
+export function isRevokedGrant(grant: Grant): boolean {
+  return !!(
+    grant.state === GrantState.Finalized &&
+    grant.finalizationReason === GrantFinalization.Revoked
   )
 }

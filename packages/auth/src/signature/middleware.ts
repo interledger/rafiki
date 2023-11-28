@@ -8,11 +8,16 @@ import {
 } from '@interledger/http-signature-utils'
 
 import { AppContext } from '../app'
-import { ContinueContext, CreateContext, DeleteContext } from '../grant/routes'
+import { ContinueContext, CreateContext, RevokeContext } from '../grant/routes'
+import { Config } from '../config/app'
 
 function contextToRequestLike(ctx: AppContext): RequestLike {
+  const url =
+    Config.env === 'autopeer'
+      ? ctx.href.replace('http://', 'https://')
+      : ctx.href
   return {
-    url: ctx.href,
+    url,
     method: ctx.method,
     headers: ctx.headers,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
@@ -42,7 +47,7 @@ async function verifySigFromClient(
 }
 
 export async function grantContinueHttpsigMiddleware(
-  ctx: ContinueContext | DeleteContext,
+  ctx: ContinueContext | RevokeContext,
   next: () => Promise<any>
 ): Promise<void> {
   if (
@@ -71,9 +76,9 @@ export async function grantContinueHttpsigMiddleware(
   const grantService = await ctx.container.use('grantService')
   const grant = await grantService.getByContinue(
     ctx.params['id'],
-    continueToken,
-    interactRef
+    continueToken
   )
+
   if (!grant) {
     ctx.status = 401
     ctx.body = {
@@ -81,6 +86,18 @@ export async function grantContinueHttpsigMiddleware(
       message: 'invalid grant'
     }
     return
+  }
+
+  const interactionService = await ctx.container.use('interactionService')
+  const interaction =
+    interactRef && (await interactionService.getByRef(interactRef))
+
+  if (!interaction) {
+    ctx.status = 401
+    ctx.body = {
+      error: 'invalid_continuation',
+      message: 'invalid interaction'
+    }
   }
 
   const sigVerified = await verifySigFromClient(grant.client, ctx)

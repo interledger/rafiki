@@ -3,29 +3,36 @@ import * as Pay from '@interledger/pay'
 
 import { Amount, serializeAmount } from '../amount'
 import {
-  PaymentPointer,
-  PaymentPointerSubresource
-} from '../payment_pointer/model'
+  WalletAddress,
+  WalletAddressSubresource
+} from '../wallet_address/model'
 import { Asset } from '../../asset/model'
 import { Quote as OpenPaymentsQuote } from '@interledger/open-payments'
+import { Fee } from '../../fee/model'
 
-export class Quote extends PaymentPointerSubresource {
+export class Quote extends WalletAddressSubresource {
   public static readonly tableName = 'quotes'
   public static readonly urlPath = '/quotes'
 
   static get virtualAttributes(): string[] {
     return [
-      'sendAmount',
+      'debitAmount',
       'receiveAmount',
       'minExchangeRate',
       'lowEstimatedExchangeRate',
-      'highEstimatedExchangeRate'
+      'highEstimatedExchangeRate',
+      'method'
     ]
   }
 
   // Asset id of the sender
   public assetId!: string
   public asset!: Asset
+  public additionalFields!: Record<string, unknown>
+
+  public estimatedExchangeRate?: number
+  public feeId?: string
+  public fee?: Fee
 
   static get relationMappings() {
     return {
@@ -37,6 +44,14 @@ export class Quote extends PaymentPointerSubresource {
           from: 'quotes.assetId',
           to: 'assets.id'
         }
+      },
+      fee: {
+        relation: Model.HasOneRelation,
+        modelClass: Fee,
+        join: {
+          from: 'quotes.feeId',
+          to: 'fees.id'
+        }
       }
     }
   }
@@ -45,22 +60,23 @@ export class Quote extends PaymentPointerSubresource {
 
   public receiver!: string
 
-  private sendAmountValue!: bigint
+  private debitAmountValue!: bigint
 
-  public getUrl(paymentPointer: PaymentPointer): string {
-    return `${paymentPointer.url}${Quote.urlPath}/${this.id}`
+  public getUrl(walletAddress: WalletAddress): string {
+    const url = new URL(walletAddress.url)
+    return `${url.origin}${Quote.urlPath}/${this.id}`
   }
 
-  public get sendAmount(): Amount {
+  public get debitAmount(): Amount {
     return {
-      value: this.sendAmountValue,
+      value: this.debitAmountValue,
       assetCode: this.asset.code,
       assetScale: this.asset.scale
     }
   }
 
-  public set sendAmount(amount: Amount) {
-    this.sendAmountValue = amount.value
+  public set debitAmount(amount: Amount) {
+    this.debitAmountValue = amount.value
   }
 
   private receiveAmountValue!: bigint
@@ -90,7 +106,7 @@ export class Quote extends PaymentPointerSubresource {
   private highEstimatedExchangeRateDenominator!: bigint
 
   public get maxSourceAmount(): bigint {
-    return this.sendAmountValue
+    return this.debitAmountValue
   }
 
   public get minDeliveryAmount(): bigint {
@@ -138,15 +154,19 @@ export class Quote extends PaymentPointerSubresource {
     this.highEstimatedExchangeRateDenominator = value.b.value
   }
 
+  public get method(): 'ilp' {
+    return 'ilp'
+  }
+
   $formatJson(json: Pojo): Pojo {
     json = super.$formatJson(json)
     return {
       id: json.id,
-      paymentPointerId: json.paymentPointerId,
+      walletAddressId: json.walletAddressId,
       receiver: json.receiver,
-      sendAmount: {
-        ...json.sendAmount,
-        value: json.sendAmount.value.toString()
+      debitAmount: {
+        ...json.debitAmount,
+        value: json.debitAmount.value.toString()
       },
       receiveAmount: {
         ...json.receiveAmount,
@@ -157,15 +177,16 @@ export class Quote extends PaymentPointerSubresource {
     }
   }
 
-  public toOpenPaymentsType(paymentPointer: PaymentPointer): OpenPaymentsQuote {
+  public toOpenPaymentsType(walletAddress: WalletAddress): OpenPaymentsQuote {
     return {
-      id: this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.url,
+      id: this.getUrl(walletAddress),
+      walletAddress: walletAddress.url,
       receiveAmount: serializeAmount(this.receiveAmount),
-      sendAmount: serializeAmount(this.sendAmount),
+      debitAmount: serializeAmount(this.debitAmount),
       receiver: this.receiver,
       expiresAt: this.expiresAt.toISOString(),
-      createdAt: this.createdAt.toISOString()
+      createdAt: this.createdAt.toISOString(),
+      method: this.method
     }
   }
 }

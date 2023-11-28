@@ -1,8 +1,8 @@
-import { BaseModel, Pagination } from './baseModel'
+import { BaseModel, Pagination, SortOrder } from './baseModel'
 
 interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
-  getPage: (pagination?: Pagination) => Promise<Type[]>
+  getPage: (pagination?: Pagination, sortOrder?: SortOrder) => Promise<Type[]>
 }
 
 export const getPageTests = <Type extends BaseModel>({
@@ -10,12 +10,16 @@ export const getPageTests = <Type extends BaseModel>({
   getPage
 }: PageTestsOptions<Type>): void => {
   describe('Common BaseModel pagination', (): void => {
+    const sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
     let modelsCreated: Type[]
 
     beforeEach(async (): Promise<void> => {
       modelsCreated = []
       for (let i = 0; i < 22; i++) {
         modelsCreated.push(await createModel())
+      }
+      if (sortOrder === SortOrder.Desc) {
+        modelsCreated.reverse()
       }
     })
 
@@ -35,7 +39,7 @@ export const getPageTests = <Type extends BaseModel>({
       if (pagination?.before !== undefined) {
         pagination.before = modelsCreated[pagination.before].id
       }
-      const models = await getPage(pagination)
+      const models = await getPage(pagination, sortOrder)
       expect(models).toHaveLength(expected.length)
       expect(models[0].id).toEqual(modelsCreated[expected.first].id)
       expect(models[expected.length - 1].id).toEqual(
@@ -49,19 +53,21 @@ export const getPageTests = <Type extends BaseModel>({
       ${{ first: -1 }}  | ${'Pagination index error'}                   | ${"Can't request less than 0"}
       ${{ first: 101 }} | ${'Pagination index error'}                   | ${"Can't request more than 100"}
     `('$description', async ({ pagination, expectedError }): Promise<void> => {
-      await expect(getPage(pagination)).rejects.toThrow(expectedError)
+      await expect(getPage(pagination, sortOrder)).rejects.toThrow(
+        expectedError
+      )
     })
 
     test('Backwards/Forwards pagination results in same order.', async (): Promise<void> => {
       const paginationForwards = {
         first: 10
       }
-      const modelsForwards = await getPage(paginationForwards)
+      const modelsForwards = await getPage(paginationForwards, sortOrder)
       const paginationBackwards = {
         last: 10,
         before: modelsCreated[10].id
       }
-      const modelsBackwards = await getPage(paginationBackwards)
+      const modelsBackwards = await getPage(paginationBackwards, sortOrder)
       expect(modelsForwards).toHaveLength(10)
       expect(modelsBackwards).toHaveLength(10)
       expect(modelsForwards).toEqual(modelsBackwards)

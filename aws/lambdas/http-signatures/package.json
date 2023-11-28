@@ -1,0 +1,8 @@
+{
+  "name": "http-signatures-lambda",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "@interledger/http-signature-utils": "2.0.0"
+  }
+}

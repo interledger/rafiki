@@ -23,6 +23,11 @@ export interface PageInfo {
   hasPreviousPage: boolean
 }
 
+export enum SortOrder {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
+
 class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
   M,
   R
@@ -45,7 +50,10 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
    * @param pagination Pagination - cursors and limits.
    * @returns Model[] An array of Models that form a page.
    */
-  getPage(pagination?: Pagination): this {
+  getPage(
+    pagination?: Pagination,
+    sortOrder: SortOrder = SortOrder.Desc
+  ): this {
     const tableName = this.modelClass().tableName
     if (
       typeof pagination?.before === 'undefined' &&
@@ -57,33 +65,34 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
     if (first < 0 || first > 100) throw new Error('Pagination index error')
     const last = pagination?.last || 20
     if (last < 0 || last > 100) throw new Error('Pagination index error')
-
     /**
      * Forward pagination
      */
     if (typeof pagination?.after === 'string') {
+      const comparisonOperator = sortOrder === SortOrder.Asc ? '>' : '<'
       return this.whereRaw(
-        `("${tableName}"."createdAt", "${tableName}"."id") > (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
+        `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.after]
       )
         .orderBy([
-          { column: 'createdAt', order: 'asc' },
-          { column: 'id', order: 'asc' }
+          { column: 'createdAt', order: sortOrder },
+          { column: 'id', order: sortOrder }
         ])
         .limit(first)
     }
-
     /**
      * Backward pagination
      */
     if (typeof pagination?.before === 'string') {
+      const comparisonOperator = sortOrder === SortOrder.Asc ? '<' : '>'
+      const order = sortOrder === SortOrder.Asc ? SortOrder.Desc : SortOrder.Asc
       return this.whereRaw(
-        `("${tableName}"."createdAt", "${tableName}"."id") < (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
+        `("${tableName}"."createdAt", "${tableName}"."id") ${comparisonOperator} (select "${tableName}"."createdAt" :: TIMESTAMP, "${tableName}"."id" from ?? where "${tableName}"."id" = ?)`,
         [this.modelClass().tableName, pagination.before]
       )
         .orderBy([
-          { column: 'createdAt', order: 'desc' },
-          { column: 'id', order: 'desc' }
+          { column: 'createdAt', order },
+          { column: 'id', order }
         ])
         .limit(last)
         .runAfter((models) => {
@@ -94,13 +103,18 @@ class PaginationQueryBuilder<M extends Model, R = M[]> extends QueryBuilder<
     }
 
     return this.orderBy([
-      { column: 'createdAt', order: 'asc' },
-      { column: 'id', order: 'asc' }
+      { column: 'createdAt', order: sortOrder },
+      { column: 'id', order: sortOrder }
     ]).limit(first)
   }
 }
 
-export abstract class BaseModel extends DbErrors(Model) {
+export class PaginationModel extends DbErrors(Model) {
+  QueryBuilderType!: PaginationQueryBuilder<this>
+  static QueryBuilder = PaginationQueryBuilder
+}
+
+export abstract class BaseModel extends PaginationModel {
   public static get modelPaths(): string[] {
     return [__dirname]
   }
@@ -112,8 +126,6 @@ export abstract class BaseModel extends DbErrors(Model) {
   public $beforeInsert(context: QueryContext): void {
     super.$beforeInsert(context)
     this.id = this.id || uuid()
-    this.createdAt = new Date()
-    this.updatedAt = new Date()
   }
 
   public $beforeUpdate(_opts: ModelOptions, _queryContext: QueryContext): void {
@@ -128,7 +140,4 @@ export abstract class BaseModel extends DbErrors(Model) {
       updatedAt: json.updatedAt.toISOString()
     }
   }
-
-  QueryBuilderType!: PaginationQueryBuilder<this>
-  static QueryBuilder = PaginationQueryBuilder
 }

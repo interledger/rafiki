@@ -1,7 +1,7 @@
 import { join } from 'path'
 import http, { Server } from 'http'
-import { EventEmitter } from 'events'
 import { ParsedUrlQuery } from 'querystring'
+import { Client as TigerbeetleClient } from 'tigerbeetle-node'
 
 import { IocContract } from '@adonisjs/fold'
 import { Knex } from 'knex'
@@ -19,40 +19,45 @@ import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
 import { loadSchemaSync } from '@graphql-tools/load'
 
 import { resolvers } from './graphql/resolvers'
-import { HttpTokenService } from './httpToken/service'
+import { HttpTokenService } from './payment-method/ilp/peer-http-token/service'
 import { AssetService, AssetOptions } from './asset/service'
 import { AccountingService } from './accounting/service'
-import { PeerService } from './peer/service'
-import { connectionMiddleware } from './open_payments/connection/middleware'
-import { createPaymentPointerMiddleware } from './open_payments/payment_pointer/middleware'
-import { PaymentPointer } from './open_payments/payment_pointer/model'
-import { PaymentPointerService } from './open_payments/payment_pointer/service'
+import { PeerService } from './payment-method/ilp/peer/service'
+import { createWalletAddressMiddleware } from './open_payments/wallet_address/middleware'
+import { WalletAddress } from './open_payments/wallet_address/model'
+import { WalletAddressService } from './open_payments/wallet_address/service'
 import {
   createTokenIntrospectionMiddleware,
   httpsigMiddleware,
   Grant,
-  RequestAction
+  RequestAction,
+  authenticatedStatusMiddleware
 } from './open_payments/auth/middleware'
 import { RatesService } from './rates/service'
-import { spspMiddleware } from './spsp/middleware'
-import { SPSPRoutes } from './spsp/routes'
-import { IncomingPaymentRoutes } from './open_payments/payment/incoming/routes'
-import { PaymentPointerKeyRoutes } from './open_payments/payment_pointer/key/routes'
-import { PaymentPointerRoutes } from './open_payments/payment_pointer/routes'
+import { spspMiddleware } from './payment-method/ilp/spsp/middleware'
+import { SPSPRoutes } from './payment-method/ilp/spsp/routes'
+import {
+  IncomingPaymentRoutes,
+  CreateBody as IncomingCreateBody
+} from './open_payments/payment/incoming/routes'
+import { WalletAddressKeyRoutes } from './open_payments/wallet_address/key/routes'
+import { WalletAddressRoutes } from './open_payments/wallet_address/routes'
 import { IncomingPaymentService } from './open_payments/payment/incoming/service'
 import { StreamServer } from '@interledger/stream-receiver'
 import { WebhookService } from './webhook/service'
-import { QuoteRoutes } from './open_payments/quote/routes'
-import { QuoteService } from './open_payments/quote/service'
-import { OutgoingPaymentRoutes } from './open_payments/payment/outgoing/routes'
-import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
-import { IlpPlugin, IlpPluginOptions } from './shared/ilp_plugin'
 import {
-  createValidatorMiddleware,
-  HttpMethod,
-  isHttpMethod
-} from '@interledger/openapi'
-import { PaymentPointerKeyService } from './open_payments/payment_pointer/key/service'
+  QuoteRoutes,
+  CreateBody as QuoteCreateBody
+} from './open_payments/quote/routes'
+import { QuoteService } from './open_payments/quote/service'
+import {
+  OutgoingPaymentRoutes,
+  CreateBody as OutgoingCreateBody
+} from './open_payments/payment/outgoing/routes'
+import { OutgoingPaymentService } from './open_payments/payment/outgoing/service'
+import { IlpPlugin, IlpPluginOptions } from './payment-method/ilp/ilp_plugin'
+import { createValidatorMiddleware, HttpMethod } from '@interledger/openapi'
+import { WalletAddressKeyService } from './open_payments/wallet_address/key/service'
 import {
   AccessAction,
   AccessType,
@@ -70,15 +75,22 @@ import {
 } from './graphql/middleware'
 import { createRedisDataStore } from './middleware/cache/data-stores/redis'
 import { createRedisLock } from './middleware/lock/redis'
+import { CombinedPaymentService } from './open_payments/payment/combined/service'
+import { FeeService } from './fee/service'
+import { AutoPeeringService } from './payment-method/ilp/auto-peering/service'
+import { AutoPeeringRoutes } from './payment-method/ilp/auto-peering/routes'
+import { Rafiki as ConnectorApp } from './payment-method/ilp/connector/core'
+import { AxiosInstance } from 'axios'
+import { PaymentMethodHandlerService } from './payment-method/handler/service'
+import { IlpPaymentService } from './payment-method/ilp/service'
 
 export interface AppContextData {
   logger: Logger
-  closeEmitter: EventEmitter
   container: AppContainer
   // Set by @koa/router.
   params: { [key: string]: string }
-  paymentPointer?: PaymentPointer
-  paymentPointerUrl?: string
+  walletAddress?: WalletAddress
+  walletAddressUrl?: string
 }
 
 export interface ApolloContext {
@@ -94,18 +106,18 @@ export type AppRequest<ParamsT extends string = string> = Omit<
   params: Record<ParamsT, string>
 }
 
-export interface PaymentPointerContext extends AppContext {
-  paymentPointer: PaymentPointer
+export interface WalletAddressContext extends AppContext {
+  walletAddress: WalletAddress
   grant?: Grant
   client?: string
   accessAction?: AccessAction
 }
 
-export type PaymentPointerKeysContext = Omit<
-  PaymentPointerContext,
-  'paymentPointer'
+export type WalletAddressKeysContext = Omit<
+  WalletAddressContext,
+  'walletAddress'
 > & {
-  paymentPointer?: PaymentPointer
+  walletAddress?: WalletAddress
 }
 
 type HttpSigHeaders = Record<'signature' | 'signature-input', string>
@@ -120,9 +132,16 @@ export type HttpSigContext = AppContext & {
   client: string
 }
 
-// Payment pointer subresources
+export type HttpSigWithAuthenticatedStatusContext = HttpSigContext &
+  AuthenticatedStatusContext
+
+// Wallet address subresources
+interface GetCollectionQuery {
+  'wallet-address': string
+}
+
 type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
-  PaymentPointerContext['request'],
+  WalletAddressContext['request'],
   'body'
 > & {
   body: BodyT
@@ -130,26 +149,39 @@ type CollectionRequest<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
 }
 
 type CollectionContext<BodyT = never, QueryT = ParsedUrlQuery> = Omit<
-  PaymentPointerContext,
+  WalletAddressContext,
   'request' | 'client' | 'accessAction'
 > & {
   request: CollectionRequest<BodyT, QueryT>
-  client: NonNullable<PaymentPointerContext['client']>
-  accessAction: NonNullable<PaymentPointerContext['accessAction']>
+  client: NonNullable<WalletAddressContext['client']>
+  accessAction: NonNullable<WalletAddressContext['accessAction']>
 }
+
+type SignedCollectionContext<
+  BodyT = never,
+  QueryT = ParsedUrlQuery
+> = CollectionContext<BodyT, QueryT> & HttpSigContext
 
 type SubresourceRequest = Omit<AppContext['request'], 'params'> & {
   params: Record<'id', string>
 }
 
 type SubresourceContext = Omit<
-  PaymentPointerContext,
+  WalletAddressContext,
   'request' | 'grant' | 'client' | 'accessAction'
 > & {
   request: SubresourceRequest
-  client: NonNullable<PaymentPointerContext['client']>
-  accessAction: NonNullable<PaymentPointerContext['accessAction']>
+  client: NonNullable<WalletAddressContext['client']>
+  accessAction: NonNullable<WalletAddressContext['accessAction']>
 }
+
+export type AuthenticatedStatusContext = { authenticated: boolean }
+
+type SignedSubresourceContext = SubresourceContext & HttpSigContext
+
+type SubresourceContextWithAuthenticatedStatus = SubresourceContext &
+  HttpSigContext &
+  AuthenticatedStatusContext
 
 export type CreateContext<BodyT> = CollectionContext<BodyT>
 export type ReadContext = SubresourceContext
@@ -168,24 +200,24 @@ type ContextType<T> = T extends (
   ? Context
   : never
 
-const PAYMENT_POINTER_PATH = '/:paymentPointerPath+'
+const WALLET_ADDRESS_PATH = '/:walletAddressPath+'
 
 export interface AppServices {
   logger: Promise<Logger>
   knex: Promise<Knex>
-  closeEmitter: Promise<EventEmitter>
+  axios: Promise<AxiosInstance>
   config: Promise<IAppConfig>
   httpTokenService: Promise<HttpTokenService>
   assetService: Promise<AssetService>
   accountingService: Promise<AccountingService>
   peerService: Promise<PeerService>
-  paymentPointerService: Promise<PaymentPointerService>
+  walletAddressService: Promise<WalletAddressService>
   spspRoutes: Promise<SPSPRoutes>
   incomingPaymentRoutes: Promise<IncomingPaymentRoutes>
   outgoingPaymentRoutes: Promise<OutgoingPaymentRoutes>
   quoteRoutes: Promise<QuoteRoutes>
-  paymentPointerKeyRoutes: Promise<PaymentPointerKeyRoutes>
-  paymentPointerRoutes: Promise<PaymentPointerRoutes>
+  walletAddressKeyRoutes: Promise<WalletAddressKeyRoutes>
+  walletAddressRoutes: Promise<WalletAddressRoutes>
   incomingPaymentService: Promise<IncomingPaymentService>
   remoteIncomingPaymentService: Promise<RemoteIncomingPaymentService>
   receiverService: Promise<ReceiverService>
@@ -195,24 +227,31 @@ export interface AppServices {
   outgoingPaymentService: Promise<OutgoingPaymentService>
   makeIlpPlugin: Promise<(options: IlpPluginOptions) => IlpPlugin>
   ratesService: Promise<RatesService>
-  paymentPointerKeyService: Promise<PaymentPointerKeyService>
+  walletAddressKeyService: Promise<WalletAddressKeyService>
   openPaymentsClient: Promise<AuthenticatedClient>
   tokenIntrospectionClient: Promise<TokenIntrospectionClient>
   redis: Promise<Redis>
+  combinedPaymentService: Promise<CombinedPaymentService>
+  feeService: Promise<FeeService>
+  autoPeeringService: Promise<AutoPeeringService>
+  autoPeeringRoutes: Promise<AutoPeeringRoutes>
+  connectorApp: Promise<ConnectorApp>
+  tigerbeetle: Promise<TigerbeetleClient>
+  paymentMethodHandlerService: Promise<PaymentMethodHandlerService>
+  ilpPaymentService: Promise<IlpPaymentService>
 }
 
 export type AppContainer = IocContract<AppServices>
 
 export class App {
   private openPaymentsServer!: Server
+  private ilpConnectorService!: Server
   private adminServer!: Server
+  private autoPeeringServer!: Server
   public apolloServer!: ApolloServer
-  public closeEmitter!: EventEmitter
   public isShuttingDown = false
   private logger!: Logger
   private config!: IAppConfig
-  private outgoingPaymentTimer!: NodeJS.Timer
-  private deactivateInvoiceTimer!: NodeJS.Timer
 
   public constructor(private container: IocContract<AppServices>) {}
 
@@ -224,13 +263,12 @@ export class App {
    */
   public async boot(): Promise<void> {
     this.config = await this.container.use('config')
-    this.closeEmitter = await this.container.use('closeEmitter')
     this.logger = await this.container.use('logger')
 
     // Workers are in the way during tests.
     if (this.config.env !== 'test') {
-      for (let i = 0; i < this.config.paymentPointerWorkers; i++) {
-        process.nextTick(() => this.processPaymentPointer())
+      for (let i = 0; i < this.config.walletAddressWorkers; i++) {
+        process.nextTick(() => this.processWalletAddress())
       }
       for (let i = 0; i < this.config.outgoingPaymentWorkers; i++) {
         process.nextTick(() => this.processOutgoingPayment())
@@ -244,7 +282,7 @@ export class App {
     }
   }
 
-  public async startAdminServer(port: number | string): Promise<void> {
+  public async startAdminServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
     const httpServer = http.createServer(koa.callback())
 
@@ -312,7 +350,7 @@ export class App {
     this.adminServer = httpServer.listen(port)
   }
 
-  public async startOpenPaymentsServer(port: number | string): Promise<void> {
+  public async startOpenPaymentsServer(port: number): Promise<void> {
     const koa = await this.createKoaServer()
 
     const router = new Router<DefaultState, AppContext>()
@@ -321,12 +359,10 @@ export class App {
       ctx.status = 200
     })
 
-    const paymentPointerKeyRoutes = await this.container.use(
-      'paymentPointerKeyRoutes'
+    const walletAddressKeyRoutes = await this.container.use(
+      'walletAddressKeyRoutes'
     )
-    const paymentPointerRoutes = await this.container.use(
-      'paymentPointerRoutes'
-    )
+    const walletAddressRoutes = await this.container.use('walletAddressRoutes')
     const incomingPaymentRoutes = await this.container.use(
       'incomingPaymentRoutes'
     )
@@ -334,138 +370,215 @@ export class App {
       'outgoingPaymentRoutes'
     )
     const quoteRoutes = await this.container.use('quoteRoutes')
-    const connectionRoutes = await this.container.use('connectionRoutes')
     const { resourceServerSpec } = await this.container.use('openApi')
-    const toRouterPath = (path: string): string =>
-      path.replace(/{/g, ':').replace(/}/g, '')
 
-    const toAction = ({
-      path,
-      method
-    }: {
-      path: string
-      method: HttpMethod
-    }): RequestAction | undefined => {
-      switch (method) {
-        case HttpMethod.GET:
-          return path.endsWith('{id}') ? RequestAction.Read : RequestAction.List
-        case HttpMethod.POST:
-          return path.endsWith('/complete')
-            ? RequestAction.Complete
-            : RequestAction.Create
-        default:
-          return undefined
-      }
-    }
+    // POST /incoming-payments
+    // Create incoming payment
+    router.post<DefaultState, SignedCollectionContext<IncomingCreateBody>>(
+      '/incoming-payments',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<IncomingCreateBody>>
+      >(resourceServerSpec, {
+        path: '/incoming-payments',
+        method: HttpMethod.POST
+      }),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.Create
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.create
+    )
 
-    const actionToRoute: {
-      [key in RequestAction]: string
-    } = {
-      create: 'create',
-      read: 'get',
-      complete: 'complete',
-      list: 'list'
-    }
+    // GET /incoming-payments
+    // List incoming payments
+    router.get<
+      DefaultState,
+      SignedCollectionContext<never, GetCollectionQuery>
+    >(
+      '/incoming-payments',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<never, GetCollectionQuery>>
+      >(resourceServerSpec, {
+        path: '/incoming-payments',
+        method: HttpMethod.GET
+      }),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.List
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.list
+    )
 
-    for (const path in resourceServerSpec.paths) {
-      for (const method in resourceServerSpec.paths[path]) {
-        if (isHttpMethod(method)) {
-          const requestAction = toAction({ path, method })
-          if (!requestAction) {
-            throw new Error()
-          }
+    // POST /outgoing-payment
+    // Create outgoing payment
+    router.post<DefaultState, SignedCollectionContext<OutgoingCreateBody>>(
+      '/outgoing-payments',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<OutgoingCreateBody>>
+      >(resourceServerSpec, {
+        path: '/outgoing-payments',
+        method: HttpMethod.POST
+      }),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.Create
+      }),
+      httpsigMiddleware,
+      outgoingPaymentRoutes.create
+    )
 
-          let requestType: AccessType
-          let route: (ctx: AppContext) => Promise<void>
-          if (path.includes('incoming-payments')) {
-            requestType = AccessType.IncomingPayment
-            // Use of ts-ignore will be obsolete once we get rid of this for-loop, see https://github.com/interledger/rafiki/issues/916
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            route = incomingPaymentRoutes[actionToRoute[requestAction]]
-          } else if (path.includes('outgoing-payments')) {
-            requestType = AccessType.OutgoingPayment
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            route = outgoingPaymentRoutes[actionToRoute[requestAction]]
-          } else if (path.includes('quotes')) {
-            requestType = AccessType.Quote
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            route = quoteRoutes[actionToRoute[requestAction]]
-          } else {
-            if (path.includes('connections')) {
-              route = connectionRoutes.get
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
-              router[method](
-                toRouterPath(path),
-                connectionMiddleware,
-                spspMiddleware,
-                createValidatorMiddleware<ContextType<typeof route>>(
-                  resourceServerSpec,
-                  {
-                    path,
-                    method
-                  }
-                ),
-                route
-              )
-            } else if (path !== '/' || method !== HttpMethod.GET) {
-              // The payment pointer query route is added last below
-              this.logger.warn({ path, method }, 'unexpected path/method')
-            }
-            continue
-          }
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          router[method](
-            PAYMENT_POINTER_PATH + toRouterPath(path),
-            createPaymentPointerMiddleware(),
-            createValidatorMiddleware<ContextType<typeof route>>(
-              resourceServerSpec,
-              {
-                path,
-                method
-              }
-            ),
-            createTokenIntrospectionMiddleware({
-              requestType,
-              requestAction
-            }),
-            httpsigMiddleware,
-            route
-          )
+    // GET /outgoing-payment
+    // List outgoing payments
+    router.get<
+      DefaultState,
+      SignedCollectionContext<never, GetCollectionQuery>
+    >(
+      '/outgoing-payments',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<never, GetCollectionQuery>>
+      >(resourceServerSpec, {
+        path: '/outgoing-payments',
+        method: HttpMethod.GET
+      }),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.List
+      }),
+      httpsigMiddleware,
+      outgoingPaymentRoutes.list
+    )
+
+    // POST /quotes
+    // Create quote
+    router.post<DefaultState, SignedCollectionContext<QuoteCreateBody>>(
+      '/quotes',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<
+        ContextType<SignedCollectionContext<QuoteCreateBody>>
+      >(resourceServerSpec, {
+        path: '/quotes',
+        method: HttpMethod.POST
+      }),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.Quote,
+        requestAction: RequestAction.Create
+      }),
+      httpsigMiddleware,
+      quoteRoutes.create
+    )
+
+    // GET /incoming-payments/{id}
+    // Read incoming payment
+    router.get<DefaultState, SubresourceContextWithAuthenticatedStatus>(
+      '/incoming-payments/:id',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<
+        ContextType<SubresourceContextWithAuthenticatedStatus>
+      >(resourceServerSpec, {
+        path: '/incoming-payments/{id}',
+        method: HttpMethod.GET
+      }),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.Read,
+        bypassError: true
+      }),
+      authenticatedStatusMiddleware,
+      incomingPaymentRoutes.get
+    )
+
+    // POST /incoming-payments/{id}/complete
+    // Complete incoming payment
+    router.post<DefaultState, SignedSubresourceContext>(
+      '/incoming-payments/:id/complete',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/incoming-payments/{id}/complete',
+          method: HttpMethod.POST
         }
-      }
-    }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.IncomingPayment,
+        requestAction: RequestAction.Complete
+      }),
+      httpsigMiddleware,
+      incomingPaymentRoutes.complete
+    )
+
+    // GET /outgoing-payments/{id}
+    // Read outgoing payment
+    router.get<DefaultState, SignedSubresourceContext>(
+      '/outgoing-payments/:id',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/outgoing-payments/{id}',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.OutgoingPayment,
+        requestAction: RequestAction.Read
+      }),
+      httpsigMiddleware,
+      outgoingPaymentRoutes.get
+    )
+
+    // GET /quotes/{id}
+    // Read quote
+    router.get<DefaultState, SignedSubresourceContext>(
+      '/quotes/:id',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<ContextType<SignedSubresourceContext>>(
+        resourceServerSpec,
+        {
+          path: '/quotes/{id}',
+          method: HttpMethod.GET
+        }
+      ),
+      createTokenIntrospectionMiddleware({
+        requestType: AccessType.Quote,
+        requestAction: RequestAction.Read
+      }),
+      httpsigMiddleware,
+      quoteRoutes.get
+    )
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     router.get(
-      PAYMENT_POINTER_PATH + '/jwks.json',
-      createPaymentPointerMiddleware(),
-      createValidatorMiddleware<PaymentPointerKeysContext>(resourceServerSpec, {
+      WALLET_ADDRESS_PATH + '/jwks.json',
+      createWalletAddressMiddleware(),
+      createValidatorMiddleware<WalletAddressKeysContext>(resourceServerSpec, {
         path: '/jwks.json',
         method: HttpMethod.GET
       }),
-      async (ctx: PaymentPointerKeysContext): Promise<void> =>
-        await paymentPointerKeyRoutes.getKeysByPaymentPointerId(ctx)
+      async (ctx: WalletAddressKeysContext): Promise<void> =>
+        await walletAddressKeyRoutes.getKeysByWalletAddressId(ctx)
     )
 
-    // Add the payment pointer query route last.
+    // Add the wallet address query route last.
     // Otherwise it will be matched instead of other Open Payments endpoints.
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     router.get(
-      PAYMENT_POINTER_PATH,
-      createPaymentPointerMiddleware(),
+      WALLET_ADDRESS_PATH,
+      createWalletAddressMiddleware(),
       spspMiddleware,
-      createValidatorMiddleware<PaymentPointerContext>(resourceServerSpec, {
+      createValidatorMiddleware<WalletAddressContext>(resourceServerSpec, {
         path: '/',
         method: HttpMethod.GET
       }),
-      paymentPointerRoutes.get
+      walletAddressRoutes.get
     )
 
     koa.use(router.routes())
@@ -473,20 +586,51 @@ export class App {
     this.openPaymentsServer = koa.listen(port)
   }
 
+  public async startAutoPeeringServer(port: number): Promise<void> {
+    const koa = await this.createKoaServer()
+
+    const autoPeeringRoutes = await this.container.use('autoPeeringRoutes')
+    const router = new Router<DefaultState, AppContext>()
+
+    router.use(bodyParser())
+    router.post('/', autoPeeringRoutes.acceptPeerRequest)
+
+    koa.use(router.routes())
+
+    this.autoPeeringServer = koa.listen(port)
+  }
+
+  public async startIlpConnectorServer(port: number): Promise<void> {
+    const ilpConnectorService = await this.container.use('connectorApp')
+    this.ilpConnectorService = ilpConnectorService.listenPublic(port)
+  }
+
   public async shutdown(): Promise<void> {
-    return new Promise((resolve): void => {
-      if (this.openPaymentsServer) {
-        this.isShuttingDown = true
-        this.closeEmitter.emit('shutdown')
-        this.adminServer.close((): void => {
-          resolve()
-        })
-        this.openPaymentsServer.close((): void => {
-          resolve()
-        })
-      } else {
+    this.isShuttingDown = true
+
+    if (this.openPaymentsServer) {
+      await this.stopServer(this.openPaymentsServer)
+    }
+    if (this.adminServer) {
+      await this.stopServer(this.adminServer)
+    }
+    if (this.ilpConnectorService) {
+      await this.stopServer(this.ilpConnectorService)
+    }
+    if (this.autoPeeringServer) {
+      await this.stopServer(this.autoPeeringServer)
+    }
+  }
+
+  private async stopServer(server: Server): Promise<void> {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) {
+          reject(err)
+        }
+
         resolve()
-      }
+      })
     })
   }
 
@@ -506,22 +650,22 @@ export class App {
     return 0
   }
 
-  private async processPaymentPointer(): Promise<void> {
-    const paymentPointerService = await this.container.use(
-      'paymentPointerService'
+  private async processWalletAddress(): Promise<void> {
+    const walletAddressService = await this.container.use(
+      'walletAddressService'
     )
-    return paymentPointerService
+    return walletAddressService
       .processNext()
       .catch((err) => {
-        this.logger.warn({ error: err.message }, 'processPaymentPointer error')
+        this.logger.warn({ error: err.message }, 'processWalletAddress error')
         return true
       })
       .then((hasMoreWork) => {
-        if (hasMoreWork) process.nextTick(() => this.processPaymentPointer())
+        if (hasMoreWork) process.nextTick(() => this.processWalletAddress())
         else
           setTimeout(
-            () => this.processPaymentPointer(),
-            this.config.paymentPointerWorkerIdle
+            () => this.processWalletAddress(),
+            this.config.walletAddressWorkerIdle
           ).unref()
       })
   }
@@ -548,10 +692,11 @@ export class App {
   }
 
   private async createKoaServer(): Promise<Koa<Koa.DefaultState, AppContext>> {
-    const koa = new Koa<DefaultState, AppContext>()
+    const koa = new Koa<DefaultState, AppContext>({
+      proxy: this.config.trustProxy
+    })
 
     koa.context.container = this.container
-    koa.context.closeEmitter = await this.container.use('closeEmitter')
     koa.context.logger = await this.container.use('logger')
 
     koa.use(

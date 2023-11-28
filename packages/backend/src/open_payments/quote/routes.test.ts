@@ -13,13 +13,13 @@ import { QuoteService } from './service'
 import { Quote } from './model'
 import { QuoteRoutes, CreateBody } from './routes'
 import { Amount, serializeAmount } from '../amount'
-import { PaymentPointer } from '../payment_pointer/model'
+import { WalletAddress } from '../wallet_address/model'
 import {
   getRouteTests,
   setup as setupContext
-} from '../payment_pointer/model.test'
+} from '../wallet_address/model.test'
 import { createAsset, randomAsset } from '../../tests/asset'
-import { createPaymentPointer } from '../../tests/paymentPointer'
+import { createWalletAddress } from '../../tests/walletAddress'
 import { createQuote } from '../../tests/quote'
 
 describe('Quote Routes', (): void => {
@@ -28,31 +28,33 @@ describe('Quote Routes', (): void => {
   let quoteService: QuoteService
   let config: IAppConfig
   let quoteRoutes: QuoteRoutes
-  let paymentPointer: PaymentPointer
+  let walletAddress: WalletAddress
+  let baseUrl: string
 
-  const receiver = `https://wallet2.example/bob/incoming-payments/${uuid()}`
+  const receiver = `https://wallet2.example/incoming-payments/${uuid()}`
   const asset = randomAsset()
-  const sendAmount: Amount = {
+  const debitAmount: Amount = {
     value: BigInt(123),
     assetCode: asset.code,
     assetScale: asset.scale
   }
 
-  const createPaymentPointerQuote = async ({
-    paymentPointerId,
+  const createWalletAddressQuote = async ({
+    walletAddressId,
     client
   }: {
-    paymentPointerId: string
+    walletAddressId: string
     client?: string
   }): Promise<Quote> => {
     return await createQuote(deps, {
-      paymentPointerId,
+      walletAddressId,
       receiver,
-      sendAmount: {
+      debitAmount: {
         value: BigInt(56),
         assetCode: asset.code,
         assetScale: asset.scale
       },
+      method: 'ilp',
       client,
       validDestination: false
     })
@@ -71,12 +73,13 @@ describe('Quote Routes', (): void => {
 
   beforeEach(async (): Promise<void> => {
     const { id: assetId } = await createAsset(deps, {
-      code: sendAmount.assetCode,
-      scale: sendAmount.assetScale
+      code: debitAmount.assetCode,
+      scale: debitAmount.assetScale
     })
-    paymentPointer = await createPaymentPointer(deps, {
+    walletAddress = await createWalletAddress(deps, {
       assetId
     })
+    baseUrl = new URL(walletAddress.url).origin
   })
 
   afterEach(async (): Promise<void> => {
@@ -89,22 +92,23 @@ describe('Quote Routes', (): void => {
 
   describe('get', (): void => {
     getRouteTests({
-      getPaymentPointer: async () => paymentPointer,
+      getWalletAddress: async () => walletAddress,
       createModel: async ({ client }) =>
-        createPaymentPointerQuote({
-          paymentPointerId: paymentPointer.id,
+        createWalletAddressQuote({
+          walletAddressId: walletAddress.id,
           client
         }),
       get: (ctx) => quoteRoutes.get(ctx),
       getBody: (quote) => {
         return {
-          id: `${paymentPointer.url}/quotes/${quote.id}`,
-          paymentPointer: paymentPointer.url,
+          id: `${baseUrl}/quotes/${quote.id}`,
+          walletAddress: walletAddress.url,
           receiver: quote.receiver,
-          sendAmount: serializeAmount(quote.sendAmount),
+          debitAmount: serializeAmount(quote.debitAmount),
           receiveAmount: serializeAmount(quote.receiveAmount),
           createdAt: quote.createdAt.toISOString(),
-          expiresAt: quote.expiresAt.toISOString()
+          expiresAt: quote.expiresAt.toISOString(),
+          method: quote.method
         }
       },
       urlPath: Quote.urlPath
@@ -125,18 +129,20 @@ describe('Quote Routes', (): void => {
           method: 'POST',
           url: `/quotes`
         },
-        paymentPointer,
+        walletAddress,
         client
       })
 
-    test('returns error on invalid sendAmount asset', async (): Promise<void> => {
+    test('returns error on invalid debitAmount asset', async (): Promise<void> => {
       options = {
+        walletAddress: walletAddress.url,
         receiver,
-        sendAmount: {
-          ...sendAmount,
-          value: sendAmount.value.toString(),
-          assetScale: sendAmount.assetScale + 1
-        }
+        debitAmount: {
+          ...debitAmount,
+          value: debitAmount.value.toString(),
+          assetScale: debitAmount.assetScale + 1
+        },
+        method: 'ilp'
       }
       const ctx = setup({})
       await expect(quoteRoutes.create(ctx)).rejects.toMatchObject({
@@ -162,18 +168,20 @@ describe('Quote Routes', (): void => {
       ${undefined}                                  | ${'no client'}
     `('returns the quote on success ($description)', ({ client }): void => {
       test.each`
-        sendAmount   | receiveAmount | description
-        ${'123'}     | ${undefined}  | ${'sendAmount'}
+        debitAmount  | receiveAmount | description
+        ${'123'}     | ${undefined}  | ${'debitAmount'}
         ${undefined} | ${'56'}       | ${'receiveAmount'}
       `(
         '$description',
-        async ({ sendAmount, receiveAmount }): Promise<void> => {
+        async ({ debitAmount, receiveAmount }): Promise<void> => {
           options = {
-            receiver
+            walletAddress: walletAddress.url,
+            receiver,
+            method: 'ilp'
           }
-          if (sendAmount)
-            options.sendAmount = {
-              value: sendAmount,
+          if (debitAmount)
+            options.debitAmount = {
+              value: debitAmount,
               assetCode: asset.code,
               assetScale: asset.scale
             }
@@ -197,17 +205,18 @@ describe('Quote Routes', (): void => {
             })
           await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
           expect(quoteSpy).toHaveBeenCalledWith({
-            paymentPointerId: paymentPointer.id,
+            walletAddressId: walletAddress.id,
             receiver,
-            sendAmount: options.sendAmount && {
-              ...options.sendAmount,
-              value: BigInt(options.sendAmount.value)
+            debitAmount: options.debitAmount && {
+              ...options.debitAmount,
+              value: BigInt(options.debitAmount.value)
             },
             receiveAmount: options.receiveAmount && {
               ...options.receiveAmount,
               value: BigInt(options.receiveAmount.value)
             },
-            client
+            client,
+            method: 'ilp'
           })
           expect(ctx.response).toSatisfyApiSpec()
           const quoteId = (
@@ -217,26 +226,29 @@ describe('Quote Routes', (): void => {
             .pop()
           assert.ok(quote)
           expect(ctx.response.body).toEqual({
-            id: `${paymentPointer.url}/quotes/${quoteId}`,
-            paymentPointer: paymentPointer.url,
+            id: `${baseUrl}/quotes/${quoteId}`,
+            walletAddress: walletAddress.url,
             receiver: quote.receiver,
-            sendAmount: {
-              ...quote.sendAmount,
-              value: quote.sendAmount.value.toString()
+            debitAmount: {
+              ...quote.debitAmount,
+              value: quote.debitAmount.value.toString()
             },
             receiveAmount: {
               ...quote.receiveAmount,
               value: quote.receiveAmount.value.toString()
             },
             createdAt: quote.createdAt.toISOString(),
-            expiresAt: quote.expiresAt.toISOString()
+            expiresAt: quote.expiresAt.toISOString(),
+            method: 'ilp'
           })
         }
       )
 
       test('receiver.incomingAmount', async (): Promise<void> => {
         options = {
-          receiver
+          walletAddress: walletAddress.url,
+          receiver,
+          method: 'ilp'
         }
         const ctx = setup({ client })
         let quote: Quote | undefined
@@ -252,9 +264,10 @@ describe('Quote Routes', (): void => {
           })
         await expect(quoteRoutes.create(ctx)).resolves.toBeUndefined()
         expect(quoteSpy).toHaveBeenCalledWith({
-          paymentPointerId: paymentPointer.id,
+          walletAddressId: walletAddress.id,
           receiver,
-          client
+          client,
+          method: 'ilp'
         })
         expect(ctx.response).toSatisfyApiSpec()
         const quoteId = (
@@ -264,19 +277,20 @@ describe('Quote Routes', (): void => {
           .pop()
         assert.ok(quote)
         expect(ctx.response.body).toEqual({
-          id: `${paymentPointer.url}/quotes/${quoteId}`,
-          paymentPointer: paymentPointer.url,
+          id: `${baseUrl}/quotes/${quoteId}`,
+          walletAddress: walletAddress.url,
           receiver: options.receiver,
-          sendAmount: {
-            ...quote.sendAmount,
-            value: quote.sendAmount.value.toString()
+          debitAmount: {
+            ...quote.debitAmount,
+            value: quote.debitAmount.value.toString()
           },
           receiveAmount: {
             ...quote.receiveAmount,
             value: quote.receiveAmount.value.toString()
           },
           createdAt: quote.createdAt.toISOString(),
-          expiresAt: quote.expiresAt.toISOString()
+          expiresAt: quote.expiresAt.toISOString(),
+          method: 'ilp'
         })
       })
     })

@@ -45,10 +45,22 @@ type GrantEdge {
 
 input GrantFilter {
   identifier: FilterString
+  state: FilterGrantState
+  finalizationReason: FilterFinalizationReason
 }
 
 input FilterString {
-  in: [String!]!
+  in: [String!]
+}
+
+input FilterGrantState {
+  in: [GrantState!]
+  notIn: [GrantState!]
+}
+
+input FilterFinalizationReason {
+  in: [GrantFinalization!]
+  notIn: [GrantFinalization!]
 }
 
 input RevokeGrantInput {
@@ -63,12 +75,14 @@ interface Model {
 type Grant implements Model {
   "Grant id"
   id: ID!
-  "Payment pointer of the grantee's account"
+  "Wallet address of the grantee's account"
   client: String!
   "Access details"
   access: [Access!]!
   "State of the grant"
   state: GrantState!
+  "Reason a grant was finalized"
+  finalizationReason: GrantFinalization
   "Date-time of creation"
   createdAt: String!
 }
@@ -76,7 +90,7 @@ type Grant implements Model {
 type Access implements Model {
   "Access id"
   id: ID!
-  "Payment pointer of a sub-resource (incoming payment, outgoing payment, or quote)"
+  "Wallet address of a sub-resource (incoming payment, outgoing payment, or quote)"
   identifier: String
   "Access type (incoming payment, outgoing payment, or quote)"
   type: String!
@@ -89,10 +103,10 @@ type Access implements Model {
 }
 
 type LimitData {
-  "Payment pointer URL of the receiver"
+  "Wallet address URL of the receiver"
   receiver: String
-  "Amount to send"
-  sendAmount: PaymentAmount
+  "Amount to debit"
+  debitAmount: PaymentAmount
   "Amount to receive"
   receiveAmount: PaymentAmount
   "Interval between payments"
@@ -120,10 +134,19 @@ interface MutationResponse {
 }
 
 enum GrantState {
-  "grant request was created but grant was not approved yet"
+  "grant request is determining what state to enter next"
+  PROCESSING
+  "grant request is awaiting interaction"
   PENDING
   "grant was approved"
-  GRANTED
+  APPROVED
+  "grant was finalized and no more access tokens or interactions can be made on it"
+  FINALIZED
+}
+
+enum GrantFinalization {
+  "grant was issued"
+  ISSUED
   "grant was revoked"
   REVOKED
   "grant was rejected"

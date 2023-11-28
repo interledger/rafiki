@@ -1,7 +1,7 @@
 import type * as crypto from 'crypto'
 import { parse } from 'yaml'
 import { readFileSync } from 'fs'
-import { parseOrProvisionKey } from '@interledger/http-signature-utils'
+import { loadOrGenerateKey } from '@interledger/http-signature-utils'
 
 export interface Self {
   graphqlUrl: string
@@ -13,14 +13,12 @@ export interface Self {
 export interface Asset {
   code: string
   scale: number
-}
-
-export interface Fees {
-  fixed: number
-  percentage: number
+  liquidity: number
+  liquidityThreshold: number
 }
 
 export interface Peering {
+  liquidityThreshold: number
   peerUrl: string
   peerIlpAddress: string
   initialLiquidity: string
@@ -33,20 +31,32 @@ export interface Account {
   initialBalance: bigint
   path: string
   postmanEnvVar: string
-  skipPaymentPointerCreation?: boolean
+  assetCode: string
+  skipWalletAddressCreation?: boolean
+}
+
+export interface Fee {
+  fixed: number
+  basisPoints: number
+  asset: string
+  scale: number
 }
 
 export interface SeedInstance {
   self: Self
-  asset: Asset
+  assets: Array<Asset>
   peers: Array<Peering>
   accounts: Array<Account>
-  fees: Array<Fees>
+  fees: Array<Fee>
+  rates: Record<string, Record<string, number>>
 }
 
 export interface Config {
   seed: SeedInstance
   key: crypto.KeyObject
+  publicHost: string
+  testnetAutoPeerUrl: string
+  authServerDomain: string
 }
 
 export const CONFIG: Config = {
@@ -55,5 +65,8 @@ export const CONFIG: Config = {
       process.env.SEED_FILE_LOCATION || `./seed.example.yml`
     ).toString('utf8')
   ),
-  key: parseOrProvisionKey(process.env.KEY_FILE)
+  key: loadOrGenerateKey(process.env.KEY_FILE),
+  publicHost: process.env.PUBLIC_HOST ?? '',
+  testnetAutoPeerUrl: process.env.TESTNET_AUTOPEER_URL ?? '',
+  authServerDomain: process.env.AUTH_SERVER_DOMAIN || 'http://localhost:3006'
 }

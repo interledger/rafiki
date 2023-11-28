@@ -1,7 +1,8 @@
+import { loadOrGenerateKey } from '@interledger/http-signature-utils'
 import * as crypto from 'crypto'
+import dotenv from 'dotenv'
 import * as fs from 'fs'
 import { ConnectionOptions } from 'tls'
-import { parseOrProvisionKey } from '@interledger/http-signature-utils'
 
 function envString(name: string, value: string): string {
   const envValue = process.env[name]
@@ -25,6 +26,10 @@ function envBool(name: string, value: boolean): boolean {
 
 export type IAppConfig = typeof Config
 
+dotenv.config({
+  path: process.env.ENV_FILE || '.env'
+})
+
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   // publicHost is for open payments URLs.
@@ -33,6 +38,8 @@ export const Config = {
   openPaymentsUrl: envString('OPEN_PAYMENTS_URL', 'http://127.0.0.1:3003'),
   openPaymentsPort: envInt('OPEN_PAYMENTS_PORT', 3003),
   connectorPort: envInt('CONNECTOR_PORT', 3002),
+  autoPeeringServerPort: envInt('AUTO_PEERING_SERVER_PORT', 3005),
+  enableAutoPeering: envBool('ENABLE_AUTO_PEERING', false),
   databaseUrl:
     process.env.NODE_ENV === 'test'
       ? `${process.env.DATABASE_URL}_${process.env.JEST_WORKER_ID}`
@@ -40,11 +47,12 @@ export const Config = {
           'DATABASE_URL',
           'postgresql://postgres:password@localhost:5432/development'
         ),
-  paymentPointerUrl: envString(
-    'PAYMENT_POINTER_URL',
+  walletAddressUrl: envString(
+    'WALLET_ADDRESS_URL',
     'http://127.0.0.1:3001/.well-known/pay'
   ),
   env: envString('NODE_ENV', 'development'),
+  trustProxy: envBool('TRUST_PROXY', false),
   redisUrl: envString('REDIS_URL', 'redis://127.0.0.1:6379'),
   redisTls: parseRedisTlsConfig(
     envString('REDIS_TLS_CA_FILE_PATH', ''),
@@ -52,6 +60,11 @@ export const Config = {
     envString('REDIS_TLS_CERT_FILE_PATH', '')
   ),
   ilpAddress: envString('ILP_ADDRESS', 'test.rafiki'),
+  ilpConnectorAddress: envString(
+    'ILP_CONNECTOR_ADDRESS',
+    'http://127.0.0.1:3002'
+  ),
+  instanceName: envString('INSTANCE_NAME', 'Rafiki'),
   streamSecret: process.env.STREAM_SECRET
     ? Buffer.from(process.env.STREAM_SECRET, 'base64')
     : crypto.randomBytes(32),
@@ -68,8 +81,8 @@ export const Config = {
   slippage: envFloat('SLIPPAGE', 0.01),
   quoteLifespan: envInt('QUOTE_LIFESPAN', 5 * 60_000), // milliseconds
 
-  paymentPointerWorkers: envInt('PAYMENT_POINTER_WORKERS', 1),
-  paymentPointerWorkerIdle: envInt('PAYMENT_POINTER_WORKER_IDLE', 200), // milliseconds
+  walletAddressWorkers: envInt('WALLET_ADDRESS_WORKERS', 1),
+  walletAddressWorkerIdle: envInt('WALLET_ADDRESS_WORKER_IDLE', 200), // milliseconds
 
   authServerGrantUrl: envString(
     'AUTH_SERVER_GRANT_URL',
@@ -86,8 +99,6 @@ export const Config = {
   incomingPaymentWorkers: envInt('INCOMING_PAYMENT_WORKERS', 1),
   incomingPaymentWorkerIdle: envInt('INCOMING_PAYMENT_WORKER_IDLE', 200), // milliseconds
 
-  quoteUrl: envString('QUOTE_URL', 'http://127.0.0.1:4001/quote'),
-
   webhookWorkers: envInt('WEBHOOK_WORKERS', 1),
   webhookWorkerIdle: envInt('WEBHOOK_WORKER_IDLE', 200), // milliseconds
   webhookUrl: envString('WEBHOOK_URL', 'http://127.0.0.1:4001/webhook'),
@@ -102,23 +113,23 @@ export const Config = {
   signatureVersion: envInt('SIGNATURE_VERSION', 1),
 
   keyId: envString('KEY_ID', 'rafiki'),
-  privateKey: parseOrProvisionKey(envString('PRIVATE_KEY_FILE', '')),
+  privateKey: loadOrGenerateKey(envString('PRIVATE_KEY_FILE', '')),
 
   graphQLIdempotencyKeyLockMs: envInt('GRAPHQL_IDEMPOTENCY_KEY_LOCK_MS', 2000),
   graphQLIdempotencyKeyTtlMs: envInt(
     'GRAPHQL_IDEMPOTENCY_KEY_TTL_MS',
     86400000
   ),
-  paymentPointerLookupTimeoutMs: envInt(
-    'PAYMENT_POINTER_LOOKUP_TIMEOUT_MS',
+  walletAddressLookupTimeoutMs: envInt(
+    'WALLET_ADDRESS_LOOKUP_TIMEOUT_MS',
     1500
   ),
-  paymentPointerPollingFrequencyMs: envInt(
-    'PAYMENT_POINTER_POLLING_FREQUENCY_MS',
+  walletAddressPollingFrequencyMs: envInt(
+    'WALLET_ADDRESS_POLLING_FREQUENCY_MS',
     100
   ),
-  paymentPointerDeactivationPaymentGracePeriodMs: envInt(
-    'PAYMENT_POINTER_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS',
+  walletAddressDeactivationPaymentGracePeriodMs: envInt(
+    'WALLET_ADDRESS_DEACTIVATION_PAYMENT_GRACE_PERIOD_MS',
     86400000
   ),
   incomingPaymentExpiryMaxMs: envInt(

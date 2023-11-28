@@ -16,7 +16,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { createContext, createContextWithSigHeaders } from '../tests/context'
-import { Grant, GrantState, StartMethod, FinishMethod } from '../grant/model'
+import {
+  Grant,
+  GrantState,
+  GrantFinalization,
+  StartMethod,
+  FinishMethod
+} from '../grant/model'
 import { Access } from '../access/model'
 import { AccessToken } from '../accessToken/model'
 import {
@@ -27,6 +33,8 @@ import {
 import { AccessTokenService } from '../accessToken/service'
 import { AccessType, AccessAction } from '@interledger/open-payments'
 import { ContinueContext, CreateContext } from '../grant/routes'
+import { Interaction, InteractionState } from '../interaction/model'
+import { generateNonce } from '../shared/utils'
 
 describe('Signature Service', (): void => {
   let deps: IocContract<AppServices>
@@ -44,11 +52,12 @@ describe('Signature Service', (): void => {
 
   afterAll(async (): Promise<void> => {
     nock.restore()
-    appContainer.shutdown()
+    await appContainer.shutdown()
   })
 
   describe('Signature middleware', (): void => {
     let grant: Grant
+    let interaction: Interaction
     let token: AccessToken
     let trx: Knex.Transaction
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,7 +66,7 @@ describe('Signature Service', (): void => {
     let tokenManagementUrl: string
     let accessTokenService: AccessTokenService
 
-    const BASE_GRANT = {
+    const generateBaseGrant = (overrides?: Partial<Grant>) => ({
       state: GrantState.Pending,
       startMethod: [StartMethod.Redirect],
       continueToken: crypto.randomBytes(8).toString('hex').toUpperCase(),
@@ -66,10 +75,16 @@ describe('Signature Service', (): void => {
       finishUri: 'https://example.com/finish',
       clientNonce: crypto.randomBytes(8).toString('hex').toUpperCase(),
       client: CLIENT,
-      interactId: v4(),
-      interactRef: crypto.randomBytes(8).toString('hex').toUpperCase(),
-      interactNonce: crypto.randomBytes(8).toString('hex').toUpperCase()
-    }
+      ...overrides
+    })
+
+    const generateBaseInteraction = (grant: Grant) => ({
+      ref: v4(),
+      nonce: generateNonce(),
+      state: InteractionState.Pending,
+      grantId: grant.id,
+      expiresIn: Config.interactionExpirySeconds
+    })
 
     const BASE_ACCESS = {
       type: AccessType.OutgoingPayment,
@@ -77,7 +92,7 @@ describe('Signature Service', (): void => {
       identifier: `https://example.com/${v4()}`,
       limits: {
         receiver: 'https://wallet.com/alice',
-        sendAmount: {
+        debitAmount: {
           value: '400',
           assetCode: 'USD',
           assetScale: 2
@@ -96,11 +111,14 @@ describe('Signature Service', (): void => {
     })
 
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
+      grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
       })
+      interaction = await Interaction.query(trx).insertAndFetch(
+        generateBaseInteraction(grant)
+      )
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN
@@ -168,7 +186,7 @@ describe('Signature Service', (): void => {
           method: 'POST'
         },
         { id: grant.continueId },
-        { interact_ref: grant.interactRef },
+        { interact_ref: interaction.ref },
         testKeys.privateKey,
         testKeys.publicKey.kid,
         deps
@@ -211,8 +229,10 @@ describe('Signature Service', (): void => {
 
       expect(next).toHaveBeenCalled()
       expect(ctx.response.status).toEqual(200)
-      expect(ctx.accessToken).toMatchObject(token)
-      expect(ctx.accessToken.grant).toEqual(grant)
+      expect(ctx.accessToken).toMatchObject({
+        ...token,
+        grant
+      })
 
       scope.done()
     })
@@ -297,7 +317,7 @@ describe('Signature Service', (): void => {
           method: 'POST'
         },
         { id: grant.continueId },
-        { interact_ref: grant.interactRef },
+        { interact_ref: interaction.ref },
         testKeys.privateKey,
         testKeys.publicKey.kid,
         deps
@@ -310,6 +330,38 @@ describe('Signature Service', (): void => {
       ).rejects.toHaveProperty('status', 401)
 
       scope.done()
+    })
+
+    test('middleware fails if grant is revoked', async (): Promise<void> => {
+      const grant = await Grant.query().insert({
+        ...generateBaseGrant({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Revoked
+        })
+      })
+
+      const ctx = await createContextWithSigHeaders<ContinueContext>(
+        {
+          headers: {
+            Accept: 'application/json',
+            Authorization: `GNAP ${grant.continueToken}`
+          },
+          url: 'http://example.com/continue',
+          method: 'POST'
+        },
+        { id: grant.continueId },
+        { interact_ref: interaction.ref },
+        testKeys.privateKey,
+        testKeys.publicKey.kid,
+        deps
+      )
+
+      await grantContinueHttpsigMiddleware(ctx, next)
+      expect(ctx.response.status).toBe(401)
+      expect(ctx.response.body).toMatchObject({
+        error: 'invalid_continuation',
+        message: 'invalid grant'
+      })
     })
 
     test('middleware fails if client is invalid', async (): Promise<void> => {

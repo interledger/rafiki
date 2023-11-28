@@ -20,6 +20,22 @@ describe('Access Service', (): void => {
   let appContainer: TestContainer
   let accessService: AccessService
   let trx: Knex.Transaction
+  let grant: Grant
+
+  const generateBaseGrant = () => ({
+    state: GrantState.Pending,
+    startMethod: [StartMethod.Redirect],
+    continueToken: generateToken(),
+    continueId: v4(),
+    finishMethod: FinishMethod.Redirect,
+    finishUri: 'https://example.com/finish',
+    clientNonce: generateNonce(),
+    client: faker.internet.url({ appendSlash: false })
+  })
+
+  beforeEach(async (): Promise<void> => {
+    grant = await Grant.query(trx).insertAndFetch(generateBaseGrant())
+  })
 
   beforeAll(async (): Promise<void> => {
     deps = initIocContainer(Config)
@@ -36,26 +52,8 @@ describe('Access Service', (): void => {
     await appContainer.shutdown()
   })
 
-  const BASE_GRANT = {
-    state: GrantState.Pending,
-    startMethod: [StartMethod.Redirect],
-    continueToken: generateToken(),
-    continueId: v4(),
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com/finish',
-    clientNonce: generateNonce(),
-    client: faker.internet.url({ appendSlash: false }),
-    interactId: v4(),
-    interactRef: generateNonce(),
-    interactNonce: generateNonce()
-  }
-
   describe('create', (): void => {
     test('Can create incoming payment access', async (): Promise<void> => {
-      const grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT
-      })
-
       const incomingPaymentAccess: IncomingPaymentRequest = {
         type: 'incoming-payment',
         actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
@@ -72,7 +70,7 @@ describe('Access Service', (): void => {
 
     test('Can create outgoing payment access', async (): Promise<void> => {
       const outgoingPaymentLimit = {
-        sendAmount: {
+        debitAmount: {
           value: '1000000000',
           assetCode: 'usd',
           assetScale: 9
@@ -92,8 +90,6 @@ describe('Access Service', (): void => {
         limits: outgoingPaymentLimit
       }
 
-      const grant = await Grant.query(trx).insertAndFetch(BASE_GRANT)
-
       const access = await accessService.createAccess(grant.id, [
         outgoingPaymentAccess
       ])
@@ -107,10 +103,6 @@ describe('Access Service', (): void => {
 
   describe('getByGrant', (): void => {
     test('gets access', async () => {
-      const grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT
-      })
-
       const incomingPaymentAccess: IncomingPaymentRequest = {
         type: 'incoming-payment',
         actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
@@ -131,6 +123,20 @@ describe('Access Service', (): void => {
       expect(fetchedAccess[0].grantId).toEqual(grant.id)
       expect(fetchedAccess[0].type).toEqual(AccessType.IncomingPayment)
       expect(fetchedAccess[0].actions).toEqual(incomingPaymentAccess.actions)
+    })
+  })
+
+  describe('revoke access', (): void => {
+    test('revokeByGrantId', async () => {
+      const access = await Access.query(trx).insert({
+        grantId: grant.id,
+        type: 'incoming-payment',
+        actions: [AccessAction.Create, AccessAction.Read, AccessAction.List]
+      })
+
+      await accessService.revokeByGrantId(grant.id)
+
+      expect(Access.query(trx).findById(access.id)).resolves.toBeUndefined()
     })
   })
 })

@@ -1,0 +1,30 @@
+name: Publish Postman API version
+
+on:
+  workflow_call:
+    inputs:
+      api-version:
+        required: true
+        type: string
+      release-notes:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
+
+jobs:
+  postman-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{inputs.branch}}
+      - name: Install Postman CLI
+        run: |
+          curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+      - name: Publish Postman API
+        run: |
+          postman api publish 84fc90ca-3153-4865-8b49-b91218e5d574  --name ${{ inputs.api-version }} --release-notes ${{ inputs.release-notes }} --collections "postman/collections/Interledger.json"

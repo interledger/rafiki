@@ -8,11 +8,11 @@ import { AccountingService } from '../../../accounting/service'
 import { BaseService } from '../../../shared/baseService'
 import { Knex } from 'knex'
 import { TransactionOrKnex } from 'objection'
-import { GetOptions, ListOptions } from '../../payment_pointer/model'
+import { GetOptions, ListOptions } from '../../wallet_address/model'
 import {
-  PaymentPointerService,
-  PaymentPointerSubresourceService
-} from '../../payment_pointer/service'
+  WalletAddressService,
+  WalletAddressSubresourceService
+} from '../../wallet_address/service'
 
 import { Amount } from '../../amount'
 import { IncomingPaymentError } from './errors'
@@ -25,7 +25,7 @@ export const POSITIVE_SLIPPAGE = BigInt(1)
 export const RETRY_BACKOFF_MS = 10_000
 
 export interface CreateIncomingPaymentOptions {
-  paymentPointerId: string
+  walletAddressId: string
   client?: string
   expiresAt?: Date
   incomingAmount?: Amount
@@ -33,20 +33,19 @@ export interface CreateIncomingPaymentOptions {
 }
 
 export interface IncomingPaymentService
-  extends PaymentPointerSubresourceService<IncomingPayment> {
+  extends WalletAddressSubresourceService<IncomingPayment> {
   create(
     options: CreateIncomingPaymentOptions,
     trx?: Knex.Transaction
   ): Promise<IncomingPayment | IncomingPaymentError>
   complete(id: string): Promise<IncomingPayment | IncomingPaymentError>
   processNext(): Promise<string | undefined>
-  getByConnection(connectionId: string): Promise<IncomingPayment | undefined>
 }
 
 export interface ServiceDependencies extends BaseService {
   knex: TransactionOrKnex
   accountingService: AccountingService
-  paymentPointerService: PaymentPointerService
+  walletAddressService: WalletAddressService
   config: IAppConfig
 }
 
@@ -64,10 +63,8 @@ export async function createIncomingPaymentService(
     get: (options) => getIncomingPayment(deps, options),
     create: (options, trx) => createIncomingPayment(deps, options, trx),
     complete: (id) => completeIncomingPayment(deps, id),
-    getPaymentPointerPage: (options) => getPaymentPointerPage(deps, options),
-    processNext: () => processNextIncomingPayment(deps),
-    getByConnection: (connectionId) =>
-      getIncomingPaymentByConnection(deps, connectionId)
+    getWalletAddressPage: (options) => getWalletAddressPage(deps, options),
+    processNext: () => processNextIncomingPayment(deps)
   }
 }
 
@@ -77,18 +74,7 @@ async function getIncomingPayment(
 ): Promise<IncomingPayment | undefined> {
   const incomingPayment = await IncomingPayment.query(deps.knex)
     .get(options)
-    .withGraphFetched('[asset, paymentPointer]')
-  if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
-  else return
-}
-
-async function getIncomingPaymentByConnection(
-  deps: ServiceDependencies,
-  connectionId: string
-): Promise<IncomingPayment | undefined> {
-  const incomingPayment = await IncomingPayment.query(deps.knex)
-    .findOne({ connectionId })
-    .withGraphFetched('[asset, paymentPointer]')
+    .withGraphFetched('[asset, walletAddress]')
   if (incomingPayment) return await addReceivedAmount(deps, incomingPayment)
   else return
 }
@@ -96,7 +82,7 @@ async function getIncomingPaymentByConnection(
 async function createIncomingPayment(
   deps: ServiceDependencies,
   {
-    paymentPointerId,
+    walletAddressId,
     client,
     expiresAt,
     incomingAmount,
@@ -115,33 +101,33 @@ async function createIncomingPayment(
   if (incomingAmount && incomingAmount.value <= 0) {
     return IncomingPaymentError.InvalidAmount
   }
-  const paymentPointer = await deps.paymentPointerService.get(paymentPointerId)
-  if (!paymentPointer) {
-    return IncomingPaymentError.UnknownPaymentPointer
+  const walletAddress = await deps.walletAddressService.get(walletAddressId)
+  if (!walletAddress) {
+    return IncomingPaymentError.UnknownWalletAddress
   }
-  if (!paymentPointer.isActive) {
-    return IncomingPaymentError.InactivePaymentPointer
+  if (!walletAddress.isActive) {
+    return IncomingPaymentError.InactiveWalletAddress
   }
   if (incomingAmount) {
     if (
-      incomingAmount.assetCode !== paymentPointer.asset.code ||
-      incomingAmount.assetScale !== paymentPointer.asset.scale
+      incomingAmount.assetCode !== walletAddress.asset.code ||
+      incomingAmount.assetScale !== walletAddress.asset.scale
     ) {
       return IncomingPaymentError.InvalidAmount
     }
   }
   const incomingPayment = await IncomingPayment.query(trx || deps.knex)
     .insertAndFetch({
-      paymentPointerId,
+      walletAddressId: walletAddressId,
       client,
-      assetId: paymentPointer.asset.id,
+      assetId: walletAddress.asset.id,
       expiresAt,
       incomingAmount,
       metadata,
       state: IncomingPaymentState.Pending,
       processAt: expiresAt
     })
-    .withGraphFetched('[asset, paymentPointer]')
+    .withGraphFetched('[asset, walletAddress]')
 
   await IncomingPaymentEvent.query(trx || deps.knex).insert({
     type: IncomingPaymentEventType.IncomingPaymentCreated,
@@ -165,7 +151,7 @@ async function processNextIncomingPayment(
       // If an incoming payment is locked, don't wait — just come back for it later.
       .skipLocked()
       .where('processAt', '<=', now)
-      .withGraphFetched('[asset, paymentPointer]')
+      .withGraphFetched('[asset, walletAddress]')
 
     const incomingPayment = incomingPayments[0]
     if (!incomingPayment) return
@@ -259,13 +245,13 @@ async function handleDeactivated(
   }
 }
 
-async function getPaymentPointerPage(
+async function getWalletAddressPage(
   deps: ServiceDependencies,
   options: ListOptions
 ): Promise<IncomingPayment[]> {
   const page = await IncomingPayment.query(deps.knex)
     .list(options)
-    .withGraphFetched('[asset, paymentPointer]')
+    .withGraphFetched('[asset, walletAddress]')
   const amounts = await deps.accountingService.getAccountsTotalReceived(
     page.map((payment: IncomingPayment) => payment.id)
   )
@@ -298,7 +284,7 @@ async function completeIncomingPayment(
     const payment = await IncomingPayment.query(trx)
       .findById(id)
       .forUpdate()
-      .withGraphFetched('[asset, paymentPointer]')
+      .withGraphFetched('[asset, walletAddress]')
     if (!payment) return IncomingPaymentError.UnknownPayment
     if (
       ![IncomingPaymentState.Pending, IncomingPaymentState.Processing].includes(

@@ -5,10 +5,15 @@ import {
 } from '@interledger/http-signature-utils'
 import Koa, { HttpError } from 'koa'
 import { Limits, parseLimits } from '../payment/outgoing/limits'
-import { HttpSigContext, PaymentPointerContext } from '../../app'
+import {
+  HttpSigContext,
+  HttpSigWithAuthenticatedStatusContext,
+  WalletAddressContext
+} from '../../app'
 import { AccessAction, AccessType, JWKS } from '@interledger/open-payments'
 import { TokenInfo } from 'token-introspection'
 import { isActiveTokenInfo } from 'token-introspection'
+import { Config } from '../../config/app'
 
 export type RequestAction = Exclude<AccessAction, 'read-all' | 'list-all'>
 export const RequestAction: Record<string, RequestAction> = Object.freeze({
@@ -30,23 +35,30 @@ export interface Access {
 }
 
 function contextToRequestLike(ctx: HttpSigContext): RequestLike {
+  const url =
+    Config.env === 'autopeer'
+      ? ctx.href.replace('http://', 'https://')
+      : ctx.href
   return {
-    url: ctx.href,
+    url,
     method: ctx.method,
     headers: ctx.headers,
     body: ctx.request.body ? JSON.stringify(ctx.request.body) : undefined
   }
 }
+
 export function createTokenIntrospectionMiddleware({
   requestType,
-  requestAction
+  requestAction,
+  bypassError = false
 }: {
   requestType: AccessType
   requestAction: RequestAction
+  bypassError?: boolean
 }) {
   return async (
-    ctx: PaymentPointerContext,
-    next: () => Promise<unknown>
+    ctx: WalletAddressContext,
+    next: () => Promise<void>
   ): Promise<void> => {
     const config = await ctx.container.use('config')
     try {
@@ -75,7 +87,7 @@ export function createTokenIntrospectionMiddleware({
       const access = tokenInfo.access.find((access: Access) => {
         if (
           access.type !== requestType ||
-          (access.identifier && access.identifier !== ctx.paymentPointer.url)
+          (access.identifier && access.identifier !== ctx.walletAddress.url)
         ) {
           return false
         }
@@ -119,6 +131,11 @@ export function createTokenIntrospectionMiddleware({
       }
       await next()
     } catch (err) {
+      if (bypassError && err instanceof HttpError) {
+        ctx.set('WWW-Authenticate', `GNAP as_uri=${config.authServerGrantUrl}`)
+        return await next()
+      }
+
       if (err instanceof HttpError && err.status === 401) {
         ctx.status = 401
         ctx.message = err.message
@@ -130,10 +147,23 @@ export function createTokenIntrospectionMiddleware({
   }
 }
 
-export const httpsigMiddleware = async (
-  ctx: HttpSigContext,
+export const authenticatedStatusMiddleware = async (
+  ctx: HttpSigWithAuthenticatedStatusContext,
   next: () => Promise<unknown>
 ): Promise<void> => {
+  ctx.authenticated = false
+  try {
+    await throwIfSignatureInvalid(ctx)
+    ctx.authenticated = true
+  } catch (err) {
+    if (err instanceof Koa.HttpError && err.status !== 401) {
+      throw err
+    }
+  }
+  await next()
+}
+
+export const throwIfSignatureInvalid = async (ctx: HttpSigContext) => {
   const keyId = getKeyId(ctx.request.headers['signature-input'])
   if (!keyId) {
     ctx.throw(401, 'Invalid signature input')
@@ -143,7 +173,7 @@ export const httpsigMiddleware = async (
   let jwks: JWKS | undefined
   try {
     const openPaymentsClient = await ctx.container.use('openPaymentsClient')
-    jwks = await openPaymentsClient.paymentPointer.getKeys({
+    jwks = await openPaymentsClient.walletAddress.getKeys({
       url: ctx.client
     })
   } catch (error) {
@@ -177,5 +207,12 @@ export const httpsigMiddleware = async (
     )
     ctx.throw(401, `Invalid signature`)
   }
+}
+
+export const httpsigMiddleware = async (
+  ctx: HttpSigContext,
+  next: () => Promise<unknown>
+): Promise<void> => {
+  await throwIfSignatureInvalid(ctx)
   await next()
 }

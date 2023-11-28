@@ -3,16 +3,16 @@ import { TransactionOrKnex } from 'objection'
 
 import { BaseService } from '../shared/baseService'
 import { generateToken } from '../shared/utils'
-import { Grant, GrantState } from '../grant/model'
+import { Grant, isRevokedGrant } from '../grant/model'
 import { ClientService } from '../client/service'
 import { AccessToken } from './model'
 
 export interface AccessTokenService {
-  get(tokenValue: string): Promise<AccessToken | undefined>
   getByManagementId(managementId: string): Promise<AccessToken | undefined>
   introspect(tokenValue: string): Promise<Grant | undefined>
   create(grantId: string, trx?: TransactionOrKnex): Promise<AccessToken>
   revoke(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
+  revokeByGrantId(grantId: string, trx?: TransactionOrKnex): Promise<number>
   rotate(id: string, trx?: TransactionOrKnex): Promise<AccessToken | undefined>
 }
 
@@ -40,11 +40,12 @@ export async function createAccessTokenService({
   }
 
   return {
-    get: (tokenValue: string) => get(tokenValue),
     getByManagementId: (managementId: string) =>
       getByManagementId(managementId),
     introspect: (tokenValue: string) => introspect(deps, tokenValue),
     revoke: (id: string, trx?: TransactionOrKnex) => revoke(deps, id, trx),
+    revokeByGrantId: (grantId: string, trx?: TransactionOrKnex) =>
+      revokeByGrantId(deps, grantId, trx),
     create: (grantId: string, trx?: TransactionOrKnex) =>
       createAccessToken(deps, grantId, trx),
     rotate: (id: string) => rotate(deps, id)
@@ -55,10 +56,6 @@ function isTokenExpired(token: AccessToken): boolean {
   const now = new Date(Date.now())
   const expiresAt = token.createdAt.getTime() + token.expiresIn * 1000
   return expiresAt < now.getTime()
-}
-
-async function get(tokenValue: string): Promise<AccessToken | undefined> {
-  return AccessToken.query().findOne('value', tokenValue)
 }
 
 async function getByManagementId(
@@ -81,7 +78,7 @@ async function introspect(
   if (isTokenExpired(token)) {
     return undefined
   } else {
-    if (!token.grant || token.grant.state === GrantState.Revoked) {
+    if (!token.grant || isRevokedGrant(token.grant)) {
       return undefined
     }
 
@@ -98,6 +95,16 @@ async function revoke(
     .deleteById(id)
     .returning('*')
     .first()
+}
+
+async function revokeByGrantId(
+  deps: ServiceDependencies,
+  grantId: string,
+  trx?: TransactionOrKnex
+): Promise<number> {
+  return await AccessToken.query(trx || deps.knex)
+    .delete()
+    .where('grantId', grantId)
 }
 
 async function createAccessToken(

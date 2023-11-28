@@ -16,6 +16,14 @@ const navigation = [
   {
     name: 'Assets',
     href: '/assets'
+  },
+  {
+    name: 'Wallet Addresses',
+    href: '/wallet-addresses'
+  },
+  {
+    name: 'Webhooks',
+    href: '/webhooks'
   }
 ]
 

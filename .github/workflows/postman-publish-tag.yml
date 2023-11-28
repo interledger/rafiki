@@ -1,0 +1,15 @@
+name: Publish Postman API version (tag)
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  postman-publish-main:
+    uses: ./.github/workflows/postman-publish.yml
+    with:
+      api-version: ${{github.ref_name}}
+      release-notes: "APIs corresponding to Rafiki version ${{github.ref_name}}"
+      branch: 'main'
+    secrets: inherit

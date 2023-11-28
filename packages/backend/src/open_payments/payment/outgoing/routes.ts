@@ -5,12 +5,12 @@ import { IAppConfig } from '../../../config/app'
 import { OutgoingPaymentService } from './service'
 import { isOutgoingPaymentError, errorToCode, errorToMessage } from './errors'
 import { OutgoingPayment } from './model'
-import { listSubresource } from '../../payment_pointer/routes'
+import { listSubresource } from '../../wallet_address/routes'
 import {
   AccessAction,
   OutgoingPayment as OpenPaymentsOutgoingPayment
 } from '@interledger/open-payments'
-import { PaymentPointer } from '../../payment_pointer/model'
+import { WalletAddress } from '../../wallet_address/model'
 
 interface ServiceDependencies {
   config: IAppConfig
@@ -47,17 +47,20 @@ async function getOutgoingPayment(
   try {
     outgoingPayment = await deps.outgoingPaymentService.get({
       id: ctx.params.id,
-      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined,
-      paymentPointerId: ctx.paymentPointer.id
+      client: ctx.accessAction === AccessAction.Read ? ctx.client : undefined
     })
   } catch (_) {
     ctx.throw(500, 'Error trying to get outgoing payment')
   }
-  if (!outgoingPayment) return ctx.throw(404)
-  ctx.body = outgoingPaymentToBody(ctx.paymentPointer, outgoingPayment)
+  if (!outgoingPayment || !outgoingPayment.walletAddress) return ctx.throw(404)
+  ctx.body = outgoingPaymentToBody(
+    outgoingPayment.walletAddress,
+    outgoingPayment
+  )
 }
 
 export type CreateBody = {
+  walletAddress: string
   quoteId: string
   metadata?: Record<string, unknown>
 }
@@ -75,7 +78,7 @@ async function createOutgoingPayment(
   }
 
   const paymentOrErr = await deps.outgoingPaymentService.create({
-    paymentPointerId: ctx.paymentPointer.id,
+    walletAddressId: ctx.walletAddress.id,
     quoteId,
     metadata: body.metadata,
     client: ctx.client,
@@ -86,7 +89,7 @@ async function createOutgoingPayment(
     return ctx.throw(errorToCode[paymentOrErr], errorToMessage[paymentOrErr])
   }
   ctx.status = 201
-  ctx.body = outgoingPaymentToBody(ctx.paymentPointer, paymentOrErr)
+  ctx.body = outgoingPaymentToBody(ctx.walletAddress, paymentOrErr)
 }
 
 async function listOutgoingPayments(
@@ -96,8 +99,8 @@ async function listOutgoingPayments(
   try {
     await listSubresource({
       ctx,
-      getPaymentPointerPage: deps.outgoingPaymentService.getPaymentPointerPage,
-      toBody: (payment) => outgoingPaymentToBody(ctx.paymentPointer, payment)
+      getWalletAddressPage: deps.outgoingPaymentService.getWalletAddressPage,
+      toBody: (payment) => outgoingPaymentToBody(ctx.walletAddress, payment)
     })
   } catch (err) {
     if (err instanceof Koa.HttpError) {
@@ -108,8 +111,8 @@ async function listOutgoingPayments(
 }
 
 function outgoingPaymentToBody(
-  paymentPointer: PaymentPointer,
+  walletAddress: WalletAddress,
   outgoingPayment: OutgoingPayment
 ): OpenPaymentsOutgoingPayment {
-  return outgoingPayment.toOpenPaymentsType(paymentPointer)
+  return outgoingPayment.toOpenPaymentsType(walletAddress)
 }

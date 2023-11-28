@@ -10,13 +10,15 @@ import {
   useLoaderData
 } from '@remix-run/react'
 import { useEffect, useState } from 'react'
-import favicon from '../public/favicon.svg'
+import logo from '../public/logo.svg'
 import { XCircle } from './components/icons'
 import { Sidebar } from './components/Sidebar'
 import { Snackbar } from './components/Snackbar'
 import { Button } from './components/ui/Button'
 import { messageStorage, type Message } from './lib/message.server'
 import tailwind from './styles/tailwind.css'
+import { getOpenPaymentsUrl } from './shared/utils'
+import { PublicEnv, type PublicEnvironment } from './PublicEnv'
 
 export const meta: MetaFunction = () => ({
   charset: 'utf-8',
@@ -28,12 +30,16 @@ export const loader = async ({ request }: LoaderArgs) => {
   const session = await messageStorage.getSession(request.headers.get('cookie'))
   const message = session.get('message') as Message
 
+  const publicEnv: PublicEnvironment = {
+    OPEN_PAYMENTS_URL: getOpenPaymentsUrl()
+  }
+
   if (!message) {
-    return json({ message: null })
+    return json({ message: null, publicEnv })
   }
 
   return json(
-    { message },
+    { message, publicEnv },
     {
       headers: {
         'Set-Cookie': await messageStorage.destroySession(session, {
@@ -45,7 +51,7 @@ export const loader = async ({ request }: LoaderArgs) => {
 }
 
 export default function App() {
-  const { message } = useLoaderData<typeof loader>()
+  const { message, publicEnv } = useLoaderData<typeof loader>()
   const [snackbarOpen, setSnackbarOpen] = useState(false)
 
   useEffect(() => {
@@ -81,6 +87,7 @@ export default function App() {
           dismissAfter={2000}
         />
         <ScrollRestoration />
+        <PublicEnv env={publicEnv} />
         <Scripts />
         <LiveReload />
       </body>
@@ -169,6 +176,6 @@ export function CatchBoundary() {
 export function links() {
   return [
     { rel: 'stylesheet', href: tailwind },
-    { rel: 'icon', href: favicon }
+    { rel: 'icon', href: logo }
   ]
 }

@@ -1,0 +1,55 @@
+/* Splash page styling */
+.card-link {
+  text-decoration: none;
+}
+
+/* API table styling */
+.content details ~ table tbody tr td:first-of-type strong,
+.content details ~ table tbody tr td:nth-of-type(2) a {
+  line-break: anywhere;
+}
+
+.content details ~ table tbody tr td:nth-of-type(3):not(:empty) {
+  width: 50%;
+}
+
+/* Accounting table styles */
+.accounting-table,
+.accounting-table table {
+  box-shadow: none;
+}
+
+.accounting-table.accounting-table {
+  border-spacing: var(--space-s) 0;
+  border-collapse: separate;
+}
+
+.accounting-table table {
+  border-collapse: collapse;
+  padding-top: var(--space-xs);
+  margin-top: -2px;
+}
+
+.accounting-table.accounting-table .header-row th {
+  text-align: center;
+  border-bottom: 2px solid var(--sl-color-text-accent);
+  padding-bottom: var(--space-2xs);
+}
+
+.accounting-table.accounting-table .header-row:not(:first-of-type) th {
+  padding-top: var(--space-s);
+}
+
+.accounting-table table tr th {
+  padding-top: var(--space-2xs);
+}
+
+.accounting-table table tr th:first-of-type,
+.accounting-table table tr td:first-of-type {
+  border-right: 2px solid var(--sl-color-text-accent);
+}
+
+.accounting-table.accounting-table tr th,
+.accounting-table.accounting-table tr td {
+  text-align: center;
+}

@@ -51,17 +51,14 @@ describe('Access Token Routes', (): void => {
   const CLIENT = faker.internet.url({ appendSlash: false })
 
   const BASE_GRANT = {
-    state: GrantState.Pending,
+    state: GrantState.Processing,
     startMethod: [StartMethod.Redirect],
     continueToken: generateToken(),
     continueId: v4(),
     finishMethod: FinishMethod.Redirect,
     finishUri: 'https://example.com/finish',
     clientNonce: generateNonce(),
-    client: CLIENT,
-    interactId: v4(),
-    interactRef: generateNonce(),
-    interactNonce: generateNonce()
+    client: CLIENT
   }
 
   const BASE_ACCESS = {
@@ -71,7 +68,7 @@ describe('Access Token Routes', (): void => {
     limits: {
       receiver:
         'https://wallet.com/alice/incoming-payments/12341234-1234-1234-1234-123412341234',
-      sendAmount: {
+      debitAmount: {
         value: '400',
         assetCode: 'USD',
         assetScale: 2

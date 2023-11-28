@@ -3,7 +3,7 @@ import { v4 as uuid } from 'uuid'
 
 import { AssetError, isAssetError } from './errors'
 import { AssetService } from './service'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 import { getPageTests } from '../shared/baseModel.test'
 import { createTestApp, TestContainer } from '../tests/app'
 import { createAsset, randomAsset } from '../tests/asset'
@@ -14,6 +14,7 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
+import { orderBy } from 'lodash'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
@@ -36,15 +37,18 @@ describe('Asset Service', (): void => {
 
   describe('create', (): void => {
     test.each`
-      withdrawalThreshold
-      ${undefined}
-      ${BigInt(5)}
+      withdrawalThreshold | liquidityThreshold
+      ${undefined}        | ${undefined}
+      ${BigInt(5)}        | ${undefined}
+      ${undefined}        | ${BigInt(5)}
+      ${BigInt(5)}        | ${BigInt(5)}
     `(
       'Asset can be created and fetched',
-      async ({ withdrawalThreshold }): Promise<void> => {
+      async ({ withdrawalThreshold, liquidityThreshold }): Promise<void> => {
         const options = {
           ...randomAsset(),
-          withdrawalThreshold
+          withdrawalThreshold,
+          liquidityThreshold
         }
         const asset = await assetService.create(options)
         assert.ok(!isAssetError(asset))
@@ -52,7 +56,8 @@ describe('Asset Service', (): void => {
           ...options,
           id: asset.id,
           ledger: asset.ledger,
-          withdrawalThreshold: withdrawalThreshold || null
+          withdrawalThreshold: withdrawalThreshold || null,
+          liquidityThreshold: liquidityThreshold || null
         })
         await expect(assetService.get(asset.id)).resolves.toEqual(asset)
       }
@@ -138,19 +143,24 @@ describe('Asset Service', (): void => {
 
   describe('update', (): void => {
     describe.each`
-      withdrawalThreshold
-      ${null}
-      ${BigInt(0)}
-      ${BigInt(5)}
+      withdrawalThreshold | liquidityThreshold
+      ${null}             | ${null}
+      ${BigInt(0)}        | ${null}
+      ${BigInt(5)}        | ${null}
+      ${null}             | ${BigInt(0)}
+      ${null}             | ${BigInt(5)}
+      ${BigInt(0)}        | ${BigInt(0)}
+      ${BigInt(5)}        | ${BigInt(5)}
     `(
-      "Asset's withdrawal threshold can be updated from $withdrawalThreshold",
-      ({ withdrawalThreshold }): void => {
+      'Asset threshold can be updated from withdrawalThreshold: $withdrawalThreshold, liquidityThreshold: $liquidityThreshold',
+      ({ withdrawalThreshold, liquidityThreshold }): void => {
         let assetId: string
 
         beforeEach(async (): Promise<void> => {
           const asset = await assetService.create({
             ...randomAsset(),
-            withdrawalThreshold
+            withdrawalThreshold,
+            liquidityThreshold
           })
           assert.ok(!isAssetError(asset))
           expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
@@ -158,19 +168,28 @@ describe('Asset Service', (): void => {
         })
 
         test.each`
-          withdrawalThreshold
-          ${null}
-          ${BigInt(0)}
-          ${BigInt(5)}
+          withdrawalThreshold | liquidityThreshold
+          ${null}             | ${null}
+          ${BigInt(0)}        | ${null}
+          ${BigInt(5)}        | ${null}
+          ${null}             | ${BigInt(0)}
+          ${null}             | ${BigInt(5)}
+          ${BigInt(0)}        | ${BigInt(0)}
+          ${BigInt(5)}        | ${BigInt(5)}
         `(
-          'to $withdrawalThreshold',
-          async ({ withdrawalThreshold }): Promise<void> => {
+          'to withdrawalThreshold: $withdrawalThreshold, liquidityThreshold: $liquidityThreshold',
+          async ({
+            withdrawalThreshold,
+            liquidityThreshold
+          }): Promise<void> => {
             const asset = await assetService.update({
               id: assetId,
-              withdrawalThreshold
+              withdrawalThreshold,
+              liquidityThreshold
             })
             assert.ok(!isAssetError(asset))
             expect(asset.withdrawalThreshold).toEqual(withdrawalThreshold)
+            expect(asset.liquidityThreshold).toEqual(liquidityThreshold)
             await expect(assetService.get(assetId)).resolves.toEqual(asset)
           }
         )
@@ -181,7 +200,8 @@ describe('Asset Service', (): void => {
       await expect(
         assetService.update({
           id: uuid(),
-          withdrawalThreshold: BigInt(10)
+          withdrawalThreshold: BigInt(10),
+          liquidityThreshold: null
         })
       ).resolves.toEqual(AssetError.UnknownAsset)
     })
@@ -190,7 +210,26 @@ describe('Asset Service', (): void => {
   describe('getPage', (): void => {
     getPageTests({
       createModel: () => createAsset(deps),
-      getPage: (pagination?: Pagination) => assetService.getPage(pagination)
+      getPage: (pagination?: Pagination, sortOrder?: SortOrder) =>
+        assetService.getPage(pagination, sortOrder)
+    })
+  })
+
+  describe('getAll', (): void => {
+    test('returns all assets', async (): Promise<void> => {
+      const assets = await Promise.all([
+        assetService.create(randomAsset()),
+        assetService.create(randomAsset()),
+        assetService.create(randomAsset())
+      ])
+
+      await expect(assetService.getAll()).resolves.toEqual(
+        orderBy(assets, 'createdAt', 'asc')
+      )
+    })
+
+    test('returns empty array if no assets', async (): Promise<void> => {
+      await expect(assetService.getAll()).resolves.toEqual([])
     })
   })
 })

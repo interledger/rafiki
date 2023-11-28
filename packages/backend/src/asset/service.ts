@@ -2,7 +2,7 @@ import { NotFoundError, UniqueViolationError } from 'objection'
 
 import { AssetError } from './errors'
 import { Asset } from './model'
-import { Pagination } from '../shared/baseModel'
+import { Pagination, SortOrder } from '../shared/baseModel'
 import { BaseService } from '../shared/baseService'
 import { AccountingService, LiquidityAccountType } from '../accounting/service'
 
@@ -13,18 +13,21 @@ export interface AssetOptions {
 
 export interface CreateOptions extends AssetOptions {
   withdrawalThreshold?: bigint
+  liquidityThreshold?: bigint
 }
 
 export interface UpdateOptions {
   id: string
   withdrawalThreshold: bigint | null
+  liquidityThreshold: bigint | null
 }
 
 export interface AssetService {
   create(options: CreateOptions): Promise<Asset | AssetError>
   update(options: UpdateOptions): Promise<Asset | AssetError>
   get(id: string): Promise<void | Asset>
-  getPage(pagination?: Pagination): Promise<Asset[]>
+  getPage(pagination?: Pagination, sortOrder?: SortOrder): Promise<Asset[]>
+  getAll(): Promise<Asset[]>
 }
 
 interface ServiceDependencies extends BaseService {
@@ -48,13 +51,15 @@ export async function createAssetService({
     create: (options) => createAsset(deps, options),
     update: (options) => updateAsset(deps, options),
     get: (id) => getAsset(deps, id),
-    getPage: (pagination?) => getAssetsPage(deps, pagination)
+    getPage: (pagination?, sortOrder?) =>
+      getAssetsPage(deps, pagination, sortOrder),
+    getAll: () => getAll(deps)
   }
 }
 
 async function createAsset(
   deps: ServiceDependencies,
-  { code, scale, withdrawalThreshold }: CreateOptions
+  { code, scale, withdrawalThreshold, liquidityThreshold }: CreateOptions
 ): Promise<Asset | AssetError> {
   try {
     // Asset rows include a smallserial 'ledger' column that would have sequence gaps
@@ -67,7 +72,8 @@ async function createAsset(
       const asset = await Asset.query(trx).insertAndFetch({
         code,
         scale,
-        withdrawalThreshold
+        withdrawalThreshold,
+        liquidityThreshold
       })
       await deps.accountingService.createLiquidityAccount(
         asset,
@@ -88,14 +94,14 @@ async function createAsset(
 
 async function updateAsset(
   deps: ServiceDependencies,
-  { id, withdrawalThreshold }: UpdateOptions
+  { id, withdrawalThreshold, liquidityThreshold }: UpdateOptions
 ): Promise<Asset | AssetError> {
   if (!deps.knex) {
     throw new Error('Knex undefined')
   }
   try {
     return await Asset.query(deps.knex)
-      .patchAndFetchById(id, { withdrawalThreshold })
+      .patchAndFetchById(id, { withdrawalThreshold, liquidityThreshold })
       .throwIfNotFound()
   } catch (err) {
     if (err instanceof NotFoundError) {
@@ -114,7 +120,12 @@ async function getAsset(
 
 async function getAssetsPage(
   deps: ServiceDependencies,
-  pagination?: Pagination
+  pagination?: Pagination,
+  sortOrder?: SortOrder
 ): Promise<Asset[]> {
-  return await Asset.query(deps.knex).getPage(pagination)
+  return await Asset.query(deps.knex).getPage(pagination, sortOrder)
+}
+
+async function getAll(deps: ServiceDependencies): Promise<Asset[]> {
+  return await Asset.query(deps.knex)
 }

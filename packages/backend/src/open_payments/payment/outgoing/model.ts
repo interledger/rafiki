@@ -3,11 +3,11 @@ import { DbErrors } from 'objection-db-errors'
 
 import { LiquidityAccount } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
-import { ConnectorAccount } from '../../../connector/core/rafiki'
+import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
 import {
-  PaymentPointerSubresource,
-  PaymentPointer
-} from '../../payment_pointer/model'
+  WalletAddressSubresource,
+  WalletAddress
+} from '../../wallet_address/model'
 import { Quote } from '../../quote/model'
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { WebhookEvent } from '../../../webhook/model'
@@ -22,14 +22,14 @@ export class OutgoingPaymentGrant extends DbErrors(Model) {
 }
 
 export class OutgoingPayment
-  extends PaymentPointerSubresource
+  extends WalletAddressSubresource
   implements ConnectorAccount, LiquidityAccount
 {
   public static readonly tableName = 'outgoingPayments'
   public static readonly urlPath = '/outgoing-payments'
 
   static get virtualAttributes(): string[] {
-    return ['sendAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
+    return ['debitAmount', 'receiveAmount', 'quote', 'sentAmount', 'receiver']
   }
 
   public state!: OutgoingPaymentState
@@ -43,8 +43,8 @@ export class OutgoingPayment
     return this.quote.receiver
   }
 
-  public get sendAmount(): Amount {
-    return this.quote.sendAmount
+  public get debitAmount(): Amount {
+    return this.quote.debitAmount
   }
 
   private sentAmountValue?: bigint
@@ -71,8 +71,9 @@ export class OutgoingPayment
     return this.quote.assetId
   }
 
-  public getUrl(paymentPointer: PaymentPointer): string {
-    return `${paymentPointer.url}${OutgoingPayment.urlPath}/${this.id}`
+  public getUrl(walletAddress: WalletAddress): string {
+    const url = new URL(walletAddress.url)
+    return `${url.origin}${OutgoingPayment.urlPath}/${this.id}`
   }
 
   public get asset(): Asset {
@@ -117,50 +118,48 @@ export class OutgoingPayment
     balance: bigint
   }): PaymentData {
     const data: PaymentData = {
-      payment: {
-        id: this.id,
-        paymentPointerId: this.paymentPointerId,
-        state: this.state,
-        receiver: this.receiver,
-        sendAmount: {
-          ...this.sendAmount,
-          value: this.sendAmount.value.toString()
-        },
-        receiveAmount: {
-          ...this.receiveAmount,
-          value: this.receiveAmount.value.toString()
-        },
-        sentAmount: {
-          ...this.sendAmount,
-          value: amountSent.toString()
-        },
-        stateAttempts: this.stateAttempts,
-        createdAt: new Date(+this.createdAt).toISOString(),
-        updatedAt: new Date(+this.updatedAt).toISOString(),
-        balance: balance.toString()
-      }
+      id: this.id,
+      walletAddressId: this.walletAddressId,
+      state: this.state,
+      receiver: this.receiver,
+      debitAmount: {
+        ...this.debitAmount,
+        value: this.debitAmount.value.toString()
+      },
+      receiveAmount: {
+        ...this.receiveAmount,
+        value: this.receiveAmount.value.toString()
+      },
+      sentAmount: {
+        ...this.debitAmount,
+        value: amountSent.toString()
+      },
+      stateAttempts: this.stateAttempts,
+      createdAt: new Date(+this.createdAt).toISOString(),
+      updatedAt: new Date(+this.updatedAt).toISOString(),
+      balance: balance.toString()
     }
     if (this.metadata) {
-      data.payment.metadata = this.metadata
+      data.metadata = this.metadata
     }
     if (this.error) {
-      data.payment.error = this.error
+      data.error = this.error
     }
     if (this.peerId) {
-      data.payment.peerId = this.peerId
+      data.peerId = this.peerId
     }
     return data
   }
 
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer
+    walletAddress: WalletAddress
   ): OpenPaymentsOutgoingPayment {
     return {
-      id: this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.url,
-      quoteId: this.quote?.getUrl(paymentPointer) ?? undefined,
+      id: this.getUrl(walletAddress),
+      walletAddress: walletAddress.url,
+      quoteId: this.quote?.getUrl(walletAddress) ?? undefined,
       receiveAmount: serializeAmount(this.receiveAmount),
-      sendAmount: serializeAmount(this.sendAmount),
+      debitAmount: serializeAmount(this.debitAmount),
       sentAmount: serializeAmount(this.sentAmount),
       receiver: this.receiver,
       failed: this.failed,
@@ -203,10 +202,10 @@ export type PaymentEventType = PaymentDepositType | PaymentWithdrawType
 
 export interface OutgoingPaymentResponse {
   id: string
-  paymentPointerId: string
+  walletAddressId: string
   createdAt: string
   receiver: string
-  sendAmount: AmountJSON
+  debitAmount: AmountJSON
   receiveAmount: AmountJSON
   metadata?: Record<string, unknown>
   failed: boolean
@@ -214,14 +213,12 @@ export interface OutgoingPaymentResponse {
   sentAmount: AmountJSON
 }
 
-export type PaymentData = {
-  payment: Omit<OutgoingPaymentResponse, 'failed'> & {
-    error?: string
-    state: OutgoingPaymentState
-    stateAttempts: number
-    balance: string
-    peerId?: string
-  }
+export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
+  error?: string
+  state: OutgoingPaymentState
+  stateAttempts: number
+  balance: string
+  peerId?: string
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types

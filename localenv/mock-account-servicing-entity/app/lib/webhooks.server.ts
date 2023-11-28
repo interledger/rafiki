@@ -4,8 +4,11 @@ import type { Amount } from './transactions.server'
 import { mockAccounts } from './accounts.server'
 import { apolloClient } from './apolloClient'
 import { v4 as uuid } from 'uuid'
-import { createPaymentPointer } from './requesters'
-import { CONFIG } from './parse_config.server'
+import {
+  addAssetLiquidity,
+  addPeerLiquidity,
+  createWalletAddress
+} from './requesters'
 
 export enum EventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -14,7 +17,9 @@ export enum EventType {
   OutgoingPaymentCreated = 'outgoing_payment.created',
   OutgoingPaymentCompleted = 'outgoing_payment.completed',
   OutgoingPaymentFailed = 'outgoing_payment.failed',
-  PaymentPointerNotFound = 'payment_pointer.not_found'
+  WalletAddressNotFound = 'wallet_address.not_found',
+  AssetLiquidityLow = 'asset.liquidity_low',
+  PeerLiquidityLow = 'peer.liquidity_low'
 }
 
 export interface WebHook {
@@ -44,18 +49,18 @@ export async function handleOutgoingPaymentCompletedFailed(wh: WebHook) {
   ) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
-  const payment = wh.data['payment']
-  const pp = payment['paymentPointerId'] as string
-  const acc = await mockAccounts.getByPaymentPointerId(pp)
+  const payment = wh.data
+  const wa = payment['walletAddressId'] as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
-  const amtSend = parseAmount(payment['sendAmount'])
-  const amtSent = parseAmount(payment['sentAmount'])
+  const amtDebit = parseAmount(payment['debitAmount'] as AmountJSON)
+  const amtSent = parseAmount(payment['sentAmount'] as AmountJSON)
 
-  const toVoid = amtSend.value - amtSent.value
+  const toVoid = amtDebit.value - amtSent.value
 
   await mockAccounts.debit(acc.id, amtSent.value, true)
   if (toVoid > 0) {
@@ -72,15 +77,15 @@ export async function handleOutgoingPaymentCreated(wh: WebHook) {
     throw new Error('Invalid event type when handling outgoing payment webhook')
   }
 
-  const payment = wh.data['payment']
-  const pp = payment['paymentPointerId'] as string
-  const acc = await mockAccounts.getByPaymentPointerId(pp)
+  const payment = wh.data
+  const wa = payment['walletAddressId'] as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
-  const amt = parseAmount(payment['sendAmount'])
+  const amt = parseAmount(payment['debitAmount'] as AmountJSON)
 
   await mockAccounts.pendingDebit(acc.id, amt.value)
 
@@ -123,15 +128,15 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
     throw new Error('Invalid event type when handling incoming payment webhook')
   }
 
-  const payment = wh.data['incomingPayment']
-  const pp = payment['paymentPointerId'] as string
-  const acc = await mockAccounts.getByPaymentPointerId(pp)
+  const payment = wh.data
+  const wa = payment['walletAddressId'] as string
+  const acc = await mockAccounts.getByWalletAddressId(wa)
 
   if (!acc) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
-  const amt = parseAmount(payment['receivedAmount'])
+  const amt = parseAmount(payment['receivedAmount'] as AmountJSON)
 
   await mockAccounts.credit(acc.id, amt.value, false)
 
@@ -165,32 +170,44 @@ export async function handleIncomingPaymentCompletedExpired(wh: WebHook) {
   return
 }
 
-export async function handlePaymentPointerNotFound(wh: WebHook) {
-  const paymentPointerUrl = wh.data['paymentPointerUrl'] as string | undefined
+export async function handleWalletAddressNotFound(wh: WebHook) {
+  const walletAddressUrl = wh.data['walletAddressUrl'] as string | undefined
 
-  if (!paymentPointerUrl) {
-    throw new Error('No paymentPointerUrl found')
+  if (!walletAddressUrl) {
+    throw new Error('No walletAddressUrl found')
   }
 
-  const accountPath = paymentPointerUrl.split(
-    `https://${CONFIG.seed.self.hostname}/`
-  )[1]
+  const accountPath = new URL(walletAddressUrl).pathname.substring(1)
 
   const account = await mockAccounts.getByPath(accountPath)
 
   if (!account) {
-    throw new Error('No account found for payment pointer')
+    throw new Error('No account found for wallet address')
   }
 
-  const paymentPointer = await createPaymentPointer(
+  const walletAddress = await createWalletAddress(
     account.name,
-    paymentPointerUrl,
+    walletAddressUrl,
     account.assetId
   )
 
-  await mockAccounts.setPaymentPointer(
+  await mockAccounts.setWalletAddress(
     account.id,
-    paymentPointer.id,
-    paymentPointer.url
+    walletAddress.id,
+    walletAddress.url
   )
+}
+
+export async function handleLowLiquidity(wh: WebHook) {
+  const id = wh.data['id'] as string | undefined
+
+  if (!id) {
+    throw new Error('id not found')
+  }
+
+  if (wh.type == 'asset.liquidity_low') {
+    await addAssetLiquidity(id, 1000000, uuid())
+  } else {
+    await addPeerLiquidity(id, '1000000', uuid())
+  }
 }

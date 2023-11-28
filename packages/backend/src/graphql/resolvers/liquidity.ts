@@ -1,10 +1,10 @@
-import { paymentPointerToGraphql } from './payment_pointer'
+import { walletAddressToGraphql } from './wallet_address'
 import {
   ResolversTypes,
   MutationResolvers,
   LiquidityError,
   LiquidityMutationResponse,
-  PaymentPointerWithdrawalMutationResponse,
+  WalletAddressWithdrawalMutationResponse,
   AssetResolvers,
   PeerResolvers
 } from '../generated/graphql'
@@ -17,6 +17,7 @@ import {
   isPaymentEvent,
   PaymentDepositType
 } from '../../open_payments/payment/outgoing/model'
+import { PeerError } from '../../payment-method/ilp/peer/errors'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
@@ -51,19 +52,18 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
         return responses[LiquidityError.AmountZero]
       }
       const peerService = await ctx.container.use('peerService')
-      const peer = await peerService.get(args.input.peerId)
-      if (!peer) {
-        return responses[LiquidityError.UnknownPeer]
-      }
-      const accountingService = await ctx.container.use('accountingService')
-      const error = await accountingService.createDeposit({
-        id: args.input.id,
-        account: peer,
+      const peerOrError = await peerService.addLiquidity({
+        transferId: args.input.id,
+        peerId: args.input.peerId,
         amount: args.input.amount
       })
-      if (error) {
-        return errorToResponse(error)
+
+      if (peerOrError === PeerError.UnknownPeer) {
+        return responses[LiquidityError.UnknownPeer]
+      } else if (isLiquidityError(peerOrError)) {
+        return errorToResponse(peerOrError)
       }
+
       return {
         code: '200',
         success: true,
@@ -222,37 +222,37 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
     }
   }
 
-export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['createPaymentPointerWithdrawal'] =
+export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['createWalletAddressWithdrawal'] =
   async (
     parent,
     args,
     ctx
-  ): Promise<ResolversTypes['PaymentPointerWithdrawalMutationResponse']> => {
+  ): Promise<ResolversTypes['WalletAddressWithdrawalMutationResponse']> => {
     try {
-      const paymentPointerService = await ctx.container.use(
-        'paymentPointerService'
+      const walletAddressService = await ctx.container.use(
+        'walletAddressService'
       )
-      const paymentPointer = await paymentPointerService.get(
-        args.input.paymentPointerId
+      const walletAddress = await walletAddressService.get(
+        args.input.walletAddressId
       )
-      if (!paymentPointer) {
+      if (!walletAddress) {
         return responses[
-          LiquidityError.UnknownPaymentPointer
-        ] as unknown as PaymentPointerWithdrawalMutationResponse
+          LiquidityError.UnknownWalletAddress
+        ] as unknown as WalletAddressWithdrawalMutationResponse
       }
       const id = args.input.id
       const accountingService = await ctx.container.use('accountingService')
-      const amount = await accountingService.getBalance(paymentPointer.id)
+      const amount = await accountingService.getBalance(walletAddress.id)
       if (amount === undefined)
-        throw new Error('missing incoming payment payment pointer')
+        throw new Error('missing incoming payment wallet address')
       if (amount === BigInt(0)) {
         return responses[
           LiquidityError.AmountZero
-        ] as unknown as PaymentPointerWithdrawalMutationResponse
+        ] as unknown as WalletAddressWithdrawalMutationResponse
       }
       const error = await accountingService.createWithdrawal({
         id,
-        account: paymentPointer,
+        account: walletAddress,
         amount,
         timeout: BigInt(60e9) // 1 minute
       })
@@ -260,7 +260,7 @@ export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['c
       if (error) {
         return errorToResponse(
           error
-        ) as unknown as PaymentPointerWithdrawalMutationResponse
+        ) as unknown as WalletAddressWithdrawalMutationResponse
       }
       return {
         code: '200',
@@ -269,7 +269,7 @@ export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['c
         withdrawal: {
           id,
           amount,
-          paymentPointer: paymentPointerToGraphql(paymentPointer)
+          walletAddress: walletAddressToGraphql(walletAddress)
         }
       }
     } catch (error) {
@@ -278,11 +278,11 @@ export const createPaymentPointerWithdrawal: MutationResolvers<ApolloContext>['c
           input: args.input,
           error
         },
-        'error creating payment pointer withdrawal'
+        'error creating wallet address withdrawal'
       )
       return {
         code: '500',
-        message: 'Error trying to create payment pointer withdrawal',
+        message: 'Error trying to create wallet address withdrawal',
         success: false
       }
     }
@@ -347,15 +347,15 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
       if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
         return responses[LiquidityError.InvalidId]
       }
-      if (!event.data.payment?.sendAmount) {
+      if (!event.data.debitAmount) {
         throw new Error()
       }
       const outgoingPaymentService = await ctx.container.use(
         'outgoingPaymentService'
       )
       const paymentOrErr = await outgoingPaymentService.fund({
-        id: event.data.payment.id,
-        amount: BigInt(event.data.payment.sendAmount.value),
+        id: event.data.id,
+        amount: BigInt(event.data.debitAmount.value),
         transferId: event.id
       })
       if (isFundingError(paymentOrErr)) {
@@ -483,11 +483,11 @@ const responses: {
     success: false,
     error: LiquidityError.TransferExists
   },
-  [LiquidityError.UnknownPaymentPointer]: {
+  [LiquidityError.UnknownWalletAddress]: {
     code: '404',
-    message: 'Unknown payment pointer',
+    message: 'Unknown wallet address',
     success: false,
-    error: LiquidityError.UnknownPaymentPointer
+    error: LiquidityError.UnknownWalletAddress
   },
   [LiquidityError.UnknownAsset]: {
     code: '404',

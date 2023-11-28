@@ -1,31 +1,14 @@
 import pino from 'pino'
-import { CacheDataStore } from './data-stores'
 import { cacheMiddleware } from '.'
 import { v4 as uuid } from 'uuid'
-
-const createTestDataStore = (): CacheDataStore => {
-  const map = new Map<string, string>()
-
-  return {
-    async get(key): Promise<string | undefined> {
-      return map.get(key)
-    },
-    async delete(key): Promise<void> {
-      map.delete(key)
-    },
-    async set(key: string, value: string): Promise<boolean> {
-      map.set(key, value)
-      return true
-    }
-  }
-}
+import { createInMemoryDataStore } from './data-stores/in-memory'
 
 describe('Cache Middleware', (): void => {
   const logger = pino({ level: 'silent' })
   const defaultRequest = () => Promise.resolve('requestResult')
   const defaultOperationName = 'defaultOperationName'
 
-  const dataStore = createTestDataStore()
+  const dataStore = createInMemoryDataStore(10000)
   const handleParamMismatch = () => {
     throw new Error('Param mismatch')
   }

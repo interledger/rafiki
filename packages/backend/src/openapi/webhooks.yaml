@@ -1,10 +1,12 @@
 openapi: 3.1.0
 info:
   title: Rafiki Webhooks
-  version: 1.0.0
+  version: 1.1.0
   description: 'Webhook Events fired by Rafiki'
   contact:
     email: tech@interledger.org
+servers:
+  - url: 'https://account-servicing-entity.com/webhooks'
 webhooks:
   incomingPaymentCompleted:
     post:
@@ -61,14 +63,14 @@ webhooks:
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
-  paymentPointerNotFound:
+  walletAddressNotFound:
     post:
       requestBody:
-        description: Notify account servicing entity to create a payment pointer if it can find a corresponding account in their system.
+        description: Notify account servicing entity to create a wallet address if it can find a corresponding account in their system.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/paymentPointerNotFound'
+              $ref: '#/components/schemas/walletAddressNotFound'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -80,6 +82,28 @@ webhooks:
           application/json:
             schema:
               $ref: '#/components/schemas/webMonetizationEvent'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  assetLiquidity:
+    post:
+      requestBody:
+        description: Notify account servicing entity that asset liquidity is low.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/liquidityEvent'
+      responses:
+        '200':
+          description: Return a 200 status to indicate that the data was received successfully
+  peerLiquidity:
+    post:
+      requestBody:
+        description: Notify account servicing entity that peer liquidity is low.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/liquidityEvent'
       responses:
         '200':
           description: Return a 200 status to indicate that the data was received successfully
@@ -105,7 +129,7 @@ components:
           type: object
           required:
             - id
-            - paymentPointerId
+            - walletAddressId
             - createdAt
             - updatedAt
             - expiresAt
@@ -115,7 +139,7 @@ components:
             id:
               type: string
               format: uuid
-            paymentPointerId:
+            walletAddressId:
               type: string
               format: uuid
             completed:
@@ -156,11 +180,11 @@ components:
           type: object
           required:
             - id
-            - paymentPointerId
+            - walletAddressId
             - createdAt
             - updatedAt
             - expiresAt
-            - sendAmount
+            - debitAmount
             - receiveAmount
             - state
             - stateAttempts
@@ -170,7 +194,7 @@ components:
             id:
               type: string
               format: uuid
-            paymentPointerId:
+            walletAddressId:
               type: string
               format: uuid
             state:
@@ -183,7 +207,7 @@ components:
             receiver:
               type: string
               format: uri
-            sendAmount:
+            debitAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
             sentAmount:
               $ref: ./schemas.yaml#/components/schemas/amount
@@ -210,7 +234,7 @@ components:
               type: string
               format: uuid
       additionalProperties: false
-    paymentPointerNotFound:
+    walletAddressNotFound:
       required:
         - id
         - type
@@ -222,13 +246,13 @@ components:
         type:
           type: string
           enum:
-            - payment_pointer.not_found
+            - wallet_address.not_found
         data:
           type: object
           required:
-            - paymentPointerUrl
+            - walletAddressUrl
           properties:
-            paymentPointerUrl:
+            walletAddressUrl:
               type: string
       additionalProperties: false
     webMonetizationEvent:
@@ -243,13 +267,13 @@ components:
         type:
           type: string
           enum:
-            - payment_pointer.web_monetization
+            - wallet_address.web_monetization
         data:
           type: object
           required:
-            - paymentPointer
+            - walletAddress
           properties:
-            paymentPointer:
+            walletAddress:
               type: object
               required:
                 - id
@@ -262,7 +286,52 @@ components:
                 createdAt:
                   type: string
                   format: date-time
-                received:
-                  type: string
-                  format: uint64
+                receivedAmount:
+                  $ref: ./schemas.yaml#/components/schemas/amount
+      additionalProperties: false
+    liquidityEvent:
+      required:
+        - id
+        - type
+        - data
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum:
+            - asset.liquidity_low
+            - peer.liquidity_low
+        data:
+          type: object
+          required:
+            - id
+            - asset
+            - liquidityThreshold
+            - balance
+          properties:
+            id:
+              type: string
+              format: uuid
+            asset:
+              $ref: '#/components/schemas/asset'
+            liquidityThreshold:
+              type: string
+            balance:
+              type: string
+      additionalProperties: false
+    asset:
+      required:
+        - id
+        - code
+        - scale
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        scale:
+          type: number
       additionalProperties: false

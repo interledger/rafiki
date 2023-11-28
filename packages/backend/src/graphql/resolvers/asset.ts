@@ -2,13 +2,16 @@ import {
   QueryResolvers,
   ResolversTypes,
   Asset as SchemaAsset,
-  MutationResolvers
+  MutationResolvers,
+  AssetResolvers
 } from '../generated/graphql'
 import { Asset } from '../../asset/model'
 import { AssetError, isAssetError } from '../../asset/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
+import { feeToGraphql } from './fee'
+import { Fee, FeeType } from '../../fee/model'
 
 export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   parent,
@@ -16,10 +19,14 @@ export const getAssets: QueryResolvers<ApolloContext>['assets'] = async (
   ctx
 ): Promise<ResolversTypes['AssetsConnection']> => {
   const assetService = await ctx.container.use('assetService')
-  const assets = await assetService.getPage(args)
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const assets = await assetService.getPage(pagination, order)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => assetService.getPage(pagination),
-    assets
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      assetService.getPage(pagination, sortOrder),
+    assets,
+    order
   )
   return {
     pageInfo,
@@ -86,7 +93,7 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
     }
   }
 
-export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['updateAssetWithdrawalThreshold'] =
+export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
   async (
     parent,
     args,
@@ -96,7 +103,8 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
       const assetService = await ctx.container.use('assetService')
       const assetOrError = await assetService.update({
         id: args.input.id,
-        withdrawalThreshold: args.input.withdrawalThreshold ?? null
+        withdrawalThreshold: args.input.withdrawalThreshold ?? null,
+        liquidityThreshold: args.input.liquidityThreshold ?? null
       })
       if (isAssetError(assetOrError)) {
         switch (assetOrError) {
@@ -113,7 +121,7 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
       return {
         code: '200',
         success: true,
-        message: 'Updated Asset Withdrawal Threshold',
+        message: 'Updated Asset',
         asset: assetToGraphql(assetOrError)
       }
     } catch (error) {
@@ -126,16 +134,69 @@ export const updateAssetWithdrawalThreshold: MutationResolvers<ApolloContext>['u
       )
       return {
         code: '400',
-        message: 'Error trying to update asset withdrawal threshold',
+        message: 'Error trying to update asset',
         success: false
       }
     }
   }
+
+export const getAssetSendingFee: AssetResolvers<ApolloContext>['sendingFee'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Fee'] | null> => {
+    if (!parent.id) return null
+
+    const feeService = await ctx.container.use('feeService')
+    const fee = await feeService.getLatestFee(parent.id, FeeType.Sending)
+
+    if (!fee) return null
+
+    return feeToGraphql(fee)
+  }
+
+export const getAssetReceivingFee: AssetResolvers<ApolloContext>['receivingFee'] =
+  async (parent, args, ctx): Promise<ResolversTypes['Fee'] | null> => {
+    if (!parent.id) return null
+
+    const feeService = await ctx.container.use('feeService')
+    const fee = await feeService.getLatestFee(parent.id, FeeType.Receiving)
+
+    if (!fee) return null
+
+    return feeToGraphql(fee)
+  }
+
+export const getFees: AssetResolvers<ApolloContext>['fees'] = async (
+  parent,
+  args,
+  ctx
+): Promise<ResolversTypes['FeesConnection']> => {
+  const { sortOrder, ...pagination } = args
+  const feeService = await ctx.container.use('feeService')
+  const getPageFn = (pagination_: Pagination, sortOrder_?: SortOrder) => {
+    if (!parent.id) throw new Error('missing asset id')
+    return feeService.getPage(parent.id, pagination_, sortOrder_)
+  }
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const fees = await getPageFn(pagination, order)
+  const pageInfo = await getPageInfo(
+    (pagination_: Pagination, sortOrder_?: SortOrder) =>
+      getPageFn(pagination_, sortOrder_),
+    fees,
+    order
+  )
+  return {
+    pageInfo,
+    edges: fees.map((fee: Fee) => ({
+      cursor: fee.id,
+      node: feeToGraphql(fee)
+    }))
+  }
+}
 
 export const assetToGraphql = (asset: Asset): SchemaAsset => ({
   id: asset.id,
   code: asset.code,
   scale: asset.scale,
   withdrawalThreshold: asset.withdrawalThreshold,
+  liquidityThreshold: asset.liquidityThreshold,
   createdAt: new Date(+asset.createdAt).toISOString()
 })

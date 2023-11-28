@@ -1,21 +1,20 @@
-import { Model, ModelOptions, QueryContext } from 'objection'
-import { v4 as uuid } from 'uuid'
+import { Model } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
-import { Connection } from '../../connection/model'
+import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
 import {
-  PaymentPointer,
-  PaymentPointerSubresource
-} from '../../payment_pointer/model'
+  WalletAddress,
+  WalletAddressSubresource
+} from '../../wallet_address/model'
 import { Asset } from '../../../asset/model'
 import { LiquidityAccount, OnCreditOptions } from '../../../accounting/service'
-import { ConnectorAccount } from '../../../connector/core/rafiki'
+import { ConnectorAccount } from '../../../payment-method/ilp/connector/core/rafiki'
 import { WebhookEvent } from '../../../webhook/model'
 import {
   IncomingPayment as OpenPaymentsIncomingPayment,
-  IncomingPaymentWithConnection as OpenPaymentsIncomingPaymentWithConnection,
-  IncomingPaymentWithConnectionUrl as OpenPaymentsIncomingPaymentWithConnectionUrl
+  IncomingPaymentWithPaymentMethods as OpenPaymentsIncomingPaymentWithPaymentMethod
 } from '@interledger/open-payments'
+import base64url from 'base64url'
 
 export enum IncomingPaymentEventType {
   IncomingPaymentCreated = 'incoming_payment.created',
@@ -38,7 +37,7 @@ export enum IncomingPaymentState {
 
 export interface IncomingPaymentResponse {
   id: string
-  paymentPointerId: string
+  walletAddressId: string
   createdAt: string
   updatedAt: string
   expiresAt: string
@@ -48,9 +47,8 @@ export interface IncomingPaymentResponse {
   metadata?: Record<string, unknown>
 }
 
-export type IncomingPaymentData = {
-  incomingPayment: IncomingPaymentResponse
-}
+export type IncomingPaymentData = IncomingPaymentResponse &
+  Record<string, unknown>
 
 export class IncomingPaymentEvent extends WebhookEvent {
   public type!: IncomingPaymentEventType
@@ -58,7 +56,7 @@ export class IncomingPaymentEvent extends WebhookEvent {
 }
 
 export class IncomingPayment
-  extends PaymentPointerSubresource
+  extends WalletAddressSubresource
   implements ConnectorAccount, LiquidityAccount
 {
   public static get tableName(): string {
@@ -87,8 +85,6 @@ export class IncomingPayment
   public expiresAt!: Date
   public state!: IncomingPaymentState
   public metadata?: Record<string, unknown>
-  // The "| null" is necessary so that `$beforeUpdate` can modify a patch to remove the connectionId. If `$beforeUpdate` set `error = undefined`, the patch would ignore the modification.
-  public connectionId?: string | null
 
   public processAt!: Date | null
 
@@ -129,8 +125,9 @@ export class IncomingPayment
     this.receivedAmountValue = amount.value
   }
 
-  public getUrl(paymentPointer: PaymentPointer): string {
-    return `${paymentPointer.url}${IncomingPayment.urlPath}/${this.id}`
+  public getUrl(walletAddress: WalletAddress): string {
+    const url = new URL(walletAddress.url)
+    return `${url.origin}${IncomingPayment.urlPath}/${this.id}`
   }
 
   public async onCredit({
@@ -164,80 +161,47 @@ export class IncomingPayment
     return this
   }
 
+  public isExpiredOrComplete(): boolean {
+    return (
+      this.state === IncomingPaymentState.Expired ||
+      this.state === IncomingPaymentState.Completed
+    )
+  }
+
   public toData(amountReceived: bigint): IncomingPaymentData {
     const data: IncomingPaymentData = {
-      incomingPayment: {
-        id: this.id,
-        paymentPointerId: this.paymentPointerId,
-        createdAt: new Date(+this.createdAt).toISOString(),
-        expiresAt: this.expiresAt.toISOString(),
-        receivedAmount: {
-          value: amountReceived.toString(),
-          assetCode: this.asset.code,
-          assetScale: this.asset.scale
-        },
-        completed: this.completed,
-        updatedAt: new Date(+this.updatedAt).toISOString()
-      }
+      id: this.id,
+      walletAddressId: this.walletAddressId,
+      createdAt: new Date(+this.createdAt).toISOString(),
+      expiresAt: this.expiresAt.toISOString(),
+      receivedAmount: {
+        value: amountReceived.toString(),
+        assetCode: this.asset.code,
+        assetScale: this.asset.scale
+      },
+      completed: this.completed,
+      updatedAt: new Date(+this.updatedAt).toISOString()
     }
 
     if (this.incomingAmount) {
-      data.incomingPayment.incomingAmount = {
+      data.incomingAmount = {
         ...this.incomingAmount,
         value: this.incomingAmount.value.toString()
       }
     }
     if (this.metadata) {
-      data.incomingPayment.metadata = this.metadata
+      data.metadata = this.metadata
     }
 
     return data
   }
 
-  public $beforeInsert(context: QueryContext): void {
-    super.$beforeInsert(context)
-    this.connectionId = this.connectionId || uuid()
-  }
-
-  public $beforeUpdate(opts: ModelOptions, queryContext: QueryContext): void {
-    super.$beforeUpdate(opts, queryContext)
-    if (
-      [IncomingPaymentState.Completed, IncomingPaymentState.Expired].includes(
-        this.state
-      )
-    ) {
-      this.connectionId = null
-    }
-  }
-
   public toOpenPaymentsType(
-    paymentPointer: PaymentPointer
-  ): OpenPaymentsIncomingPayment
-  public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
-    ilpStreamConnection: Connection
-  ): OpenPaymentsIncomingPaymentWithConnection
-  public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
-    ilpStreamConnection: string
-  ): OpenPaymentsIncomingPaymentWithConnectionUrl
-  public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
-    ilpStreamConnection?: Connection | string
-  ):
-    | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl
-
-  public toOpenPaymentsType(
-    paymentPointer: PaymentPointer,
-    ilpStreamConnection?: Connection | string
-  ):
-    | OpenPaymentsIncomingPayment
-    | OpenPaymentsIncomingPaymentWithConnection
-    | OpenPaymentsIncomingPaymentWithConnectionUrl {
-    const baseIncomingPayment: OpenPaymentsIncomingPayment = {
-      id: this.getUrl(paymentPointer),
-      paymentPointer: paymentPointer.url,
+    walletAddress: WalletAddress
+  ): OpenPaymentsIncomingPayment {
+    return {
+      id: this.getUrl(walletAddress),
+      walletAddress: walletAddress.url,
       incomingAmount: this.incomingAmount
         ? serializeAmount(this.incomingAmount)
         : undefined,
@@ -248,21 +212,34 @@ export class IncomingPayment
       updatedAt: this.updatedAt.toISOString(),
       expiresAt: this.expiresAt.toISOString()
     }
+  }
 
-    if (!ilpStreamConnection) {
-      return baseIncomingPayment
-    }
-
-    if (typeof ilpStreamConnection === 'string') {
-      return {
-        ...baseIncomingPayment,
-        ilpStreamConnection
-      }
-    }
-
+  public toOpenPaymentsTypeWithMethods(
+    walletAddress: WalletAddress,
+    ilpStreamCredentials?: IlpStreamCredentials
+  ): OpenPaymentsIncomingPaymentWithPaymentMethod {
     return {
-      ...baseIncomingPayment,
-      ilpStreamConnection: ilpStreamConnection.toOpenPaymentsType()
+      ...this.toOpenPaymentsType(walletAddress),
+      methods:
+        this.isExpiredOrComplete() || !ilpStreamCredentials
+          ? []
+          : [
+              {
+                type: 'ilp',
+                ilpAddress: ilpStreamCredentials.ilpAddress,
+                sharedSecret: base64url(ilpStreamCredentials.sharedSecret)
+              }
+            ]
+    }
+  }
+
+  public toPublicOpenPaymentsType(authServerUrl: string): {
+    receivedAmount: OpenPaymentsIncomingPayment['receivedAmount']
+    authServer: string
+  } {
+    return {
+      receivedAmount: serializeAmount(this.receivedAmount),
+      authServer: authServerUrl
     }
   }
 }

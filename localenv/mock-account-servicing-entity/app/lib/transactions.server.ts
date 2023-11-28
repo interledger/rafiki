@@ -1,5 +1,5 @@
 import { mockAccounts } from './accounts.server'
-import { getPaymentPointerPayments } from './requesters'
+import { getWalletAddressPayments } from './requesters'
 
 export interface Amount {
   value: bigint
@@ -38,17 +38,18 @@ export async function getAccountTransactions(
 ): Promise<Array<IncomingPayment | OutgoingPayment>> {
   const account = await mockAccounts.get(accountId)
 
-  if (!account?.paymentPointerID) {
+  if (!account?.walletAddressID) {
     return []
   }
 
-  const { incomingPayments, outgoingPayments } =
-    await getPaymentPointerPayments(account.paymentPointerID)
+  const { incomingPayments, outgoingPayments } = await getWalletAddressPayments(
+    account.walletAddressID
+  )
   const transactions = incomingPayments.edges.map(({ node }) => {
     return {
       id: node.id,
       metadata: node.metadata,
-      incomingAmountValue: node.incomingAmount.value,
+      incomingAmountValue: node.incomingAmount?.value,
       amountValue: node.receivedAmount.value,
       assetCode: node.receivedAmount.assetCode,
       assetScale: node.receivedAmount.assetScale,
@@ -63,11 +64,11 @@ export async function getAccountTransactions(
         id: node.id,
         receiver: node.receiver,
         metadata: node.metadata,
-        sendAmountValue: node.sendAmount.value,
+        debitAmountValue: node.debitAmount.value,
         amountValue: node.sentAmount.value,
         receiveAmount: node.receiveAmount,
-        assetCode: node.sendAmount.assetCode,
-        assetScale: node.sendAmount.assetScale,
+        assetCode: node.debitAmount.assetCode,
+        assetScale: node.debitAmount.assetScale,
         state: node.state,
         createdAt: node.createdAt,
         type: TransactionType.OutgoingPayment

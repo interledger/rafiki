@@ -5,16 +5,16 @@ import {
   Peer as SchemaPeer,
   MutationResolvers
 } from '../generated/graphql'
-import { Peer } from '../../peer/model'
+import { Peer } from '../../payment-method/ilp/peer/model'
 import {
   PeerError,
   isPeerError,
   errorToCode,
   errorToMessage
-} from '../../peer/errors'
+} from '../../payment-method/ilp/peer/errors'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   parent,
@@ -22,10 +22,14 @@ export const getPeers: QueryResolvers<ApolloContext>['peers'] = async (
   ctx
 ): Promise<ResolversTypes['PeersConnection']> => {
   const peerService = await ctx.container.use('peerService')
-  const peers = await peerService.getPage(args)
+  const { sortOrder, ...pagination } = args
+  const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+  const peers = await peerService.getPage(pagination, order)
   const pageInfo = await getPageInfo(
-    (pagination: Pagination) => peerService.getPage(pagination),
-    peers
+    (pagination: Pagination, sortOrder?: SortOrder) =>
+      peerService.getPage(pagination, sortOrder),
+    peers,
+    order
   )
   return {
     pageInfo,
@@ -172,5 +176,6 @@ export const peerToGraphql = (peer: Peer): SchemaPeer => ({
   asset: assetToGraphql(peer.asset),
   staticIlpAddress: peer.staticIlpAddress,
   name: peer.name,
+  liquidityThreshold: peer.liquidityThreshold,
   createdAt: new Date(+peer.createdAt).toISOString()
 })

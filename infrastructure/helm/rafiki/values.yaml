@@ -1,0 +1,102 @@
+rafiki-backend:
+  nodeEnv: development
+  logLevel: debug
+  serviceUrls:
+    PUBLIC_HOST: http://rafiki-rafiki-backend
+    OPEN_PAYMENTS_URL: http://rafiki-rafiki-backend
+    WALLET_ADDRESS_URL: http://rafiki-rafiki-backend/.well-known/pay
+    WEBHOOK_URL: http://cloud-nine-wallet/webhooks
+    EXCHANGE_RATES_URL: http://cloud-nine-wallet/prices
+    AUTH_SERVER_GRANT_URL: http://rafiki-rafiki-auth:3006
+    AUTH_SERVER_INTROSPECTION_URL: http://rafiki-rafiki-auth:3007
+  redis:
+    host: "rafiki-redis-master"
+    port: 6379
+    tlsCaFile: ''
+    tlsCertFile: ''
+    tlsKeyFile: ''
+  postgresql:
+    host: "rafiki-postgresql"
+    port: 5432
+    username: "backend"
+    database: "backend"
+    password: "changeme"
+  port:
+    admin: 3001
+    connector: 3002
+    openPayments: 80
+  ilp:
+    address: test.cloud-nine-wallet # override this value
+    streamSecret: "BjPXtnd00G2mRQwP/8ZpwyZASOch5sUXT5o0iR5b5wU=" # override this value
+    slippage: 0.01
+  key:
+    id: rafiki
+    file: ''
+  quoteSignatureSecret: "overridethisValue"
+  withdrawalThrottleDelay: ''
+  lifetime: 
+    exchangeRate: 15000
+    quote: 300000
+    webhook: 200
+  workers:
+    incomingPayment: 1
+    outgoingPayment: 4
+    walletAddress: 1
+    webhook: 1
+  workerIdle: 200
+  idempotency:
+    keyTTL: 86400000
+    keyLock: 2000
+
+rafiki-auth:
+  postgresql:
+    host: "rafiki-postgresql"
+    port: 5432
+    username: "auth"
+    database: "auth"
+    password: "changeme"
+  port:
+    admin: 3003
+    auth: 3006
+    introspection: 3007
+  identityServer:
+    domain: "http://cloud-nine-wallet/idp"
+    secret: "changeme"
+  interaction:
+    incomingPayment: "false"
+    quote: "false"
+  grant:
+    waitSeconds: 5
+  accessToken:
+    deletionDays: 30
+    expirySeconds: 600
+  cookieKey: ''
+  workers: 
+    cleanup: 1
+
+rafiki-frontend:
+  serviceUrls:
+    GRAPHQL_URL: http://rafiki-rafiki-backend:3001/graphql
+    OPEN_PAYMENTS_URL: https://rafiki-rafiki-backend/
+  port: 3010
+
+postgresql:
+  replication:
+    enabled: false
+  metrics:
+    enabled: false
+  primary:
+    initdb:
+      scripts:
+        initialize_backend.sql: |
+          CREATE USER backend PASSWORD 'changeme';
+          CREATE DATABASE backend OWNER backend;
+        initialize_auth.sql: |
+          CREATE USER auth PASSWORD 'changeme';
+          CREATE DATABASE auth OWNER auth;
+    persistence:
+      enabled: true
+
+redis:
+  auth:
+    enabled: false

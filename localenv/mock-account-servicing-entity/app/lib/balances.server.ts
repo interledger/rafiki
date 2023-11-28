@@ -3,8 +3,8 @@ import { mockAccounts } from './accounts.server'
 export type AccountWithBalance = {
   id: string
   name: string
-  paymentPointerID: string
-  paymentPointer: string
+  walletAddressID: string
+  walletAddress: string
   balance: string
   assetCode: string
   assetScale: number
@@ -18,8 +18,8 @@ export async function getAccountsWithBalance(): Promise<
     return {
       id: acc.id,
       name: acc.name,
-      paymentPointerID: acc.paymentPointerID,
-      paymentPointer: acc.paymentPointer,
+      walletAddressID: acc.walletAddressID,
+      walletAddress: acc.walletAddress,
       balance: (
         BigInt(acc.creditsPosted) - BigInt(acc.debitsPosted)
       ).toString(),

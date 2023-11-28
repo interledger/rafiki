@@ -2,7 +2,7 @@ import { quoteToGraphql } from './quote'
 import {
   MutationResolvers,
   OutgoingPayment as SchemaOutgoingPayment,
-  PaymentPointerResolvers,
+  WalletAddressResolvers,
   QueryResolvers,
   ResolversTypes
 } from '../generated/graphql'
@@ -15,7 +15,7 @@ import {
 import { OutgoingPayment } from '../../open_payments/payment/outgoing/model'
 import { ApolloContext } from '../../app'
 import { getPageInfo } from '../../shared/pagination'
-import { Pagination } from '../../shared/baseModel'
+import { Pagination, SortOrder } from '../../shared/baseModel'
 
 export const getOutgoingPayment: QueryResolvers<ApolloContext>['outgoingPayment'] =
   async (parent, args, ctx): Promise<ResolversTypes['OutgoingPayment']> => {
@@ -60,29 +60,32 @@ export const createOutgoingPayment: MutationResolvers<ApolloContext>['createOutg
       }))
   }
 
-export const getPaymentPointerOutgoingPayments: PaymentPointerResolvers<ApolloContext>['outgoingPayments'] =
+export const getWalletAddressOutgoingPayments: WalletAddressResolvers<ApolloContext>['outgoingPayments'] =
   async (
     parent,
     args,
     ctx
   ): Promise<ResolversTypes['OutgoingPaymentConnection']> => {
-    if (!parent.id) throw new Error('missing payment pointer id')
+    if (!parent.id) throw new Error('missing wallet address id')
     const outgoingPaymentService = await ctx.container.use(
       'outgoingPaymentService'
     )
-    const outgoingPayments = await outgoingPaymentService.getPaymentPointerPage(
-      {
-        paymentPointerId: parent.id,
-        pagination: args
-      }
-    )
+    const { sortOrder, ...pagination } = args
+    const order = sortOrder === 'ASC' ? SortOrder.Asc : SortOrder.Desc
+    const outgoingPayments = await outgoingPaymentService.getWalletAddressPage({
+      walletAddressId: parent.id,
+      pagination,
+      sortOrder: order
+    })
     const pageInfo = await getPageInfo(
-      (pagination: Pagination) =>
-        outgoingPaymentService.getPaymentPointerPage({
-          paymentPointerId: parent.id as string,
-          pagination
+      (pagination: Pagination, sortOrder?: SortOrder) =>
+        outgoingPaymentService.getWalletAddressPage({
+          walletAddressId: parent.id as string,
+          pagination,
+          sortOrder
         }),
-      outgoingPayments
+      outgoingPayments,
+      order
     )
     return {
       pageInfo,
@@ -98,12 +101,12 @@ export function paymentToGraphql(
 ): SchemaOutgoingPayment {
   return {
     id: payment.id,
-    paymentPointerId: payment.paymentPointerId,
+    walletAddressId: payment.walletAddressId,
     state: payment.state,
     error: payment.error,
     stateAttempts: payment.stateAttempts,
     receiver: payment.receiver,
-    sendAmount: payment.sendAmount,
+    debitAmount: payment.debitAmount,
     sentAmount: payment.sentAmount,
     receiveAmount: payment.receiveAmount,
     metadata: payment.metadata,

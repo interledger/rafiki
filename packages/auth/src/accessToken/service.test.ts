@@ -1,4 +1,3 @@
-import { faker } from '@faker-js/faker'
 import nock from 'nock'
 import { Knex } from 'knex'
 import { v4 } from 'uuid'
@@ -10,12 +9,13 @@ import { IocContract } from '@adonisjs/fold'
 import { initIocContainer } from '..'
 import { AppServices } from '../app'
 import { truncateTables } from '../tests/tableManager'
-import { FinishMethod, Grant, GrantState, StartMethod } from '../grant/model'
+import { Grant, GrantState, GrantFinalization } from '../grant/model'
 import { AccessToken } from './model'
 import { AccessTokenService } from './service'
 import { Access } from '../access/model'
-import { generateNonce, generateToken } from '../shared/utils'
+import { generateToken } from '../shared/utils'
 import { AccessType, AccessAction } from '@interledger/open-payments'
+import { generateBaseGrant } from '../tests/grant'
 
 describe('Access Token Service', (): void => {
   let deps: IocContract<AppServices>
@@ -39,24 +39,13 @@ describe('Access Token Service', (): void => {
     await appContainer.shutdown()
   })
 
-  const CLIENT = faker.internet.url({ appendSlash: false })
-
-  const BASE_GRANT = {
-    state: GrantState.Pending,
-    startMethod: [StartMethod.Redirect],
-    finishMethod: FinishMethod.Redirect,
-    finishUri: 'https://example.com/finish',
-    clientNonce: generateNonce(),
-    client: CLIENT
-  }
-
   const BASE_ACCESS = {
     type: AccessType.OutgoingPayment,
     actions: [AccessAction.Read, AccessAction.Create],
     identifier: `https://example.com/${v4()}`,
     limits: {
       receiver: 'https://wallet.com/alice',
-      sendAmount: {
+      debitAmount: {
         value: '400',
         assetCode: 'USD',
         assetScale: 2
@@ -70,14 +59,9 @@ describe('Access Token Service', (): void => {
 
   let grant: Grant
   beforeEach(async (): Promise<void> => {
-    grant = await Grant.query(trx).insertAndFetch({
-      ...BASE_GRANT,
-      continueToken: generateToken(),
-      continueId: v4(),
-      interactId: v4(),
-      interactRef: generateNonce(),
-      interactNonce: generateNonce()
-    })
+    grant = await Grant.query(trx).insertAndFetch(
+      generateBaseGrant({ state: GrantState.Approved })
+    )
     grant.access = [
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
@@ -97,32 +81,6 @@ describe('Access Token Service', (): void => {
     })
   })
 
-  describe('Get', (): void => {
-    let accessToken: AccessToken
-    beforeEach(async (): Promise<void> => {
-      accessToken = await AccessToken.query(trx).insert({
-        value: 'test-access-token',
-        managementId: v4(),
-        grantId: grant.id,
-        expiresIn: 1234
-      })
-    })
-
-    test('Can get an access token by its value', async (): Promise<void> => {
-      await expect(accessTokenService.get(accessToken.value)).resolves.toEqual(
-        accessToken
-      )
-    })
-
-    test('Cannot get rotated access token', async (): Promise<void> => {
-      await accessTokenService.rotate(accessToken.id)
-
-      await expect(
-        accessTokenService.get(accessToken.value)
-      ).resolves.toBeUndefined()
-    })
-  })
-
   describe('getByManagementId', (): void => {
     let accessToken: AccessToken
     beforeEach(async (): Promise<void> => {
@@ -135,13 +93,17 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can get an access token by its managementId', async (): Promise<void> => {
+      const retrievedGrant = await Grant.query(trx).findById(grant.id)
       await expect(
         accessTokenService.getByManagementId(accessToken.managementId)
-      ).resolves.toMatchObject(accessToken)
+      ).resolves.toMatchObject({
+        ...accessToken,
+        grant: retrievedGrant
+      })
     })
 
     test('Cannot get an access token that does not exist', async (): Promise<void> => {
-      await expect(accessTokenService.get(v4())).resolves.toBeUndefined()
+      await expect(AccessToken.query().findById(v4())).resolves.toBeUndefined()
       await expect(
         accessTokenService.getByManagementId(v4())
       ).resolves.toBeUndefined()
@@ -184,7 +146,10 @@ describe('Access Token Service', (): void => {
     })
 
     test('Can introspect active token for revoked grant', async (): Promise<void> => {
-      await grant.$query(trx).patch({ state: GrantState.Revoked })
+      await grant.$query(trx).patch({
+        state: GrantState.Finalized,
+        finalizationReason: GrantFinalization.Revoked
+      })
       await expect(
         accessTokenService.introspect(accessToken.value)
       ).resolves.toBeUndefined()
@@ -207,14 +172,13 @@ describe('Access Token Service', (): void => {
     let grant: Grant
     let token: AccessToken
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        continueToken: generateToken(),
-        continueId: v4(),
-        interactId: v4(),
-        interactRef: generateNonce(),
-        interactNonce: generateNonce()
-      })
+      grant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Issued
+        })
+      )
+
       token = await AccessToken.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_TOKEN,
@@ -222,32 +186,80 @@ describe('Access Token Service', (): void => {
         managementId: v4()
       })
     })
-    test('Can revoke un-expired token', async (): Promise<void> => {
-      await token.$query(trx).patch({ expiresIn: 1000000 })
-      await expect(accessTokenService.revoke(token.id)).resolves.toEqual(token)
-      await expect(
-        AccessToken.query(trx).findById(token.id)
-      ).resolves.toBeUndefined()
-    })
-    test('Can revoke even if token has already expired', async (): Promise<void> => {
-      await token.$query(trx).patch({ expiresIn: -1 })
-      await expect(accessTokenService.revoke(token.id)).resolves.toEqual(token)
-      await expect(
-        AccessToken.query(trx).findById(token.id)
-      ).resolves.toBeUndefined()
-    })
-    test('Can revoke even if token has already been revoked', async (): Promise<void> => {
-      await token.$query(trx).delete()
-      await expect(accessTokenService.revoke(token.id)).resolves.toBeUndefined()
-      await expect(
-        AccessToken.query(trx).findById(token.id)
-      ).resolves.toBeUndefined()
-    })
 
-    test('Cannot revoke rotated access token', async (): Promise<void> => {
-      await accessTokenService.rotate(token.id)
+    describe('Revoke by token id', (): void => {
+      test('Can revoke un-expired token', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: 1000000 })
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
+          token
+        )
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already expired', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: -1 })
+        await expect(accessTokenService.revoke(token.id)).resolves.toEqual(
+          token
+        )
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already been revoked', async (): Promise<void> => {
+        await token.$query(trx).delete()
+        await expect(
+          accessTokenService.revoke(token.id)
+        ).resolves.toBeUndefined()
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
 
-      await expect(accessTokenService.revoke(token.id)).resolves.toBeUndefined()
+      test('Cannot revoke rotated access token', async (): Promise<void> => {
+        await accessTokenService.rotate(token.id)
+
+        await expect(
+          accessTokenService.revoke(token.id)
+        ).resolves.toBeUndefined()
+      })
+    })
+    describe('Revoke by grant id', (): void => {
+      test('Can revoke un-expired token', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: 1000000 })
+        await expect(
+          accessTokenService.revokeByGrantId(grant.id)
+        ).resolves.toEqual(1)
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already expired', async (): Promise<void> => {
+        await token.$query(trx).patch({ expiresIn: -1 })
+        await expect(
+          accessTokenService.revokeByGrantId(grant.id)
+        ).resolves.toEqual(1)
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+      test('Can revoke even if token has already been revoked', async (): Promise<void> => {
+        await token.$query(trx).delete()
+        await expect(
+          accessTokenService.revokeByGrantId(grant.id)
+        ).resolves.toEqual(0)
+        await expect(
+          AccessToken.query(trx).findById(token.id)
+        ).resolves.toBeUndefined()
+      })
+
+      test('Cannot revoke rotated access token', async (): Promise<void> => {
+        await accessTokenService.rotate(token.id)
+
+        await expect(
+          accessTokenService.revokeByGrantId(token.id)
+        ).resolves.toEqual(0)
+      })
     })
   })
 
@@ -256,14 +268,12 @@ describe('Access Token Service', (): void => {
     let token: AccessToken
     let originalTokenValue: string
     beforeEach(async (): Promise<void> => {
-      grant = await Grant.query(trx).insertAndFetch({
-        ...BASE_GRANT,
-        continueToken: generateToken(),
-        continueId: v4(),
-        interactId: v4(),
-        interactRef: generateNonce(),
-        interactNonce: generateNonce()
-      })
+      grant = await Grant.query(trx).insertAndFetch(
+        generateBaseGrant({
+          state: GrantState.Finalized,
+          finalizationReason: GrantFinalization.Issued
+        })
+      )
       await Access.query(trx).insertAndFetch({
         grantId: grant.id,
         ...BASE_ACCESS
