@@ -1079,34 +1079,6 @@
 					"response": []
 				},
 				{
-					"name": "Deposit Event Liquidity",
-					"id": "7c3afd23-2348-43d6-9cfa-895e54e05f9e",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation DepositEventLiquidity($input: DepositEventLiquidityInput!) {\n  depositEventLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
-								"variables": "{\n    \"input\": {\n        \"eventId\": \"b4f85d5c-652d-472d-873c-4ba2a5e39052\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
-							}
-						},
-						"url": {
-							"raw": "{{RafikiGraphqlHost}}/graphql",
-							"host": [
-								"{{RafikiGraphqlHost}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Deposit Outgoing Payment Liquidity",
 					"id": "8c7a355f-305e-45b0-88c9-0c85a1236a51",
 					"protocolProfileBehavior": {
@@ -1120,34 +1092,6 @@
 							"graphql": {
 								"query": "mutation DepositOutgoingPaymentLiquidity($input: DepositOutgoingPaymentLiquidityInput!) {\n  depositOutgoingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
 								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
-							}
-						},
-						"url": {
-							"raw": "{{RafikiGraphqlHost}}/graphql",
-							"host": [
-								"{{RafikiGraphqlHost}}"
-							],
-							"path": [
-								"graphql"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Withdraw Event Liquidity",
-					"id": "2d788367-7019-4a9a-94c6-e0655e9200c7",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "graphql",
-							"graphql": {
-								"query": "mutation WithdrawEventLiquidity($input: WithdrawEventLiquidityInput!) {\n  withdrawEventLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
-								"variables": "{\n    \"input\": {\n        \"eventId\": \"b4f85d5c-652d-472d-873c-4ba2a5e39052\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
 							}
 						},
 						"url": {
