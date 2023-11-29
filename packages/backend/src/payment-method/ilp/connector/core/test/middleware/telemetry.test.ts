@@ -41,7 +41,6 @@ describe('Telemetry Middleware', function () {
       .spyOn(ctx.services.telemetry!, 'getOrCreate')
       .mockImplementation(() => mockCounter)
 
-    console.log(ctx)
     await middleware(ctx, next)
 
     expect(getOrCreateSpy).toHaveBeenCalledWith('transactions_amount', {
