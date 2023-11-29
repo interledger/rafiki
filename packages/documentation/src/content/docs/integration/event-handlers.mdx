@@ -2,22 +2,24 @@
 title: Event Handlers
 ---
 
+import { Mermaid } from '@interledger/docs-design-system'
+
 Rafiki communicates with the Account Servicing Entity over webhook events, as mentioned in the [_Getting Started_](./getting-started) section. Most events require the Account Servicing Entity interact with Rafiki, either to deposit or withdraw liquidity into or from Rafiki, or to provide wallet address information. This document will describe how an Account Servicing Entity should handle each of the defined webhook events.
 
 ## `incoming_payment.created`
 
 The `incoming_payment.created` event indicates that an incoming payment has been created. It has not yet received any funds so no action is required. The webhook event is informational and allows the Account Servicing Entity to display upcoming incoming payments to their users.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: incoming payment created
+    ASE->>ASE: no action required
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: incoming payment created
-ASE->>ASE: no action required
-```
+`}
+/>
 
 ## `incoming_payment.completed`
 
@@ -25,17 +27,17 @@ The `incoming_payment.completed` event indicates that an incoming payment has be
 
 Example: An incoming payment was completed and received $10.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: incoming payment completed,<br>receivedAmount: $10
+    ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
+    ASE->>ASE: credit receiver's account with $10
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: incoming payment completed,<br>receivedAmount: $10
-ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
-ASE->>ASE: credit receiver's account with $10
-```
+`}
+/>
 
 ## `incoming_payment.expired`
 
@@ -43,17 +45,17 @@ The `incoming_payment.expired` event indicates that an incoming payment has expi
 
 Example: An incoming payment has expired and received $2.55.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: incoming payment expired,<br>receivedAmount: $2.55
+    ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
+    ASE->>ASE: credit receiver's account with $2.55
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: incoming payment expired,<br>receivedAmount: $2.55
-ASE->>R: admin API call: WithdrawIncomingPaymentLiquidity
-ASE->>ASE: credit receiver's account with $2.55
-```
+`}
+/>
 
 ## `outgoing_payment.created`
 
@@ -61,17 +63,17 @@ The `outgoing_payment.created` event indicates that an outgoing payment has been
 
 Example: An outgoing payment for $12 has been created.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: outgoing payment created,<br>debitAmount: $12
+    ASE->>ASE: put hold of $12 on sender's account
+    ASE->>R: admin API call: DepositOutgoingPaymentLiquidity
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: outgoing payment created,<br>debitAmount: $12
-ASE->>ASE: put hold of $12 on sender's account
-ASE->>R: admin API call: DepositOutgoingPaymentLiquidity
-```
+`}
+/>
 
 ## `outgoing_payment.completed`
 
@@ -79,17 +81,17 @@ The `outgoing_payment.completed` event indicates that an outgoing payment has su
 
 Example: An outgoing payment for $12 has been completed. $11.50 were sent. The Account Servicing Entity keeps $0.50 as fees.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
+    ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
+    ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: outgoing completed,<br>debitAmount: $12, sentAmount:$11.50
-ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
-ASE->>ASE: remove the hold and deduct $12 from the sender's account,<br>credit ASE's account with $0.50
-```
+`}
+/>
 
 ## `outgoing_payment.failed`
 
@@ -97,17 +99,17 @@ The `outgoing_payment.failed` event indicates that an outgoing payment has eithe
 
 Example: An outgoing payment for $12 has failed. $8 were sent.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: outgoing failed,<br>debitAmount: $12, sentAmount:$8
+    ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
+    ASE->>ASE: remove the hold and deduct $8 from the sender's account
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: outgoing failed,<br>debitAmount: $12, sentAmount:$8
-ASE->>R: admin API call: WithdrawOutgoingPaymentLiquidity
-ASE->>ASE: remove the hold and deduct $8 from the sender's account
-```
+`}
+/>
 
 ## `wallet_address.web_monetization`
 
@@ -115,17 +117,17 @@ The `wallet_address.web_monetization` event indicates that a wallet address has 
 
 Example: A wallet address received $0.33
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: wallet address web monetization,<br>receivedAmount: $0.33
+    ASE->>R: admin API call: CreateWalletAddressWithdrawal
+    ASE->>ASE: credit receiver's account with $0.33
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: wallet address web monetization,<br>receivedAmount: $0.33
-ASE->>R: admin API call: CreateWalletAddressWithdrawal
-ASE->>ASE: credit receiver's account with $0.33
-```
+`}
+/>
 
 ## `wallet_address.not_found`
 
@@ -133,16 +135,16 @@ The `wallet_address.not_found` event indicates that a [wallet address](/referenc
 
 Example: The wallet address `https://example-wallet.com/carla_garcia` was requested but does not yet exist
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: wallet address not found,<br>wallet address: https://example-wallet.com/carla_garcia
+    ASE->>R: admin API call: CreateWalletAddress<br>url: https://example-wallet.com/carla_garcia,<br>public name: Carla Eva Garcia
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: wallet address not found,<br>wallet address: https://example-wallet.com/carla_garcia
-ASE->>R: admin API call: CreateWalletAddress<br>url: https://example-wallet.com/carla_garcia,<br>public name: Carla Eva Garcia
-```
+`}
+/>
 
 ## `asset.liquidity_low`
 
@@ -150,16 +152,16 @@ The `asset.liquidity_low` event indicates that the liquidity of an [asset](../re
 
 Example: The asset liquidity for USD (scale: 2) drops below 100.00 USD.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: liquidity (asset) low,<br>asset: USD (scale: 2, id: "abc")
+    ASE->>R: admin API call: AddAssetLiquidity
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: liquidity (asset) low,<br>asset: USD (scale: 2, id: "abc")
-ASE->>R: admin API call: AddAssetLiquidity
-```
+`}
+/>
 
 ## `peer.liquidity_low`
 
@@ -167,13 +169,13 @@ The `peer.liquidity_low` event indicates that the liquidity of a [peer](../refer
 
 Example: The peer liquidity for Happy Life Bank drops below 100.00 USD.
 
-```mermaid
+<Mermaid
+  graph={`sequenceDiagram
+    participant ASE as Account Servicing Entity
+    participant R as Rafiki
 
-sequenceDiagram
+    R->>ASE: webhook event: liquidity (peer) low,<br>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
+    ASE->>R: admin API call: AddPeerLiquidity
 
-participant ASE as Account Servicing Entity
-participant R as Rafiki
-
-R->>ASE: webhook event: liquidity (peer) low,<br>peer: Happy Life Bank (asset: "USD", scale: 2, id: "abc")
-ASE->>R: admin API call: AddPeerLiquidity
-```
+`}
+/>
