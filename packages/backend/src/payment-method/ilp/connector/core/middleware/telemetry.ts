@@ -6,7 +6,6 @@ export function createTelemetryMiddleware(): ILPMiddleware {
     { request, services, accounts, state }: ILPContext,
     next: () => Promise<void>
   ): Promise<void> => {
-    console.log('IN TELEMETRY MIDDLEWARE')
     const { amount } = request.prepare
     if (state.unfulfillable || !Number(amount)) {
       await next()
@@ -27,11 +26,6 @@ export function createTelemetryMiddleware(): ILPMiddleware {
         asset_code: code,
         source: services.telemetry?.getServiceName()
       })
-
-    console.log(
-      'GATHERED TELEMETRY FROM MIDDLEWARE',
-      totalReceivedInAssetScale4
-    )
 
     await next()
   }
