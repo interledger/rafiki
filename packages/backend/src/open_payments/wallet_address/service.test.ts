@@ -20,7 +20,6 @@ import { initIocContainer } from '../../'
 import { AppServices } from '../../app'
 import { faker } from '@faker-js/faker'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { getPageInfo } from '../../shared/pagination'
 import { getPageTests } from '../../shared/baseModel.test'
 import { Pagination, SortOrder } from '../../shared/baseModel'
 import { sleep } from '../../shared/utils'
@@ -387,47 +386,6 @@ describe('Open Payments Wallet Address Service', (): void => {
   })
 
   describe('Wallet Address pagination', (): void => {
-    test.each`
-      num   | pagination       | cursor  | start   | end     | hasNextPage | hasPreviousPage
-      ${0}  | ${{ first: 5 }}  | ${null} | ${null} | ${null} | ${false}    | ${false}
-      ${10} | ${{ first: 5 }}  | ${null} | ${0}    | ${4}    | ${true}     | ${false}
-      ${5}  | ${{ first: 10 }} | ${null} | ${0}    | ${4}    | ${false}    | ${false}
-      ${10} | ${{ first: 3 }}  | ${3}    | ${4}    | ${6}    | ${true}     | ${true}
-      ${10} | ${{ last: 5 }}   | ${9}    | ${4}    | ${8}    | ${true}     | ${true}
-    `(
-      '$num payments, pagination $pagination with cursor $cursor',
-      async ({
-        num,
-        pagination,
-        cursor,
-        start,
-        end,
-        hasNextPage,
-        hasPreviousPage
-      }): Promise<void> => {
-        const walletAddressIds: string[] = []
-        for (let i = 0; i < num; i++) {
-          const walletAddress = await createWalletAddress(deps)
-          walletAddressIds.push(walletAddress.id)
-        }
-        walletAddressIds.reverse() // default order is descending
-        if (cursor) {
-          if (pagination.last) pagination.before = walletAddressIds[cursor]
-          else pagination.after = walletAddressIds[cursor]
-        }
-        const page = await walletAddressService.getPage(pagination)
-        const pageInfo = await getPageInfo(
-          (pagination) => walletAddressService.getPage(pagination),
-          page
-        )
-        expect(pageInfo).toEqual({
-          startCursor: walletAddressIds[start],
-          endCursor: walletAddressIds[end],
-          hasNextPage,
-          hasPreviousPage
-        })
-      }
-    )
     describe('getPage', (): void => {
       getPageTests({
         createModel: () => createWalletAddress(deps),
