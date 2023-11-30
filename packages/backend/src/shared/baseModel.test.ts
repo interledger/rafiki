@@ -1,4 +1,5 @@
 import { BaseModel, Pagination, SortOrder } from './baseModel'
+import { getPageInfo } from './pagination'
 
 interface PageTestsOptions<Type> {
   createModel: () => Promise<Type>
@@ -75,6 +76,52 @@ export const getPageTests = <Type extends BaseModel>({
       expect(modelsBackwards).toHaveLength(10)
       expect(modelsForwards).toEqual(modelsBackwards)
     })
+
+    test.each`
+      pagination       | cursor  | start | end   | hasNextPage | hasPreviousPage | sortOrder
+      ${null}          | ${null} | ${0}  | ${19} | ${true}     | ${false}        | ${SortOrder.Desc}
+      ${{ first: 5 }}  | ${null} | ${0}  | ${4}  | ${true}     | ${false}        | ${SortOrder.Desc}
+      ${{ first: 22 }} | ${null} | ${0}  | ${21} | ${false}    | ${false}        | ${SortOrder.Desc}
+      ${{ first: 3 }}  | ${3}    | ${4}  | ${6}  | ${true}     | ${true}         | ${SortOrder.Desc}
+      ${{ last: 5 }}   | ${9}    | ${4}  | ${8}  | ${true}     | ${true}         | ${SortOrder.Desc}
+      ${null}          | ${null} | ${0}  | ${19} | ${true}     | ${false}        | ${SortOrder.Asc}
+      ${{ first: 5 }}  | ${null} | ${0}  | ${4}  | ${true}     | ${false}        | ${SortOrder.Asc}
+      ${{ first: 22 }} | ${null} | ${0}  | ${21} | ${false}    | ${false}        | ${SortOrder.Asc}
+      ${{ first: 3 }}  | ${3}    | ${4}  | ${6}  | ${true}     | ${true}         | ${SortOrder.Asc}
+      ${{ last: 5 }}   | ${9}    | ${4}  | ${8}  | ${true}     | ${true}         | ${SortOrder.Asc}
+    `(
+      'pagination $pagination with cursor $cursor in $sortOrder order',
+      async ({
+        pagination,
+        cursor,
+        start,
+        end,
+        hasNextPage,
+        hasPreviousPage,
+        sortOrder
+      }): Promise<void> => {
+        if (sortOrder === SortOrder.Asc) {
+          modelsCreated.reverse()
+        }
+        if (cursor) {
+          if (pagination.last) pagination.before = modelsCreated[cursor].id
+          else pagination.after = modelsCreated[cursor].id
+        }
+
+        const page = await getPage(pagination, sortOrder)
+        const pageInfo = await getPageInfo(
+          (pagination, sortOrder) => getPage(pagination, sortOrder),
+          page,
+          sortOrder
+        )
+        expect(pageInfo).toEqual({
+          startCursor: modelsCreated[start].id,
+          endCursor: modelsCreated[end].id,
+          hasNextPage,
+          hasPreviousPage
+        })
+      }
+    )
   })
 }
 

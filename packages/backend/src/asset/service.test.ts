@@ -15,7 +15,6 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { LiquidityAccountType } from '../accounting/service'
 import { CheckViolationError } from 'objection'
-import { orderBy } from 'lodash'
 
 describe('Asset Service', (): void => {
   let deps: IocContract<AppServices>
