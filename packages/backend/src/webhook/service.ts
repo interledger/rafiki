@@ -78,7 +78,7 @@ async function getLatestWebhookEventByAccount(
 
   const query = WebhookEvent.query(deps.knex)
     .orderBy('createdAt', 'DESC')
-    .first()
+    .limit(1)
 
   if (types && types.length) {
     query.whereIn('type', types)
@@ -90,7 +90,7 @@ async function getLatestWebhookEventByAccount(
     query.where({ withdrawalAccountId: options.withdrawalAccountId })
   }
 
-  return await query
+  return await query.first()
 }
 
 // Fetch (and lock) a webhook event for work.

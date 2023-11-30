@@ -38,7 +38,6 @@ describe('Webhook Service', (): void => {
   let knex: Knex
   let webhookUrl: URL
   let event: WebhookEvent
-  let sortOrder: SortOrder
   const WEBHOOK_SECRET = 'test secret'
 
   async function makeWithdrawalEvent(event: WebhookEvent): Promise<void> {
@@ -66,7 +65,6 @@ describe('Webhook Service', (): void => {
     webhookService = await deps.use('webhookService')
     accountingService = await deps.use('accountingService')
     webhookUrl = new URL(Config.webhookUrl)
-    sortOrder = Math.random() < 0.5 ? SortOrder.Asc : SortOrder.Desc
   })
 
   afterEach(async (): Promise<void> => {
@@ -256,8 +254,7 @@ describe('Webhook Service', (): void => {
           type: {
             in: [type]
           }
-        },
-        sortOrder
+        }
       })
       const expectedLength = webhookEvents.filter(
         (event) => event.type === type
@@ -271,13 +268,10 @@ describe('Webhook Service', (): void => {
       const idsOfTypeY = webhookEvents
         .filter((event) => event.type === type)
         .map((event) => event.id)
-      if (sortOrder === SortOrder.Desc) {
-        idsOfTypeY.reverse()
-      }
+      idsOfTypeY.reverse() // default is descending
       const page = await webhookService.getPage({
         pagination: { first: 10, after: idsOfTypeY[0] },
-        filter,
-        sortOrder
+        filter
       })
       expect(page[0].id).toBe(idsOfTypeY[1])
       expect(page.filter((event) => event.type === type).length).toBe(
