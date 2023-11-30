@@ -130,11 +130,11 @@ export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['trigg
         message: 'Triggered Wallet Address Events',
         count
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input.limit,
-          error
+          err
         },
         'error triggering wallet address events'
       )

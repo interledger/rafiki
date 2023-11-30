@@ -79,11 +79,11 @@ export const revokeGrant: MutationResolvers<ApolloContext>['revokeGrant'] =
         success: true,
         message: 'Grant revoked'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input.grantId,
-          error
+          err
         },
         'error revoking grant'
       )

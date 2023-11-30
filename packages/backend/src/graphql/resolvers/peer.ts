@@ -76,11 +76,11 @@ export const createPeer: MutationResolvers<ApolloContext>['createPeer'] =
               peer: peerToGraphql(peerOrError)
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             options: args.input,
-            error
+            err
           },
           'error creating peer'
         )
@@ -115,11 +115,11 @@ export const updatePeer: MutationResolvers<ApolloContext>['updatePeer'] =
               peer: peerToGraphql(peerOrError)
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             options: args.input,
-            error
+            err
           },
           'error updating peer'
         )
@@ -153,11 +153,11 @@ export const deletePeer: MutationResolvers<ApolloContext>['deletePeer'] =
               message: errorToMessage[PeerError.UnknownPeer]
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             id: args.input.id,
-            error
+            err
           },
           'error deleting peer'
         )
