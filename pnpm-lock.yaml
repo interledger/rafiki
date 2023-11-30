@@ -402,8 +402,8 @@ importers:
         specifier: ^4.14.202
         version: 4.14.202
       '@types/luxon':
-        specifier: ^3.3.5
-        version: 3.3.5
+        specifier: ^3.3.6
+        version: 3.3.6
       '@types/rosie':
         specifier: ^0.0.45
         version: 0.0.45
@@ -5777,8 +5777,8 @@ packages:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
     dev: false
 
-  /@types/luxon@3.3.5:
-    resolution: {integrity: sha512-1cyf6Ge/94zlaWIZA2ei1pE6SZ8xpad2hXaYa5JEFiaUH0YS494CZwyi4MXNpXD9oEuv6ZH0Bmh0e7F9sPhmZA==}
+  /@types/luxon@3.3.6:
+    resolution: {integrity: sha512-LblarKeI26YsMLxHDIQ0295wPSLjkl98eNwDcVhz3zbo1H+kfnkzR01H5Ai5LBzSeddX0ZJSpGwKEZihGb5diw==}
     dev: true
 
   /@types/mathjax@0.0.37:
