@@ -179,11 +179,15 @@ type Mutation {
   depositEventLiquidity(
     input: DepositEventLiquidityInput!
   ): LiquidityMutationResponse
+    @deprecated(reason: "Use `depositOutgoingPaymentLiquidity`")
 
   "Withdraw webhook event liquidity"
   withdrawEventLiquidity(
     input: WithdrawEventLiquidityInput!
   ): LiquidityMutationResponse
+    @deprecated(
+      reason: "Use `withdrawOutgoingPaymentLiquidity, withdrawIncomingPaymentLiquidity, or createWalletAddressWithdrawal`"
+    )
 
   "Withdraw incoming payment liquidity"
   withdrawIncomingPaymentLiquidity(

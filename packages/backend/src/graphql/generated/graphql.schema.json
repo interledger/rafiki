@@ -4108,8 +4108,8 @@
               "name": "LiquidityMutationResponse",
               "ofType": null
             },
-            "isDeprecated": false,
-            "deprecationReason": null
+            "isDeprecated": true,
+            "deprecationReason": "Use `depositOutgoingPaymentLiquidity`"
           },
           {
             "name": "depositOutgoingPaymentLiquidity",
@@ -4418,8 +4418,8 @@
               "name": "LiquidityMutationResponse",
               "ofType": null
             },
-            "isDeprecated": false,
-            "deprecationReason": null
+            "isDeprecated": true,
+            "deprecationReason": "Use `withdrawOutgoingPaymentLiquidity, withdrawIncomingPaymentLiquidity, or createWalletAddressWithdrawal`"
           },
           {
             "name": "withdrawIncomingPaymentLiquidity",

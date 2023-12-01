@@ -563,7 +563,10 @@ export type Mutation = {
   createWalletAddressWithdrawal?: Maybe<WalletAddressWithdrawalMutationResponse>;
   /** Delete a peer */
   deletePeer: DeletePeerMutationResponse;
-  /** Deposit webhook event liquidity */
+  /**
+   * Deposit webhook event liquidity
+   * @deprecated Use `depositOutgoingPaymentLiquidity`
+   */
   depositEventLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Deposit outgoing payment liquidity */
   depositOutgoingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
@@ -583,7 +586,10 @@ export type Mutation = {
   updateWalletAddress: UpdateWalletAddressMutationResponse;
   /** Void liquidity withdrawal. Withdrawals are two-phase commits and are rolled back via this mutation. */
   voidLiquidityWithdrawal?: Maybe<LiquidityMutationResponse>;
-  /** Withdraw webhook event liquidity */
+  /**
+   * Withdraw webhook event liquidity
+   * @deprecated Use `withdrawOutgoingPaymentLiquidity, withdrawIncomingPaymentLiquidity, or createWalletAddressWithdrawal`
+   */
   withdrawEventLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Withdraw incoming payment liquidity */
   withdrawIncomingPaymentLiquidity?: Maybe<LiquidityMutationResponse>;
