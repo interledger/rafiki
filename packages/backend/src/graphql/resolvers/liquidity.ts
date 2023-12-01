@@ -348,7 +348,7 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       }
 
       if (!event.data.debitAmount) {
-        throw new Error()
+        throw new Error('No debit amount')
       }
       const outgoingPaymentService = await ctx.container.use(
         'outgoingPaymentService'
