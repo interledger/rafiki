@@ -74,13 +74,13 @@ async function getQuote(
         slippage: deps.config.slippage,
         prices: convertRatesToIlpPrices(rates)
       })
-    } catch (error) {
+    } catch (err) {
       const errorMessage = 'Received error during ILP quoting'
-      deps.logger.error({ error }, errorMessage)
+      deps.logger.error({ err }, errorMessage)
 
       throw new PaymentMethodHandlerError(errorMessage, {
-        description: Pay.isPaymentError(error) ? error : 'Unknown error',
-        retryable: canRetryError(error as Error | Pay.PaymentError)
+        description: Pay.isPaymentError(err) ? err : 'Unknown error',
+        retryable: canRetryError(err as Error | Pay.PaymentError)
       })
     }
     // Pay.startQuote should return PaymentError.InvalidSourceAmount or
@@ -210,16 +210,16 @@ async function pay(
     if (receipt.error) {
       throw receipt.error
     }
-  } catch (error) {
+  } catch (err) {
     const errorMessage = 'Received error during ILP pay'
     deps.logger.error(
-      { error, destination: destination.destinationAddress },
+      { err, destination: destination.destinationAddress },
       errorMessage
     )
 
     throw new PaymentMethodHandlerError(errorMessage, {
-      description: Pay.isPaymentError(error) ? error : 'Unknown error',
-      retryable: canRetryError(error as Error | Pay.PaymentError)
+      description: Pay.isPaymentError(err) ? err : 'Unknown error',
+      retryable: canRetryError(err as Error | Pay.PaymentError)
     })
   } finally {
     try {

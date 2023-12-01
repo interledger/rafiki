@@ -62,14 +62,14 @@ async function revoke(
 
   try {
     return await key.$query(deps.knex).patchAndFetch({ revoked: true })
-  } catch (error) {
+  } catch (err) {
     deps.logger.error(
       {
-        error
+        err
       },
       'error revoking key'
     )
-    throw error
+    throw err
   }
 }
 
