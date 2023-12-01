@@ -32,11 +32,11 @@ export const createOrUpdatePeerByUrl: MutationResolvers<ApolloContext>['createOr
               peer: peerToGraphql(peerOrError)
             }
       )
-      .catch((error) => {
+      .catch((err) => {
         ctx.logger.error(
           {
             options: args.input,
-            error
+            err
           },
           'error creating peer'
         )

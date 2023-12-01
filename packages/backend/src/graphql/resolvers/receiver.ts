@@ -38,9 +38,9 @@ export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] 
         success: true,
         receiver: receiverToGraphql(receiverOrError)
       }
-    } catch (error) {
+    } catch (err) {
       const errorMessage = 'Error trying to create receiver'
-      ctx.logger.error({ error, args }, errorMessage)
+      ctx.logger.error({ err, args }, errorMessage)
 
       return {
         code: '500',
