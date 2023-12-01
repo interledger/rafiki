@@ -34,6 +34,10 @@ When Open Payments incoming or outgoing payments are created, a liquidity accoun
 
 ## Adding and Withdrawing Liquidity
 
+> **Note:** The `idempotencyKey` must be provided whenever calling mutations dealing with liquidity.
+> This key allows safely retrying requests, without performing the operation multiple times.
+> This should be a unique key (typically, a V4 UUID). For more information on Rafiki's idempotency, [see more](/apis/idempotency).
+
 ### Asset Liquidity
 
 Add and withdraw asset liquidity via the Admin API (or UI):
