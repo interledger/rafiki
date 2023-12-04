@@ -29,6 +29,10 @@ import {
 import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
 import { Asset } from '../asset/model'
 import { PaymentEventType } from '../open_payments/payment/outgoing/model'
+import { createIncomingPayment } from '../tests/incomingPayment'
+import { createWalletAddress } from '../tests/walletAddress'
+import { WalletAddress } from '../open_payments/wallet_address/model'
+import { createOutgoingPayment } from '../tests/outgoingPayment'
 
 describe('Webhook Service', (): void => {
   let deps: IocContract<AppServices>
@@ -104,59 +108,78 @@ describe('Webhook Service', (): void => {
   })
 
   describe('Get Webhook Event by account id and types', (): void => {
-    const withdrawalAccountIds = [uuid(), uuid()]
-    const depositAccountIds = [uuid()]
-
+    let walletAddressIn: WalletAddress
+    let walletAddressOut: WalletAddress
+    let incomingPaymentIds: string[]
+    let outgoingPaymentIds: string[]
     let events: WebhookEvent[] = []
-    let asset: Asset
 
     beforeEach(async (): Promise<void> => {
-      asset = await createAsset(deps)
-      const amount = BigInt(10)
+      walletAddressIn = await createWalletAddress(deps)
+      walletAddressOut = await createWalletAddress(deps)
+      incomingPaymentIds = [
+        (
+          await createIncomingPayment(deps, {
+            walletAddressId: walletAddressIn.id
+          })
+        ).id,
+        (
+          await createIncomingPayment(deps, {
+            walletAddressId: walletAddressIn.id
+          })
+        ).id
+      ]
+      outgoingPaymentIds = [
+        (
+          await createOutgoingPayment(deps, {
+            method: 'ilp',
+            walletAddressId: walletAddressOut.id,
+            receiver: '',
+            validDestination: false
+          })
+        ).id,
+        (
+          await createOutgoingPayment(deps, {
+            method: 'ilp',
+            walletAddressId: walletAddressOut.id,
+            receiver: '',
+            validDestination: false
+          })
+        ).id
+      ]
+
       events = [
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: IncomingPaymentEventType.IncomingPaymentCompleted,
           data: { id: uuid() },
-          withdrawal: {
-            accountId: withdrawalAccountIds[0],
-            assetId: asset.id,
-            amount
-          }
+          incomingPaymentId: incomingPaymentIds[0]
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: IncomingPaymentEventType.IncomingPaymentExpired,
           data: { id: uuid() },
-          withdrawal: {
-            accountId: withdrawalAccountIds[0],
-            assetId: asset.id,
-            amount
-          }
+          incomingPaymentId: incomingPaymentIds[0]
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: IncomingPaymentEventType.IncomingPaymentCompleted,
           data: { id: uuid() },
-          withdrawal: {
-            accountId: withdrawalAccountIds[1],
-            assetId: asset.id,
-            amount
-          }
+          incomingPaymentId: incomingPaymentIds[1]
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
           type: PaymentEventType.PaymentCreated,
           data: { id: uuid() },
-          depositAccountId: depositAccountIds[0]
+          outgoingPaymentId: outgoingPaymentIds[0]
         })
       ]
     })
 
     test('Gets latest event matching account id and type', async (): Promise<void> => {
       await expect(
-        webhookService.getLatestByAccount({
-          withdrawalAccountId: withdrawalAccountIds[0],
+        webhookService.getLatestByResourceId({
+          incomingPaymentId: incomingPaymentIds[0],
           types: [
             IncomingPaymentEventType.IncomingPaymentCompleted,
             IncomingPaymentEventType.IncomingPaymentExpired
@@ -164,8 +187,8 @@ describe('Webhook Service', (): void => {
         })
       ).resolves.toEqual(events[1])
       await expect(
-        webhookService.getLatestByAccount({
-          depositAccountId: depositAccountIds[0],
+        webhookService.getLatestByResourceId({
+          outgoingPaymentId: outgoingPaymentIds[0],
           types: [PaymentEventType.PaymentCreated]
         })
       ).resolves.toEqual(events[3])
@@ -176,15 +199,11 @@ describe('Webhook Service', (): void => {
         id: uuid(),
         type: 'some_new_type',
         data: { id: uuid() },
-        withdrawal: {
-          accountId: withdrawalAccountIds[0],
-          assetId: asset.id,
-          amount: BigInt(10)
-        }
+        incomingPaymentId: incomingPaymentIds[0]
       })
       await expect(
-        webhookService.getLatestByAccount({
-          withdrawalAccountId: withdrawalAccountIds[0]
+        webhookService.getLatestByResourceId({
+          incomingPaymentId: incomingPaymentIds[0]
         })
       ).resolves.toEqual(newLatestEvent)
     })
@@ -192,16 +211,16 @@ describe('Webhook Service', (): void => {
     describe('Returns undefined if no match', (): void => {
       test('Good account id, bad event type', async (): Promise<void> => {
         await expect(
-          webhookService.getLatestByAccount({
-            withdrawalAccountId: withdrawalAccountIds[0],
+          webhookService.getLatestByResourceId({
+            incomingPaymentId: incomingPaymentIds[0],
             types: ['nonexistant.event']
           })
         ).resolves.toBeUndefined()
       })
       test('Bad account id, good event type', async (): Promise<void> => {
         await expect(
-          webhookService.getLatestByAccount({
-            withdrawalAccountId: uuid(),
+          webhookService.getLatestByResourceId({
+            incomingPaymentId: uuid(),
             types: [IncomingPaymentEventType.IncomingPaymentCompleted]
           })
         ).resolves.toBeUndefined()

@@ -507,6 +507,7 @@ describe('Incoming Payment Service', (): void => {
           )
           await expect(
             IncomingPaymentEvent.query(knex).where({
+              incomingPaymentId: incomingPayment.id,
               type: eventType,
               withdrawalAccountId: incomingPayment.id,
               withdrawalAmount: amountReceived

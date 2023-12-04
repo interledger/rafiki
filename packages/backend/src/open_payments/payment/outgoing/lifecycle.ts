@@ -158,24 +158,20 @@ export async function sendWebhookEvent(
     throw LifecycleError.MissingBalance
   }
 
-  const eventPayload: Objection.PartialModelObject<PaymentEvent> = {
+  const withdrawal = balance
+    ? {
+        accountId: payment.id,
+        assetId: payment.assetId,
+        amount: balance
+      }
+    : undefined
+
+  await PaymentEvent.query(deps.knex).insert({
+    outgoingPaymentId: payment.id,
     type,
-    data: payment.toData({ amountSent, balance })
-  }
-
-  if (isPaymentDepositEvenType(type)) {
-    eventPayload.depositAccountId = payment.id
-  } else {
-    eventPayload.withdrawal = balance
-      ? {
-          accountId: payment.id,
-          assetId: payment.assetId,
-          amount: balance
-        }
-      : undefined
-  }
-
-  await PaymentEvent.query(deps.knex).insert(eventPayload)
+    data: payment.toData({ amountSent, balance }),
+    withdrawal
+  })
 }
 
 function validateAssets(

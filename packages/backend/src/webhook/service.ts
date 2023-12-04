@@ -25,8 +25,8 @@ interface GetPageOptions {
 
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
-  getLatestByAccount(
-    options: WebhookByAccountOptions
+  getLatestByResourceId(
+    options: WebhookByResourceIdOptions
   ): Promise<WebhookEvent | undefined>
   processNext(): Promise<string | undefined>
   getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
@@ -45,8 +45,8 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
-    getLatestByAccount: (options) =>
-      getLatestWebhookEventByAccount(deps, options),
+    getLatestByResourceId: (options) =>
+      getLatestWebhookEventByResourceId(deps, options),
     processNext: () => processNextWebhookEvent(deps),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
@@ -62,17 +62,23 @@ async function getWebhookEvent(
 interface WebhookEventOptions {
   types?: string[]
 }
-interface DepositOptions extends WebhookEventOptions {
-  depositAccountId: string
+interface OutgoingPaymentOptions extends WebhookEventOptions {
+  outgoingPaymentId: string
 }
-interface WithdrawalOptions extends WebhookEventOptions {
-  withdrawalAccountId: string
+interface IncomingPaymentOptions extends WebhookEventOptions {
+  incomingPaymentId: string
 }
-type WebhookByAccountOptions = DepositOptions | WithdrawalOptions
+interface WalletAddressOptions extends WebhookEventOptions {
+  walletAddressId: string
+}
+type WebhookByResourceIdOptions =
+  | OutgoingPaymentOptions
+  | IncomingPaymentOptions
+  | WalletAddressOptions
 
-async function getLatestWebhookEventByAccount(
+async function getLatestWebhookEventByResourceId(
   deps: ServiceDependencies,
-  options: WebhookByAccountOptions
+  options: WebhookByResourceIdOptions
 ): Promise<WebhookEvent | undefined> {
   const { types } = options
 
@@ -84,10 +90,12 @@ async function getLatestWebhookEventByAccount(
     query.whereIn('type', types)
   }
 
-  if ('depositAccountId' in options) {
-    query.where({ depositAccountId: options.depositAccountId })
+  if ('outgoingPaymentId' in options) {
+    query.where({ outgoingPaymentId: options.outgoingPaymentId })
+  } else if ('incomingPaymentId' in options) {
+    query.where({ incomingPaymentId: options.incomingPaymentId })
   } else {
-    query.where({ withdrawalAccountId: options.withdrawalAccountId })
+    query.where({ incomingPaymentId: options.walletAddressId })
   }
 
   return await query.first()

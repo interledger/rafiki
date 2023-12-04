@@ -444,8 +444,8 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     try {
       const { outgoingPaymentId } = args.input
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccount({
-        depositAccountId: outgoingPaymentId,
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
         types: [PaymentDepositType.PaymentCreated]
       })
       if (!event || !isPaymentEvent(event)) {
@@ -502,8 +502,8 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
         id: incomingPaymentId
       })
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccount({
-        withdrawalAccountId: incomingPaymentId,
+      const event = await webhookService.getLatestByResourceId({
+        incomingPaymentId,
         types: [
           IncomingPaymentEventType.IncomingPaymentCompleted,
           IncomingPaymentEventType.IncomingPaymentExpired
@@ -562,8 +562,8 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
         id: outgoingPaymentId
       })
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccount({
-        withdrawalAccountId: outgoingPaymentId,
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
         types: [
           PaymentEventType.PaymentCompleted,
           PaymentEventType.PaymentFailed
