@@ -82,9 +82,9 @@ export async function createConnectorService({
       // Local pay
       createBalanceMiddleware(),
 
-      createTelemetryMiddleware(),
       // Outgoing Rules
       createStreamController(),
+      createTelemetryMiddleware(),
       createOutgoingThroughputMiddleware(),
       createOutgoingReduceExpiryMiddleware({}),
       createOutgoingExpireMiddleware(),

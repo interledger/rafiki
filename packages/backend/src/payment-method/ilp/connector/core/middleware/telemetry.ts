@@ -7,15 +7,12 @@ export function createTelemetryMiddleware(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
-    if (
-      state.unfulfillable ||
-      !state.incomingAccount.quote ||
-      !Number(amount)
-    ) {
+    if (state.unfulfillable || !Number(amount)) {
       await next()
       return
     }
-    const { code, scale } = accounts.incoming.asset
+    const { scale } = accounts.incoming.asset
+    const code: string = state.incomingAccount?.quote?.receiveAmountAssetCode
 
     const scalingFactor = scale ? Math.pow(10, 4 - scale) : undefined
     const totalReceivedInAssetScale4 = Number(amount) * Number(scalingFactor)
