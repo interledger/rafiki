@@ -27,7 +27,6 @@ import {
   webhookEventTypes
 } from '../tests/webhook'
 import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
-import { Asset } from '../asset/model'
 import { PaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'

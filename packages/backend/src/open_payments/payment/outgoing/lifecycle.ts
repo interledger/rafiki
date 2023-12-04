@@ -3,12 +3,10 @@ import {
   OutgoingPayment,
   OutgoingPaymentState,
   PaymentEvent,
-  PaymentEventType,
-  isPaymentDepositEvenType
+  PaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
-import Objection from 'objection'
 
 // "payment" is locked by the "deps.knex" transaction.
 export async function handleSending(
