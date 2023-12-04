@@ -71,11 +71,11 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
         success: true,
         message: 'Added peer liquidity'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error adding peer liquidity'
       )
@@ -116,11 +116,11 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
         success: true,
         message: 'Added asset liquidity'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error adding asset liquidity'
       )
@@ -162,11 +162,11 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
         success: true,
         message: 'Created peer liquidity withdrawal'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error creating peer liquidity withdrawal'
       )
@@ -208,11 +208,11 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         success: true,
         message: 'Created asset liquidity withdrawal'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error creating asset liquidity withdrawal'
       )
@@ -274,11 +274,11 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
           walletAddress: walletAddressToGraphql(walletAddress)
         }
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error creating wallet address withdrawal'
       )
@@ -368,11 +368,11 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
         success: true,
         message: 'Deposited liquidity'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           eventId: args.input.eventId,
-          error
+          err
         },
         'error depositing liquidity'
       )
@@ -419,11 +419,11 @@ export const withdrawEventLiquidity: MutationResolvers<ApolloContext>['withdrawE
         success: true,
         message: 'Withdrew liquidity'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           eventId: args.input.eventId,
-          error
+          err
         },
         'error withdrawing liquidity'
       )

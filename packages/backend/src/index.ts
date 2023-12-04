@@ -489,7 +489,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo = err instanceof Error && err.stack ? err.stack : err
-      logger.error({ error: errInfo }, 'error while shutting down')
+      logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
   })
@@ -513,7 +513,7 @@ export const start = async (
       process.exit(0)
     } catch (err) {
       const errInfo = err instanceof Error && err.stack ? err.stack : err
-      logger.error({ error: errInfo }, 'error while shutting down')
+      logger.error({ err: errInfo }, 'error while shutting down')
       process.exit(1)
     }
   })
@@ -554,7 +554,7 @@ if (!module.parent) {
   start(container, app).catch(async (e): Promise<void> => {
     const errInfo = e && typeof e === 'object' && e.stack ? e.stack : e
     const logger = await container.use('logger')
-    logger.error(errInfo)
+    logger.error({ err: errInfo })
   })
 }
 

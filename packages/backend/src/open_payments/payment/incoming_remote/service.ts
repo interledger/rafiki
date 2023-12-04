@@ -83,9 +83,9 @@ async function create(
         metadata: args.metadata ?? undefined
       }
     )
-  } catch (error) {
+  } catch (err) {
     const errorMessage = 'Error creating remote incoming payment'
-    deps.logger.error({ error, walletAddressUrl }, errorMessage)
+    deps.logger.error({ err, walletAddressUrl }, errorMessage)
     return RemoteIncomingPaymentError.InvalidRequest
   }
 }
@@ -101,9 +101,9 @@ async function getGrant(
     walletAddress = await deps.openPaymentsClient.walletAddress.get({
       url: walletAddressUrl
     })
-  } catch (error) {
+  } catch (err) {
     const errorMessage = 'Could not get wallet address'
-    deps.logger.error({ walletAddressUrl, error }, errorMessage)
+    deps.logger.error({ err, walletAddressUrl }, errorMessage)
     return RemoteIncomingPaymentError.UnknownWalletAddress
   }
 

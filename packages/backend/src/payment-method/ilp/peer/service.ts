@@ -172,7 +172,7 @@ async function createPeer(
 
         if (transferError) {
           deps.logger.error(
-            { transferError },
+            { err: transferError },
             'error trying to add initial liquidity'
           )
 
