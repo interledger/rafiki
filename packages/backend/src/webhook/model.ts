@@ -71,11 +71,11 @@ export class WebhookEvent extends BaseModel {
   public readonly assetId?: string
   public readonly peerId?: string
 
-  public outgoingPayment!: OutgoingPayment
-  public incomingPayment!: IncomingPayment
-  public walletAddress!: WalletAddress
-  public asset!: Asset
-  public peer!: Peer
+  public outgoingPayment?: OutgoingPayment
+  public incomingPayment?: IncomingPayment
+  public walletAddress?: WalletAddress
+  public asset?: Asset
+  public peer?: Peer
 
   public withdrawal?: {
     accountId: string
