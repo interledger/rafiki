@@ -161,6 +161,9 @@ export class Rafiki<T = any> {
       get walletAddresses(): WalletAddressService {
         return config.walletAddresses
       },
+      get telemetry(): TelemetryService | undefined {
+        return config.telemetry
+      },
       logger
     }
 

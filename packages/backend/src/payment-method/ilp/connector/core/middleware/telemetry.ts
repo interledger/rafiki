@@ -7,7 +7,11 @@ export function createTelemetryMiddleware(): ILPMiddleware {
     next: () => Promise<void>
   ): Promise<void> => {
     const { amount } = request.prepare
-    if (state.unfulfillable || !Number(amount)) {
+    if (
+      state.unfulfillable ||
+      !state.incomingAccount.quote ||
+      !Number(amount)
+    ) {
       await next()
       return
     }

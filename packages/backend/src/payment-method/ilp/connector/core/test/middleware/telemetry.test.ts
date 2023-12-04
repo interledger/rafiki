@@ -21,7 +21,10 @@ const ctx = createILPContext({
   },
   accounts: { incoming: incomingAccount, outgoing: {} as OutgoingAccount },
   state: {
-    unfulfillable: false
+    unfulfillable: false,
+    incomingAccount: {
+      quote: 'exists'
+    }
   }
 })
 
@@ -36,7 +39,7 @@ beforeEach(async () => {
 })
 
 describe('Telemetry Middleware', function () {
-  test('should gather telemetry in correct asset scale and call next', async () => {
+  it('should gather telemetry in correct asset scale and call next', async () => {
     const getOrCreateSpy = jest
       .spyOn(ctx.services.telemetry!, 'getOrCreate')
       .mockImplementation(() => mockCounter)
@@ -65,7 +68,7 @@ describe('Telemetry Middleware', function () {
     expect(next).toHaveBeenCalled()
   })
 
-  test('should call next without gathering telemetry when state is unfulfillable', async () => {
+  it('should call next without gathering telemetry when state is unfulfillable', async () => {
     ctx.state.unfulfillable = true
 
     const getOrCreateSpy = jest
@@ -77,7 +80,19 @@ describe('Telemetry Middleware', function () {
     expect(getOrCreateSpy).not.toHaveBeenCalled()
   })
 
-  test('should handle invalid amount by calling next without gathering telemetry', async () => {
+  it('should only gather amount data on the sending side of a transaction. It should call next when there is no quote on the incomingAccount.', async () => {
+    ctx.state.incomingAccount.quote = ''
+
+    const getOrCreateSpy = jest
+      .spyOn(ctx.services.telemetry!, 'getOrCreate')
+      .mockImplementation(() => mockCounter)
+
+    await middleware(ctx, next)
+
+    expect(getOrCreateSpy).not.toHaveBeenCalled()
+  })
+
+  it('should handle invalid amount by calling next without gathering telemetry', async () => {
     ctx.request.prepare.amount = '0'
 
     const getOrCreateSpy = jest
