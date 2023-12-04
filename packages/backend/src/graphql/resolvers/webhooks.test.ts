@@ -7,11 +7,7 @@ import { initIocContainer } from '../..'
 import { Config } from '../../config/app'
 import { truncateTables } from '../../tests/tableManager'
 import { WebhookEventsConnection } from '../generated/graphql'
-import {
-  createWebhookEvent,
-  randomWebhookEvent,
-  webhookEventTypes
-} from '../../tests/webhook'
+import { createWebhookEvent, webhookEventTypes } from '../../tests/webhook'
 import { WebhookEvent } from '../../webhook/model'
 
 describe('Webhook Events Query', (): void => {
@@ -45,10 +41,7 @@ describe('Webhook Events Query', (): void => {
     for (let i = 0; i < webhookEventTypes.length; i++) {
       for (let j = 0; j < numOfEachEventType; j++) {
         webhookEvents.push(
-          await createWebhookEvent(
-            deps,
-            randomWebhookEvent({ type: webhookEventTypes[i] })
-          )
+          await createWebhookEvent(deps, { type: webhookEventTypes[i] })
         )
       }
     }
