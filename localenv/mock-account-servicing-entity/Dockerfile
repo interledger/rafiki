@@ -7,10 +7,6 @@ ENV PATH="$PNPM_HOME:$PATH"
 
 RUN corepack enable
 RUN corepack prepare pnpm@8.7.4 --activate
-RUN apk add --no-cache \
-    python3 \
-    make \
-    g++
 
 COPY pnpm-lock.yaml ./
 
