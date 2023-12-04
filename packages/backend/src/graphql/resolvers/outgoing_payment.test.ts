@@ -207,6 +207,36 @@ describe('OutgoingPayment Resolvers', (): void => {
           })
         }
       )
+
+      test('200 - with added liquidity', async (): Promise<void> => {
+        await accountingService.createDeposit({
+          id: uuid(),
+          account: payment,
+          amount: 100n
+        })
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query OutgoingPayment($paymentId: String!) {
+                outgoingPayment(id: $paymentId) {
+                  id
+                  liquidity
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): OutgoingPayment => query.data?.outgoingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          liquidity: '100',
+          __typename: 'OutgoingPayment'
+        })
+      })
     })
 
     test('404', async (): Promise<void> => {
