@@ -12,7 +12,6 @@ import {
 } from '../../../../accounting/errors'
 import {
   LiquidityAccount,
-  LiquidityAccountAsset,
   LiquidityAccountType,
   Transaction
 } from '../../../../accounting/service'

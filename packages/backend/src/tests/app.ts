@@ -16,6 +16,7 @@ import { setContext } from '@apollo/client/link/context'
 
 import { start, gracefulShutdown } from '..'
 import { App, AppServices } from '../app'
+import { MockTelemetryService } from './meter'
 export const testAccessToken = 'test-app-access'
 
 export interface TestContainer {
@@ -52,6 +53,10 @@ export const createTestApp = async (
   })
 
   container.bind('logger', async () => logger)
+
+  container.bind('telemetry', async () => {
+    return new MockTelemetryService()
+  })
 
   const app = new App(container)
   await start(container, app)
