@@ -5893,7 +5893,7 @@
           },
           {
             "name": "receiver",
-            "description": "Get an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server.",
+            "description": "Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server.",
             "args": [
               {
                 "name": "id",

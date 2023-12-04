@@ -875,7 +875,7 @@ export type Query = {
   peers: PeersConnection;
   /** Fetch an Open Payments quote */
   quote?: Maybe<Quote>;
-  /** Get an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server. */
+  /** Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server. */
   receiver?: Maybe<Receiver>;
   /** Fetch a wallet address */
   walletAddress?: Maybe<WalletAddress>;

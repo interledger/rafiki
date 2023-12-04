@@ -20,6 +20,7 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   const receiverService = await ctx.container.use('receiverService')
   const receiver = await receiverService.get(args.id)
   if (!receiver) {
+    ctx.logger.error(`Receiver "${args.id}" was not found.`)
     throw new Error('receiver does not exist')
   }
   return receiverToGraphql(receiver)
