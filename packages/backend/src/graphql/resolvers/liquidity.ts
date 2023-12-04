@@ -71,11 +71,11 @@ export const addPeerLiquidity: MutationResolvers<ApolloContext>['addPeerLiquidit
         success: true,
         message: 'Added peer liquidity'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error adding peer liquidity'
       )
@@ -116,11 +116,11 @@ export const addAssetLiquidity: MutationResolvers<ApolloContext>['addAssetLiquid
         success: true,
         message: 'Added asset liquidity'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error adding asset liquidity'
       )
@@ -162,11 +162,11 @@ export const createPeerLiquidityWithdrawal: MutationResolvers<ApolloContext>['cr
         success: true,
         message: 'Created peer liquidity withdrawal'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error creating peer liquidity withdrawal'
       )
@@ -208,11 +208,11 @@ export const createAssetLiquidityWithdrawal: MutationResolvers<ApolloContext>['c
         success: true,
         message: 'Created asset liquidity withdrawal'
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error creating asset liquidity withdrawal'
       )
@@ -274,11 +274,11 @@ export const createWalletAddressWithdrawal: MutationResolvers<ApolloContext>['cr
           walletAddress: walletAddressToGraphql(walletAddress)
         }
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           input: args.input,
-          error
+          err
         },
         'error creating wallet address withdrawal'
       )
@@ -339,8 +339,8 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
     try {
       const { outgoingPaymentId } = args.input
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccount({
-        depositAccountId: outgoingPaymentId,
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
         types: [PaymentDepositType.PaymentCreated]
       })
       if (!event || !isPaymentEvent(event)) {
@@ -397,8 +397,8 @@ export const withdrawIncomingPaymentLiquidity: MutationResolvers<ApolloContext>[
         id: incomingPaymentId
       })
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccount({
-        withdrawalAccountId: incomingPaymentId,
+      const event = await webhookService.getLatestByResourceId({
+        incomingPaymentId,
         types: [
           IncomingPaymentEventType.IncomingPaymentCompleted,
           IncomingPaymentEventType.IncomingPaymentExpired
@@ -457,8 +457,8 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
         id: outgoingPaymentId
       })
       const webhookService = await ctx.container.use('webhookService')
-      const event = await webhookService.getLatestByAccount({
-        withdrawalAccountId: outgoingPaymentId,
+      const event = await webhookService.getLatestByResourceId({
+        outgoingPaymentId,
         types: [
           PaymentEventType.PaymentCompleted,
           PaymentEventType.PaymentFailed

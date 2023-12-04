@@ -132,7 +132,7 @@ async function createLocalIncomingPayment(
   if (!streamCredentials) {
     const errorMessage =
       'Could not get stream credentials for local incoming payment'
-    deps.logger.error({ incomingPaymentOrError }, errorMessage)
+    deps.logger.error({ err: incomingPaymentOrError }, errorMessage)
 
     throw new Error(errorMessage)
   }
