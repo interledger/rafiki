@@ -33,7 +33,8 @@ export const getWalletAddresses: QueryResolvers<ApolloContext>['walletAddresses'
     const pageInfo = await getPageInfo(
       (pagination: Pagination, sortOrder?: SortOrder) =>
         walletAddressService.getPage(pagination, sortOrder),
-      walletAddresses
+      walletAddresses,
+      order
     )
     return {
       pageInfo,
@@ -130,11 +131,11 @@ export const triggerWalletAddressEvents: MutationResolvers<ApolloContext>['trigg
         message: 'Triggered Wallet Address Events',
         count
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input.limit,
-          error
+          err
         },
         'error triggering wallet address events'
       )

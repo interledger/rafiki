@@ -169,7 +169,7 @@ async function addLiquidity(
     isPeerError(transferOrPeerError)
   ) {
     deps.logger.error(
-      { error: transferOrPeerError, args, peerId: args.peer.id },
+      { err: transferOrPeerError, args, peerId: args.peer.id },
       'Could not add liquidity to peer'
     )
 
@@ -323,7 +323,7 @@ function handlePeerError(
   ) {
     return AutoPeeringError.InvalidPeerIlpConfiguration
   } else {
-    deps.logger.error({ error: peerError }, logMessage)
+    deps.logger.error({ err: peerError }, logMessage)
     return AutoPeeringError.InvalidPeeringRequest
   }
 }

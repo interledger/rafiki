@@ -34,11 +34,11 @@ export const revokeWalletAddressKey: MutationResolvers<ApolloContext>['revokeWal
         message: 'Wallet address key revoked',
         walletAddressKey: walletAddressKeyToGraphql(key)
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input.id,
-          error
+          err
         },
         'error revoking wallet address key'
       )
@@ -70,11 +70,11 @@ export const createWalletAddressKey: MutationResolvers<ApolloContext>['createWal
         message: 'Added Key To Wallet Address',
         walletAddressKey: walletAddressKeyToGraphql(key)
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input,
-          error
+          err
         },
         'error creating wallet address key'
       )

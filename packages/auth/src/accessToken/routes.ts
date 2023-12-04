@@ -129,7 +129,7 @@ async function rotateToken(
     await trx.rollback()
     const errorMessage = 'Could not rotate token'
     deps.logger.error(
-      { error: error instanceof Error && error.message },
+      { err: error instanceof Error && error.message },
       errorMessage
     )
     ctx.throw(400, { message: errorMessage })

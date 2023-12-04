@@ -77,11 +77,11 @@ export const createAsset: MutationResolvers<ApolloContext>['createAsset'] =
         message: 'Created Asset',
         asset: assetToGraphql(assetOrError)
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input,
-          error
+          err
         },
         'error creating asset'
       )
@@ -124,11 +124,11 @@ export const updateAsset: MutationResolvers<ApolloContext>['updateAsset'] =
         message: 'Updated Asset',
         asset: assetToGraphql(assetOrError)
       }
-    } catch (error) {
+    } catch (err) {
       ctx.logger.error(
         {
           options: args.input,
-          error
+          err
         },
         'error updating asset'
       )

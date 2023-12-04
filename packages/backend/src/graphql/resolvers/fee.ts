@@ -29,11 +29,11 @@ export const setFee: MutationResolvers<ApolloContext>['setFee'] = async (
       message: 'Fee set',
       fee: feeToGraphql(feeOrError)
     }
-  } catch (error) {
+  } catch (err) {
     ctx.logger.error(
       {
         options: args.input,
-        error
+        err
       },
       'error updating fee'
     )

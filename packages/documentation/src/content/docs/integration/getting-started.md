@@ -38,7 +38,7 @@ Sending fees can be set on a given asset using Admin UI or the `setFee` graphql 
 
 Mutation:
 
-```gql
+```graphql
 mutation SetFee($input: SetFeeInput!) {
   setFee(input: $input) {
     code
@@ -140,8 +140,8 @@ A [Wallet Address](/reference/glossary#wallet-address) is a standardized identif
 
 Query:
 
-```
-mutation CreateAsset ($input: CreateAssetInput!) {
+```graphql
+mutation CreateAsset($input: CreateAssetInput!) {
   createAsset(input: $input) {
     code
     success
@@ -157,7 +157,7 @@ mutation CreateAsset ($input: CreateAssetInput!) {
 
 Query Variables:
 
-```
+```json
 {
   "input": {
     "code": "USD",
@@ -168,7 +168,7 @@ Query Variables:
 
 Example Successful Response
 
-```
+```json
 {
   "data": {
     "createAsset": {
@@ -189,7 +189,7 @@ Example Successful Response
 
 Query:
 
-```
+```graphql
 mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
   createWalletAddress(input: $input) {
     code
@@ -212,7 +212,7 @@ mutation CreateWalletAddress($input: CreateWalletAddressInput!) {
 
 Query Variables:
 
-```
+```json
 {
   "input": {
     "assetId": "0ddc0b7d-1822-4213-948e-915dda58850b",
@@ -224,7 +224,7 @@ Query Variables:
 
 Example Successful Response
 
-```
+```json
 {
   "data": {
     "createWalletAddress": {
@@ -255,7 +255,7 @@ In order to use the [Open Payments](/reference/glossary#open-payments) APIs, a w
 
 Query:
 
-```
+```graphql
 mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
   createWalletAddressKey(input: $input) {
     code
@@ -280,7 +280,7 @@ mutation CreateWalletAddressKey($input: CreateWalletAddressKeyInput!) {
 
 Query Variables:
 
-```
+```json
 {
   "input": {
     "jwk": {
@@ -297,7 +297,7 @@ Query Variables:
 
 Example Successful Response
 
-```
+```json
 {
   "data": {
     "createWalletAddressKey": {

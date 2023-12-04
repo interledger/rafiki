@@ -2,11 +2,9 @@
 title: Key Registry
 ---
 
-import { LargeImg } from '@interledger/docs-design-system'
-
 ## Sequence Diagram
 
-<LargeImg src='/img/key-registry-diagram.png' alt='Key registry diagram' />
+![Key registry diagram](/img/key-registry-diagram.png)
 
 ## Basics
 
@@ -32,13 +30,13 @@ Once the AS has acquired the client's key registry, it searches for the public k
 
 A key registry should expose public keys in the form of a JWK. They should be generated using the `ed25519` algorithm, and the resultant JWK should have fields with the following values:
 
-```
+```json
 // Key should also have a `kid` field to identify it in a signature
 // Public keys should contain the `x` field
 {
-  alg: 'EdDSA',
-  kty: 'OKP',
-  crv: 'Ed25519'
+  "alg": "EdDSA",
+  "kty": "OKP",
+  "crv": "Ed25519"
 }
 ```
 
@@ -76,7 +74,7 @@ Each component should be on a separate line. The component name should be in quo
 
 #### Signature Base Example
 
-```
+```http
 "@method": POST
 "@target-uri": https://server.example.com/gnap
 "content-digest": \
@@ -90,7 +88,7 @@ Each component should be on a separate line. The component name should be in quo
 
 ### Signature Input Example
 
-```
+```http
 Signature-Input: sig1=("@method" "@target-uri" "content-digest" \
   "content-length" "content-type");created=1618884473\
   ;keyid="gnap-rsa";nonce="NAOEJF12ER2";tag="gnap"
