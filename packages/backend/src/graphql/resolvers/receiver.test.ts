@@ -328,7 +328,7 @@ describe('Receiver Resolver', (): void => {
           `,
           variables: { id: uuid() }
         })
-      ).rejects.toThrow('payment does not exist')
+      ).rejects.toThrow('receiver does not exist')
     })
   })
 })

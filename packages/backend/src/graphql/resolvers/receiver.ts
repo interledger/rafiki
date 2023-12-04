@@ -20,7 +20,7 @@ export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
   const receiverService = await ctx.container.use('receiverService')
   const receiver = await receiverService.get(args.id)
   if (!receiver) {
-    throw new Error('payment does not exist')
+    throw new Error('receiver does not exist')
   }
   return receiverToGraphql(receiver)
 }
