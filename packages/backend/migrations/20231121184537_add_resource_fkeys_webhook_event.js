@@ -28,7 +28,7 @@ exports.up = function (knex) {
       table
         .uuid('assetId')
         .nullable()
-        .references('peers.id')
+        .references('assets.id')
         .index()
         .onDelete('CASCADE')
     })
