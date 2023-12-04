@@ -56,6 +56,7 @@ export class Peer
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
         await WebhookEvent.query().insert({
+          peerId: this.id,
           type: 'peer.liquidity_low',
           data: {
             id: this.id,

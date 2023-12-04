@@ -385,7 +385,7 @@ describe('OutgoingPaymentService', (): void => {
             ).resolves.toMatchObject([
               {
                 data: expectedPaymentData,
-                depositAccountId: payment.id
+                outgoingPaymentId: payment.id
               }
             ])
           }

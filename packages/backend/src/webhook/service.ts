@@ -71,10 +71,18 @@ interface IncomingPaymentOptions extends WebhookEventOptions {
 interface WalletAddressOptions extends WebhookEventOptions {
   walletAddressId: string
 }
+interface PeerOptions extends WebhookEventOptions {
+  peerId: string
+}
+interface AssetOptions extends WebhookEventOptions {
+  assetId: string
+}
 type WebhookByResourceIdOptions =
   | OutgoingPaymentOptions
   | IncomingPaymentOptions
   | WalletAddressOptions
+  | PeerOptions
+  | AssetOptions
 
 async function getLatestWebhookEventByResourceId(
   deps: ServiceDependencies,
@@ -94,8 +102,12 @@ async function getLatestWebhookEventByResourceId(
     query.where({ outgoingPaymentId: options.outgoingPaymentId })
   } else if ('incomingPaymentId' in options) {
     query.where({ incomingPaymentId: options.incomingPaymentId })
-  } else {
+  } else if ('walletAddressId' in options) {
     query.where({ incomingPaymentId: options.walletAddressId })
+  } else if ('peerId' in options) {
+    query.where({ incomingPaymentId: options.peerId })
+  } else {
+    query.where({ assetId: options.assetId })
   }
 
   return await query.first()

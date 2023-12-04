@@ -22,6 +22,18 @@ exports.up = function (knex) {
       .references('walletAddresses.id')
       .index()
       .onDelete('CASCADE')
+    table
+      .uuid('peerId')
+      .nullable()
+      .references('peers.id')
+      .index()
+      .onDelete('CASCADE')
+    table
+      .uuid('assetId')
+      .nullable()
+      .references('peers.id')
+      .index()
+      .onDelete('CASCADE')
 
     // Ensure a max of one of these foreign keys is set
     table.check(
@@ -29,11 +41,13 @@ exports.up = function (knex) {
         (
           ("outgoingPaymentId" IS NOT NULL)::int +
           ("incomingPaymentId" IS NOT NULL)::int +
-          ("walletAddressId" IS NOT NULL)::int
+          ("walletAddressId" IS NOT NULL)::int +
+          ("peerId" IS NOT NULL)::int +
+          ("assetId" IS NOT NULL)::int
         ) IN (0, 1)
       `,
       null,
-      'check_single_column'
+      'exactly_one_related_resource_set'
     )
   })
 }
