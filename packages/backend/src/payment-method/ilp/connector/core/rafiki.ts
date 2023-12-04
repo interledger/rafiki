@@ -114,15 +114,6 @@ export type ILPContext<T = any> = {
   revertTotalReceived?: () => Promise<number>
   state: T
 }
-export type IlpObservabilityParameters = {
-  asset: LiquidityAccountAsset
-  amount: bigint
-  unfulfillable: boolean
-}
-
-export type IlpObservabilityCallback = (
-  params: IlpObservabilityParameters
-) => void
 
 export class Rafiki<T = any> {
   //private _router?: Router

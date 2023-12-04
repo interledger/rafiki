@@ -1,10 +1,10 @@
 import { ValueType } from '@opentelemetry/api'
 import assert from 'assert'
 import { OutgoingAccount, ZeroCopyIlpPrepare } from '../..'
+import { mockCounter } from '../../../../../../tests/meter'
 import { IncomingAccountFactory, RafikiServicesFactory } from '../../factories'
 import { createTelemetryMiddleware } from '../../middleware/telemetry'
 import { createILPContext } from '../../utils'
-import { mockCounter } from '../mocks/telemetry'
 
 const incomingAccount = IncomingAccountFactory.build({ id: 'alice' })
 
@@ -36,10 +36,14 @@ beforeEach(async () => {
 })
 
 describe('Telemetry Middleware', function () {
-  it('should gather telemetry and call next', async () => {
+  test('should gather telemetry in correct asset scale and call next', async () => {
     const getOrCreateSpy = jest
       .spyOn(ctx.services.telemetry!, 'getOrCreate')
       .mockImplementation(() => mockCounter)
+
+    const expectedScaledValue =
+      Number(ctx.request.prepare.amount) *
+      Math.pow(10, 4 - incomingAccount.asset.scale)
 
     await middleware(ctx, next)
 
@@ -51,7 +55,7 @@ describe('Telemetry Middleware', function () {
     expect(
       ctx.services.telemetry!.getOrCreate('transactions_amount').add
     ).toHaveBeenCalledWith(
-      expect.any(Number),
+      expectedScaledValue,
       expect.objectContaining({
         asset_code: 'USD',
         source: 'serviceName'
@@ -61,7 +65,7 @@ describe('Telemetry Middleware', function () {
     expect(next).toHaveBeenCalled()
   })
 
-  it('should call next without gathering telemetry when state is unfulfillable', async () => {
+  test('should call next without gathering telemetry when state is unfulfillable', async () => {
     ctx.state.unfulfillable = true
 
     const getOrCreateSpy = jest
@@ -71,5 +75,18 @@ describe('Telemetry Middleware', function () {
     await middleware(ctx, next)
 
     expect(getOrCreateSpy).not.toHaveBeenCalled()
+  })
+
+  test('should handle invalid amount by calling next without gathering telemetry', async () => {
+    ctx.request.prepare.amount = '0'
+
+    const getOrCreateSpy = jest
+      .spyOn(ctx.services.telemetry!, 'getOrCreate')
+      .mockImplementation(() => mockCounter)
+
+    await middleware(ctx, next)
+
+    expect(getOrCreateSpy).not.toHaveBeenCalled()
+    expect(next).toHaveBeenCalled()
   })
 })

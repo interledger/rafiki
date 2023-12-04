@@ -1,5 +1,5 @@
 import { Attributes, Counter, MetricOptions } from '@opentelemetry/api'
-import { TelemetryService } from '../../../../../../telemetry/meter'
+import { TelemetryService } from '../telemetry/meter'
 
 export const mockCounter = { add: jest.fn() } as Counter
 

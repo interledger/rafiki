@@ -39,9 +39,6 @@ class TelemetryServiceImpl implements TelemetryService {
   constructor(private deps: TelemetryServiceDependencies) {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.serviceName = deps.serviceName
-    console.log(
-      `serviceName: ${deps.serviceName}, collectorUrl: ${deps.collectorUrl} }`
-    )
 
     const meterProvider = new MeterProvider({
       resource: new Resource({ 'service.name': 'RAFIKI_NETWORK' })
