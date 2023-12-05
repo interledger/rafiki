@@ -21,13 +21,8 @@ import { initIocContainer } from '../'
 import { AppServices } from '../app'
 import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
-import {
-  createWebhookEvent,
-  randomWebhookEvent,
-  webhookEventTypes
-} from '../tests/webhook'
+import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
 import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
-import { Asset } from '../asset/model'
 import { PaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
@@ -249,9 +244,7 @@ describe('Webhook Service', (): void => {
 
     beforeEach(async (): Promise<void> => {
       for (const eventOverride of eventOverrides) {
-        webhookEvents.push(
-          await createWebhookEvent(deps, randomWebhookEvent(eventOverride))
-        )
+        webhookEvents.push(await createWebhookEvent(deps, eventOverride))
       }
     })
     afterEach(async (): Promise<void> => {

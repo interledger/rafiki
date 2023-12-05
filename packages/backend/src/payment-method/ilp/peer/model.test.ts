@@ -10,12 +10,11 @@ import { initIocContainer } from '../../..'
 import { AppServices } from '../../../app'
 import { createAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
-import { Peer } from './model'
+import { Peer, PeerEvent, PeerEventError, PeerEventType } from './model'
 import { isPeerError } from './errors'
-import { WebhookEvent } from '../../../webhook/model'
 import { Asset } from '../../../asset/model'
 
-describe('Peer Model', (): void => {
+describe('Models', (): void => {
   let deps: IocContract<AppServices>
   let appContainer: TestContainer
   let peerService: PeerService
@@ -41,62 +40,84 @@ describe('Peer Model', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('onDebit', (): void => {
-    let peer: Peer
-    beforeEach(async (): Promise<void> => {
-      const options = {
-        assetId: asset.id,
-        http: {
-          incoming: {
-            authTokens: [faker.string.sample(32)]
-          },
-          outgoing: {
-            authToken: faker.string.sample(32),
-            endpoint: faker.internet.url({ appendSlash: false })
-          }
-        },
-        maxPacketAmount: BigInt(100),
-        staticIlpAddress: 'test.' + uuid(),
-        name: faker.person.fullName(),
-        liquidityThreshold: BigInt(100)
-      }
-      const peerOrError = await peerService.create(options)
-      if (!isPeerError(peerOrError)) {
-        peer = peerOrError
-      }
-    })
-    test.each`
-      balance
-      ${BigInt(50)}
-      ${BigInt(99)}
-      ${BigInt(100)}
-    `(
-      'creates webhook event if balance=$balance <= liquidityThreshold',
-      async ({ balance }): Promise<void> => {
-        await peer.onDebit({ balance })
-        const event = (
-          await WebhookEvent.query(knex).where('type', 'peer.liquidity_low')
-        )[0]
-        expect(event).toMatchObject({
-          type: 'peer.liquidity_low',
-          data: {
-            id: peer.id,
-            asset: {
-              id: asset.id,
-              code: asset.code,
-              scale: asset.scale
+  describe('Peer Model', (): void => {
+    describe('onDebit', (): void => {
+      let peer: Peer
+      beforeEach(async (): Promise<void> => {
+        const options = {
+          assetId: asset.id,
+          http: {
+            incoming: {
+              authTokens: [faker.string.sample(32)]
             },
-            liquidityThreshold: peer.liquidityThreshold?.toString(),
-            balance: balance.toString()
-          }
-        })
-      }
-    )
-    test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
-      await peer.onDebit({ balance: BigInt(110) })
-      await expect(
-        WebhookEvent.query(knex).where('type', 'peer.liquidity_low')
-      ).resolves.toEqual([])
+            outgoing: {
+              authToken: faker.string.sample(32),
+              endpoint: faker.internet.url({ appendSlash: false })
+            }
+          },
+          maxPacketAmount: BigInt(100),
+          staticIlpAddress: 'test.' + uuid(),
+          name: faker.person.fullName(),
+          liquidityThreshold: BigInt(100)
+        }
+        const peerOrError = await peerService.create(options)
+        if (!isPeerError(peerOrError)) {
+          peer = peerOrError
+        }
+      })
+      test.each`
+        balance
+        ${BigInt(50)}
+        ${BigInt(99)}
+        ${BigInt(100)}
+      `(
+        'creates webhook event if balance=$balance <= liquidityThreshold',
+        async ({ balance }): Promise<void> => {
+          await peer.onDebit({ balance })
+          const event = (
+            await PeerEvent.query(knex).where(
+              'type',
+              PeerEventType.LiquidityLow
+            )
+          )[0]
+          expect(event).toMatchObject({
+            type: PeerEventType.LiquidityLow,
+            data: {
+              id: peer.id,
+              asset: {
+                id: asset.id,
+                code: asset.code,
+                scale: asset.scale
+              },
+              liquidityThreshold: peer.liquidityThreshold?.toString(),
+              balance: balance.toString()
+            }
+          })
+        }
+      )
+      test('does not create webhook event if balance > liquidityThreshold', async (): Promise<void> => {
+        await peer.onDebit({ balance: BigInt(110) })
+        await expect(
+          PeerEvent.query(knex).where('type', PeerEventType.LiquidityLow)
+        ).resolves.toEqual([])
+      })
+    })
+  })
+
+  describe('Peer Event Model', (): void => {
+    describe('beforeInsert', (): void => {
+      test.each(
+        Object.values(PeerEventType).map((type) => ({
+          type,
+          error: PeerEventError.PeerIdRequired
+        }))
+      )('Peer Id is required', async ({ type, error }): Promise<void> => {
+        expect(
+          PeerEvent.query().insert({
+            type
+          })
+        ).rejects.toThrow(error)
+      })
     })
   })
 })

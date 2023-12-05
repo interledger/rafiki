@@ -45,8 +45,8 @@ importers:
         specifier: ^29.1.1
         version: 29.1.1(@babel/core@7.23.2)(@jest/types@29.6.3)(jest@29.7.0)(typescript@4.9.5)
       tunnelmole:
-        specifier: ^2.2.11
-        version: 2.2.11
+        specifier: ^2.2.12
+        version: 2.2.12
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -242,8 +242,8 @@ importers:
         specifier: ^10.2.3
         version: 10.2.3
       testcontainers:
-        specifier: ^10.2.2
-        version: 10.2.2
+        specifier: ^10.3.2
+        version: 10.3.2
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -402,8 +402,8 @@ importers:
         specifier: ^4.14.202
         version: 4.14.202
       '@types/luxon':
-        specifier: ^3.3.6
-        version: 3.3.6
+        specifier: ^3.3.7
+        version: 3.3.7
       '@types/rosie':
         specifier: ^0.0.45
         version: 0.0.45
@@ -441,8 +441,8 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       testcontainers:
-        specifier: ^10.2.2
-        version: 10.2.2
+        specifier: ^10.3.2
+        version: 10.3.2
       tmp:
         specifier: ^0.2.1
         version: 0.2.1
@@ -5587,6 +5587,20 @@ packages:
     resolution: {integrity: sha512-xP1pB67eLrRdMLKpXUXhYN/3uiJN1gNalcVOSY5kdJbxhGuZTTE8awSWOD9LCJDzQZVsuZZcnMMLRrbf+nOUSQ==}
     dev: true
 
+  /@types/docker-modem@3.0.6:
+    resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
+    dependencies:
+      '@types/node': 18.18.5
+      '@types/ssh2': 0.5.52
+    dev: true
+
+  /@types/dockerode@3.3.23:
+    resolution: {integrity: sha512-Lz5J+NFgZS4cEVhquwjIGH4oQwlVn2h7LXD3boitujBnzOE5o7s9H8hchEjoDK2SlRsJTogdKnQeiJgPPKLIEw==}
+    dependencies:
+      '@types/docker-modem': 3.0.6
+      '@types/node': 18.18.5
+    dev: true
+
   /@types/estree-jsx@0.0.1:
     resolution: {integrity: sha512-gcLAYiMfQklDCPjQegGn0TBAn9it05ISEsEhlKQUddIk7o2XDokOcTN7HBO8tznM0D9dGezvHEfRZBfZf6me0A==}
     dependencies:
@@ -5776,8 +5790,8 @@ packages:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
     dev: false
 
-  /@types/luxon@3.3.6:
-    resolution: {integrity: sha512-LblarKeI26YsMLxHDIQ0295wPSLjkl98eNwDcVhz3zbo1H+kfnkzR01H5Ai5LBzSeddX0ZJSpGwKEZihGb5diw==}
+  /@types/luxon@3.3.7:
+    resolution: {integrity: sha512-gKc9P2d4g5uYwmy4s/MO/yOVPmvHyvzka1YH6i5dM03UrFofHSmgc0D0ymbDRStFWHusk6cwwF6nhLm/ckBbbQ==}
     dev: true
 
   /@types/mathjax@0.0.37:
@@ -8584,14 +8598,6 @@ packages:
   /define-lazy-prop@2.0.0:
     resolution: {integrity: sha512-Ds09qNh8yw3khSjiJjiUInaGX9xlqZDY7JVryGxdxV7NPeuqQfplOpQ66yJFZut3jLa5zOwkXw1g9EI2uKh4Og==}
     engines: {node: '>=8'}
-    dev: true
-
-  /define-properties@1.2.0:
-    resolution: {integrity: sha512-xvqAVKGfT1+UAvPwKTVw/njhdQ8ZhXK4lI0bCIuCMrp2up9nPnaDftrLtmpTazqd1o+UY4zgzU+avtMbDP+ldA==}
-    engines: {node: '>= 0.4'}
-    dependencies:
-      has-property-descriptors: 1.0.0
-      object-keys: 1.1.1
     dev: true
 
   /define-properties@1.2.1:
@@ -16390,7 +16396,7 @@ packages:
     engines: {node: '>= 0.4'}
     dependencies:
       call-bind: 1.0.2
-      define-properties: 1.2.0
+      define-properties: 1.2.1
       es-abstract: 1.22.1
     dev: true
 
@@ -16664,10 +16670,11 @@ packages:
       minimatch: 3.1.2
     dev: true
 
-  /testcontainers@10.2.2:
-    resolution: {integrity: sha512-5GZ93rtoVXMx/s3xZjydftrKLnv1Yf+ETzGkXYRCm16LB60W48SGodxuiouYvNlVy0y0ogoQhdOw3DqsPActEA==}
+  /testcontainers@10.3.2:
+    resolution: {integrity: sha512-IsV6NgS5reHcVF1nJLCDJv1hM9gAWUhLwh9b3ybgzvM3X7T2dcmuLFKt1RAR8qN8k+44tW2Drj7idxW6oeGvvg==}
     dependencies:
       '@balena/dockerignore': 1.0.2
+      '@types/dockerode': 3.3.23
       archiver: 5.3.2
       async-lock: 1.4.0
       byline: 5.0.0
@@ -16974,8 +16981,8 @@ packages:
     dev: false
     optional: true
 
-  /tunnelmole@2.2.11:
-    resolution: {integrity: sha512-kNeSjsx+LrmTAE/TjPtY+mAGhA2WIcbY7rkukQC+uU8huLubppMnBlAicbCRw98kTZBQBCsUOsG3gu8KWp7now==}
+  /tunnelmole@2.2.12:
+    resolution: {integrity: sha512-RzkzDBkdJBtGF1zPjlbD07KoBYnLcBIRlA4JUvvEJBlPKJEym1DgiJ2+qZ3VJgvKbZrFcHCJC7XWuG2+B/apfw==}
     hasBin: true
     requiresBuild: true
     dependencies:

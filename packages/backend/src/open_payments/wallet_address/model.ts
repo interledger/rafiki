@@ -1,4 +1,4 @@
-import { Model, Page } from 'objection'
+import { Model, Page, QueryContext } from 'objection'
 import { WalletAddress as OpenPaymentsWalletAddress } from '@interledger/open-payments'
 import { LiquidityAccount, OnCreditOptions } from '../../accounting/service'
 import { ConnectorAccount } from '../../payment-method/ilp/connector/core/rafiki'
@@ -127,9 +127,30 @@ export type WalletAddressRequestedData = {
   walletAddressUrl: string
 }
 
+export enum WalletAddressEventError {
+  WalletAddressIdRequired = 'Wallet Address ID is required for this wallet address event',
+  WalletAddressIdProhibited = 'Wallet Address ID is not allowed for this wallet address event'
+}
+
 export class WalletAddressEvent extends WebhookEvent {
   public type!: WalletAddressEventType
   public data!: WalletAddressData | WalletAddressRequestedData
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+
+    if (
+      this.type === WalletAddressEventType.WalletAddressNotFound &&
+      this.walletAddressId
+    ) {
+      throw new Error(WalletAddressEventError.WalletAddressIdProhibited)
+    } else if (
+      this.type !== WalletAddressEventType.WalletAddressNotFound &&
+      !this.walletAddressId
+    ) {
+      throw new Error(WalletAddressEventError.WalletAddressIdRequired)
+    }
+  }
 }
 
 export interface GetOptions {

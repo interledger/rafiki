@@ -1,4 +1,4 @@
-import { Model } from 'objection'
+import { Model, QueryContext } from 'objection'
 
 import { Amount, AmountJSON, serializeAmount } from '../../amount'
 import { IlpStreamCredentials } from '../../../payment-method/ilp/stream-credentials/service'
@@ -50,9 +50,21 @@ export interface IncomingPaymentResponse {
 export type IncomingPaymentData = IncomingPaymentResponse &
   Record<string, unknown>
 
+export enum IncomingPaymentEventError {
+  IncomingPaymentIdRequired = 'Incoming Payment ID is required for incoming payment events'
+}
+
 export class IncomingPaymentEvent extends WebhookEvent {
   public type!: IncomingPaymentEventType
   public data!: IncomingPaymentData
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+
+    if (!this.incomingPaymentId) {
+      throw new Error(IncomingPaymentEventError.IncomingPaymentIdRequired)
+    }
+  }
 }
 
 export class IncomingPayment

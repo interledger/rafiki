@@ -1616,6 +1616,7 @@ describe('Liquidity Resolvers', (): void => {
 
           await WebhookEvent.query(knex).insert({
             id: uuid(),
+            incomingPaymentId: incomingPayment.id,
             type: eventType,
             data: {},
             withdrawal: {
@@ -1667,6 +1668,7 @@ describe('Liquidity Resolvers', (): void => {
         test('Returns error for non-existent incoming payment id', async (): Promise<void> => {
           await WebhookEvent.query(knex).insert({
             id: uuid(),
+            incomingPaymentId: incomingPayment.id,
             type: IncomingPaymentEventType.IncomingPaymentCompleted,
             data: {},
             withdrawal: {
@@ -1750,6 +1752,7 @@ describe('Liquidity Resolvers', (): void => {
           const eventId = uuid()
           await WebhookEvent.query(knex).insert({
             id: eventId,
+            incomingPaymentId: incomingPayment.id,
             type: IncomingPaymentEventType.IncomingPaymentCompleted,
             data: {},
             withdrawal: {
@@ -1828,6 +1831,7 @@ describe('Liquidity Resolvers', (): void => {
 
           await WebhookEvent.query(knex).insert({
             id: uuid(),
+            outgoingPaymentId: outgoingPayment.id,
             type: eventType,
             data: {},
             withdrawal: {
@@ -1956,6 +1960,7 @@ describe('Liquidity Resolvers', (): void => {
         test('Returns error for already completed withdrawal', async (): Promise<void> => {
           await WebhookEvent.query(knex).insert({
             id: uuid(),
+            outgoingPaymentId: outgoingPayment.id,
             type: PaymentEventType.PaymentCompleted,
             data: {},
             withdrawal: {
@@ -2017,12 +2022,12 @@ describe('Liquidity Resolvers', (): void => {
             eventId = uuid()
             await PaymentEvent.query(knex).insertAndFetch({
               id: eventId,
+              outgoingPaymentId: outgoingPayment.id,
               type,
               data: outgoingPayment.toData({
                 amountSent: BigInt(0),
                 balance: BigInt(0)
-              }),
-              depositAccountId: outgoingPayment.id
+              })
             })
           })
 

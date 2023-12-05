@@ -1,4 +1,4 @@
-import { Model, Pojo } from 'objection'
+import { Model, Pojo, QueryContext } from 'objection'
 import { LiquidityAccount, OnDebitOptions } from '../../../accounting/service'
 import { Asset } from '../../../asset/model'
 import { ConnectorAccount } from '../connector/core/rafiki'
@@ -55,8 +55,9 @@ export class Peer
   public async onDebit({ balance }: OnDebitOptions): Promise<Peer> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await WebhookEvent.query().insert({
-          type: 'peer.liquidity_low',
+        await PeerEvent.query().insert({
+          peerId: this.id,
+          type: PeerEventType.LiquidityLow,
           data: {
             id: this.id,
             asset: {
@@ -95,5 +96,37 @@ export class Peer
       delete formattedJson.outgoingEndpoint
     }
     return formattedJson
+  }
+}
+
+export enum PeerEventType {
+  LiquidityLow = 'peer.liquidity_low'
+}
+
+export type PeerEventData = {
+  id: string
+  asset: {
+    id: string
+    code: string
+    scale: number
+  }
+  liquidityThreshold: bigint | null
+  balance: bigint
+}
+
+export enum PeerEventError {
+  PeerIdRequired = 'Peer ID is required for peer events'
+}
+
+export class PeerEvent extends WebhookEvent {
+  public type!: PeerEventType
+  public data!: PeerEventData
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+
+    if (!this.peerId) {
+      throw new Error(PeerEventError.PeerIdRequired)
+    }
   }
 }
