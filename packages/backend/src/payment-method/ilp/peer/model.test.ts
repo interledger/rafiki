@@ -12,7 +12,6 @@ import { createAsset } from '../../../tests/asset'
 import { truncateTables } from '../../../tests/tableManager'
 import { Peer, PeerEvent, PeerEventError, PeerEventType } from './model'
 import { isPeerError } from './errors'
-import { WebhookEvent } from '../../../webhook/model'
 import { Asset } from '../../../asset/model'
 
 describe('Models', (): void => {
