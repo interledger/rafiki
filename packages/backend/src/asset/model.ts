@@ -29,7 +29,7 @@ export class Asset extends BaseModel implements LiquidityAccount {
   public async onDebit({ balance }: OnDebitOptions): Promise<Asset> {
     if (this.liquidityThreshold !== null) {
       if (balance <= this.liquidityThreshold) {
-        await WebhookEvent.query().insert({
+        await AssetEvent.query().insert({
           assetId: this.id,
           type: AssetEventType.LiquidityLow,
           data: {
