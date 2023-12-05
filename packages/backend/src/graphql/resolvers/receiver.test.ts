@@ -31,14 +31,14 @@ describe('Receiver Resolver', (): void => {
     await appContainer.shutdown()
   })
 
-  describe('Mutation.createReceiver', (): void => {
-    const amount: Amount = {
-      value: BigInt(123),
-      assetCode: 'USD',
-      assetScale: 2
-    }
-    const walletAddress = mockWalletAddress()
+  const amount: Amount = {
+    value: BigInt(123),
+    assetCode: 'USD',
+    assetScale: 2
+  }
+  const walletAddress = mockWalletAddress()
 
+  describe('Mutation.createReceiver', (): void => {
     test.each`
       incomingAmount | expiresAt                        | metadata
       ${undefined}   | ${undefined}                     | ${undefined}
@@ -241,6 +241,94 @@ describe('Receiver Resolver', (): void => {
         message: 'Error trying to create receiver',
         receiver: null
       })
+    })
+  })
+
+  describe('Query.receiver', (): void => {
+    const receiver = new Receiver(
+      mockIncomingPaymentWithPaymentMethods({
+        id: `${walletAddress.id}/incoming-payments/${uuid()}`,
+        walletAddress: walletAddress.id,
+        incomingAmount: amount ? serializeAmount(amount) : undefined
+      })
+    )
+
+    test('returns receiver', async (): Promise<void> => {
+      jest
+        .spyOn(receiverService, 'get')
+        .mockImplementation(async () => receiver)
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            query GetReceiver($id: String!) {
+              receiver(id: $id) {
+                id
+                walletAddressUrl
+                completed
+                expiresAt
+                incomingAmount {
+                  value
+                  assetCode
+                  assetScale
+                }
+                receivedAmount {
+                  value
+                  assetCode
+                  assetScale
+                }
+                metadata
+                createdAt
+                updatedAt
+              }
+            }
+          `,
+          variables: {
+            id: receiver.incomingPayment.id
+          }
+        })
+        .then((query): Receiver => query.data?.receiver)
+
+      expect(query).toEqual({
+        __typename: 'Receiver',
+        id: receiver.incomingPayment?.id,
+        walletAddressUrl: receiver.incomingPayment?.walletAddress,
+        completed: false,
+        expiresAt: receiver.incomingPayment?.expiresAt?.toISOString() || null,
+        incomingAmount:
+          receiver.incomingPayment?.incomingAmount === undefined
+            ? null
+            : {
+                __typename: 'Amount',
+                ...serializeAmount(receiver.incomingPayment?.incomingAmount)
+              },
+        receivedAmount: receiver.incomingPayment && {
+          __typename: 'Amount',
+          ...serializeAmount(receiver.incomingPayment.receivedAmount)
+        },
+        metadata: receiver.incomingPayment?.metadata || null,
+        createdAt: receiver.incomingPayment?.createdAt.toISOString(),
+        updatedAt: receiver.incomingPayment?.updatedAt.toISOString()
+      })
+    })
+
+    test('404', async (): Promise<void> => {
+      jest
+        .spyOn(receiverService, 'get')
+        .mockImplementation(async () => undefined)
+
+      await expect(
+        appContainer.apolloClient.query({
+          query: gql`
+            query GetReceiver($id: String!) {
+              receiver(id: $id) {
+                id
+              }
+            }
+          `,
+          variables: { id: uuid() }
+        })
+      ).rejects.toThrow('receiver does not exist')
     })
   })
 })

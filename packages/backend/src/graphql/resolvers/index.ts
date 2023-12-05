@@ -45,7 +45,7 @@ import {
   createWalletAddressKey,
   revokeWalletAddressKey
 } from './walletAddressKey'
-import { createReceiver } from './receiver'
+import { createReceiver, getReceiver } from './receiver'
 import { getWebhookEvents } from './webhooks'
 import { setFee } from './fee'
 import { GraphQLJSONObject } from 'graphql-scalars'
@@ -76,7 +76,8 @@ export const resolvers: Resolvers = {
     peers: getPeers,
     quote: getQuote,
     webhookEvents: getWebhookEvents,
-    payments: getCombinedPayments
+    payments: getCombinedPayments,
+    receiver: getReceiver
   },
   WalletAddress: {
     incomingPayments: getWalletAddressIncomingPayments,

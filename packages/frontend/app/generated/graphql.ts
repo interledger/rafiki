@@ -875,6 +875,8 @@ export type Query = {
   peers: PeersConnection;
   /** Fetch an Open Payments quote */
   quote?: Maybe<Quote>;
+  /** Get an local or remote Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server. */
+  receiver?: Maybe<Receiver>;
   /** Fetch a wallet address */
   walletAddress?: Maybe<WalletAddress>;
   /** Fetch a page of wallet addresses. */
@@ -933,6 +935,11 @@ export type QueryPeersArgs = {
 
 
 export type QueryQuoteArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryReceiverArgs = {
   id: Scalars['String']['input'];
 };
 
@@ -1906,6 +1913,7 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   peer?: Resolver<Maybe<ResolversTypes['Peer']>, ParentType, ContextType, RequireFields<QueryPeerArgs, 'id'>>;
   peers?: Resolver<ResolversTypes['PeersConnection'], ParentType, ContextType, Partial<QueryPeersArgs>>;
   quote?: Resolver<Maybe<ResolversTypes['Quote']>, ParentType, ContextType, RequireFields<QueryQuoteArgs, 'id'>>;
+  receiver?: Resolver<Maybe<ResolversTypes['Receiver']>, ParentType, ContextType, RequireFields<QueryReceiverArgs, 'id'>>;
   walletAddress?: Resolver<Maybe<ResolversTypes['WalletAddress']>, ParentType, ContextType, RequireFields<QueryWalletAddressArgs, 'id'>>;
   walletAddresses?: Resolver<ResolversTypes['WalletAddressesConnection'], ParentType, ContextType, Partial<QueryWalletAddressesArgs>>;
   webhookEvents?: Resolver<ResolversTypes['WebhookEventsConnection'], ParentType, ContextType, Partial<QueryWebhookEventsArgs>>;

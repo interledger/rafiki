@@ -1,7 +1,8 @@
 import {
   ResolversTypes,
   MutationResolvers,
-  Receiver as SchemaReceiver
+  Receiver as SchemaReceiver,
+  QueryResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import { Receiver } from '../../open_payments/receiver/model'
@@ -10,6 +11,20 @@ import {
   errorToCode as receiverErrorToCode,
   errorToMessage as receiverErrorToMessage
 } from '../../open_payments/receiver/errors'
+
+export const getReceiver: QueryResolvers<ApolloContext>['receiver'] = async (
+  _,
+  args,
+  ctx
+): Promise<ResolversTypes['Receiver']> => {
+  const receiverService = await ctx.container.use('receiverService')
+  const receiver = await receiverService.get(args.id)
+  if (!receiver) {
+    ctx.logger.error(`Receiver "${args.id}" was not found.`)
+    throw new Error('receiver does not exist')
+  }
+  return receiverToGraphql(receiver)
+}
 
 export const createReceiver: MutationResolvers<ApolloContext>['createReceiver'] =
   async (_, args, ctx): Promise<ResolversTypes['CreateReceiverResponse']> => {
