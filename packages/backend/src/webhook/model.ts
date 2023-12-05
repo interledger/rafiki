@@ -112,38 +112,4 @@ export class WebhookEvent extends BaseModel {
     }
     return json
   }
-
-  $beforeInsert(context: QueryContext) {
-    super.$beforeInsert(context)
-
-    if (isPeerEventType(this.type) && !this.peerId) {
-      throw new Error(RelatedResourceError.PeerIdRequired)
-    }
-
-    if (isAssetEventType(this.type) && !this.assetId) {
-      throw new Error(RelatedResourceError.AssetIdRequired)
-    }
-  }
 }
-
-export enum RelatedResourceError {
-  PeerIdRequired = 'Peer ID is required for peer events',
-  AssetIdRequired = 'Asset ID is required for asset events'
-}
-
-export enum PeerEventType {
-  LiquidityLow = 'peer.liquidity_low'
-}
-export enum AssetEventType {
-  LiquidityLow = 'asset.liquidity_low'
-}
-
-const isPeerEventType = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  o: any
-): o is PeerEventType => Object.values(PeerEventType).includes(o)
-
-const isAssetEventType = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-  o: any
-): o is AssetEventType => Object.values(AssetEventType).includes(o)
