@@ -366,7 +366,7 @@ describe('Incoming Payment Resolver', (): void => {
         })
       })
 
-      test('200 - with liquidity', async (): Promise<void> => {
+      test('200 - with added liquidity', async (): Promise<void> => {
         await accountingService.createDeposit({
           id: uuid(),
           account: payment,
