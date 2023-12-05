@@ -41,7 +41,7 @@ exports.up = function (knex) {
           "CASE WHEN type LIKE 'outgoing_payment.%' THEN (data->>'id')::uuid END"
         ),
         walletAddressId: knex.raw(
-          "CASE WHEN type LIKE 'wallet_address.%' THEN (data->'walletAddress'->>'walletAddressId')::uuid END"
+          "CASE WHEN type = 'wallet_address.web_monetization' THEN (data->'walletAddress'->>'id')::uuid END"
         ),
         peerId: knex.raw(
           "CASE WHEN type LIKE 'peer.%' THEN (data->>'id')::uuid END"
@@ -54,7 +54,7 @@ exports.up = function (knex) {
     .then(() => {
       return knex.schema.table('webhookEvents', function (table) {
         table.check(
-          `
+          ` (CASE WHEN type != 'wallet_address.not_found' THEN
             (
               ("outgoingPaymentId" IS NOT NULL)::int +
               ("incomingPaymentId" IS NOT NULL)::int +
@@ -62,9 +62,18 @@ exports.up = function (knex) {
               ("peerId" IS NOT NULL)::int +
               ("assetId" IS NOT NULL)::int
             ) = 1
+            ELSE
+            (
+              ("outgoingPaymentId" IS NOT NULL)::int +
+              ("incomingPaymentId" IS NOT NULL)::int +
+              ("walletAddressId" IS NOT NULL)::int +
+              ("peerId" IS NOT NULL)::int +
+              ("assetId" IS NOT NULL)::int
+            ) = 0
+            END)
           `,
           null,
-          'exactly_one_related_resource_set'
+          'related_resource'
         )
       })
     })

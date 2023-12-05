@@ -233,7 +233,19 @@ export const isPaymentEvent = (o: any): o is PaymentEvent =>
 export const isPaymentDepositEvenType = (o: any): o is PaymentDepositType =>
   Object.values(PaymentDepositType).includes(o)
 
+export enum OutgoingPaymentEventError {
+  OutgoingPaymentIdRequired = 'Outgoing Payment ID is required for outgoing payment events'
+}
+
 export class PaymentEvent extends WebhookEvent {
   public type!: PaymentEventType
   public data!: PaymentData
+
+  public $beforeInsert(context: QueryContext): void {
+    super.$beforeInsert(context)
+
+    if (!this.outgoingPaymentId) {
+      throw new Error(OutgoingPaymentEventError.OutgoingPaymentIdRequired)
+    }
+  }
 }
