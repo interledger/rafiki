@@ -549,6 +549,8 @@ type WalletAddress implements Model {
   id: ID!
   "Asset of the wallet address"
   asset: Asset!
+  "Available liquidity"
+  liquidity: UInt64
   "Wallet Address URL"
   url: String!
   "Public name associated with the wallet address"
@@ -627,6 +629,8 @@ type IncomingPayment implements BasePayment & Model {
   id: ID!
   "Id of the wallet address under which this incoming payment was created"
   walletAddressId: ID!
+  "Available liquidity"
+  liquidity: UInt64
   "Incoming payment state"
   state: IncomingPaymentState!
   "Date-time of expiry. After this time, the incoming payment will not accept further payments made to it."
@@ -696,6 +700,8 @@ type OutgoingPayment implements BasePayment & Model {
   id: ID!
   "Id of the wallet address under which this outgoing payment was created"
   walletAddressId: ID!
+  "Available liquidity"
+  liquidity: UInt64
   "Outgoing payment state"
   state: OutgoingPaymentState!
   error: String
@@ -746,6 +752,8 @@ type Payment implements BasePayment & Model {
   walletAddressId: ID!
   "Either the IncomingPaymentState or OutgoingPaymentState according to type"
   state: String!
+  "Available liquidity"
+  liquidity: UInt64
   "Additional metadata associated with the payment."
   metadata: JSONObject
   "Date-time of creation"

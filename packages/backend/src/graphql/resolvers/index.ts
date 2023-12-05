@@ -30,6 +30,10 @@ import { getPeer, getPeers, createPeer, updatePeer, deletePeer } from './peer'
 import {
   getAssetLiquidity,
   getPeerLiquidity,
+  getWalletAddressLiquidity,
+  getIncomingPaymentLiquidity,
+  getOutgoingPaymentLiquidity,
+  getPaymentLiquidity,
   addAssetLiquidity,
   addPeerLiquidity,
   createAssetLiquidityWithdrawal,
@@ -80,9 +84,19 @@ export const resolvers: Resolvers = {
     receiver: getReceiver
   },
   WalletAddress: {
+    liquidity: getWalletAddressLiquidity,
     incomingPayments: getWalletAddressIncomingPayments,
     outgoingPayments: getWalletAddressOutgoingPayments,
     quotes: getWalletAddressQuotes
+  },
+  IncomingPayment: {
+    liquidity: getIncomingPaymentLiquidity
+  },
+  OutgoingPayment: {
+    liquidity: getOutgoingPaymentLiquidity
+  },
+  Payment: {
+    liquidity: getPaymentLiquidity
   },
   Mutation: {
     createWalletAddressKey,

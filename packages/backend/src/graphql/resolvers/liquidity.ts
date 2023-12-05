@@ -6,7 +6,11 @@ import {
   LiquidityMutationResponse,
   WalletAddressWithdrawalMutationResponse,
   AssetResolvers,
-  PeerResolvers
+  PeerResolvers,
+  WalletAddressResolvers,
+  IncomingPaymentResolvers,
+  OutgoingPaymentResolvers,
+  PaymentResolvers
 } from '../generated/graphql'
 import { ApolloContext } from '../../app'
 import {
@@ -21,20 +25,47 @@ import { PeerError } from '../../payment-method/ilp/peer/errors'
 
 export const getAssetLiquidity: AssetResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
-    return await getLiquidity(ctx, parent.id as string)
+    return await getPeerOrAssetLiquidity(ctx, parent.id as string)
   }
 
 export const getPeerLiquidity: PeerResolvers<ApolloContext>['liquidity'] =
   async (parent, args, ctx): Promise<ResolversTypes['UInt64']> => {
-    return await getLiquidity(ctx, parent.id as string)
+    return await getPeerOrAssetLiquidity(ctx, parent.id as string)
+  }
+
+export const getWalletAddressLiquidity: WalletAddressResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
+  }
+
+export const getIncomingPaymentLiquidity: IncomingPaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
+  }
+
+export const getOutgoingPaymentLiquidity: OutgoingPaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
+  }
+
+export const getPaymentLiquidity: PaymentResolvers<ApolloContext>['liquidity'] =
+  async (parent, args, ctx): Promise<ResolversTypes['UInt64'] | null> => {
+    return (await getLiquidity(ctx, parent.id as string)) ?? null
   }
 
 const getLiquidity = async (
   ctx: ApolloContext,
   id: string
-): Promise<bigint> => {
+): Promise<bigint | undefined> => {
   const accountingService = await ctx.container.use('accountingService')
-  const liquidity = await accountingService.getBalance(id)
+  return await accountingService.getBalance(id)
+}
+
+const getPeerOrAssetLiquidity = async (
+  ctx: ApolloContext,
+  id: string
+): Promise<bigint> => {
+  const liquidity = await getLiquidity(ctx, id)
   if (liquidity === undefined) {
     throw new Error('No liquidity account found')
   }
