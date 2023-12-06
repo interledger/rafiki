@@ -223,8 +223,8 @@ export type PaymentData = Omit<OutgoingPaymentResponse, 'failed'> & {
   peerId?: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isOutgoingPaymentEventType = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   o: any
 ): o is OutgoingPaymentEventType =>
   Object.values(OutgoingPaymentEventType).includes(o)
@@ -233,8 +233,8 @@ export const isOutgoingPaymentEventType = (
 export const isOutgoingPaymentEvent = (o: any): o is OutgoingPaymentEvent =>
   o instanceof WebhookEvent && isOutgoingPaymentEventType(o.type)
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export const isOutgoingPaymentDepositEvenType = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
   o: any
 ): o is OutgoingPaymentDepositType =>
   Object.values(OutgoingPaymentDepositType).includes(o)
