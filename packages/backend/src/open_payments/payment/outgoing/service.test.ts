@@ -32,8 +32,8 @@ import {
   OutgoingPaymentGrant,
   OutgoingPaymentState,
   PaymentData,
-  PaymentEvent,
-  PaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType
 } from './model'
 import { RETRY_BACKOFF_SECONDS } from './worker'
 import { IncomingPayment, IncomingPaymentState } from '../incoming/model'
@@ -81,12 +81,12 @@ describe('OutgoingPaymentService', (): void => {
   const exchangeRate = 0.5
 
   const webhookTypes: {
-    [key in OutgoingPaymentState]: PaymentEventType | undefined
+    [key in OutgoingPaymentState]: OutgoingPaymentEventType | undefined
   } = {
-    [OutgoingPaymentState.Funding]: PaymentEventType.PaymentCreated,
+    [OutgoingPaymentState.Funding]: OutgoingPaymentEventType.PaymentCreated,
     [OutgoingPaymentState.Sending]: undefined,
-    [OutgoingPaymentState.Failed]: PaymentEventType.PaymentFailed,
-    [OutgoingPaymentState.Completed]: PaymentEventType.PaymentCompleted
+    [OutgoingPaymentState.Failed]: OutgoingPaymentEventType.PaymentFailed,
+    [OutgoingPaymentState.Completed]: OutgoingPaymentEventType.PaymentCompleted
   }
 
   async function processNext(
@@ -104,7 +104,7 @@ describe('OutgoingPaymentService', (): void => {
     const type = webhookTypes[payment.state]
     if (type) {
       await expect(
-        PaymentEvent.query(knex).where({
+        OutgoingPaymentEvent.query(knex).where({
           type
         })
       ).resolves.not.toHaveLength(0)
@@ -216,7 +216,7 @@ describe('OutgoingPaymentService', (): void => {
     }
     if (withdrawAmount !== undefined && withdrawAmount > 0) {
       await expect(
-        PaymentEvent.query(knex).where({
+        OutgoingPaymentEvent.query(knex).where({
           withdrawalAccountId: payment.id,
           withdrawalAmount: withdrawAmount
         })
@@ -379,8 +379,8 @@ describe('OutgoingPaymentService', (): void => {
               expectedPaymentData.peerId = peer.id
             }
             await expect(
-              PaymentEvent.query(knex).where({
-                type: PaymentEventType.PaymentCreated
+              OutgoingPaymentEvent.query(knex).where({
+                type: OutgoingPaymentEventType.PaymentCreated
               })
             ).resolves.toMatchObject([
               {

@@ -26,10 +26,10 @@ import {
 } from '../../open_payments/payment/incoming/model'
 import {
   OutgoingPayment,
-  PaymentEvent,
-  PaymentEventType,
-  PaymentWithdrawType,
-  isPaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType,
+  OutgoingPaymentWithdrawType,
+  isOutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { Peer } from '../../payment-method/ilp/peer/model'
 import { createAsset } from '../../tests/asset'
@@ -1608,7 +1608,7 @@ describe('Liquidity Resolvers', (): void => {
 
           beforeEach(async (): Promise<void> => {
             eventId = uuid()
-            await PaymentEvent.query(knex).insertAndFetch({
+            await OutgoingPaymentEvent.query(knex).insertAndFetch({
               id: eventId,
               outgoingPaymentId: payment.id,
               type,
@@ -1749,12 +1749,12 @@ describe('Liquidity Resolvers', (): void => {
     const WithdrawEventType = {
       ...WalletAddressEventType,
       ...IncomingPaymentEventType,
-      ...PaymentWithdrawType
+      ...OutgoingPaymentWithdrawType
     }
     type WithdrawEventType =
       | WalletAddressEventType
       | IncomingPaymentEventType
-      | PaymentWithdrawType
+      | OutgoingPaymentWithdrawType
 
     const isIncomingPaymentEventType = (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
@@ -1779,7 +1779,7 @@ describe('Liquidity Resolvers', (): void => {
               | 'outgoingPaymentId'
               | 'walletAddressId'
               | null = null
-            if (isPaymentEventType(type)) {
+            if (isOutgoingPaymentEventType(type)) {
               liquidityAccount = payment
               data = payment.toData({
                 amountSent: BigInt(0),
@@ -2207,8 +2207,8 @@ describe('Liquidity Resolvers', (): void => {
 
       describe('Can withdraw liquidity', () => {
         test.each([
-          PaymentEventType.PaymentCompleted,
-          PaymentEventType.PaymentFailed
+          OutgoingPaymentEventType.PaymentCompleted,
+          OutgoingPaymentEventType.PaymentFailed
         ])('for outgoing payment event %s', async (eventType) => {
           const balance = await accountingService.getBalance(outgoingPayment.id)
           assert.ok(balance === amount)
@@ -2345,7 +2345,7 @@ describe('Liquidity Resolvers', (): void => {
           await WebhookEvent.query(knex).insert({
             id: uuid(),
             outgoingPaymentId: outgoingPayment.id,
-            type: PaymentEventType.PaymentCompleted,
+            type: OutgoingPaymentEventType.PaymentCompleted,
             data: {},
             withdrawal: {
               accountId: outgoingPayment.id,
@@ -2404,7 +2404,7 @@ describe('Liquidity Resolvers', (): void => {
 
           beforeEach(async (): Promise<void> => {
             eventId = uuid()
-            await PaymentEvent.query(knex).insertAndFetch({
+            await OutgoingPaymentEvent.query(knex).insertAndFetch({
               id: eventId,
               outgoingPaymentId: outgoingPayment.id,
               type,

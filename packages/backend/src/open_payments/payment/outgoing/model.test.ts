@@ -7,8 +7,8 @@ import { AppServices } from '../../../app'
 import { truncateTables } from '../../../tests/tableManager'
 import {
   OutgoingPaymentEventError,
-  PaymentEvent,
-  PaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType
 } from './model'
 
 describe('Outgoing Payment Event Model', (): void => {
@@ -32,7 +32,7 @@ describe('Outgoing Payment Event Model', (): void => {
 
   describe('beforeInsert', (): void => {
     test.each(
-      Object.values(PaymentEventType).map((type) => ({
+      Object.values(OutgoingPaymentEventType).map((type) => ({
         type,
         error: OutgoingPaymentEventError.OutgoingPaymentIdRequired
       }))
@@ -40,7 +40,7 @@ describe('Outgoing Payment Event Model', (): void => {
       'Outgoing Payment Id is required',
       async ({ type, error }): Promise<void> => {
         expect(
-          PaymentEvent.query(knex).insert({
+          OutgoingPaymentEvent.query(knex).insert({
             type
           })
         ).rejects.toThrow(error)

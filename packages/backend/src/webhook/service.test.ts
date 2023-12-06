@@ -23,7 +23,7 @@ import { getPageTests } from '../shared/baseModel.test'
 import { Pagination, SortOrder } from '../shared/baseModel'
 import { createWebhookEvent, webhookEventTypes } from '../tests/webhook'
 import { IncomingPaymentEventType } from '../open_payments/payment/incoming/model'
-import { PaymentEventType } from '../open_payments/payment/outgoing/model'
+import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
 import { WalletAddress } from '../open_payments/wallet_address/model'
@@ -164,7 +164,7 @@ describe('Webhook Service', (): void => {
         }),
         await WebhookEvent.query(knex).insertAndFetch({
           id: uuid(),
-          type: PaymentEventType.PaymentCreated,
+          type: OutgoingPaymentEventType.PaymentCreated,
           data: { id: uuid() },
           outgoingPaymentId: outgoingPaymentIds[0]
         })
@@ -184,7 +184,7 @@ describe('Webhook Service', (): void => {
       await expect(
         webhookService.getLatestByResourceId({
           outgoingPaymentId: outgoingPaymentIds[0],
-          types: [PaymentEventType.PaymentCreated]
+          types: [OutgoingPaymentEventType.PaymentCreated]
         })
       ).resolves.toEqual(events[3])
     })

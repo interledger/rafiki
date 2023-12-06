@@ -14,9 +14,9 @@ import {
   isFundingError
 } from '../../open_payments/payment/outgoing/errors'
 import {
-  isPaymentEvent,
-  PaymentDepositType,
-  PaymentEventType
+  isOutgoingPaymentEvent,
+  OutgoingPaymentDepositType,
+  OutgoingPaymentEventType
 } from '../../open_payments/payment/outgoing/model'
 import { PeerError } from '../../payment-method/ilp/peer/errors'
 import { IncomingPaymentEventType } from '../../open_payments/payment/incoming/model'
@@ -330,8 +330,8 @@ export const voidLiquidityWithdrawal: MutationResolvers<ApolloContext>['voidLiqu
     }
   }
 
-export const DepositEventType = PaymentDepositType
-export type DepositEventType = PaymentDepositType
+export const DepositEventType = OutgoingPaymentDepositType
+export type DepositEventType = OutgoingPaymentDepositType
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 const isDepositEventType = (o: any): o is DepositEventType =>
@@ -346,7 +346,11 @@ export const depositEventLiquidity: MutationResolvers<ApolloContext>['depositEve
     try {
       const webhookService = await ctx.container.use('webhookService')
       const event = await webhookService.getEvent(args.input.eventId)
-      if (!event || !isPaymentEvent(event) || !isDepositEventType(event.type)) {
+      if (
+        !event ||
+        !isOutgoingPaymentEvent(event) ||
+        !isDepositEventType(event.type)
+      ) {
         return responses[LiquidityError.InvalidId]
       }
       if (!event.data.debitAmount) {
@@ -446,9 +450,9 @@ export const depositOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>['
       const webhookService = await ctx.container.use('webhookService')
       const event = await webhookService.getLatestByResourceId({
         outgoingPaymentId,
-        types: [PaymentDepositType.PaymentCreated]
+        types: [OutgoingPaymentDepositType.PaymentCreated]
       })
-      if (!event || !isPaymentEvent(event)) {
+      if (!event || !isOutgoingPaymentEvent(event)) {
         return responses[LiquidityError.InvalidId]
       }
 
@@ -565,8 +569,8 @@ export const withdrawOutgoingPaymentLiquidity: MutationResolvers<ApolloContext>[
       const event = await webhookService.getLatestByResourceId({
         outgoingPaymentId,
         types: [
-          PaymentEventType.PaymentCompleted,
-          PaymentEventType.PaymentFailed
+          OutgoingPaymentEventType.PaymentCompleted,
+          OutgoingPaymentEventType.PaymentFailed
         ]
       })
       if (!outgoingPayment || !event?.id) {
