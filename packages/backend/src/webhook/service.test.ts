@@ -26,7 +26,10 @@ import { IncomingPaymentEventType } from '../open_payments/payment/incoming/mode
 import { OutgoingPaymentEventType } from '../open_payments/payment/outgoing/model'
 import { createIncomingPayment } from '../tests/incomingPayment'
 import { createWalletAddress } from '../tests/walletAddress'
-import { WalletAddress } from '../open_payments/wallet_address/model'
+import {
+  WalletAddress,
+  WalletAddressEventType
+} from '../open_payments/wallet_address/model'
 import { createOutgoingPayment } from '../tests/outgoingPayment'
 
 describe('Webhook Service', (): void => {
@@ -78,7 +81,7 @@ describe('Webhook Service', (): void => {
     beforeEach(async (): Promise<void> => {
       event = await WebhookEvent.query(knex).insertAndFetch({
         id: uuid(),
-        type: 'account.test_event',
+        type: WalletAddressEventType.WalletAddressNotFound,
         data: {
           account: {
             id: uuid()
