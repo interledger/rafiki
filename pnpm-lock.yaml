@@ -45,8 +45,8 @@ importers:
         specifier: ^29.1.1
         version: 29.1.1(@babel/core@7.23.2)(@jest/types@29.6.3)(jest@29.7.0)(typescript@4.9.5)
       tunnelmole:
-        specifier: ^2.2.12
-        version: 2.2.12
+        specifier: ^2.2.13
+        version: 2.2.13
       typescript:
         specifier: ^4.9.5
         version: 4.9.5
@@ -16981,8 +16981,8 @@ packages:
     dev: false
     optional: true
 
-  /tunnelmole@2.2.12:
-    resolution: {integrity: sha512-RzkzDBkdJBtGF1zPjlbD07KoBYnLcBIRlA4JUvvEJBlPKJEym1DgiJ2+qZ3VJgvKbZrFcHCJC7XWuG2+B/apfw==}
+  /tunnelmole@2.2.13:
+    resolution: {integrity: sha512-6TTF4NQvWIse8UDn9MoWH2z0qD/Mjkrr3eFvU5WJrRERHaHA/elPheRdQKDG2wR9vgPKx+rT9ES76c7JQXMVdA==}
     hasBin: true
     requiresBuild: true
     dependencies:
