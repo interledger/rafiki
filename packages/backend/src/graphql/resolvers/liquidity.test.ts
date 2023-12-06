@@ -1756,6 +1756,20 @@ describe('Liquidity Resolvers', (): void => {
       | IncomingPaymentEventType
       | OutgoingPaymentWithdrawType
 
+    interface WithdrawWebhookData {
+      id: string
+      type: WithdrawEventType
+      data: Record<string, unknown>
+      withdrawal: {
+        accountId: string
+        assetId: string
+        amount: bigint
+      }
+      incomingPaymentId?: string
+      outgoingPaymentId?: string
+      walletAddressId?: string
+    }
+
     const isIncomingPaymentEventType = (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
       o: any
@@ -1775,8 +1789,8 @@ describe('Liquidity Resolvers', (): void => {
             let liquidityAccount: LiquidityAccount
             let data: Record<string, unknown>
             let resourceId:
-              | 'incomingPaymentId'
               | 'outgoingPaymentId'
+              | 'incomingPaymentId'
               | 'walletAddressId'
               | null = null
             if (isOutgoingPaymentEventType(type)) {
@@ -1797,9 +1811,11 @@ describe('Liquidity Resolvers', (): void => {
                 LiquidityAccountType.WEB_MONETIZATION
               )
               data = walletAddress.toData(amount)
-              resourceId = 'walletAddressId'
+              if (type !== WalletAddressEventType.WalletAddressNotFound) {
+                resourceId = 'walletAddressId'
+              }
             }
-            await WebhookEvent.query(knex).insertAndFetch({
+            const insertPayload: WithdrawWebhookData = {
               id: eventId,
               type,
               data,
@@ -1807,9 +1823,14 @@ describe('Liquidity Resolvers', (): void => {
                 accountId: liquidityAccount.id,
                 assetId: liquidityAccount.asset.id,
                 amount
-              },
-              [resourceId]: liquidityAccount.id
-            })
+              }
+            }
+
+            if (resourceId) {
+              insertPayload[resourceId] = liquidityAccount.id
+            }
+
+            await WebhookEvent.query(knex).insertAndFetch(insertPayload)
             await expect(
               accountingService.createDeposit({
                 id: uuid(),

@@ -5,6 +5,7 @@ import { ConnectorAccount } from '../connector/core/rafiki'
 import { HttpToken } from '../peer-http-token/model'
 import { BaseModel } from '../../../shared/baseModel'
 import { WebhookEvent } from '../../../webhook/model'
+import { join } from 'path'
 
 export class Peer
   extends BaseModel
@@ -25,7 +26,7 @@ export class Peer
     },
     incomingTokens: {
       relation: Model.HasManyRelation,
-      modelClass: HttpToken,
+      modelClass: join(__dirname, '../peer-http-token/model'),
       join: {
         from: 'peers.id',
         to: 'httpTokens.peerId'
