@@ -12,6 +12,7 @@ import { createWalletAddress } from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { v4 as uuid } from 'uuid'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
+import { AccountingService } from '../../accounting/service'
 import {
   IncomingPayment as IncomingPaymentModel,
   IncomingPaymentState
@@ -32,12 +33,14 @@ describe('Incoming Payment Resolver', (): void => {
   let appContainer: TestContainer
   let walletAddressId: string
   let incomingPaymentService: IncomingPaymentService
+  let accountingService: AccountingService
   let asset: Asset
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     incomingPaymentService = await deps.use('incomingPaymentService')
+    accountingService = await deps.use('accountingService')
     asset = await createAsset(deps)
   })
 
@@ -317,6 +320,7 @@ describe('Incoming Payment Resolver', (): void => {
                   walletAddressId
                   state
                   expiresAt
+                  liquidity
                   incomingAmount {
                     value
                     assetCode
@@ -343,6 +347,7 @@ describe('Incoming Payment Resolver', (): void => {
           walletAddressId: payment.walletAddressId,
           state,
           expiresAt: expiresAt.toISOString(),
+          liquidity: '0',
           incomingAmount: {
             value: payment.incomingAmount?.value.toString(),
             assetCode: payment.incomingAmount?.assetCode,
@@ -357,6 +362,36 @@ describe('Incoming Payment Resolver', (): void => {
           },
           metadata,
           createdAt: payment.createdAt.toISOString(),
+          __typename: 'IncomingPayment'
+        })
+      })
+
+      test('200 - with added liquidity', async (): Promise<void> => {
+        await accountingService.createDeposit({
+          id: uuid(),
+          account: payment,
+          amount: 100n
+        })
+
+        const query = await appContainer.apolloClient
+          .query({
+            query: gql`
+              query IncomingPayment($paymentId: String!) {
+                incomingPayment(id: $paymentId) {
+                  id
+                  liquidity
+                }
+              }
+            `,
+            variables: {
+              paymentId: payment.id
+            }
+          })
+          .then((query): IncomingPayment => query.data?.incomingPayment)
+
+        expect(query).toEqual({
+          id: payment.id,
+          liquidity: '100',
           __typename: 'IncomingPayment'
         })
       })

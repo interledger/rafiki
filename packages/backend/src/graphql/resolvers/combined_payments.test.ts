@@ -82,6 +82,7 @@ describe('Payment', (): void => {
                   id
                   type
                   walletAddressId
+                  liquidity
                   state
                   metadata
                   createdAt
@@ -118,7 +119,8 @@ describe('Payment', (): void => {
       metadata: combinedOutgoingPayment.metadata,
       walletAddressId: combinedOutgoingPayment.walletAddressId,
       state: combinedOutgoingPayment.state,
-      createdAt: combinedOutgoingPayment.createdAt.toISOString()
+      createdAt: combinedOutgoingPayment.createdAt.toISOString(),
+      liquidity: '0'
     })
 
     const combinedIncomingPayment = toCombinedPayment(
@@ -131,7 +133,8 @@ describe('Payment', (): void => {
       metadata: combinedIncomingPayment.metadata,
       walletAddressId: combinedIncomingPayment.walletAddressId,
       state: combinedIncomingPayment.state,
-      createdAt: combinedIncomingPayment.createdAt.toISOString()
+      createdAt: combinedIncomingPayment.createdAt.toISOString(),
+      liquidity: '0'
     })
   })
 
