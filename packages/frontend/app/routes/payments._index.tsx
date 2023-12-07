@@ -6,6 +6,7 @@ import { Button, Table } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
 import { PaymentType } from '~/shared/enums'
+import { capitalize } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -73,10 +74,6 @@ export default function PaymentsPage() {
     })
   }
 
-  const formatPaymentType = (type: PaymentType) => {
-    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
-  }
-
   return (
     <div className='pt-4 flex flex-col space-y-8'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -100,7 +97,7 @@ export default function PaymentsPage() {
                   }
                 },
                 ...Object.values(PaymentType).map((value) => ({
-                  name: formatPaymentType(value),
+                  name: capitalize(value),
                   value: value,
                   action: () => {
                     setTypeFilterParams(value)
@@ -121,9 +118,7 @@ export default function PaymentsPage() {
                   onClick={() => navigate(`/payments/${payments.node.id}`)}
                 >
                   <Table.Cell>{payments.node.id}</Table.Cell>
-                  <Table.Cell>
-                    {formatPaymentType(payments.node.type)}
-                  </Table.Cell>
+                  <Table.Cell>{capitalize(payments.node.type)}</Table.Cell>
                 </Table.Row>
               ))
             ) : (
