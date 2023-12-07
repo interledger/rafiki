@@ -73,18 +73,24 @@ exports.up = function (knex) {
             END)
           `,
           null,
-          'related_resource'
+          'webhookevents_related_resource_constraint'
         )
       })
     })
 }
 
 exports.down = function (knex) {
-  return knex.schema.table('webhookEvents', function (table) {
-    table.dropColumn('incomingPaymentId')
-    table.dropColumn('outgoingPaymentId')
-    table.dropColumn('walletAddressId')
-    table.dropColumn('peerId')
-    table.dropColumn('assetId')
-  })
+  return knex.schema
+    .raw(
+      'ALTER TABLE "webhookEvents" DROP CONSTRAINT IF EXISTS webhookevents_related_resource_constraint'
+    )
+    .then(() => {
+      return knex.schema.table('webhookEvents', function (table) {
+        table.dropColumn('incomingPaymentId')
+        table.dropColumn('outgoingPaymentId')
+        table.dropColumn('walletAddressId')
+        table.dropColumn('peerId')
+        table.dropColumn('assetId')
+      })
+    })
 }
