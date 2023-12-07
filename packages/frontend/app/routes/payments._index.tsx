@@ -74,6 +74,13 @@ export default function PaymentsPage() {
     })
   }
 
+  const paymentSubpathByType: {
+    [key in PaymentType]: string
+  } = {
+    [PaymentType.Incoming]: 'incoming',
+    [PaymentType.Outgoing]: 'outgoing'
+  }
+
   return (
     <div className='pt-4 flex flex-col space-y-8'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -111,14 +118,17 @@ export default function PaymentsPage() {
           <Table.Head columns={['ID', 'Type']} />
           <Table.Body>
             {payments.edges.length ? (
-              payments.edges.map((payments) => (
+              payments.edges.map((payment) => (
                 <Table.Row
-                  key={payments.node.id}
+                  key={payment.node.id}
                   className='cursor-pointer'
-                  onClick={() => navigate(`/payments/${payments.node.id}`)}
+                  onClick={() => {
+                    const subpath = paymentSubpathByType[payment.node.type]
+                    return navigate(`/payments/${subpath}/${payment.node.id}`)
+                  }}
                 >
-                  <Table.Cell>{payments.node.id}</Table.Cell>
-                  <Table.Cell>{capitalize(payments.node.type)}</Table.Cell>
+                  <Table.Cell>{payment.node.id}</Table.Cell>
+                  <Table.Cell>{capitalize(payment.node.type)}</Table.Cell>
                 </Table.Row>
               ))
             ) : (

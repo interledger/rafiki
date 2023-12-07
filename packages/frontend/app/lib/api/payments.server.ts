@@ -12,9 +12,7 @@ import {
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
-export const getIncomingPaymentInfo = async (
-  args: QueryIncomingPaymentArgs
-) => {
+export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
   await apolloClient.query
   const response = await apolloClient.query<
     GetIncomingPayment,
@@ -47,9 +45,7 @@ export const getIncomingPaymentInfo = async (
   return response.data.incomingPayment
 }
 
-export const getOutgoingPaymentInfo = async (
-  args: QueryOutgoingPaymentArgs
-) => {
+export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
   const response = await apolloClient.query<
     GetOutgoingPayment,
     GetOutgoingPaymentVariables
