@@ -61,7 +61,18 @@ export default function ViewIncomingPaymentPage() {
                 <p className='mt-1'>{incomingPayment.id}</p>
               </div>
               <div>
-                <p className='font-medium'>Wallet Address ID</p>
+                <p className='font-medium'>
+                  Wallet Address ID{' '}
+                  <Button
+                    className='mt-1 ml-1'
+                    aria-label='go to wallet address page'
+                    type='button'
+                    size='xs'
+                    to={`/wallet-addresses/${incomingPayment.walletAddressId}`}
+                  >
+                    ↗️
+                  </Button>
+                </p>
                 <p className='mt-1'>{incomingPayment.walletAddressId}</p>
               </div>
               <div>
@@ -78,7 +89,7 @@ export default function ViewIncomingPaymentPage() {
                     <button
                       className='font-medium mb-1 cursor-pointer'
                       aria-label='toggle metadata visibility'
-                      onClick={() => setShowMetadata(!showMetadata)} // Toggle metadata visibility
+                      onClick={() => setShowMetadata(!showMetadata)}
                     >
                       {showMetadata ? '▼' : '►'} Metadata
                     </button>
@@ -165,6 +176,41 @@ export default function ViewIncomingPaymentPage() {
           </div>
         </div>
         {/* Incoming Payment Received Amount - END */}
+
+        {/* Peer Asset Info */}
+        {/* <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Asset Information</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
+              <div>
+                <p className='font-medium'>Code</p>
+                <p className='mt-1'>{incomingPayment.asset.code}</p>
+              </div>
+              <div>
+                <p className='font-medium'>Scale</p>
+                <p className='mt-1'>{peer.asset.scale}</p>
+              </div>
+              <div>
+                <p className='font-medium'>Withdrawal threshold</p>
+                <p className='mt-1'>
+                  {peer.asset.withdrawalThreshold ?? 'No withdrawal threshhold'}
+                </p>
+              </div>
+            </div>
+            <div className='flex justify-end p-4'>
+              <Button
+                aria-label='go to wallet address page'
+                type='button'
+                to={`/wallet-addresses/${incomingPayment.walletAddressId}`}
+              >
+                View wallet address
+              </Button>
+            </div>
+          </div>
+        </div> */}
+        {/* Peer Asset Info - END */}
 
         {/* Peer Asset Info */}
         {/* TODO: refactor to incoming payment asset info */}
