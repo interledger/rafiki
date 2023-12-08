@@ -40,43 +40,41 @@ export async function setupFromSeed(config: Config): Promise<void> {
     }
   }
 
-  for (const asset of Object.values(assets)) {
-    const peerResponses = await Promise.all(
-      config.seed.peers.map(async (peer: Peering) => {
-        const peerResponse = await createPeer(
-          peer.peerIlpAddress,
-          peer.peerUrl,
-          asset.id,
-          asset.code,
-          peer.name,
-          peer.liquidityThreshold
-        ).then((response) => response.peer)
-        if (!peerResponse) {
-          throw new Error('peer response not defined')
-        }
-        const transferUid = v4()
-        const liquidity = await addPeerLiquidity(
-          peerResponse.id,
-          peer.initialLiquidity,
-          transferUid
-        )
-        return [peerResponse, liquidity]
-      })
-    )
+  const peerResponses = await Promise.all(
+    config.seed.peers.map(async (peer: Peering) => {
+      const peerResponse = await createPeer(
+        peer.peerIlpAddress,
+        peer.peerUrl,
+        assets['USD'].id,
+        assets['USD'].code,
+        peer.name,
+        peer.liquidityThreshold
+      ).then((response) => response.peer)
+      if (!peerResponse) {
+        throw new Error('peer response not defined')
+      }
+      const transferUid = v4()
+      const liquidity = await addPeerLiquidity(
+        peerResponse.id,
+        peer.initialLiquidity,
+        transferUid
+      )
+      return [peerResponse, liquidity]
+    })
+  )
 
-    console.log(JSON.stringify(peerResponses, null, 2))
+  console.log(JSON.stringify(peerResponses, null, 2))
 
-    if (CONFIG.testnetAutoPeerUrl) {
-      console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
-      const autoPeerResponse = await createAutoPeer(
-        CONFIG.testnetAutoPeerUrl,
-        asset.id
-      ).catch((e) => {
-        console.log('error on autopeering: ', e)
-        return
-      })
-      console.log(JSON.stringify(autoPeerResponse, null, 2))
-    }
+  if (CONFIG.testnetAutoPeerUrl) {
+    console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
+    const autoPeerResponse = await createAutoPeer(
+      CONFIG.testnetAutoPeerUrl,
+      assets['USD'].id
+    ).catch((e) => {
+      console.log('error on autopeering: ', e)
+      return
+    })
+    console.log(JSON.stringify(autoPeerResponse, null, 2))
   }
 
   // Clear the accounts before seeding.
