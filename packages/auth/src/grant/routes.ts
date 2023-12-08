@@ -19,6 +19,7 @@ import { AccessService } from '../access/service'
 import { AccessToken } from '../accessToken/model'
 import { InteractionService } from '../interaction/service'
 import { canSkipInteraction } from './utils'
+import { AccessAction } from '@interledger/open-payments'
 
 interface ServiceDependencies extends BaseService {
   grantService: GrantService
@@ -137,7 +138,18 @@ async function createPendingGrant(
   const { body } = ctx.request
   const { grantService, interactionService, config } = deps
   if (!body.interact) {
-    ctx.throw(400, { error: 'interaction_required' })
+    ctx.throw(400, 'interaction_required', { error: 'interaction_required' })
+  }
+
+  if (
+    body.access_token.access.every(
+      (item) =>
+        (item.actions.includes(AccessAction.ReadAll) ||
+          item.actions.includes(AccessAction.ReadAll)) &&
+        item.identifier !== ''
+    )
+  ) {
+    ctx.throw(400, 'identifier_required', { error: 'identifier_required' })
   }
 
   const client = await deps.clientService.get(body.client)

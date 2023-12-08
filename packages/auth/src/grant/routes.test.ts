@@ -119,24 +119,35 @@ describe('Grant Routes', (): void => {
 
       describe('non-interactive grants', () => {
         describe.each`
-          interactionFlagsEnabled | description
-          ${true}                 | ${'enabled'}
-          ${false}                | ${'disabled'}
+          resourceInteractionFlagsEnabled | allGrantInteractionFlagEnabled | allGrant | description
+          ${true}                         | ${false}                       | ${false} | ${'no -all grant'}
+          ${false}                        | ${false}                       | ${false} | ${'no -all grant'}
+          ${true}                         | ${false}                       | ${true}  | ${'including an -all grant'}
+          ${false}                        | ${false}                       | ${true}  | ${'including an -all grant'}
+          ${true}                         | ${true}                        | ${true}  | ${'including an -all grant'}
+          ${false}                        | ${true}                        | ${true}  | ${'including an -all grant'}
         `(
-          'with interaction flags $description',
-          ({ interactionFlagsEnabled }) => {
+          'with resource interaction flags set to $resourceInteractionFlagsEnabled, all grant interaction flag set to $allGrantInteractionFlagEnabled, and $description',
+          ({
+            resourceInteractionFlagsEnabled,
+            allGrantInteractionFlagEnabled,
+            allGrant
+          }) => {
             test.each`
               accessTypes                                       | description
               ${[AccessType.IncomingPayment]}                   | ${'grant for incoming payments'}
               ${[AccessType.Quote]}                             | ${'grant for quotes'}
               ${[AccessType.IncomingPayment, AccessType.Quote]} | ${'grant for incoming payments and quotes'}
             `(
-              `can${interactionFlagsEnabled ? 'not' : ''} get $description`,
+              `can${
+                resourceInteractionFlagsEnabled || allGrant ? 'not' : ''
+              } get $description`,
               withConfigOverride(
                 () => config,
                 {
-                  incomingPaymentInteraction: interactionFlagsEnabled,
-                  quoteInteraction: interactionFlagsEnabled
+                  incomingPaymentInteraction: resourceInteractionFlagsEnabled,
+                  quoteInteraction: resourceInteractionFlagsEnabled,
+                  allInteraction: allGrantInteractionFlagEnabled
                 },
                 async ({ accessTypes }): Promise<void> => {
                   const ctx = createContext<CreateContext>(
@@ -154,7 +165,9 @@ describe('Grant Routes', (): void => {
                     access_token: {
                       access: accessTypes.map((accessType: AccessType) => ({
                         type: accessType,
-                        actions: [AccessAction.Create, AccessAction.Read],
+                        actions: allGrant
+                          ? [AccessAction.Create, AccessAction.ReadAll]
+                          : [AccessAction.Create, AccessAction.Read],
                         identifier: `https://example.com/${v4()}`
                       }))
                     },
@@ -162,7 +175,10 @@ describe('Grant Routes', (): void => {
                   }
                   ctx.request.body = body
 
-                  if (interactionFlagsEnabled) {
+                  if (
+                    resourceInteractionFlagsEnabled ||
+                    (allGrantInteractionFlagEnabled && allGrant)
+                  ) {
                     await expect(grantRoutes.create(ctx)).rejects.toMatchObject(
                       {
                         status: 400,
@@ -297,6 +313,40 @@ describe('Grant Routes', (): void => {
         await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
           status: 400,
           error: 'interaction_required'
+        })
+      })
+
+      test('Fails to initiate a grant w/o identifier field if interaction required', async (): Promise<void> => {
+        const ctx = createContext<CreateContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json'
+            },
+            url,
+            method
+          },
+          {}
+        )
+
+        const grantRequest = {
+          access_token: {
+            access: [
+              {
+                type: AccessType.IncomingPayment,
+                actions: [AccessAction.Create, AccessAction.ReadAll]
+              }
+            ]
+          },
+          client: CLIENT,
+          interact: BASE_GRANT_REQUEST.interact
+        }
+
+        ctx.request.body = grantRequest
+
+        await expect(grantRoutes.create(ctx)).rejects.toMatchObject({
+          status: 400,
+          error: 'identifier_required'
         })
       })
 
