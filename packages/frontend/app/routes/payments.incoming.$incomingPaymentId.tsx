@@ -134,7 +134,6 @@ export default function ViewIncomingPaymentPage() {
                   <p className='font-medium'>Asset Code</p>
                   <p className='mt-1'>
                     {incomingPayment.incomingAmount.assetCode}
-                    USD
                   </p>
                 </div>
               </div>
@@ -169,7 +168,6 @@ export default function ViewIncomingPaymentPage() {
                 <p className='font-medium'>Asset Code</p>
                 <p className='mt-1'>
                   {incomingPayment.receivedAmount.assetCode}
-                  USD
                 </p>
               </div>
             </div>
@@ -248,8 +246,8 @@ export default function ViewIncomingPaymentPage() {
         </div> */}
         {/* Peer Asset Info - END */}
         {/* TODO: refactor to incoming payment liquidity info */}
-        {/* Peer Liquidity Info */}
-        {/* <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+        {/* Incoming Payment Liquidity */}
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>Liquidity Information</h3>
           </div>
@@ -258,31 +256,34 @@ export default function ViewIncomingPaymentPage() {
               <div>
                 <p className='font-medium'>Amount</p>
                 <p className='mt-1'>
-                  {formatAmount(peer.liquidity ?? '0', peer.asset.scale)}{' '}
-                  {peer.asset.code}
+                  {formatAmount(
+                    incomingPayment.liquidity ?? '0',
+                    incomingPayment.receivedAmount.assetScale
+                  )}{' '}
+                  {incomingPayment.receivedAmount.assetCode}
                 </p>
               </div>
               <div className='flex space-x-4'>
                 <Button
-                  aria-label='add peer liquidity page'
+                  aria-label='add incoming payment liquidity page'
                   preventScrollReset
                   type='button'
-                  to={`/peers/${peer.id}/add-liquidity`}
+                  to={`/payments/incoming/${incomingPayment.id}/add-liquidity`}
                 >
                   Add liquidity
                 </Button>
                 <Button
-                  aria-label='withdraw peer liquidity page'
+                  aria-label='withdraw incoming payment liquidity page'
                   preventScrollReset
                   type='button'
-                  to={`/peers/${peer.id}/withdraw-liquidity`}
+                  to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
                 >
                   Withdraw liquidity
                 </Button>
               </div>
             </div>
           </div>
-        </div> */}
+        </div>
         {/* Peer Liquidity Info - END */}
         {/* DELETE PEER - Danger zone */}
       </div>

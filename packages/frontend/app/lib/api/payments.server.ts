@@ -37,6 +37,7 @@ export const getIncomingPayment = async (args: QueryIncomingPaymentArgs) => {
           }
           metadata
           createdAt
+          liquidity
         }
       }
     `,
@@ -74,6 +75,7 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
           }
           state
           stateAttempts
+          liquidity
         }
       }
     `,
