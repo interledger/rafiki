@@ -11,20 +11,20 @@ export function createTelemetryMiddleware(): ILPMiddleware {
       await next()
       return
     }
-    const { scale } = accounts.incoming.asset
-    const code: string = state.incomingAccount?.quote?.receiveAmountAssetCode
+    const { scale: incomingScale } = accounts.incoming.asset
 
-    const scalingFactor = scale ? Math.pow(10, 4 - scale) : undefined
-    const totalReceivedInAssetScale4 = Number(amount) * Number(scalingFactor)
+    const scalingFactor = incomingScale
+      ? Math.pow(10, 4 - incomingScale)
+      : undefined
+
+    const amountInScale4 = Number(amount) * Number(scalingFactor)
 
     services.telemetry
       ?.getOrCreate('transactions_amount', {
-        description:
-          'Amount sent through the network. Asset Code & Asset Scale are sent as attributes',
+        description: 'Amount sent through the network',
         valueType: ValueType.DOUBLE
       })
-      .add(totalReceivedInAssetScale4, {
-        asset_code: code,
+      .add(amountInScale4, {
         source: services.telemetry?.getServiceName()
       })
 

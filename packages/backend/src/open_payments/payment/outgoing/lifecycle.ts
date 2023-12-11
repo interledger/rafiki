@@ -86,8 +86,7 @@ export async function handleSending(
       description: 'Count of funded transactions'
     })
     .add(1, {
-      source: deps.telemetry?.getServiceName(),
-      asset_code: payment.sentAmount.assetCode
+      source: deps.telemetry?.getServiceName()
     })
 
   await handleCompleted(deps, payment)
