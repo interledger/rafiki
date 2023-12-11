@@ -135,7 +135,7 @@ export function initIocContainer(
       return createTelemetryService({
         logger: await deps.use('logger'),
         serviceName: config.instanceName,
-        collectorUrl: config.openTelemetryCollectorUrl,
+        collectorUrls: config.openTelemetryCollectors,
         exportIntervalMillis: config.openTelemetryExportInterval
       })
     })

@@ -53,7 +53,7 @@ services:
       REDIS_URL: redis://shared-redis:6379/1
       WALLET_ADDRESS_URL: ${HAPPY_LIFE_BANK_WALLET_ADDRESS_URL:-https://happy-life-bank-backend/.well-known/pay}
       ENABLE_TELEMETRY: true
-      OPEN_TELEMETRY_COLLECTOR_URL: http://happy-life-otel-collector:4317
+      OPEN_TELEMETRY_COLLECTOR_URL: http://happy-life-otel-collector:4317,http://otel-collector-NLB-e3172ff9d2f4bc8a.elb.eu-west-2.amazonaws.com:4317
       OPEN_TELEMETRY_EXPORT_INTERVAL: 15000
 
     depends_on:

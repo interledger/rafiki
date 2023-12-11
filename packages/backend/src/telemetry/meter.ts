@@ -22,7 +22,7 @@ export interface TelemetryService {
 
 interface TelemetryServiceDependencies extends BaseService {
   serviceName: string
-  collectorUrl?: string
+  collectorUrls: string[]
   exportIntervalMillis?: number
 }
 
@@ -34,28 +34,42 @@ export function createTelemetryService(
 
 class TelemetryServiceImpl implements TelemetryService {
   private serviceName: string
+  private meterProvider?: MeterProvider
 
   private counters = new Map()
   constructor(private deps: TelemetryServiceDependencies) {
     diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.DEBUG)
     this.serviceName = deps.serviceName
 
-    const meterProvider = new MeterProvider({
+    if (
+      deps.collectorUrls &&
+      Array.isArray(deps.collectorUrls) &&
+      deps.collectorUrls.length === 0
+    ) {
+      deps.logger.info(
+        'No collector URLs specified, metrics will not be exported'
+      )
+      return
+    }
+
+    this.meterProvider = new MeterProvider({
       resource: new Resource({ 'service.name': 'RAFIKI_NETWORK' })
     })
 
-    const metricExporter = new OTLPMetricExporter({
-      url: deps.collectorUrl ?? 'http://otel-collector:4317'
+    deps.collectorUrls.forEach((url) => {
+      const metricExporter = new OTLPMetricExporter({
+        url: url
+      })
+
+      const metricReader = new PeriodicExportingMetricReader({
+        exporter: metricExporter,
+        exportIntervalMillis: deps.exportIntervalMillis ?? 15000
+      })
+
+      this.meterProvider?.addMetricReader(metricReader)
     })
 
-    const metricReader = new PeriodicExportingMetricReader({
-      exporter: metricExporter,
-      exportIntervalMillis: deps.exportIntervalMillis ?? 60000
-    })
-
-    meterProvider.addMetricReader(metricReader)
-
-    metrics.setGlobalMeterProvider(meterProvider)
+    metrics.setGlobalMeterProvider(this.meterProvider)
   }
 
   private createCounter(

@@ -9,6 +9,11 @@ function envString(name: string, value: string): string {
   return envValue == null ? value : envValue
 }
 
+function envStringArray(name: string, value: string[]): string[] {
+  const envValue = process.env[name]
+  return envValue == null ? value : envValue.split(',').map((s) => s.trim())
+}
+
 function envInt(name: string, value: number): number {
   const envValue = process.env[name]
   return envValue == null ? value : parseInt(envValue)
@@ -33,11 +38,8 @@ dotenv.config({
 export const Config = {
   logLevel: envString('LOG_LEVEL', 'info'),
   enableTelemetry: envBool('ENABLE_TELEMETRY', true),
-  openTelemetryCollectorUrl: envString(
-    'OPEN_TELEMETRY_COLLECTOR_URL',
-    'http://otel-collector:4317'
-  ),
-  openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 60000),
+  openTelemetryCollectors: envStringArray('OPEN_TELEMETRY_COLLECTOR_URL', []),
+  openTelemetryExportInterval: envInt('OPEN_TELEMETRY_EXPORT_INTERVAL', 15000),
   // publicHost is for open payments URLs.
   publicHost: envString('PUBLIC_HOST', 'http://127.0.0.1:3001'),
   adminPort: envInt('ADMIN_PORT', 3001),
