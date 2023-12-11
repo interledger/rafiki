@@ -39,8 +39,8 @@ export default function WalletAddressesPage() {
     useLoaderData<typeof loader>()
   const navigate = useNavigate()
 
-  const badgeColorByStatus: Record<WalletAddressStatus, BadgeColor> | any = {
-    ['WalletAddressStatus.Active' as any]: BadgeColor.Green,
+  const badgeColorByStatus: { [key in WalletAddressStatus]: BadgeColor } = {
+    [WalletAddressStatus.Active]: BadgeColor.Green,
     [WalletAddressStatus.Inactive]: BadgeColor.Red
   }
 
