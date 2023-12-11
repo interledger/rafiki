@@ -18,6 +18,7 @@ import {
 import {
   getWalletAddressIncomingPayments,
   createIncomingPayment,
+  completeIncomingPayment,
   getIncomingPayment
 } from './incoming_payment'
 import { getQuote, createQuote, getWalletAddressQuotes } from './quote'
@@ -95,6 +96,7 @@ export const resolvers: Resolvers = {
     createQuote,
     createOutgoingPayment,
     createIncomingPayment,
+    completeIncomingPaymentt: completeIncomingPayment,
     createReceiver,
     createPeer: createPeer,
     createOrUpdatePeerByUrl: createOrUpdatePeerByUrl,

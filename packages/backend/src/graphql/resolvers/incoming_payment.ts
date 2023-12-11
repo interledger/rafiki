@@ -104,6 +104,39 @@ export const createIncomingPayment: MutationResolvers<ApolloContext>['createInco
       }))
   }
 
+export const completeIncomingPayment: MutationResolvers<ApolloContext>['completeIncomingPayment'] =
+  async (_, args, ctx): Promise<ResolversTypes['IncomingPaymentResponse']> => {
+    const incomingPaymentService = await ctx.container.use(
+      'incomingPaymentService'
+    )
+    return incomingPaymentService
+      .complete(args.id)
+      .then((paymentOrErr) =>
+        isIncomingPaymentError(paymentOrErr)
+          ? {
+              code: errorToCode[paymentOrErr].toString(),
+              success: false,
+              message: errorToMessage[paymentOrErr]
+            }
+          : {
+              code: '200',
+              success: true,
+              payment: paymentToGraphql(paymentOrErr)
+            }
+      )
+      .catch((e) => {
+        ctx.logger.error(
+          e,
+          `Could not complete incoming payment with ID "${args.id}"`
+        )
+        return {
+          code: '500',
+          success: false,
+          message: 'Error trying to complete incoming payment'
+        }
+      })
+  }
+
 export function paymentToGraphql(
   payment: IncomingPayment
 ): SchemaIncomingPayment {

@@ -530,6 +530,8 @@ export type Mutation = {
   addAssetLiquidity?: Maybe<LiquidityMutationResponse>;
   /** Add peer liquidity */
   addPeerLiquidity?: Maybe<LiquidityMutationResponse>;
+  /** Complete an Open Payments incoming payment. Only incoming payments (remote or local) created by this Rafiki instance can be completed. */
+  completeIncomingPayment: IncomingPaymentResponse;
   /** Create an asset */
   createAsset: AssetMutationResponse;
   /** Withdraw asset liquidity */
@@ -586,6 +588,11 @@ export type MutationAddAssetLiquidityArgs = {
 
 export type MutationAddPeerLiquidityArgs = {
   input: AddPeerLiquidityInput;
+};
+
+
+export type MutationCompleteIncomingPaymentArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -1781,6 +1788,7 @@ export type ModelResolvers<ContextType = any, ParentType extends ResolversParent
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   addAssetLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddAssetLiquidityArgs, 'input'>>;
   addPeerLiquidity?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationAddPeerLiquidityArgs, 'input'>>;
+  completeIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCompleteIncomingPaymentArgs, 'id'>>;
   createAsset?: Resolver<ResolversTypes['AssetMutationResponse'], ParentType, ContextType, RequireFields<MutationCreateAssetArgs, 'input'>>;
   createAssetLiquidityWithdrawal?: Resolver<Maybe<ResolversTypes['LiquidityMutationResponse']>, ParentType, ContextType, RequireFields<MutationCreateAssetLiquidityWithdrawalArgs, 'input'>>;
   createIncomingPayment?: Resolver<ResolversTypes['IncomingPaymentResponse'], ParentType, ContextType, RequireFields<MutationCreateIncomingPaymentArgs, 'input'>>;

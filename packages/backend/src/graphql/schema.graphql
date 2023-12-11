@@ -167,6 +167,9 @@ type Mutation {
     input: CreateIncomingPaymentInput!
   ): IncomingPaymentResponse!
 
+  "Complete an Open Payments incoming payment. Only incoming payments (remote or local) created by this Rafiki instance can be completed."
+  completeIncomingPayment(id: String!): IncomingPaymentResponse!
+
   "Create an internal or external Open Payments Incoming Payment. The receiver has a wallet address on either this or another Open Payments resource server."
   createReceiver(input: CreateReceiverInput!): CreateReceiverResponse!
 

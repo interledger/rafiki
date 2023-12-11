@@ -60,6 +60,7 @@ async function create(
   const { walletAddressUrl } = args
   const grantOrError = await getGrant(deps, walletAddressUrl, [
     AccessAction.Create,
+    AccessAction.Complete,
     AccessAction.ReadAll
   ])
 
