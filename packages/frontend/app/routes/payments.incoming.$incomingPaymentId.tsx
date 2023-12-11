@@ -1,5 +1,6 @@
-import { LoaderArgs, json } from '@remix-run/node'
-import { Form, useLoaderData } from '@remix-run/react'
+import type { LoaderArgs} from '@remix-run/node';
+import { json } from '@remix-run/node'
+import { Form, Outlet, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { z } from 'zod'
 import { PageHeader } from '~/components'
@@ -51,8 +52,6 @@ export default function ViewIncomingPaymentPage() {
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
             <p className='text-sm'>Created at {incomingPayment.createdAt}</p>
-            {/* TODO: use or remove */}
-            {/* <ErrorPanel errors={response?.errors.general.message} /> */}
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
@@ -122,7 +121,7 @@ export default function ViewIncomingPaymentPage() {
             <div className='md:col-span-2 bg-white rounded-md shadow-md'>
               <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
                 <div>
-                  <p className='font-medium'>Incoming Amount</p>
+                  <p className='font-medium'>Amount</p>
                   <p className='mt-1'>
                     {formatAmount(
                       incomingPayment.incomingAmount.value,
@@ -156,7 +155,7 @@ export default function ViewIncomingPaymentPage() {
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
             <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
               <div>
-                <p className='font-medium'>Incoming Amount</p>
+                <p className='font-medium'>Amount</p>
                 <p className='mt-1'>
                   {formatAmount(
                     incomingPayment.receivedAmount.value,
@@ -175,77 +174,6 @@ export default function ViewIncomingPaymentPage() {
         </div>
         {/* Incoming Payment Received Amount - END */}
 
-        {/* Peer Asset Info */}
-        {/* <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Asset Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Code</p>
-                <p className='mt-1'>{incomingPayment.asset.code}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Scale</p>
-                <p className='mt-1'>{peer.asset.scale}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Withdrawal threshold</p>
-                <p className='mt-1'>
-                  {peer.asset.withdrawalThreshold ?? 'No withdrawal threshhold'}
-                </p>
-              </div>
-            </div>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='go to wallet address page'
-                type='button'
-                to={`/wallet-addresses/${incomingPayment.walletAddressId}`}
-              >
-                View wallet address
-              </Button>
-            </div>
-          </div>
-        </div> */}
-        {/* Peer Asset Info - END */}
-
-        {/* Peer Asset Info */}
-        {/* TODO: refactor to incoming payment asset info */}
-        {/* <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Asset Information</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Code</p>
-                <p className='mt-1'>{peer.asset.code}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Scale</p>
-                <p className='mt-1'>{peer.asset.scale}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Withdrawal threshold</p>
-                <p className='mt-1'>
-                  {peer.asset.withdrawalThreshold ?? 'No withdrawal threshhold'}
-                </p>
-              </div>
-            </div>
-            <div className='flex justify-end p-4'>
-              <Button
-                aria-label='go to asset page'
-                type='button'
-                to={`/assets/${peer.asset.id}`}
-              >
-                View asset
-              </Button>
-            </div>
-          </div>
-        </div> */}
-        {/* Peer Asset Info - END */}
-        {/* TODO: refactor to incoming payment liquidity info */}
         {/* Incoming Payment Liquidity */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
@@ -265,28 +193,20 @@ export default function ViewIncomingPaymentPage() {
               </div>
               <div className='flex space-x-4'>
                 <Button
-                  aria-label='add incoming payment liquidity page'
-                  preventScrollReset
-                  type='button'
-                  to={`/payments/incoming/${incomingPayment.id}/add-liquidity`}
-                >
-                  Add liquidity
-                </Button>
-                <Button
                   aria-label='withdraw incoming payment liquidity page'
                   preventScrollReset
                   type='button'
                   to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
                 >
-                  Withdraw liquidity
+                  Withdraw
                 </Button>
               </div>
             </div>
           </div>
         </div>
-        {/* Peer Liquidity Info - END */}
-        {/* DELETE PEER - Danger zone */}
+        {/* Incoming Payment Liquidity - END */}
       </div>
+      <Outlet />
     </div>
   )
 }

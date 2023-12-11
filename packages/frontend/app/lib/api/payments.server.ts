@@ -1,4 +1,17 @@
 import { gql } from '@apollo/client'
+import type {
+  ListPaymentsQuery,
+  ListPaymentsQueryVariables,
+  WithdrawIncomingPaymentLiquidity,
+  WithdrawIncomingPaymentLiquidityVariables,
+  WithdrawIncomingPaymentLiquidityInput,
+  WithdrawOutgoingPaymentLiquidity,
+  WithdrawOutgoingPaymentLiquidityVariables,
+  WithdrawOutgoingPaymentLiquidityInput,
+  DepositOutgoingPaymentLiquidityInput,
+  DepositOutgoingPaymentLiquidity,
+  DepositOutgoingPaymentLiquidityVariables
+} from '~/generated/graphql';
 import {
   type QueryIncomingPaymentArgs,
   type QueryPaymentsArgs,
@@ -6,9 +19,7 @@ import {
   type GetIncomingPayment,
   type GetIncomingPaymentVariables,
   type GetOutgoingPaymentVariables,
-  type GetOutgoingPayment,
-  ListPaymentsQuery,
-  ListPaymentsQueryVariables
+  type GetOutgoingPayment
 } from '~/generated/graphql'
 import { apolloClient } from '../apollo.server'
 
@@ -54,15 +65,19 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
     query: gql`
       query GetOutgoingPayment($id: String!) {
         outgoingPayment(id: $id) {
-          error
           id
+          createdAt
+          error
+          receiver
           walletAddressId
+          state
+          stateAttempts
+          metadata
           receiveAmount {
             assetCode
             assetScale
             value
           }
-          receiver
           debitAmount {
             assetCode
             assetScale
@@ -73,8 +88,6 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
             assetScale
             value
           }
-          state
-          stateAttempts
           liquidity
         }
       }
@@ -126,54 +139,83 @@ export const listPayments = async (args: QueryPaymentsArgs) => {
   return response.data.payments
 }
 
-// TODO: refactor to payments (from asset)
-// export const addAssetLiquidity = async (args: AddAssetLiquidityInput) => {
-//   const response = await apolloClient.mutate<
-//     AddAssetLiquidityMutation,
-//     AddAssetLiquidityMutationVariables
-//   >({
-//     mutation: gql`
-//       mutation AddAssetLiquidityMutation($input: AddAssetLiquidityInput!) {
-//         addAssetLiquidity(input: $input) {
-//           code
-//           success
-//           message
-//           error
-//         }
-//       }
-//     `,
-//     variables: {
-//       input: args
-//     }
-//   })
+export const depositOutgoingPaymentLiquidity = async (
+  args: DepositOutgoingPaymentLiquidityInput
+) => {
+  const response = await apolloClient.mutate<
+    DepositOutgoingPaymentLiquidity,
+    DepositOutgoingPaymentLiquidityVariables
+  >({
+    mutation: gql`
+      mutation DepositOutgoingPaymentLiquidity(
+        $input: DepositOutgoingPaymentLiquidityInput!
+      ) {
+        depositOutgoingPaymentLiquidity(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
 
-//   return response.data?.addAssetLiquidity
-// }
+  return response.data?.depositOutgoingPaymentLiquidity
+}
 
-// // TODO: refactor to payments (from asset)
-// export const withdrawAssetLiquidity = async (
-//   args: CreateAssetLiquidityWithdrawalInput
-// ) => {
-//   const response = await apolloClient.mutate<
-//     WithdrawAssetLiquidity,
-//     WithdrawAssetLiquidityVariables
-//   >({
-//     mutation: gql`
-//       mutation WithdrawAssetLiquidity(
-//         $input: CreateAssetLiquidityWithdrawalInput!
-//       ) {
-//         createAssetLiquidityWithdrawal(input: $input) {
-//           code
-//           success
-//           message
-//           error
-//         }
-//       }
-//     `,
-//     variables: {
-//       input: args
-//     }
-//   })
+export const withdrawOutgoingPaymentLiquidity = async (
+  args: WithdrawOutgoingPaymentLiquidityInput
+) => {
+  const response = await apolloClient.mutate<
+    WithdrawOutgoingPaymentLiquidity,
+    WithdrawOutgoingPaymentLiquidityVariables
+  >({
+    mutation: gql`
+      mutation WithdrawOutgoingPaymentLiquidity(
+        $input: WithdrawOutgoingPaymentLiquidityInput!
+      ) {
+        withdrawOutgoingPaymentLiquidity(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
 
-//   return response.data?.createAssetLiquidityWithdrawal
-// }
+  return response.data?.withdrawOutgoingPaymentLiquidity
+}
+
+export const withdrawIncomingPaymentLiquidity = async (
+  args: WithdrawIncomingPaymentLiquidityInput
+) => {
+  const response = await apolloClient.mutate<
+    WithdrawIncomingPaymentLiquidity,
+    WithdrawIncomingPaymentLiquidityVariables
+  >({
+    mutation: gql`
+      mutation WithdrawIncomingPaymentLiquidity(
+        $input: WithdrawIncomingPaymentLiquidityInput!
+      ) {
+        withdrawIncomingPaymentLiquidity(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.withdrawIncomingPaymentLiquidity
+}
