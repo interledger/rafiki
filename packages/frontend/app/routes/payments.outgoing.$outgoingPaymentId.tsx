@@ -3,10 +3,10 @@ import { json } from '@remix-run/node'
 import { Link, Outlet, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { z } from 'zod'
-import { PageHeader } from '~/components'
+import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
-import { formatAmount } from '~/shared/utils'
+import { badgeColorByState, formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const outgoingPaymentId = params.outgoingPaymentId
@@ -50,10 +50,15 @@ export default function ViewOutgoingPaymentPage() {
           {/* Outgoing Payment General Info*/}
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>Created at {outgoingPayment.createdAt}</p>
+            <p className='text-sm mb-2'>
+              Created at {outgoingPayment.createdAt}{' '}
+              <Badge color={badgeColorByState[outgoingPayment.state]}>
+                {outgoingPayment.state}
+              </Badge>
+            </p>
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
+            <div className='w-full p-4 space-y-3'>
               <div>
                 <p className='font-medium'>Outgoing Payment ID</p>
                 <p className='mt-1'>{outgoingPayment.id}</p>
@@ -81,14 +86,6 @@ export default function ViewOutgoingPaymentPage() {
                 >
                   {outgoingPayment.receiver}
                 </Link>
-              </div>
-              <div>
-                <p className='font-medium'>State</p>
-                <p className='mt-1'>{outgoingPayment.state}</p>
-              </div>
-              <div>
-                <p className='font-medium'>State Attempts</p>
-                <p className='mt-1'>{outgoingPayment.stateAttempts}</p>
               </div>
               <div>
                 <p className='font-medium'>Error</p>

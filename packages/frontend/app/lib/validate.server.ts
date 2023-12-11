@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { isValidIlpAddress } from 'ilp-packet'
-import { PaymentType, WebhookEventType } from '~/shared/enums'
-import { WalletAddressStatus } from '~/generated/graphql'
+import { WebhookEventType } from '~/shared/enums'
+import { WalletAddressStatus, PaymentType } from '~/generated/graphql'
 
 export const uuidSchema = z.object({
   id: z.string().uuid()

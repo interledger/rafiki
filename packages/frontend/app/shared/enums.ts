@@ -9,8 +9,3 @@ export enum WebhookEventType {
   AssetLiquidityLow = 'asset.liquidity_low',
   PeerLiquidityLow = 'peer.liquidity_low'
 }
-
-export enum PaymentType {
-  Incoming = 'INCOMING',
-  Outgoing = 'OUTGOING'
-}

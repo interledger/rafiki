@@ -2301,7 +2301,7 @@ export type GetOutgoingPaymentVariables = Exact<{
 }>;
 
 
-export type GetOutgoingPayment = { __typename?: 'Query', outgoingPayment?: { __typename?: 'OutgoingPayment', id: string, createdAt: string, error?: string | null, receiver: string, walletAddressId: string, state: OutgoingPaymentState, stateAttempts: number, metadata?: any | null, liquidity?: bigint | null, receiveAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint }, debitAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint }, sentAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint } } | null };
+export type GetOutgoingPayment = { __typename?: 'Query', outgoingPayment?: { __typename?: 'OutgoingPayment', id: string, createdAt: string, error?: string | null, receiver: string, walletAddressId: string, state: OutgoingPaymentState, metadata?: any | null, liquidity?: bigint | null, receiveAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint }, debitAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint }, sentAmount: { __typename?: 'Amount', assetCode: string, assetScale: number, value: bigint } } | null };
 
 export type ListPaymentsQueryVariables = Exact<{
   after?: InputMaybe<Scalars['String']['input']>;
@@ -2312,7 +2312,7 @@ export type ListPaymentsQueryVariables = Exact<{
 }>;
 
 
-export type ListPaymentsQuery = { __typename?: 'Query', payments: { __typename?: 'PaymentConnection', edges: Array<{ __typename?: 'PaymentEdge', node: { __typename?: 'Payment', id: string, type: PaymentType, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type ListPaymentsQuery = { __typename?: 'Query', payments: { __typename?: 'PaymentConnection', edges: Array<{ __typename?: 'PaymentEdge', node: { __typename?: 'Payment', id: string, type: PaymentType, state: string, createdAt: string } }>, pageInfo: { __typename?: 'PageInfo', startCursor?: string | null, endCursor?: string | null, hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type DepositOutgoingPaymentLiquidityVariables = Exact<{
   input: DepositOutgoingPaymentLiquidityInput;

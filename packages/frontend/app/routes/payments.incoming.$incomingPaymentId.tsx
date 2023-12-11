@@ -3,10 +3,10 @@ import { json } from '@remix-run/node'
 import { Outlet, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { z } from 'zod'
-import { PageHeader } from '~/components'
+import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { getIncomingPayment } from '~/lib/api/payments.server'
-import { formatAmount } from '~/shared/utils'
+import { badgeColorByState, formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const incomingPaymentId = params.incomingPaymentId
@@ -51,10 +51,20 @@ export default function ViewIncomingPaymentPage() {
           {/* Incoming Payment General Info*/}
           <div className='col-span-1 pt-3'>
             <h3 className='text-lg font-medium'>General Information</h3>
-            <p className='text-sm'>Created at {incomingPayment.createdAt}</p>
+            <p className='text-sm'>
+              Created at {incomingPayment.createdAt}{' '}
+              <Badge color={badgeColorByState[incomingPayment.state]}>
+                {incomingPayment.state}
+              </Badge>
+            </p>
+            {new Date(incomingPayment.expiresAt) > new Date() && (
+              <p className='text-sm mb-2'>
+                Expires at {incomingPayment.expiresAt}{' '}
+              </p>
+            )}
           </div>
           <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
+            <div className='w-full p-4 space-y-3'>
               <div>
                 <p className='font-medium'>Incoming Payment ID</p>
                 <p className='mt-1'>{incomingPayment.id}</p>
@@ -73,14 +83,6 @@ export default function ViewIncomingPaymentPage() {
                   </Button>
                 </p>
                 <p className='mt-1'>{incomingPayment.walletAddressId}</p>
-              </div>
-              <div>
-                <p className='font-medium'>State</p>
-                <p className='mt-1'>{incomingPayment.state}</p>
-              </div>
-              <div>
-                <p className='font-medium'>Expires At</p>
-                <p className='mt-1'>{incomingPayment.expiresAt}</p>
               </div>
               <div>
                 {incomingPayment.metadata ? (

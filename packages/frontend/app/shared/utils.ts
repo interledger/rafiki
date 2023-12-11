@@ -1,3 +1,6 @@
+import { BadgeColor } from '~/components'
+import { IncomingPaymentState, OutgoingPaymentState } from '~/generated/graphql'
+
 const COLORS = {
   key: 'text-tealish',
   number: 'text-blue-500',
@@ -57,4 +60,18 @@ export function getOpenPaymentsUrl() {
   }
 
   return window.ENV.OPEN_PAYMENTS_URL
+}
+
+export type CombinedPaymentState = IncomingPaymentState | OutgoingPaymentState
+
+export const badgeColorByState: {
+  [key in CombinedPaymentState]: BadgeColor
+} = {
+  COMPLETED: BadgeColor.Green,
+  EXPIRED: BadgeColor.Yellow,
+  PENDING: BadgeColor.Yellow,
+  PROCESSING: BadgeColor.Yellow,
+  FAILED: BadgeColor.Red,
+  FUNDING: BadgeColor.Yellow,
+  SENDING: BadgeColor.Yellow
 }

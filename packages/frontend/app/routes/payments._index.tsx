@@ -1,12 +1,16 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate, useSearchParams } from '@remix-run/react'
-import { PageHeader } from '~/components'
+import { Badge, BadgeColor, PageHeader } from '~/components'
 import { PopoverFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
-import { PaymentType } from '~/shared/enums'
-import { capitalize } from '~/shared/utils'
+import { PaymentType } from '~/generated/graphql'
+import {
+  capitalize,
+  badgeColorByState,
+  CombinedPaymentState
+} from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
@@ -112,7 +116,7 @@ export default function PaymentsPage() {
           </div>
         </div>
         <Table>
-          <Table.Head columns={['ID', 'Type']} />
+          <Table.Head columns={['ID', 'Type', 'State']} />
           <Table.Body>
             {payments.edges.length ? (
               payments.edges.map((payment) => (
@@ -126,6 +130,19 @@ export default function PaymentsPage() {
                 >
                   <Table.Cell>{payment.node.id}</Table.Cell>
                   <Table.Cell>{capitalize(payment.node.type)}</Table.Cell>
+                  <Table.Cell>
+                    {
+                      <Badge
+                        color={
+                          badgeColorByState[
+                            payment.node.state as CombinedPaymentState
+                          ]
+                        }
+                      >
+                        {payment.node.state}
+                      </Badge>
+                    }
+                  </Table.Cell>
                 </Table.Row>
               ))
             ) : (

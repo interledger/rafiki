@@ -71,7 +71,6 @@ export const getOutgoingPayment = async (args: QueryOutgoingPaymentArgs) => {
           receiver
           walletAddressId
           state
-          stateAttempts
           metadata
           receiveAmount {
             assetCode
@@ -121,6 +120,7 @@ export const listPayments = async (args: QueryPaymentsArgs) => {
             node {
               id
               type
+              state
               createdAt
             }
           }
