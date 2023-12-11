@@ -38,12 +38,6 @@ export default function ViewIncomingPaymentPage() {
   const { incomingPayment } = useLoaderData<typeof loader>()
   const [showMetadata, setShowMetadata] = useState(false)
 
-  // incomingPayment.incomingAmount = {
-  //   assetCode: 'USD',
-  //   assetScale: 2,
-  //   value: '1000'
-  // }
-
   return (
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -127,7 +121,7 @@ export default function ViewIncomingPaymentPage() {
                       {showMetadata ? '▼' : '►'} Metadata
                     </button>
                     {showMetadata && incomingPayment.metadata && (
-                      <pre className='mt-1'>
+                      <pre className='mt-1 text-sm break-words whitespace-pre-wrap'>
                         {JSON.stringify(incomingPayment.metadata, null, 2)}
                       </pre>
                     )}

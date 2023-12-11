@@ -1,19 +1,19 @@
 import { type ActionArgs } from '@remix-run/node'
 import { useNavigate } from '@remix-run/react'
 import { v4 } from 'uuid'
-import { LiquidityDialog } from '~/components/LiquidityDialog'
+import { LiquidityConfirmDialog } from '~/components/LiquidityConfirmDialog'
 import { withdrawOutgoingPaymentLiquidity } from '~/lib/api/payments.server'
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
-import { amountSchema } from '~/lib/validate.server'
+import { confirmedSchema } from '~/lib/validate.server'
 
 export default function OutgoingPaymentWithdrawLiquidity() {
   const navigate = useNavigate()
   const dismissDialog = () => navigate('..', { preventScrollReset: true })
 
   return (
-    <LiquidityDialog
+    <LiquidityConfirmDialog
       onClose={dismissDialog}
-      title='Withdraw outgoing payment liquidity'
+      title='Withdraw liquidity'
       type='Withdraw'
     />
   )
@@ -35,13 +35,13 @@ export async function action({ request, params }: ActionArgs) {
   }
 
   const formData = await request.formData()
-  const result = amountSchema.safeParse(formData.get('amount'))
+  const result = confirmedSchema.safeParse(formData.get('confirmed'))
 
   if (!result.success) {
     return setMessageAndRedirect({
       session,
       message: {
-        content: 'Amount is not valid. Please try again!',
+        content: 'Something went wrong. Please try again!',
         type: 'error'
       },
       location: '.'

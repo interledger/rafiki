@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
+import { OutgoingPaymentState } from '~/generated/graphql'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
 import { badgeColorByState, formatAmount } from '~/shared/utils'
 
@@ -139,7 +140,7 @@ export default function ViewOutgoingPaymentPage() {
                       {showMetadata ? '▼' : '►'} Metadata
                     </button>
                     {showMetadata && outgoingPayment.metadata && (
-                      <pre className='mt-1'>
+                      <pre className='mt-1 text-sm break-words whitespace-pre-wrap'>
                         {JSON.stringify(outgoingPayment.metadata, null, 2)}
                       </pre>
                     )}
@@ -192,13 +193,22 @@ export default function ViewOutgoingPaymentPage() {
                     Withdraw
                   </Button>
                 )}
-                <Button
-                  aria-label='deposit outgoing payment liquidity page'
-                  preventScrollReset
-                  to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
-                >
-                  Deposit
-                </Button>
+                {outgoingPayment.state === OutgoingPaymentState.Funding ? (
+                  <Button
+                    aria-label='deposit outgoing payment liquidity page'
+                    preventScrollReset
+                    to={`/payments/outgoing/${outgoingPayment.id}/deposit-liquidity`}
+                  >
+                    Deposit
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={true}
+                    aria-label='deposit outgoing payment liquidity page'
+                  >
+                    Deposit
+                  </Button>
+                )}
               </div>
             </div>
           </div>

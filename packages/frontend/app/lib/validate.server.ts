@@ -126,3 +126,5 @@ export const updateWalletAddressSchema = z
     status: z.enum([WalletAddressStatus.Active, WalletAddressStatus.Inactive])
   })
   .merge(uuidSchema)
+
+export const confirmedSchema = z.coerce.number().int().min(0).max(1)
