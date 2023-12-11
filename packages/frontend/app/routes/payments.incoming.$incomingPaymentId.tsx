@@ -1,10 +1,10 @@
-import type { LoaderArgs} from '@remix-run/node';
+import type { LoaderArgs } from '@remix-run/node'
 import { json } from '@remix-run/node'
-import { Form, Outlet, useLoaderData } from '@remix-run/react'
+import { Outlet, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { z } from 'zod'
 import { PageHeader } from '~/components'
-import { Button, ErrorPanel, Input } from '~/components/ui'
+import { Button } from '~/components/ui'
 import { getIncomingPayment } from '~/lib/api/payments.server'
 import { formatAmount } from '~/shared/utils'
 

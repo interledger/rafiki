@@ -24,8 +24,6 @@ export const loader = async ({ request }: LoaderArgs) => {
 
   const { type, ...pagination } = result.data
 
-  console.log({ type })
-
   const payments = await listPayments({
     ...pagination,
     ...(type ? { filter: { type: { in: type } } } : {})
@@ -42,15 +40,14 @@ export const loader = async ({ request }: LoaderArgs) => {
     nextPageUrl = `/payments?after=${payments.pageInfo.endCursor}`
   }
 
-  console.log(json({ payments, previousPageUrl, nextPageUrl }))
-
   return json({ payments, previousPageUrl, nextPageUrl, type })
 }
 
 export default function PaymentsPage() {
   const { payments, previousPageUrl, nextPageUrl, type } =
     useLoaderData<typeof loader>()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const setSearchParams = useSearchParams()[1]
+
   const navigate = useNavigate()
 
   function setTypeFilterParams(selectedType: PaymentType): void {

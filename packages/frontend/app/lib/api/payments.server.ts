@@ -11,7 +11,7 @@ import type {
   DepositOutgoingPaymentLiquidityInput,
   DepositOutgoingPaymentLiquidity,
   DepositOutgoingPaymentLiquidityVariables
-} from '~/generated/graphql';
+} from '~/generated/graphql'
 import {
   type QueryIncomingPaymentArgs,
   type QueryPaymentsArgs,
