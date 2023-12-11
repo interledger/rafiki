@@ -194,14 +194,22 @@ export default function ViewIncomingPaymentPage() {
                 </p>
               </div>
               <div className='flex space-x-4'>
-                <Button
-                  aria-label='withdraw incoming payment liquidity page'
-                  preventScrollReset
-                  type='button'
-                  to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
-                >
-                  Withdraw
-                </Button>
+                {BigInt(incomingPayment.liquidity ?? '0') ? (
+                  <Button
+                    aria-label='withdraw incoming payment liquidity page'
+                    preventScrollReset
+                    to={`/payments/incoming/${incomingPayment.id}/withdraw-liquidity`}
+                  >
+                    Withdraw
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={true}
+                    aria-label='withdraw incoming payment liquidity page'
+                  >
+                    Withdraw
+                  </Button>
+                )}
               </div>
             </div>
           </div>
