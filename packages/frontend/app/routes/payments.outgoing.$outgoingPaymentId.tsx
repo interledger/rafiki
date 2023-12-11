@@ -88,6 +88,39 @@ export default function ViewOutgoingPaymentPage() {
                 </Link>
               </div>
               <div>
+                <p className='font-medium'>Received Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(
+                    outgoingPayment.receiveAmount.value,
+                    outgoingPayment.receiveAmount.assetScale
+                  ) +
+                    ' ' +
+                    outgoingPayment.receiveAmount.assetCode}
+                </p>
+              </div>
+              <div>
+                <p className='font-medium'>Debit Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(
+                    outgoingPayment.debitAmount.value,
+                    outgoingPayment.debitAmount.assetScale
+                  ) +
+                    ' ' +
+                    outgoingPayment.debitAmount.assetCode}
+                </p>
+              </div>
+              <div>
+                <p className='font-medium'>Sent Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(
+                    outgoingPayment.sentAmount.value,
+                    outgoingPayment.sentAmount.assetScale
+                  ) +
+                    ' ' +
+                    outgoingPayment.sentAmount.assetCode}
+                </p>
+              </div>
+              <div>
                 <p className='font-medium'>Error</p>
                 {outgoingPayment.error ? (
                   <p className='mt-1 text-red-500'>{outgoingPayment.error}</p>
@@ -124,83 +157,6 @@ export default function ViewOutgoingPaymentPage() {
           </div>
         </div>
         {/* Outgoing Payment General Info - END */}
-
-        {/* Outgoing Payment Receive Amount */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Receive Amount</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(
-                    outgoingPayment.receiveAmount.value,
-                    outgoingPayment.receiveAmount.assetScale
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Asset Code</p>
-                <p className='mt-1'>
-                  {outgoingPayment.receiveAmount.assetCode}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Outgoing Payment Outgoing Amount - END */}
-
-        {/* Outgoing Payment Debit Amount */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Debit Amount</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(
-                    outgoingPayment.debitAmount.value,
-                    outgoingPayment.debitAmount.assetScale
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Asset Code</p>
-                <p className='mt-1'>{outgoingPayment.debitAmount.assetCode}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Outgoing Payment Debit Amount - END */}
-
-        {/* Outgoing Payment Sent Amount */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Sent Amount</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(
-                    outgoingPayment.sentAmount.value,
-                    outgoingPayment.sentAmount.assetScale
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Asset Code</p>
-                <p className='mt-1'>{outgoingPayment.sentAmount.assetCode}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Outgoing Payment Sent Amount - END */}
 
         {/* Outgoing Payment Liquidity */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>

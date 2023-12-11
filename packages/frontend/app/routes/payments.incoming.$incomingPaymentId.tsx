@@ -38,6 +38,12 @@ export default function ViewIncomingPaymentPage() {
   const { incomingPayment } = useLoaderData<typeof loader>()
   const [showMetadata, setShowMetadata] = useState(false)
 
+  // incomingPayment.incomingAmount = {
+  //   assetCode: 'USD',
+  //   assetScale: 2,
+  //   value: '1000'
+  // }
+
   return (
     <div className='pt-4 flex flex-col space-y-4'>
       <div className='flex flex-col rounded-md bg-offwhite px-6'>
@@ -85,6 +91,32 @@ export default function ViewIncomingPaymentPage() {
                 <p className='mt-1'>{incomingPayment.walletAddressId}</p>
               </div>
               <div>
+                <p className='font-medium'>Incoming Amount</p>
+                <p className='mt-1'>
+                  {incomingPayment.incomingAmount ? (
+                    formatAmount(
+                      incomingPayment.incomingAmount.value,
+                      incomingPayment.incomingAmount.assetScale
+                    ) +
+                    ' ' +
+                    incomingPayment.incomingAmount.assetCode
+                  ) : (
+                    <em>None</em>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className='font-medium'>Received Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(
+                    incomingPayment.receivedAmount.value,
+                    incomingPayment.receivedAmount.assetScale
+                  ) +
+                    ' ' +
+                    incomingPayment.receivedAmount.assetCode}
+                </p>
+              </div>
+              <div>
                 {incomingPayment.metadata ? (
                   <>
                     <button
@@ -113,69 +145,6 @@ export default function ViewIncomingPaymentPage() {
           </div>
         </div>
         {/* Incoming Payment General Info - END */}
-
-        {/* Incoming Payment Incoming Amount */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Incoming Amount</h3>
-          </div>
-          {incomingPayment.incomingAmount ? (
-            <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-              <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-                <div>
-                  <p className='font-medium'>Amount</p>
-                  <p className='mt-1'>
-                    {formatAmount(
-                      incomingPayment.incomingAmount.value,
-                      incomingPayment.incomingAmount.assetScale
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <p className='font-medium'>Asset Code</p>
-                  <p className='mt-1'>
-                    {incomingPayment.incomingAmount.assetCode}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-              <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-                <em>None</em>
-              </div>
-            </div>
-          )}
-        </div>
-        {/* Incoming Payment Incoming Amount - END */}
-
-        {/* Incoming Payment Received Amount */}
-        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
-          <div className='col-span-1 pt-3'>
-            <h3 className='text-lg font-medium'>Received Amount</h3>
-          </div>
-          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
-            <div className='w-full p-4 gap-4 grid grid-cols-1 lg:grid-cols-3'>
-              <div>
-                <p className='font-medium'>Amount</p>
-                <p className='mt-1'>
-                  {formatAmount(
-                    incomingPayment.receivedAmount.value,
-                    incomingPayment.receivedAmount.assetScale
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className='font-medium'>Asset Code</p>
-                <p className='mt-1'>
-                  {incomingPayment.receivedAmount.assetCode}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Incoming Payment Received Amount - END */}
-
         {/* Incoming Payment Liquidity */}
         <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
           <div className='col-span-1 pt-3'>
