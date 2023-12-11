@@ -21,7 +21,7 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 ## Environment overview
 
-![Docker compose environment](../packages/documentation/static/docs/assets/localenv-architecture.png)
+![Docker compose environment](../packages/documentation/public/img/localenv-architecture.png)
 
 #### Cloud Nine Wallet
 
@@ -63,13 +63,13 @@ This environment will set up an playground where you can use the Rafiki Admin AP
 
 Navigate to [`localhost:3030`](http://localhost:3030) to view the accounts on one instance of the Mock Account Servicing Entity called Cloud Nine Wallet.
 
-![Mock Account Servicing Entity Accounts](../packages/documentation/static/docs/assets/map-accounts.png)
+![Mock Account Servicing Entity Accounts](../packages/documentation/public/img/map-accounts.png)
 
 The accounts of the second instance (Happy Life Bank) can be found on [`localhost:3031`](http://localhost:3031).
 
 When clicking on the Account Name, a list of Transactions appears.
 
-![Mock Account Servicing Entity Transactions](../packages/documentation/static/docs/assets/map-transactions.png)
+![Mock Account Servicing Entity Transactions](../packages/documentation/public/img/map-transactions.png)
 
 ## Running the local environment
 
