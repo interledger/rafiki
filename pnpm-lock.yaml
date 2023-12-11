@@ -133,8 +133,8 @@ importers:
         specifier: 2.0.0
         version: 2.0.0
       '@interledger/open-payments':
-        specifier: 6.0.0
-        version: 6.0.0
+        specifier: 6.4.0
+        version: 6.4.0
       '@interledger/openapi':
         specifier: 1.2.1
         version: 1.2.1
@@ -4391,8 +4391,8 @@ packages:
       uuid: 9.0.1
     dev: false
 
-  /@interledger/open-payments@6.0.0:
-    resolution: {integrity: sha512-r9YOtS02ON/B4Jz9lBaLGcfuYGqGVsKEpcBCBADRb1R+IcwizKXl8NOF3nGuqJ8TBK50ENcG2DoBsU7/uqyVhA==}
+  /@interledger/open-payments@6.4.0:
+    resolution: {integrity: sha512-hvvHa67hVvVVOkwOmoyNJvCp05yS2cGdegef2XxIwsmH9eKmzKMss0JjQ/LpSKb0W1XsTYzJWgvHXZyzFkBxUw==}
     dependencies:
       '@interledger/http-signature-utils': 2.0.0
       '@interledger/openapi': 1.2.1

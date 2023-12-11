@@ -8,6 +8,7 @@ import {
   GrantState,
   toOpenPaymentPendingGrant,
   toOpenPaymentsGrant,
+  toOpenPaymentsGrantContinuation,
   isRevokedGrant,
   isRejectedGrant
 } from './model'
@@ -47,7 +48,7 @@ type GrantContext<BodyT = never, QueryT = ParsedUrlQuery> = Exclude<
 export type CreateContext = GrantContext<GrantRequestBody>
 
 interface GrantContinueBody {
-  interact_ref: string
+  interact_ref?: string
 }
 
 interface GrantParams {
@@ -200,7 +201,7 @@ async function continueGrant(
   )[1]
   const { interact_ref: interactRef } = ctx.request.body
 
-  if (!continueId || !continueToken || !interactRef) {
+  if (!continueId || !continueToken) {
     ctx.throw(401, { error: 'invalid_request' })
   }
 
@@ -212,7 +213,49 @@ async function continueGrant(
     interactionService
   } = deps
 
-  const interaction = await interactionService.getByRef(interactRef)
+  // TODO: enforce wait
+  if (!ctx.request.body || Object.keys(ctx.request.body).length === 0) {
+    const grant = await grantService.getByContinue(continueId, continueToken)
+    if (!grant) {
+      ctx.throw(404, { error: 'unknown_request' })
+    } else {
+      /*
+        https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-15#name-continuing-during-pending-i
+        "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
+      */
+      if (grant.finishMethod) {
+        ctx.throw(401, { error: 'request_denied' })
+      } else if (
+        grant.state === GrantState.Pending ||
+        grant.state === GrantState.Processing
+      ) {
+        ctx.body = toOpenPaymentsGrantContinuation(grant, {
+          authServerUrl: config.authServerDomain
+        })
+        return
+      } else if (
+        grant.state !== GrantState.Approved ||
+        !isContinuableGrant(grant)
+      ) {
+        ctx.throw(401, { error: 'request_denied' })
+      } else {
+        const accessToken = await accessTokenService.create(grant.id)
+        const access = await accessService.getByGrant(grant.id)
+        ctx.body = toOpenPaymentsGrant(
+          grant,
+          {
+            authServerUrl: config.authServerDomain
+          },
+          accessToken,
+          access
+        )
+        return
+      }
+    }
+  }
+
+  // TODO: enforce wait
+  const interaction = await interactionService.getByRef(interactRef as string)
   if (
     !interaction ||
     !isContinuableGrant(interaction.grant) ||

@@ -565,29 +565,29 @@ describe('Grant Routes', (): void => {
         })
       })
 
-      test('Cannot issue access token without interact ref', async (): Promise<void> => {
-        const ctx = createContext<ContinueContext>(
-          {
-            headers: {
-              Accept: 'application/json',
-              'Content-Type': 'application/json',
-              Authorization: `GNAP ${grant.continueToken}`
-            }
-          },
-          {
-            id: grant.continueId
-          }
-        )
+      // test('Cannot issue access token without interact ref', async (): Promise<void> => {
+      //   const ctx = createContext<ContinueContext>(
+      //     {
+      //       headers: {
+      //         Accept: 'application/json',
+      //         'Content-Type': 'application/json',
+      //         Authorization: `GNAP ${grant.continueToken}`
+      //       }
+      //     },
+      //     {
+      //       id: grant.continueId
+      //     }
+      //   )
 
-        ctx.request.body = {} as {
-          interact_ref: string
-        }
+      //   ctx.request.body = {} as {
+      //     interact_ref: string
+      //   }
 
-        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-          status: 401,
-          error: 'invalid_request'
-        })
-      })
+      //   await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+      //     status: 404,
+      //     error: 'unknown_request'
+      //   })
+      // })
 
       test('Cannot issue access token without continue token', async (): Promise<void> => {
         const ctx = createContext<ContinueContext>(
@@ -633,6 +633,117 @@ describe('Grant Routes', (): void => {
           error: 'invalid_request'
         })
       })
+
+      test.each`
+        state                    | description
+        ${GrantState.Processing} | ${'processing'}
+        ${GrantState.Pending}    | ${'pending'}
+      `(
+        'Polls correctly for continuation on a $description grant',
+        async ({ state }): Promise<void> => {
+          const polledGrant = await Grant.query().insert(
+            generateBaseGrant({
+              state,
+              noFinishMethod: true
+            })
+          )
+
+          const polledGrantAccess = await Access.query().insert({
+            ...BASE_GRANT_ACCESS,
+            grantId: polledGrant.id
+          })
+
+          const ctx = createContext<ContinueContext>(
+            {
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                Authorization: `GNAP ${polledGrant.continueToken}`
+              },
+              url: `/continue/${polledGrant.continueId}`,
+              method: 'POST'
+            },
+            {
+              id: polledGrant.continueId
+            }
+          )
+
+          ctx.request.body = {}
+
+          await expect(grantRoutes.continue(ctx)).resolves.toBeUndefined()
+
+          expect(ctx.response).toSatisfyApiSpec()
+          expect(ctx.status).toBe(200)
+
+          const expectedBody = {
+            continue: {
+              access_token: {
+                value: expect.any(String)
+              },
+              uri: expect.any(String)
+            }
+          }
+
+          if (state === GrantState.Approved) {
+            const accessToken = await AccessToken.query().findOne({
+              grantId: polledGrant.id
+            })
+
+            assert.ok(accessToken)
+
+            Object.assign(expectedBody, {
+              access_token: {
+                value: accessToken.value,
+                manage:
+                  Config.authServerDomain +
+                  `/token/${accessToken.managementId}`,
+                access: expect.arrayContaining([
+                  {
+                    actions: expect.arrayContaining(['create', 'read', 'list']),
+                    identifier: polledGrantAccess.identifier,
+                    type: 'incoming-payment'
+                  }
+                ]),
+                expires_in: 600
+              }
+            })
+          }
+
+          expect(ctx.body).toEqual(expectedBody)
+        }
+      )
+
+      test('Cannot poll a finalized grant', async (): Promise<void> => {
+        const finalizedPolledGrant = await Grant.query().insert(
+          generateBaseGrant({
+            state: GrantState.Finalized,
+            noFinishMethod: true
+          })
+        )
+
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${finalizedPolledGrant.continueToken}`
+            },
+            url: `/continue/${finalizedPolledGrant.continueId}`,
+            method: 'POST'
+          },
+          {
+            id: finalizedPolledGrant.continueId
+          }
+        )
+
+        ctx.request.body = {}
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'request_denied'
+        })
+      })
+
+      // TODO: test that grants with finalization reason cannot be polled
 
       test('Can cancel a grant request / pending grant', async (): Promise<void> => {
         const ctx = createContext<RevokeContext>(

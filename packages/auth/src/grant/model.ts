@@ -4,7 +4,8 @@ import { Access } from '../access/model'
 import { join } from 'path'
 import {
   PendingGrant as OpenPaymentsPendingGrant,
-  Grant as OpenPaymentsGrant
+  Grant as OpenPaymentsGrant,
+  GrantContinuation as OpenPaymentsGrantContinuation
 } from '@interledger/open-payments'
 import { AccessToken, toOpenPaymentsAccessToken } from '../accessToken/model'
 import { Interaction } from '../interaction/model'
@@ -118,6 +119,20 @@ export function toOpenPaymentPendingGrant(
 
 interface ToOpenPaymentsGrantArgs {
   authServerUrl: string
+}
+
+export function toOpenPaymentsGrantContinuation(
+  grant: Grant,
+  args: ToOpenPaymentsGrantArgs
+): OpenPaymentsGrantContinuation {
+  return {
+    continue: {
+      access_token: {
+        value: grant.continueToken
+      },
+      uri: `${args.authServerUrl}/continue/${grant.continueId}`
+    }
+  }
 }
 
 export function toOpenPaymentsGrant(
