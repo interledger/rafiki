@@ -8,7 +8,10 @@ import { Asset } from '../../asset/model'
 import { Config } from '../../config/app'
 import { createAsset } from '../../tests/asset'
 import { createIncomingPayment } from '../../tests/incomingPayment'
-import { createWalletAddress } from '../../tests/walletAddress'
+import {
+  createWalletAddress,
+  MockWalletAddress
+} from '../../tests/walletAddress'
 import { truncateTables } from '../../tests/tableManager'
 import { v4 as uuid } from 'uuid'
 import { IncomingPaymentService } from '../../open_payments/payment/incoming/service'
@@ -33,12 +36,18 @@ describe('Incoming Payment Resolver', (): void => {
   let walletAddressId: string
   let incomingPaymentService: IncomingPaymentService
   let asset: Asset
+  let amount: Amount
 
   beforeAll(async (): Promise<void> => {
     deps = await initIocContainer(Config)
     appContainer = await createTestApp(deps)
     incomingPaymentService = await deps.use('incomingPaymentService')
     asset = await createAsset(deps)
+    amount = {
+      value: BigInt(56),
+      assetCode: asset.code,
+      assetScale: asset.scale
+    }
   })
 
   afterAll(async (): Promise<void> => {
@@ -78,16 +87,6 @@ describe('Incoming Payment Resolver', (): void => {
   })
 
   describe('Mutation.createIncomingPayment', (): void => {
-    let amount: Amount
-
-    beforeEach((): void => {
-      amount = {
-        value: BigInt(56),
-        assetCode: asset.code,
-        assetScale: asset.scale
-      }
-    })
-
     test.each`
       metadata                                          | expiresAt                        | withAmount | desc
       ${{ description: 'rent', externalRef: '202201' }} | ${undefined}                     | ${false}   | ${'metadata'}
@@ -263,6 +262,69 @@ describe('Incoming Payment Resolver', (): void => {
       expect(query.success).toBe(false)
       expect(query.message).toBe('Error trying to create incoming payment')
       expect(query.payment).toBeNull()
+    })
+  })
+
+  describe('Mutation.completeIncomingPayment', (): void => {
+    let walletAddress: MockWalletAddress
+    let incomingPayment: IncomingPaymentModel
+
+    const metadata = {
+      description: 'rent'
+    }
+
+    beforeAll(async (): Promise<void> => {
+      walletAddress = await createWalletAddress(deps, {
+        assetId: asset.id
+      })
+    })
+
+    beforeEach(async (): Promise<void> => {
+      incomingPayment = await createIncomingPayment(deps, {
+        walletAddressId: walletAddress.id,
+        metadata,
+        expiresAt: new Date(),
+        incomingAmount: amount
+      })
+    })
+
+    test('200', async (): Promise<void> => {
+      const completeSpy = jest.spyOn(incomingPaymentService, 'complete')
+
+      const query = await appContainer.apolloClient
+        .query({
+          query: gql`
+            mutation CompleteIncomingPayment($id: String!) {
+              completeIncomingPayment(id: $id) {
+                code
+                success
+                message
+                payment {
+                  id
+                  state
+                }
+              }
+            }
+          `,
+          variables: { id: incomingPayment.id }
+        })
+        .then(
+          (query): IncomingPaymentResponse =>
+            query.data?.completeIncomingPayment
+        )
+      console.log(query)
+      expect(completeSpy).toHaveBeenCalledWith(incomingPayment.id)
+      expect(query).toEqual({
+        __typename: 'IncomingPaymentResponse',
+        code: '200',
+        success: true,
+        message: null,
+        payment: {
+          __typename: 'IncomingPayment',
+          id: incomingPayment.id,
+          state: SchemaPaymentState.Completed
+        }
+      })
     })
   })
 
