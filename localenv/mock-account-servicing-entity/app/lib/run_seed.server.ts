@@ -40,13 +40,15 @@ export async function setupFromSeed(config: Config): Promise<void> {
     }
   }
 
+  const peeringAsset = config.peeringAsset
+
   const peerResponses = await Promise.all(
     config.seed.peers.map(async (peer: Peering) => {
       const peerResponse = await createPeer(
         peer.peerIlpAddress,
         peer.peerUrl,
-        assets['USD'].id,
-        assets['USD'].code,
+        assets[peeringAsset].id,
+        assets[peeringAsset].code,
         peer.name,
         peer.liquidityThreshold
       ).then((response) => response.peer)
@@ -69,7 +71,7 @@ export async function setupFromSeed(config: Config): Promise<void> {
     console.log('autopeering url: ', CONFIG.testnetAutoPeerUrl)
     const autoPeerResponse = await createAutoPeer(
       CONFIG.testnetAutoPeerUrl,
-      assets['USD'].id
+      assets[peeringAsset].id
     ).catch((e) => {
       console.log('error on autopeering: ', e)
       return
