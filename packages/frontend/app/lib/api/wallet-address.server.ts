@@ -10,7 +10,10 @@ import type {
   QueryWalletAddressArgs,
   QueryWalletAddressesArgs,
   UpdateWalletAddressInput,
-  CreateWalletAddressMutationVariables
+  CreateWalletAddressMutationVariables,
+  CreateWalletAddressWithdrawalVariables,
+  CreateWalletAddressWithdrawal,
+  CreateWalletAddressWithdrawalInput
 } from '~/generated/graphql'
 
 export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
@@ -26,6 +29,7 @@ export const getWalletAddress = async (args: QueryWalletAddressArgs) => {
           publicName
           status
           createdAt
+          liquidity
           asset {
             id
             code
@@ -125,4 +129,31 @@ export const createWalletAddress = async (args: CreateWalletAddressInput) => {
   })
 
   return response.data?.createWalletAddress
+}
+
+export const createWalletAddressWithdrawal = async (
+  args: CreateWalletAddressWithdrawalInput
+) => {
+  const response = await apolloClient.mutate<
+    CreateWalletAddressWithdrawal,
+    CreateWalletAddressWithdrawalVariables
+  >({
+    mutation: gql`
+      mutation CreateWalletAddressWithdrawal(
+        $input: CreateWalletAddressWithdrawalInput!
+      ) {
+        createWalletAddressWithdrawal(input: $input) {
+          code
+          success
+          message
+          error
+        }
+      }
+    `,
+    variables: {
+      input: args
+    }
+  })
+
+  return response.data?.createWalletAddressWithdrawal
 }

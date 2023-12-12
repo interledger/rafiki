@@ -16,7 +16,7 @@ import {
 import { messageStorage, setMessageAndRedirect } from '~/lib/message.server'
 import { updateWalletAddressSchema } from '~/lib/validate.server'
 import type { ZodFieldErrors } from '~/shared/types'
-import { capitalize } from '~/shared/utils'
+import { capitalize, formatAmount } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const walletAddressId = params.walletAddressId
@@ -145,6 +145,43 @@ export default function ViewAssetPage() {
               >
                 View asset
               </Button>
+            </div>
+          </div>
+        </div>
+        <div className='grid grid-cols-1 py-3 gap-6 md:grid-cols-3 border-b border-pearl'>
+          <div className='col-span-1 pt-3'>
+            <h3 className='text-lg font-medium'>Liquidity Information</h3>
+          </div>
+          <div className='md:col-span-2 bg-white rounded-md shadow-md'>
+            <div className='w-full p-4 flex justify-between items-center'>
+              <div>
+                <p className='font-medium'>Amount</p>
+                <p className='mt-1'>
+                  {formatAmount(
+                    walletAddress.liquidity ?? '0',
+                    walletAddress.asset.scale
+                  )}{' '}
+                  {walletAddress.asset.code}
+                </p>
+              </div>
+              <div className='flex space-x-4'>
+                {BigInt(walletAddress.liquidity ?? '0') ? (
+                  <Button
+                    aria-label='withdraw wallet address liquidity page'
+                    preventScrollReset
+                    to={`/wallet-addresses/${walletAddress.id}/withdraw-liquidity`}
+                  >
+                    Withdraw
+                  </Button>
+                ) : (
+                  <Button
+                    disabled={true}
+                    aria-label='withdraw wallet address liquidity page'
+                  >
+                    Withdraw
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>
