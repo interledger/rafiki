@@ -7,7 +7,7 @@ import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { OutgoingPaymentState } from '~/generated/graphql'
 import { getOutgoingPayment } from '~/lib/api/payments.server'
-import { badgeColorByState, formatAmount } from '~/shared/utils'
+import { badgeColorByState, formatAmount, prettify } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const outgoingPaymentId = params.outgoingPaymentId
@@ -140,9 +140,12 @@ export default function ViewOutgoingPaymentPage() {
                       {showMetadata ? '▼' : '►'} Metadata
                     </button>
                     {showMetadata && outgoingPayment.metadata && (
-                      <pre className='mt-1 text-sm break-words whitespace-pre-wrap'>
-                        {JSON.stringify(outgoingPayment.metadata, null, 2)}
-                      </pre>
+                      <pre
+                        className='mt-1 text-sm'
+                        dangerouslySetInnerHTML={{
+                          __html: prettify(outgoingPayment.metadata)
+                        }}
+                      />
                     )}
                   </>
                 ) : (

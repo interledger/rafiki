@@ -6,7 +6,7 @@ import { z } from 'zod'
 import { Badge, PageHeader } from '~/components'
 import { Button } from '~/components/ui'
 import { getIncomingPayment } from '~/lib/api/payments.server'
-import { badgeColorByState, formatAmount } from '~/shared/utils'
+import { badgeColorByState, formatAmount, prettify } from '~/shared/utils'
 
 export async function loader({ params }: LoaderArgs) {
   const incomingPaymentId = params.incomingPaymentId
@@ -121,9 +121,12 @@ export default function ViewIncomingPaymentPage() {
                       {showMetadata ? '▼' : '►'} Metadata
                     </button>
                     {showMetadata && incomingPayment.metadata && (
-                      <pre className='mt-1 text-sm break-words whitespace-pre-wrap'>
-                        {JSON.stringify(incomingPayment.metadata, null, 2)}
-                      </pre>
+                      <pre
+                        className='mt-1 text-sm'
+                        dangerouslySetInnerHTML={{
+                          __html: prettify(incomingPayment.metadata)
+                        }}
+                      />
                     )}
                   </>
                 ) : (
