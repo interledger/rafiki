@@ -967,6 +967,34 @@
 					"response": []
 				},
 				{
+					"name": "Deposit Outgoing Payment Liquidity",
+					"id": "8c7a355f-305e-45b0-88c9-0c85a1236a51",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation DepositOutgoingPaymentLiquidity($input: DepositOutgoingPaymentLiquidityInput!) {\n  depositOutgoingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
+								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Withdraw Event Liquidity",
 					"request": {
 						"method": "POST",
@@ -976,6 +1004,62 @@
 							"graphql": {
 								"query": "mutation WithdrawEventLiquidity($input: WithdrawEventLiquidityInput!) {\n  withdrawEventLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
 								"variables": "{\n    \"input\": {\n        \"eventId\": \"b4f85d5c-652d-472d-873c-4ba2a5e39052\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{RafikiGraphqlHost}}/graphql",
+							"host": [
+								"{{RafikiGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Incoming Payment Liquidity",
+					"id": "39e875d2-dd72-4f44-846f-9c58f1a036ae",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation WithdrawIncomingPaymentLiquidity($input: WithdrawIncomingPaymentLiquidityInput!) {\n  withdrawIncomingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
+								"variables": "{\n    \"input\": {\n        \"incomingPaymentId\": \"{{incomingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
+							}
+						},
+						"url": {
+							"raw": "{{PeerGraphqlHost}}/graphql",
+							"host": [
+								"{{PeerGraphqlHost}}"
+							],
+							"path": [
+								"graphql"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Withdraw Outgoing Payment Liquidity",
+					"id": "8a56ae12-8bd9-4ae4-af91-92cd3adf86bc",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation WithdrawOutgoingPaymentLiquidity($input: WithdrawOutgoingPaymentLiquidityInput!) {\n  withdrawOutgoingPaymentLiquidity(input: $input) {\n    code\n    error\n    message\n    success\n  }\n}",
+								"variables": "{\n    \"input\": {\n        \"outgoingPaymentId\": \"{{outgoingPaymentId}}\",\n        \"idempotencyKey\":\"{{$guid}}\"\n    }\n}"
 							}
 						},
 						"url": {

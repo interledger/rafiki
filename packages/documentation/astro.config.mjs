@@ -170,6 +170,10 @@ export default defineConfig({
           label: 'Admin APIs',
           items: [
             {
+              label: 'Idempotency',
+              link: 'apis/idempotency'
+            },
+            {
               label: 'Backend Admin API',
               collapsed: true,
               autogenerate: {

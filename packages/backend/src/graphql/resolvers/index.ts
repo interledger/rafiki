@@ -42,7 +42,10 @@ import {
   postLiquidityWithdrawal,
   voidLiquidityWithdrawal,
   depositEventLiquidity,
-  withdrawEventLiquidity
+  withdrawEventLiquidity,
+  depositOutgoingPaymentLiquidity,
+  withdrawIncomingPaymentLiquidity,
+  withdrawOutgoingPaymentLiquidity
 } from './liquidity'
 import { GraphQLBigInt, GraphQLUInt8 } from '../scalars'
 import {
@@ -123,6 +126,9 @@ export const resolvers: Resolvers = {
     voidLiquidityWithdrawal: voidLiquidityWithdrawal,
     depositEventLiquidity,
     withdrawEventLiquidity,
+    depositOutgoingPaymentLiquidity,
+    withdrawIncomingPaymentLiquidity,
+    withdrawOutgoingPaymentLiquidity,
     setFee
   }
 }

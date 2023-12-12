@@ -25,6 +25,9 @@ interface GetPageOptions {
 
 export interface WebhookService {
   getEvent(id: string): Promise<WebhookEvent | undefined>
+  getLatestByResourceId(
+    options: WebhookByResourceIdOptions
+  ): Promise<WebhookEvent | undefined>
   processNext(): Promise<string | undefined>
   getPage(options?: GetPageOptions): Promise<WebhookEvent[]>
 }
@@ -42,6 +45,8 @@ export async function createWebhookService(
   const deps = { ...deps_, logger }
   return {
     getEvent: (id) => getWebhookEvent(deps, id),
+    getLatestByResourceId: (options) =>
+      getLatestWebhookEventByResourceId(deps, options),
     processNext: () => processNextWebhookEvent(deps),
     getPage: (options) => getWebhookEventsPage(deps, options)
   }
@@ -52,6 +57,60 @@ async function getWebhookEvent(
   id: string
 ): Promise<WebhookEvent | undefined> {
   return WebhookEvent.query(deps.knex).findById(id)
+}
+
+interface WebhookEventOptions {
+  types?: string[]
+}
+interface OutgoingPaymentOptions extends WebhookEventOptions {
+  outgoingPaymentId: string
+}
+interface IncomingPaymentOptions extends WebhookEventOptions {
+  incomingPaymentId: string
+}
+interface WalletAddressOptions extends WebhookEventOptions {
+  walletAddressId: string
+}
+interface PeerOptions extends WebhookEventOptions {
+  peerId: string
+}
+interface AssetOptions extends WebhookEventOptions {
+  assetId: string
+}
+type WebhookByResourceIdOptions =
+  | OutgoingPaymentOptions
+  | IncomingPaymentOptions
+  | WalletAddressOptions
+  | PeerOptions
+  | AssetOptions
+
+async function getLatestWebhookEventByResourceId(
+  deps: ServiceDependencies,
+  options: WebhookByResourceIdOptions
+): Promise<WebhookEvent | undefined> {
+  const { types } = options
+
+  const query = WebhookEvent.query(deps.knex)
+    .orderBy('createdAt', 'DESC')
+    .limit(1)
+
+  if (types && types.length) {
+    query.whereIn('type', types)
+  }
+
+  if ('outgoingPaymentId' in options) {
+    query.where({ outgoingPaymentId: options.outgoingPaymentId })
+  } else if ('incomingPaymentId' in options) {
+    query.where({ incomingPaymentId: options.incomingPaymentId })
+  } else if ('walletAddressId' in options) {
+    query.where({ incomingPaymentId: options.walletAddressId })
+  } else if ('peerId' in options) {
+    query.where({ incomingPaymentId: options.peerId })
+  } else {
+    query.where({ assetId: options.assetId })
+  }
+
+  return await query.first()
 }
 
 // Fetch (and lock) a webhook event for work.

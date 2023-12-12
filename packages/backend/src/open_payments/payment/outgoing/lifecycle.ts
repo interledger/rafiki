@@ -2,8 +2,8 @@ import { LifecycleError } from './errors'
 import {
   OutgoingPayment,
   OutgoingPaymentState,
-  PaymentEvent,
-  PaymentEventType
+  OutgoingPaymentEvent,
+  OutgoingPaymentEventType
 } from './model'
 import { ServiceDependencies } from './service'
 import { Receiver } from '../../receiver/model'
@@ -123,7 +123,7 @@ export async function handleFailed(
     state: OutgoingPaymentState.Failed,
     error
   })
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentFailed)
+  await sendWebhookEvent(deps, payment, OutgoingPaymentEventType.PaymentFailed)
 }
 
 async function handleCompleted(
@@ -133,13 +133,17 @@ async function handleCompleted(
   await payment.$query(deps.knex).patch({
     state: OutgoingPaymentState.Completed
   })
-  await sendWebhookEvent(deps, payment, PaymentEventType.PaymentCompleted)
+  await sendWebhookEvent(
+    deps,
+    payment,
+    OutgoingPaymentEventType.PaymentCompleted
+  )
 }
 
 export async function sendWebhookEvent(
   deps: ServiceDependencies,
   payment: OutgoingPayment,
-  type: PaymentEventType
+  type: OutgoingPaymentEventType
 ): Promise<void> {
   // TigerBeetle accounts are only created as the OutgoingPayment is funded.
   // So default the amountSent and balance to 0 for outgoing payments still in the funding state
@@ -163,7 +167,9 @@ export async function sendWebhookEvent(
         amount: balance
       }
     : undefined
-  await PaymentEvent.query(deps.knex).insert({
+
+  await OutgoingPaymentEvent.query(deps.knex).insert({
+    outgoingPaymentId: payment.id,
     type,
     data: payment.toData({ amountSent, balance }),
     withdrawal
