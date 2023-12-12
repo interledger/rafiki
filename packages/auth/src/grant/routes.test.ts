@@ -232,7 +232,8 @@ describe('Grant Routes', (): void => {
           publicName: TEST_CLIENT_DISPLAY.name,
           assetCode: 'USD',
           assetScale: 2,
-          authServer: Config.authServerDomain
+          authServer: Config.authServerDomain,
+          resourceServer: faker.internet.url({ appendSlash: false })
         })
 
         const ctx = createContext<CreateContext>(
@@ -565,30 +566,6 @@ describe('Grant Routes', (): void => {
         })
       })
 
-      // test('Cannot issue access token without interact ref', async (): Promise<void> => {
-      //   const ctx = createContext<ContinueContext>(
-      //     {
-      //       headers: {
-      //         Accept: 'application/json',
-      //         'Content-Type': 'application/json',
-      //         Authorization: `GNAP ${grant.continueToken}`
-      //       }
-      //     },
-      //     {
-      //       id: grant.continueId
-      //     }
-      //   )
-
-      //   ctx.request.body = {} as {
-      //     interact_ref: string
-      //   }
-
-      //   await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
-      //     status: 404,
-      //     error: 'unknown_request'
-      //   })
-      // })
-
       test('Cannot issue access token without continue token', async (): Promise<void> => {
         const ctx = createContext<ContinueContext>(
           {
@@ -743,7 +720,29 @@ describe('Grant Routes', (): void => {
         })
       })
 
-      // TODO: test that grants with finalization reason cannot be polled
+      test('Cannot poll a grant with a finish method', async (): Promise<void> => {
+        const ctx = createContext<ContinueContext>(
+          {
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `GNAP ${grant.continueToken}`
+            }
+          },
+          {
+            id: grant.continueId
+          }
+        )
+
+        ctx.request.body = {} as {
+          interact_ref: string
+        }
+
+        await expect(grantRoutes.continue(ctx)).rejects.toMatchObject({
+          status: 401,
+          error: 'request_denied'
+        })
+      })
 
       test('Can cancel a grant request / pending grant', async (): Promise<void> => {
         const ctx = createContext<RevokeContext>(

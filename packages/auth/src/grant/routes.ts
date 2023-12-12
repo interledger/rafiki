@@ -186,6 +186,65 @@ function isContinuableGrant(grant: Grant): boolean {
   return !isRejectedGrant(grant) && !isRevokedGrant(grant)
 }
 
+function isGrantStillWaiting(grant: Grant): boolean {
+  if (!grant.wait) return false
+  const grantWaitTime = grant.createdAt.getTime() + (grant.wait * 1000)
+  const currentTime = Date.now()
+
+  return currentTime < grantWaitTime
+}
+
+async function pollGrantContinuation(
+  deps: ServiceDependencies,
+  ctx: ContinueContext,
+  continueId: string,
+  continueToken: string
+): Promise<void> {
+  const { config, grantService, accessService, accessTokenService } = deps
+
+  const grant = await grantService.getByContinue(continueId, continueToken)
+  if (!grant) {
+    ctx.throw(404, { error: 'unknown_request' })
+  }
+
+  if (isGrantStillWaiting(grant)) {
+    ctx.throw(401, { error: 'too_fast'})
+  }
+
+  /*
+    https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-15#name-continuing-during-pending-i
+    "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
+  */
+  if (grant.finishMethod) {
+    ctx.throw(401, { error: 'request_denied' })
+  } else if (
+    grant.state === GrantState.Pending ||
+    grant.state === GrantState.Processing
+  ) {
+    ctx.body = toOpenPaymentsGrantContinuation(grant, {
+      authServerUrl: config.authServerDomain
+    })
+    return
+  } else if (
+    grant.state !== GrantState.Approved ||
+    !isContinuableGrant(grant)
+  ) {
+    ctx.throw(401, { error: 'request_denied' })
+  } else {
+    const accessToken = await accessTokenService.create(grant.id)
+    const access = await accessService.getByGrant(grant.id)
+    ctx.body = toOpenPaymentsGrant(
+      grant,
+      {
+        authServerUrl: config.authServerDomain
+      },
+      accessToken,
+      access
+    )
+    return
+  }
+}
+
 /* 
   GNAP indicates that a grant may be continued even if it didn't require interaction.
   Rafiki only needs to continue a grant if it required an interaction, noninteractive grants immediately issue an access token without needing continuation
@@ -215,43 +274,8 @@ async function continueGrant(
 
   // TODO: enforce wait
   if (!ctx.request.body || Object.keys(ctx.request.body).length === 0) {
-    const grant = await grantService.getByContinue(continueId, continueToken)
-    if (!grant) {
-      ctx.throw(404, { error: 'unknown_request' })
-    } else {
-      /*
-        https://datatracker.ietf.org/doc/html/draft-ietf-gnap-core-protocol-15#name-continuing-during-pending-i
-        "When the client instance does not include a finish parameter, the client instance will often need to poll the AS until the RO has authorized the request."
-      */
-      if (grant.finishMethod) {
-        ctx.throw(401, { error: 'request_denied' })
-      } else if (
-        grant.state === GrantState.Pending ||
-        grant.state === GrantState.Processing
-      ) {
-        ctx.body = toOpenPaymentsGrantContinuation(grant, {
-          authServerUrl: config.authServerDomain
-        })
-        return
-      } else if (
-        grant.state !== GrantState.Approved ||
-        !isContinuableGrant(grant)
-      ) {
-        ctx.throw(401, { error: 'request_denied' })
-      } else {
-        const accessToken = await accessTokenService.create(grant.id)
-        const access = await accessService.getByGrant(grant.id)
-        ctx.body = toOpenPaymentsGrant(
-          grant,
-          {
-            authServerUrl: config.authServerDomain
-          },
-          accessToken,
-          access
-        )
-        return
-      }
-    }
+    await pollGrantContinuation(deps, ctx, continueId, continueToken)
+    return
   }
 
   // TODO: enforce wait
@@ -262,6 +286,8 @@ async function continueGrant(
     !isMatchingContinueRequest(continueId, continueToken, interaction.grant)
   ) {
     ctx.throw(404, { error: 'unknown_request' })
+  } else if (isGrantStillWaiting(interaction.grant)) {
+    ctx.throw(401, { error: 'too_fast'})
   } else {
     const { grant } = interaction
     if (grant.state !== GrantState.Approved) {

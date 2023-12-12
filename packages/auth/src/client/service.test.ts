@@ -38,7 +38,8 @@ describe('Client Service', (): void => {
           publicName: TEST_CLIENT_DISPLAY.name,
           assetCode: 'USD',
           assetScale: 9,
-          authServer: faker.internet.url({ appendSlash: false })
+          authServer: faker.internet.url({ appendSlash: false }),
+          resourceServer: faker.internet.url({ appendSlash: false })
         })
 
       await expect(clientService.get(TEST_CLIENT_DISPLAY.uri)).resolves.toEqual(
