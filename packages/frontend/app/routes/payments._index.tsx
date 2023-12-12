@@ -1,16 +1,13 @@
 import { json, type LoaderArgs } from '@remix-run/node'
 import { useLoaderData, useNavigate, useSearchParams } from '@remix-run/react'
-import { Badge, BadgeColor, PageHeader } from '~/components'
+import { Badge, PageHeader } from '~/components'
 import { PopoverFilter } from '~/components/Filters'
 import { Button, Table } from '~/components/ui'
 import { listPayments } from '~/lib/api/payments.server'
 import { paymentsSearchParams } from '~/lib/validate.server'
 import { PaymentType } from '~/generated/graphql'
-import {
-  capitalize,
-  badgeColorByState,
-  CombinedPaymentState
-} from '~/shared/utils'
+import type { CombinedPaymentState } from '~/shared/utils'
+import { capitalize, badgeColorByState } from '~/shared/utils'
 
 export const loader = async ({ request }: LoaderArgs) => {
   const url = new URL(request.url)
