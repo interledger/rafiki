@@ -127,4 +127,4 @@ export const updateWalletAddressSchema = z
   })
   .merge(uuidSchema)
 
-export const confirmedSchema = z.coerce.number().int().min(0).max(1)
+export const confirmedSchema = z.coerce.number().int().min(1).max(1)
